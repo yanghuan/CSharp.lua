@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.Emit;
 
 namespace CSharpLua {
     public sealed class Worker {
-        private static readonly UTF8Encoding UTF8Encoding = new UTF8Encoding(false);
+        private static Encoding Encoding => UTF8Encoding.UTF8;
         private static readonly string[] SystemDlls = new string[] {
             "mscorlib.dll",
             "System.dll",
@@ -59,10 +59,21 @@ namespace CSharpLua {
                 }
             }
 
+            List<LuaCompilationUnitSyntax> luaCompilationUnits = new List<LuaCompilationUnitSyntax>();
             foreach(SyntaxTree syntaxTree in compilation.SyntaxTrees) {
+                SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
                 CompilationUnitSyntax compilationUnitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();
-                LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor();
-                var node = compilationUnitSyntax.Accept(transfor);
+                LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor(semanticModel);
+                var luaCompilationUnit = (LuaCompilationUnitSyntax)compilationUnitSyntax.Accept(transfor);
+                luaCompilationUnits.Add(luaCompilationUnit);
+            }
+
+            foreach(var luaCompilationUnit in luaCompilationUnits) {
+                string outFile = Path.Combine(output_, Path.GetFileNameWithoutExtension(luaCompilationUnit.FilePath));
+                using(var writer = new StreamWriter(outFile + "2.lua", false, Encoding)) {
+                    LuaRenderer renderer = new LuaRenderer(writer);
+                    luaCompilationUnit.Render(renderer);
+                }
             }
         }
     }

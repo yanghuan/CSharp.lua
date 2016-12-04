@@ -44,6 +44,10 @@ namespace CSharpLua {
             return cmds;
         }
 
+        public static T GetOrDefault<T>(this IList<T> list, int index, T v = default(T)) {
+            return index >= 0 && index < list.Count ? list[index] : v;
+        }
+
         public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T t = default(T)) {
             T v;
             if(dict.TryGetValue(key, out v)) {
