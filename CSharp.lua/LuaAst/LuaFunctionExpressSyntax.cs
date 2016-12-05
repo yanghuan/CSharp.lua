@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace CSharpLua.LuaAst {
     public sealed class LuaFunctionExpressSyntax : LuaExpressionSyntax {
         public LuaParameterListSyntax ParameterList { get; } = new LuaParameterListSyntax();
+        public string FunctionKeyword => Tokens.Function;
 
         public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
             OpenBraceToken = Tokens.Empty,

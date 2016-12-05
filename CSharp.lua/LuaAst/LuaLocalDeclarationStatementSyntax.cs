@@ -7,6 +7,7 @@ using System.Text;
 namespace CSharpLua.LuaAst {
     public sealed class LuaLocalDeclarationStatementSyntax : LuaStatementSyntax {
         public LuaVariableDeclarationSyntax Declaration { get; } = new LuaVariableDeclarationSyntax();
+        public string LocalKeyword => Tokens.Local;
         public string SemicolonToken => Tokens.Semicolon;
 
         internal override void Render(LuaRenderer renderer) {

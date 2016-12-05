@@ -8,18 +8,19 @@ namespace CSharpLua.LuaAst {
     public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
         public LuaLocalDeclarationStatementSyntax Local { get; } = new LuaLocalDeclarationStatementSyntax();
         public LuaStatementListSyntax MethodList { get; } = new LuaStatementListSyntax();
+        public LuaTableInitializerExpression ResultTable { get; } = new LuaTableInitializerExpression();
 
         public LuaTypeDeclarationSyntax(LuaIdentifierNameSyntax name) : base(name) {
             Add(Local);
             Add(MethodList);
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
+            LuaReturnStatementSyntax returnNode = new LuaReturnStatementSyntax(ResultTable);
+            Add(returnNode);
         }
 
         public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax method) {
             Local.Declaration.Variables.Add(name);
+            LuaAssignmentExpressionSyntax assignmentNode = new LuaAssignmentExpressionSyntax(name, method);
+            MethodList.Statements.Add(new LuaExpressionStatementSyntax(assignmentNode));
         }
     }
 

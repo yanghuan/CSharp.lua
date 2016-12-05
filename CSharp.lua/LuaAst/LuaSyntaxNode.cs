@@ -9,16 +9,24 @@ namespace CSharpLua.LuaAst {
         internal virtual void Render(LuaRenderer renderer) {
         }
 
-        public static class Tokens {
+        public class Tokens : Keyword {
             public static string Empty => string.Empty;
-            public const string End = "end";
             public const string Semicolon = ";";
             public const string OpenParentheses = "(";
             public const string CloseParentheses = ")";
+            public const string OpenBrace = "{";
+            public const string CloseBrace = "}";
             public const string ObjectColon = ":";
             public const string Dot = ".";
             public const string Quote = "\"";
-            public new const string Equals = "=";
+            public new const string Equals = " = ";
+        }
+
+        public class Keyword {
+            public const string Function = "function";
+            public const string End = "end";
+            public const string Return = "return";
+            public const string Local = "local";
         }
     }
 

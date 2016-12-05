@@ -116,6 +116,10 @@ namespace CSharpLua {
             CurType.AddMethod(nameNode, newNode);
             return newNode;
 
+            //AssignmentExpressionSyntax
+            //InitializerExpressionSyntax ArrayInitializerExpression
+            //ReturnStatementSyntax 
+            //AssignmentExpressionSyntax 
             //VariableDeclaratorSyntax
             //LocalDeclarationStatementSyntax 
             //LiteralExpressionSyntax

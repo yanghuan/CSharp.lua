@@ -59,7 +59,6 @@
     <Compile Include="LuaAst\LuaArgumentSyntax.cs" />
     <Compile Include="LuaAst\LuaBlockSyntax.cs" />
     <Compile Include="LuaAst\LuaCompilationUnitSyntax.cs" />
-    <Compile Include="LuaAst\LuaExpressionStatementSyntax.cs" />
     <Compile Include="LuaAst\LuaExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaFunctionExpressSyntax.cs" />
     <Compile Include="LuaAst\LuaIdentifierNameSyntax.cs" />
@@ -73,6 +72,7 @@
     <Compile Include="LuaAst\LuaSyntaxNode.cs" />
     <Compile Include="LuaAst\LuaTypeDeclarationSyntax.cs" />
     <Compile Include="LuaAst\LuaWrapFunctionStatementSynatx.cs" />
+    <Compile Include="LuaAst\LuaTableInitializerExpression.cs" />
     <Compile Include="LuaRenderer.cs" />
     <Compile Include="LuaSyntaxNodeTransfor.cs" />
     <Compile Include="Program.cs" />

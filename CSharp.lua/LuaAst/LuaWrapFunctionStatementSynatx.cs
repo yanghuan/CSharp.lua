@@ -7,11 +7,10 @@ using System.Text;
 namespace CSharpLua.LuaAst {
     public abstract class LuaWrapFunctionStatementSynatx : LuaStatementSyntax {
         private LuaInvocationExpressionSyntax invokeNode_ = new LuaInvocationExpressionSyntax();
-        private LuaFunctionExpressSyntax functionNode_;
+        private LuaFunctionExpressSyntax functionNode_ = new LuaFunctionExpressSyntax();
 
         public LuaWrapFunctionStatementSynatx(LuaIdentifierNameSyntax name) {
             invokeNode_.ArgumentList.Arguments.Add(new LuaArgumentSyntax(new LuaLiteralExpressionSyntax(name)));
-            functionNode_ = new LuaFunctionExpressSyntax();
             invokeNode_.ArgumentList.Arguments.Add(new LuaArgumentSyntax(functionNode_));
         }
 
