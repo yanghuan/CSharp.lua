@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -79,9 +79,7 @@ namespace CSharpLua {
 
         internal void Render(LuaExpressionStatementSyntax node) {
             node.Expression.Render(this);
-            if(IsWriteSemicolon) {
-                Write(node.SemicolonToken);
-            }
+            Write(node.SemicolonToken);
         }
 
         internal void Render(LuaMemberAccessExpressionSyntax node) {
@@ -147,6 +145,35 @@ namespace CSharpLua {
             }
             Outdent();
             Write(node.CloseBraceToken);
+        }
+
+        internal void Render(LuaLiteralExpressionSyntax node) {
+            Write(node.OpenParenToken);
+            node.Identifier.Render(this);
+            Write(node.CloseParenToken);
+        }
+
+        internal void Render(LuaTypeDeclarationSyntax node) {
+            node.Local.Render(this);
+            node.MethodList.Render(this);
+        }
+
+        internal void Render(LuaStatementListSyntax node) {
+            foreach(var statement in node.Statements) {
+                statement.Render(this);
+            }
+        }
+
+        internal void Render(LuaLocalDeclarationStatementSyntax node) {
+            node.Declaration.Render(this);
+            Write(node.SemicolonToken);
+        }
+
+        internal void Render(LuaVariableDeclarationSyntax node) {
+            WriteArgumentList(string.Empty, node.Variables, string.Empty);
+            if(node != null) {
+                node.Render(this);
+            }
         }
     }
 }

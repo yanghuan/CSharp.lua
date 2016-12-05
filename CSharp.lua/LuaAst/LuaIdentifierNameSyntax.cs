@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,15 +11,13 @@ namespace CSharpLua.LuaAst {
     public class LuaIdentifierNameSyntax : LuaExpressionSyntax {
         public string ValueText { get; }
 
+        public readonly static LuaIdentifierNameSyntax Empty = new LuaIdentifierNameSyntax("");
         public readonly static LuaIdentifierNameSyntax System = new LuaIdentifierNameSyntax("System");
         public readonly static LuaIdentifierNameSyntax Namespace = new LuaIdentifierNameSyntax("namespace");
         public readonly static LuaIdentifierNameSyntax Class = new LuaIdentifierNameSyntax("class");
-
-        public LuaIdentifierNameSyntax(IdentifierNameSyntax node) : this(node.Identifier) {
-        }
-
-        public LuaIdentifierNameSyntax(SyntaxToken identifier) : this(identifier.ValueText) {
-        }
+        public readonly static LuaIdentifierNameSyntax Struct = new LuaIdentifierNameSyntax("struct");
+        public readonly static LuaIdentifierNameSyntax Interface = new LuaIdentifierNameSyntax("interface");
+        public readonly static LuaIdentifierNameSyntax Enum = new LuaIdentifierNameSyntax("enum");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

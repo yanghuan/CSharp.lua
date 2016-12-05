@@ -17,6 +17,17 @@ namespace CSharpLua.LuaAst {
             public const string CloseParentheses = ")";
             public const string ObjectColon = ":";
             public const string Dot = ".";
+            public const string Quote = "\"";
+            public new const string Equals = "=";
+        }
+    }
+
+    public sealed class LuaSyntaxList<T> : List<T> where T : LuaSyntaxNode {
+        public new void Add(T node) {
+            if(node == null) {
+                throw new ArgumentNullException(nameof(node));
+            }
+            base.Add(node);
         }
     }
 }

@@ -56,23 +56,23 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LuaAst\LuaArgumentListSyntax.cs" />
     <Compile Include="LuaAst\LuaArgumentSyntax.cs" />
     <Compile Include="LuaAst\LuaBlockSyntax.cs" />
-    <Compile Include="LuaAst\LuaClassDeclarationSyntax.cs" />
     <Compile Include="LuaAst\LuaCompilationUnitSyntax.cs" />
     <Compile Include="LuaAst\LuaExpressionStatementSyntax.cs" />
     <Compile Include="LuaAst\LuaExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaFunctionExpressSyntax.cs" />
     <Compile Include="LuaAst\LuaIdentifierNameSyntax.cs" />
     <Compile Include="LuaAst\LuaInvocationExpressionSyntax.cs" />
+    <Compile Include="LuaAst\LuaLiteralExpressionSyntax.cs" />
+    <Compile Include="LuaAst\LuaLocalDeclarationStatementSyntax.cs" />
     <Compile Include="LuaAst\LuaMemberAccessExpressionSyntax.cs" />
-    <Compile Include="LuaAst\LuaParameterListSyntax.cs" />
     <Compile Include="LuaAst\LuaNamespaceDeclarationSyntax.cs" />
     <Compile Include="LuaAst\LuaParameterSyntax.cs" />
     <Compile Include="LuaAst\LuaStatementSyntax.cs" />
     <Compile Include="LuaAst\LuaSyntaxNode.cs" />
     <Compile Include="LuaAst\LuaTypeDeclarationSyntax.cs" />
+    <Compile Include="LuaAst\LuaWrapFunctionStatementSynatx.cs" />
     <Compile Include="LuaRenderer.cs" />
     <Compile Include="LuaSyntaxNodeTransfor.cs" />
     <Compile Include="Program.cs" />
