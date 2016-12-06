@@ -9,6 +9,9 @@ namespace CSharpLua.LuaAst {
         public LuaExpressionSyntax Expression { get; }
 
         public LuaArgumentSyntax(LuaExpressionSyntax expression) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
             Expression = expression;
         }
 

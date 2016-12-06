@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,6 +24,10 @@ namespace CSharpLua.LuaAst {
         public LuaSingleTableItemSyntax(LuaExpressionSyntax expression) {
             Expression = expression;
         }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
     }
 
     public abstract class LuaTableKeySyntax : LuaSyntaxNode {
@@ -31,9 +35,15 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaTableExpressionKeySyntax : LuaTableKeySyntax {
         public LuaExpressionSyntax Expression { get; }
+        public string OpenBracketToken => Tokens.OpenBracket;
+        public string CloseBracketToken => Tokens.CloseBracket;
 
         public LuaTableExpressionKeySyntax(LuaExpressionSyntax expression) {
             Expression = expression;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
         }
     }
 
@@ -43,11 +53,24 @@ namespace CSharpLua.LuaAst {
         public LuaTableLiteralKeySyntax(LuaIdentifierNameSyntax identifier) {
             Identifier = identifier;
         }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
     }
 
     public sealed class LuaKeyValueTableItemSyntax : LuaTableItemSyntax {
         public LuaTableKeySyntax Key { get; }
         public string OperatorToken => Tokens.Equals;
         public LuaExpressionSyntax Value { get; }
+
+        public LuaKeyValueTableItemSyntax(LuaTableKeySyntax key, LuaExpressionSyntax value) {
+            Key = key;
+            Value = value;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
     }
 }

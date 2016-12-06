@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
     public sealed class LuaNamespaceDeclarationSyntax : LuaWrapFunctionStatementSynatx {
-        public LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax name) : base(name) {
-            UpdateIdentifiers(LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Namespace);
+        public LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax name) {
+            UpdateIdentifiers(name, LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Namespace);
         }
     }
 }

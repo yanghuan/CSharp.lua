@@ -10,7 +10,7 @@ namespace CSharpLua.LuaAst {
         public LuaStatementListSyntax MethodList { get; } = new LuaStatementListSyntax();
         public LuaTableInitializerExpression ResultTable { get; } = new LuaTableInitializerExpression();
 
-        public LuaTypeDeclarationSyntax(LuaIdentifierNameSyntax name) : base(name) {
+        public LuaTypeDeclarationSyntax() {
             Add(Local);
             Add(MethodList);
             LuaReturnStatementSyntax returnNode = new LuaReturnStatementSyntax(ResultTable);
@@ -18,33 +18,35 @@ namespace CSharpLua.LuaAst {
         }
 
         public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax method) {
-            Local.Declaration.Variables.Add(name);
+            Local.Variables.Add(name);
             LuaAssignmentExpressionSyntax assignmentNode = new LuaAssignmentExpressionSyntax(name, method);
             MethodList.Statements.Add(new LuaExpressionStatementSyntax(assignmentNode));
+            LuaKeyValueTableItemSyntax itemNode = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), name);
+            ResultTable.Items.Add(itemNode);
         }
     }
 
     public sealed class LuaClassDeclarationSyntax : LuaTypeDeclarationSyntax {
-        public LuaClassDeclarationSyntax(LuaIdentifierNameSyntax name) : base(name) {
-            UpdateIdentifiers(LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Class, LuaIdentifierNameSyntax.Namespace);
+        public LuaClassDeclarationSyntax(LuaIdentifierNameSyntax name) {
+            UpdateIdentifiers(name, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Class, LuaIdentifierNameSyntax.Namespace);
         }
     }
 
     public sealed class LuaStructDeclarationSyntax : LuaTypeDeclarationSyntax {
-        public LuaStructDeclarationSyntax(LuaIdentifierNameSyntax name) : base(name) {
-            UpdateIdentifiers(LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Struct, LuaIdentifierNameSyntax.Namespace);
+        public LuaStructDeclarationSyntax(LuaIdentifierNameSyntax name) {
+            UpdateIdentifiers(name, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Struct, LuaIdentifierNameSyntax.Namespace);
         }
     }
 
     public sealed class LuaInterfaceDeclarationSyntax : LuaTypeDeclarationSyntax {
-        public LuaInterfaceDeclarationSyntax(LuaIdentifierNameSyntax name) : base(name) {
-            UpdateIdentifiers(LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Interface);
+        public LuaInterfaceDeclarationSyntax(LuaIdentifierNameSyntax name) {
+            UpdateIdentifiers(name, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Interface);
         }
     }
 
     public sealed class LuaEnumDeclarationSyntax : LuaTypeDeclarationSyntax {
-        public LuaEnumDeclarationSyntax(LuaIdentifierNameSyntax name) : base(name) {
-            UpdateIdentifiers(LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Enum);
+        public LuaEnumDeclarationSyntax(LuaIdentifierNameSyntax name) {
+            UpdateIdentifiers(name, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Enum);
         }
     }
 }

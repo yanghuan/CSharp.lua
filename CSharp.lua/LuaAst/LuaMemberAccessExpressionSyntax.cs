@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +10,14 @@ namespace CSharpLua.LuaAst {
         public LuaIdentifierNameSyntax Name { get; }
         public string OperatorToken { get; }
 
-        public LuaMemberAccessExpressionSyntax(LuaExpressionSyntax expression, LuaIdentifierNameSyntax name, bool isObjectColon) {
+        public LuaMemberAccessExpressionSyntax(LuaExpressionSyntax expression, LuaIdentifierNameSyntax name, bool isObjectColon = false) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
+            if(name == null) {
+                throw new ArgumentNullException(nameof(name));
+            }
+
             Expression = expression;
             Name = name;
             OperatorToken = isObjectColon ? Tokens.ObjectColon : Tokens.Dot;

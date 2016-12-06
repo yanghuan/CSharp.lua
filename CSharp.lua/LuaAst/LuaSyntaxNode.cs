@@ -11,11 +11,13 @@ namespace CSharpLua.LuaAst {
 
         public class Tokens : Keyword {
             public static string Empty => string.Empty;
-            public const string Semicolon = ";";
+            public static string Semicolon => LuaRenderer.Setting.HasSemicolon ?  ";" : Empty;
             public const string OpenParentheses = "(";
             public const string CloseParentheses = ")";
             public const string OpenBrace = "{";
             public const string CloseBrace = "}";
+            public const string OpenBracket = "[";
+            public const string CloseBracket = "]";
             public const string ObjectColon = ":";
             public const string Dot = ".";
             public const string Quote = "\"";
@@ -36,6 +38,15 @@ namespace CSharpLua.LuaAst {
                 throw new ArgumentNullException(nameof(node));
             }
             base.Add(node);
+        }
+
+        public new void AddRange(IEnumerable<T> collection) {
+            foreach(var item in collection) {
+                if(item == null) {
+                    throw new ArgumentNullException(nameof(item));
+                }
+                base.Add(item);
+            }
         }
     }
 }

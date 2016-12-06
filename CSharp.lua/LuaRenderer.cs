@@ -8,29 +8,35 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed class LuaRenderer {
-        public bool IsWriteSemicolon { get; set; }
+        public static class Setting {
+            public static bool HasSemicolon { get; set; }
+            private static int indent_;
+            public static string IndentString;
+
+            static Setting() {
+                Indent = 4;
+                HasSemicolon = true;
+            }
+
+            public static int Indent {
+                get {
+                    return indent_;
+                }
+                set {
+                    if(indent_ != value) {
+                        indent_ = value;
+                        IndentString = new string(' ', indent_);
+                    }
+                }
+            }
+        }
 
         private TextWriter writer_;
-        private int indent_;
-        private string indentStr_;
         private bool isNewLine_;
         private int indentLevel_;
 
         public LuaRenderer(TextWriter writer) {
             writer_ = writer;
-            Indent = 4;
-        }
-
-        public int Indent {
-            get {
-                return indent_;
-            }
-            set {
-                if(indent_ != value) {
-                    indent_ = value;
-                    indentStr_ = new string(' ', indent_);
-                }
-            }
         }
 
         private void AddIndent() {
@@ -60,7 +66,7 @@ namespace CSharpLua {
         private void Write(string value) {
             if(isNewLine_) {
                 for(int i = 0; i < indentLevel_; i++) {
-                    writer_.Write(indentStr_);
+                    writer_.Write(Setting.IndentString);
                 }
                 isNewLine_ = false;
             }
@@ -130,7 +136,7 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaParameterListSyntax node) {
-            WriteArgumentList(node.OpenParenToken, node.Arguments, node.CloseParenToken);
+            WriteArgumentList(node.OpenParenToken, node.Parameters, node.CloseParenToken);
         }
 
         internal void Render(LuaParameterSyntax node) {
@@ -149,6 +155,10 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaLiteralExpressionSyntax node) {
+            node.Identifier.Render(this);
+        }
+
+        internal void Render(LuaStringLiteralExpressionSyntax node) {
             Write(node.OpenParenToken);
             node.Identifier.Render(this);
             Write(node.CloseParenToken);
@@ -161,17 +171,15 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaLocalDeclarationStatementSyntax node) {
-            Write(node.LocalKeyword);
-            WriteSpace();
-            node.Declaration.Render(this);
-            Write(node.SemicolonToken);
-            WriteNewLine();
-        }
-
-        internal void Render(LuaVariableDeclarationSyntax node) {
-            WriteSeparatedSyntaxList(node.Variables);
-            if(node.Initializer != null) {
-                node.Initializer.Render(this);
+            if(node.Variables.Count > 0) {
+                Write(node.LocalKeyword);
+                WriteSpace();
+                WriteSeparatedSyntaxList(node.Variables);
+                if(node.Initializer != null) {
+                    node.Initializer.Render(this);
+                }
+                Write(node.SemicolonToken);
+                WriteNewLine();
             }
         }
 
@@ -193,8 +201,75 @@ namespace CSharpLua {
 
         internal void Render(LuaTableInitializerExpression node) {
             Write(node.OpenBraceToken);
-            WriteSeparatedSyntaxList(node.Items);
+            if(node.Items.Count > 0) {
+                AddIndent();
+                bool isFirst = true;
+                foreach(LuaSyntaxNode itemNode in node.Items) {
+                    if(isFirst) {
+                        isFirst = false;
+                        WriteNewLine();
+                    }
+                    else {
+                        WriteComma();
+                    }
+                    itemNode.Render(this);
+                    WriteNewLine();
+                }
+                Outdent();
+            }
             Write(node.CloseBraceToken);
+        }
+
+        internal void Render(LuaSingleTableItemSyntax node) {
+            node.Expression.Render(this);
+        }
+
+        internal void Render(LuaKeyValueTableItemSyntax node) {
+            node.Key.Render(this);
+            Write(node.OperatorToken);
+            node.Value.Render(this);
+        }
+
+        internal void Render(LuaTableExpressionKeySyntax node) {
+            Write(node.OpenBracketToken);
+            node.Expression.Render(this);
+            Write(node.CloseBracketToken);
+        }
+
+        internal void Render(LuaTableLiteralKeySyntax node) {
+            node.Identifier.Render(this);
+        }
+
+        internal void Render(EqualsValueClauseListSyntax node) {
+            Write(node.EqualsToken);
+            WriteSeparatedSyntaxList(node.Values);
+        }
+
+        internal void Render(LuaLocalVariablesStatementSyntax node) {
+            if(node.Variables.Count > 0) {
+                bool isFirst = true;
+                foreach(var variable in node.Variables) {
+                    if(isFirst) {
+                        isFirst = false;
+                    }
+                    else {
+                        WriteSpace();
+                    }
+                    variable.Render(this);
+                }
+                WriteNewLine();
+            }
+        }
+
+        internal void Render(LuaVariableDeclaratorSyntax node) {
+            Write(node.LocalKeyword);
+            WriteSpace();
+            node.Identifier.Render(this);
+            if(node.Value != null) {
+                Write(node.EqualsToken);
+                node.Value.Render(this);
+            }
+            Write(node.SemicolonToken);
         }
     }
 }
