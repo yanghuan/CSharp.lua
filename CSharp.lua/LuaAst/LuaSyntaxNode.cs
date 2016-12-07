@@ -32,6 +32,9 @@ namespace CSharpLua.LuaAst {
             public const string Local = "local";
             public const string Ref = "ref";
             public const string Out = "out";
+            public const string If = "if";
+            public const string Then = "then";
+            public const string Else = "else";
         }
     }
 

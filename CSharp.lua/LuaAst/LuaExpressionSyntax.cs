@@ -40,4 +40,20 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaBinaryExpressionSyntax : LuaExpressionSyntax {
+        public LuaExpressionSyntax Left { get; }
+        public string OperatorToken { get; }
+        public LuaExpressionSyntax Right { get; }
+
+        public LuaBinaryExpressionSyntax(LuaExpressionSyntax left, string operatorToken, LuaExpressionSyntax right) {
+            Left = left;
+            OperatorToken = operatorToken;
+            Right = right;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
 }

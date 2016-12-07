@@ -247,7 +247,7 @@ namespace CSharpLua {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
             string text;
-            if(symbol.Kind == SymbolKind.Local) {
+            if(symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Parameter) {
                 text = symbol.Name;
             }
             else {
@@ -311,6 +311,48 @@ namespace CSharpLua {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
             return new LuaIdentifierNameSyntax(symbol.ContainingNamespace.Name + '.' + symbol.Name);
+        }
+
+
+        #region if else
+
+        public override LuaSyntaxNode VisitIfStatement(IfStatementSyntax node) {
+            var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
+            LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
+            if(node.Statement.Kind() == SyntaxKind.Block) {
+                var block = (LuaBlockSyntax)node.Statement.Accept(this);
+                ifStatement.Body.Statements.AddRange(block.Statements);
+            }
+            else {
+                var statement = (LuaStatementSyntax)node.Statement.Accept(this);
+                ifStatement.Body.Statements.Add(statement);
+            }
+            if(node.Else != null) {
+                var elseCause = (LuaElseClauseSyntax)node.Else.Accept(this);
+                ifStatement.Else = elseCause;
+            }
+            return ifStatement;
+        }
+
+        #endregion
+
+        public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
+            var left = (LuaExpressionSyntax)node.Left.Accept(this);
+            var right = (LuaExpressionSyntax)node.Right.Accept(this);
+            return new LuaBinaryExpressionSyntax(left, node.OperatorToken.ValueText, right);
+        }
+
+        public override LuaSyntaxNode VisitElseClause(ElseClauseSyntax node) {
+            LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
+            if(node.Statement.Kind() == SyntaxKind.Block) {
+                var block = (LuaBlockSyntax)node.Statement.Accept(this);
+                elseClause.Body.Statements.AddRange(block.Statements);
+            }
+            else {
+                var statement = (LuaStatementSyntax)node.Statement.Accept(this);
+                elseClause.Body.Statements.Add(statement);
+            }
+            return elseClause;
         }
     }
 }

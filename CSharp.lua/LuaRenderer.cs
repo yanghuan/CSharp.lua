@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.IO;
 using CSharpLua.LuaAst;
 
-
 namespace CSharpLua {
     public sealed class LuaRenderer {
         public static class Setting {
@@ -293,6 +292,31 @@ namespace CSharpLua {
             node.Identifier.Render(this);
             node.Initializer?.Render(this);
             Write(node.SemicolonToken);
+        }
+
+        internal void Render(LuaBinaryExpressionSyntax node) {
+            node.Left.Render(this);
+            WriteSpace();
+            Write(node.OperatorToken);
+            WriteSpace();
+            node.Right.Render(this);
+        }
+
+        internal void Render(LuaIfStatementSyntax node) {
+            Write(node.IfKeyword);
+            WriteSpace();
+            node.Condition.Render(this);
+            WriteSpace();
+            Write(node.OpenParenToken);
+            node.Body.Render(this);
+            node.Else?.Render(this);
+            Write(node.CloseParenToken);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaElseClauseSyntax node) {
+            Write(node.ElseKeyword);
+            node.Body.Render(this);
         }
     }
 }

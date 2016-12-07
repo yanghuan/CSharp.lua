@@ -62,6 +62,7 @@
     <Compile Include="LuaAst\LuaExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaFunctionExpressSyntax.cs" />
     <Compile Include="LuaAst\LuaIdentifierNameSyntax.cs" />
+    <Compile Include="LuaAst\LuaIfStatementSyntax.cs" />
     <Compile Include="LuaAst\LuaInvocationExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaLiteralExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaLocalDeclarationStatementSyntax.cs" />
