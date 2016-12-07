@@ -6,14 +6,15 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
     public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
-        public LuaLocalDeclarationStatementSyntax Local { get; } = new LuaLocalDeclarationStatementSyntax();
+        public LuaLocalVariablesStatementSyntax Local { get; } = new LuaLocalVariablesStatementSyntax();
         public LuaStatementListSyntax MethodList { get; } = new LuaStatementListSyntax();
         public LuaTableInitializerExpression ResultTable { get; } = new LuaTableInitializerExpression();
 
         public LuaTypeDeclarationSyntax() {
             Add(Local);
             Add(MethodList);
-            LuaReturnStatementSyntax returnNode = new LuaReturnStatementSyntax(ResultTable);
+            LuaReturnStatementSyntax returnNode = new LuaReturnStatementSyntax();
+            returnNode.Expressions.Add(ResultTable);
             Add(returnNode);
         }
 

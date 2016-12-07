@@ -18,6 +18,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Struct = new LuaIdentifierNameSyntax("struct");
         public readonly static LuaIdentifierNameSyntax Interface = new LuaIdentifierNameSyntax("interface");
         public readonly static LuaIdentifierNameSyntax Enum = new LuaIdentifierNameSyntax("enum");
+        public readonly static LuaIdentifierNameSyntax Placeholder = new LuaIdentifierNameSyntax("_");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

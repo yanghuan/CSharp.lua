@@ -7,6 +7,7 @@ using System.Text;
 namespace CSharpLua.LuaAst {
     public class LuaSyntaxNode {
         internal virtual void Render(LuaRenderer renderer) {
+            throw new NotSupportedException();
         }
 
         public class Tokens : Keyword {
@@ -29,6 +30,8 @@ namespace CSharpLua.LuaAst {
             public const string End = "end";
             public const string Return = "return";
             public const string Local = "local";
+            public const string Ref = "ref";
+            public const string Out = "out";
         }
     }
 

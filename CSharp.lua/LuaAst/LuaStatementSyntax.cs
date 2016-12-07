@@ -13,6 +13,9 @@ namespace CSharpLua.LuaAst {
         public string SemicolonToken => Tokens.Semicolon;
 
         public LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
             Expression = expression;
         }
 
@@ -30,13 +33,9 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaReturnStatementSyntax : LuaStatementSyntax {
-        public LuaExpressionSyntax Expression { get; }
+        public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
         public string ReturnKeyword => Tokens.Return;
         public string SemicolonToken => Tokens.Semicolon;
-
-        public LuaReturnStatementSyntax(LuaExpressionSyntax expression = null) {
-            Expression = expression;
-        }
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

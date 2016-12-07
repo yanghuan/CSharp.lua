@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +17,24 @@ namespace CSharpLua.LuaAst {
             Left = left;
             Right = right;
         }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaMultipleAssignmentExpressionSyntax : LuaExpressionSyntax {
+        public LuaSyntaxList<LuaExpressionSyntax> Lefts { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+        public string OperatorToken => Tokens.Equals;
+        public LuaSyntaxList<LuaExpressionSyntax> Rights { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaLineMultipleAssignmentExpressionSyntax : LuaExpressionSyntax {
+        public LuaSyntaxList<LuaAssignmentExpressionSyntax> Assignments { get; } = new LuaSyntaxList<LuaAssignmentExpressionSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

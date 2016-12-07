@@ -14,6 +14,7 @@ namespace CSharpLua {
         private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
         private Stack<LuaNamespaceDeclarationSyntax> namespaces_ = new Stack<LuaNamespaceDeclarationSyntax>();
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
+        private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
 
         public LuaSyntaxNodeTransfor(SemanticModel semanticModel) {
             semanticModel_ = semanticModel;
@@ -34,6 +35,12 @@ namespace CSharpLua {
         private LuaTypeDeclarationSyntax CurType {
             get {
                 return typeDeclarations_.Peek();
+            }
+        }
+
+        private LuaBlockSyntax CurBlock {
+            get {
+                return blocks_.Peek();
             }
         }
 
@@ -137,10 +144,12 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitBlock(BlockSyntax node) {
             LuaBlockSyntax blockNode = new LuaBlockSyntax();
+            blocks_.Push(blockNode);
             foreach(var statement in node.Statements) {
                 LuaStatementSyntax statementNode = (LuaStatementSyntax)statement.Accept(this);
                 blockNode.Statements.Add(statementNode);
             }
+            blocks_.Pop();
             return blockNode;
         }
 
@@ -149,11 +158,80 @@ namespace CSharpLua {
             return new LuaExpressionStatementSyntax(expressionNode);
         }
 
+        public override LuaSyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node) {
+            if(node.Right.Kind() != SyntaxKind.SimpleAssignmentExpression ) {
+                var left = (LuaExpressionSyntax)node.Left.Accept(this);
+                var right = (LuaExpressionSyntax)node.Right.Accept(this);
+                return new LuaAssignmentExpressionSyntax(left, right);
+            }
+            else {
+                List<LuaAssignmentExpressionSyntax> assignments = new List<LuaAssignmentExpressionSyntax>();
+                var leftExpression = node.Left;
+                var rightExpression = node.Right;
+
+                while(true) {
+                    var left = (LuaExpressionSyntax)leftExpression.Accept(this);
+                    var assignmentRight = rightExpression as AssignmentExpressionSyntax;
+                    if(assignmentRight == null) {
+                        var right = (LuaExpressionSyntax)rightExpression.Accept(this);
+                        assignments.Add(new LuaAssignmentExpressionSyntax(left, right));
+                        break;
+                    }
+                    else {
+                        var right = (LuaExpressionSyntax)assignmentRight.Left.Accept(this);
+                        assignments.Add(new LuaAssignmentExpressionSyntax(left, right));
+                        leftExpression = assignmentRight.Left;
+                        rightExpression = assignmentRight.Right;
+                    }
+                }
+
+                assignments.Reverse();
+                LuaLineMultipleAssignmentExpressionSyntax multipleAssignment = new LuaLineMultipleAssignmentExpressionSyntax();
+                multipleAssignment.Assignments.AddRange(assignments);
+                return multipleAssignment;
+            }
+        }
+
         public override LuaSyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node) {
+            List<LuaArgumentSyntax> arguments = new List<LuaArgumentSyntax>();
+            List<LuaArgumentSyntax> refOrOutArguments = new List<LuaArgumentSyntax>();
+
+            foreach(var argument in node.ArgumentList.Arguments) {
+                var luaArgument = (LuaArgumentSyntax)argument.Accept(this);
+                arguments.Add(luaArgument);
+                string refOrOutKeyword = argument.RefOrOutKeyword.ValueText;
+                if(refOrOutKeyword == LuaSyntaxNode.Keyword.Ref || refOrOutKeyword == LuaSyntaxNode.Keyword.Out) {
+                    refOrOutArguments.Add(luaArgument);
+                }
+            }
+
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
             LuaInvocationExpressionSyntax invocationNode = new LuaInvocationExpressionSyntax(expression);
-            invocationNode.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+            invocationNode.ArgumentList.Arguments.AddRange(arguments);
+
+            if(refOrOutArguments.Count > 0) {
+                SyntaxKind kind = node.Parent.Kind();
+                if(kind == SyntaxKind.ExpressionStatement) {
+                    LuaMultipleAssignmentExpressionSyntax multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
+                    SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
+                    IMethodSymbol symbol = (IMethodSymbol)symbolInfo.Symbol;
+                    if(!symbol.ReturnsVoid) {
+                        multipleAssignment.Lefts.Add(LuaIdentifierNameSyntax.Placeholder);
+                    }
+                    multipleAssignment.Lefts.AddRange(refOrOutArguments.Select(i => i.Expression));
+                    multipleAssignment.Rights.Add(invocationNode);
+                    return multipleAssignment;
+                }
+                else {
+                    LuaMultipleAssignmentExpressionSyntax multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
+                    multipleAssignment.Lefts.Add(LuaIdentifierNameSyntax.Placeholder);
+                    multipleAssignment.Lefts.AddRange(refOrOutArguments.Select(i => i.Expression));
+                    multipleAssignment.Rights.Add(invocationNode);
+
+                    CurBlock.Statements.Add(new LuaExpressionStatementSyntax(multipleAssignment));
+                    return LuaIdentifierNameSyntax.Placeholder;
+                }
+            }
             return invocationNode;
         }
 
@@ -168,7 +246,14 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
-            return new LuaIdentifierNameSyntax(symbol.ContainingNamespace.Name + '.' + symbol.Name);
+            string text;
+            if(symbol.Kind == SymbolKind.Local) {
+                text = symbol.Name;
+            }
+            else {
+                text = symbol.ContainingNamespace.Name + '.' + symbol.Name;
+            }
+            return new LuaIdentifierNameSyntax(text);
         }
 
         public override LuaSyntaxNode VisitArgumentList(ArgumentListSyntax node) {
@@ -191,15 +276,15 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {
-            LuaLocalVariablesStatementSyntax variablesStatement = new LuaLocalVariablesStatementSyntax();
+            LuaLocalDeclarationStatementSyntax variablesStatement = new LuaLocalDeclarationStatementSyntax();
             foreach(VariableDeclaratorSyntax variable in node.Declaration.Variables) {
                var variableDeclarator = (LuaVariableDeclaratorSyntax)variable.Accept(this);
                 variablesStatement.Variables.Add(variableDeclarator);
             }
 
-            bool isMultiNil = variablesStatement.Variables.Count > 0 && variablesStatement.Variables.All(i => i.Value == null);
+            bool isMultiNil = variablesStatement.Variables.Count > 0 && variablesStatement.Variables.All(i => i.Initializer == null);
             if(isMultiNil) {
-                LuaLocalDeclarationStatementSyntax declarationStatement = new LuaLocalDeclarationStatementSyntax();
+                LuaLocalVariablesStatementSyntax declarationStatement = new LuaLocalVariablesStatementSyntax();
                 foreach(var variable in variablesStatement.Variables) {
                     declarationStatement.Variables.Add(variable.Identifier);
                 }
@@ -210,11 +295,22 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node) {
             LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-            LuaExpressionSyntax expression = null;
+            LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(identifier);
             if(node.Initializer != null) {
-                expression = (LuaExpressionSyntax)node.Initializer.Value.Accept(this);
+                variableDeclarator.Initializer = (LuaEqualsValueClauseSyntax)node.Initializer.Accept(this);
             }
-            return new LuaVariableDeclaratorSyntax(identifier, expression);
+            return variableDeclarator;
+        }
+
+        public override LuaSyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node) {
+            var expression = (LuaExpressionSyntax)node.Value.Accept(this);
+            return new LuaEqualsValueClauseSyntax(expression);
+        }
+
+        public override LuaSyntaxNode VisitPredefinedType(PredefinedTypeSyntax node) {
+            SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
+            ISymbol symbol = symbolInfo.Symbol;
+            return new LuaIdentifierNameSyntax(symbol.ContainingNamespace.Name + '.' + symbol.Name);
         }
     }
 }

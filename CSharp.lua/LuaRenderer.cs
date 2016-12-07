@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using CSharpLua.LuaAst;
+
 
 namespace CSharpLua {
     public sealed class LuaRenderer {
@@ -170,17 +172,20 @@ namespace CSharpLua {
             }
         }
 
-        internal void Render(LuaLocalDeclarationStatementSyntax node) {
+        internal void Render(LuaLocalVariablesStatementSyntax node) {
             if(node.Variables.Count > 0) {
                 Write(node.LocalKeyword);
                 WriteSpace();
                 WriteSeparatedSyntaxList(node.Variables);
-                if(node.Initializer != null) {
-                    node.Initializer.Render(this);
-                }
+                node.Initializer?.Render(this);
                 Write(node.SemicolonToken);
                 WriteNewLine();
             }
+        }
+
+        internal void Render(LuaEqualsValueClauseListSyntax node) {
+            Write(node.EqualsToken);
+            WriteSeparatedSyntaxList(node.Values);
         }
 
         internal void Render(LuaAssignmentExpressionSyntax node) {
@@ -189,11 +194,32 @@ namespace CSharpLua {
             node.Right.Render(this);
         }
 
+        internal void Render(LuaMultipleAssignmentExpressionSyntax node) {
+            Contract.Assert(node.Lefts.Count > 0 && node.Rights.Count > 0);
+            WriteSeparatedSyntaxList(node.Lefts);
+            Write(node.OperatorToken);
+            WriteSeparatedSyntaxList(node.Rights);
+        }
+
+        internal void Render(LuaLineMultipleAssignmentExpressionSyntax node) {
+            bool isFirst = true;
+            foreach(var assignment in node.Assignments) {
+                if(isFirst) {
+                    isFirst = false;
+                }
+                else {
+                    Write(LuaSyntaxNode.Tokens.Semicolon);
+                    WriteSpace();
+                }
+                assignment.Render(this);
+            }
+        }
+
         internal void Render(LuaReturnStatementSyntax node) {
             Write(node.ReturnKeyword);
-            if(node.Expression != null) {
+            if(node.Expressions.Count > 0) {
                 WriteSpace();
-                node.Expression.Render(this);
+                WriteSeparatedSyntaxList(node.Expressions);
             }
             Write(node.SemicolonToken);
             WriteNewLine();
@@ -240,12 +266,12 @@ namespace CSharpLua {
             node.Identifier.Render(this);
         }
 
-        internal void Render(EqualsValueClauseListSyntax node) {
+        internal void Render(LuaEqualsValueClauseSyntax node) {
             Write(node.EqualsToken);
-            WriteSeparatedSyntaxList(node.Values);
+            node.Value.Render(this);
         }
 
-        internal void Render(LuaLocalVariablesStatementSyntax node) {
+        internal void Render(LuaLocalDeclarationStatementSyntax node) {
             if(node.Variables.Count > 0) {
                 bool isFirst = true;
                 foreach(var variable in node.Variables) {
@@ -265,10 +291,7 @@ namespace CSharpLua {
             Write(node.LocalKeyword);
             WriteSpace();
             node.Identifier.Render(this);
-            if(node.Value != null) {
-                Write(node.EqualsToken);
-                node.Value.Render(this);
-            }
+            node.Initializer?.Render(this);
             Write(node.SemicolonToken);
         }
     }
