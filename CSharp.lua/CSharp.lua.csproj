@@ -66,6 +66,7 @@
     <Compile Include="LuaAst\LuaInvocationExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaLiteralExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaLocalDeclarationStatementSyntax.cs" />
+    <Compile Include="LuaAst\LuaLoopStatement.cs" />
     <Compile Include="LuaAst\LuaMemberAccessExpressionSyntax.cs" />
     <Compile Include="LuaAst\LuaNamespaceDeclarationSyntax.cs" />
     <Compile Include="LuaAst\LuaParameterSyntax.cs" />

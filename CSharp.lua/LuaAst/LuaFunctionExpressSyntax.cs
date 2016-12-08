@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,8 +14,22 @@ namespace CSharpLua.LuaAst {
             CloseBraceToken = Tokens.End,
         };
 
+        private LuaLocalVariablesStatementSyntax tempStatement_ = new LuaLocalVariablesStatementSyntax();
+
+        public LuaFunctionExpressSyntax() {
+            Body.Statements.Add(tempStatement_);
+        }
+
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
+        }
+
+        public LuaIdentifierNameSyntax GetTemp1() {
+            var temp1 = LuaIdentifierNameSyntax.Temp1;
+            if(tempStatement_.Variables.Count == 0) {
+                tempStatement_.Variables.Add(temp1);
+            }
+            return temp1;
         }
     }
 }

@@ -12,13 +12,17 @@ namespace CSharpLua.LuaAst {
         public string ValueText { get; }
 
         public readonly static LuaIdentifierNameSyntax Empty = new LuaIdentifierNameSyntax("");
+        public readonly static LuaIdentifierNameSyntax Placeholder = new LuaIdentifierNameSyntax("_");
         public readonly static LuaIdentifierNameSyntax System = new LuaIdentifierNameSyntax("System");
         public readonly static LuaIdentifierNameSyntax Namespace = new LuaIdentifierNameSyntax("namespace");
         public readonly static LuaIdentifierNameSyntax Class = new LuaIdentifierNameSyntax("class");
         public readonly static LuaIdentifierNameSyntax Struct = new LuaIdentifierNameSyntax("struct");
         public readonly static LuaIdentifierNameSyntax Interface = new LuaIdentifierNameSyntax("interface");
         public readonly static LuaIdentifierNameSyntax Enum = new LuaIdentifierNameSyntax("enum");
-        public readonly static LuaIdentifierNameSyntax Placeholder = new LuaIdentifierNameSyntax("_");
+        public readonly static LuaIdentifierNameSyntax Temp1 = new LuaIdentifierNameSyntax("default");
+        public readonly static LuaIdentifierNameSyntax True = new LuaIdentifierNameSyntax("true");
+        public readonly static LuaIdentifierNameSyntax Throw = new LuaIdentifierNameSyntax("System.throw");
+        public readonly static LuaIdentifierNameSyntax Each = new LuaIdentifierNameSyntax("System.each");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

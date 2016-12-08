@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 
 namespace CSharpLua.LuaAst {
-    public sealed class LuaLocalVariablesStatementSyntax : LuaStatementSyntax {
+    public sealed class LuaLocalVariablesStatementSyntax : LuaVariableDeclarationSyntax {
         public string LocalKeyword => Tokens.Local;
         public LuaSyntaxList<LuaIdentifierNameSyntax> Variables { get; } = new LuaSyntaxList<LuaIdentifierNameSyntax>();
         public LuaEqualsValueClauseListSyntax Initializer { get; set; }
-        public string SemicolonToken => Tokens.Semicolon;
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
@@ -25,8 +24,22 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-
     public sealed class LuaLocalDeclarationStatementSyntax : LuaStatementSyntax {
+        public LuaVariableDeclarationSyntax Declaration { get; }
+
+        public LuaLocalDeclarationStatementSyntax(LuaVariableDeclarationSyntax declaration) {
+            Declaration = declaration;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public abstract class LuaVariableDeclarationSyntax : LuaStatementSyntax {
+    }
+
+    public sealed class LuaVariableListDeclarationSyntax : LuaVariableDeclarationSyntax {
         public LuaSyntaxList<LuaVariableDeclaratorSyntax> Variables { get; } = new LuaSyntaxList<LuaVariableDeclaratorSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
@@ -38,7 +51,6 @@ namespace CSharpLua.LuaAst {
         public string LocalKeyword => Tokens.Local;
         public LuaIdentifierNameSyntax Identifier { get; }
         public LuaEqualsValueClauseSyntax Initializer { get; set; }
-        public string SemicolonToken => Tokens.Semicolon;
 
         public LuaVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier) {
             if(identifier == null) {

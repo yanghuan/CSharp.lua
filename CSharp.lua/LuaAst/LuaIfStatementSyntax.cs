@@ -6,16 +6,13 @@ using System.Text;
 
 namespace CSharpLua.LuaAst {
     public sealed class LuaIfStatementSyntax : LuaStatementSyntax {
-        public string CloseParenToken => Keyword.End;
+        public string CloseParenToken => Tokens.End;
         public LuaExpressionSyntax Condition { get; }
         public LuaElseClauseSyntax Else { get; set; }
-        public string IfKeyword => Keyword.If;
-        public string OpenParenToken => Keyword.Then;
+        public string IfKeyword => Tokens.If;
+        public string OpenParenToken => Tokens.Then;
 
-        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-            OpenBraceToken = Tokens.Empty,
-            CloseBraceToken = Tokens.Empty,
-        };
+        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax();
 
         public LuaIfStatementSyntax(LuaExpressionSyntax condition) {
             if(condition == null) {
@@ -30,12 +27,12 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaElseClauseSyntax : LuaSyntaxNode {
-        public string ElseKeyword => Keyword.Else;
+        public string ElseKeyword => Tokens.Else;
+        public LuaStatementSyntax Statement { get; }
 
-        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-            OpenBraceToken = Tokens.Empty,
-            CloseBraceToken = Tokens.Empty,
-        };
+        public LuaElseClauseSyntax(LuaStatementSyntax statement) {
+            Statement = statement;
+        }
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

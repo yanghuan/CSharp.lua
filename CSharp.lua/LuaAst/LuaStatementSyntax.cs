@@ -10,7 +10,6 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {
         public LuaExpressionSyntax Expression { get; }
-        public string SemicolonToken => Tokens.Semicolon;
 
         public LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
             if(expression == null) {
@@ -35,7 +34,6 @@ namespace CSharpLua.LuaAst {
     public sealed class LuaReturnStatementSyntax : LuaStatementSyntax {
         public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
         public string ReturnKeyword => Tokens.Return;
-        public string SemicolonToken => Tokens.Semicolon;
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

@@ -56,4 +56,18 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaPrefixUnaryExpressionSyntax : LuaExpressionSyntax {
+        public LuaExpressionSyntax Operand { get; }
+        public string OperatorToken { get; }
+
+        public LuaPrefixUnaryExpressionSyntax(LuaExpressionSyntax operand, string operatorToken) {
+            Operand = operand;
+            OperatorToken = operatorToken;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
 }
