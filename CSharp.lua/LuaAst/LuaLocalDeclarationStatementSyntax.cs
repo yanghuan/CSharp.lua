@@ -47,6 +47,21 @@ namespace CSharpLua.LuaAst {
         }
     }
 
+    public sealed class LuaLocalVariableDeclaratorSyntax : LuaStatementSyntax {
+        public LuaVariableDeclaratorSyntax Declarator { get; }
+
+        public LuaLocalVariableDeclaratorSyntax(LuaVariableDeclaratorSyntax declarator) {
+            if(declarator == null) {
+                throw new ArgumentNullException(nameof(declarator));
+            }
+            Declarator = declarator;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
     public sealed class LuaVariableDeclaratorSyntax : LuaStatementSyntax {
         public string LocalKeyword => Tokens.Local;
         public LuaIdentifierNameSyntax Identifier { get; }

@@ -23,6 +23,7 @@ namespace CSharpLua.LuaAst {
             public const string Dot = ".";
             public const string Quote = "\"";
             public new const string Equals = " = ";
+            public const string EqualsEquals = "==";
         }
 
         public class Keyword {
@@ -44,6 +45,7 @@ namespace CSharpLua.LuaAst {
             public const string While = "while";
             public const string Repeat = "repeat";
             public const string Until = "until";
+            public const string Break = "break";
         }
     }
 

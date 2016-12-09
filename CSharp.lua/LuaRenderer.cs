@@ -296,6 +296,11 @@ namespace CSharpLua {
             Write(node.SemicolonToken);
         }
 
+        internal void Render(LuaLocalVariableDeclaratorSyntax node) {
+            node.Declarator.Render(this);
+            WriteNewLine();
+        }
+
         internal void Render(LuaBinaryExpressionSyntax node) {
             node.Left.Render(this);
             WriteSpace();
@@ -370,6 +375,17 @@ namespace CSharpLua {
             Write(node.UntilKeyword);
             WriteSpace();
             node.Condition.Render(this);
+            Write(node.SemicolonToken);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaSwitchAdapterStatementSyntax node) {
+            node.Body.Render(this);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaBreakStatementSyntax node) {
+            Write(node.BreakKeyword);
             Write(node.SemicolonToken);
             WriteNewLine();
         }

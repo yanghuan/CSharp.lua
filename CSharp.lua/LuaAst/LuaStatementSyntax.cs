@@ -40,4 +40,12 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaBreakStatementSyntax : LuaStatementSyntax {
+        public string BreakKeyword => Tokens.Break;
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
 }

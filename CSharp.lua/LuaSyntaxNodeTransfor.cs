@@ -363,7 +363,7 @@ namespace CSharpLua {
             }
         }
 
-        #region if else
+        #region if else switch
 
         public override LuaSyntaxNode VisitIfStatement(IfStatementSyntax node) {
             var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
@@ -387,7 +387,46 @@ namespace CSharpLua {
             return elseClause;
         }
 
+        public override LuaSyntaxNode VisitSwitchStatement(SwitchStatementSyntax node) {
+            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            LuaSwitchAdapterStatementSyntax switchStatement = new LuaSwitchAdapterStatementSyntax(expression, node.Sections.Select(i => (LuaStatementSyntax)i.Accept(this)));
+            return switchStatement;
+        }
+
+        public override LuaSyntaxNode VisitSwitchSection(SwitchSectionSyntax node) {
+            bool isDefault = node.Labels.Any(i => i.Kind() == SyntaxKind.DefaultSwitchLabel);
+            if(isDefault) {
+                LuaBlockSyntax block = new LuaBlockSyntax();
+                foreach(var statement in node.Statements) {
+                    var luaStatement = (LuaStatementSyntax)statement.Accept(this);
+                    block.Statements.Add(luaStatement);
+                }
+                return block;
+            }
+            else {
+                var expressions = node.Labels.Select(i => (LuaExpressionSyntax)i.Accept(this));
+                var condition = expressions.Aggregate((x, y) => new LuaBinaryExpressionSyntax(x, LuaSyntaxNode.Tokens.Or, y));
+                LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
+                foreach(var statement in node.Statements) {
+                    var luaStatement = (LuaStatementSyntax)statement.Accept(this);
+                    ifStatement.Body.Statements.Add(luaStatement);
+                }
+                return ifStatement;
+            }
+        }
+
+        public override LuaSyntaxNode VisitCaseSwitchLabel(CaseSwitchLabelSyntax node) {
+            var left = LuaIdentifierNameSyntax.Temp1;
+            var right = (LuaExpressionSyntax)node.Value.Accept(this);
+            LuaBinaryExpressionSyntax BinaryExpression = new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.EqualsEquals, right);
+            return BinaryExpression;
+        }
+
         #endregion
+
+        public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {
+            return new LuaBreakStatementSyntax();
+        }
 
         public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
             var left = (LuaExpressionSyntax)node.Left.Accept(this);
