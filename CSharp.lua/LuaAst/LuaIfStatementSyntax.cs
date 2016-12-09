@@ -83,7 +83,7 @@ namespace CSharpLua.LuaAst {
             }
             else {
                 if(defaultBock != null) {
-                    Body.Statements.Add(defaultBock);
+                    Body.Statements.AddRange(defaultBock.Statements);
                 }
             }
         }
