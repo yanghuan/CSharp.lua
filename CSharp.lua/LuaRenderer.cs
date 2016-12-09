@@ -389,5 +389,16 @@ namespace CSharpLua {
             Write(node.SemicolonToken);
             WriteNewLine();
         }
+
+        internal void Render(LuaBlockBlockSyntax node) {
+            node.Body.Render(this);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaBlankLinesStatement node) {
+            for(int i = 0; i < node.Count; ++i) {
+                WriteNewLine();
+            }
+        }
     }
 }

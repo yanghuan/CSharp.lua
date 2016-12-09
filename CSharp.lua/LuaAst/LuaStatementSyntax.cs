@@ -7,6 +7,24 @@ using System.Threading.Tasks;
 namespace CSharpLua.LuaAst {
     public abstract class LuaStatementSyntax : LuaSyntaxNode {
         public string SemicolonToken => Tokens.Semicolon;
+
+        private sealed class EmptyLuaStatementSyntax : LuaStatementSyntax {
+            internal override void Render(LuaRenderer renderer) {
+            }
+        }
+        public readonly static LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
+    }
+
+    public sealed class LuaBlankLinesStatement : LuaStatementSyntax {
+        public int Count { get; }
+
+        public LuaBlankLinesStatement(int count) {
+            Count = count;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
     }
 
     public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {

@@ -14,4 +14,22 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaBlockBlockSyntax : LuaStatementSyntax {
+        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
+            OpenBraceToken = Tokens.Do,
+            CloseBraceToken = Tokens.End,
+        };
+
+        public LuaBlockBlockSyntax(LuaBlockSyntax block) {
+            if(block == null) {
+                throw new ArgumentNullException(nameof(block));
+            }
+            Body.Statements.AddRange(block.Statements);
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
 }

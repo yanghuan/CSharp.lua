@@ -163,15 +163,36 @@ namespace CSharpLua {
             return new LuaParameterSyntax(identifier);
         }
 
+        private void WriteBlankLines(LuaBlockSyntax block, StatementSyntax prev, StatementSyntax cur) {
+            if(prev != null) {
+                var tree = prev.SyntaxTree;
+                int prevLine = tree.GetLineSpan(prev.Span).EndLinePosition.Line;
+                int curLine = tree.GetLineSpan(cur.Span).StartLinePosition.Line;
+                int count = curLine - prevLine - 1;
+                if(count > 0) {
+                    block.Statements.Add(new LuaBlankLinesStatement(count));
+                }
+            }
+        }
+
         public override LuaSyntaxNode VisitBlock(BlockSyntax node) {
-            LuaBlockSyntax blockNode = new LuaBlockSyntax();
-            blocks_.Push(blockNode);
+            LuaBlockSyntax block = new LuaBlockSyntax();
+            blocks_.Push(block);
+            StatementSyntax prev = null;
             foreach(var statement in node.Statements) {
+                WriteBlankLines(block, prev, statement);
                 LuaStatementSyntax statementNode = (LuaStatementSyntax)statement.Accept(this);
-                blockNode.Statements.Add(statementNode);
+                block.Statements.Add(statementNode);
+                prev = statement;
             }
             blocks_.Pop();
-            return blockNode;
+            SyntaxKind kind = node.Parent.Kind();
+            if(kind == SyntaxKind.Block || kind == SyntaxKind.SwitchSection) {
+                return new LuaBlockBlockSyntax(block);
+            }
+            else {
+                return block;
+            }
         }
 
         public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
@@ -424,8 +445,19 @@ namespace CSharpLua {
 
         #endregion
 
-        public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {
-            return new LuaBreakStatementSyntax();
+        public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {     
+            var parent = node.Parent;
+            do {
+                SyntaxKind kind = parent.Kind();
+                if(kind == SyntaxKind.SwitchSection) {
+                    return LuaStatementSyntax.Empty;
+                }
+                else if(kind >= SyntaxKind.WhileStatement && kind <= SyntaxKind.ForEachStatement) {
+                    return new LuaBreakStatementSyntax();
+                }
+                parent = parent.Parent;
+            } while(parent != null);
+            throw new InvalidOperationException();
         }
 
         public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {

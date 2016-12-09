@@ -66,23 +66,23 @@ namespace CSharpLua.LuaAst {
                 if(statement != null) {
                     if(ifStatement != null) {
                         ifStatement.Else = new LuaElseClauseSyntax(statement);
-                        ifStatement = statement;
                     }
-                    else {
-                        ifStatement = statement;
-                    }
+                    ifStatement = statement;
                 }
                 else {
                     Contract.Assert(defaultBock == null);
                     defaultBock = (LuaBlockSyntax)section;
                 }
             }
-            if(defaultBock != null) {
-                if(ifStatement != null) {
+
+            if(ifStatement != null) {
+                if(defaultBock != null) {
                     ifStatement.Else = new LuaElseClauseSyntax(defaultBock);
-                    Body.Statements.Add(ifStatement);
                 }
-                else {
+                Body.Statements.Add(ifStatement);
+            }
+            else {
+                if(defaultBock != null) {
                     Body.Statements.Add(defaultBock);
                 }
             }
