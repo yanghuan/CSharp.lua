@@ -12,6 +12,7 @@ namespace CSharpLua.LuaAst {
 
         public class Tokens : Keyword {
             public static string Empty => string.Empty;
+            public static string Semicolon => LuaRenderer.Setting.HasSemicolon ? ";" : Empty;
             public const string OpenParentheses = "(";
             public const string CloseParentheses = ")";
             public const string OpenBrace = "{";

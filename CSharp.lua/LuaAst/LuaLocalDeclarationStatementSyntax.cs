@@ -47,7 +47,7 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaVariableDeclaratorSyntax : LuaSyntaxNode {
+    public sealed class LuaVariableDeclaratorSyntax : LuaStatementSyntax {
         public string LocalKeyword => Tokens.Local;
         public LuaIdentifierNameSyntax Identifier { get; }
         public LuaEqualsValueClauseSyntax Initializer { get; set; }

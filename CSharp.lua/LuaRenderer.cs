@@ -7,11 +7,13 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
     public sealed class LuaRenderer {
         public static class Setting {
+            public static bool HasSemicolon { get; set; }
             private static int indent_;
             public static string IndentString;
 
             static Setting() {
                 Indent = 4;
+                HasSemicolon = true;
             }
 
             public static int Indent {
@@ -77,6 +79,7 @@ namespace CSharpLua {
 
         internal void Render(LuaExpressionStatementSyntax node) {
             node.Expression.Render(this);
+            Write(node.SemicolonToken);
             WriteNewLine();
         }
 
@@ -171,6 +174,7 @@ namespace CSharpLua {
                 WriteSpace();
                 WriteSeparatedSyntaxList(node.Variables);
                 node.Initializer?.Render(this);
+                Write(node.SemicolonToken);
                 WriteNewLine();
             }
         }
@@ -200,6 +204,7 @@ namespace CSharpLua {
                     isFirst = false;
                 }
                 else {
+                    Write(LuaSyntaxNode.Tokens.Semicolon);
                     WriteSpace();
                 }
                 assignment.Render(this);
@@ -212,6 +217,7 @@ namespace CSharpLua {
                 WriteSpace();
                 WriteSeparatedSyntaxList(node.Expressions);
             }
+            Write(node.SemicolonToken);
             WriteNewLine();
         }
 
@@ -287,6 +293,7 @@ namespace CSharpLua {
             WriteSpace();
             node.Identifier.Render(this);
             node.Initializer?.Render(this);
+            Write(node.SemicolonToken);
         }
 
         internal void Render(LuaBinaryExpressionSyntax node) {
@@ -363,6 +370,7 @@ namespace CSharpLua {
             Write(node.UntilKeyword);
             WriteSpace();
             node.Condition.Render(this);
+            Write(node.SemicolonToken);
             WriteNewLine();
         }
     }

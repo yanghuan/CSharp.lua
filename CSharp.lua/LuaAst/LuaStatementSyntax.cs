@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
     public abstract class LuaStatementSyntax : LuaSyntaxNode {
+        public string SemicolonToken => Tokens.Semicolon;
     }
 
     public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {
