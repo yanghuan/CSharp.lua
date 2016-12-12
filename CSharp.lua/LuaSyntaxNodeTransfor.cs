@@ -213,28 +213,34 @@ namespace CSharpLua {
             return new LuaParameterSyntax(identifier);
         }
 
-        private void WriteBlankLines(LuaBlockSyntax block, StatementSyntax prev, StatementSyntax cur) {
+        private void VisitBlankLinesAndComment(LuaBlockSyntax block, StatementSyntax prev, StatementSyntax cur, List<SyntaxTrivia> comments) {
             if(prev != null) {
                 var tree = prev.SyntaxTree;
                 int prevLine = tree.GetLineSpan(prev.Span).EndLinePosition.Line;
                 int curLine = tree.GetLineSpan(cur.Span).StartLinePosition.Line;
                 int count = curLine - prevLine - 1;
                 if(count > 0) {
+                    foreach(var comment in comments) {
+
+                    }
                     block.Statements.Add(new LuaBlankLinesStatement(count));
                 }
             }
         }
 
         public override LuaSyntaxNode VisitBlock(BlockSyntax node) {
+            var comments = node.DescendantTrivia().Where(i => i.IsKind(SyntaxKind.SingleLineCommentTrivia) || i.IsKind(SyntaxKind.MultiLineCommentTrivia)).ToList();
+
             LuaBlockSyntax block = new LuaBlockSyntax();
             blocks_.Push(block);
             StatementSyntax prev = null;
             foreach(var statement in node.Statements) {
-                WriteBlankLines(block, prev, statement);
+                VisitBlankLinesAndComment(block, prev, statement, comments);
                 LuaStatementSyntax statementNode = (LuaStatementSyntax)statement.Accept(this);
                 block.Statements.Add(statementNode);
                 prev = statement;
             }
+
             blocks_.Pop();
             SyntaxKind kind = node.Parent.Kind();
             if(kind == SyntaxKind.Block || kind == SyntaxKind.SwitchSection) {
@@ -293,9 +299,8 @@ namespace CSharpLua {
             }
         }
 
-        private LuaSyntaxNode CheckInvokeRefOrOut(InvocationExpressionSyntax node, LuaInvocationExpressionSyntax invocatione, List<LuaArgumentSyntax> refOrOutArguments) {
-            SyntaxKind kind = node.Parent.Kind();
-            if(kind == SyntaxKind.ExpressionStatement) {
+        private LuaSyntaxNode BuildInvokeRefOrOut(InvocationExpressionSyntax node, LuaInvocationExpressionSyntax invocatione, List<LuaArgumentSyntax> refOrOutArguments) {
+            if(node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
                 LuaMultipleAssignmentExpressionSyntax multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
                 SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
                 IMethodSymbol symbol = (IMethodSymbol)symbolInfo.Symbol;
@@ -339,7 +344,7 @@ namespace CSharpLua {
             invocation.ArgumentList.Arguments.AddRange(arguments);
 
             if(refOrOutArguments.Count > 0) {
-                return CheckInvokeRefOrOut(node, invocation, refOrOutArguments);
+                return BuildInvokeRefOrOut(node, invocation, refOrOutArguments);
             }
             return invocation;
         }

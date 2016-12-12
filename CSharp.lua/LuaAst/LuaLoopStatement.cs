@@ -56,6 +56,35 @@ namespace CSharpLua.LuaAst {
         }
     }
 
+    /*
+    public sealed class LuaForAdapterStatementSyntax : LuaStatementSyntax {
+        public LuaForAdapterStatementSyntax(
+            LuaVariableDeclarationSyntax declaration, 
+            IEnumerable<LuaExpressionStatementSyntax> initializers, 
+            LuaExpressionSyntax condition, 
+            LuaBlockSyntax statementBlock, 
+            IEnumerable<LuaExpressionStatementSyntax> incrementors) {
+
+            if(declaration != null) {
+                Body.Statements.Add(declaration);
+            }
+            Body.Statements.AddRange(initializers);
+            LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition ?? LuaIdentifierNameSyntax.True);
+            whileStatement.Body.Statements.AddRange(statementBlock.Statements);
+            whileStatement.Body.Statements.AddRange(incrementors);
+            Body.Statements.Add(whileStatement);
+        }
+
+        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
+            OpenBraceToken = Tokens.Do,
+            CloseBraceToken = Tokens.End,
+        };
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }*/
+
     public sealed class LuaRepeatStatementSyntax : LuaStatementSyntax {
         public LuaExpressionSyntax Condition { get; }
         public string RepeatKeyword => Tokens.Repeat;
