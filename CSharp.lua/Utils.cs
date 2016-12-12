@@ -81,12 +81,6 @@ namespace CSharpLua {
             return Path.Combine(Environment.CurrentDirectory, path);
         }
 
-        public static string Move(string directory, string lib) {
-            string path = Path.Combine(directory, Path.GetFileName(lib));
-            File.Copy(lib, path, true);
-            return path;
-        }
-
         public static string[] SplitPaths(string path) {
             HashSet<string> list = new HashSet<string>();
             if(!string.IsNullOrEmpty(path)) {

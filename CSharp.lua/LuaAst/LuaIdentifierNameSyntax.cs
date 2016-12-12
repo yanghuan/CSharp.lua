@@ -23,6 +23,9 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax True = new LuaIdentifierNameSyntax("true");
         public readonly static LuaIdentifierNameSyntax Throw = new LuaIdentifierNameSyntax("System.throw");
         public readonly static LuaIdentifierNameSyntax Each = new LuaIdentifierNameSyntax("System.each");
+        public readonly static LuaIdentifierNameSyntax YieldReturn = new LuaIdentifierNameSyntax("System.yieldReturn");
+        public readonly static LuaIdentifierNameSyntax Object = new LuaIdentifierNameSyntax("System.Object");
+        public readonly static LuaIdentifierNameSyntax One = new LuaIdentifierNameSyntax("1");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;
