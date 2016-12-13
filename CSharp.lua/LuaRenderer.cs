@@ -401,5 +401,18 @@ namespace CSharpLua {
                 WriteNewLine();
             }
         }
+
+        internal void Render(LuaShortCommentStatement node) {
+            Write(node.SingleCommentToken);
+            Write(node.Comment);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaLongCommentStatement node) {
+            Write(node.OpenLongCommentToken);
+            Write(node.Comment);
+            Write(node.CloseLongCommentToken);
+            WriteNewLine();
+        }
     }
 }

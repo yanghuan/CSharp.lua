@@ -213,32 +213,72 @@ namespace CSharpLua {
             return new LuaParameterSyntax(identifier);
         }
 
-        private void VisitBlankLinesAndComment(LuaBlockSyntax block, StatementSyntax prev, StatementSyntax cur, List<SyntaxTrivia> comments) {
-            if(prev != null) {
-                var tree = prev.SyntaxTree;
-                int prevLine = tree.GetLineSpan(prev.Span).EndLinePosition.Line;
-                int curLine = tree.GetLineSpan(cur.Span).StartLinePosition.Line;
-                int count = curLine - prevLine - 1;
-                if(count > 0) {
-                    foreach(var comment in comments) {
+        private sealed class BlockCommonNode : IComparable<BlockCommonNode> {
+            const int kCommentCharCount = 2;
+            public SyntaxTrivia Comment { get; }
+            public StatementSyntax Statement { get; }
+            public FileLinePositionSpan LineSpan { get; }
 
+            public BlockCommonNode(SyntaxTrivia comment) {
+                Comment = comment;
+                LineSpan = comment.SyntaxTree.GetLineSpan(comment.Span);
+            }
+
+            public BlockCommonNode(StatementSyntax statement) {
+                Statement = statement;
+                LineSpan = statement.SyntaxTree.GetLineSpan(statement.Span);
+            }
+
+            public int CompareTo(BlockCommonNode other) {
+                return LineSpan.StartLinePosition.CompareTo(other.LineSpan.StartLinePosition);
+            }
+
+            public void Visit(LuaSyntaxNodeTransfor transfor, LuaBlockSyntax block, ref int lastLine) {
+                if(lastLine != -1) {
+                    int count = LineSpan.StartLinePosition.Line - lastLine - 1;
+                    if(count > 0) {
+                        block.Statements.Add(new LuaBlankLinesStatement(count));
                     }
-                    block.Statements.Add(new LuaBlankLinesStatement(count));
                 }
+
+                if(Statement != null) {
+                    LuaStatementSyntax statementNode = (LuaStatementSyntax)Statement.Accept(transfor);
+                    block.Statements.Add(statementNode);
+                }
+                else {
+                    string content = Comment.ToString();
+                    if(Comment.IsKind(SyntaxKind.SingleLineCommentTrivia)) {
+                        string commentContent = content.Substring(kCommentCharCount);
+                        LuaShortCommentStatement singleComment = new LuaShortCommentStatement(commentContent);
+                        block.Statements.Add(singleComment);
+                    }
+                    else {
+                        string commentContent = content.Substring(kCommentCharCount, content.Length - kCommentCharCount - kCommentCharCount);
+                        LuaLongCommentStatement longComment = new LuaLongCommentStatement(commentContent);
+                        block.Statements.Add(longComment);
+                    }
+                }
+
+                lastLine = LineSpan.EndLinePosition.Line;
             }
         }
 
         public override LuaSyntaxNode VisitBlock(BlockSyntax node) {
-            var comments = node.DescendantTrivia().Where(i => i.IsKind(SyntaxKind.SingleLineCommentTrivia) || i.IsKind(SyntaxKind.MultiLineCommentTrivia)).ToList();
-
             LuaBlockSyntax block = new LuaBlockSyntax();
             blocks_.Push(block);
-            StatementSyntax prev = null;
-            foreach(var statement in node.Statements) {
-                VisitBlankLinesAndComment(block, prev, statement, comments);
-                LuaStatementSyntax statementNode = (LuaStatementSyntax)statement.Accept(this);
-                block.Statements.Add(statementNode);
-                prev = statement;
+
+            var comments = node.DescendantTrivia().Where(i => i.IsKind(SyntaxKind.SingleLineCommentTrivia) || i.IsKind(SyntaxKind.MultiLineCommentTrivia));
+            List<BlockCommonNode> commonNodes = new List<BlockCommonNode>();
+            commonNodes.AddRange(comments.Select(i => new BlockCommonNode(i)));
+            bool hasComments = commonNodes.Count > 0;
+            commonNodes.AddRange(node.Statements.Select(i => new BlockCommonNode(i)));
+            if(hasComments) {
+                commonNodes.Sort();
+            }
+
+            int lastLine = -1;
+            foreach(var common in commonNodes) {
+                common.Visit(this, block, ref lastLine);
             }
 
             blocks_.Pop();
@@ -334,7 +374,7 @@ namespace CSharpLua {
                 var luaArgument = (LuaArgumentSyntax)argument.Accept(this);
                 arguments.Add(luaArgument);
                 string refOrOutKeyword = argument.RefOrOutKeyword.ValueText;
-                if(refOrOutKeyword == LuaSyntaxNode.Keyword.Ref || refOrOutKeyword == LuaSyntaxNode.Keyword.Out) {
+                if(refOrOutKeyword == LuaSyntaxNode.Tokens.Ref || refOrOutKeyword == LuaSyntaxNode.Tokens.Out) {
                     refOrOutArguments.Add(luaArgument);
                 }
             }

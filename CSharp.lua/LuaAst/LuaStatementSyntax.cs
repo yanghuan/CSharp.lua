@@ -15,18 +15,6 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
     }
 
-    public sealed class LuaBlankLinesStatement : LuaStatementSyntax {
-        public int Count { get; }
-
-        public LuaBlankLinesStatement(int count) {
-            Count = count;
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-    }
-
     public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {
         public LuaExpressionSyntax Expression { get; }
 
@@ -61,6 +49,45 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaBreakStatementSyntax : LuaStatementSyntax {
         public string BreakKeyword => Tokens.Break;
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaBlankLinesStatement : LuaStatementSyntax {
+        public int Count { get; }
+
+        public LuaBlankLinesStatement(int count) {
+            Count = count;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaShortCommentStatement : LuaStatementSyntax {
+        public string SingleCommentToken => Tokens.ShortComment;
+        public string Comment { get; }
+
+        public LuaShortCommentStatement(string comment) {
+            Comment = comment;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaLongCommentStatement : LuaStatementSyntax {
+        public string OpenLongCommentToken => Tokens.OpenLongComment;
+        public string Comment { get; }
+        public string CloseLongCommentToken => Tokens.CloseLongComment;
+
+        public LuaLongCommentStatement(string comment) {
+            Comment = comment;
+        }
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

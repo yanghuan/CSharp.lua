@@ -24,9 +24,14 @@ namespace CSharpLua.LuaAst {
             public const string Quote = "\"";
             public new const string Equals = " = ";
             public const string EqualsEquals = "==";
+            public const string Ref = "ref";
+            public const string Out = "out";
             public const string Yield = "yield";
             public const string Plus = "+";
             public const string Sub = "-";
+            public const string ShortComment = "--";
+            public const string OpenLongComment = "--[[";
+            public const string CloseLongComment = "--]]";
         }
 
         public class Keyword {
@@ -34,8 +39,6 @@ namespace CSharpLua.LuaAst {
             public const string End = "end";
             public const string Return = "return";
             public const string Local = "local";
-            public const string Ref = "ref";
-            public const string Out = "out";
             public const string If = "if";
             public const string Then = "then";
             public const string Else = "else";
