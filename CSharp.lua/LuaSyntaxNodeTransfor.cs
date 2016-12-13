@@ -649,15 +649,14 @@ namespace CSharpLua {
             LuaBlockSyntax body = new LuaBlockSyntax();
             blocks_.Push(body);
 
-            var declaration = (LuaVariableDeclarationSyntax)node.Declaration?.Accept(this);
-            if(declaration != null) {
-                body.Statements.Add(declaration);
+            if(node.Declaration != null) {
+                body.Statements.Add((LuaVariableDeclarationSyntax)node.Declaration.Accept(this));
             }
             var initializers = node.Initializers.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
             body.Statements.AddRange(initializers);
 
-            var condition = (LuaExpressionSyntax)node.Condition?.Accept(this);
-            LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition ?? LuaIdentifierNameSyntax.True);
+            LuaExpressionSyntax condition = node.Condition != null ? (LuaExpressionSyntax)node.Condition.Accept(this) : LuaIdentifierNameSyntax.True;
+            LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
             blocks_.Push(whileStatement.Body);
             WriteStatementOrBlock(node.Statement, whileStatement.Body);
             var incrementors = node.Incrementors.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
