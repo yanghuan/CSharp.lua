@@ -81,9 +81,9 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaLongCommentStatement : LuaStatementSyntax {
-        public string OpenLongCommentToken => Tokens.OpenLongComment;
+        public string OpenCommentToken => Tokens.OpenLongComment;
         public string Comment { get; }
-        public string CloseLongCommentToken => Tokens.CloseLongComment;
+        public string CloseCommentToken => Tokens.CloseLongComment;
 
         public LuaLongCommentStatement(string comment) {
             Comment = comment;

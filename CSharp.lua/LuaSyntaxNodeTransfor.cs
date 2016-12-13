@@ -436,7 +436,12 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node) {
-            return new LuaLiteralExpressionSyntax(node.Token.Text);
+            if(node.IsKind(SyntaxKind.CharacterLiteralExpression)) {
+                return new LuaCharacterLiteralExpression((char)node.Token.Value);
+            }
+            else {
+                return new LuaLiteralExpressionSyntax(node.Token.Text);
+            }
         }
 
         public override LuaSyntaxNode VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {

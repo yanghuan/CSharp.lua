@@ -162,6 +162,12 @@ namespace CSharpLua {
             Write(node.CloseParenToken);
         }
 
+        internal void Render(LuaCharacterLiteralExpression node) {
+            Write(((int)node.Character).ToString());
+            WriteSpace();
+            Write($"{node.OpenCommentToken} '{node.Character}' {node.CloseCommentToken}");
+        }
+
         internal void Render(LuaStatementListSyntax node) {
             foreach(var statement in node.Statements) {
                 statement.Render(this);
@@ -409,9 +415,9 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaLongCommentStatement node) {
-            Write(node.OpenLongCommentToken);
+            Write(node.OpenCommentToken);
             Write(node.Comment);
-            Write(node.CloseLongCommentToken);
+            Write(node.CloseCommentToken);
             WriteNewLine();
         }
     }
