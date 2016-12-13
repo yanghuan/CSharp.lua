@@ -24,8 +24,6 @@ namespace CSharpLua.LuaAst {
             public const string Quote = "\"";
             public new const string Equals = " = ";
             public const string EqualsEquals = "==";
-            public const string Ref = "ref";
-            public const string Out = "out";
             public const string Yield = "yield";
             public const string Plus = "+";
             public const string Sub = "-";

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -155,48 +156,51 @@ namespace CSharpLua {
             return newNode;
         }
 
-        private void CheckYield(MethodDeclarationSyntax node, LuaFunctionExpressSyntax function) {
-            if(function.HasYield) {
-                var nameSyntax = (SimpleNameSyntax)node.ReturnType;
-                string name = LuaSyntaxNode.Tokens.Yield + nameSyntax.Identifier.ValueText;
-                LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
-                LuaInvocationExpressionSyntax invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
-                LuaFunctionExpressSyntax wrapFunction = new LuaFunctionExpressSyntax();
+        private void VisitYield(MethodDeclarationSyntax node, LuaFunctionExpressSyntax function) {
+            Contract.Assert(function.HasYield);
 
-                var parameters = function.ParameterList.Parameters;
-                wrapFunction.ParameterList.Parameters.AddRange(parameters);
-                wrapFunction.Body.Statements.AddRange(function.Body.Statements);
-                invokeExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(wrapFunction));
-                if(node.ReturnType.Kind() == SyntaxKind.GenericName) {
-                    var genericNameSyntax = (GenericNameSyntax)nameSyntax;
-                    var typeName = genericNameSyntax.TypeArgumentList.Arguments.First();
-                    var expression = (LuaExpressionSyntax)typeName.Accept(this);
-                    invokeExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(expression));
-                }
-                else {
-                    invokeExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(LuaIdentifierNameSyntax.Object));
-                }
-                invokeExpression.ArgumentList.Arguments.AddRange(parameters.Select(i => new LuaArgumentSyntax(i.Identifier)));
+            var nameSyntax = (SimpleNameSyntax)node.ReturnType;
+            string name = LuaSyntaxNode.Tokens.Yield + nameSyntax.Identifier.ValueText;
+            LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
+            LuaInvocationExpressionSyntax invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
+            LuaFunctionExpressSyntax wrapFunction = new LuaFunctionExpressSyntax();
 
-                LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax();
-                returnStatement.Expressions.Add(invokeExpression);
-                function.Body.Statements.Clear();
-                function.Body.Statements.Add(returnStatement);
+            var parameters = function.ParameterList.Parameters;
+            wrapFunction.ParameterList.Parameters.AddRange(parameters);
+            wrapFunction.Body.Statements.AddRange(function.Body.Statements);
+            invokeExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(wrapFunction));
+            if(node.ReturnType.Kind() == SyntaxKind.GenericName) {
+                var genericNameSyntax = (GenericNameSyntax)nameSyntax;
+                var typeName = genericNameSyntax.TypeArgumentList.Arguments.First();
+                var expression = (LuaExpressionSyntax)typeName.Accept(this);
+                invokeExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(expression));
             }
+            else {
+                invokeExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(LuaIdentifierNameSyntax.Object));
+            }
+            invokeExpression.ArgumentList.Arguments.AddRange(parameters.Select(i => new LuaArgumentSyntax(i.Identifier)));
+
+            LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax();
+            returnStatement.Expressions.Add(invokeExpression);
+            function.Body.Statements.Clear();
+            function.Body.Statements.Add(returnStatement);
         }
 
         public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
             LuaIdentifierNameSyntax nameNode = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-            LuaFunctionExpressSyntax functionNode = new LuaFunctionExpressSyntax();
-            functions_.Push(functionNode);
+            LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
+            functions_.Push(function);
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
-            functionNode.ParameterList.Parameters.AddRange(parameterList.Parameters);
+            function.ParameterList.Parameters.AddRange(parameterList.Parameters);
             LuaBlockSyntax blockNode = (LuaBlockSyntax)node.Body.Accept(this);
-            functionNode.Body.Statements.AddRange(blockNode.Statements);
-            CurType.AddMethod(nameNode, functionNode);
+            function.Body.Statements.AddRange(blockNode.Statements);
+            if(function.HasYield) {
+                VisitYield(node, function);
+            }
             functions_.Pop();
-            CheckYield(node, functionNode);
-            return functionNode;
+            bool isPrivate = node.Modifiers.Any(i => i.IsKind(SyntaxKind.PrivateKeyword));
+            CurType.AddMethod(nameNode, function, isPrivate);
+            return function;
         }
 
         public override LuaSyntaxNode VisitParameterList(ParameterListSyntax node) {
@@ -373,8 +377,7 @@ namespace CSharpLua {
             foreach(var argument in node.ArgumentList.Arguments) {
                 var luaArgument = (LuaArgumentSyntax)argument.Accept(this);
                 arguments.Add(luaArgument);
-                string refOrOutKeyword = argument.RefOrOutKeyword.ValueText;
-                if(refOrOutKeyword == LuaSyntaxNode.Tokens.Ref || refOrOutKeyword == LuaSyntaxNode.Tokens.Out) {
+                if(argument.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || argument.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
                     refOrOutArguments.Add(luaArgument);
                 }
             }

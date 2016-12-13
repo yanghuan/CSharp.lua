@@ -18,12 +18,14 @@ namespace CSharpLua.LuaAst {
             Add(returnNode);
         }
 
-        public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax method) {
+        public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax method, bool isPrivate) {
             Local.Variables.Add(name);
             LuaAssignmentExpressionSyntax assignmentNode = new LuaAssignmentExpressionSyntax(name, method);
             MethodList.Statements.Add(new LuaExpressionStatementSyntax(assignmentNode));
-            LuaKeyValueTableItemSyntax itemNode = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), name);
-            ResultTable.Items.Add(itemNode);
+            if(!isPrivate) {
+                LuaKeyValueTableItemSyntax itemNode = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), name);
+                ResultTable.Items.Add(itemNode);
+            }
         }
     }
 
