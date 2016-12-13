@@ -6,17 +6,18 @@ using System.Text;
 
 namespace CSharpLua.LuaAst {
     public abstract class LuaWrapFunctionStatementSynatx : LuaStatementSyntax {
-        private LuaInvocationExpressionSyntax invokeNode_;
+        public LuaExpressionStatementSyntax Statement { get; private set; }
         private LuaFunctionExpressSyntax functionNode_ = new LuaFunctionExpressSyntax();
 
         protected void UpdateIdentifiers(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax target, LuaIdentifierNameSyntax memberName, LuaIdentifierNameSyntax parameter = null) {
-            LuaMemberAccessExpressionSyntax memberAccessNode = new LuaMemberAccessExpressionSyntax(target, memberName);
-            invokeNode_ = new LuaInvocationExpressionSyntax(memberAccessNode);
-            invokeNode_.ArgumentList.Arguments.Add(new LuaArgumentSyntax(new LuaStringLiteralExpressionSyntax(name)));
-            invokeNode_.ArgumentList.Arguments.Add(new LuaArgumentSyntax(functionNode_));
+            LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(target, memberName);
+            LuaInvocationExpressionSyntax invoke = new LuaInvocationExpressionSyntax(memberAccess);
+            invoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(new LuaStringLiteralExpressionSyntax(name)));
+            invoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(functionNode_));
             if(parameter != null) {
                 functionNode_.ParameterList.Parameters.Add(new LuaParameterSyntax(parameter));
             }
+            Statement = new LuaExpressionStatementSyntax(invoke);
         }
 
         public void Add(LuaStatementSyntax statement) {
@@ -24,8 +25,7 @@ namespace CSharpLua.LuaAst {
         }
 
         internal override void Render(LuaRenderer renderer) {
-            LuaExpressionStatementSyntax node = new LuaExpressionStatementSyntax(invokeNode_);
-            node.Render(renderer);
+            renderer.Render(this);
         }
     }
 }

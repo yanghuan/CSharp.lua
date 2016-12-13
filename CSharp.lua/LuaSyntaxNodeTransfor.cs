@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 
 namespace CSharpLua {
-    public sealed class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
+    public sealed partial class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
         private SemanticModel semanticModel_;
         private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
         private Stack<LuaNamespaceDeclarationSyntax> namespaces_ = new Stack<LuaNamespaceDeclarationSyntax>();
@@ -678,14 +678,6 @@ namespace CSharpLua {
             LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Keyword.Not));
             WriteStatementOrBlock(node.Statement, repeatStatement.Body);
             return repeatStatement;
-        }
-
-        public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
-            var type = (LuaExpressionSyntax)node.Type.Accept(this);
-            var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
-            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(type);
-            invocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
-            return invocationExpression;
         }
 
         public override LuaSyntaxNode VisitYieldStatement(YieldStatementSyntax node) {

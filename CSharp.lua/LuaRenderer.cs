@@ -77,6 +77,10 @@ namespace CSharpLua {
             }
         }
 
+        internal void Render(LuaWrapFunctionStatementSynatx node) {
+            node.Statement.Render(this);
+        }
+
         internal void Render(LuaExpressionStatementSyntax node) {
             node.Expression.Render(this);
             Write(node.SemicolonToken);
