@@ -374,12 +374,6 @@ namespace CSharpLua {
             WriteNewLine();
         }
 
-        /*
-        internal void Render(LuaForAdapterStatementSyntax node) {
-            node.Body.Render(this);
-            WriteNewLine();
-        }*/
-
         internal void Render(LuaRepeatStatementSyntax node) {
             Write(node.RepeatKeyword);
             node.Body.Render(this);

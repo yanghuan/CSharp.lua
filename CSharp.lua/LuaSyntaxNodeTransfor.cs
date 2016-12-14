@@ -394,30 +394,15 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node.Name);
-            ISymbol symbol = symbolInfo.Symbol;
-            if(symbol.Kind == SymbolKind.Property) {
-                LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax("get" + symbol.Name);
-                var memberAccess = new LuaMemberAccessExpressionSyntax(expression, name, !symbol.IsStatic);
-                return new LuaInvocationExpressionSyntax(memberAccess);
-            }
-            else {
-                LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(symbol.Name);
-                return new LuaMemberAccessExpressionSyntax(expression, name, !symbol.IsStatic);
-            }
+            var identifierName = (LuaIdentifierNameSyntax)node.Name.Accept(this);
+            return new LuaMemberAccessExpressionSyntax(expression, identifierName);
         }
 
         public override LuaSyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
-            string text;
-            if(symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Parameter || symbol.Kind == SymbolKind.Method) {
-                text = symbol.Name;
-            }
-            else {
-                text = symbol.ContainingNamespace.Name + '.' + symbol.Name;
-            }
-            return new LuaIdentifierNameSyntax(text);
+            string name = symbol.Kind != SymbolKind.NamedType ? symbol.Name : symbol.ContainingNamespace.Name + '.' + symbol.Name;
+            return new LuaIdentifierNameSyntax(name);
         }
 
         public override LuaSyntaxNode VisitArgumentList(ArgumentListSyntax node) {
