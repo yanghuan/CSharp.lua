@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSharpLua {
     public sealed class CmdArgumentException : Exception {
@@ -90,6 +92,42 @@ namespace CSharpLua {
                 }
             }
             return list.ToArray();
+        }
+
+        public static bool IsPrivate(this SyntaxTokenList modifiers) {
+            return modifiers.Any(i => i.IsKind(SyntaxKind.PrivateKeyword));
+        }
+
+        public static bool IsStatic(this SyntaxTokenList modifiers) {
+            return modifiers.Any(i => i.IsKind(SyntaxKind.StaticKeyword));
+        }
+
+        private static ITypeSymbol stringType_;
+        public static bool IsStringType(this ITypeSymbol type) {
+            if(stringType_ != null) {
+                return type == stringType_;
+            }
+            else {
+                bool success = type.IsReferenceType && type.IsDefinition && type.ToString() == "string";
+                if(success) {
+                    stringType_ = type;
+                }
+                return success;
+            }
+        }
+
+        private static ITypeSymbol multicastDelegateType_;
+        public static bool IsDelegateType(this ITypeSymbol type) {
+            if(multicastDelegateType_ != null) {
+                return multicastDelegateType_ == type.BaseType;
+            }
+            else {
+                bool success = type.IsReferenceType && type.BaseType.ToString() == "System.MulticastDelegate";
+                if(success) {
+                    multicastDelegateType_ = type.BaseType;
+                }
+                return success;
+            }
         }
     }
 }

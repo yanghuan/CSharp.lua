@@ -27,20 +27,6 @@ namespace CSharpLua {
             ["??"] = LuaSyntaxNode.Tokens.Or,
         };
 
-        private static readonly Dictionary<string, string> predefinedTypeMapps_ = new Dictionary<string, string>() {
-            ["byte"] = "System.Int",
-            ["sbyte"] = "System.Int",
-            ["short"] = "System.Int",
-            ["ushort"] = "System.Int",
-            ["int"] = "System.Int",
-            ["uint"] = "System.Int",
-            ["long"] = "System.Int",
-            ["ulong"] = "System.Int",
-            ["float"] = "System.Double",
-            ["double"] = "System.Int",
-            ["object"] = "System.Object",
-        };
-
         public LuaSyntaxNodeTransfor(SemanticModel semanticModel) {
             semanticModel_ = semanticModel;
         }
@@ -50,7 +36,28 @@ namespace CSharpLua {
         }
 
         private static string GetPredefinedTypeName(string name) {
-            return predefinedTypeMapps_.GetOrDefault(name, name);
+            switch(name) {
+                case "byte":
+                case "sbyte":
+                case "short":
+                case "ushort":
+                case "int":
+                case "uint":
+                case "long":
+                case "ulong":
+                    return "System.Int";
+                case "float":
+                case "double":
+                    return "System.Double";
+                case "bool":
+                    return "System.Boolean";
+                case "string":
+                    return "System.String";
+                case "object":
+                    return "System.Object";
+                default:
+                    return name;
+            }
         }
 
         private LuaCompilationUnitSyntax CurCompilationUnit {
@@ -187,7 +194,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
-            LuaIdentifierNameSyntax nameNode = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
             LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
             functions_.Push(function);
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
@@ -198,9 +205,65 @@ namespace CSharpLua {
                 VisitYield(node, function);
             }
             functions_.Pop();
-            bool isPrivate = node.Modifiers.Any(i => i.IsKind(SyntaxKind.PrivateKeyword));
-            CurType.AddMethod(nameNode, function, isPrivate);
+            CurType.AddMethod(name, function, node.Modifiers.IsPrivate());
             return function;
+        }
+
+        private static string GetPredefinedTypeDefaultValue(string name) {
+            switch(name) {
+                case "byte":
+                case "sbyte":
+                case "short":
+                case "ushort":
+                case "int":
+                case "uint":
+                case "long":
+                case "ulong":
+                    return 0.ToString();
+                case "float":
+                case "double":
+                    return 0.0.ToString();
+                case "bool":
+                    return false.ToString();
+                default:
+                    return null;
+            }
+        }
+
+        private LuaInvocationExpressionSyntax BuildDefaultValueExpression(TypeSyntax type) {
+            var identifierName = (LuaIdentifierNameSyntax)type.Accept(this);
+            return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(identifierName, LuaIdentifierNameSyntax.Default));
+        }
+
+        public override LuaSyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node) {
+            bool isStatic = node.Modifiers.IsStatic();
+            var type = node.Declaration.Type;
+            ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
+            bool isImmutable = (typeSymbol.IsValueType && typeSymbol.IsDefinition) || typeSymbol.IsStringType() || typeSymbol.IsDelegateType();
+            foreach(var variable in node.Declaration.Variables) {
+                LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(variable.Identifier.ValueText);
+                var valueExpression = (LuaExpressionSyntax)variable.Initializer?.Value.Accept(this);
+                if(valueExpression == null) {
+                    if(typeSymbol.IsValueType) {
+                        if(typeSymbol.IsDefinition) {
+                            string valueText = GetPredefinedTypeDefaultValue(typeSymbol.ToString());
+                            if(valueText != null) {
+                                valueExpression = new LuaIdentifierNameSyntax(valueText);
+                            }
+                            else {
+                                valueExpression = BuildDefaultValueExpression(type);
+                            }
+                        }
+                        else {
+                            valueExpression = BuildDefaultValueExpression(type);
+                        }
+                    }
+                }
+                if(valueExpression != null) {
+                    CurType.AddField(name, valueExpression, isStatic, isImmutable);
+                }
+            }
+            return null;
         }
 
         public override LuaSyntaxNode VisitParameterList(ParameterListSyntax node) {

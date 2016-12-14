@@ -27,6 +27,21 @@ namespace CSharpLua.LuaAst {
                 ResultTable.Items.Add(itemNode);
             }
         }
+
+        public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isStatic, bool isImmutable) {
+            if(isImmutable) {
+                LuaKeyValueTableItemSyntax itemNode = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), value);
+                ResultTable.Items.Add(itemNode);
+            }
+            else {
+                if(isStatic) {
+
+                }
+                else {
+
+                }
+            }
+        }
     }
 
     public sealed class LuaClassDeclarationSyntax : LuaTypeDeclarationSyntax {
