@@ -88,15 +88,15 @@ namespace CSharpLua.LuaAst {
             bool hasStaticInit = staticInitFunction_ != null;
             bool hasStaticCtor = staticCtorFunction_ != null;
 
-            if(hasStaticInit) {
-                if(hasStaticCtor) {
-                    staticCtorFunction_.Body.Statements.InsertRange(0, staticInitFunction_.Body.Statements);                 
+            if(hasStaticCtor) {
+                if(hasStaticInit) {
+                    staticCtorFunction_.Body.Statements.InsertRange(0, staticInitFunction_.Body.Statements);
                 }
                 AddInitFunction(LuaIdentifierNameSyntax.StaticCtor, staticCtorFunction_);
             }
             else {
-                if(hasStaticCtor) {
-                    AddInitFunction(LuaIdentifierNameSyntax.StaticCtor, staticCtorFunction_);
+                if(hasStaticInit) {
+                    AddInitFunction(LuaIdentifierNameSyntax.StaticCtor, staticInitFunction_);
                 }
             }
         }
