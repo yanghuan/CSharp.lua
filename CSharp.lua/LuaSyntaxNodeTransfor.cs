@@ -199,8 +199,8 @@ namespace CSharpLua {
             functions_.Push(function);
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
             function.ParameterList.Parameters.AddRange(parameterList.Parameters);
-            LuaBlockSyntax blockNode = (LuaBlockSyntax)node.Body.Accept(this);
-            function.Body.Statements.AddRange(blockNode.Statements);
+            LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
+            function.Body.Statements.AddRange(block.Statements);
             if(function.HasYield) {
                 VisitYield(node, function);
             }

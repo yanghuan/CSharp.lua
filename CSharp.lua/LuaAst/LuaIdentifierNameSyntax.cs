@@ -31,6 +31,10 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax ObjectCreate = new LuaIdentifierNameSyntax("System.create");
         public readonly static LuaIdentifierNameSyntax ThisAdd = new LuaIdentifierNameSyntax("this:Add");
         public readonly static LuaIdentifierNameSyntax Default = new LuaIdentifierNameSyntax("__default__");
+        public readonly static LuaIdentifierNameSyntax StaticInit = new LuaIdentifierNameSyntax("__staticInit__");
+        public readonly static LuaIdentifierNameSyntax StaticCtor = new LuaIdentifierNameSyntax("__staticCtor__");
+        public readonly static LuaIdentifierNameSyntax Init = new LuaIdentifierNameSyntax("__init__");
+        public readonly static LuaIdentifierNameSyntax Ctor = new LuaIdentifierNameSyntax("__ctor__");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

@@ -46,6 +46,14 @@ namespace CSharpLua {
             return cmds;
         }
 
+        public static T First<T>(this IList<T> list) {
+            return list[0];
+        }
+
+        public static T Last<T>(this IList<T> list) {
+            return list[list.Count - 1];
+        }
+
         public static T GetOrDefault<T>(this IList<T> list, int index, T v = default(T)) {
             return index >= 0 && index < list.Count ? list[index] : v;
         }
