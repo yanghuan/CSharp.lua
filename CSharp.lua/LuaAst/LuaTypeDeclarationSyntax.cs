@@ -65,14 +65,13 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        internal void AddCtor(LuaFunctionExpressSyntax function, bool isStatic) {
-            if(isStatic) {
-                Contract.Assert(staticCtorFunction_ == null);
-                staticCtorFunction_ = function;
-            }
-            else {
-                ctors_.Add(function);
-            }
+        public void SetStaticCtor(LuaFunctionExpressSyntax function) {
+            Contract.Assert(staticCtorFunction_ == null);
+            staticCtorFunction_ = function;
+        }
+
+        public void AddCtor(LuaFunctionExpressSyntax function) {
+            ctors_.Add(function);
         }
 
         private void AddInitFunction(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax initFunction, bool isAddItem = true) {
@@ -123,7 +122,7 @@ namespace CSharpLua.LuaAst {
                     LuaTableInitializerExpression ctrosTable = new LuaTableInitializerExpression();
                     int index = 1;
                     foreach(var ctor in ctors_) {
-                        string name = LuaIdentifierNameSyntax.Ctor.ValueText + index;
+                        string name = SpecailWord(Tokens.Ctor + index);
                         LuaIdentifierNameSyntax nameIdentifier = new LuaIdentifierNameSyntax(name);
                         AddInitFunction(nameIdentifier, ctor, false);
                         ctrosTable.Items.Add(new LuaSingleTableItemSyntax(nameIdentifier));
@@ -143,9 +142,9 @@ namespace CSharpLua.LuaAst {
             AddStaticCtorFunction();
             AddCtorsFunction();
 
-            LuaReturnStatementSyntax returnNode = new LuaReturnStatementSyntax();
-            returnNode.Expressions.Add(resultTable_);
-            Add(returnNode);
+            LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax();
+            returnStatement.Expressions.Add(resultTable_);
+            Add(returnStatement);
             base.Render(renderer);
         }
     }

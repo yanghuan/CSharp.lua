@@ -104,7 +104,13 @@ namespace CSharpLua {
             LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
             function.Body.Statements.AddRange(block.Statements);
             functions_.Pop();
-            CurType.AddCtor(function, node.Modifiers.IsStatic());
+            bool isStatic = node.Modifiers.IsStatic();
+            if(isStatic) {
+                CurType.SetStaticCtor(function);
+            }
+            else {
+                CurType.AddCtor(function);
+            }
             return function;
         }
     }

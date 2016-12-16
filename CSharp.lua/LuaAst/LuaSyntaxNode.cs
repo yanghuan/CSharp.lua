@@ -30,6 +30,7 @@ namespace CSharpLua.LuaAst {
             public const string ShortComment = "--";
             public const string OpenLongComment = "--[[";
             public const string CloseLongComment = "--]]";
+            public const string Ctor = "ctor";
         }
 
         public class Keyword {
@@ -50,6 +51,10 @@ namespace CSharpLua.LuaAst {
             public const string Repeat = "repeat";
             public const string Until = "until";
             public const string Break = "break";
+        }
+
+        public static string SpecailWord(string s) {
+            return "__" + s + "__";
         }
     }
 
