@@ -268,9 +268,7 @@ namespace CSharpLua {
                         }
                     }
                 }
-                if(valueExpression != null) {
-                    CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly);
-                }
+                CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly);
             }
             return null;
         }
@@ -489,7 +487,28 @@ namespace CSharpLua {
                 case SymbolKind.Field: {
                         var fieldSymbol = (IFieldSymbol)symbol;
                         if(fieldSymbol.IsStatic) {
-                            name = symbol.Name;
+                            if(fieldSymbol.DeclaredAccessibility == Accessibility.Private) {
+                                name = symbol.Name;
+                            }
+                            else {
+                                if(fieldSymbol.IsReadOnly) {
+                                    name = symbol.Name;
+                                    if(node.Parent.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+                                        AssignmentExpressionSyntax assignmentExpression = (AssignmentExpressionSyntax)node.Parent;
+                                        if(assignmentExpression.Left == node) {
+                                            CurType.AddStaticReadOnlyAssignmentName(name);
+                                        }
+                                    }
+                                }
+                                else {
+                                    if(CurFunction.IsStaticCtor) {
+                                        name = LuaSyntaxNode.Tokens.This + '.' + symbol.Name;
+                                    }
+                                    else {
+                                        name = fieldSymbol.ToString();
+                                    }
+                                }
+                            }
                         }
                         else {
                             name = LuaSyntaxNode.Tokens.This + '.' + symbol.Name;
