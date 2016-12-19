@@ -9,6 +9,7 @@ namespace CSharpLua.LuaAst {
         public LuaParameterListSyntax ParameterList { get; } = new LuaParameterListSyntax();
         public string FunctionKeyword => Tokens.Function;
         public bool HasYield { get; set; }
+        public bool IsStaticCtor { get; set; }
 
         public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
             OpenBraceToken = Tokens.Empty,

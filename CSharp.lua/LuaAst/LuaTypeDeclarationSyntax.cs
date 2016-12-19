@@ -33,8 +33,8 @@ namespace CSharpLua.LuaAst {
 
         public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax method, bool isPrivate) {
             local_.Variables.Add(name);
-            LuaAssignmentExpressionSyntax assignmentNode = new LuaAssignmentExpressionSyntax(name, method);
-            methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignmentNode));
+            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, method);
+            methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
             if(!isPrivate) {
                 AddResultTable(name);
             }
@@ -51,13 +51,44 @@ namespace CSharpLua.LuaAst {
             initFunction.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
         }
 
-        public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isStatic, bool isImmutable) {
-            if(isImmutable) {
-                AddResultTable(name, value);
+        public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly) {
+            if(isStatic) {
+                if(isPrivate) {
+                    local_.Variables.Add(name);
+                    if(isImmutable) {
+                        LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
+                        methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+                    }
+                    else {
+                        AddInitFiled(ref staticInitFunction_, name, value);
+                    }
+                }
+                else {
+                    //TODO 字段在静态构造函数中赋值操作
+                    if(isReadOnly) {
+                        local_.Variables.Add(name);
+                        if(isImmutable) {
+                            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
+                            methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+                            AddResultTable(name);
+                        }
+                        else {
+                            AddInitFiled(ref staticInitFunction_, name, value);
+                        }
+                    }
+                    else {
+                        if(isImmutable) {
+                            AddResultTable(name, value);
+                        }
+                        else {
+                            AddInitFiled(ref staticInitFunction_, name, value);
+                        }
+                    }
+                }
             }
             else {
-                if(isStatic) {
-                    AddInitFiled(ref staticInitFunction_, name, value);
+                if(isImmutable) {
+                    AddResultTable(name, value);
                 }
                 else {
                     AddInitFiled(ref initFunction_, name, value);

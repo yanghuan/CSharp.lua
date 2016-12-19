@@ -110,6 +110,10 @@ namespace CSharpLua {
             return modifiers.Any(i => i.IsKind(SyntaxKind.StaticKeyword));
         }
 
+        public static bool IsReadOnly(this SyntaxTokenList modifiers) {
+            return modifiers.Any(i => i.IsKind(SyntaxKind.ReadOnlyKeyword));
+        }
+
         private static ITypeSymbol stringType_;
         public static bool IsStringType(this ITypeSymbol type) {
             if(stringType_ != null) {

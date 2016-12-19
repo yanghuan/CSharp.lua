@@ -98,13 +98,14 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
             LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
             functions_.Push(function);
+            bool isStatic = node.Modifiers.IsStatic();
+            function.IsStaticCtor = isStatic;
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
             function.ParameterList.Parameters.Add(new LuaParameterSyntax(LuaIdentifierNameSyntax.This));
             function.ParameterList.Parameters.AddRange(parameterList.Parameters);
             LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
             function.Body.Statements.AddRange(block.Statements);
             functions_.Pop();
-            bool isStatic = node.Modifiers.IsStatic();
             if(isStatic) {
                 CurType.SetStaticCtor(function);
             }

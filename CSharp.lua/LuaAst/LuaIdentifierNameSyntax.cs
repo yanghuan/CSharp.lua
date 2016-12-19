@@ -21,6 +21,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Interface = new LuaIdentifierNameSyntax("interface");
         public readonly static LuaIdentifierNameSyntax Enum = new LuaIdentifierNameSyntax("enum");
         public readonly static LuaIdentifierNameSyntax Temp1 = new LuaIdentifierNameSyntax("default");
+        public readonly static LuaIdentifierNameSyntax Value = new LuaIdentifierNameSyntax("value");
         public readonly static LuaIdentifierNameSyntax This = new LuaIdentifierNameSyntax("this");
         public readonly static LuaIdentifierNameSyntax True = new LuaIdentifierNameSyntax("true");
         public readonly static LuaIdentifierNameSyntax Throw = new LuaIdentifierNameSyntax("System.throw");
@@ -31,7 +32,6 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax ObjectCreate = new LuaIdentifierNameSyntax("System.create");
         public readonly static LuaIdentifierNameSyntax ThisAdd = new LuaIdentifierNameSyntax("this:Add");
         public readonly static LuaIdentifierNameSyntax Default = new LuaIdentifierNameSyntax("__default__");
-        public readonly static LuaIdentifierNameSyntax StaticInit = new LuaIdentifierNameSyntax("__staticInit__");
         public readonly static LuaIdentifierNameSyntax StaticCtor = new LuaIdentifierNameSyntax("__staticCtor__");
         public readonly static LuaIdentifierNameSyntax Init = new LuaIdentifierNameSyntax("__init__");
         public readonly static LuaIdentifierNameSyntax Ctor = new LuaIdentifierNameSyntax("__ctor__");

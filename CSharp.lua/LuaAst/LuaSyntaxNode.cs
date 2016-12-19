@@ -31,6 +31,9 @@ namespace CSharpLua.LuaAst {
             public const string OpenLongComment = "--[[";
             public const string CloseLongComment = "--]]";
             public const string Ctor = "ctor";
+            public const string This = "this";
+            public const string Get = "get";
+            public const string Set = "set";
         }
 
         public class Keyword {
