@@ -73,4 +73,26 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaTableIndexAccessExpressionSyntax : LuaExpressionSyntax {
+        public LuaExpressionSyntax Expression { get; }
+        public LuaExpressionSyntax Index { get; }
+        public string OpenBracketToken => Tokens.OpenBracket;
+        public string CloseBracketToken => Tokens.CloseBracket;
+
+        public LuaTableIndexAccessExpressionSyntax(LuaExpressionSyntax expression, LuaExpressionSyntax index) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
+            if(index == null) {
+                throw new ArgumentNullException(nameof(index));
+            }
+            Expression = expression;
+            Index = index;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
 }

@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using CSharpLua.LuaAst;
+using System.Diagnostics.Contracts;
 
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor {
@@ -96,13 +97,36 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
-            LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
+            LuaConstructorAdapterExpressSyntax function = new LuaConstructorAdapterExpressSyntax();
             functions_.Push(function);
             bool isStatic = node.Modifiers.IsStatic();
             function.IsStaticCtor = isStatic;
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
             function.ParameterList.Parameters.Add(new LuaParameterSyntax(LuaIdentifierNameSyntax.This));
             function.ParameterList.Parameters.AddRange(parameterList.Parameters);
+            if(node.Initializer != null) {
+                var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
+                var typeSymbol = (INamedTypeSymbol)symbol.ReceiverType;
+                int index = typeSymbol.Constructors.IndexOf(symbol);
+                Contract.Assert(index != -1);
+                int ctroCounter = index + 1;
+
+                LuaInvocationExpressionSyntax otherCtorInvoke;
+                if(node.Initializer.IsKind(SyntaxKind.ThisConstructorInitializer)) {
+                    LuaIdentifierNameSyntax thisCtor = new LuaIdentifierNameSyntax(LuaSyntaxNode.SpecailWord(LuaSyntaxNode.Tokens.Ctor + ctroCounter));
+                    otherCtorInvoke = new LuaInvocationExpressionSyntax(thisCtor);
+                    function.IsInvokeThisCtor = true;
+                }
+                else {
+                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(typeSymbol.ToString()), LuaIdentifierNameSyntax.Ctor);
+                    otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter.ToString())));
+                }
+
+                otherCtorInvoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(LuaIdentifierNameSyntax.This));
+                var argumentList = (LuaArgumentListSyntax)node.Initializer.ArgumentList.Accept(this);
+                otherCtorInvoke.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+                function.Body.Statements.Add(new LuaExpressionStatementSyntax(otherCtorInvoke));
+            }
             LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
             function.Body.Statements.AddRange(block.Statements);
             functions_.Pop();

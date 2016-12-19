@@ -5,12 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
-    public sealed class LuaFunctionExpressSyntax : LuaExpressionSyntax {
+    public class LuaFunctionExpressSyntax : LuaExpressionSyntax {
         public LuaParameterListSyntax ParameterList { get; } = new LuaParameterListSyntax();
         public string FunctionKeyword => Tokens.Function;
         public bool HasYield { get; set; }
-        public bool IsStaticCtor { get; set; }
-
         public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
             OpenBraceToken = Tokens.Empty,
             CloseBraceToken = Tokens.End,
@@ -19,5 +17,10 @@ namespace CSharpLua.LuaAst {
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
+    }
+
+    public sealed class LuaConstructorAdapterExpressSyntax : LuaFunctionExpressSyntax {
+        public bool IsStaticCtor { get; set; }
+        public bool IsInvokeThisCtor { get; set; }
     }
 }

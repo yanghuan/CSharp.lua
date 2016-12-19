@@ -273,6 +273,13 @@ namespace CSharpLua {
             node.Identifier.Render(this);
         }
 
+        internal void Render(LuaTableIndexAccessExpressionSyntax node) {
+            node.Expression.Render(this);
+            Write(node.OpenBracketToken);
+            node.Index.Render(this);
+            Write(node.CloseBracketToken);
+        }
+
         internal void Render(LuaEqualsValueClauseSyntax node) {
             Write(node.EqualsToken);
             node.Value.Render(this);

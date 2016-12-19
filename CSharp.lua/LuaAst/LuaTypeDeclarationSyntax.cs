@@ -16,7 +16,7 @@ namespace CSharpLua.LuaAst {
         private List<string> staticAssignmentNames_ = new List<string>();
 
         private LuaFunctionExpressSyntax initFunction_;
-        private List<LuaFunctionExpressSyntax> ctors_ = new List<LuaFunctionExpressSyntax>();
+        private List<LuaConstructorAdapterExpressSyntax> ctors_ = new List<LuaConstructorAdapterExpressSyntax>();
 
         public LuaTypeDeclarationSyntax() {
             Add(local_);
@@ -115,12 +115,12 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void SetStaticCtor(LuaFunctionExpressSyntax function) {
+        public void SetStaticCtor(LuaConstructorAdapterExpressSyntax function) {
             Contract.Assert(staticCtorFunction_ == null);
             staticCtorFunction_ = function;
         }
 
-        public void AddCtor(LuaFunctionExpressSyntax function) {
+        public void AddCtor(LuaConstructorAdapterExpressSyntax function) {
             ctors_.Add(function);
         }
 
@@ -136,7 +136,7 @@ namespace CSharpLua.LuaAst {
         private void AddStaticAssignmentNames(LuaBlockSyntax body) {
             if(staticAssignmentNames_.Count > 0) {
                 LuaMultipleAssignmentExpressionSyntax assignment = new LuaMultipleAssignmentExpressionSyntax();
-                foreach(var name in staticAssignmentNames_) {
+                foreach(string name in staticAssignmentNames_) {
                     LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(name);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, identifierName);
                     assignment.Lefts.Add(memberAccess);
@@ -174,9 +174,11 @@ namespace CSharpLua.LuaAst {
                     var initIdentifier = LuaIdentifierNameSyntax.Init;
                     AddInitFunction(initIdentifier, initFunction_, false);
                     foreach(var ctor in ctors_) {
-                        LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier);
-                        invocationInit.ArgumentList.Arguments.Add(new LuaArgumentSyntax(LuaIdentifierNameSyntax.This));
-                        ctor.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
+                        if(!ctor.IsInvokeThisCtor) {
+                            LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier);
+                            invocationInit.ArgumentList.Arguments.Add(new LuaArgumentSyntax(LuaIdentifierNameSyntax.This));
+                            ctor.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
+                        }
                     }
                 }
 

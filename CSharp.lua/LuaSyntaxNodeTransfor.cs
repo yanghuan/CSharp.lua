@@ -501,7 +501,8 @@ namespace CSharpLua {
                                     }
                                 }
                                 else {
-                                    if(CurFunction.IsStaticCtor) {
+                                    var constructor = CurFunction as LuaConstructorAdapterExpressSyntax;
+                                    if(constructor != null && constructor.IsStaticCtor) {
                                         name = LuaSyntaxNode.Tokens.This + '.' + symbol.Name;
                                     }
                                     else {
