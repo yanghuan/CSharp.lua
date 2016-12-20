@@ -138,5 +138,9 @@ namespace CSharpLua {
             }
             return function;
         }
+
+        public override LuaSyntaxNode VisitSimpleBaseType(SimpleBaseTypeSyntax node) {
+            return node.Type.Accept(this);
+        }
     }
 }

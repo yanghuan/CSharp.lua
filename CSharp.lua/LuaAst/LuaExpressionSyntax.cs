@@ -68,8 +68,28 @@ namespace CSharpLua.LuaAst {
         public string OperatorToken { get; }
 
         public LuaPrefixUnaryExpressionSyntax(LuaExpressionSyntax operand, string operatorToken) {
+            if(operand == null) {
+                throw new ArgumentNullException(nameof(operand));
+            }
             Operand = operand;
             OperatorToken = operatorToken;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaParenthesizedExpressionSyntax : LuaExpressionSyntax {
+        public LuaExpressionSyntax Expression { get; }
+        public string OpenParenToken => Tokens.OpenParentheses;
+        public string CloseParenToken => Tokens.CloseParentheses;
+
+        public LuaParenthesizedExpressionSyntax(LuaExpressionSyntax expression) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
+            Expression = expression;
         }
 
         internal override void Render(LuaRenderer renderer) {

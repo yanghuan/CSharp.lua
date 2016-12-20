@@ -120,14 +120,22 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
-            LuaIdentifierNameSyntax nameNode = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-            LuaClassDeclarationSyntax newNode = new LuaClassDeclarationSyntax(nameNode);
-            typeDeclarations_.Push(newNode);
+            LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            LuaClassDeclarationSyntax classDeclaration = new LuaClassDeclarationSyntax(name);
+            typeDeclarations_.Push(classDeclaration);
+            if(node.BaseList != null) {
+                List<LuaIdentifierNameSyntax> baseTypes = new List<LuaIdentifierNameSyntax>();
+                foreach(var baseType in node.BaseList.Types) {
+                    var baseTypeName = (LuaIdentifierNameSyntax)baseType.Accept(this);
+                    baseTypes.Add(baseTypeName);
+                }
+                classDeclaration.AddBaseTypes(baseTypes);
+            }
             foreach(var member in node.Members) {
                 member.Accept(this);
             }
             typeDeclarations_.Pop();
-            return newNode;
+            return classDeclaration;
         }
 
         public override LuaSyntaxNode VisitStructDeclaration(StructDeclarationSyntax node) {
@@ -481,7 +489,7 @@ namespace CSharpLua {
                         break;
                     }
                 case SymbolKind.NamedType: {
-                        name = symbol.ContainingNamespace.Name + '.' + symbol.Name;
+                        name = symbol.ToString();
                         break;
                     }
                 case SymbolKind.Field: {
@@ -518,6 +526,10 @@ namespace CSharpLua {
                     }
                 case SymbolKind.Method: {
                         name = symbol.Name;
+                        break;
+                    }
+                case SymbolKind.Property: {
+                        name = LuaSyntaxNode.Tokens.Get + symbol.Name;
                         break;
                     }
                 default: {
@@ -782,7 +794,8 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitDoStatement(DoStatementSyntax node) {
             var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
-            LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Keyword.Not));
+            var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Keyword.Not);
+            LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(newCondition);
             WriteStatementOrBlock(node.Statement, repeatStatement.Body);
             return repeatStatement;
         }
@@ -800,6 +813,11 @@ namespace CSharpLua {
                 invocationExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(expression));
                 return new LuaExpressionStatementSyntax(invocationExpression);
             }
+        }
+
+        public override LuaSyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
+            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            return new LuaParenthesizedExpressionSyntax(expression);
         }
     }
 }

@@ -205,6 +205,12 @@ namespace CSharpLua.LuaAst {
             }
         }
 
+        public void AddBaseTypes(List<LuaIdentifierNameSyntax> baseTypes) {
+            LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+            table.Items.AddRange(baseTypes.Select(i => new LuaSingleTableItemSyntax(i)));
+            AddResultTable(LuaIdentifierNameSyntax.Inherits, table);
+        }
+
         internal override void Render(LuaRenderer renderer) {
             AddStaticCtorFunction();
             AddCtorsFunction();

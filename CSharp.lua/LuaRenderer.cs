@@ -425,5 +425,11 @@ namespace CSharpLua {
             Write(node.CloseCommentToken);
             WriteNewLine();
         }
+
+        internal void Render(LuaParenthesizedExpressionSyntax node) {
+            Write(node.OpenParenToken);
+            node.Expression.Render(this);
+            Write(node.CloseParenToken);
+        }
     }
 }

@@ -35,6 +35,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax StaticCtor = new LuaIdentifierNameSyntax("__staticCtor__");
         public readonly static LuaIdentifierNameSyntax Init = new LuaIdentifierNameSyntax("__init__");
         public readonly static LuaIdentifierNameSyntax Ctor = new LuaIdentifierNameSyntax("__ctor__");
+        public readonly static LuaIdentifierNameSyntax Inherits = new LuaIdentifierNameSyntax("__inherits__");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;
