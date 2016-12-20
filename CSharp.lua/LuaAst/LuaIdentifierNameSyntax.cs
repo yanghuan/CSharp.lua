@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 
 namespace CSharpLua.LuaAst {
-    public sealed class LuaIdentifierNameSyntax : LuaExpressionSyntax {
+    public class LuaIdentifierNameSyntax : LuaExpressionSyntax {
         public string ValueText { get; }
 
         public readonly static LuaIdentifierNameSyntax Empty = new LuaIdentifierNameSyntax("");
@@ -39,6 +39,18 @@ namespace CSharpLua.LuaAst {
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaPropertyIdentifierNameSyntax : LuaIdentifierNameSyntax {
+        public bool IsGet { get; set; } = true;
+        public string PrefixToken => IsGet ? Tokens.Get : Tokens.Set;
+
+        public LuaPropertyIdentifierNameSyntax(string valueText) : base(valueText) {
         }
 
         internal override void Render(LuaRenderer renderer) {

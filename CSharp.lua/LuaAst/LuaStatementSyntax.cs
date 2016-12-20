@@ -39,6 +39,25 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaReturnStatementSyntax : LuaStatementSyntax {
+        public LuaExpressionSyntax Expression { get; }
+        public string ReturnKeyword => Tokens.Return;
+
+        public LuaReturnStatementSyntax(LuaExpressionSyntax expression) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
+            Expression = expression;
+        }
+
+        public LuaReturnStatementSyntax() {
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaMultipleReturnStatementSyntax : LuaStatementSyntax {
         public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
         public string ReturnKeyword => Tokens.Return;
 

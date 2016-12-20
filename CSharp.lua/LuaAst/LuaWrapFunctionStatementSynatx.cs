@@ -15,7 +15,7 @@ namespace CSharpLua.LuaAst {
             invoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(new LuaStringLiteralExpressionSyntax(name)));
             invoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(functionNode_));
             if(parameter != null) {
-                functionNode_.ParameterList.Parameters.Add(new LuaParameterSyntax(parameter));
+                functionNode_.AddParameter(parameter);
             }
             Statement = new LuaExpressionStatementSyntax(invoke);
         }

@@ -51,7 +51,7 @@ namespace CSharpLua.LuaAst {
         private void AddInitFiled(ref LuaFunctionExpressSyntax initFunction, LuaAssignmentExpressionSyntax assignment) {
             if(initFunction == null) {
                 initFunction = new LuaFunctionExpressSyntax();
-                initFunction.ParameterList.Parameters.Add(new LuaParameterSyntax(LuaIdentifierNameSyntax.This));
+                initFunction.AddParameter(LuaIdentifierNameSyntax.This);
             }
             initFunction.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
         }
@@ -215,8 +215,7 @@ namespace CSharpLua.LuaAst {
             AddStaticCtorFunction();
             AddCtorsFunction();
 
-            LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax();
-            returnStatement.Expressions.Add(resultTable_);
+            LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(resultTable_);
             Add(returnStatement);
             base.Render(renderer);
         }

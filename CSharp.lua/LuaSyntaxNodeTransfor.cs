@@ -195,8 +195,7 @@ namespace CSharpLua {
             }
             invokeExpression.ArgumentList.Arguments.AddRange(parameters.Select(i => new LuaArgumentSyntax(i.Identifier)));
 
-            LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax();
-            returnStatement.Expressions.Add(invokeExpression);
+            LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(invokeExpression);
             function.Body.Statements.Clear();
             function.Body.Statements.Add(returnStatement);
         }
@@ -243,42 +242,110 @@ namespace CSharpLua {
             return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(identifierName, LuaIdentifierNameSyntax.Default));
         }
 
-        public override LuaSyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node) {
-            bool isStatic = node.Modifiers.IsStatic();
-            bool isPrivate = node.Modifiers.IsPrivate();
-            bool isReadOnly = node.Modifiers.IsReadOnly();
+        private LuaExpressionSyntax GetFieldValueExpression(
+            TypeSyntax type, 
+            ITypeSymbol typeSymbol, 
+            SyntaxToken identifier, 
+            ExpressionSyntax expression, 
+            out LuaIdentifierNameSyntax name, 
+            out bool valueIsLiteral) {
 
-            var type = node.Declaration.Type;
-            ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
-            bool isImmutable = (typeSymbol.IsValueType && typeSymbol.IsDefinition) || typeSymbol.IsStringType() || typeSymbol.IsDelegateType();
-            foreach(var variable in node.Declaration.Variables) {
-                LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(variable.Identifier.ValueText);
-                LuaExpressionSyntax valueExpression = null;
-                bool valueIsLiteral = false;
-                if(variable.Initializer != null) {
-                    valueExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
-                    valueIsLiteral = variable.Initializer.Value is LiteralExpressionSyntax;
-                }
-                if(valueExpression == null) {
-                    if(typeSymbol.IsValueType) {
-                        if(typeSymbol.IsDefinition) {
-                            string valueText = GetPredefinedTypeDefaultValue(typeSymbol.ToString());
-                            if(valueText != null) {
-                                valueExpression = new LuaIdentifierNameSyntax(valueText);
-                            }
-                            else {
-                                valueExpression = BuildDefaultValueExpression(type);
-                            }
-                            valueIsLiteral = true;
+            name = new LuaIdentifierNameSyntax(identifier.ValueText);
+            LuaExpressionSyntax valueExpression = null;
+            valueIsLiteral = false;
+            if(expression != null) {
+                valueExpression = (LuaExpressionSyntax)expression.Accept(this);
+                valueIsLiteral = expression is LiteralExpressionSyntax;
+            }
+            if(valueExpression == null) {
+                if(typeSymbol.IsValueType) {
+                    if(typeSymbol.IsDefinition) {
+                        string valueText = GetPredefinedTypeDefaultValue(typeSymbol.ToString());
+                        if(valueText != null) {
+                            valueExpression = new LuaIdentifierNameSyntax(valueText);
                         }
                         else {
                             valueExpression = BuildDefaultValueExpression(type);
                         }
+                        valueIsLiteral = true;
+                    }
+                    else {
+                        valueExpression = BuildDefaultValueExpression(type);
                     }
                 }
+            }
+            return valueExpression;
+        }
+
+        public override LuaSyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node) {
+            bool isStatic = node.Modifiers.IsStatic();
+            bool isPrivate = node.Modifiers.IsPrivate();
+            bool isReadOnly = node.Modifiers.IsReadOnly();
+            var type = node.Declaration.Type;
+            ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
+            bool isImmutable = typeSymbol.IsImmutable();
+            foreach(var variable in node.Declaration.Variables) {
+                LuaIdentifierNameSyntax name;
+                bool valueIsLiteral;
+                LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, variable.Identifier, variable.Initializer?.Value, out name, out valueIsLiteral);
                 CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly);
             }
-            return null;
+            return base.VisitFieldDeclaration(node);
+        }
+
+        public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
+            bool isStatic = node.Modifiers.IsStatic();
+            bool isPrivate = node.Modifiers.IsPrivate();
+            bool hasGet = false;
+            bool hasSet = false;
+            if(node.AccessorList != null) {
+                foreach(var accessor in node.AccessorList.Accessors) {
+                    if(accessor.Body != null) {
+                        var block = (LuaBlockSyntax)accessor.Body.Accept(this);
+                        LuaFunctionExpressSyntax functionExpress = new LuaFunctionExpressSyntax();
+                        if(!isStatic) {
+                            functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
+                        }
+                        functionExpress.Body.Statements.AddRange(block.Statements);
+                        LuaPropertyIdentifierNameSyntax name = new LuaPropertyIdentifierNameSyntax(node.Identifier.ValueText);
+                        if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
+                            Contract.Assert(!hasGet);
+                            CurType.AddMethod(name, functionExpress, isPrivate);
+                            hasGet = true;
+                        }
+                        else {
+                            Contract.Assert(!hasSet);
+                            functionExpress.AddParameter(LuaIdentifierNameSyntax.Value);
+                            name.IsGet = false;
+                            CurType.AddMethod(name, functionExpress, isPrivate);
+                            hasSet = true;
+                        }
+                    }
+                }
+            }
+            else {
+                Contract.Assert(!hasGet);
+                LuaPropertyIdentifierNameSyntax name = new LuaPropertyIdentifierNameSyntax(node.Identifier.ValueText);
+                var expression = (LuaExpressionSyntax)node.ExpressionBody.Expression.Accept(this);
+                LuaFunctionExpressSyntax functionExpress = new LuaFunctionExpressSyntax();
+                if(!isStatic) {
+                    functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
+                }
+                LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(expression);
+                functionExpress.Body.Statements.Add(returnStatement);
+                CurType.AddMethod(name, functionExpress, isPrivate);
+                hasGet = true;
+            }
+
+            if(!hasGet && !hasSet) {
+                var type = node.Type;
+                ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
+                LuaIdentifierNameSyntax name;
+                bool valueIsLiteral;
+                LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, node.Identifier, node.Initializer?.Value, out name, out valueIsLiteral);
+            }
+
+            return base.VisitPropertyDeclaration(node);
         }
 
         public override LuaSyntaxNode VisitParameterList(ParameterListSyntax node) {
@@ -374,12 +441,11 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
-            LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax();
             if(node.Expression != null) {
                 var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-                returnStatement.Expressions.Add(expression);
+                return new LuaReturnStatementSyntax(expression);
             }
-            return returnStatement;
+            return new LuaReturnStatementSyntax();
         }
 
         public override LuaSyntaxNode VisitExpressionStatement(ExpressionStatementSyntax node) {
@@ -387,14 +453,26 @@ namespace CSharpLua {
             return new LuaExpressionStatementSyntax(expressionNode);
         }
 
+        private LuaExpressionSyntax BuildLuaAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right) {
+            var propertyAdapter = left as LuaPropertyAdapterExpressionSyntax;
+            if(propertyAdapter != null) {
+                propertyAdapter.IsGet = false;
+                propertyAdapter.InvocationExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(right));
+                return propertyAdapter;
+            }
+            else {
+                return new LuaAssignmentExpressionSyntax(left, right);
+            }
+        }
+
         public override LuaSyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node) {
             if(node.Right.Kind() != SyntaxKind.SimpleAssignmentExpression ) {
                 var left = (LuaExpressionSyntax)node.Left.Accept(this);
                 var right = (LuaExpressionSyntax)node.Right.Accept(this);
-                return new LuaAssignmentExpressionSyntax(left, right);
+                return BuildLuaAssignmentExpression(left, right);
             }
             else {
-                List<LuaAssignmentExpressionSyntax> assignments = new List<LuaAssignmentExpressionSyntax>();
+                List<LuaExpressionSyntax> assignments = new List<LuaExpressionSyntax>();
                 var leftExpression = node.Left;
                 var rightExpression = node.Right;
 
@@ -403,19 +481,19 @@ namespace CSharpLua {
                     var assignmentRight = rightExpression as AssignmentExpressionSyntax;
                     if(assignmentRight == null) {
                         var right = (LuaExpressionSyntax)rightExpression.Accept(this);
-                        assignments.Add(new LuaAssignmentExpressionSyntax(left, right));
+                        assignments.Add(BuildLuaAssignmentExpression(left, right));
                         break;
                     }
                     else {
                         var right = (LuaExpressionSyntax)assignmentRight.Left.Accept(this);
-                        assignments.Add(new LuaAssignmentExpressionSyntax(left, right));
+                        assignments.Add(BuildLuaAssignmentExpression(left, right));
                         leftExpression = assignmentRight.Left;
                         rightExpression = assignmentRight.Right;
                     }
                 }
 
                 assignments.Reverse();
-                LuaLineMultipleAssignmentExpressionSyntax multipleAssignment = new LuaLineMultipleAssignmentExpressionSyntax();
+                LuaLineMultipleExpressionSyntax multipleAssignment = new LuaLineMultipleExpressionSyntax();
                 multipleAssignment.Assignments.AddRange(assignments);
                 return multipleAssignment;
             }
@@ -472,10 +550,18 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            var identifierName = (LuaIdentifierNameSyntax)node.Name.Accept(this);
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
-            return new LuaMemberAccessExpressionSyntax(expression, identifierName, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
+            if(symbol.Kind != SymbolKind.Property) {
+                var identifierName = (LuaIdentifierNameSyntax)node.Name.Accept(this);
+                return new LuaMemberAccessExpressionSyntax(expression, identifierName, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
+            }
+            else {
+                var propertyAdapter = (LuaPropertyAdapterExpressionSyntax)node.Name.Accept(this);
+                var memberAccessExpression = new LuaMemberAccessExpressionSyntax(expression, propertyAdapter.InvocationExpression.Expression, !symbol.IsStatic);
+                propertyAdapter.Update(memberAccessExpression);
+                return propertyAdapter;
+            }
         }
 
         public override LuaSyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
@@ -529,8 +615,11 @@ namespace CSharpLua {
                         break;
                     }
                 case SymbolKind.Property: {
-                        name = LuaSyntaxNode.Tokens.Get + symbol.Name;
-                        break;
+                        var propertyAdapter = new LuaPropertyAdapterExpressionSyntax(new LuaPropertyIdentifierNameSyntax(symbol.Name));
+                        if(!symbol.IsStatic) {
+                            propertyAdapter.InvocationExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(LuaIdentifierNameSyntax.This));
+                        }
+                        return propertyAdapter;
                     }
                 default: {
                         throw new NotSupportedException();
@@ -804,8 +893,7 @@ namespace CSharpLua {
             CurFunction.HasYield = true;
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             if(node.IsKind(SyntaxKind.YieldBreakStatement)) {
-                LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax();
-                returnStatement.Expressions.Add(expression);
+                LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(expression);
                 return returnStatement;
             }
             else {

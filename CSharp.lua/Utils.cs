@@ -141,5 +141,10 @@ namespace CSharpLua {
                 return success;
             }
         }
+
+        public static bool IsImmutable(this ITypeSymbol typel) {
+            bool isImmutable = (typel.IsValueType && typel.IsDefinition) || typel.IsStringType() || typel.IsDelegateType();
+            return isImmutable;
+        }
     }
 }

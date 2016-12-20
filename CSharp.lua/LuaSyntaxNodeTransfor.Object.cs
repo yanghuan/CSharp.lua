@@ -22,7 +22,7 @@ namespace CSharpLua {
             else {
                 var thisIdentifier = LuaIdentifierNameSyntax.This;
                 LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
-                function.ParameterList.Parameters.Add(new LuaParameterSyntax(thisIdentifier));
+                function.AddParameter(thisIdentifier);
                 foreach(var expression in node.Initializer.Expressions) {
                     if(expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
                         AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
@@ -102,7 +102,7 @@ namespace CSharpLua {
             bool isStatic = node.Modifiers.IsStatic();
             function.IsStaticCtor = isStatic;
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
-            function.ParameterList.Parameters.Add(new LuaParameterSyntax(LuaIdentifierNameSyntax.This));
+            function.AddParameter(LuaIdentifierNameSyntax.This);
             function.ParameterList.Parameters.AddRange(parameterList.Parameters);
             if(node.Initializer != null) {
                 var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;

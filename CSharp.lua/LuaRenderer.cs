@@ -102,6 +102,11 @@ namespace CSharpLua {
             Write(node.ValueText);
         }
 
+        internal void Render(LuaPropertyIdentifierNameSyntax node) {
+            Write(node.PrefixToken);
+            Write(node.ValueText);
+        }
+
         private void WriteSeparatedSyntaxList(IEnumerable<LuaSyntaxNode> list) {
             bool isFirst = true;
             foreach(LuaSyntaxNode node in list) {
@@ -207,7 +212,7 @@ namespace CSharpLua {
             WriteSeparatedSyntaxList(node.Rights);
         }
 
-        internal void Render(LuaLineMultipleAssignmentExpressionSyntax node) {
+        internal void Render(LuaLineMultipleExpressionSyntax node) {
             bool isFirst = true;
             foreach(var assignment in node.Assignments) {
                 if(isFirst) {
@@ -221,11 +226,21 @@ namespace CSharpLua {
             }
         }
 
-        internal void Render(LuaReturnStatementSyntax node) {
+        internal void Render(LuaMultipleReturnStatementSyntax node) {
             Write(node.ReturnKeyword);
             if(node.Expressions.Count > 0) {
                 WriteSpace();
                 WriteSeparatedSyntaxList(node.Expressions);
+            }
+            Write(node.SemicolonToken);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaReturnStatementSyntax node) {
+            Write(node.ReturnKeyword);
+            if(node.Expression != null) {
+                WriteSpace();
+                node.Expression.Render(this);
             }
             Write(node.SemicolonToken);
             WriteNewLine();

@@ -9,6 +9,7 @@ namespace CSharpLua.LuaAst {
         public LuaParameterListSyntax ParameterList { get; } = new LuaParameterListSyntax();
         public string FunctionKeyword => Tokens.Function;
         public bool HasYield { get; set; }
+
         public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
             OpenBraceToken = Tokens.Empty,
             CloseBraceToken = Tokens.End,
@@ -16,6 +17,10 @@ namespace CSharpLua.LuaAst {
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
+        }
+
+        public void AddParameter(LuaIdentifierNameSyntax identifier) {
+            ParameterList.Parameters.Add(new LuaParameterSyntax(identifier));
         }
     }
 

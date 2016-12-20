@@ -39,8 +39,8 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaLineMultipleAssignmentExpressionSyntax : LuaExpressionSyntax {
-        public LuaSyntaxList<LuaAssignmentExpressionSyntax> Assignments { get; } = new LuaSyntaxList<LuaAssignmentExpressionSyntax>();
+    public sealed class LuaLineMultipleExpressionSyntax : LuaExpressionSyntax {
+        public LuaSyntaxList<LuaExpressionSyntax> Assignments { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
