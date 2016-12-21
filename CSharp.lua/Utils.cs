@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSharpLua {
     public sealed class CmdArgumentException : Exception {
@@ -142,9 +144,57 @@ namespace CSharpLua {
             }
         }
 
-        public static bool IsImmutable(this ITypeSymbol typel) {
-            bool isImmutable = (typel.IsValueType && typel.IsDefinition) || typel.IsStringType() || typel.IsDelegateType();
+        public static bool IsImmutable(this ITypeSymbol type) {
+            bool isImmutable = (type.IsValueType && type.IsDefinition) || type.IsStringType() || type.IsDelegateType();
             return isImmutable;
+        }
+
+        public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
+            var type = symbol.ContainingType;
+            if(type != null) {
+                var interfaceSymbols = type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<T>());
+                return interfaceSymbols.Any(i => symbol.Equals(type.FindImplementationForInterfaceMember(i)));
+            }
+            return false;
+        }
+
+        public static bool IsAuto(this IPropertySymbol property) {
+            if(!property.IsStatic && (property.IsAbstract || property.IsVirtual || property.IsOverride)) {
+                return false;
+            }
+
+            var syntaxReference = property.DeclaringSyntaxReferences.FirstOrDefault();
+            if(syntaxReference != null) {
+                var node = (PropertyDeclarationSyntax)syntaxReference.GetSyntax();
+                bool hasGet = false;
+                bool hasSet = false;
+                if(node.AccessorList != null) {
+                    foreach(var accessor in node.AccessorList.Accessors) {
+                        if(accessor.Body != null) {
+                            if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
+                                Contract.Assert(!hasGet);
+                                hasGet = true;
+                            }
+                            else {
+                                Contract.Assert(!hasSet);
+                                hasSet = true;
+                            }
+                        }
+                    }
+                }
+                else {
+                    Contract.Assert(!hasGet);
+                    hasGet = true;
+                }
+                bool isAuto = !hasGet && !hasSet;
+                if(isAuto) {
+                    if(property.IsInterfaceImplementation()) {
+                        isAuto = false;
+                    }
+                }
+                return isAuto;
+            }
+            return false;
         }
     }
 }
