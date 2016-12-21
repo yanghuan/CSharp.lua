@@ -12,8 +12,8 @@ namespace CSharpLua.LuaAst {
         protected void UpdateIdentifiers(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax target, LuaIdentifierNameSyntax memberName, LuaIdentifierNameSyntax parameter = null) {
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(target, memberName);
             LuaInvocationExpressionSyntax invoke = new LuaInvocationExpressionSyntax(memberAccess);
-            invoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(new LuaStringLiteralExpressionSyntax(name)));
-            invoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(functionNode_));
+            invoke.AddArgument(new LuaStringLiteralExpressionSyntax(name));
+            invoke.AddArgument(functionNode_);
             if(parameter != null) {
                 functionNode_.AddParameter(parameter);
             }

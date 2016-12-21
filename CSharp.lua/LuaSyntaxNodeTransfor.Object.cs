@@ -34,14 +34,14 @@ namespace CSharpLua {
                     else {
                         LuaInvocationExpressionSyntax add = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ThisAdd);
                         var argument = (LuaExpressionSyntax)expression.Accept(this);
-                        add.ArgumentList.Arguments.Add(new LuaArgumentSyntax(argument));
+                        add.AddArgument(argument);
                         function.Body.Statements.Add(new LuaExpressionStatementSyntax(add));
                     }
                 }
 
                 LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ObjectCreate);
-                invocation.ArgumentList.Arguments.Add(new LuaArgumentSyntax(invocationExpression));
-                invocation.ArgumentList.Arguments.Add(new LuaArgumentSyntax(function));
+                invocation.AddArgument(invocationExpression);
+                invocation.AddArgument(function);
                 return invocation;
             }
         }
@@ -53,7 +53,7 @@ namespace CSharpLua {
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
             foreach(var typeArgument in node.TypeArgumentList.Arguments) {
                 var expression = (LuaExpressionSyntax)typeArgument.Accept(this);
-                invocation.ArgumentList.Arguments.Add(new LuaArgumentSyntax(expression));
+                invocation.AddArgument(expression);
             }
             return invocation;
         }
@@ -69,13 +69,13 @@ namespace CSharpLua {
                 }
                 size = (LuaExpressionSyntax)rank.Sizes.First().Accept(this);
                 LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array);
-                invocation.ArgumentList.Arguments.Add(new LuaArgumentSyntax(typeExpress ?? elementType));
+                invocation.AddArgument(typeExpress ?? elementType);
                 typeExpress = invocation;
             }
 
             LuaInvocationExpressionSyntax arrayInvocation = new LuaInvocationExpressionSyntax(typeExpress);
             if(size != null) {
-                arrayInvocation.ArgumentList.Arguments.Add(new LuaArgumentSyntax(size));
+                arrayInvocation.AddArgument(size);
             }
             return arrayInvocation;
         }
@@ -86,11 +86,11 @@ namespace CSharpLua {
                 bool hasSize = arrayInvocation.ArgumentList.Arguments.Count > 0;
                 if(!hasSize) {
                     var sizeExprssion = new LuaIdentifierNameSyntax(node.Initializer.Expressions.Count.ToString());
-                    arrayInvocation.ArgumentList.Arguments.Add(new LuaArgumentSyntax(sizeExprssion));
+                    arrayInvocation.AddArgument(sizeExprssion);
                 }
                 foreach(var expression in node.Initializer.Expressions) {
                     var itemExpression = (LuaExpressionSyntax)expression.Accept(this);
-                    arrayInvocation.ArgumentList.Arguments.Add(new LuaArgumentSyntax(itemExpression));
+                    arrayInvocation.AddArgument(itemExpression);
                 }
             }
             return arrayInvocation;
@@ -122,7 +122,7 @@ namespace CSharpLua {
                     otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter.ToString())));
                 }
 
-                otherCtorInvoke.ArgumentList.Arguments.Add(new LuaArgumentSyntax(LuaIdentifierNameSyntax.This));
+                otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
                 var argumentList = (LuaArgumentListSyntax)node.Initializer.ArgumentList.Accept(this);
                 otherCtorInvoke.ArgumentList.Arguments.AddRange(argumentList.Arguments);
                 function.Body.Statements.Add(new LuaExpressionStatementSyntax(otherCtorInvoke));

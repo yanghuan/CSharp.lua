@@ -24,7 +24,7 @@ namespace CSharpLua.LuaAst {
                 throw new ArgumentNullException(nameof(expression));
             }
             LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each);
-            invocationExpression.ArgumentList.Arguments.Add(new LuaArgumentSyntax(expression));
+            invocationExpression.AddArgument(expression);
 
             Identifier = identifier;
             Expression = invocationExpression;
