@@ -335,13 +335,19 @@ namespace CSharpLua {
             }
 
             if(!hasGet && !hasSet) {
-                if(isStatic) {
+                if(!node.Parent.IsKind(SyntaxKind.InterfaceDeclaration)) {
                     var type = node.Type;
                     ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
-                    AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, typeSymbol.IsImmutable(), isStatic, isPrivate, node.Modifiers.IsReadOnly());
-                }
-                else {
-
+                    bool isImmutable = typeSymbol.IsImmutable();
+                    if(isStatic) {
+                        AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, isImmutable, isStatic, isPrivate, node.Modifiers.IsReadOnly());
+                    }
+                    else {
+                        string name = node.Identifier.ValueText;
+                        bool valueIsLiteral;
+                        LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, node.Initializer?.Value, out valueIsLiteral);
+                        CurType.AddProperty(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
+                    }
                 }
             }
 
@@ -719,7 +725,7 @@ namespace CSharpLua {
         }
 
         private void WriteStatementOrBlock(StatementSyntax statement, LuaBlockSyntax luablock) {
-            if(statement.Kind() == SyntaxKind.Block) {
+            if(statement.IsKind(SyntaxKind.Block)) {
                 var blockNode = (LuaBlockSyntax)statement.Accept(this);
                 luablock.Statements.AddRange(blockNode.Statements);
             }

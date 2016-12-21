@@ -29,13 +29,14 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax YieldReturn = new LuaIdentifierNameSyntax("System.yieldReturn");
         public readonly static LuaIdentifierNameSyntax Object = new LuaIdentifierNameSyntax("System.Object");
         public readonly static LuaIdentifierNameSyntax Array = new LuaIdentifierNameSyntax("System.Array");
-        public readonly static LuaIdentifierNameSyntax ObjectCreate = new LuaIdentifierNameSyntax("System.create");
+        public readonly static LuaIdentifierNameSyntax Create = new LuaIdentifierNameSyntax("System.create");
         public readonly static LuaIdentifierNameSyntax ThisAdd = new LuaIdentifierNameSyntax("this:Add");
         public readonly static LuaIdentifierNameSyntax Default = new LuaIdentifierNameSyntax("__default__");
         public readonly static LuaIdentifierNameSyntax StaticCtor = new LuaIdentifierNameSyntax("__staticCtor__");
         public readonly static LuaIdentifierNameSyntax Init = new LuaIdentifierNameSyntax("__init__");
         public readonly static LuaIdentifierNameSyntax Ctor = new LuaIdentifierNameSyntax("__ctor__");
         public readonly static LuaIdentifierNameSyntax Inherits = new LuaIdentifierNameSyntax("__inherits__");
+        public readonly static LuaIdentifierNameSyntax Property = new LuaIdentifierNameSyntax("System.property");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

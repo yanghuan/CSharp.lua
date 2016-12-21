@@ -115,6 +115,45 @@ namespace CSharpLua.LuaAst {
             }
         }
 
+        public void AddProperty(string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+            LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(name);
+            LuaIdentifierNameSyntax get = new LuaIdentifierNameSyntax(LuaSyntaxNode.Tokens.Get + name);
+            LuaIdentifierNameSyntax set = new LuaIdentifierNameSyntax(LuaSyntaxNode.Tokens.Set + name);
+            local_.Variables.Add(get);
+            local_.Variables.Add(set);
+            LuaMultipleAssignmentExpressionSyntax assignment = new LuaMultipleAssignmentExpressionSyntax();
+            assignment.Lefts.Add(get);
+            assignment.Lefts.Add(set);
+            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Property);
+            invocation.AddArgument(new LuaStringLiteralExpressionSyntax(identifierName));
+            assignment.Rights.Add(invocation);
+            Add(new LuaExpressionStatementSyntax(assignment));
+
+            if(value != null) {
+                if(isStatic) {
+                    if(isImmutable) {
+                        AddResultTable(identifierName, value);
+                    }
+                    else {
+                        AddInitFiled(ref staticInitFunction_, identifierName, value);
+                    }
+                }
+                else {
+                    if(isImmutable) {
+                        AddResultTable(identifierName, value);
+                    }
+                    else {
+                        AddInitFiled(ref initFunction_, identifierName, value);
+                    }
+                }
+            }
+
+            if(!isPrivate) {
+                AddResultTable(get);
+                AddResultTable(set);
+            }
+        }
+
         public void SetStaticCtor(LuaConstructorAdapterExpressSyntax function) {
             Contract.Assert(staticCtorFunction_ == null);
             staticCtorFunction_ = function;

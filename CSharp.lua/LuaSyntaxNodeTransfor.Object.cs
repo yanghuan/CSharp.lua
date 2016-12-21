@@ -39,7 +39,7 @@ namespace CSharpLua {
                     }
                 }
 
-                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ObjectCreate);
+                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create);
                 invocation.AddArgument(invocationExpression);
                 invocation.AddArgument(function);
                 return invocation;
