@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -150,16 +151,22 @@ namespace CSharpLua {
         }
 
         public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
-            var type = symbol.ContainingType;
-            if(type != null) {
-                var interfaceSymbols = type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<T>());
-                return interfaceSymbols.Any(i => symbol.Equals(type.FindImplementationForInterfaceMember(i)));
+            if(!symbol.IsStatic) {
+                var type = symbol.ContainingType;
+                if(type != null) {
+                    var interfaceSymbols = type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<T>());
+                    return interfaceSymbols.Any(i => symbol.Equals(type.FindImplementationForInterfaceMember(i)));
+                }
             }
             return false;
         }
 
+        public static bool IsOverridable(this ISymbol symbol) {
+            return !symbol.IsStatic && (symbol.IsAbstract || symbol.IsVirtual || symbol.IsOverride);
+        }
+
         public static bool IsAuto(this IPropertySymbol property) {
-            if(!property.IsStatic && (property.IsAbstract || property.IsVirtual || property.IsOverride)) {
+            if(!property.IsOverridable()) {
                 return false;
             }
 
@@ -195,6 +202,12 @@ namespace CSharpLua {
                 return isAuto;
             }
             return false;
+        }
+
+        public static string GetLocationString(this SyntaxNode node) {
+            var location = node.SyntaxTree.GetLocation(node.Span);
+            var methodInfo = location.GetType().GetMethod("GetDebuggerDisplay", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (string)methodInfo.Invoke(location, null);
         }
     }
 }

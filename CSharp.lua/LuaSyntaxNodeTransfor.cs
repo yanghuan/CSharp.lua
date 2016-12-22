@@ -251,11 +251,13 @@ namespace CSharpLua {
             bool isImmutable = typeSymbol.IsImmutable();
             foreach(var variable in node.Declaration.Variables) {
                 if(node.IsKind(SyntaxKind.EventFieldDeclaration)) {
-                    throw new NotSupportedException();
+                    var eventSymbol = (IEventSymbol)semanticModel_.GetDeclaredSymbol(variable);
+                    if(eventSymbol.IsOverridable() || eventSymbol.IsInterfaceImplementation()) {
+                        string locationString = variable.GetLocationString();
+                        throw new CompilationErrorException($"{locationString} : event must be 'EventField'");
+                    }
                 }
-                else {
-                    AddField(type, typeSymbol, variable.Identifier, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly);
-                }
+                AddField(type, typeSymbol, variable.Identifier, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly);
             }
         }
 
@@ -370,7 +372,8 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitEventDeclaration(EventDeclarationSyntax node) {
-            return base.VisitEventDeclaration(node);
+            string locationString = node.GetLocationString();
+            throw new CompilationErrorException($"{locationString} : event must be 'EventField'");
         }
 
         public override LuaSyntaxNode VisitEventFieldDeclaration(EventFieldDeclarationSyntax node) {
