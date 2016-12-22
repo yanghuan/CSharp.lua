@@ -407,8 +407,7 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaSwitchAdapterStatementSyntax node) {
-            node.Body.Render(this);
-            WriteNewLine();
+            node.RepeatStatement.Render(this);
         }
 
         internal void Render(LuaBreakStatementSyntax node) {

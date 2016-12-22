@@ -40,10 +40,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaSwitchAdapterStatementSyntax : LuaStatementSyntax {
-        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-            OpenBraceToken = Tokens.Do,
-            CloseBraceToken = Tokens.End,
-        };
+        public LuaRepeatStatementSyntax RepeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
 
         public LuaSwitchAdapterStatementSyntax(LuaExpressionSyntax expression, IEnumerable<LuaStatementSyntax> sections) {
             if(expression == null) {
@@ -53,20 +50,25 @@ namespace CSharpLua.LuaAst {
                 throw new ArgumentNullException(nameof(sections));
             }
 
+            var body = RepeatStatement.Body;
             var temp = LuaIdentifierNameSyntax.Temp1;
             LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(temp);
             variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(expression);
-            Body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+            body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
 
+            LuaIfStatementSyntax ifHeadStatement = null;
+            LuaIfStatementSyntax ifTailStatement = null;
             LuaBlockSyntax defaultBock = null;
-            LuaIfStatementSyntax ifStatement = null;
             foreach(var section in sections) {
                 LuaIfStatementSyntax statement = section as LuaIfStatementSyntax;
                 if(statement != null) {
-                    if(ifStatement != null) {
-                        ifStatement.Else = new LuaElseClauseSyntax(statement);
+                    if(ifTailStatement != null) {
+                        ifTailStatement.Else = new LuaElseClauseSyntax(statement);
                     }
-                    ifStatement = statement;
+                    else {
+                        ifHeadStatement = statement;
+                    }
+                    ifTailStatement = statement;
                 }
                 else {
                     Contract.Assert(defaultBock == null);
@@ -74,15 +76,15 @@ namespace CSharpLua.LuaAst {
                 }
             }
 
-            if(ifStatement != null) {
+            if(ifHeadStatement != null) {
+                body.Statements.Add(ifHeadStatement);
                 if(defaultBock != null) {
-                    ifStatement.Else = new LuaElseClauseSyntax(defaultBock);
+                    ifTailStatement.Else = new LuaElseClauseSyntax(defaultBock);
                 }
-                Body.Statements.Add(ifStatement);
             }
             else {
                 if(defaultBock != null) {
-                    Body.Statements.AddRange(defaultBock.Statements);
+                    body.Statements.AddRange(defaultBock.Statements);
                 }
             }
         }

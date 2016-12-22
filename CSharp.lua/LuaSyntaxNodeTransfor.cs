@@ -928,19 +928,8 @@ namespace CSharpLua {
 
         #endregion
 
-        public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {     
-            var parent = node.Parent;
-            do {
-                SyntaxKind kind = parent.Kind();
-                if(kind == SyntaxKind.SwitchSection) {
-                    return LuaStatementSyntax.Empty;
-                }
-                else if(kind >= SyntaxKind.WhileStatement && kind <= SyntaxKind.ForEachStatement) {
-                    return new LuaBreakStatementSyntax();
-                }
-                parent = parent.Parent;
-            } while(parent != null);
-            throw new InvalidOperationException();
+        public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {
+            return new LuaBreakStatementSyntax();
         }
 
         public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
