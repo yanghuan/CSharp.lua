@@ -37,6 +37,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Ctor = new LuaIdentifierNameSyntax("__ctor__");
         public readonly static LuaIdentifierNameSyntax Inherits = new LuaIdentifierNameSyntax("__inherits__");
         public readonly static LuaIdentifierNameSyntax Property = new LuaIdentifierNameSyntax("System.property");
+        public readonly static LuaIdentifierNameSyntax Event = new LuaIdentifierNameSyntax("System.event");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;
@@ -47,11 +48,23 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaPropertyIdentifierNameSyntax : LuaIdentifierNameSyntax {
-        public bool IsGet { get; set; } = true;
-        public string PrefixToken => IsGet ? Tokens.Get : Tokens.Set;
+    public sealed class LuaPropertyOrEventIdentifierNameSyntax : LuaIdentifierNameSyntax {
+        public bool IsGetOrAdd { get; set; } = true;
+        public bool IsProperty { get; }
 
-        public LuaPropertyIdentifierNameSyntax(string valueText) : base(valueText) {
+        public LuaPropertyOrEventIdentifierNameSyntax(bool isProperty, string valueText) : base(valueText) {
+            IsProperty = isProperty;
+        }
+
+        public string PrefixToken {
+            get {
+                if(IsProperty) {
+                    return IsGetOrAdd ? Tokens.Get : Tokens.Set;
+                }
+                else {
+                    return IsGetOrAdd ? Tokens.Add : Tokens.Remove;
+                }
+            }
         }
 
         internal override void Render(LuaRenderer renderer) {

@@ -165,12 +165,12 @@ namespace CSharpLua {
             return !symbol.IsStatic && (symbol.IsAbstract || symbol.IsVirtual || symbol.IsOverride);
         }
 
-        public static bool IsAuto(this IPropertySymbol property) {
-            if(!property.IsOverridable()) {
+        public static bool IsPropertyField(this IPropertySymbol symbol) {
+            if(!symbol.IsOverridable()) {
                 return false;
             }
 
-            var syntaxReference = property.DeclaringSyntaxReferences.FirstOrDefault();
+            var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if(syntaxReference != null) {
                 var node = (PropertyDeclarationSyntax)syntaxReference.GetSyntax();
                 bool hasGet = false;
@@ -195,11 +195,29 @@ namespace CSharpLua {
                 }
                 bool isAuto = !hasGet && !hasSet;
                 if(isAuto) {
-                    if(property.IsInterfaceImplementation()) {
+                    if(symbol.IsInterfaceImplementation()) {
                         isAuto = false;
                     }
                 }
                 return isAuto;
+            }
+            return false;
+        }
+
+        public static bool IsEventFiled(this IEventSymbol symbol) {
+            if(!symbol.IsOverridable()) {
+                return false;
+            }
+
+            var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+            if(syntaxReference != null) {
+                bool isField = syntaxReference.GetSyntax() is EventFieldDeclarationSyntax;
+                if(isField) {
+                    if(symbol.IsInterfaceImplementation()) {
+                        isField = false;
+                    }
+                }
+                return isField;
             }
             return false;
         }

@@ -102,7 +102,7 @@ namespace CSharpLua {
             Write(node.ValueText);
         }
 
-        internal void Render(LuaPropertyIdentifierNameSyntax node) {
+        internal void Render(LuaPropertyOrEventIdentifierNameSyntax node) {
             Write(node.PrefixToken);
             Write(node.ValueText);
         }

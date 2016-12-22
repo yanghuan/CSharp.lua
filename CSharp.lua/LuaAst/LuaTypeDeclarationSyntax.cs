@@ -115,16 +115,29 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void AddProperty(string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+        private void AddPropertyOrEvent(bool isProperty, string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+            string getToken, setToken;
+            LuaIdentifierNameSyntax initMethodIdentifier;
+            if(isProperty) {
+                getToken = LuaSyntaxNode.Tokens.Get;
+                setToken = LuaSyntaxNode.Tokens.Set;
+                initMethodIdentifier = LuaIdentifierNameSyntax.Property;
+            }
+            else {
+                getToken = LuaSyntaxNode.Tokens.Add;
+                setToken = LuaSyntaxNode.Tokens.Remove;
+                initMethodIdentifier = LuaIdentifierNameSyntax.Event;
+            }
+
             LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(name);
-            LuaIdentifierNameSyntax get = new LuaIdentifierNameSyntax(LuaSyntaxNode.Tokens.Get + name);
-            LuaIdentifierNameSyntax set = new LuaIdentifierNameSyntax(LuaSyntaxNode.Tokens.Set + name);
+            LuaIdentifierNameSyntax get = new LuaIdentifierNameSyntax(getToken + name);
+            LuaIdentifierNameSyntax set = new LuaIdentifierNameSyntax(setToken + name);
             local_.Variables.Add(get);
             local_.Variables.Add(set);
             LuaMultipleAssignmentExpressionSyntax assignment = new LuaMultipleAssignmentExpressionSyntax();
             assignment.Lefts.Add(get);
             assignment.Lefts.Add(set);
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Property);
+            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(initMethodIdentifier);
             invocation.AddArgument(new LuaStringLiteralExpressionSyntax(identifierName));
             assignment.Rights.Add(invocation);
             Add(new LuaExpressionStatementSyntax(assignment));
@@ -152,6 +165,14 @@ namespace CSharpLua.LuaAst {
                 AddResultTable(get);
                 AddResultTable(set);
             }
+        }
+
+        public void AddProperty(string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+            AddPropertyOrEvent(true, name, value, isImmutable, isStatic, isPrivate);
+        }
+
+        public void AddEvent(string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+            AddPropertyOrEvent(false, name, value, isImmutable, isStatic, isPrivate);
         }
 
         public void SetStaticCtor(LuaConstructorAdapterExpressSyntax function) {

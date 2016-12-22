@@ -36,12 +36,17 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaPropertyAdapterExpressionSyntax : LuaExpressionSyntax {
-        private LuaPropertyIdentifierNameSyntax identifier_;
+        private LuaPropertyOrEventIdentifierNameSyntax identifier_;
         public LuaInvocationExpressionSyntax InvocationExpression { get; set; }
 
-        public LuaPropertyAdapterExpressionSyntax(LuaPropertyIdentifierNameSyntax identifier) {
+        public LuaPropertyAdapterExpressionSyntax(LuaPropertyOrEventIdentifierNameSyntax identifier) {
             identifier_ = identifier;
             InvocationExpression = new LuaInvocationExpressionSyntax(identifier);
+        }
+
+        public LuaPropertyAdapterExpressionSyntax(LuaMemberAccessExpressionSyntax memberAccess, LuaPropertyOrEventIdentifierNameSyntax identifier) {
+            identifier_ = identifier;
+            InvocationExpression = new LuaInvocationExpressionSyntax(memberAccess);
         }
 
         public void Update(LuaMemberAccessExpressionSyntax memberAccessExpression) {
@@ -52,7 +57,7 @@ namespace CSharpLua.LuaAst {
 
         public bool IsGet {
             set {
-                 identifier_.IsGet = value;
+                 identifier_.IsGetOrAdd = value;
             }
         }
 

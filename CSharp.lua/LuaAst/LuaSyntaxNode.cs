@@ -34,6 +34,8 @@ namespace CSharpLua.LuaAst {
             public const string This = "this";
             public const string Get = "get";
             public const string Set = "set";
+            public const string Add = "add";
+            public const string Remove = "remove";
         }
 
         public class Keyword {
