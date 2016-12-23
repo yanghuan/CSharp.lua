@@ -26,6 +26,7 @@ Options
                         return;
                     }
 
+                    Console.WriteLine($"start {DateTime.Now}");
                     string folder = cmds.GetArgument("-s");
                     string output = cmds.GetArgument("-d");
                     string lib = cmds.GetArgument("-l", true);
@@ -34,6 +35,7 @@ Options
                     Worker w = new Worker(folder, output, lib, meta, defines);
                     w.Do();
                     Console.WriteLine("all operator success");
+                    Console.WriteLine($"end {DateTime.Now}");
                 }
                 catch(CmdArgumentException e) {
                     Console.Error.WriteLine(e.Message);

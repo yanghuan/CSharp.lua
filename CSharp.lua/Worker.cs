@@ -36,6 +36,15 @@ namespace CSharpLua {
             defines_ = Utility.SplitPaths(defines);
         }
 
+        private IEnumerable<string> Metas {
+            get {
+                List<string> metas = new List<string>();
+                metas.Add(Utility.GetCurrentDirectory(kSystemMeta));
+                metas.AddRange(metas_);
+                return metas;
+            }
+        }
+
         public void Do() {
             Compiler();
         }
@@ -58,6 +67,8 @@ namespace CSharpLua {
                     throw new CompilationErrorException(message);
                 }
             }
+
+            XmlMetaProvider xmlMetaProvider = new XmlMetaProvider(Metas);
 
             List<LuaCompilationUnitSyntax> luaCompilationUnits = new List<LuaCompilationUnitSyntax>();
             foreach(SyntaxTree syntaxTree in compilation.SyntaxTrees) {
