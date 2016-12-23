@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
     public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
-        private LuaLocalVariablesStatementSyntax local_ = new LuaLocalVariablesStatementSyntax();
+        private LuaTypeLocalAreaSyntax local_ = new LuaTypeLocalAreaSyntax();
         private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
 
         private LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();

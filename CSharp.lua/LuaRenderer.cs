@@ -333,6 +333,27 @@ namespace CSharpLua {
             WriteNewLine();
         }
 
+        internal void Render(LuaTypeLocalAreaSyntax node) {
+            const int kPerLineCount = 8;
+            if(node.Variables.Count > 0) {
+                Write(node.LocalKeyword);
+                WriteSpace();
+                int count = 0;
+                foreach(var item in node.Variables) {
+                    if(count > 0) {
+                        WriteComma();
+                        if(count % kPerLineCount == 0) {
+                            WriteNewLine();
+                        }
+                    }
+                    item.Render(this);
+                    ++count;
+                }
+                Write(node.SemicolonToken);
+                WriteNewLine();
+            }
+        }
+
         internal void Render(LuaBinaryExpressionSyntax node) {
             node.Left.Render(this);
             WriteSpace();
