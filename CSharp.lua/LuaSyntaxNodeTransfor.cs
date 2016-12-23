@@ -246,23 +246,25 @@ namespace CSharpLua {
         }
 
         private void VisitBaseFieldDeclarationSyntax(BaseFieldDeclarationSyntax node) {
-            bool isStatic = node.Modifiers.IsStatic();
-            bool isPrivate = node.Modifiers.IsPrivate();
-            bool isReadOnly = node.Modifiers.IsReadOnly();
-            var type = node.Declaration.Type;
-            ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
-            bool isImmutable = typeSymbol.IsImmutable();
-            foreach(var variable in node.Declaration.Variables) {
-                if(node.IsKind(SyntaxKind.EventFieldDeclaration)) {
-                    var eventSymbol = (IEventSymbol)semanticModel_.GetDeclaredSymbol(variable);
-                    if(eventSymbol.IsOverridable() || eventSymbol.IsInterfaceImplementation()) {
-                        bool valueIsLiteral;
-                        LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, variable.Initializer?.Value, out valueIsLiteral);
-                        CurType.AddEvent(variable.Identifier.ValueText, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
-                        continue;
+            if(!node.Modifiers.IsConst()) {
+                bool isStatic = node.Modifiers.IsStatic();
+                bool isPrivate = node.Modifiers.IsPrivate();
+                bool isReadOnly = node.Modifiers.IsReadOnly();
+                var type = node.Declaration.Type;
+                ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
+                bool isImmutable = typeSymbol.IsImmutable();
+                foreach(var variable in node.Declaration.Variables) {
+                    if(node.IsKind(SyntaxKind.EventFieldDeclaration)) {
+                        var eventSymbol = (IEventSymbol)semanticModel_.GetDeclaredSymbol(variable);
+                        if(eventSymbol.IsOverridable() || eventSymbol.IsInterfaceImplementation()) {
+                            bool valueIsLiteral;
+                            LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, variable.Initializer?.Value, out valueIsLiteral);
+                            CurType.AddEvent(variable.Identifier.ValueText, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
+                            continue;
+                        }
                     }
+                    AddField(type, typeSymbol, variable.Identifier, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly);
                 }
-                AddField(type, typeSymbol, variable.Identifier, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly);
             }
         }
 
@@ -619,6 +621,12 @@ namespace CSharpLua {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
             if(symbol.Kind != SymbolKind.Property) {
+                if(symbol.Kind == SymbolKind.Field) {
+                    IFieldSymbol fieldSymbol = (IFieldSymbol)symbol;
+                    if(fieldSymbol.HasConstantValue) {
+                        return VisitConstIdentifier(fieldSymbol.ConstantValue);
+                    }
+                }
                 var identifier = (LuaIdentifierNameSyntax)node.Name.Accept(this);
                 return new LuaMemberAccessExpressionSyntax(expression, identifier, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
             }
@@ -739,6 +747,26 @@ namespace CSharpLua {
             return new LuaIdentifierNameSyntax(name);
         }
 
+        private LuaSyntaxNode VisitConstIdentifier(object constantValue) {
+            if(constantValue != null) {
+                var code = Type.GetTypeCode(constantValue.GetType());
+                switch(code) {
+                    case TypeCode.Char: {
+                            return new LuaCharacterLiteralExpression((char)constantValue);
+                        }
+                    case TypeCode.String: {
+                            return new LuaStringLiteralExpressionSyntax(new LuaIdentifierNameSyntax((string)constantValue));
+                        }
+                    default: {
+                            return new LuaIdentifierNameSyntax(constantValue.ToString());
+                        }
+                }
+            }
+            else {
+                return LuaIdentifierNameSyntax.Nil;
+            }
+        }
+
         public override LuaSyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
@@ -756,7 +784,12 @@ namespace CSharpLua {
                 case SymbolKind.Field: {
                         if(symbol.IsStatic) {
                             var fieldSymbol = (IFieldSymbol)symbol;
-                            name = BuildStaticFieldName(symbol, fieldSymbol.IsReadOnly, node);
+                            if(fieldSymbol.HasConstantValue) {
+                                return VisitConstIdentifier(fieldSymbol.ConstantValue);
+                            }
+                            else {
+                                name = BuildStaticFieldName(symbol, fieldSymbol.IsReadOnly, node);
+                            }
                         }
                         else {
                             if(IsInternalNode(node)) {
@@ -827,7 +860,7 @@ namespace CSharpLua {
                         return new LuaCharacterLiteralExpression((char)node.Token.Value);
                     }
                 case SyntaxKind.NullLiteralExpression: {
-                        return new LuaLiteralExpressionSyntax(LuaSyntaxNode.Tokens.Nil);
+                        return new LuaLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
                     }
                 default: {
                         return new LuaLiteralExpressionSyntax(node.Token.Text);
