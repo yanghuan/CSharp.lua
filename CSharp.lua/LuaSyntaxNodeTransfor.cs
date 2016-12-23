@@ -862,8 +862,10 @@ namespace CSharpLua {
                 luablock.Statements.AddRange(blockNode.Statements);
             }
             else {
+                blocks_.Push(luablock);
                 var statementNode = (LuaStatementSyntax)statement.Accept(this);
                 luablock.Statements.Add(statementNode);
+                blocks_.Pop();
             }
         }
 
@@ -1056,6 +1058,47 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             return new LuaParenthesizedExpressionSyntax(expression);
+        }
+
+        /// <summary>
+        /// http://lua-users.org/wiki/TernaryOperator
+        /// </summary>
+        public override LuaSyntaxNode VisitConditionalExpression(ConditionalExpressionSyntax node) {
+            var type = semanticModel_.GetTypeInfo(node.WhenTrue).Type;
+            bool mayBeNullOrFalse;
+            if(type.IsValueType) {
+                mayBeNullOrFalse = type.ToString() == "bool";
+            }
+            else {
+                mayBeNullOrFalse = true;
+            }
+
+            if(mayBeNullOrFalse) {
+                var temp = LuaIdentifierNameSyntax.Temp1;
+                var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
+                LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
+                blocks_.Push(ifStatement.Body);
+                var whenTrue = (LuaExpressionSyntax)node.WhenTrue.Accept(this);
+                blocks_.Pop();
+                ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, whenTrue)));
+
+                LuaBlockSyntax block = new LuaBlockSyntax();
+                blocks_.Push(block);
+                var whenFalse = (LuaExpressionSyntax)node.WhenFalse.Accept(this);
+                blocks_.Pop();
+                block.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, whenFalse)));
+
+                ifStatement.Else = new LuaElseClauseSyntax(block);
+                CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(new LuaVariableDeclaratorSyntax(temp)));
+                CurBlock.Statements.Add(ifStatement);
+                return temp;
+            }
+            else {
+                var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
+                var whenTrue = (LuaExpressionSyntax)node.WhenTrue.Accept(this);
+                var whenFalse = (LuaExpressionSyntax)node.WhenFalse.Accept(this);
+                return new LuaBinaryExpressionSyntax(new LuaBinaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.And, whenTrue), LuaSyntaxNode.Tokens.Or, whenFalse);
+            }
         }
     }
 }
