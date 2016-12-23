@@ -108,15 +108,15 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
-            LuaIdentifierNameSyntax nameNode = new LuaIdentifierNameSyntax(((IdentifierNameSyntax)node.Name).Identifier.ValueText);
-            LuaNamespaceDeclarationSyntax newNode = new LuaNamespaceDeclarationSyntax(nameNode);
-            namespaces_.Push(newNode);
+            LuaIdentifierNameSyntax name = (LuaIdentifierNameSyntax)node.Name.Accept(this);
+            LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name);
+            namespaces_.Push(namespaceDeclaration);
             foreach(var member in node.Members) {
                 var memberNode = (LuaTypeDeclarationSyntax)member.Accept(this);
-                newNode.Add(memberNode);
+                namespaceDeclaration.Add(memberNode);
             }
             namespaces_.Pop();
-            return newNode;
+            return namespaceDeclaration;
         }
 
         public override LuaSyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
@@ -592,9 +592,22 @@ namespace CSharpLua {
             }
 
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(expression);
+            LuaInvocationExpressionSyntax invocation;
+            var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+            if(!symbol.IsExtensionMethod) {
+                invocation = new LuaInvocationExpressionSyntax(expression);
+                if(expression is LuaInternalMethodIdentifierNameSyntax) {
+                    invocation.AddArgument(LuaIdentifierNameSyntax.This);
+                }
+            }
+            else {
+                LuaMemberAccessExpressionSyntax memberAccess = (LuaMemberAccessExpressionSyntax)expression;
+                IMethodSymbol reducedFrom = symbol.ReducedFrom;
+                string name = reducedFrom.ContainingType.ToString() + '.' + reducedFrom.Name;
+                invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
+                invocation.AddArgument(memberAccess.Expression);
+            }
             invocation.ArgumentList.Arguments.AddRange(arguments);
-
             if(refOrOutArguments.Count > 0) {
                 return BuildInvokeRefOrOut(node, invocation, refOrOutArguments);
             }
@@ -767,7 +780,7 @@ namespace CSharpLua {
                                     return memberAccess;
                                 }
                                 else {
-                                    name = symbol.Name;
+                                    return new LuaInternalMethodIdentifierNameSyntax(symbol.Name);
                                 }
                             }
                             else {
@@ -789,6 +802,10 @@ namespace CSharpLua {
             return new LuaIdentifierNameSyntax(name);
         }
 
+        public override LuaSyntaxNode VisitQualifiedName(QualifiedNameSyntax node) {
+            return new LuaIdentifierNameSyntax(node.ToString());
+        }
+
         public override LuaSyntaxNode VisitArgumentList(ArgumentListSyntax node) {
             LuaArgumentListSyntax argumentList = new LuaArgumentListSyntax();
             foreach(var argument in node.Arguments) {
@@ -805,11 +822,16 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node) {
-            if(node.IsKind(SyntaxKind.CharacterLiteralExpression)) {
-                return new LuaCharacterLiteralExpression((char)node.Token.Value);
-            }
-            else {
-                return new LuaLiteralExpressionSyntax(node.Token.Text);
+            switch(node.Kind()) {
+                case SyntaxKind.CharacterLiteralExpression: {
+                        return new LuaCharacterLiteralExpression((char)node.Token.Value);
+                    }
+                case SyntaxKind.NullLiteralExpression: {
+                        return new LuaLiteralExpressionSyntax(LuaSyntaxNode.Tokens.Nil);
+                    }
+                default: {
+                        return new LuaLiteralExpressionSyntax(node.Token.Text);
+                    }
             }
         }
 

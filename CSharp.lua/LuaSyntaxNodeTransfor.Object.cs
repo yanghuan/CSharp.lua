@@ -20,16 +20,14 @@ namespace CSharpLua {
                 return invocationExpression;
             }
             else {
-                var thisIdentifier = LuaIdentifierNameSyntax.This;
                 LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
-                function.AddParameter(thisIdentifier);
+                function.AddParameter(LuaIdentifierNameSyntax.This);
                 foreach(var expression in node.Initializer.Expressions) {
                     if(expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
                         AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
                         var identifierName = (LuaIdentifierNameSyntax)assignment.Left.Accept(this);
-                        LuaMemberAccessExpressionSyntax left = new LuaMemberAccessExpressionSyntax(thisIdentifier, identifierName);
                         var right = (LuaExpressionSyntax)assignment.Right.Accept(this);
-                        function.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(left, right)));
+                        function.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(identifierName, right)));
                     }
                     else {
                         LuaInvocationExpressionSyntax add = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ThisAdd);
@@ -141,6 +139,28 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitSimpleBaseType(SimpleBaseTypeSyntax node) {
             return node.Type.Accept(this);
+        }
+
+        public override LuaSyntaxNode VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {
+            LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
+            functions_.Push(function);
+
+            var parameter = (LuaParameterSyntax)node.Parameter.Accept(this);
+            function.ParameterList.Parameters.Add(parameter);
+
+            if(node.Body.IsKind(SyntaxKind.Block)) {
+                var block = (LuaBlockSyntax)node.Body.Accept(this);
+                function.Body.Statements.AddRange(block.Statements);
+            }
+            else {
+                blocks_.Push(function.Body);
+                var expression = (LuaExpressionSyntax)node.Body.Accept(this);
+                blocks_.Pop();
+                function.Body.Statements.Add(new LuaExpressionStatementSyntax(expression));
+            }
+
+            functions_.Peek();
+            return function;
         }
     }
 }

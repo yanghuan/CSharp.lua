@@ -56,6 +56,7 @@ namespace CSharpLua.LuaAst {
             public const string Repeat = "repeat";
             public const string Until = "until";
             public const string Break = "break";
+            public const string Nil = "nil";
         }
 
         public static string SpecailWord(string s) {
