@@ -19,8 +19,6 @@ namespace CSharpLua.LuaAst {
         private List<LuaConstructorAdapterExpressSyntax> ctors_ = new List<LuaConstructorAdapterExpressSyntax>();
 
         public LuaTypeDeclarationSyntax() {
-            Add(local_);
-            Add(methodList_);
         }
         
         public void AddStaticReadOnlyAssignmentName(string name) {
@@ -272,8 +270,10 @@ namespace CSharpLua.LuaAst {
         }
 
         internal override void Render(LuaRenderer renderer) {
+            Add(local_);
             AddStaticCtorFunction();
             AddCtorsFunction();
+            Add(methodList_);
 
             LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(resultTable_);
             Add(returnStatement);

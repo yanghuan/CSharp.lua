@@ -132,7 +132,11 @@ namespace CSharpLua {
                 classDeclaration.AddBaseTypes(baseTypes);
             }
             foreach(var member in node.Members) {
-                member.Accept(this);
+                var newMember = member.Accept(this);
+                SyntaxKind kind = member.Kind();
+                if(kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration) {
+                    classDeclaration.Add((LuaStatementSyntax)newMember);
+                }
             }
             typeDeclarations_.Pop();
             return classDeclaration;
