@@ -13,8 +13,6 @@ using Microsoft.CodeAnalysis;
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
         private SemanticModel semanticModel_;
-        private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
-        private Stack<LuaNamespaceDeclarationSyntax> namespaces_ = new Stack<LuaNamespaceDeclarationSyntax>();
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
         private Stack<LuaFunctionExpressSyntax> functions_ = new Stack<LuaFunctionExpressSyntax>();
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
@@ -60,18 +58,6 @@ namespace CSharpLua {
             }
         }
 
-        private LuaCompilationUnitSyntax CurCompilationUnit {
-            get {
-                return compilationUnits_.Peek();
-            }
-        }
-
-        private LuaNamespaceDeclarationSyntax CurNamespace {
-            get {
-                return namespaces_.Peek();
-            }
-        }
-
         private LuaTypeDeclarationSyntax CurType {
             get {
                 return typeDeclarations_.Peek();
@@ -91,31 +77,27 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
-            LuaCompilationUnitSyntax newNode = new LuaCompilationUnitSyntax() { FilePath = node.SyntaxTree.FilePath };
-            compilationUnits_.Push(newNode);
+            LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax() { FilePath = node.SyntaxTree.FilePath };
             foreach(var member in node.Members) {
                 LuaStatementSyntax memberNode = (LuaStatementSyntax)member.Accept(this);
                 var typeDeclaration = memberNode as LuaTypeDeclarationSyntax;
                 if(typeDeclaration != null) {
-                    newNode.AddTypeDeclaration(typeDeclaration);
+                    compilationUnit.AddTypeDeclaration(typeDeclaration);
                 }
                 else {
-                    newNode.Statements.Add(memberNode);
+                    compilationUnit.Statements.Add(memberNode);
                 }
             }
-            compilationUnits_.Pop();
-            return newNode;
+            return compilationUnit;
         }
 
         public override LuaSyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
             LuaIdentifierNameSyntax name = (LuaIdentifierNameSyntax)node.Name.Accept(this);
             LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name);
-            namespaces_.Push(namespaceDeclaration);
             foreach(var member in node.Members) {
                 var memberNode = (LuaTypeDeclarationSyntax)member.Accept(this);
                 namespaceDeclaration.Add(memberNode);
             }
-            namespaces_.Pop();
             return namespaceDeclaration;
         }
 
