@@ -13,6 +13,8 @@ using Microsoft.CodeAnalysis;
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
         private SemanticModel semanticModel_;
+        private XmlMetaProvider xmlMetaProvider_;
+
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
         private Stack<LuaFunctionExpressSyntax> functions_ = new Stack<LuaFunctionExpressSyntax>();
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
@@ -25,37 +27,13 @@ namespace CSharpLua {
             ["??"] = LuaSyntaxNode.Tokens.Or,
         };
 
-        public LuaSyntaxNodeTransfor(SemanticModel semanticModel) {
+        public LuaSyntaxNodeTransfor(SemanticModel semanticModel, XmlMetaProvider xmlMetaProvider) {
             semanticModel_ = semanticModel;
+            xmlMetaProvider_ = xmlMetaProvider;
         }
 
         private static string GetOperatorToken(string operatorToken) {
             return operatorTokenMapps_.GetOrDefault(operatorToken, operatorToken);
-        }
-
-        private static string GetPredefinedTypeName(string name) {
-            switch(name) {
-                case "byte":
-                case "sbyte":
-                case "short":
-                case "ushort":
-                case "int":
-                case "uint":
-                case "long":
-                case "ulong":
-                    return "System.Int";
-                case "float":
-                case "double":
-                    return "System.Double";
-                case "bool":
-                    return "System.Boolean";
-                case "string":
-                    return "System.String";
-                case "object":
-                    return "System.Object";
-                default:
-                    return name;
-            }
         }
 
         private LuaTypeDeclarationSyntax CurType {
@@ -893,7 +871,8 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitPredefinedType(PredefinedTypeSyntax node) {
-            string typeName = GetPredefinedTypeName(node.Keyword.ValueText);
+            ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
+            string typeName = xmlMetaProvider_.GetTypeMapName(symbol);
             return new LuaIdentifierNameSyntax(typeName);
         }
 

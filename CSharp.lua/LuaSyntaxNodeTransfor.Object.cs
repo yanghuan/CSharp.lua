@@ -47,7 +47,7 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitGenericName(GenericNameSyntax node) {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
-            string name = $"{symbol.ContainingNamespace.ToString()}.{symbol.Name}_{node.TypeArgumentList.Arguments.Count}";
+            string name = xmlMetaProvider_.GetTypeMapName(symbol);
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
             foreach(var typeArgument in node.TypeArgumentList.Arguments) {
                 var expression = (LuaExpressionSyntax)typeArgument.Accept(this);

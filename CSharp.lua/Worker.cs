@@ -74,7 +74,7 @@ namespace CSharpLua {
             foreach(SyntaxTree syntaxTree in compilation.SyntaxTrees) {
                 SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
                 CompilationUnitSyntax compilationUnitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();
-                LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor(semanticModel);
+                LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor(semanticModel, xmlMetaProvider);
                 var luaCompilationUnit = (LuaCompilationUnitSyntax)compilationUnitSyntax.Accept(transfor);
                 luaCompilationUnits.Add(luaCompilationUnit);
             }
