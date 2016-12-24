@@ -766,22 +766,23 @@ namespace CSharpLua {
                         break;
                     }
                 case SymbolKind.Method: {
+                        string methodName = xmlMetaProvider_.GetMethodMapName((IMethodSymbol)symbol);
                         if(symbol.IsStatic) {
-                            name = symbol.Name;
+                            name = methodName;
                         }
                         else {
                             if(IsInternalNode(node)) {
                                 if(symbol.IsOverridable() && !symbol.ContainingType.IsSealed) {
-                                    LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(symbol.Name);
+                                    LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(methodName);
                                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, identifierName, true);
                                     return memberAccess;
                                 }
                                 else {
-                                    return new LuaInternalMethodIdentifierNameSyntax(symbol.Name);
+                                    return new LuaInternalMethodIdentifierNameSyntax(methodName);
                                 }
                             }
                             else {
-                                name = symbol.Name;
+                                name = methodName;
                             }
                         }
                         break;

@@ -84,8 +84,55 @@ namespace CSharpLua {
             public NamespaceModel[] Namespaces;
         }
 
+        private sealed class MethodMetaInfo {
+            private List<XmlMetaModel.MethodModel> models_ = new List<XmlMetaModel.MethodModel>();
+
+            public void Add(XmlMetaModel.MethodModel model) {
+                models_.Add(model);
+            }
+
+            public string GetName(IMethodSymbol symbol) {
+                if(models_.Count == 1) {
+                    return models_.First().Name;
+                }
+                throw new NotSupportedException();
+            }
+        }
+
+        private sealed class TypeMetaInfo {
+            private XmlMetaModel.ClassModel model_;
+            private Dictionary<string, MethodMetaInfo> methods_ = new Dictionary<string, MethodMetaInfo>();
+
+            public TypeMetaInfo(XmlMetaModel.ClassModel model) {
+                model_ = model;
+                Method();
+            }
+
+            private void Method() {
+                if(model_.Methods != null) {
+                    foreach(var methodModel in model_.Methods) {
+                        if(string.IsNullOrEmpty(methodModel.name)) {
+                            throw new ArgumentException($"type [{model_.name}] has a method name is empty");
+                        }
+
+                        var info = methods_.GetOrDefault(methodModel.name);
+                        if(info == null) {
+                            info = new MethodMetaInfo();
+                            methods_.Add(methodModel.name, info);
+                        }
+                        info.Add(methodModel);
+                    }
+                }
+            }
+
+            public MethodMetaInfo GetMethodMetaInfo(string name) {
+                return methods_.GetOrDefault(name);
+            }
+        }
+
         private static Dictionary<string, string> namespaceNameMaps_ = new Dictionary<string, string>();
         private static Dictionary<string, string> typeNameMaps_ = new Dictionary<string, string>();
+        private static Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
 
         public XmlMetaProvider(IEnumerable<string> files) {
             foreach(string file in files) {
@@ -132,7 +179,7 @@ namespace CSharpLua {
             foreach(var classModel in classes) {
                 string className = classModel.name;
                 if(string.IsNullOrEmpty(className)) {
-                    throw new ArgumentException($"namespace[{namespaceName}] has a class's name is empty");
+                    throw new ArgumentException($"namespace [{namespaceName}] has a class's name is empty");
                 }
 
                 string classesfullName = namespaceName + '.' + className;
@@ -143,6 +190,12 @@ namespace CSharpLua {
                     }
                     typeNameMaps_.Add(classesfullName, classModel.Name);
                 }
+
+                if(typeMetas_.ContainsKey(classesfullName)) {
+                    throw new ArgumentException($"type [{classesfullName}] is already has");
+                }
+                TypeMetaInfo info = new TypeMetaInfo(classModel);
+                typeMetas_.Add(classesfullName, info);
             }
         }
 
@@ -156,17 +209,37 @@ namespace CSharpLua {
             }
         }
 
-        public string GetTypeMapName(ISymbol symbol) {
+        private string GetTypeName(ISymbol symbol) {
             INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
             string namespaceName = GetNamespaceMapName(typeSymbol.ContainingNamespace);
             string name;
             if(typeSymbol.TypeArguments.Length == 0) {
                 name = $"{namespaceName}.{symbol.Name}";
-            } 
+            }
             else {
                 name = $"{namespaceName}.{symbol.Name}_{typeSymbol.TypeArguments.Length}";
             }
+            return name;
+        }
+
+        public string GetTypeMapName(ISymbol symbol) {
+            string name = GetTypeName(symbol);
             return typeNameMaps_.GetOrDefault(name, name);
+        }
+
+        internal string GetMethodMapName(IMethodSymbol symbol) {
+            string typeName = GetTypeName(symbol.ContainingType);
+            var typeInfo = typeMetas_.GetOrDefault(typeName);
+            if(typeInfo != null) {
+                var methodInfo = typeInfo.GetMethodMetaInfo(symbol.Name);
+                if(methodInfo != null) {
+                    string name = methodInfo.GetName(symbol);
+                    if(name != null) {
+                        return name;
+                    }
+                }
+            }
+            return symbol.Name;
         }
     }
 }
