@@ -17,6 +17,7 @@ namespace CSharpLua {
 
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
         private Stack<LuaFunctionExpressSyntax> functions_ = new Stack<LuaFunctionExpressSyntax>();
+        private Stack<LuaIdentifierNameSyntax> swictTemps_ = new Stack<LuaIdentifierNameSyntax>();
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
 
         private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
@@ -202,6 +203,17 @@ namespace CSharpLua {
                 default:
                     return null;
             }
+        }
+
+        private LuaIdentifierNameSyntax GetTempIdentifier(SyntaxNode node) {
+            int index = CurFunction.TempIndex;
+            string name = LuaSyntaxNode.TempIdentifiers.GetOrDefault(index);
+            if(name == null) {
+                throw new CompilationErrorException($"{node.GetLocationString()} : Your code is startling, {LuaSyntaxNode.TempIdentifiers.Length} " 
+                    + "temporary variables is not enough, please refactor your code.");
+            }
+            ++CurFunction.TempIndex;
+            return new LuaIdentifierNameSyntax(name);
         }
 
         private LuaInvocationExpressionSyntax BuildDefaultValueExpression(TypeSyntax type) {
@@ -524,7 +536,7 @@ namespace CSharpLua {
                 SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
                 IMethodSymbol symbol = (IMethodSymbol)symbolInfo.Symbol;
                 if(!symbol.ReturnsVoid) {
-                    var temp = LuaIdentifierNameSyntax.Temp1;
+                    var temp = GetTempIdentifier(node);
                     CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(new LuaVariableDeclaratorSyntax(temp)));
                     multipleAssignment.Lefts.Add(temp);
                 }
@@ -533,7 +545,7 @@ namespace CSharpLua {
                 return multipleAssignment;
             }
             else {
-                var temp = LuaIdentifierNameSyntax.Temp1;
+                var temp = GetTempIdentifier(node);
                 LuaMultipleAssignmentExpressionSyntax multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
                 multipleAssignment.Lefts.Add(temp);
                 multipleAssignment.Lefts.AddRange(refOrOutArguments.Select(i => i.Expression));
@@ -915,8 +927,11 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitSwitchStatement(SwitchStatementSyntax node) {
+            var temp = GetTempIdentifier(node);
+            swictTemps_.Push(temp);
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            LuaSwitchAdapterStatementSyntax switchStatement = new LuaSwitchAdapterStatementSyntax(expression, node.Sections.Select(i => (LuaStatementSyntax)i.Accept(this)));
+            LuaSwitchAdapterStatementSyntax switchStatement = new LuaSwitchAdapterStatementSyntax(temp, expression, node.Sections.Select(i => (LuaStatementSyntax)i.Accept(this)));
+            swictTemps_.Pop();
             return switchStatement;
         }
 
@@ -943,7 +958,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitCaseSwitchLabel(CaseSwitchLabelSyntax node) {
-            var left = LuaIdentifierNameSyntax.Temp1;
+            var left = swictTemps_.Peek();
             var right = (LuaExpressionSyntax)node.Value.Accept(this);
             LuaBinaryExpressionSyntax BinaryExpression = new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.EqualsEquals, right);
             return BinaryExpression;
@@ -1000,7 +1015,7 @@ namespace CSharpLua {
                 return assignment;
             }
             else {
-                var temp = LuaIdentifierNameSyntax.Temp1;
+                var temp = GetTempIdentifier(node);
                 LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(temp);
                 variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(assignment.Left);
                 CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
@@ -1095,7 +1110,7 @@ namespace CSharpLua {
             }
 
             if(mayBeNullOrFalse) {
-                var temp = LuaIdentifierNameSyntax.Temp1;
+                var temp = GetTempIdentifier(node);
                 var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
                 LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
                 blocks_.Push(ifStatement.Body);

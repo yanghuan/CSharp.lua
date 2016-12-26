@@ -42,7 +42,7 @@ namespace CSharpLua.LuaAst {
     public sealed class LuaSwitchAdapterStatementSyntax : LuaStatementSyntax {
         public LuaRepeatStatementSyntax RepeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
 
-        public LuaSwitchAdapterStatementSyntax(LuaExpressionSyntax expression, IEnumerable<LuaStatementSyntax> sections) {
+        public LuaSwitchAdapterStatementSyntax(LuaIdentifierNameSyntax temp, LuaExpressionSyntax expression, IEnumerable<LuaStatementSyntax> sections) {
             if(expression == null) {
                 throw new ArgumentNullException(nameof(expression));
             }
@@ -51,7 +51,6 @@ namespace CSharpLua.LuaAst {
             }
 
             var body = RepeatStatement.Body;
-            var temp = LuaIdentifierNameSyntax.Temp1;
             LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(temp);
             variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(expression);
             body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));

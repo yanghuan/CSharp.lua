@@ -62,6 +62,12 @@ namespace CSharpLua.LuaAst {
         public static string SpecailWord(string s) {
             return "__" + s + "__";
         }
+
+        public static string[] TempIdentifiers = {
+            "default", "extern", "ref", "out", "internal",
+            "void",  "case", "new", "object", "using",
+            "fixed", "override", "abstract", "checked", "virtual",
+        };
     }
 
     public sealed class LuaSyntaxList<T> : List<T> where T : LuaSyntaxNode {

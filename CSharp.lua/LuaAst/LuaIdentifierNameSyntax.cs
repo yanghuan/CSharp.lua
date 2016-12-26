@@ -20,7 +20,6 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Struct = new LuaIdentifierNameSyntax("struct");
         public readonly static LuaIdentifierNameSyntax Interface = new LuaIdentifierNameSyntax("interface");
         public readonly static LuaIdentifierNameSyntax Enum = new LuaIdentifierNameSyntax("enum");
-        public readonly static LuaIdentifierNameSyntax Temp1 = new LuaIdentifierNameSyntax("default");
         public readonly static LuaIdentifierNameSyntax Value = new LuaIdentifierNameSyntax("value");
         public readonly static LuaIdentifierNameSyntax This = new LuaIdentifierNameSyntax("this");
         public readonly static LuaIdentifierNameSyntax True = new LuaIdentifierNameSyntax("true");
