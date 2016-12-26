@@ -17,6 +17,7 @@ namespace CSharpLua.LuaAst {
 
         private LuaFunctionExpressSyntax initFunction_;
         private List<LuaConstructorAdapterExpressSyntax> ctors_ = new List<LuaConstructorAdapterExpressSyntax>();
+        private List<LuaIdentifierNameSyntax> typeIdentifiers_ = new List<LuaIdentifierNameSyntax>();
 
         public LuaTypeDeclarationSyntax() {
         }
@@ -25,6 +26,10 @@ namespace CSharpLua.LuaAst {
             if(!staticAssignmentNames_.Contains(name)) {
                 staticAssignmentNames_.Add(name);
             }
+        }
+
+        public void AddTypeIdentifier(LuaIdentifierNameSyntax identifier) {
+            typeIdentifiers_.Add(identifier);
         }
 
         private void AddResultTable(LuaIdentifierNameSyntax name) {
@@ -277,6 +282,16 @@ namespace CSharpLua.LuaAst {
 
             LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(resultTable_);
             Add(returnStatement);
+
+            if(typeIdentifiers_.Count > 0) {
+                LuaFunctionExpressSyntax wrapFunction = new LuaFunctionExpressSyntax();
+                foreach(var type in typeIdentifiers_) {
+                    wrapFunction.AddParameter(type);
+                }
+                wrapFunction.Body.Statements.AddRange(statements_);
+                statements_.Clear();
+                statements_.Add(new LuaReturnStatementSyntax(wrapFunction));
+            }
             base.Render(renderer);
         }
     }

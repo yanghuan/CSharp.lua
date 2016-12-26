@@ -47,13 +47,18 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitGenericName(GenericNameSyntax node) {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
-            string name = xmlMetaProvider_.GetTypeMapName(symbol);
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
-            foreach(var typeArgument in node.TypeArgumentList.Arguments) {
-                var expression = (LuaExpressionSyntax)typeArgument.Accept(this);
-                invocation.AddArgument(expression);
+            if(symbol.Kind == SymbolKind.Method) {
+                return GetMethodNameExpression((IMethodSymbol)symbol, node);
             }
-            return invocation;
+            else {
+                string name = xmlMetaProvider_.GetTypeMapName(symbol);
+                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
+                foreach(var typeArgument in node.TypeArgumentList.Arguments) {
+                    var expression = (LuaExpressionSyntax)typeArgument.Accept(this);
+                    invocation.AddArgument(expression);
+                }
+                return invocation;
+            }
         }
 
         public override LuaSyntaxNode VisitArrayType(ArrayTypeSyntax node) {
@@ -161,6 +166,17 @@ namespace CSharpLua {
 
             functions_.Peek();
             return function;
+        }
+
+        public override LuaSyntaxNode VisitTypeParameter(TypeParameterSyntax node) {
+            return new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+        }
+
+        public override LuaSyntaxNode VisitTypeOfExpression(TypeOfExpressionSyntax node) {
+            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf);
+            var typeName = (LuaIdentifierNameSyntax)node.Type.Accept(this);
+            invocation.AddArgument(typeName);
+            return invocation;
         }
     }
 }

@@ -38,6 +38,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Property = new LuaIdentifierNameSyntax("System.property");
         public readonly static LuaIdentifierNameSyntax Event = new LuaIdentifierNameSyntax("System.event");
         public readonly static LuaIdentifierNameSyntax Nil = new LuaIdentifierNameSyntax("nil");
+        public readonly static LuaIdentifierNameSyntax TypeOf = new LuaIdentifierNameSyntax("System.typeof");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

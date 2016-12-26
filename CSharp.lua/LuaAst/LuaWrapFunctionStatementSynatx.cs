@@ -7,24 +7,26 @@ using System.Text;
 namespace CSharpLua.LuaAst {
     public abstract class LuaWrapFunctionStatementSynatx : LuaStatementSyntax {
         public LuaExpressionStatementSyntax Statement { get; private set; }
-        private LuaFunctionExpressSyntax functionNode_ = new LuaFunctionExpressSyntax();
+        private LuaFunctionExpressSyntax function_ = new LuaFunctionExpressSyntax();
+        protected List<LuaStatementSyntax> statements_ = new List<LuaStatementSyntax>();
 
         protected void UpdateIdentifiers(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax target, LuaIdentifierNameSyntax memberName, LuaIdentifierNameSyntax parameter = null) {
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(target, memberName);
             LuaInvocationExpressionSyntax invoke = new LuaInvocationExpressionSyntax(memberAccess);
             invoke.AddArgument(new LuaStringLiteralExpressionSyntax(name));
-            invoke.AddArgument(functionNode_);
+            invoke.AddArgument(function_);
             if(parameter != null) {
-                functionNode_.AddParameter(parameter);
+                function_.AddParameter(parameter);
             }
             Statement = new LuaExpressionStatementSyntax(invoke);
         }
 
         public void Add(LuaStatementSyntax statement) {
-            functionNode_.Body.Statements.Add(statement);
+            statements_.Add(statement);
         }
 
         internal override void Render(LuaRenderer renderer) {
+            function_.Body.Statements.AddRange(statements_);
             renderer.Render(this);
         }
     }
