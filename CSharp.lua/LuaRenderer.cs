@@ -437,6 +437,11 @@ namespace CSharpLua {
             WriteNewLine();
         }
 
+        internal void Render(LuaContinueAdapterStatementSyntax node) {
+            node.Assignment.Render(this);
+            node.Break.Render(this);
+        }
+
         internal void Render(LuaBlockBlockSyntax node) {
             node.Body.Render(this);
             WriteNewLine();

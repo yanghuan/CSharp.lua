@@ -69,9 +69,28 @@ namespace CSharpLua.LuaAst {
     public sealed class LuaBreakStatementSyntax : LuaStatementSyntax {
         public string BreakKeyword => Tokens.Break;
 
+        private LuaBreakStatementSyntax() {}
+
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
+
+        public static readonly LuaBreakStatementSyntax Statement = new LuaBreakStatementSyntax();
+    }
+
+    public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
+        public LuaExpressionStatementSyntax Assignment { get; }
+        public LuaBreakStatementSyntax Break => LuaBreakStatementSyntax.Statement;
+
+        private LuaContinueAdapterStatementSyntax() {
+            Assignment = new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Continue, LuaIdentifierNameSyntax.True));
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+
+        public static readonly LuaContinueAdapterStatementSyntax Statement = new LuaContinueAdapterStatementSyntax();
     }
 
     public sealed class LuaBlankLinesStatement : LuaStatementSyntax {

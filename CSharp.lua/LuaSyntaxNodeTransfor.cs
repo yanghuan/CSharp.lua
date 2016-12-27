@@ -918,15 +918,15 @@ namespace CSharpLua {
             return new LuaIdentifierNameSyntax(typeName);
         }
 
-        private void WriteStatementOrBlock(StatementSyntax statement, LuaBlockSyntax luablock) {
+        private void WriteStatementOrBlock(StatementSyntax statement, LuaBlockSyntax block) {
             if(statement.IsKind(SyntaxKind.Block)) {
                 var blockNode = (LuaBlockSyntax)statement.Accept(this);
-                luablock.Statements.AddRange(blockNode.Statements);
+                block.Statements.AddRange(blockNode.Statements);
             }
             else {
-                blocks_.Push(luablock);
+                blocks_.Push(block);
                 var statementNode = (LuaStatementSyntax)statement.Accept(this);
-                luablock.Statements.Add(statementNode);
+                block.Statements.Add(statementNode);
                 blocks_.Pop();
             }
         }
@@ -997,7 +997,7 @@ namespace CSharpLua {
         #endregion
 
         public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {
-            return new LuaBreakStatementSyntax();
+            return LuaBreakStatementSyntax.Statement;
         }
 
         public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
@@ -1019,7 +1019,7 @@ namespace CSharpLua {
             SyntaxKind kind = node.Kind();
             if(kind == SyntaxKind.PreIncrementExpression || kind == SyntaxKind.PreDecrementExpression) {
                 LuaAssignmentExpressionSyntax assignment = GetLuaAssignmentExpressionSyntax(node.Operand, kind == SyntaxKind.PreIncrementExpression);
-                if(node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
+                if(node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement)) {
                     return assignment;
                 }
                 else {
@@ -1041,7 +1041,7 @@ namespace CSharpLua {
                 throw new NotSupportedException();
             }
             LuaAssignmentExpressionSyntax assignment = GetLuaAssignmentExpressionSyntax(node.Operand, kind == SyntaxKind.PostIncrementExpression);
-            if(node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
+            if(node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement)) {
                 return assignment;
             }
             else {
@@ -1061,18 +1061,55 @@ namespace CSharpLua {
             return new LuaExpressionStatementSyntax(invocationExpression);
         }
 
+        private bool IsContinueExists(SyntaxNode node) {
+            ContinueSearcher searcher = new ContinueSearcher();
+            searcher.Visit(node);
+            return searcher.IsFound;
+        }
+
+        private sealed class ContinueSearcher : CSharpSyntaxWalker {
+            public bool IsFound { get; private set; }
+            public override void VisitContinueStatement(ContinueStatementSyntax node) {
+                IsFound = true;
+            }
+        }
+
+        public override LuaSyntaxNode VisitContinueStatement(ContinueStatementSyntax node) {
+            return LuaContinueAdapterStatementSyntax.Statement;      
+        }
+
+        private void VisitLoopBody(StatementSyntax bodyStatement, LuaBlockSyntax block) {
+            bool hasContinue = IsContinueExists(bodyStatement);
+            if(hasContinue) {
+                // http://lua-users.org/wiki/ContinueProposal
+                var continueIdentifier = LuaIdentifierNameSyntax.Continue;
+                block.Statements.Add(new LuaLocalVariableDeclaratorSyntax(new LuaVariableDeclaratorSyntax(continueIdentifier)));
+                LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
+                WriteStatementOrBlock(bodyStatement, repeatStatement.Body);
+                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(continueIdentifier, LuaIdentifierNameSyntax.True);
+                repeatStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+                block.Statements.Add(repeatStatement);
+                LuaIfStatementSyntax IfStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(continueIdentifier, LuaSyntaxNode.Tokens.Not));
+                IfStatement.Body.Statements.Add(LuaBreakStatementSyntax.Statement);
+                block.Statements.Add(IfStatement);
+            }
+            else {
+                WriteStatementOrBlock(bodyStatement, block);
+            }
+        }
+
         public override LuaSyntaxNode VisitForEachStatement(ForEachStatementSyntax node) {
             LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             LuaForInStatementSyntax forInStatement = new LuaForInStatementSyntax(identifier, expression);
-            WriteStatementOrBlock(node.Statement, forInStatement.Body);
+            VisitLoopBody(node.Statement, forInStatement.Body);
             return forInStatement;
         }
 
         public override LuaSyntaxNode VisitWhileStatement(WhileStatementSyntax node) {
             var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
             LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
-            WriteStatementOrBlock(node.Statement, whileStatement.Body);
+            VisitLoopBody(node.Statement, whileStatement.Body);
             return whileStatement;
         }
 
@@ -1089,7 +1126,7 @@ namespace CSharpLua {
             LuaExpressionSyntax condition = node.Condition != null ? (LuaExpressionSyntax)node.Condition.Accept(this) : LuaIdentifierNameSyntax.True;
             LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
             blocks_.Push(whileStatement.Body);
-            WriteStatementOrBlock(node.Statement, whileStatement.Body);
+            VisitLoopBody(node.Statement, whileStatement.Body);
             var incrementors = node.Incrementors.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
             whileStatement.Body.Statements.AddRange(incrementors);
             blocks_.Pop();
@@ -1103,7 +1140,7 @@ namespace CSharpLua {
             var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
             var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Keyword.Not);
             LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(newCondition);
-            WriteStatementOrBlock(node.Statement, repeatStatement.Body);
+            VisitLoopBody(node.Statement, repeatStatement.Body);
             return repeatStatement;
         }
 
