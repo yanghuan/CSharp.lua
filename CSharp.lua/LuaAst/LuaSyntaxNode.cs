@@ -36,6 +36,7 @@ namespace CSharpLua.LuaAst {
             public const string Set = "set";
             public const string Add = "add";
             public const string Remove = "remove";
+            public const string Label = "::";
         }
 
         public class Keyword {
@@ -57,6 +58,7 @@ namespace CSharpLua.LuaAst {
             public const string Until = "until";
             public const string Break = "break";
             public const string Nil = "nil";
+            public const string Goto = "goto";
         }
 
         public static string SpecailWord(string s) {

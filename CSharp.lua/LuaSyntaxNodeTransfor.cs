@@ -17,7 +17,7 @@ namespace CSharpLua {
 
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
         private Stack<LuaFunctionExpressSyntax> functions_ = new Stack<LuaFunctionExpressSyntax>();
-        private Stack<LuaIdentifierNameSyntax> swictTemps_ = new Stack<LuaIdentifierNameSyntax>();
+        private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
 
         private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
@@ -795,7 +795,9 @@ namespace CSharpLua {
             string name;
             switch(symbol.Kind) {
                 case SymbolKind.Local:
-                case SymbolKind.Parameter: {
+                case SymbolKind.Parameter:
+                case SymbolKind.TypeParameter:
+                case SymbolKind.Label: {
                         name = symbol.Name;
                         break;
                     }
@@ -832,10 +834,6 @@ namespace CSharpLua {
                 case SymbolKind.Event: {
                         return VisitFieldOrEventIdentifierName(node, symbol, false);
                     }
-                case SymbolKind.TypeParameter: {
-                        name = symbol.Name;
-                        break;
-                    }
                 default: {
                         throw new NotSupportedException();
                     }
@@ -868,10 +866,10 @@ namespace CSharpLua {
                         return new LuaCharacterLiteralExpression((char)node.Token.Value);
                     }
                 case SyntaxKind.NullLiteralExpression: {
-                        return new LuaLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
+                        return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
                     }
                 default: {
-                        return new LuaLiteralExpressionSyntax(node.Token.Text);
+                        return new LuaIdentifierLiteralExpressionSyntax(node.Token.Text);
                     }
             }
         }
@@ -959,10 +957,11 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitSwitchStatement(SwitchStatementSyntax node) {
             var temp = GetTempIdentifier(node);
-            swictTemps_.Push(temp);
+            LuaSwitchAdapterStatementSyntax switchStatement = new LuaSwitchAdapterStatementSyntax(temp);
+            switchs_.Push(switchStatement);
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            LuaSwitchAdapterStatementSyntax switchStatement = new LuaSwitchAdapterStatementSyntax(temp, expression, node.Sections.Select(i => (LuaStatementSyntax)i.Accept(this)));
-            swictTemps_.Pop();
+            switchStatement.Fill(expression, node.Sections.Select(i => (LuaStatementSyntax)i.Accept(this)));
+            switchs_.Pop();
             return switchStatement;
         }
 
@@ -989,8 +988,8 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitCaseSwitchLabel(CaseSwitchLabelSyntax node) {
-            var left = swictTemps_.Peek();
-            var right = (LuaExpressionSyntax)node.Value.Accept(this);
+            var left = switchs_.Peek().Temp;
+            var right = (LuaLiteralExpressionSyntax)node.Value.Accept(this);
             LuaBinaryExpressionSyntax BinaryExpression = new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.EqualsEquals, right);
             return BinaryExpression;
         }
@@ -1166,6 +1165,30 @@ namespace CSharpLua {
                 var whenFalse = (LuaExpressionSyntax)node.WhenFalse.Accept(this);
                 return new LuaBinaryExpressionSyntax(new LuaBinaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.And, whenTrue), LuaSyntaxNode.Tokens.Or, whenFalse);
             }
+        }
+
+        public override LuaSyntaxNode VisitGotoStatement(GotoStatementSyntax node) {
+            if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.None)) {
+                var identifier = (LuaIdentifierNameSyntax)node.Expression.Accept(this);
+                return new LuaGotoStatement(identifier);
+            }
+            else if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.CaseKeyword)) {
+                var label = (LuaLiteralExpressionSyntax)node.Expression.Accept(this);
+                var temp = new LuaIdentifierNameSyntax("label_" + label.Text);
+                switchs_.Peek().AddCaseLabel(temp, label.Text);
+                return new LuaGotoCaseAdapterStatement(temp);
+            }
+            else {
+                var temp = new LuaIdentifierNameSyntax("label_default");
+                switchs_.Peek().AddDefaultLabel(temp);
+                return new LuaGotoCaseAdapterStatement(temp);
+            }
+        }
+
+        public override LuaSyntaxNode VisitLabeledStatement(LabeledStatementSyntax node) {
+            LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            var statement = (LuaStatementSyntax)node.Statement.Accept(this);
+            return new LuaLabeledStatement(identifier, statement);
         }
     }
 }

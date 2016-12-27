@@ -161,7 +161,7 @@ namespace CSharpLua {
             Write(node.CloseBraceToken);
         }
 
-        internal void Render(LuaLiteralExpressionSyntax node) {
+        internal void Render(LuaIdentifierLiteralExpressionSyntax node) {
             node.Identifier.Render(this);
         }
 
@@ -465,6 +465,28 @@ namespace CSharpLua {
             Write(node.OpenParenToken);
             node.Expression.Render(this);
             Write(node.CloseParenToken);
+        }
+
+        internal void Render(LuaGotoStatement node) {
+            Write(node.GotoKeyword);
+            WriteSpace();
+            node.Identifier.Render(this);
+            Write(node.SemicolonToken);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaLabeledStatement node) {
+            Write(node.PrefixToken);
+            node.Identifier.Render(this);
+            Write(node.SuffixToken);
+            Write(node.SemicolonToken);
+            WriteNewLine();
+            node.Statement?.Render(this);
+        }
+
+        internal void Render(LuaGotoCaseAdapterStatement node) {
+            node.Assignment.Render(this);
+            node.GotoStatement.Render(this);
         }
     }
 }

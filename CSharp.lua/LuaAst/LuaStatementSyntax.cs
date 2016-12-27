@@ -112,4 +112,58 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaGotoStatement : LuaStatementSyntax {
+        public LuaIdentifierNameSyntax Identifier { get; }
+        public string GotoKeyword => Tokens.Goto;
+
+        public LuaGotoStatement(LuaIdentifierNameSyntax identifier) {
+            if(identifier == null) {
+                throw new ArgumentNullException(nameof(identifier));
+            }
+            Identifier = identifier;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaGotoCaseAdapterStatement : LuaStatementSyntax {
+        public LuaStatementSyntax Assignment { get; }
+        public LuaGotoStatement GotoStatement { get; }
+
+        public LuaGotoCaseAdapterStatement(LuaIdentifierNameSyntax identifier) {
+            if(identifier == null) {
+                throw new ArgumentNullException(nameof(identifier));
+            }
+
+            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(identifier, LuaIdentifierNameSyntax.True);
+            Assignment = new LuaExpressionStatementSyntax(assignment);
+            GotoStatement = new LuaGotoStatement(identifier);
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaLabeledStatement : LuaStatementSyntax {
+        public string PrefixToken => Tokens.Label;
+        public string SuffixToken => Tokens.Label;
+        public LuaIdentifierNameSyntax Identifier { get; }
+        public LuaStatementSyntax Statement { get; }
+
+        public LuaLabeledStatement(LuaIdentifierNameSyntax identifier, LuaStatementSyntax statement = null) {
+            if(identifier == null) {
+                throw new ArgumentNullException(nameof(identifier));
+            }
+            Identifier = identifier;
+            Statement = statement;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
 }
