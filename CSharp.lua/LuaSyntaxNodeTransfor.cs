@@ -167,6 +167,12 @@ namespace CSharpLua {
             function.Body.Statements.Add(returnStatement);
         }
 
+        private LuaStatementSyntax BuildMethodDefaultParameterInit(LuaIdentifierNameSyntax parameterIdentifier, LuaExpressionSyntax defaultValue) {
+            LuaBinaryExpressionSyntax binaryExpression = new LuaBinaryExpressionSyntax(parameterIdentifier, LuaSyntaxNode.Tokens.Or, defaultValue);
+            LuaAssignmentExpressionSyntax initAssignment = new LuaAssignmentExpressionSyntax(parameterIdentifier, binaryExpression);
+            return new LuaExpressionStatementSyntax(initAssignment);
+        }
+
         public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
             LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
             LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
@@ -175,8 +181,24 @@ namespace CSharpLua {
                 function.AddParameter(LuaIdentifierNameSyntax.This);
             }
 
-            var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
-            function.ParameterList.Parameters.AddRange(parameterList.Parameters);
+            foreach(var parameter in node.ParameterList.Parameters) {
+               var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
+                function.ParameterList.Parameters.Add(luaParameter);
+                if(parameter.Default != null) {
+                    var expression = (LuaExpressionSyntax)parameter.Default.Value.Accept(this);
+                    var intiStatement = BuildMethodDefaultParameterInit(luaParameter.Identifier, expression);
+                    function.Body.Statements.Add(intiStatement);
+                }
+                else {
+                    if(parameter.Modifiers.IsParams()) {
+                        var typeName = (LuaIdentifierNameSyntax)((ArrayTypeSyntax)parameter.Type).ElementType.Accept(this);
+                        LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty);
+                        invocation.AddArgument(typeName);
+                        var intiStatement = BuildMethodDefaultParameterInit(luaParameter.Identifier, invocation);
+                        function.Body.Statements.Add(intiStatement);
+                    }
+                }
+            }
             if(node.TypeParameterList != null) {
                 foreach(var typeParameter in node.TypeParameterList.Parameters) {
                     var typeName = (LuaIdentifierNameSyntax)typeParameter.Accept(this);

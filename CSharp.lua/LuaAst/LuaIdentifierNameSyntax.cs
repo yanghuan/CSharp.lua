@@ -28,6 +28,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax YieldReturn = new LuaIdentifierNameSyntax("System.yieldReturn");
         public readonly static LuaIdentifierNameSyntax Object = new LuaIdentifierNameSyntax("System.Object");
         public readonly static LuaIdentifierNameSyntax Array = new LuaIdentifierNameSyntax("System.Array");
+        public readonly static LuaIdentifierNameSyntax ArrayEmpty = new LuaIdentifierNameSyntax("System.Array.Empty");
         public readonly static LuaIdentifierNameSyntax Create = new LuaIdentifierNameSyntax("System.create");
         public readonly static LuaIdentifierNameSyntax ThisAdd = new LuaIdentifierNameSyntax("this:Add");
         public readonly static LuaIdentifierNameSyntax Default = new LuaIdentifierNameSyntax("__default__");
@@ -40,6 +41,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Nil = new LuaIdentifierNameSyntax("nil");
         public readonly static LuaIdentifierNameSyntax TypeOf = new LuaIdentifierNameSyntax("System.typeof");
         public readonly static LuaIdentifierNameSyntax Continue = new LuaIdentifierNameSyntax("continue");
+
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

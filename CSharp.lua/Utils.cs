@@ -121,6 +121,10 @@ namespace CSharpLua {
             return modifiers.Any(i => i.IsKind(SyntaxKind.ConstKeyword));
         }
 
+        public static bool IsParams(this SyntaxTokenList modifiers) {
+            return modifiers.Any(i => i.IsKind(SyntaxKind.ParamsKeyword));
+        }
+
         private static ITypeSymbol stringType_;
         public static bool IsStringType(this ITypeSymbol type) {
             if(stringType_ != null) {
