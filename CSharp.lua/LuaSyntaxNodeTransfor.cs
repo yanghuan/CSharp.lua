@@ -1070,14 +1070,37 @@ namespace CSharpLua {
             return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.Concatenation, right);
         }
 
-        public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
-            if(node.OperatorToken.IsKind(SyntaxKind.PlusToken)) {
-                var methodSymbol = semanticModel_.GetSymbolInfo(node).Symbol as IMethodSymbol;
-                if(methodSymbol != null && methodSymbol.ContainingType.IsStringType()) {
-                    return BuildStringConcatExpression(node);
-                }
-            }
+        private LuaExpressionSyntax BuildDelegateExpression(ExpressionSyntax left, ExpressionSyntax right, bool isComine) {
+            var a = (LuaExpressionSyntax)left.Accept(this);
+            var b = (LuaExpressionSyntax)right.Accept(this);
+            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(isComine ? LuaIdentifierNameSyntax.DelegateCombine : LuaIdentifierNameSyntax.DelegateRemove);
+            invocation.AddArgument(a);
+            invocation.AddArgument(b);
+            return invocation;
+        }
 
+        public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
+            switch(node.OperatorToken.Kind()) {
+                case SyntaxKind.PlusToken: {
+                        var methodSymbol = semanticModel_.GetSymbolInfo(node).Symbol as IMethodSymbol;
+                        if(methodSymbol != null) {
+                            if(methodSymbol.ContainingType.IsStringType()) {
+                                return BuildStringConcatExpression(node);
+                            }
+                            else if(methodSymbol.ContainingType.IsDelegateType()) {
+                                return BuildDelegateExpression(node.Left, node.Right, true);
+                            }
+                        }
+                        break;
+                    }
+                case SyntaxKind.MinusToken: {
+                        var methodSymbol = semanticModel_.GetSymbolInfo(node).Symbol as IMethodSymbol;
+                        if(methodSymbol != null && methodSymbol.ContainingType.IsDelegateType()) {
+                            return BuildDelegateExpression(node.Left, node.Right, false);
+                        }
+                        break;
+                    }
+            }
             var left = (LuaExpressionSyntax)node.Left.Accept(this);
             var right = (LuaExpressionSyntax)node.Right.Accept(this);
             string operatorToken = GetOperatorToken(node.OperatorToken.ValueText);
