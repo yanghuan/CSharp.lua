@@ -1022,7 +1022,62 @@ namespace CSharpLua {
             return LuaBreakStatementSyntax.Statement;
         }
 
+        private LuaExpressionSyntax WrapStringConcatExpression(ExpressionSyntax expression) {
+            var typeInfo = semanticModel_.GetTypeInfo(expression).Type;
+            var original = (LuaExpressionSyntax)expression.Accept(this);
+            if(typeInfo.IsStringType()) {
+                if(expression is BinaryExpressionSyntax) {
+                    return original;
+                }
+
+                var constValue = semanticModel_.GetConstantValue(expression);
+                if(constValue.HasValue) {
+                    return original;
+                }
+                else {
+                    LuaBinaryExpressionSyntax binaryExpression = new LuaBinaryExpressionSyntax(original, LuaSyntaxNode.Tokens.Or, LuaStringLiteralExpressionSyntax.Empty);
+                    return new LuaParenthesizedExpressionSyntax(binaryExpression);
+                }
+            }
+            else if(typeInfo.SpecialType == SpecialType.System_Char) {
+                var constValue = semanticModel_.GetConstantValue(expression);
+                if(constValue.HasValue) {
+                    return new LuaCharacterStringLiteralExpressionSyntax((char)constValue.Value);
+                }
+                else {
+                    LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringChar);
+                    invocation.AddArgument(original);
+                    return invocation;
+                }
+            }
+            else if(typeInfo.SpecialType >= SpecialType.System_Boolean && typeInfo.SpecialType <= SpecialType.System_Double) {
+                return original;
+            }
+            else if(typeInfo.IsValueType) {
+                LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToString, true);
+                return new LuaInvocationExpressionSyntax(memberAccess);
+            }
+            else {
+                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringConcat);
+                invocation.AddArgument(original);
+                return invocation;
+            }
+        }
+
+        private LuaBinaryExpressionSyntax BuildStringConcatExpression(BinaryExpressionSyntax node) {
+            var left = WrapStringConcatExpression(node.Left);
+            var right = WrapStringConcatExpression(node.Right);
+            return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.Concatenation, right);
+        }
+
         public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
+            if(node.OperatorToken.IsKind(SyntaxKind.PlusToken)) {
+                var methodSymbol = semanticModel_.GetSymbolInfo(node).Symbol as IMethodSymbol;
+                if(methodSymbol != null && methodSymbol.ContainingType.IsStringType()) {
+                    return BuildStringConcatExpression(node);
+                }
+            }
+
             var left = (LuaExpressionSyntax)node.Left.Accept(this);
             var right = (LuaExpressionSyntax)node.Right.Accept(this);
             string operatorToken = GetOperatorToken(node.OperatorToken.ValueText);

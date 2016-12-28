@@ -125,32 +125,12 @@ namespace CSharpLua {
             return modifiers.Any(i => i.IsKind(SyntaxKind.ParamsKeyword));
         }
 
-        private static ITypeSymbol stringType_;
         public static bool IsStringType(this ITypeSymbol type) {
-            if(stringType_ != null) {
-                return type == stringType_;
-            }
-            else {
-                bool success = type.IsReferenceType && type.IsDefinition && type.ToString() == "string";
-                if(success) {
-                    stringType_ = type;
-                }
-                return success;
-            }
+            return type.SpecialType == SpecialType.System_String;
         }
 
-        private static ITypeSymbol multicastDelegateType_;
         public static bool IsDelegateType(this ITypeSymbol type) {
-            if(multicastDelegateType_ != null) {
-                return multicastDelegateType_ == type.BaseType;
-            }
-            else {
-                bool success = type.IsReferenceType && type.BaseType.ToString() == "System.MulticastDelegate";
-                if(success) {
-                    multicastDelegateType_ = type.BaseType;
-                }
-                return success;
-            }
+            return type.TypeKind == TypeKind.Delegate;
         }
 
         public static bool IsImmutable(this ITypeSymbol type) {

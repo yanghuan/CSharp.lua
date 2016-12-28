@@ -41,7 +41,9 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Nil = new LuaIdentifierNameSyntax("nil");
         public readonly static LuaIdentifierNameSyntax TypeOf = new LuaIdentifierNameSyntax("System.typeof");
         public readonly static LuaIdentifierNameSyntax Continue = new LuaIdentifierNameSyntax("continue");
-
+        public readonly static LuaIdentifierNameSyntax StringChar = new LuaIdentifierNameSyntax("string.char");
+        public readonly static new LuaIdentifierNameSyntax ToString = new LuaIdentifierNameSyntax("ToString");
+        public readonly static LuaIdentifierNameSyntax StringConcat = new LuaIdentifierNameSyntax("System.strconcat");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

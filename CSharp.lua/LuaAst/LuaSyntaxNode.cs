@@ -22,6 +22,7 @@ namespace CSharpLua.LuaAst {
             public const string ObjectColon = ":";
             public const string Dot = ".";
             public const string Quote = "\"";
+            public const string SingleQuote = "'";
             public new const string Equals = " = ";
             public const string EqualsEquals = "==";
             public const string Yield = "yield";
@@ -37,6 +38,7 @@ namespace CSharpLua.LuaAst {
             public const string Add = "add";
             public const string Remove = "remove";
             public const string Label = "::";
+            public const string Concatenation = "..";
         }
 
         public class Keyword {

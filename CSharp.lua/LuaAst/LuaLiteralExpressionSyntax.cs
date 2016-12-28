@@ -48,6 +48,28 @@ namespace CSharpLua.LuaAst {
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
+
+        public static readonly LuaStringLiteralExpressionSyntax Empty = new LuaStringLiteralExpressionSyntax(LuaIdentifierNameSyntax.Empty); 
+    }
+
+    public sealed class LuaCharacterStringLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
+        public string OpenParenToken => Tokens.SingleQuote;
+        public char Character { get; }
+        public string CloseParenToken => Tokens.SingleQuote;
+
+        public LuaCharacterStringLiteralExpressionSyntax(char character) {
+            Character = character;
+        }
+
+        public override string Text {
+            get {
+                return Character.ToString();
+            }
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
     }
 
     public sealed class LuaCharacterLiteralExpression : LuaLiteralExpressionSyntax {
