@@ -158,7 +158,7 @@ namespace CSharpLua {
         }
 
         public static bool IsPropertyField(this IPropertySymbol symbol) {
-            if(!symbol.IsOverridable()) {
+            if(symbol.IsOverridable()) {
                 return false;
             }
 
@@ -197,13 +197,13 @@ namespace CSharpLua {
         }
 
         public static bool IsEventFiled(this IEventSymbol symbol) {
-            if(!symbol.IsOverridable()) {
+            if(symbol.IsOverridable()) {
                 return false;
             }
 
             var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if(syntaxReference != null) {
-                bool isField = syntaxReference.GetSyntax() is EventFieldDeclarationSyntax;
+                bool isField = syntaxReference.GetSyntax().IsKind(SyntaxKind.VariableDeclarator);
                 if(isField) {
                     if(symbol.IsInterfaceImplementation()) {
                         isField = false;

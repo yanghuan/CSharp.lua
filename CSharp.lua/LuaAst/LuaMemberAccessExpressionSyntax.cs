@@ -22,6 +22,12 @@ namespace CSharpLua.LuaAst {
             OperatorToken = isObjectColon ? Tokens.ObjectColon : Tokens.Dot;
         }
 
+        public bool IsObjectColon {
+            get {
+                return OperatorToken == Tokens.ObjectColon;
+            }
+        }
+
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
@@ -55,14 +61,34 @@ namespace CSharpLua.LuaAst {
             InvocationExpression = invocationExpression;
         }
 
-        public bool IsGet {
+        public bool IsGetOrAdd {
             set {
                  identifier_.IsGetOrAdd = value;
             }
         }
 
+        public bool IsProperty {
+            get {
+                return identifier_.IsProperty;
+            }
+        }
+
+        private bool isAutoGet_;
+
+        public LuaExpressionSyntax GetCloneOfGet() {
+            IsGetOrAdd = false;
+            isAutoGet_ = true;
+            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(InvocationExpression.Expression);
+            invocationExpression.ArgumentList.Arguments.AddRange(InvocationExpression.ArgumentList.Arguments);
+            return invocationExpression;
+        }
+
         internal override void Render(LuaRenderer renderer) {
-            InvocationExpression.Render(renderer);
+            InvocationExpression.Expression.Render(renderer);
+            if(isAutoGet_) {
+                IsGetOrAdd = true;
+            }
+            InvocationExpression.ArgumentList.Render(renderer);
         }
     }
 }

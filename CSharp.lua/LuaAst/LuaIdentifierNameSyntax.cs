@@ -46,10 +46,13 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax StringConcat = new LuaIdentifierNameSyntax("System.strconcat");
         public readonly static LuaIdentifierNameSyntax DelegateCombine = new LuaIdentifierNameSyntax("System.combine");
         public readonly static LuaIdentifierNameSyntax DelegateRemove = new LuaIdentifierNameSyntax("System.remove");
+        public readonly static LuaIdentifierNameSyntax DelegateBind = new LuaIdentifierNameSyntax("System.bind");
         public readonly static LuaIdentifierNameSyntax IntegerDiv = new LuaIdentifierNameSyntax("System.div");
         public readonly static LuaIdentifierNameSyntax BitAdd = new LuaIdentifierNameSyntax("System.band");
         public readonly static LuaIdentifierNameSyntax BitOr = new LuaIdentifierNameSyntax("System.bor");
         public readonly static LuaIdentifierNameSyntax BitXor = new LuaIdentifierNameSyntax("System.xor");
+        public readonly static LuaIdentifierNameSyntax ShiftRight = new LuaIdentifierNameSyntax("System.sr");
+        public readonly static LuaIdentifierNameSyntax ShiftLeft = new LuaIdentifierNameSyntax("System.sl");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;
