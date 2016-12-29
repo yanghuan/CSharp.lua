@@ -25,9 +25,11 @@ namespace CSharpLua.LuaAst {
             public const string SingleQuote = "'";
             public new const string Equals = " = ";
             public const string EqualsEquals = "==";
+            public const string NotEquals = "~=";
             public const string Yield = "yield";
             public const string Plus = "+";
             public const string Sub = "-";
+            public const string Div = "//";
             public const string ShortComment = "--";
             public const string OpenLongComment = "--[[";
             public const string CloseLongComment = "--]]";
@@ -42,25 +44,31 @@ namespace CSharpLua.LuaAst {
         }
 
         public class Keyword {
-            public const string Function = "function";
-            public const string End = "end";
-            public const string Return = "return";
-            public const string Local = "local";
-            public const string If = "if";
-            public const string Then = "then";
-            public const string Else = "else";
-            public const string Not = "not";
-            public const string For = "for";
-            public const string In = "in";
-            public const string Do = "do";
             public const string And = "and";
-            public const string Or = "or";
-            public const string While = "while";
-            public const string Repeat = "repeat";
-            public const string Until = "until";
             public const string Break = "break";
-            public const string Nil = "nil";
+            public const string Do = "do";
+            public const string Else = "else";
+            public const string ElseIf = "elseif";
+            public const string End = "end";
+
+            public const string False = "false";
+            public const string For = "for";
+            public const string Function = "function";
             public const string Goto = "goto";
+            public const string If = "if";
+            public const string In = "in";
+
+            public const string Local = "local";
+            public const string Nil = "nil";
+            public const string Not = "not";
+            public const string Or = "or";
+            public const string Repeat = "repeat";
+            public const string Return = "return";
+
+            public const string Then = "then";
+            public const string True = "true";
+            public const string Until = "until";
+            public const string While = "while";
         }
 
         public static string SpecailWord(string s) {

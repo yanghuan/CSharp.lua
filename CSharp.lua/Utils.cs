@@ -99,7 +99,7 @@ namespace CSharpLua {
             if(!string.IsNullOrEmpty(path)) {
                 string[] paths = path.Split(';');
                 foreach(string file in paths) {
-                    list.Add(Utility.GetCurrentDirectory(path));
+                    list.Add(Utility.GetCurrentDirectory(file));
                 }
             }
             return list.ToArray();
@@ -131,6 +131,10 @@ namespace CSharpLua {
 
         public static bool IsDelegateType(this ITypeSymbol type) {
             return type.TypeKind == TypeKind.Delegate;
+        }
+
+        public static bool IsIntegerType(this ITypeSymbol type) {
+            return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_UInt64;
         }
 
         public static bool IsImmutable(this ITypeSymbol type) {

@@ -10,10 +10,12 @@ namespace CSharpLua {
             public static bool HasSemicolon { get; set; }
             private static int indent_;
             public static string IndentString;
+            public static bool IsNewest { get; set; }
 
             static Setting() {
                 Indent = 4;
                 HasSemicolon = true;
+                IsNewest = true;
             }
 
             public static int Indent {
