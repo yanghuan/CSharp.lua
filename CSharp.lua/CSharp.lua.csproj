@@ -88,6 +88,35 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="CoreSystem.Lua\All.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Array.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Boolean.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Char.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collection.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\Dictionary.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\EqualityComparer.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\HashSet.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\LinkedList.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\Linq.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\List.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\Queue.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Collections\Stack.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Console.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Core.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\DateTime.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Delegate.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Double.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Enum.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Exception.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Int.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Interfaces.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\IO\File.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Math.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\String.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Text\StringBuilder.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\TimeSpan.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Type.lua" />
+    <None Include="CoreSystem.Lua\Sample\test.lua" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

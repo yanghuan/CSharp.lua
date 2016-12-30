@@ -32,6 +32,5 @@ namespace CSharpLua.LuaAst {
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
-
     }
 }
