@@ -101,7 +101,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
             LuaConstructorAdapterExpressSyntax function = new LuaConstructorAdapterExpressSyntax();
-            functions_.Push(function);
+            PushFunction(function);
             bool isStatic = node.Modifiers.IsStatic();
             function.IsStaticCtor = isStatic;
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
@@ -132,7 +132,7 @@ namespace CSharpLua {
             }
             LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
             function.Body.Statements.AddRange(block.Statements);
-            functions_.Pop();
+            PopFunction();
             if(isStatic) {
                 CurType.SetStaticCtor(function);
             }
@@ -148,7 +148,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {
             LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
-            functions_.Push(function);
+            PushFunction(function);
 
             var parameter = (LuaParameterSyntax)node.Parameter.Accept(this);
             function.ParameterList.Parameters.Add(parameter);
@@ -164,7 +164,7 @@ namespace CSharpLua {
                 function.Body.Statements.Add(new LuaExpressionStatementSyntax(expression));
             }
 
-            functions_.Peek();
+            PopFunction();
             return function;
         }
 

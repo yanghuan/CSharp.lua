@@ -78,6 +78,7 @@
     <Compile Include="LuaAst\LuaTableInitializerExpression.cs" />
     <Compile Include="LuaRenderer.cs" />
     <Compile Include="LuaSyntaxNodeTransfor.cs" />
+    <Compile Include="LuaSyntaxNodeTransfor.Helper.cs" />
     <Compile Include="LuaSyntaxNodeTransfor.Object.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

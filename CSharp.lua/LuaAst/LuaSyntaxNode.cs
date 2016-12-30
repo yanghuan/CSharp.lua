@@ -69,16 +69,6 @@ namespace CSharpLua.LuaAst {
             public const string True = "true";
             public const string Until = "until";
             public const string While = "while";
-
-            public readonly static HashSet<string> ReservedWords = new HashSet<string>();
-
-            static Keyword() {
-                var fields = typeof(Keyword).GetFields();
-                foreach(var field in fields) {
-                    string value = (string)field.GetValue(null);
-                    ReservedWords.Add(value);
-                }
-            }
         }
 
         public static string SpecailWord(string s) {
@@ -91,8 +81,22 @@ namespace CSharpLua.LuaAst {
             "fixed", "override", "abstract", "checked", "virtual",
         };
 
+        public readonly static HashSet<string> ReservedWords = new HashSet<string>() {
+            "and", "elseif", "end", "function", "local", "nil", "not", "or", "repeat", "then", "until",
+        };
+
+        public readonly static HashSet<string> SpecialReservedWords = new HashSet<string>() {
+            // lua metatable methods
+            "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
+            "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",
+            "__eq", "__lt", "__le", "__index", "__newindex", "__call",
+
+            // adapter special methods 
+            "__id__", "__name__", "__kind__", "__base__", "__ctor__", "__inherits__", "__interfaces__", "__default__",
+        };
+
         public static bool IsReservedWord(string identifier) {
-            return Keyword.ReservedWords.Contains(identifier);
+            return ReservedWords.Contains(identifier);
         }
     }
 

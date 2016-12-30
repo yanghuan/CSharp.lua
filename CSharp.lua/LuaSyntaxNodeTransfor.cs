@@ -56,6 +56,19 @@ namespace CSharpLua {
             }
         }
 
+        private void PushFunction(LuaFunctionExpressSyntax function) {
+            functions_.Push(function);
+            ++localMappingCounter_;
+        }
+
+        private void PopFunction() {
+            functions_.Pop();
+            --localMappingCounter_;
+            if(localMappingCounter_ == 0) {
+                localReservedNames_.Clear();
+            }
+        }
+
         private LuaBlockSyntax CurBlock {
             get {
                 return blocks_.Peek();
@@ -183,13 +196,14 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
             LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
             LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
-            functions_.Push(function);
+            PushFunction(function);
             if(!node.Modifiers.IsStatic()) {
                 function.AddParameter(LuaIdentifierNameSyntax.This);
             }
 
             foreach(var parameter in node.ParameterList.Parameters) {
-               var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
+                var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
+                CheckParameterName(ref luaParameter, node, parameter);
                 function.ParameterList.Parameters.Add(luaParameter);
                 if(parameter.Default != null) {
                     var expression = (LuaExpressionSyntax)parameter.Default.Value.Accept(this);
@@ -218,7 +232,7 @@ namespace CSharpLua {
             if(function.HasYield) {
                 VisitYield(node, function);
             }
-            functions_.Pop();
+            PopFunction();
             CurType.AddMethod(name, function, node.Modifiers.IsPrivate());
             return function;
         }
@@ -245,13 +259,12 @@ namespace CSharpLua {
         }
 
         private LuaIdentifierNameSyntax GetTempIdentifier(SyntaxNode node) {
-            int index = CurFunction.TempIndex;
+            int index = CurFunction.TempIndex++;
             string name = LuaSyntaxNode.TempIdentifiers.GetOrDefault(index);
             if(name == null) {
                 throw new CompilationErrorException($"{node.GetLocationString()} : Your code is startling, {LuaSyntaxNode.TempIdentifiers.Length} " 
                     + "temporary variables is not enough, please refactor your code.");
             }
-            ++CurFunction.TempIndex;
             return new LuaIdentifierNameSyntax(name);
         }
 
@@ -893,7 +906,11 @@ namespace CSharpLua {
             string name;
             switch(symbol.Kind) {
                 case SymbolKind.Local:
-                case SymbolKind.Parameter:
+                case SymbolKind.Parameter: {
+                        name = symbol.Name;
+                        CheckReservedWord(ref name, symbol);
+                        break;
+                    }
                 case SymbolKind.TypeParameter:
                 case SymbolKind.Label: {
                         name = symbol.Name;
@@ -998,6 +1015,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node) {
             LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            CheckVariableDeclaratorName(ref identifier, node);
             LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(identifier);
             if(node.Initializer != null) {
                 variableDeclarator.Initializer = (LuaEqualsValueClauseSyntax)node.Initializer.Accept(this);
