@@ -29,4 +29,8 @@ namespace CSharpLua.LuaAst {
         public bool IsStaticCtor { get; set; }
         public bool IsInvokeThisCtor { get; set; }
     }
+
+    public sealed class LuaTryBlockAdapterExpressSyntax : LuaFunctionExpressSyntax {
+        public bool IsReturnExists { get; set; }
+    }
 }

@@ -524,11 +524,24 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
-            if(node.Expression != null) {
-                var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-                return new LuaReturnStatementSyntax(expression);
+            var tryBlock = CurFunction as LuaTryBlockAdapterExpressSyntax;
+            if(tryBlock != null) {
+                tryBlock.IsReturnExists = true;
+                LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
+                returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
+                if(node.Expression != null) {
+                    var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+                    returnStatement.Expressions.Add(expression);
+                }
+                return returnStatement;
             }
-            return new LuaReturnStatementSyntax();
+            else {
+                if(node.Expression != null) {
+                    var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+                    return new LuaReturnStatementSyntax(expression);
+                }
+                return new LuaReturnStatementSyntax();
+            }
         }
 
         public override LuaSyntaxNode VisitExpressionStatement(ExpressionStatementSyntax node) {

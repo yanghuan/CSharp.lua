@@ -40,28 +40,23 @@ local function throw(e, lv)
     error(e)
 end
 
-local rethrow = {}
-
 local function try(try, catch, finally)
-    local ok, result = pcall(try)
+    local ok, status, result = pcall(try)
     if not ok then
         if catch then
-            if type(result) == "string" then
-                result = System.Exception(result)
+            if type(status) == "string" then
+                status = System.Exception(status)
             end
-            local fine, value
             if finally then
-                fine, value = pcall(catch, result)
+                ok, status, result = pcall(catch, status)
             else
-                fine, value = true, catch(result)
+                ok, status, result = true, catch(status)
             end
-            if fine then
-                if value ~= rethrow then
-                    ok = true
-                    result = value
+            if ok then
+                if status == -1 then
+                    ok = false
+                    status = result
                 end
-            else
-                result = value
             end
         end
     end
@@ -69,9 +64,9 @@ local function try(try, catch, finally)
         finally()
     end
     if not ok then
-        throw(result)
+        throw(status)
     end
-    return result
+    return status, result
 end
 
 local function set(className, cls)
@@ -246,7 +241,6 @@ System = {
     equals = equals,
     try = try,
     throw = throw,
-    rethrow = rethrow,
     define = defCls,
     defInf = defInf,
     defStc = defStc,
@@ -320,29 +314,23 @@ function System.CreateInstance(type, ...)
     return type.c(...)
 end
 
-function System.property(t, name, v)
-    t[name] = v
+function System.property(name)
     local function get(this)
         return this[name]
     end
     local function set(this, v)
         this[name] = v
     end;
-    t["get" .. name] = get
-    t["set" .. name] = set
     return get, set
 end
 
-function System.event(t, name, v)
-    t[name] = v
+function System.event(name)
     local function add(this, v)
         this[name] = System.combine(this[name], v)
     end
     local function remove(this, v)
         this[name] = System.remove(this[name], v)
     end
-    t["add" .. name] = add
-    t["remove" .. name] = remove
     return add, remove
 end
 
