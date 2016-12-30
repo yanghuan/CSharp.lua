@@ -69,6 +69,16 @@ namespace CSharpLua.LuaAst {
             public const string True = "true";
             public const string Until = "until";
             public const string While = "while";
+
+            public readonly static HashSet<string> ReservedWords = new HashSet<string>();
+
+            static Keyword() {
+                var fields = typeof(Keyword).GetFields();
+                foreach(var field in fields) {
+                    string value = (string)field.GetValue(null);
+                    ReservedWords.Add(value);
+                }
+            }
         }
 
         public static string SpecailWord(string s) {
@@ -80,6 +90,10 @@ namespace CSharpLua.LuaAst {
             "void",  "case", "new", "object", "using",
             "fixed", "override", "abstract", "checked", "virtual",
         };
+
+        public static bool IsReservedWord(string identifier) {
+            return Keyword.ReservedWords.Contains(identifier);
+        }
     }
 
     public sealed class LuaSyntaxList<T> : List<T> where T : LuaSyntaxNode {

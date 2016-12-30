@@ -1378,7 +1378,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitDoStatement(DoStatementSyntax node) {
             var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
-            var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Keyword.Not);
+            var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not);
             LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(newCondition);
             VisitLoopBody(node.Statement, repeatStatement.Body);
             return repeatStatement;
