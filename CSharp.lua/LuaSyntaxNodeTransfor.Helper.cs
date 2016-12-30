@@ -77,6 +77,12 @@ namespace CSharpLua {
             return false;
         }
 
+        private void AddReservedMapping(string name, SyntaxNode node) {
+            ISymbol symbol = semanticModel_.GetDeclaredSymbol(node);
+            Contract.Assert(symbol != null);
+            localReservedNames_.Add(symbol, name);
+        }
+
         private void CheckParameterName(ref LuaParameterSyntax parameter, MethodDeclarationSyntax parent, ParameterSyntax node) {
             string name = parameter.Identifier.ValueText;
             bool isReserved = CheckReservedWord(ref name, parent, node);
@@ -91,12 +97,6 @@ namespace CSharpLua {
             if(isReserved) {
                 identifierName = new LuaIdentifierNameSyntax(name);
             }
-        }
-
-        private void AddReservedMapping(string name, SyntaxNode node) {
-            ISymbol symbol = semanticModel_.GetDeclaredSymbol(node);
-            Contract.Assert(symbol != null);
-            localReservedNames_.Add(symbol, name);
         }
 
         private void CheckReservedWord(ref string name, ISymbol symbol) {
