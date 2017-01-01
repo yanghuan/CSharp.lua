@@ -53,7 +53,7 @@ local function try(try, catch, finally)
                 ok, status, result = true, catch(status)
             end
             if ok then
-                if status == -1 then
+                if status == 1 then
                     ok = false
                     status = result
                 end

@@ -32,5 +32,6 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaTryBlockAdapterExpressSyntax : LuaFunctionExpressSyntax {
         public bool IsReturnExists { get; set; }
+        public LuaIdentifierNameSyntax CatchTemp { get; set; }
     }
 }

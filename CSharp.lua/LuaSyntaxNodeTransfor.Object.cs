@@ -189,14 +189,97 @@ namespace CSharpLua {
             return invocation;
         }
 
+        public override LuaSyntaxNode VisitThrowStatement(ThrowStatementSyntax node) {
+            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Throw);
+            if(node.Expression != null) {
+                var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+                invocationExpression.AddArgument(expression);
+            }
+            else {
+                var curTryFunction = (LuaTryBlockAdapterExpressSyntax)CurFunction;
+                Contract.Assert(curTryFunction.CatchTemp != null);
+                invocationExpression.AddArgument(curTryFunction.CatchTemp);
+            }
+            return new LuaExpressionStatementSyntax(invocationExpression);
+        }
+
         private LuaTryBlockAdapterExpressSyntax VisitTryCatchesExpress(SyntaxList<CatchClauseSyntax> catches) {
             LuaTryBlockAdapterExpressSyntax functionExpress = new LuaTryBlockAdapterExpressSyntax();
             PushFunction(functionExpress);
             var temp = GetTempIdentifier(catches.First());
+            functionExpress.CatchTemp = temp;
             functionExpress.AddParameter(temp);
-            foreach(var catchNode in catches) {
 
+            LuaIfStatementSyntax ifHeadStatement = null;
+            LuaIfStatementSyntax ifTailStatement = null;
+            bool hasCatchRoot = false;
+            foreach(var catchNode in catches) {
+                LuaExpressionSyntax ifCondition = null;
+                if(catchNode.Filter != null) {
+                    ifCondition = (LuaExpressionSyntax)catchNode.Filter.FilterExpression.Accept(this);
+                }
+                if(catchNode.Declaration != null) {
+                    var typeName = (LuaIdentifierNameSyntax)catchNode.Declaration.Type.Accept(this);
+                    if(typeName.ValueText != "System.Exception") {
+                        var mathcTypeInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is);
+                        mathcTypeInvocation.AddArgument(temp);
+                        mathcTypeInvocation.AddArgument(typeName);
+                        if(ifCondition != null) {
+                            ifCondition = new LuaBinaryExpressionSyntax(ifCondition, LuaSyntaxNode.Tokens.And, mathcTypeInvocation);
+                        }
+                        else {
+                            ifCondition = mathcTypeInvocation;
+                        }
+                    }
+                    else {
+                        hasCatchRoot = true;
+                    }
+                }
+                else {
+                    hasCatchRoot = true;
+                }
+
+                var block = (LuaBlockSyntax)catchNode.Block.Accept(this);
+                if(ifCondition != null) {
+                    LuaIfStatementSyntax statement = new LuaIfStatementSyntax(ifCondition);
+                    if(catchNode.Declaration != null && !catchNode.Declaration.Identifier.IsKind(SyntaxKind.None)) {
+                        var variableDeclarator = new LuaVariableDeclaratorSyntax(new LuaIdentifierNameSyntax(catchNode.Declaration.Identifier.ValueText));
+                        variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(temp);
+                        statement.Body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+                    }
+                    statement.Body.Statements.AddRange(block.Statements);
+                    if(ifTailStatement != null) {
+                        ifTailStatement.Else = new LuaElseClauseSyntax(statement);
+                    }
+                    else {
+                        ifHeadStatement = statement;
+                    }
+                    ifTailStatement = statement;
+                }
+                else {
+                    if(ifTailStatement != null) {
+                        ifTailStatement.Else = new LuaElseClauseSyntax(block);
+                    }
+                    else {
+                        functionExpress.Body.Statements.AddRange(block.Statements);
+                    }
+                    break;
+                }
             }
+
+            if(ifHeadStatement != null) {
+                if(!hasCatchRoot) {
+                    Contract.Assert(ifTailStatement.Else == null);
+                    LuaMultipleReturnStatementSyntax rethrowStatement = new LuaMultipleReturnStatementSyntax();
+                    rethrowStatement.Expressions.Add(LuaIdentifierNameSyntax.One);
+                    rethrowStatement.Expressions.Add(temp);
+                    LuaBlockSyntax block = new LuaBlockSyntax();
+                    block.Statements.Add(rethrowStatement);
+                    ifTailStatement.Else = new LuaElseClauseSyntax(block);
+                }
+                functionExpress.Body.Statements.Add(ifHeadStatement);
+            }
+
             PopFunction();
             return functionExpress;
         }

@@ -929,6 +929,7 @@ namespace CSharpLua {
                         name = symbol.Name;
                         break;
                     }
+                case SymbolKind.Namespace:
                 case SymbolKind.NamedType: {
                         name = symbol.ToString();
                         break;
@@ -1323,13 +1324,6 @@ namespace CSharpLua {
                 CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
                 return temp;
             }
-        }
-
-        public override LuaSyntaxNode VisitThrowStatement(ThrowStatementSyntax node) {
-            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Throw);
-            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            invocationExpression.AddArgument(expression);
-            return new LuaExpressionStatementSyntax(invocationExpression);
         }
 
         private bool IsContinueExists(SyntaxNode node) {

@@ -135,6 +135,7 @@ System.define("System.KeyNotFoundException", {
 })
 
 System.define("System.ArithmeticException", {
+    __tostring = toString,
     __inherits__ = { System.Exception },
 
     __ctor__ = function(this, message, innerException) 
