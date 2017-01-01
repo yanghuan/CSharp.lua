@@ -291,8 +291,11 @@ end
 function System.using(f, ...)
     local ok, status, ret = pcall(f, ...)
     for i = 1, select("#", ...) do
-        local t = select(1, ...)
-        t:Dispose()
+        local t = select(i, ...)
+        local dispose = t.Dispose
+        if dispose ~= nil and dispose ~= emptyFn then
+            t:Dispose()
+        end
     end
     if not ok then
         throw(status)
