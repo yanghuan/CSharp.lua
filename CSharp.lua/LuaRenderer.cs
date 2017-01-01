@@ -182,7 +182,7 @@ namespace CSharpLua {
         internal void Render(LuaCharacterLiteralExpression node) {
             Write(((int)node.Character).ToString());
             WriteSpace();
-            Write($"{node.OpenCommentToken} '{node.Character}' {node.CloseCommentToken}");
+            Write(node.Comment);
         }
 
         internal void Render(LuaStatementListSyntax node) {

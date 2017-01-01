@@ -237,22 +237,28 @@ namespace CSharpLua {
             return function;
         }
 
-        private static string GetPredefinedTypeDefaultValue(string name) {
-            switch(name) {
-                case "byte":
-                case "sbyte":
-                case "short":
-                case "ushort":
-                case "int":
-                case "uint":
-                case "long":
-                case "ulong":
-                    return 0.ToString();
-                case "float":
-                case "double":
-                    return 0.0.ToString();
-                case "bool":
-                    return false.ToString();
+        private static LuaExpressionSyntax GetPredefinedTypeDefaultValue(ITypeSymbol typeSymbol) {
+            switch(typeSymbol.SpecialType) {
+                case SpecialType.System_Boolean: {
+                        return new LuaIdentifierNameSyntax(default(bool).ToString());
+                    }
+                case SpecialType.System_Char: {
+                        return new LuaCharacterLiteralExpression(default(char));
+                    }
+                case SpecialType.System_SByte:
+                case SpecialType.System_Byte:
+                case SpecialType.System_Int16:
+                case SpecialType.System_UInt16:
+                case SpecialType.System_Int32:
+                case SpecialType.System_UInt32:
+                case SpecialType.System_Int64:
+                case SpecialType.System_UInt64: {
+                        return new LuaIdentifierNameSyntax(0.ToString());
+                    }
+                case SpecialType.System_Single:
+                case SpecialType.System_Double: {
+                        return new LuaIdentifierNameSyntax(0.0.ToString());
+                    }
                 default:
                     return null;
             }
@@ -311,9 +317,9 @@ namespace CSharpLua {
             if(valueExpression == null) {
                 if(typeSymbol.IsValueType) {
                     if(typeSymbol.IsDefinition) {
-                        string valueText = GetPredefinedTypeDefaultValue(typeSymbol.ToString());
-                        if(valueText != null) {
-                            valueExpression = new LuaIdentifierNameSyntax(valueText);
+                        LuaExpressionSyntax defalutValue = GetPredefinedTypeDefaultValue(typeSymbol);
+                        if(defalutValue != null) {
+                            valueExpression = defalutValue;
                         }
                         else {
                             valueExpression = BuildDefaultValueExpression(type);
@@ -1248,6 +1254,16 @@ namespace CSharpLua {
                         var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
                         if(leftType.IsIntegerType() && rightType.IsIntegerType()) {
                             return BuildIntegerDivExpression(node);
+                        }
+                        break;
+                    }
+                case SyntaxKind.PercentToken: {
+                        if(!IsLuaNewest) {
+                            var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
+                            var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+                            if(leftType.IsIntegerType() && rightType.IsIntegerType()) {
+                                return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.IntegerMod);
+                            }
                         }
                         break;
                     }

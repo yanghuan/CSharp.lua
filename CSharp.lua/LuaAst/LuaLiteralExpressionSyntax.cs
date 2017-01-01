@@ -81,6 +81,13 @@ namespace CSharpLua.LuaAst {
             Character = character;
         }
 
+        public string Comment {
+            get {
+                string character = Character != '\0' ? Character.ToString() : "\\0";
+                return $"{OpenCommentToken} '{character}' {CloseCommentToken}";
+            }
+        }
+
         public override string Text {
             get {
                 return Character.ToString();
