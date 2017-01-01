@@ -39,6 +39,9 @@ namespace CSharpLua.LuaAst {
             Identifier = identifier;
         }
 
+        public LuaStringLiteralExpressionSyntax(string identifier) : this(new LuaIdentifierNameSyntax(identifier)) {
+        }
+
         public override string Text {
             get {
                 return Identifier.ValueText;

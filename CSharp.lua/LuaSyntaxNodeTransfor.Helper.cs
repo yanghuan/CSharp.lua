@@ -4,10 +4,10 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CSharpLua.LuaAst;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor {
@@ -34,37 +34,33 @@ namespace CSharpLua {
 
         private sealed class LocalVarSearcher : LuaSyntaxSearcher {
             private string name_;
-            private SyntaxNode node_;
 
-            public LocalVarSearcher(string name, SyntaxNode node) {
+            public LocalVarSearcher(string name) {
                 name_ = name;
-                node_ = node;
             }
 
             public override void VisitParameter(ParameterSyntax node) {
-                if(node != node_) {
-                    if(node.Identifier.ValueText == name_) {
-                        Found();
-                    }
+                if(node.Identifier.ValueText == name_) {
+                    Found();
                 }
             }
 
             public override void VisitVariableDeclarator(VariableDeclaratorSyntax node) {
-                if(node != node_) {
-                    if(node.Identifier.ValueText == name_) {
-                        Found();
-                    } 
+                if(node.Identifier.ValueText == name_) {
+                    Found();
                 }
             }
         }
 
-        public bool IsLocalVarExists(string name, SyntaxNode parent, SyntaxNode node) {
-            LocalVarSearcher searcher = new LocalVarSearcher(name, node);
-            return searcher.Find(parent);
+        private bool IsLocalVarExists(string name, MethodDeclarationSyntax root) {
+            LocalVarSearcher searcher = new LocalVarSearcher(name);
+            return searcher.Find(root);
         }
 
-        private string GetReservedNewName(string name, int index) {
+        private string GetNewIdentifierName(string name, int index) {
             switch(index) {
+                case -1:
+                    return name;
                 case 0:
                     return name.FirstLetterToUpper();
                 case 1:
@@ -76,19 +72,32 @@ namespace CSharpLua {
             }
         }
 
-        private bool CheckReservedWord(ref string name, SyntaxNode parent, SyntaxNode node) {
-            if(LuaSyntaxNode.IsReservedWord(name)) {
-                int index = 0;
-                while(true) {
-                    string newName = GetReservedNewName(name, index);
-                    bool exists = IsLocalVarExists(newName, parent, node);
-                    if(!exists) {
-                        AddReservedMapping(newName, node);
-                        name = newName;
-                        return true;
-                    }
-                    ++index;
+        private SyntaxNode FindParent(SyntaxNode node, SyntaxKind kind) {
+            var parent = node.Parent;
+            while(true) {
+                if(parent.IsKind(kind)) {
+                    return parent;
                 }
+                parent = parent.Parent;
+            }
+        }
+
+        private string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
+            var root = (MethodDeclarationSyntax)FindParent(node, SyntaxKind.MethodDeclaration);
+            while(true) {
+                string newName = GetNewIdentifierName(name, index);
+                bool exists = IsLocalVarExists(newName, root);
+                if(!exists) {
+                    return newName;
+                }
+                ++index;
+            }
+        }
+
+        private bool CheckReservedWord(ref string name, SyntaxNode node) {
+            if(LuaSyntaxNode.IsReservedWord(name)) {
+                name = GetUniqueIdentifier(name, node);
+                AddReservedMapping(name, node);
             }
             return false;
         }
@@ -99,9 +108,9 @@ namespace CSharpLua {
             localReservedNames_.Add(symbol, name);
         }
 
-        private void CheckParameterName(ref LuaParameterSyntax parameter, MethodDeclarationSyntax parent, ParameterSyntax node) {
+        private void CheckParameterName(ref LuaParameterSyntax parameter, ParameterSyntax node) {
             string name = parameter.Identifier.ValueText;
-            bool isReserved = CheckReservedWord(ref name, parent, node);
+            bool isReserved = CheckReservedWord(ref name, node);
             if(isReserved) {
                 parameter = new LuaParameterSyntax(new LuaIdentifierNameSyntax(name));
             }
@@ -109,7 +118,7 @@ namespace CSharpLua {
 
         private void CheckVariableDeclaratorName(ref LuaIdentifierNameSyntax identifierName, VariableDeclaratorSyntax node) {
             string name = identifierName.ValueText;
-            bool isReserved = CheckReservedWord(ref name, node.Parent.Parent.Parent, node);
+            bool isReserved = CheckReservedWord(ref name, node);
             if(isReserved) {
                 identifierName = new LuaIdentifierNameSyntax(name);
             }
@@ -138,9 +147,29 @@ namespace CSharpLua {
             }
         }
 
-        public bool IsReturnExists(SyntaxNode node) {
+        private bool IsReturnExists(SyntaxNode node) {
             ReturnStatementSearcher searcher = new ReturnStatementSearcher();
             return searcher.Find(node);
+        }
+
+        private int GetCaseLabelIndex(GotoStatementSyntax node) {
+            var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
+            int index = 0;
+            foreach(var section in switchStatement.Sections) {
+               bool isFound = section.Labels.Any(i => {
+                    if(i.IsKind(SyntaxKind.CaseSwitchLabel)) {
+                        var label = (CaseSwitchLabelSyntax)i;
+                        if(label.Value.ToString() == node.Expression.ToString()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                if(isFound) {
+                    return index;
+                }
+            }
+            throw new InvalidOperationException();
         }
     }
 }

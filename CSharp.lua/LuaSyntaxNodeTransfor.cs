@@ -203,7 +203,7 @@ namespace CSharpLua {
 
             foreach(var parameter in node.ParameterList.Parameters) {
                 var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
-                CheckParameterName(ref luaParameter, node, parameter);
+                CheckParameterName(ref luaParameter, parameter);
                 function.ParameterList.Parameters.Add(luaParameter);
                 if(parameter.Default != null) {
                     var expression = (LuaExpressionSyntax)parameter.Default.Value.Accept(this);
@@ -744,13 +744,17 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            SyntaxKind kind = node.Expression.Kind();
+            if(kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.NullLiteralExpression) {
+                expression = new LuaParenthesizedExpressionSyntax(expression);
+            }
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
             if(symbol.Kind != SymbolKind.Property) {
                 if(symbol.Kind == SymbolKind.Field) {
                     IFieldSymbol fieldSymbol = (IFieldSymbol)symbol;
                     if(fieldSymbol.HasConstantValue) {
-                        return VisitConstIdentifier(fieldSymbol.ConstantValue);
+                        return GetConstLiteralExpression(fieldSymbol.ConstantValue);
                     }
                 }
                 var identifier = (LuaIdentifierNameSyntax)node.Name.Accept(this);
@@ -873,7 +877,7 @@ namespace CSharpLua {
             return new LuaIdentifierNameSyntax(name);
         }
 
-        private LuaSyntaxNode VisitConstIdentifier(object constantValue) {
+        private LuaLiteralExpressionSyntax GetConstLiteralExpression(object constantValue) {
             if(constantValue != null) {
                 var code = Type.GetTypeCode(constantValue.GetType());
                 switch(code) {
@@ -881,15 +885,15 @@ namespace CSharpLua {
                             return new LuaCharacterLiteralExpression((char)constantValue);
                         }
                     case TypeCode.String: {
-                            return new LuaStringLiteralExpressionSyntax(new LuaIdentifierNameSyntax((string)constantValue));
+                            return new LuaStringLiteralExpressionSyntax((string)constantValue);
                         }
                     default: {
-                            return new LuaIdentifierNameSyntax(constantValue.ToString());
+                            return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
                         }
                 }
             }
             else {
-                return LuaIdentifierNameSyntax.Nil;
+                return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
             }
         }
 
@@ -942,7 +946,7 @@ namespace CSharpLua {
                         if(symbol.IsStatic) {
                             var fieldSymbol = (IFieldSymbol)symbol;
                             if(fieldSymbol.HasConstantValue) {
-                                return VisitConstIdentifier(fieldSymbol.ConstantValue);
+                                return GetConstLiteralExpression(fieldSymbol.ConstantValue);
                             }
                             else {
                                 name = BuildStaticFieldName(symbol, fieldSymbol.IsReadOnly, node);
@@ -1164,6 +1168,13 @@ namespace CSharpLua {
             }
             else if(typeInfo.SpecialType >= SpecialType.System_Boolean && typeInfo.SpecialType <= SpecialType.System_Double) {
                 return original;
+            }
+            else if(typeInfo.TypeKind == TypeKind.Enum) {
+                var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
+                if(original is LuaLiteralExpressionSyntax) {
+                    return new LuaStringLiteralExpressionSyntax(symbol.Name);
+                }
+                throw new NotImplementedException();
             }
             else if(typeInfo.IsValueType) {
                 LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToString, true);
@@ -1496,15 +1507,25 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitGotoStatement(GotoStatementSyntax node) {
             if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.CaseKeyword)) {
-                var label = (LuaLiteralExpressionSyntax)node.Expression.Accept(this);
-                var temp = new LuaIdentifierNameSyntax("label_" + label.Text);
-                switchs_.Peek().AddCaseLabel(temp, label.Text);
-                return new LuaGotoCaseAdapterStatement(temp);
+                const string kCaseLabel = "caseLabel";
+                var switchStatement = switchs_.Peek();
+                int caseIndex = GetCaseLabelIndex(node);
+                var labelIdentifier = switchStatement.CaseLabels.GetOrDefault(caseIndex);
+                if(labelIdentifier == null) {
+                    string uniqueName = GetUniqueIdentifier(kCaseLabel + caseIndex, node, -1);
+                    labelIdentifier = new LuaIdentifierNameSyntax(uniqueName);
+                    switchStatement.CaseLabels.Add(caseIndex, labelIdentifier);
+                }
+                return new LuaGotoCaseAdapterStatement(labelIdentifier);
             }
             else if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.DefaultKeyword)) {
-                var temp = new LuaIdentifierNameSyntax("label_default");
-                switchs_.Peek().AddDefaultLabel(temp);
-                return new LuaGotoCaseAdapterStatement(temp);
+                const string kDefaultLabel = "defaultLabel";
+                var switchStatement = switchs_.Peek();
+                if(switchStatement.DefaultLabel == null) {
+                    string identifier = GetUniqueIdentifier(kDefaultLabel, node, -1);
+                    switchStatement.DefaultLabel = new LuaIdentifierNameSyntax(identifier);
+                }
+                return new LuaGotoCaseAdapterStatement(switchStatement.DefaultLabel);
             }
             else {
                 var identifier = (LuaIdentifierNameSyntax)node.Expression.Accept(this);

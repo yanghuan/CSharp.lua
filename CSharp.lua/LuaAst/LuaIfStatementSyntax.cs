@@ -40,12 +40,12 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaSwitchAdapterStatementSyntax : LuaStatementSyntax {
-        public LuaRepeatStatementSyntax RepeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
+        public readonly LuaRepeatStatementSyntax RepeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
         public LuaIdentifierNameSyntax Temp { get; }
         private LuaBlockSyntax defaultBock_;
         private LuaLocalVariablesStatementSyntax caseLabelVariables_ = new LuaLocalVariablesStatementSyntax();
-        private LuaIdentifierNameSyntax defaultLabel_;
-        private Dictionary<string, LuaIdentifierNameSyntax> caseLabels_ = new Dictionary<string, LuaIdentifierNameSyntax>();
+        public LuaIdentifierNameSyntax DefaultLabel { get; set; }
+        public readonly Dictionary<int, LuaIdentifierNameSyntax> CaseLabels = new Dictionary<int, LuaIdentifierNameSyntax>();
         private LuaIfStatementSyntax headIfStatement_;
 
         public LuaSwitchAdapterStatementSyntax(LuaIdentifierNameSyntax temp) {
@@ -99,79 +99,40 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void AddDefaultLabel(LuaIdentifierNameSyntax label) {
-            Contract.Assert(defaultLabel_ == null);
-            defaultLabel_ = label;
-        }
-
-        public void AddCaseLabel(LuaIdentifierNameSyntax label, string valueText) {
-            caseLabels_[valueText] = label;
-        }
-
         private void CheckHasDefaultLabel() {
-            if(defaultLabel_ != null) {
+            if(DefaultLabel != null) {
                 Contract.Assert(defaultBock_ != null);
-                caseLabelVariables_.Variables.Add(defaultLabel_);
-                LuaLabeledStatement labeledStatement = new LuaLabeledStatement(defaultLabel_);
+                caseLabelVariables_.Variables.Add(DefaultLabel);
+                LuaLabeledStatement labeledStatement = new LuaLabeledStatement(DefaultLabel);
                 RepeatStatement.Body.Statements.Add(labeledStatement);
-                LuaIfStatementSyntax IfStatement = new LuaIfStatementSyntax(defaultLabel_);
+                LuaIfStatementSyntax IfStatement = new LuaIfStatementSyntax(DefaultLabel);
                 IfStatement.Body.Statements.AddRange(defaultBock_.Statements);
                 RepeatStatement.Body.Statements.Add(IfStatement);
             }
         }
 
-        private bool IsConditionMatch(LuaBinaryExpressionSyntax condition, string keyText) {
-            if(condition.Right is LuaLiteralExpressionSyntax) {
-                var literalExpression = (LuaLiteralExpressionSyntax)condition.Right;
-                return literalExpression.Text == keyText;
-            }
-            else {
-                var left = (LuaBinaryExpressionSyntax)condition.Left;
-                if(IsConditionMatch(left, keyText)) {
-                    return true;
-                }
-
-                var right = (LuaBinaryExpressionSyntax)condition.Right;
-                if(IsConditionMatch(right, keyText)) {
-                    return true;
-                }
-
-                return false;
-            }
-        }
-
-        private LuaIfStatementSyntax FindMatchIfStatement(string keyText) {
+        private LuaIfStatementSyntax FindMatchIfStatement(int index) {
             LuaIfStatementSyntax head = headIfStatement_;
-            while(head != null) {
-                var condition = (LuaBinaryExpressionSyntax)head.Condition;
-                if(IsConditionMatch(condition, keyText)) {
+            int counter = 0;
+            while(true) {
+                if(counter == index) {
                     return head;
                 }
-                head = head.Else.Statement as LuaIfStatementSyntax;
+                head = (LuaIfStatementSyntax)head.Else.Statement;
+                ++counter;
             }
-            return null;
         }
 
         private void CheckHasCaseLabel() {
-            if(caseLabels_.Count > 0) {
+            if(CaseLabels.Count > 0) {
                 Contract.Assert(headIfStatement_ != null);
-                caseLabelVariables_.Variables.AddRange(caseLabels_.Values);
-                var groups = caseLabels_.GroupBy(pair => FindMatchIfStatement(pair.Key)).ToDictionary(i => i.Key, i => i.ToArray());
-                foreach(var group in groups) {
-                    LuaExpressionSyntax condition = null;
-                    foreach(var pair in group.Value) {
-                        LuaIdentifierNameSyntax labelIdentifier = pair.Value;
-                        LuaLabeledStatement labeledStatement = new LuaLabeledStatement(labelIdentifier);
-                        RepeatStatement.Body.Statements.Add(labeledStatement);
-                        if(condition != null) {
-                            condition = new LuaBinaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Or, labelIdentifier);
-                        }
-                        else {
-                            condition = labelIdentifier;
-                        }
-                    }
-                    LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
-                    ifStatement.Body.Statements.AddRange(group.Key.Body.Statements);
+                caseLabelVariables_.Variables.AddRange(CaseLabels.Values);
+                foreach(var pair in CaseLabels) {
+                    LuaIfStatementSyntax caseLabelStatement = FindMatchIfStatement(pair.Key);
+                    LuaIdentifierNameSyntax labelIdentifier = pair.Value;
+                    RepeatStatement.Body.Statements.Add(new LuaLabeledStatement(labelIdentifier));
+                    LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(labelIdentifier);
+                    ifStatement.Body.Statements.AddRange(caseLabelStatement.Body.Statements);
                     RepeatStatement.Body.Statements.Add(ifStatement);
                 }
             }
