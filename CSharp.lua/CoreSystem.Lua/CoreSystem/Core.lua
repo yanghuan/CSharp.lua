@@ -288,21 +288,16 @@ function System.getTimeZone()
     return os.difftime(now, os.time(os.date("!*t", now)))
 end
 
-function System.using(t, f, ...)
-    local dispose = t.Dispose
-    local ret
-    if dispose == nil or dispose == emptyFn then
-        ret = f(t, ...)
-    else 
-        local ok, err = pcall(f, t, ...)
-        dispose(t)
-        if not ok then
-            throw(err)
-        else 
-            ret = err
-        end
+function System.using(f, ...)
+    local ok, status, ret = pcall(f, ...)
+    for i = 1, select("#", ...) do
+        local t = select(1, ...)
+        t:Dispose()
     end
-    return ret
+    if not ok then
+        throw(status)
+    end
+    return status, ret
 end
 
 function System.create(t, f)

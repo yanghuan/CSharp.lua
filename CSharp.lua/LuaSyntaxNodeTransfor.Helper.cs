@@ -14,10 +14,27 @@ namespace CSharpLua {
         private Dictionary<ISymbol, string> localReservedNames_ = new Dictionary<ISymbol, string>();
         private int localMappingCounter_;
 
-        private sealed class LocalVarSearcher : CSharpSyntaxWalker {
+        private abstract class LuaSyntaxSearcher : CSharpSyntaxWalker {
+            private sealed class FoundException : Exception {
+            }
+            protected void Found() {
+                throw new FoundException();
+            }
+
+            public bool Find(SyntaxNode root) {
+                try {
+                    Visit(root);
+                }
+                catch(FoundException) {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        private sealed class LocalVarSearcher : LuaSyntaxSearcher {
             private string name_;
             private SyntaxNode node_;
-            public bool IsExists { get; private set; }
 
             public LocalVarSearcher(string name, SyntaxNode node) {
                 name_ = name;
@@ -27,7 +44,7 @@ namespace CSharpLua {
             public override void VisitParameter(ParameterSyntax node) {
                 if(node != node_) {
                     if(node.Identifier.ValueText == name_) {
-                        IsExists = true;
+                        Found();
                     }
                 }
             }
@@ -35,16 +52,15 @@ namespace CSharpLua {
             public override void VisitVariableDeclarator(VariableDeclaratorSyntax node) {
                 if(node != node_) {
                     if(node.Identifier.ValueText == name_) {
-                        IsExists = true;
+                        Found();
                     } 
                 }
             }
+        }
 
-            public static bool Exists(string name, SyntaxNode parent, SyntaxNode node) {
-                LocalVarSearcher searcher = new LocalVarSearcher(name, node);
-                searcher.Visit(parent);
-                return searcher.IsExists;
-            }
+        public bool IsLocalVarExists(string name, SyntaxNode parent, SyntaxNode node) {
+            LocalVarSearcher searcher = new LocalVarSearcher(name, node);
+            return searcher.Find(parent);
         }
 
         private string GetReservedNewName(string name, int index) {
@@ -65,7 +81,7 @@ namespace CSharpLua {
                 int index = 0;
                 while(true) {
                     string newName = GetReservedNewName(name, index);
-                    bool exists = LocalVarSearcher.Exists(newName, parent, node);
+                    bool exists = IsLocalVarExists(newName, parent, node);
                     if(!exists) {
                         AddReservedMapping(newName, node);
                         name = newName;
@@ -103,6 +119,28 @@ namespace CSharpLua {
             if(LuaSyntaxNode.IsReservedWord(name)) {
                 name = localReservedNames_[symbol];
             }
+        }
+
+        private sealed class ContinueSearcher : LuaSyntaxSearcher {
+            public override void VisitContinueStatement(ContinueStatementSyntax node) {
+                Found();
+            }
+        }
+
+        private bool IsContinueExists(SyntaxNode node) {
+            ContinueSearcher searcher = new ContinueSearcher();
+            return searcher.Find(node);
+        }
+
+        private sealed class ReturnStatementSearcher : LuaSyntaxSearcher {
+            public override void VisitReturnStatement(ReturnStatementSyntax node) {
+                Found();
+            }
+        }
+
+        public bool IsReturnExists(SyntaxNode node) {
+            ReturnStatementSearcher searcher = new ReturnStatementSearcher();
+            return searcher.Find(node);
         }
     }
 }

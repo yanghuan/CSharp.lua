@@ -30,8 +30,13 @@ namespace CSharpLua.LuaAst {
         public bool IsInvokeThisCtor { get; set; }
     }
 
-    public sealed class LuaTryBlockAdapterExpressSyntax : LuaFunctionExpressSyntax {
-        public bool IsReturnExists { get; set; }
+    public abstract class LuaSpecialAdapterFunctionExpressSyntax : LuaFunctionExpressSyntax {
+    }
+
+    public sealed class LuaTryBlockAdapterExpressSyntax : LuaSpecialAdapterFunctionExpressSyntax {
         public LuaIdentifierNameSyntax CatchTemp { get; set; }
+    }
+
+    public sealed class LuaUsingAdapterExpressSyntax : LuaSpecialAdapterFunctionExpressSyntax {
     }
 }

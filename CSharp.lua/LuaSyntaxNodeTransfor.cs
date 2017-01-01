@@ -524,9 +524,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
-            var tryBlock = CurFunction as LuaTryBlockAdapterExpressSyntax;
-            if(tryBlock != null) {
-                tryBlock.IsReturnExists = true;
+            if(CurFunction is LuaSpecialAdapterFunctionExpressSyntax) {
                 LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
                 returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
                 if(node.Expression != null) {
@@ -1323,19 +1321,6 @@ namespace CSharpLua {
                 CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
                 CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
                 return temp;
-            }
-        }
-
-        private bool IsContinueExists(SyntaxNode node) {
-            ContinueSearcher searcher = new ContinueSearcher();
-            searcher.Visit(node);
-            return searcher.IsFound;
-        }
-
-        private sealed class ContinueSearcher : CSharpSyntaxWalker {
-            public bool IsFound { get; private set; }
-            public override void VisitContinueStatement(ContinueStatementSyntax node) {
-                IsFound = true;
             }
         }
 
