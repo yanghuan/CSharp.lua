@@ -1495,20 +1495,20 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitGotoStatement(GotoStatementSyntax node) {
-            if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.None)) {
-                var identifier = (LuaIdentifierNameSyntax)node.Expression.Accept(this);
-                return new LuaGotoStatement(identifier);
-            }
-            else if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.CaseKeyword)) {
+            if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.CaseKeyword)) {
                 var label = (LuaLiteralExpressionSyntax)node.Expression.Accept(this);
                 var temp = new LuaIdentifierNameSyntax("label_" + label.Text);
                 switchs_.Peek().AddCaseLabel(temp, label.Text);
                 return new LuaGotoCaseAdapterStatement(temp);
             }
-            else {
+            else if(node.CaseOrDefaultKeyword.IsKind(SyntaxKind.DefaultKeyword)) {
                 var temp = new LuaIdentifierNameSyntax("label_default");
                 switchs_.Peek().AddDefaultLabel(temp);
                 return new LuaGotoCaseAdapterStatement(temp);
+            }
+            else {
+                var identifier = (LuaIdentifierNameSyntax)node.Expression.Accept(this);
+                return new LuaGotoStatement(identifier);
             }
         }
 

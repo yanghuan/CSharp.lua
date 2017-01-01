@@ -74,8 +74,6 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaCharacterLiteralExpression : LuaLiteralExpressionSyntax {
         public char Character { get; }
-        public string OpenCommentToken => Tokens.OpenLongComment;
-        public string CloseCommentToken => Tokens.CloseLongComment;
 
         public LuaCharacterLiteralExpression(char character) {
             Character = character;
@@ -84,7 +82,7 @@ namespace CSharpLua.LuaAst {
         public string Comment {
             get {
                 string character = Character != '\0' ? Character.ToString() : "\\0";
-                return $"{OpenCommentToken} '{character}' {CloseCommentToken}";
+                return $"{Tokens.OpenLongComment} '{character}' {Tokens.CloseLongComment}";
             }
         }
 
