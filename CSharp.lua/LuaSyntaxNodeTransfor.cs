@@ -12,8 +12,8 @@ using Microsoft.CodeAnalysis;
 
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
+        private LuaSyntaxGenerator generator_;
         private SemanticModel semanticModel_;
-        private XmlMetaProvider xmlMetaProvider_;
 
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
         private Stack<LuaFunctionExpressSyntax> functions_ = new Stack<LuaFunctionExpressSyntax>();
@@ -29,18 +29,24 @@ namespace CSharpLua {
             ["^"] = "~"
         };
 
-        public LuaSyntaxNodeTransfor(SemanticModel semanticModel, XmlMetaProvider xmlMetaProvider) {
+        public LuaSyntaxNodeTransfor(LuaSyntaxGenerator generator, SemanticModel semanticModel) {
+            generator_ = generator;
             semanticModel_ = semanticModel;
-            xmlMetaProvider_ = xmlMetaProvider;
+        }
+
+        private XmlMetaProvider XmlMetaProvider {
+            get {
+                return generator_.XmlMetaProvider;
+            }
         }
 
         private static string GetOperatorToken(string operatorToken) {
             return operatorTokenMapps_.GetOrDefault(operatorToken, operatorToken);
         }
 
-        private static bool IsLuaNewest {
+        private bool IsLuaNewest {
             get {
-                return LuaRenderer.Setting.IsNewest;
+                return generator_.Setting.IsNewest;
             }
         }
 
@@ -148,11 +154,14 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node) {
+            var symbol = semanticModel_.GetDeclaredSymbol(node);
+            string fullName = symbol.ToString();
             LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-            LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(name);
+            LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(fullName, name);
             typeDeclarations_.Push(enumDeclaration);
             foreach(var member in node.Members) {
-                member.Accept(this);
+                var statement = (LuaKeyValueTableItemSyntax)member.Accept(this);
+                enumDeclaration.Add(statement);
             }
             typeDeclarations_.Pop();
             return enumDeclaration;
@@ -435,6 +444,14 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitEventFieldDeclaration(EventFieldDeclarationSyntax node) {
             VisitBaseFieldDeclarationSyntax(node);
             return base.VisitEventFieldDeclaration(node);
+        }
+
+        public override LuaSyntaxNode VisitEnumMemberDeclaration(EnumMemberDeclarationSyntax node) {
+            var symbol = (IFieldSymbol)semanticModel_.GetDeclaredSymbol(node);
+            Contract.Assert(symbol.HasConstantValue);
+            LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            LuaExpressionSyntax value = GetConstLiteralExpression(symbol.ConstantValue);
+            return new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(identifier), value);
         }
 
         public override LuaSyntaxNode VisitParameterList(ParameterListSyntax node) {
@@ -732,7 +749,7 @@ namespace CSharpLua {
                     --optionalCount;
                 }
                 foreach(var typeArgument in methodSybol.TypeArguments) {
-                    string typeName = xmlMetaProvider_.GetTypeMapName(typeArgument);
+                    string typeName = XmlMetaProvider.GetTypeMapName(typeArgument);
                     invocation.AddArgument(new LuaIdentifierNameSyntax(typeName));
                 }
             }
@@ -899,7 +916,7 @@ namespace CSharpLua {
 
         private LuaExpressionSyntax GetMethodNameExpression(IMethodSymbol symbol, NameSyntax node) {
             string name;
-            string methodName = xmlMetaProvider_.GetMethodMapName(symbol);
+            string methodName = XmlMetaProvider.GetMethodMapName(symbol);
             if(symbol.IsStatic) {
                 name = methodName;
             }
@@ -1052,7 +1069,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitPredefinedType(PredefinedTypeSyntax node) {
             ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
-            string typeName = xmlMetaProvider_.GetTypeMapName(symbol);
+            string typeName = XmlMetaProvider.GetTypeMapName(symbol);
             return new LuaIdentifierNameSyntax(typeName);
         }
 
@@ -1174,10 +1191,24 @@ namespace CSharpLua {
                 if(original is LuaLiteralExpressionSyntax) {
                     return new LuaStringLiteralExpressionSyntax(symbol.Name);
                 }
-                throw new NotImplementedException();
+                else {
+                    ITypeSymbol type;
+                    if(symbol.Kind == SymbolKind.Parameter) {
+                        type = ((IParameterSymbol)symbol).Type;
+                    }
+                    else {
+                        type = ((IFieldSymbol)symbol).Type;
+                    }
+                    string typeName = XmlMetaProvider.GetTypeMapName(type);
+                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(symbol.Name), LuaIdentifierNameSyntax.ToEnumString, true);
+                    LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
+                    invocation.AddArgument(new LuaIdentifierNameSyntax(typeName));
+                    generator_.AddExportEnum(symbol.ToString());
+                    return invocation;
+                }
             }
             else if(typeInfo.IsValueType) {
-                LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToString, true);
+                LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);
                 return new LuaInvocationExpressionSyntax(memberAccess);
             }
             else {

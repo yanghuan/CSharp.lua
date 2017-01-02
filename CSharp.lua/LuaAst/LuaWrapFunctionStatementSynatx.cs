@@ -22,6 +22,9 @@ namespace CSharpLua.LuaAst {
         }
 
         public void Add(LuaStatementSyntax statement) {
+            if(statement == null) {
+                throw new ArgumentNullException(nameof(statement));
+            }
             statements_.Add(statement);
         }
 

@@ -130,9 +130,9 @@ namespace CSharpLua {
             }
         }
 
-        private static Dictionary<string, string> namespaceNameMaps_ = new Dictionary<string, string>();
-        private static Dictionary<string, string> typeNameMaps_ = new Dictionary<string, string>();
-        private static Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
+        private Dictionary<string, string> namespaceNameMaps_ = new Dictionary<string, string>();
+        private Dictionary<string, string> typeNameMaps_ = new Dictionary<string, string>();
+        private Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
 
         public XmlMetaProvider(IEnumerable<string> files) {
             foreach(string file in files) {

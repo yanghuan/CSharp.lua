@@ -10,9 +10,15 @@ namespace CSharpLua.LuaAst {
             throw new NotSupportedException($"{this.GetType().Name} is not override");
         }
 
+        public sealed class Semicolon {
+            public override string ToString() {
+                return ";";
+            }
+        }
+
         public class Tokens : Keyword {
             public static string Empty => string.Empty;
-            public static string Semicolon => LuaRenderer.Setting.HasSemicolon ? ";" : Empty;
+            public static readonly Semicolon Semicolon = new Semicolon();
             public const string OpenParentheses = "(";
             public const string CloseParentheses = ")";
             public const string OpenBrace = "{";

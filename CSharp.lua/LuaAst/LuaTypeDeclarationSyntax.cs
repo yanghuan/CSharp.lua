@@ -10,7 +10,7 @@ namespace CSharpLua.LuaAst {
         private LuaTypeLocalAreaSyntax local_ = new LuaTypeLocalAreaSyntax();
         private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
 
-        private LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
+        protected LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
         private LuaFunctionExpressSyntax staticInitFunction_;
         private LuaFunctionExpressSyntax staticCtorFunction_;
         private List<string> staticAssignmentNames_ = new List<string>();
@@ -315,8 +315,21 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaEnumDeclarationSyntax : LuaTypeDeclarationSyntax {
-        public LuaEnumDeclarationSyntax(LuaIdentifierNameSyntax name) {
+        public string FullName { get; }
+
+        public LuaEnumDeclarationSyntax(string fullName, LuaIdentifierNameSyntax name) {
+            FullName = fullName;
             UpdateIdentifiers(name, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Enum);
+        }
+
+        public void Add(LuaKeyValueTableItemSyntax statement) {
+            resultTable_.Items.Add(statement);
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            if(renderer.IsEnumExport(FullName)) {
+                base.Render(renderer);
+            }
         }
     }
 }

@@ -6,11 +6,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using CSharpLua.LuaAst;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
+using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed class Worker {
@@ -68,24 +68,11 @@ namespace CSharpLua {
                 }
             }
 
-            XmlMetaProvider xmlMetaProvider = new XmlMetaProvider(Metas);
-
-            List<LuaCompilationUnitSyntax> luaCompilationUnits = new List<LuaCompilationUnitSyntax>();
-            foreach(SyntaxTree syntaxTree in compilation.SyntaxTrees) {
-                SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
-                CompilationUnitSyntax compilationUnitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();
-                LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor(semanticModel, xmlMetaProvider);
-                var luaCompilationUnit = (LuaCompilationUnitSyntax)compilationUnitSyntax.Accept(transfor);
-                luaCompilationUnits.Add(luaCompilationUnit);
-            }
-
-            foreach(var luaCompilationUnit in luaCompilationUnits) {
+            LuaSyntaxGenerator generator = new LuaSyntaxGenerator(Metas);
+            generator.Generate(compilation, luaCompilationUnit => {
                 string outFile = Path.Combine(output_, Path.GetFileNameWithoutExtension(luaCompilationUnit.FilePath));
-                using(var writer = new StreamWriter(outFile + "2.lua", false, Encoding)) {
-                    LuaRenderer renderer = new LuaRenderer(writer);
-                    luaCompilationUnit.Render(renderer);
-                }
-            }
+                return new StreamWriter(outFile + "2.lua", false, Encoding);
+            });
         }
     }
 }

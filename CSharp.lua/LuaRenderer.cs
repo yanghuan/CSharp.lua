@@ -6,37 +6,24 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed class LuaRenderer {
-        public static class Setting {
-            public static bool HasSemicolon { get; set; }
-            private static int indent_;
-            public static string IndentString;
-            public static bool IsNewest { get; set; }
-
-            static Setting() {
-                Indent = 4;
-                HasSemicolon = true;
-                IsNewest = true;
-            }
-
-            public static int Indent {
-                get {
-                    return indent_;
-                }
-                set {
-                    if(indent_ != value) {
-                        indent_ = value;
-                        IndentString = new string(' ', indent_);
-                    }
-                }
-            }
-        }
-
+        private LuaSyntaxGenerator generator_;
         private TextWriter writer_;
         private bool isNewLine_;
         private int indentLevel_;
 
-        public LuaRenderer(TextWriter writer) {
+        public LuaRenderer(LuaSyntaxGenerator generator, TextWriter writer) {
+            generator_ = generator;
             writer_ = writer;
+        }
+
+        private LuaSyntaxGenerator.SettingInfo Setting {
+            get {
+                return generator_.Setting;
+            }
+        }
+
+        public bool IsEnumExport(string fullName) {
+            return generator_.IsEnumExport(fullName);
         }
 
         private void AddIndent() {
@@ -71,6 +58,12 @@ namespace CSharpLua {
                 isNewLine_ = false;
             }
             writer_.Write(value);
+        }
+
+        private void Write(LuaSyntaxNode.Semicolon semicolonToken) {
+            if(Setting.HasSemicolon) {
+                Write(semicolonToken.ToString());
+            }
         }
 
         internal void Render(LuaCompilationUnitSyntax node) {
