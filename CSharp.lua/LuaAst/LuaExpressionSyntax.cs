@@ -96,4 +96,12 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaCodeTemplateExpressionSyntax : LuaExpressionSyntax {
+        public readonly LuaSyntaxList<LuaExpressionSyntax> Codes = new LuaSyntaxList<LuaExpressionSyntax>();
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
 }

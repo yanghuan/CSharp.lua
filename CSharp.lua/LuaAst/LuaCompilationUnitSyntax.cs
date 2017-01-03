@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSharpLua.LuaAst {
     public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
         public string FilePath { get; set; }
-        public LuaSyntaxList<LuaStatementSyntax> Statements { get; } = new LuaSyntaxList<LuaStatementSyntax>();
+        public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
 
         public LuaCompilationUnitSyntax() {
             var info = Assembly.GetExecutingAssembly().GetName();

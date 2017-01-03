@@ -23,7 +23,7 @@ namespace CSharpLua.LuaAst {
     public sealed class LuaArgumentListSyntax : LuaSyntaxNode {
         public string OpenParenToken => Tokens.OpenParentheses;
         public string CloseParenToken => Tokens.CloseParentheses;
-        public LuaSyntaxList<LuaArgumentSyntax> Arguments { get; } = new LuaSyntaxList<LuaArgumentSyntax>();
+        public readonly LuaSyntaxList<LuaArgumentSyntax> Arguments = new LuaSyntaxList<LuaArgumentSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

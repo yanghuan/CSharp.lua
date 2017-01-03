@@ -101,11 +101,45 @@ namespace CSharpLua {
 
         private sealed class TypeMetaInfo {
             private XmlMetaModel.ClassModel model_;
+            private Dictionary<string, XmlMetaModel.FieldModel> fields_ = new Dictionary<string, XmlMetaModel.FieldModel>();
+            private Dictionary<string, XmlMetaModel.PropertyModel> propertys_ = new Dictionary<string, XmlMetaModel.PropertyModel>();
             private Dictionary<string, MethodMetaInfo> methods_ = new Dictionary<string, MethodMetaInfo>();
 
             public TypeMetaInfo(XmlMetaModel.ClassModel model) {
                 model_ = model;
+                Field();
+                Property();
                 Method();
+            }
+
+            private void Field() {
+                if(model_.Fields != null) {
+                    foreach(var fieldModel in model_.Fields) {
+                        if(string.IsNullOrEmpty(fieldModel.name)) {
+                            throw new ArgumentException($"type [{model_.name}] has a field name is empty");
+                        }
+
+                        if(fields_.ContainsKey(fieldModel.name)) {
+                            throw new ArgumentException($"type [{model_.name}]'s field [{fieldModel.name}] is already exists");
+                        }
+                        fields_.Add(fieldModel.name, fieldModel);
+                    }
+                }
+            }
+
+            private void Property() {
+                if(model_.Propertys != null) {
+                    foreach(var propertyModel in model_.Propertys) {
+                        if(string.IsNullOrEmpty(propertyModel.name)) {
+                            throw new ArgumentException($"type [{model_.name}] has a property name is empty");
+                        }
+
+                        if(fields_.ContainsKey(propertyModel.name)) {
+                            throw new ArgumentException($"type [{model_.name}]'s property [{propertyModel.name}] is already exists");
+                        }
+                        propertys_.Add(propertyModel.name, propertyModel);
+                    }
+                }
             }
 
             private void Method() {
@@ -123,6 +157,14 @@ namespace CSharpLua {
                         info.Add(methodModel);
                     }
                 }
+            }
+
+            public XmlMetaModel.FieldModel GetFieldModel(string name) {
+                return fields_.GetOrDefault(name);
+            }
+
+            public XmlMetaModel.PropertyModel GetPropertyModel(string name) {
+                return propertys_.GetOrDefault(name);
             }
 
             public MethodMetaInfo GetMethodMetaInfo(string name) {
@@ -227,9 +269,13 @@ namespace CSharpLua {
             return typeNameMaps_.GetOrDefault(name, name);
         }
 
-        internal string GetMethodMapName(IMethodSymbol symbol) {
-            string typeName = GetTypeName(symbol.ContainingType);
-            var typeInfo = typeMetas_.GetOrDefault(typeName);
+        private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
+            string typeName = GetTypeName(memberSymbol.ContainingType);
+            return typeMetas_.GetOrDefault(typeName);
+        }
+
+        public string GetMethodMapName(IMethodSymbol symbol) {
+            var typeInfo = GetTypeMetaInfo(symbol);
             if(typeInfo != null) {
                 var methodInfo = typeInfo.GetMethodMetaInfo(symbol.Name);
                 if(methodInfo != null) {
@@ -240,6 +286,23 @@ namespace CSharpLua {
                 }
             }
             return symbol.Name;
+        }
+
+        public bool IsPropertyField(IPropertySymbol symbol) {
+            var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
+            return info != null && info.IsAutoField;
+        }
+
+        public string GetFieldCodeTemplate(IFieldSymbol symbol) {
+            return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
+        }
+
+        public string GetProertyCodeTemplate(IPropertySymbol symbol, bool isGet) {
+            var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
+            if(info != null) {
+                return isGet ? info.get?.Template : info.set?.Template;
+            }
+            return null;
         }
     }
 }

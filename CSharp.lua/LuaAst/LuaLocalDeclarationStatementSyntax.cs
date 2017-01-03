@@ -7,7 +7,7 @@ using System.Text;
 namespace CSharpLua.LuaAst {
     public sealed class LuaLocalVariablesStatementSyntax : LuaVariableDeclarationSyntax {
         public string LocalKeyword => Tokens.Local;
-        public LuaSyntaxList<LuaIdentifierNameSyntax> Variables { get; } = new LuaSyntaxList<LuaIdentifierNameSyntax>();
+        public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
         public LuaEqualsValueClauseListSyntax Initializer { get; set; }
 
         internal override void Render(LuaRenderer renderer) {
@@ -17,7 +17,7 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaEqualsValueClauseListSyntax : LuaSyntaxNode {
         public string EqualsToken => Tokens.Equals;
-        public LuaSyntaxList<LuaExpressionSyntax> Values { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+        public readonly LuaSyntaxList<LuaExpressionSyntax> Values = new LuaSyntaxList<LuaExpressionSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
@@ -40,7 +40,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaVariableListDeclarationSyntax : LuaVariableDeclarationSyntax {
-        public LuaSyntaxList<LuaVariableDeclaratorSyntax> Variables { get; } = new LuaSyntaxList<LuaVariableDeclaratorSyntax>();
+        public readonly LuaSyntaxList<LuaVariableDeclaratorSyntax> Variables = new LuaSyntaxList<LuaVariableDeclaratorSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
@@ -97,7 +97,7 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaTypeLocalAreaSyntax : LuaStatementSyntax {
         public string LocalKeyword => Tokens.Local;
-        public LuaSyntaxList<LuaIdentifierNameSyntax> Variables { get; } = new LuaSyntaxList<LuaIdentifierNameSyntax>();
+        public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

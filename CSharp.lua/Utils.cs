@@ -214,6 +214,10 @@ namespace CSharpLua {
             return false;
         }
 
+        public static bool IsAssignment(this SyntaxKind kind) {
+            return kind >= SyntaxKind.SimpleAssignmentExpression && kind <= SyntaxKind.RightShiftAssignmentExpression;
+        }
+
         public static string GetLocationString(this SyntaxNode node) {
             var location = node.SyntaxTree.GetLocation(node.Span);
             var methodInfo = location.GetType().GetMethod("GetDebuggerDisplay", BindingFlags.Instance | BindingFlags.NonPublic);

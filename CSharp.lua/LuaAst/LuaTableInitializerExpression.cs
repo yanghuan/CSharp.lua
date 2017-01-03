@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace CSharpLua.LuaAst {
     public sealed class LuaTableInitializerExpression : LuaExpressionSyntax {
         public string OpenBraceToken => Tokens.OpenBrace;
-        public LuaSyntaxList<LuaTableItemSyntax> Items { get; } = new LuaSyntaxList<LuaTableItemSyntax>();
+        public readonly LuaSyntaxList<LuaTableItemSyntax> Items = new LuaSyntaxList<LuaTableItemSyntax>();
         public string CloseBraceToken => Tokens.CloseBrace;
 
         internal override void Render(LuaRenderer renderer) {

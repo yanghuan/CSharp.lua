@@ -12,7 +12,7 @@ namespace CSharpLua.LuaAst {
         public LuaElseClauseSyntax Else { get; set; }
         public string IfKeyword => Tokens.If;
         public string OpenParenToken => Tokens.Then;
-        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax();
+        public readonly LuaBlockSyntax Body = new LuaBlockSyntax();
 
         public LuaIfStatementSyntax(LuaExpressionSyntax condition) {
             if(condition == null) {

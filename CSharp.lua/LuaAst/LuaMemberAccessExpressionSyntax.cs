@@ -43,7 +43,7 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaPropertyAdapterExpressionSyntax : LuaExpressionSyntax {
         private LuaPropertyOrEventIdentifierNameSyntax identifier_;
-        public LuaInvocationExpressionSyntax InvocationExpression { get; set; }
+        public LuaInvocationExpressionSyntax InvocationExpression { get; private set; }
 
         public LuaPropertyAdapterExpressionSyntax(LuaPropertyOrEventIdentifierNameSyntax identifier) {
             identifier_ = identifier;

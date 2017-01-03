@@ -509,5 +509,11 @@ namespace CSharpLua {
             node.Assignment.Render(this);
             node.GotoStatement.Render(this);
         }
+
+        internal void Render(LuaCodeTemplateExpressionSyntax node) {
+            foreach(var code in node.Codes) {
+                code.Render(this);
+            }
+        }
     }
 }

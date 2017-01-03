@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text.RegularExpressions;
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor {
+        private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{([\w|^]+)\}", RegexOptions.Compiled);
         private Dictionary<ISymbol, string> localReservedNames_ = new Dictionary<ISymbol, string>();
         private int localMappingCounter_;
 
@@ -171,6 +173,37 @@ namespace CSharpLua {
                 }
             }
             throw new InvalidOperationException();
+        }
+
+        private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression) {
+            LuaCodeTemplateExpressionSyntax codeTemplateExpression = new LuaCodeTemplateExpressionSyntax();
+
+            var matchs = codeTemplateRegex_.Matches(codeTemplate);
+            int prevIndex = 0;
+            foreach(Match match in matchs) {
+                string prevToken = codeTemplate.Substring(prevIndex, match.Index);
+                codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(prevToken));
+                string key = match.Groups[2].Value;
+                if(key == "this") {
+                    codeTemplateExpression.Codes.Add(BuildMemberAccessTargetExpression(targetExpression));
+                }
+                else if(key == "class") {
+                    var type = semanticModel_.GetTypeInfo(targetExpression).Type;
+                    string typeName = XmlMetaProvider.GetTypeMapName(type);
+                    codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(typeName));
+                }
+                else {
+                    throw new NotImplementedException();
+                }
+                prevIndex = match.Index + match.Length;
+            }
+
+            if(prevIndex < codeTemplate.Length) {
+                string last = codeTemplate.Substring(prevIndex);
+                codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(last));
+            }
+
+            return codeTemplateExpression;
         }
     }
 }
