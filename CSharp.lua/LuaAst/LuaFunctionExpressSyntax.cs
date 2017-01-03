@@ -16,12 +16,25 @@ namespace CSharpLua.LuaAst {
             CloseBraceToken = Tokens.End,
         };
 
+        public void AddParameter(LuaIdentifierNameSyntax identifier) {
+            ParameterList.Parameters.Add(new LuaParameterSyntax(identifier));
+        }
+
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
+    }
 
-        public void AddParameter(LuaIdentifierNameSyntax identifier) {
-            ParameterList.Parameters.Add(new LuaParameterSyntax(identifier));
+    public sealed class LuaSimpleLambdaAdapterExpression : LuaExpressionSyntax {
+        public LuaFunctionExpressSyntax FunctionExpress { get; }
+        public string EndToken => Tokens.End;
+
+        public LuaSimpleLambdaAdapterExpression(LuaFunctionExpressSyntax functionExpress) {
+            FunctionExpress = functionExpress;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
         }
     }
 

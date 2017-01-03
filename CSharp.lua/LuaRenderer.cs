@@ -137,6 +137,21 @@ namespace CSharpLua {
             node.Body.Render(this);
         }
 
+        internal void Render(LuaSimpleLambdaAdapterExpression node) {
+            var function = node.FunctionExpress;
+            Write(function.FunctionKeyword);
+            WriteSpace();
+            function.ParameterList.Render(this);
+            WriteSpace();
+            var returnStatement = (LuaReturnStatementSyntax)function.Body.Statements.First();
+            Write(returnStatement.ReturnKeyword);
+            WriteSpace();
+            returnStatement.Expression.Render(this);
+            Write(returnStatement.SemicolonToken);
+            WriteSpace();
+            Write(node.EndToken);
+        }
+
         internal void Render(LuaParameterListSyntax node) {
             WriteArgumentList(node.OpenParenToken, node.Parameters, node.CloseParenToken);
         }

@@ -146,7 +146,7 @@ namespace CSharpLua {
             return node.Type.Accept(this);
         }
 
-        private LuaFunctionExpressSyntax VisitLambdaExpression(IEnumerable<ParameterSyntax> parameters, CSharpSyntaxNode body) {
+        private LuaExpressionSyntax VisitLambdaExpression(IEnumerable<ParameterSyntax> parameters, CSharpSyntaxNode body) {
             LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
             PushFunction(function);
 
@@ -155,6 +155,7 @@ namespace CSharpLua {
                 function.ParameterList.Parameters.Add(luaParameter);
             }
 
+            LuaExpressionSyntax resultExpression = function;
             if(body.IsKind(SyntaxKind.Block)) {
                 var block = (LuaBlockSyntax)body.Accept(this);
                 function.Body.Statements.AddRange(block.Statements);
@@ -163,11 +164,14 @@ namespace CSharpLua {
                 blocks_.Push(function.Body);
                 var expression = (LuaExpressionSyntax)body.Accept(this);
                 blocks_.Pop();
-                function.Body.Statements.Add(new LuaExpressionStatementSyntax(expression));
+                function.Body.Statements.Add(new LuaReturnStatementSyntax(expression));
+                if(function.Body.Statements.Count == 1) {
+                    resultExpression = new LuaSimpleLambdaAdapterExpression(function);
+                }
             }
 
             PopFunction();
-            return function;
+            return resultExpression;
         }
 
         public override LuaSyntaxNode VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {

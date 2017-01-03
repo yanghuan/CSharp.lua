@@ -98,6 +98,7 @@ namespace CSharpLua {
             if(LuaSyntaxNode.IsReservedWord(name)) {
                 name = GetUniqueIdentifier(name, node, 1);
                 AddReservedMapping(name, node);
+                return true;
             }
             return false;
         }
