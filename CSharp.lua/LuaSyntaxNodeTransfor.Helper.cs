@@ -59,16 +59,16 @@ namespace CSharpLua {
 
         private string GetNewIdentifierName(string name, int index) {
             switch(index) {
-                case -1:
-                    return name;
                 case 0:
-                    return name.FirstLetterToUpper();
+                    return name;
                 case 1:
-                    return name + "_";
+                    return name.FirstLetterToUpper();
                 case 2:
+                    return name + "_";
+                case 3:
                     return "_" + name;
                 default:
-                    return name + (index - 2);
+                    return name + (index - 4);
             }
         }
 
@@ -96,7 +96,7 @@ namespace CSharpLua {
 
         private bool CheckReservedWord(ref string name, SyntaxNode node) {
             if(LuaSyntaxNode.IsReservedWord(name)) {
-                name = GetUniqueIdentifier(name, node);
+                name = GetUniqueIdentifier(name, node, 1);
                 AddReservedMapping(name, node);
             }
             return false;

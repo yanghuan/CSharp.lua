@@ -1543,7 +1543,7 @@ namespace CSharpLua {
                 int caseIndex = GetCaseLabelIndex(node);
                 var labelIdentifier = switchStatement.CaseLabels.GetOrDefault(caseIndex);
                 if(labelIdentifier == null) {
-                    string uniqueName = GetUniqueIdentifier(kCaseLabel + caseIndex, node, -1);
+                    string uniqueName = GetUniqueIdentifier(kCaseLabel + caseIndex, node);
                     labelIdentifier = new LuaIdentifierNameSyntax(uniqueName);
                     switchStatement.CaseLabels.Add(caseIndex, labelIdentifier);
                 }
@@ -1553,7 +1553,7 @@ namespace CSharpLua {
                 const string kDefaultLabel = "defaultLabel";
                 var switchStatement = switchs_.Peek();
                 if(switchStatement.DefaultLabel == null) {
-                    string identifier = GetUniqueIdentifier(kDefaultLabel, node, -1);
+                    string identifier = GetUniqueIdentifier(kDefaultLabel, node);
                     switchStatement.DefaultLabel = new LuaIdentifierNameSyntax(identifier);
                 }
                 return new LuaGotoCaseAdapterStatement(switchStatement.DefaultLabel);
