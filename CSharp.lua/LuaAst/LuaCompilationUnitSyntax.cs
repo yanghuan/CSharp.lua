@@ -30,7 +30,7 @@ namespace CSharpLua.LuaAst {
             Statements.Add(namespaceNode);
         }
 
-        internal void ImportLinq() {
+        public void ImportLinq() {
             if(!isImportLinq_) {
                 AddImport(LuaIdentifierNameSyntax.Linq, LuaIdentifierNameSyntax.SystemLinqEnumerable);
                 isImportLinq_ = true;
