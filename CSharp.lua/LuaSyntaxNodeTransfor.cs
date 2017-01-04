@@ -729,12 +729,15 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node) {
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             if(node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-                string codeTemplate = GetMethodCodeTemplate(symbol);
+                string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
                 if(codeTemplate != null) {
                     List<ExpressionSyntax> argumentExpressions = new List<ExpressionSyntax>();
                     var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
                     if(symbol.IsExtensionMethod) {
                         argumentExpressions.Add(memberAccessExpression.Expression);
+                        if(symbol.ContainingType.IsSystemLinqEnumerable()) {
+                            CurCompilationUnit.ImportLinq();
+                        }
                     }
                     argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => i.Expression));
                     var invocationExpression = BuildCodeTemplateExpression(codeTemplate, memberAccessExpression.Expression, argumentExpressions, symbol.TypeArguments);

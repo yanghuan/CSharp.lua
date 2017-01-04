@@ -176,17 +176,6 @@ namespace CSharpLua {
             throw new InvalidOperationException();
         }
 
-        private string GetMethodCodeTemplate(IMethodSymbol symbol) {
-            string importString;
-            string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol, out importString);
-            if(codeTemplate != null) {
-                if(importString != null) {
-                    CurCompilationUnit.AddImport(importString);
-                }
-            }
-            return codeTemplate;
-        }
-
         private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression) {
             return BuildCodeTemplateExpression(codeTemplate, targetExpression, null, ImmutableArray<ITypeSymbol>.Empty);
         }

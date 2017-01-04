@@ -355,8 +355,12 @@ namespace CSharpLua {
         }
 
         private string GetMethodName(IMethodSymbol symbol) {
+            if(symbol.DeclaredAccessibility != Accessibility.Public) {
+                return null;
+            }
+
             string name = null;
-            if(IsCodeTemplateEnable(symbol)) {
+            if(!symbol.IsCodeSymbol()) {
                 name = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetName(symbol);
             }
 
@@ -407,19 +411,31 @@ namespace CSharpLua {
             return null;
         }
 
-        public string GetMethodCodeTemplate(IMethodSymbol symbol, out string importString) {
-            importString = null;
-            if(IsCodeTemplateEnable(symbol)) {
-                var info = GetTypeMetaInfo(symbol);
-                if(info != null) {
-                    string codeTemplate = info.GetMethodMetaInfo(symbol.Name)?.GetCodeTemplate(symbol);
-                    if(codeTemplate != null) {
-                        importString = info.Model.Import;
-                        return codeTemplate;
+        public string GetMethodCodeTemplate(IMethodSymbol symbol) {
+            if(symbol.DeclaredAccessibility != Accessibility.Public) {
+                return null;
+            }
+
+            string codeTemplate = null;
+            if(!symbol.IsCodeSymbol()) {
+                codeTemplate = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetCodeTemplate(symbol);
+            }
+
+            if(codeTemplate == null) {
+                if(symbol.IsOverride) {
+                    codeTemplate = GetMethodCodeTemplate(symbol.OverriddenMethod);
+                }
+                else {
+                    var interfaceImplementations = symbol.InterfaceImplementations();
+                    foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
+                        codeTemplate = GetMethodCodeTemplate(interfaceMethod);
+                        if(codeTemplate != null) {
+                            break;
+                        }
                     }
                 }
             }
-            return null;
+            return codeTemplate;
         }
     }
 }

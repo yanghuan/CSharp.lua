@@ -58,6 +58,8 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Try = new LuaIdentifierNameSyntax("System.try");
         public readonly static LuaIdentifierNameSyntax Is = new LuaIdentifierNameSyntax("System.is");
         public readonly static LuaIdentifierNameSyntax Using = new LuaIdentifierNameSyntax("System.using");
+        public readonly static LuaIdentifierNameSyntax Linq = new LuaIdentifierNameSyntax("Linq");
+        public readonly static LuaIdentifierNameSyntax SystemLinqEnumerable = new LuaIdentifierNameSyntax("Linq");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

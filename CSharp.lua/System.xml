@@ -136,7 +136,7 @@
         </class>
     </namespace>
     <namespace name="System.Linq">
-        <class name="Enumerable" Import="Linq=System.Linq.Enumerable">
+        <class name="Enumerable" Import="Linq">
             <method name="Where" Template="Linq.Where({0}, {1})" />
             <method name="Select" Template="Linq.Select({0}, {1}, {^1})" />
             <method name="SelectMany" Template="Linq.SelectMany({0}, {1}, {^1})" />

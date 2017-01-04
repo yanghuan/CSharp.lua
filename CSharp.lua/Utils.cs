@@ -233,6 +233,21 @@ namespace CSharpLua {
             return kind >= SyntaxKind.SimpleAssignmentExpression && kind <= SyntaxKind.RightShiftAssignmentExpression;
         }
 
+        private static INamedTypeSymbol systemLinqEnumerableType_;
+
+        public static bool IsSystemLinqEnumerable(this INamedTypeSymbol symbol) {
+            if(systemLinqEnumerableType_ != null) {
+                return symbol == systemLinqEnumerableType_;
+            }
+            else {
+                bool success = symbol.ToString() == "System.Linq.Enumerable";
+                if(success) {
+                    systemLinqEnumerableType_ = symbol;
+                }
+                return success;
+            }
+        }
+
         public static string GetLocationString(this SyntaxNode node) {
             var location = node.SyntaxTree.GetLocation(node.Span);
             var methodInfo = location.GetType().GetMethod("GetDebuggerDisplay", BindingFlags.Instance | BindingFlags.NonPublic);
