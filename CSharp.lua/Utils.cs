@@ -153,6 +153,17 @@ namespace CSharpLua {
             return false;
         }
 
+        public static IEnumerable<T> InterfaceImplementations<T>(this T symbol) where T : ISymbol {
+            if(!symbol.IsStatic) {
+                var type = symbol.ContainingType;
+                if(type != null) {
+                    var interfaceSymbols = type.AllInterfaces.SelectMany(i => i.GetMembers().OfType<T>());
+                    return interfaceSymbols.Where(i => symbol.Equals(type.FindImplementationForInterfaceMember(i)));
+                }
+            }
+            return null;
+        }
+
         public static bool IsCodeSymbol(this ISymbol symbol) {
             return symbol.DeclaringSyntaxReferences.Length > 0;
         }

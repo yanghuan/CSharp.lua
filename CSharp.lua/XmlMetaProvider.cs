@@ -93,18 +93,76 @@ namespace CSharpLua {
                 models_.Add(model);
             }
 
+            private bool IsTypeMatch(ITypeSymbol symbol, string typeString) {
+                INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
+                string namespaceName = typeSymbol.ContainingNamespace.ToString();
+                string name;
+                if(typeSymbol.TypeArguments.Length == 0) {
+                    name = $"{namespaceName}.{symbol.Name}";
+                }
+                else {
+                    name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
+                }
+                return name == typeString;
+            }
+
+            private bool IsMethodMatch(XmlMetaModel.MethodModel model, IMethodSymbol symbol) {
+                if(model.name != symbol.Name) {
+                    return false;
+                }
+
+                if(model.ArgCount != -1) {
+                    if(symbol.Parameters.Length != model.ArgCount) {
+                        return false;
+                    }
+                }
+
+                if(model.GenericArgCount != -1) {
+                    if(symbol.TypeArguments.Length != model.GenericArgCount) {
+                        return false;
+                    }
+                }
+
+                if(!string.IsNullOrEmpty(model.RetType)) {
+                    if(!IsTypeMatch(symbol.ReturnType, model.RetType)) {
+                        return false;
+                    }
+                }
+
+                if(model.Args != null) {
+                    if(symbol.Parameters.Length != model.Args.Length) {
+                        return false;
+                    }
+
+                    int index = 0;
+                    foreach(var parameter in symbol.Parameters) {
+                        var parameterModel = model.Args[index];
+                        if(!IsTypeMatch(parameter.Type, parameterModel.type)) {
+                            return false;
+                        }
+                        ++index;
+                    }
+                }
+
+                return true;
+            }
+
             public string GetName(IMethodSymbol symbol) {
                 if(models_.Count == 1) {
                     return models_.First().Name;
                 }
-                throw new NotImplementedException();
+
+                var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+                return methodModel?.Name;
             }
 
             internal string GetCodeTemplate(IMethodSymbol symbol) {
                 if(models_.Count == 1) {
                     return models_.First().Template;
                 }
-                throw new NotImplementedException();
+
+                var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+                return methodModel?.Template;
             }
         }
 
@@ -279,9 +337,16 @@ namespace CSharpLua {
             return name;
         }
 
+        private bool IsCodeTemplateEnable(ISymbol symbol) {
+            return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsCodeSymbol();
+        }
+
         public string GetTypeMapName(ISymbol symbol) {
             string name = GetTypeName(symbol);
-            return typeNameMaps_.GetOrDefault(name, name);
+            if(IsCodeTemplateEnable(symbol)) {
+                return typeNameMaps_.GetOrDefault(name, name);
+            }
+            return name;        
         }
 
         private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
@@ -289,24 +354,51 @@ namespace CSharpLua {
             return typeMetas_.GetOrDefault(typeName);
         }
 
+        private string GetMethodName(IMethodSymbol symbol) {
+            string name = null;
+            if(IsCodeTemplateEnable(symbol)) {
+                name = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetName(symbol);
+            }
+
+            if(name == null) {
+                if(symbol.IsOverride) {
+                    name = GetMethodName(symbol.OverriddenMethod); 
+                }
+                else {
+                    var interfaceImplementations = symbol.InterfaceImplementations();
+                    foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
+                        name = GetMethodName(interfaceMethod);
+                        if(name != null) {
+                            break;
+                        }
+                    }
+                }
+            }
+            return name;
+        }
+
         public string GetMethodMapName(IMethodSymbol symbol) {
-            return GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetName(symbol);
+            string name = GetMethodName(symbol);
+            return name ?? symbol.Name;
         }
 
         public bool IsPropertyField(IPropertySymbol symbol) {
-            var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
-            return info != null && info.IsAutoField;
+            if(IsCodeTemplateEnable(symbol)) {
+                var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
+                return info != null && info.IsAutoField;
+            }
+            return false;
         }
 
         public string GetFieldCodeTemplate(IFieldSymbol symbol) {
-            if(symbol.IsCodeSymbol()) {
-                return null;
+            if(IsCodeTemplateEnable(symbol)) {
+                return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
             }
-            return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
+            return null;
         }
 
         public string GetProertyCodeTemplate(IPropertySymbol symbol, bool isGet) {
-            if(!symbol.IsCodeSymbol()) {
+            if(IsCodeTemplateEnable(symbol)) {
                 var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
                 if(info != null) {
                     return isGet ? info.get?.Template : info.set?.Template;
@@ -317,19 +409,16 @@ namespace CSharpLua {
 
         public string GetMethodCodeTemplate(IMethodSymbol symbol, out string importString) {
             importString = null;
-            if(symbol.IsCodeSymbol()) {
-                return null;
-            }
-
-            var info = GetTypeMetaInfo(symbol);
-            if(info != null) {
-                string codeTemplate = info.GetMethodMetaInfo(symbol.Name)?.GetCodeTemplate(symbol);
-                if(codeTemplate != null) {
-                    importString = info.Model.Import;
-                    return codeTemplate;
+            if(IsCodeTemplateEnable(symbol)) {
+                var info = GetTypeMetaInfo(symbol);
+                if(info != null) {
+                    string codeTemplate = info.GetMethodMetaInfo(symbol.Name)?.GetCodeTemplate(symbol);
+                    if(codeTemplate != null) {
+                        importString = info.Model.Import;
+                        return codeTemplate;
+                    }
                 }
             }
-
             return null;
         }
     }
