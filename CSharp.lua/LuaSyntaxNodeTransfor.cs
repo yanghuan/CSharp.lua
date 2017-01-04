@@ -15,6 +15,7 @@ namespace CSharpLua {
         private LuaSyntaxGenerator generator_;
         private SemanticModel semanticModel_;
 
+        private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
         private Stack<LuaFunctionExpressSyntax> functions_ = new Stack<LuaFunctionExpressSyntax>();
         private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
@@ -47,6 +48,12 @@ namespace CSharpLua {
         private bool IsLuaNewest {
             get {
                 return generator_.Setting.IsNewest;
+            }
+        }
+
+        private LuaCompilationUnitSyntax CurCompilationUnit {
+            get {
+                return compilationUnits_.Peek();
             }
         }
 
@@ -83,6 +90,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
             LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax() { FilePath = node.SyntaxTree.FilePath };
+            compilationUnits_.Push(compilationUnit);
             foreach(var member in node.Members) {
                 LuaStatementSyntax memberNode = (LuaStatementSyntax)member.Accept(this);
                 var typeDeclaration = memberNode as LuaTypeDeclarationSyntax;
@@ -93,6 +101,7 @@ namespace CSharpLua {
                     compilationUnit.Statements.Add(memberNode);
                 }
             }
+            compilationUnits_.Pop();
             return compilationUnit;
         }
 
@@ -716,6 +725,20 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node) {
+            var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+            if(node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+                string codeTemplate = GetMethodCodeTemplate(symbol);
+                if(codeTemplate != null) {
+                    List<ExpressionSyntax> argumentExpressions = new List<ExpressionSyntax>();
+                    var memberAccessException = (MemberAccessExpressionSyntax)node.Expression;
+                    if(symbol.IsExtensionMethod) {
+                        argumentExpressions.Add(memberAccessException.Expression);
+                    }
+                    argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => i.Expression));
+                    return BuildCodeTemplateExpression(codeTemplate, memberAccessException.Expression, argumentExpressions, symbol.TypeArguments);
+                }
+            }
+
             List<LuaArgumentSyntax> arguments = new List<LuaArgumentSyntax>();
             List<LuaArgumentSyntax> refOrOutArguments = new List<LuaArgumentSyntax>();
 
@@ -729,7 +752,6 @@ namespace CSharpLua {
 
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             LuaInvocationExpressionSyntax invocation;
-            var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             if(!symbol.IsExtensionMethod) {
                 invocation = new LuaInvocationExpressionSyntax(expression);
                 if(expression is LuaInternalMethodIdentifierNameSyntax) {
@@ -744,14 +766,13 @@ namespace CSharpLua {
                 invocation.AddArgument(memberAccess.Expression);
             }
             invocation.ArgumentList.Arguments.AddRange(arguments);
-            var methodSybol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-            if(methodSybol.TypeArguments.Length > 0) {
-                int optionalCount = methodSybol.Parameters.Length - node.ArgumentList.Arguments.Count;
+            if(symbol.TypeArguments.Length > 0) {
+                int optionalCount = symbol.Parameters.Length - node.ArgumentList.Arguments.Count;
                 while(optionalCount > 0) {
                     invocation.AddArgument(LuaIdentifierNameSyntax.Nil);
                     --optionalCount;
                 }
-                foreach(var typeArgument in methodSybol.TypeArguments) {
+                foreach(var typeArgument in symbol.TypeArguments) {
                     string typeName = XmlMetaProvider.GetTypeMapName(typeArgument);
                     invocation.AddArgument(new LuaIdentifierNameSyntax(typeName));
                 }
@@ -1589,6 +1610,10 @@ namespace CSharpLua {
             LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
             var statement = (LuaStatementSyntax)node.Statement.Accept(this);
             return new LuaLabeledStatement(identifier, statement);
+        }
+
+        public override LuaSyntaxNode VisitEmptyStatement(EmptyStatementSyntax node) {
+            return LuaStatementSyntax.Empty;
         }
     }
 }

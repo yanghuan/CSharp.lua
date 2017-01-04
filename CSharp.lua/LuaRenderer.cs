@@ -515,5 +515,9 @@ namespace CSharpLua {
                 code.Render(this);
             }
         }
+
+        internal void Render(LuaCodeTemplateParamsExpressionSyntax node) {
+            WriteSeparatedSyntaxList(node.Expressions);
+        }
     }
 }

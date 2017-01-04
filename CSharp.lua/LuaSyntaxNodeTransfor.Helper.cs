@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text.RegularExpressions;
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor {
-        private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{([\w|^]+)\}", RegexOptions.Compiled);
+        private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
         private Dictionary<ISymbol, string> localReservedNames_ = new Dictionary<ISymbol, string>();
         private int localMappingCounter_;
 
@@ -175,25 +176,81 @@ namespace CSharpLua {
             throw new InvalidOperationException();
         }
 
+        private string GetMethodCodeTemplate(IMethodSymbol symbol) {
+            string importString;
+            string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol, out importString);
+            if(codeTemplate != null) {
+                if(importString != null) {
+                    CurCompilationUnit.AddImport(importString);
+                }
+            }
+            return codeTemplate;
+        }
+
         private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression) {
+            return BuildCodeTemplateExpression(codeTemplate, targetExpression, null, ImmutableArray<ITypeSymbol>.Empty);
+        }
+
+
+        private void AddCodeTemplateExpression(LuaExpressionSyntax expression, string comma, LuaCodeTemplateExpressionSyntax codeTemplateExpression) {
+            if(!string.IsNullOrEmpty(comma)) {
+                codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(comma));
+            }
+            codeTemplateExpression.Codes.Add(expression);
+        }
+
+        private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, List<ExpressionSyntax> arguments, ImmutableArray<ITypeSymbol> typeArguments) {
             LuaCodeTemplateExpressionSyntax codeTemplateExpression = new LuaCodeTemplateExpressionSyntax();
 
             var matchs = codeTemplateRegex_.Matches(codeTemplate);
             int prevIndex = 0;
             foreach(Match match in matchs) {
-                string prevToken = codeTemplate.Substring(prevIndex, match.Index);
-                codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(prevToken));
+                if(match.Index > prevIndex) {
+                    string prevToken = codeTemplate.Substring(prevIndex, match.Index - prevIndex);
+                    codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(prevToken));
+                }
+                string comma = match.Groups[1].Value; 
                 string key = match.Groups[2].Value;
                 if(key == "this") {
-                    codeTemplateExpression.Codes.Add(BuildMemberAccessTargetExpression(targetExpression));
+                    AddCodeTemplateExpression(BuildMemberAccessTargetExpression(targetExpression), comma, codeTemplateExpression);
                 }
                 else if(key == "class") {
                     var type = semanticModel_.GetTypeInfo(targetExpression).Type;
                     string typeName = XmlMetaProvider.GetTypeMapName(type);
-                    codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(typeName));
+                    AddCodeTemplateExpression(new LuaIdentifierNameSyntax(typeName), comma, codeTemplateExpression);
+                }
+                else if(key[0] == '^') {
+                    int typeIndex;
+                    if(int.TryParse(key.Substring(1), out typeIndex)) {
+                        var typeArgument = typeArguments.GetOrDefault(typeIndex);
+                        if(typeArgument != null) {
+                            string typeName = XmlMetaProvider.GetTypeMapName(typeArgument);
+                            AddCodeTemplateExpression(new LuaIdentifierNameSyntax(typeName), comma, codeTemplateExpression);
+                        }
+                    }
+                }
+                else if(key[0] == '*') {
+                    int paramsIndex;
+                    if(int.TryParse(key.Substring(1), out paramsIndex)) {
+                        LuaCodeTemplateParamsExpressionSyntax paramsExpression = new LuaCodeTemplateParamsExpressionSyntax();
+                        foreach(var argument in arguments.Skip(paramsIndex)) {
+                            var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
+                            paramsExpression.Expressions.Add(argumentExpression);
+                        }
+                        if(paramsExpression.Expressions.Count > 0) {
+                            AddCodeTemplateExpression(paramsExpression, comma, codeTemplateExpression);
+                        }
+                    }
                 }
                 else {
-                    throw new NotImplementedException();
+                    int argumentIndex;
+                    if(int.TryParse(key, out argumentIndex)) {
+                        var argument =  arguments.GetOrDefault(argumentIndex);
+                        if(argument != null) {
+                            var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
+                            AddCodeTemplateExpression(argumentExpression, comma, codeTemplateExpression);
+                        }
+                    }
                 }
                 prevIndex = match.Index + match.Length;
             }

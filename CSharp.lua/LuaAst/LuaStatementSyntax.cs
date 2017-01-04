@@ -103,6 +103,8 @@ namespace CSharpLua.LuaAst {
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
+
+        public static readonly LuaBlankLinesStatement One = new LuaBlankLinesStatement(1);
     }
 
     public sealed class LuaShortCommentStatement : LuaStatementSyntax {

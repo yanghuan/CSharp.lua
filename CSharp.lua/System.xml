@@ -86,7 +86,7 @@
         <class name="Activator" >
             <method name="CreateInstance" ArgCount="0" Template="{^0}()" />
             <method name="CreateInstance" ArgCount="1" Template="{0}.c()" />
-            <method name="CreateInstance" ArgCount="2" Template="System.CreateInstance({type}, {*args})" />
+            <method name="CreateInstance" ArgCount="2" Template="System.CreateInstance({0}, {*1})" />
         </class>
         <class name="Environment">
             <method name="Exit" Template="os.exit({0})" />

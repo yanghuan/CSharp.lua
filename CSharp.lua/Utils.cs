@@ -153,6 +153,10 @@ namespace CSharpLua {
             return false;
         }
 
+        public static bool IsCodeSymbol(this ISymbol symbol) {
+            return symbol.DeclaringSyntaxReferences.Length > 0;
+        }
+
         public static bool IsOverridable(this ISymbol symbol) {
             return !symbol.IsStatic && (symbol.IsAbstract || symbol.IsVirtual || symbol.IsOverride);
         }

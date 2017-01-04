@@ -11,6 +11,8 @@ namespace CSharpLua.LuaAst {
     public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
         public string FilePath { get; set; }
         public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
+        private LuaStatementListSyntax HeadAreaStatements = new LuaStatementListSyntax();
+        private HashSet<string> importStrings_ = new HashSet<string>();
 
         public LuaCompilationUnitSyntax() {
             var info = Assembly.GetExecutingAssembly().GetName();
@@ -21,12 +23,27 @@ namespace CSharpLua.LuaAst {
             LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(system);
             variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(system);
             Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+            Statements.Add(HeadAreaStatements);
         }
 
         public void AddTypeDeclaration(LuaTypeDeclarationSyntax memberNode) {
             LuaNamespaceDeclarationSyntax namespaceNode = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
             namespaceNode.Add(memberNode);
             Statements.Add(namespaceNode);
+        }
+
+        public void AddImport(string importString) {
+            if(!importStrings_.Contains(importString)) {
+                importStrings_.Add(importString);
+                int index = importString.IndexOf('=');
+                if(index != -1) {
+                    string name = importString.Substring(0, index);
+                    string value = importString.Substring(index + 1);
+                    LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(new LuaIdentifierNameSyntax(name));
+                    variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(new LuaIdentifierNameSyntax(value));
+                    HeadAreaStatements.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+                }
+            }
         }
 
         internal override void Render(LuaRenderer renderer) {

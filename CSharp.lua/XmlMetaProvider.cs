@@ -69,6 +69,8 @@ namespace CSharpLua {
                 public FieldModel[] Fields;
                 [XmlElement("method")]
                 public MethodModel[] Methods;
+                [XmlAttribute]
+                public string Import;
             }
 
             public sealed class NamespaceModel {
@@ -95,7 +97,14 @@ namespace CSharpLua {
                 if(models_.Count == 1) {
                     return models_.First().Name;
                 }
-                throw new NotSupportedException();
+                throw new NotImplementedException();
+            }
+
+            internal string GetCodeTemplate(IMethodSymbol symbol) {
+                if(models_.Count == 1) {
+                    return models_.First().Template;
+                }
+                throw new NotImplementedException();
             }
         }
 
@@ -110,6 +119,12 @@ namespace CSharpLua {
                 Field();
                 Property();
                 Method();
+            }
+
+            public XmlMetaModel.ClassModel Model {
+                get {
+                    return model_;
+                }
             }
 
             private void Field() {
@@ -242,7 +257,7 @@ namespace CSharpLua {
         }
 
         public string GetNamespaceMapName(INamespaceSymbol symbol) {
-            string name = symbol.ContainingNamespace.ToString();
+            string name = symbol.ToString();
             if(name[0] == '<') {
                 return symbol.Name;
             }
@@ -275,17 +290,7 @@ namespace CSharpLua {
         }
 
         public string GetMethodMapName(IMethodSymbol symbol) {
-            var typeInfo = GetTypeMetaInfo(symbol);
-            if(typeInfo != null) {
-                var methodInfo = typeInfo.GetMethodMetaInfo(symbol.Name);
-                if(methodInfo != null) {
-                    string name = methodInfo.GetName(symbol);
-                    if(name != null) {
-                        return name;
-                    }
-                }
-            }
-            return symbol.Name;
+            return GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetName(symbol);
         }
 
         public bool IsPropertyField(IPropertySymbol symbol) {
@@ -294,14 +299,37 @@ namespace CSharpLua {
         }
 
         public string GetFieldCodeTemplate(IFieldSymbol symbol) {
+            if(symbol.IsCodeSymbol()) {
+                return null;
+            }
             return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
         }
 
         public string GetProertyCodeTemplate(IPropertySymbol symbol, bool isGet) {
-            var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
-            if(info != null) {
-                return isGet ? info.get?.Template : info.set?.Template;
+            if(!symbol.IsCodeSymbol()) {
+                var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
+                if(info != null) {
+                    return isGet ? info.get?.Template : info.set?.Template;
+                }
             }
+            return null;
+        }
+
+        public string GetMethodCodeTemplate(IMethodSymbol symbol, out string importString) {
+            importString = null;
+            if(symbol.IsCodeSymbol()) {
+                return null;
+            }
+
+            var info = GetTypeMetaInfo(symbol);
+            if(info != null) {
+                string codeTemplate = info.GetMethodMetaInfo(symbol.Name)?.GetCodeTemplate(symbol);
+                if(codeTemplate != null) {
+                    importString = info.Model.Import;
+                    return codeTemplate;
+                }
+            }
+
             return null;
         }
     }
