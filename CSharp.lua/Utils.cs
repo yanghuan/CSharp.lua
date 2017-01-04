@@ -253,17 +253,5 @@ namespace CSharpLua {
             var methodInfo = location.GetType().GetMethod("GetDebuggerDisplay", BindingFlags.Instance | BindingFlags.NonPublic);
             return (string)methodInfo.Invoke(location, null);
         }
-
-        public static string FirstLetterToUpper(this string s) {
-            if(s == null) {
-                return null;
-            }
-             
-            if(s.Length > 1) {
-                return char.ToUpper(s[0]) + s.Substring(1);
-            }
-
-            return s.ToUpper();
-        }
     }
 }

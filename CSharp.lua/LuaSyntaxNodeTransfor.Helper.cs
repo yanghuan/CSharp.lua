@@ -65,13 +65,11 @@ namespace CSharpLua {
                 case 0:
                     return name;
                 case 1:
-                    return name.FirstLetterToUpper();
-                case 2:
                     return name + "_";
-                case 3:
+                case 2:
                     return "_" + name;
                 default:
-                    return name + (index - 4);
+                    return name + (index - 2);
             }
         }
 
