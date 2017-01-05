@@ -338,7 +338,7 @@ namespace CSharpLua {
         }
 
         private bool IsCodeTemplateEnable(ISymbol symbol) {
-            return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsCodeSymbol();
+            return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
         }
 
         public string GetTypeMapName(ISymbol symbol) {
@@ -360,7 +360,7 @@ namespace CSharpLua {
             }
 
             string name = null;
-            if(!symbol.IsCodeSymbol()) {
+            if(!symbol.IsFromCode()) {
                 name = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetName(symbol);
             }
 
@@ -417,7 +417,7 @@ namespace CSharpLua {
             }
 
             string codeTemplate = null;
-            if(!symbol.IsCodeSymbol()) {
+            if(!symbol.IsFromCode()) {
                 codeTemplate = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetCodeTemplate(symbol);
             }
 

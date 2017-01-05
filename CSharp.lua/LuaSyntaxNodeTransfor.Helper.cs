@@ -132,6 +132,19 @@ namespace CSharpLua {
             }
         }
 
+        private int GetConstructorIndex(IMethodSymbol constructorSymbol) {
+            if(constructorSymbol.IsFromCode()) {
+                var typeSymbol = (INamedTypeSymbol)constructorSymbol.ReceiverType;
+                if(typeSymbol.Constructors.Length > 1) {
+                    int index = typeSymbol.Constructors.IndexOf(constructorSymbol);
+                    Contract.Assert(index != -1);
+                    int ctroCounter = index + 1;
+                    return ctroCounter;
+                }
+            }
+            return 0;
+        }
+
         private sealed class ContinueSearcher : LuaSyntaxSearcher {
             public override void VisitContinueStatement(ContinueStatementSyntax node) {
                 Found();

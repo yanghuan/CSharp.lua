@@ -165,7 +165,7 @@ namespace CSharpLua {
             return null;
         }
 
-        public static bool IsCodeSymbol(this ISymbol symbol) {
+        public static bool IsFromCode(this ISymbol symbol) {
             return symbol.DeclaringSyntaxReferences.Length > 0;
         }
 

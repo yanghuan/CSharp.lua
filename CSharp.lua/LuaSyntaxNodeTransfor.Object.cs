@@ -12,36 +12,50 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor {
         public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
-            var type = (LuaExpressionSyntax)node.Type.Accept(this);
+            var expression = (LuaExpressionSyntax)node.Type.Accept(this);
+
+            var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+            int index = GetConstructorIndex(symbol);
+            if(index > 0) {
+                expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
+            }
+
             var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
-            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(type);
+            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(expression);
+            if(index > 0) {
+                invocationExpression.AddArgument(new LuaIdentifierNameSyntax(index.ToString()));
+            }
             invocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
             if(node.Initializer == null) {
                 return invocationExpression;
             }
             else {
-                LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
-                function.AddParameter(LuaIdentifierNameSyntax.This);
-                foreach(var expression in node.Initializer.Expressions) {
-                    if(expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
-                        AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
-                        var identifierName = (LuaIdentifierNameSyntax)assignment.Left.Accept(this);
-                        var right = (LuaExpressionSyntax)assignment.Right.Accept(this);
-                        function.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(identifierName, right)));
-                    }
-                    else {
-                        LuaInvocationExpressionSyntax add = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ThisAdd);
-                        var argument = (LuaExpressionSyntax)expression.Accept(this);
-                        add.AddArgument(argument);
-                        function.Body.Statements.Add(new LuaExpressionStatementSyntax(add));
-                    }
-                }
-
+                var functionExpression = (LuaFunctionExpressionSyntax)node.Initializer.Accept(this);
                 LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create);
                 invocation.AddArgument(invocationExpression);
-                invocation.AddArgument(function);
+                invocation.AddArgument(functionExpression);
                 return invocation;
             }
+        }
+
+        public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
+            LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
+            function.AddParameter(LuaIdentifierNameSyntax.This);
+            foreach(var expression in node.Expressions) {
+                if(expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+                    AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
+                    var identifierName = (LuaIdentifierNameSyntax)assignment.Left.Accept(this);
+                    var right = (LuaExpressionSyntax)assignment.Right.Accept(this);
+                    function.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(identifierName, right)));
+                }
+                else {
+                    LuaInvocationExpressionSyntax add = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ThisAdd);
+                    var argument = (LuaExpressionSyntax)expression.Accept(this);
+                    add.AddArgument(argument);
+                    function.Body.Statements.Add(new LuaExpressionStatementSyntax(add));
+                }
+            }
+            return function;
         }
 
         public override LuaSyntaxNode VisitGenericName(GenericNameSyntax node) {
@@ -109,20 +123,23 @@ namespace CSharpLua {
             function.ParameterList.Parameters.AddRange(parameterList.Parameters);
             if(node.Initializer != null) {
                 var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
-                var typeSymbol = (INamedTypeSymbol)symbol.ReceiverType;
-                int index = typeSymbol.Constructors.IndexOf(symbol);
-                Contract.Assert(index != -1);
-                int ctroCounter = index + 1;
-
+                int ctroCounter = GetConstructorIndex(symbol);
                 LuaInvocationExpressionSyntax otherCtorInvoke;
                 if(node.Initializer.IsKind(SyntaxKind.ThisConstructorInitializer)) {
+                    Contract.Assert(ctroCounter != 0);
                     LuaIdentifierNameSyntax thisCtor = new LuaIdentifierNameSyntax(LuaSyntaxNode.SpecailWord(LuaSyntaxNode.Tokens.Ctor + ctroCounter));
                     otherCtorInvoke = new LuaInvocationExpressionSyntax(thisCtor);
                     function.IsInvokeThisCtor = true;
                 }
                 else {
-                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(typeSymbol.ToString()), LuaIdentifierNameSyntax.Ctor);
-                    otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter.ToString())));
+                    string typeName = XmlMetaProvider.GetTypeMapName(symbol.ReceiverType);
+                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(typeName), LuaIdentifierNameSyntax.Ctor);
+                    if(ctroCounter > 0) {
+                        otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter.ToString())));
+                    }
+                    else {
+                        otherCtorInvoke = new LuaInvocationExpressionSyntax(memberAccess);
+                    }
                 }
 
                 otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
