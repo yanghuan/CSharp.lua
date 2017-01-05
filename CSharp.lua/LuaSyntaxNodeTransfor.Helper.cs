@@ -192,7 +192,7 @@ namespace CSharpLua {
         }
 
         private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression) {
-            return BuildCodeTemplateExpression(codeTemplate, targetExpression, null, ImmutableArray<ITypeSymbol>.Empty);
+            return BuildCodeTemplateExpression(codeTemplate, targetExpression, Array.Empty<ExpressionSyntax>(), ImmutableArray<ITypeSymbol>.Empty);
         }
 
         private void AddCodeTemplateExpression(LuaExpressionSyntax expression, string comma, LuaCodeTemplateExpressionSyntax codeTemplateExpression) {
@@ -202,7 +202,7 @@ namespace CSharpLua {
             codeTemplateExpression.Codes.Add(expression);
         }
 
-        private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, List<ExpressionSyntax> arguments, ImmutableArray<ITypeSymbol> typeArguments) {
+        private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IList<ExpressionSyntax> arguments, ImmutableArray<ITypeSymbol> typeArguments) {
             LuaCodeTemplateExpressionSyntax codeTemplateExpression = new LuaCodeTemplateExpressionSyntax();
 
             var matchs = codeTemplateRegex_.Matches(codeTemplate);
@@ -233,29 +233,25 @@ namespace CSharpLua {
                     }
                 }
                 else if(key[0] == '*') {
-                    if(arguments != null) {
-                        int paramsIndex;
-                        if(int.TryParse(key.Substring(1), out paramsIndex)) {
-                            LuaCodeTemplateParamsExpressionSyntax paramsExpression = new LuaCodeTemplateParamsExpressionSyntax();
-                            foreach(var argument in arguments.Skip(paramsIndex)) {
-                                var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
-                                paramsExpression.Expressions.Add(argumentExpression);
-                            }
-                            if(paramsExpression.Expressions.Count > 0) {
-                                AddCodeTemplateExpression(paramsExpression, comma, codeTemplateExpression);
-                            }
+                    int paramsIndex;
+                    if(int.TryParse(key.Substring(1), out paramsIndex)) {
+                        LuaCodeTemplateParamsExpressionSyntax paramsExpression = new LuaCodeTemplateParamsExpressionSyntax();
+                        foreach(var argument in arguments.Skip(paramsIndex)) {
+                            var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
+                            paramsExpression.Expressions.Add(argumentExpression);
+                        }
+                        if(paramsExpression.Expressions.Count > 0) {
+                            AddCodeTemplateExpression(paramsExpression, comma, codeTemplateExpression);
                         }
                     }
                 }
                 else {
-                    if(arguments != null) {
-                        int argumentIndex;
-                        if(int.TryParse(key, out argumentIndex)) {
-                            var argument = arguments.GetOrDefault(argumentIndex);
-                            if(argument != null) {
-                                var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
-                                AddCodeTemplateExpression(argumentExpression, comma, codeTemplateExpression);
-                            }
+                    int argumentIndex;
+                    if(int.TryParse(key, out argumentIndex)) {
+                        var argument = arguments.GetOrDefault(argumentIndex);
+                        if(argument != null) {
+                            var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
+                            AddCodeTemplateExpression(argumentExpression, comma, codeTemplateExpression);
                         }
                     }
                 }
