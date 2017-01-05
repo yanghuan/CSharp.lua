@@ -461,11 +461,42 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitEnumMemberDeclaration(EnumMemberDeclarationSyntax node) {
-            var symbol = (IFieldSymbol)semanticModel_.GetDeclaredSymbol(node);
+            IFieldSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
             Contract.Assert(symbol.HasConstantValue);
             LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
             LuaExpressionSyntax value = GetConstLiteralExpression(symbol.ConstantValue);
             return new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(identifier), value);
+        }
+
+        public override LuaSyntaxNode VisitIndexerDeclaration(IndexerDeclarationSyntax node) {
+            bool isStatic = node.Modifiers.IsStatic();
+            bool isPrivate = node.Modifiers.IsPrivate();
+            bool hasGet = false;
+            bool hasSet = false;
+            foreach(var accessor in node.AccessorList.Accessors) {
+                LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+                if(!isStatic) {
+                    functionExpression.AddParameter(LuaIdentifierNameSyntax.This);
+                }
+                PushFunction(functionExpression);
+                var block = (LuaBlockSyntax)accessor.Body.Accept(this);
+                PopFunction();
+                functionExpression.Body.Statements.AddRange(block.Statements);
+                LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(true, string.Empty);
+                CurType.AddMethod(name, functionExpression, isPrivate);
+                if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
+                    Contract.Assert(!hasGet);
+                    hasGet = true;
+                }
+                else {
+                    Contract.Assert(!hasSet);
+                    functionExpression.AddParameter(LuaIdentifierNameSyntax.Value);
+                    name.IsGetOrAdd = false;
+                    hasSet = true;
+                }
+            }
+
+            return base.VisitIndexerDeclaration(node);
         }
 
         public override LuaSyntaxNode VisitParameterList(ParameterListSyntax node) {
