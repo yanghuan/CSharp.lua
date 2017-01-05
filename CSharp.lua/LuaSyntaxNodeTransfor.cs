@@ -370,21 +370,23 @@ namespace CSharpLua {
             if(node.AccessorList != null) {
                 foreach(var accessor in node.AccessorList.Accessors) {
                     if(accessor.Body != null) {
-                        var block = (LuaBlockSyntax)accessor.Body.Accept(this);
-                        LuaFunctionExpressionSyntax functionExpress = new LuaFunctionExpressionSyntax();
+                        LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
                         if(!isStatic) {
-                            functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
+                            functionExpression.AddParameter(LuaIdentifierNameSyntax.This);
                         }
-                        functionExpress.Body.Statements.AddRange(block.Statements);
+                        PushFunction(functionExpression);
+                        var block = (LuaBlockSyntax)accessor.Body.Accept(this);
+                        PopFunction();
+                        functionExpression.Body.Statements.AddRange(block.Statements);
                         LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(true, node.Identifier.ValueText);
-                        CurType.AddMethod(name, functionExpress, isPrivate);
+                        CurType.AddMethod(name, functionExpression, isPrivate);
                         if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
                             Contract.Assert(!hasGet);
                             hasGet = true;
                         }
                         else {
                             Contract.Assert(!hasSet);
-                            functionExpress.AddParameter(LuaIdentifierNameSyntax.Value);
+                            functionExpression.AddParameter(LuaIdentifierNameSyntax.Value);
                             name.IsGetOrAdd = false;
                             hasSet = true;
                         }
@@ -807,7 +809,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
             ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
-            if(symbol.Kind != SymbolKind.Property) {
+            if(symbol.Kind != SymbolKind.Property && symbol.Kind != SymbolKind.Event) {
                 if(symbol.Kind == SymbolKind.Field) {
                     IFieldSymbol fieldSymbol = (IFieldSymbol)symbol;
                     string codeTemplate = XmlMetaProvider.GetFieldCodeTemplate(fieldSymbol);
@@ -822,22 +824,29 @@ namespace CSharpLua {
 
                 var expression = BuildMemberAccessTargetExpression(node.Expression);
                 var identifier = (LuaIdentifierNameSyntax)node.Name.Accept(this);
+                if(node.Expression.IsKind(SyntaxKind.ThisExpression)) {
+                    return identifier;
+                }
                 return new LuaMemberAccessExpressionSyntax(expression, identifier, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
             }
             else {
-                IPropertySymbol propertySymbol = (IPropertySymbol)symbol;
-                bool isGet = !node.Parent.Kind().IsAssignment();
-                string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, isGet);
-                if(codeTemplate != null) {
-                    return BuildCodeTemplateExpression(codeTemplate, node.Expression);
+                if(symbol.Kind == SymbolKind.Property) {
+                    IPropertySymbol propertySymbol = (IPropertySymbol)symbol;
+                    bool isGet = !node.Parent.Kind().IsAssignment();
+                    string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, isGet);
+                    if(codeTemplate != null) {
+                        return BuildCodeTemplateExpression(codeTemplate, node.Expression);
+                    }
                 }
 
                 var expression = BuildMemberAccessTargetExpression(node.Expression);
                 var propertyIdentifier = (LuaExpressionSyntax)node.Name.Accept(this);
                 var propertyAdapter = propertyIdentifier as LuaPropertyAdapterExpressionSyntax;
                 if(propertyAdapter != null) {
-                    var memberAccessExpression = new LuaMemberAccessExpressionSyntax(expression, propertyAdapter.InvocationExpression.Expression, !symbol.IsStatic);
-                    propertyAdapter.Update(memberAccessExpression);
+                    if(!node.Expression.IsKind(SyntaxKind.ThisExpression)) {
+                        var memberAccessExpression = new LuaMemberAccessExpressionSyntax(expression, propertyAdapter.InvocationExpression.Expression, !symbol.IsStatic);
+                        propertyAdapter.Update(memberAccessExpression);
+                    }
                     return propertyAdapter;
                 }
                 else {
@@ -887,7 +896,10 @@ namespace CSharpLua {
                 parent = (MemberAccessExpressionSyntax)node.Parent;
             }
             if(parent != null) {
-                if(parent.Expression == node) {
+                if(parent.Expression.IsKind(SyntaxKind.ThisExpression)) {
+                    isInternal = true;
+                }
+                else if(parent.Expression == node) {
                     isInternal = true;
                 }
             }

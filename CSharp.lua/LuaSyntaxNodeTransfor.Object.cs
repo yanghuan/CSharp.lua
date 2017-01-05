@@ -403,5 +403,9 @@ namespace CSharpLua {
             usingInvocationExpression.ArgumentList.Arguments.AddRange(variableExpressions.Select(i => new LuaArgumentSyntax(i)));
             return BuildCheckReturnInvocationExpression(usingInvocationExpression, node);
         }
+
+        public override LuaSyntaxNode VisitThisExpression(ThisExpressionSyntax node) {
+            return LuaIdentifierNameSyntax.Empty;
+        }
     }
 }
