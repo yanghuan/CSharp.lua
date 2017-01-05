@@ -41,8 +41,9 @@ namespace CSharpLua {
             }
         }
 
-        private static string GetOperatorToken(string operatorToken) {
-            return operatorTokenMapps_.GetOrDefault(operatorToken, operatorToken);
+        private static string GetOperatorToken(SyntaxToken operatorToken) {
+            string token = operatorToken.ValueText;
+            return operatorTokenMapps_.GetOrDefault(token, token);
         }
 
         private bool IsLuaNewest {
@@ -1319,14 +1320,14 @@ namespace CSharpLua {
                 return BuildBinaryInvokeExpression(node, otherName);
             }
             else {
-                string operatorToken = GetOperatorToken(node.OperatorToken.ValueText);
+                string operatorToken = GetOperatorToken(node.OperatorToken);
                 return BuildBinaryExpression(node, operatorToken);
             }
         }
 
         public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
-            switch(node.OperatorToken.Kind()) {
-                case SyntaxKind.PlusToken: {
+            switch(node.Kind()) {
+                case SyntaxKind.AddExpression: {
                         var methodSymbol = semanticModel_.GetSymbolInfo(node).Symbol as IMethodSymbol;
                         if(methodSymbol != null) {
                             if(methodSymbol.ContainingType.IsStringType()) {
@@ -1338,14 +1339,14 @@ namespace CSharpLua {
                         }
                         break;
                     }
-                case SyntaxKind.MinusToken: {
+                case SyntaxKind.SubtractExpression: {
                         var methodSymbol = semanticModel_.GetSymbolInfo(node).Symbol as IMethodSymbol;
                         if(methodSymbol != null && methodSymbol.ContainingType.IsDelegateType()) {
                             return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.DelegateRemove);
                         }
                         break;
                     }
-                case SyntaxKind.SlashToken: {
+                case SyntaxKind.DivideExpression: {
                         var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
                         var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
                         if(leftType.IsIntegerType() && rightType.IsIntegerType()) {
@@ -1353,7 +1354,7 @@ namespace CSharpLua {
                         }
                         break;
                     }
-                case SyntaxKind.PercentToken: {
+                case SyntaxKind.ModuloExpression: {
                         if(!IsLuaNewest) {
                             var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
                             var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
@@ -1363,29 +1364,35 @@ namespace CSharpLua {
                         }
                         break;
                     }
-                case SyntaxKind.AmpersandToken: {
-                        return BuildBitExpression(node, LuaSyntaxNode.Tokens.Add, LuaIdentifierNameSyntax.BitAdd);
-                    }
-                case SyntaxKind.BarToken: {
-                        return BuildBitExpression(node, LuaSyntaxNode.Tokens.Or, LuaIdentifierNameSyntax.BitOr);
-                    }
-                case SyntaxKind.CaretToken: {
-                        return BuildBitExpression(node, LuaSyntaxNode.Tokens.NotEquals, LuaIdentifierNameSyntax.BitXor);
-                    }
-                case SyntaxKind.GreaterThanGreaterThanToken: {
-                        if(!IsLuaNewest) {
-                            return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.ShiftRight);
-                        }
-                        break;
-                    }
-                case SyntaxKind.LessThanLessThanToken: {
+                case SyntaxKind.LeftShiftExpression: {
                         if(!IsLuaNewest) {
                             return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.ShiftLeft);
                         }
                         break;
                     }
+                case SyntaxKind.RightShiftExpression: {
+                        if(!IsLuaNewest) {
+                            return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.ShiftRight);
+                        }
+                        break;
+                    }
+                case SyntaxKind.BitwiseOrExpression: {
+                        return BuildBitExpression(node, LuaSyntaxNode.Tokens.Or, LuaIdentifierNameSyntax.BitOr);
+                    }
+                case SyntaxKind.BitwiseAndExpression: {
+                        return BuildBitExpression(node, LuaSyntaxNode.Tokens.And, LuaIdentifierNameSyntax.BitAnd);
+                    }
+                case SyntaxKind.ExclusiveOrExpression: {
+                        return BuildBitExpression(node, LuaSyntaxNode.Tokens.NotEquals, LuaIdentifierNameSyntax.BitXor);
+                    }
+                case SyntaxKind.IsExpression: {
+                        return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.Is);
+                    }
+                case SyntaxKind.AsExpression: {
+                        return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.As);
+                    }
             }
-            string operatorToken = GetOperatorToken(node.OperatorToken.ValueText);
+            string operatorToken = GetOperatorToken(node.OperatorToken);
             return BuildBinaryExpression(node, operatorToken);
         }
 
@@ -1411,7 +1418,7 @@ namespace CSharpLua {
             }
             else {
                 var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
-                string operatorToken = GetOperatorToken(node.OperatorToken.ValueText);
+                string operatorToken = GetOperatorToken(node.OperatorToken);
                 LuaPrefixUnaryExpressionSyntax unaryExpression = new LuaPrefixUnaryExpressionSyntax(operand, operatorToken);
                 return unaryExpression;
             }
@@ -1626,6 +1633,12 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitEmptyStatement(EmptyStatementSyntax node) {
             return LuaStatementSyntax.Empty;
+        }
+
+        public override LuaSyntaxNode VisitCastExpression(CastExpressionSyntax node) {
+            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);
+            return BuildBinaryInvokeExpression(expression, typeExpression, LuaIdentifierNameSyntax.Cast);
         }
     }
 }

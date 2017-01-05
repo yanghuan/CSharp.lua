@@ -50,16 +50,18 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax DelegateBind = new LuaIdentifierNameSyntax("System.bind");
         public readonly static LuaIdentifierNameSyntax IntegerDiv = new LuaIdentifierNameSyntax("System.div");
         public readonly static LuaIdentifierNameSyntax IntegerMod = new LuaIdentifierNameSyntax("System.mod");
-        public readonly static LuaIdentifierNameSyntax BitAdd = new LuaIdentifierNameSyntax("System.band");
+        public readonly static LuaIdentifierNameSyntax BitAnd = new LuaIdentifierNameSyntax("System.band");
         public readonly static LuaIdentifierNameSyntax BitOr = new LuaIdentifierNameSyntax("System.bor");
         public readonly static LuaIdentifierNameSyntax BitXor = new LuaIdentifierNameSyntax("System.xor");
         public readonly static LuaIdentifierNameSyntax ShiftRight = new LuaIdentifierNameSyntax("System.sr");
         public readonly static LuaIdentifierNameSyntax ShiftLeft = new LuaIdentifierNameSyntax("System.sl");
         public readonly static LuaIdentifierNameSyntax Try = new LuaIdentifierNameSyntax("System.try");
         public readonly static LuaIdentifierNameSyntax Is = new LuaIdentifierNameSyntax("System.is");
+        public readonly static LuaIdentifierNameSyntax As = new LuaIdentifierNameSyntax("System.as");
+        public readonly static LuaIdentifierNameSyntax Cast = new LuaIdentifierNameSyntax("System.cast");
         public readonly static LuaIdentifierNameSyntax Using = new LuaIdentifierNameSyntax("System.using");
         public readonly static LuaIdentifierNameSyntax Linq = new LuaIdentifierNameSyntax("Linq");
-        public readonly static LuaIdentifierNameSyntax SystemLinqEnumerable = new LuaIdentifierNameSyntax("Linq");
+        public readonly static LuaIdentifierNameSyntax SystemLinqEnumerable = new LuaIdentifierNameSyntax("System.Linq.Enumerable");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

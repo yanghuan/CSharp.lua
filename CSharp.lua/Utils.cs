@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed class CmdArgumentException : Exception {
@@ -240,7 +241,7 @@ namespace CSharpLua {
                 return symbol == systemLinqEnumerableType_;
             }
             else {
-                bool success = symbol.ToString() == "System.Linq.Enumerable";
+                bool success = symbol.ToString() == LuaIdentifierNameSyntax.SystemLinqEnumerable.ValueText;
                 if(success) {
                     systemLinqEnumerableType_ = symbol;
                 }

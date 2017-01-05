@@ -88,7 +88,11 @@ namespace CSharpLua.LuaAst {
         };
 
         public readonly static HashSet<string> ReservedWords = new HashSet<string>() {
+            //  lua reserved words
             "and", "elseif", "end", "function", "local", "nil", "not", "or", "repeat", "then", "until",
+            
+            // compiler reserved words
+            "System", "Linq",
         };
 
         public readonly static HashSet<string> SpecialReservedWords = new HashSet<string>() {
