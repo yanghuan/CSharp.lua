@@ -407,5 +407,9 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitThisExpression(ThisExpressionSyntax node) {
             return LuaIdentifierNameSyntax.Empty;
         }
+
+        public override LuaSyntaxNode VisitBaseExpression(BaseExpressionSyntax node) {
+            return base.VisitBaseExpression(node);
+        }
     }
 }
