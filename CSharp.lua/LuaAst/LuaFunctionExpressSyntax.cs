@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
-    public class LuaFunctionExpressSyntax : LuaExpressionSyntax {
+    public class LuaFunctionExpressionSyntax : LuaExpressionSyntax {
         public LuaParameterListSyntax ParameterList { get; } = new LuaParameterListSyntax();
         public string FunctionKeyword => Tokens.Function;
         public bool HasYield { get; set; }
@@ -26,10 +26,10 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaSimpleLambdaAdapterExpression : LuaExpressionSyntax {
-        public LuaFunctionExpressSyntax FunctionExpress { get; }
+        public LuaFunctionExpressionSyntax FunctionExpress { get; }
         public string EndToken => Tokens.End;
 
-        public LuaSimpleLambdaAdapterExpression(LuaFunctionExpressSyntax functionExpress) {
+        public LuaSimpleLambdaAdapterExpression(LuaFunctionExpressionSyntax functionExpress) {
             FunctionExpress = functionExpress;
         }
 
@@ -38,18 +38,18 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaConstructorAdapterExpressSyntax : LuaFunctionExpressSyntax {
+    public sealed class LuaConstructorAdapterExpressionSyntax : LuaFunctionExpressionSyntax {
         public bool IsStaticCtor { get; set; }
         public bool IsInvokeThisCtor { get; set; }
     }
 
-    public abstract class LuaSpecialAdapterFunctionExpressSyntax : LuaFunctionExpressSyntax {
+    public abstract class LuaSpecialAdapterFunctionExpressionSyntax : LuaFunctionExpressionSyntax {
     }
 
-    public sealed class LuaTryBlockAdapterExpressSyntax : LuaSpecialAdapterFunctionExpressSyntax {
+    public sealed class LuaTryBlockAdapterExpressionSyntax : LuaSpecialAdapterFunctionExpressionSyntax {
         public LuaIdentifierNameSyntax CatchTemp { get; set; }
     }
 
-    public sealed class LuaUsingAdapterExpressSyntax : LuaSpecialAdapterFunctionExpressSyntax {
+    public sealed class LuaUsingAdapterExpressionSyntax : LuaSpecialAdapterFunctionExpressionSyntax {
     }
 }

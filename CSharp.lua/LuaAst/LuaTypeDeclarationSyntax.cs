@@ -11,12 +11,12 @@ namespace CSharpLua.LuaAst {
         private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
 
         protected LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
-        private LuaFunctionExpressSyntax staticInitFunction_;
-        private LuaFunctionExpressSyntax staticCtorFunction_;
+        private LuaFunctionExpressionSyntax staticInitFunction_;
+        private LuaFunctionExpressionSyntax staticCtorFunction_;
         private List<string> staticAssignmentNames_ = new List<string>();
 
-        private LuaFunctionExpressSyntax initFunction_;
-        private List<LuaConstructorAdapterExpressSyntax> ctors_ = new List<LuaConstructorAdapterExpressSyntax>();
+        private LuaFunctionExpressionSyntax initFunction_;
+        private List<LuaConstructorAdapterExpressionSyntax> ctors_ = new List<LuaConstructorAdapterExpressionSyntax>();
         private List<LuaIdentifierNameSyntax> typeIdentifiers_ = new List<LuaIdentifierNameSyntax>();
 
         public LuaTypeDeclarationSyntax() {
@@ -42,7 +42,7 @@ namespace CSharpLua.LuaAst {
             resultTable_.Items.Add(item);
         }
 
-        public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax method, bool isPrivate) {
+        public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate) {
             local_.Variables.Add(name);
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, method);
             methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
@@ -51,15 +51,15 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        private void AddInitFiled(ref LuaFunctionExpressSyntax initFunction, LuaAssignmentExpressionSyntax assignment) {
+        private void AddInitFiled(ref LuaFunctionExpressionSyntax initFunction, LuaAssignmentExpressionSyntax assignment) {
             if(initFunction == null) {
-                initFunction = new LuaFunctionExpressSyntax();
+                initFunction = new LuaFunctionExpressionSyntax();
                 initFunction.AddParameter(LuaIdentifierNameSyntax.This);
             }
             initFunction.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
         }
 
-        private void AddInitFiled(ref LuaFunctionExpressSyntax initFunction, LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
+        private void AddInitFiled(ref LuaFunctionExpressionSyntax initFunction, LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name);
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(memberAccess, value);
             AddInitFiled(ref initFunction, assignment);
@@ -178,16 +178,16 @@ namespace CSharpLua.LuaAst {
             AddPropertyOrEvent(false, name, value, isImmutable, isStatic, isPrivate);
         }
 
-        public void SetStaticCtor(LuaConstructorAdapterExpressSyntax function) {
+        public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function) {
             Contract.Assert(staticCtorFunction_ == null);
             staticCtorFunction_ = function;
         }
 
-        public void AddCtor(LuaConstructorAdapterExpressSyntax function) {
+        public void AddCtor(LuaConstructorAdapterExpressionSyntax function) {
             ctors_.Add(function);
         }
 
-        private void AddInitFunction(LuaIdentifierNameSyntax name, LuaFunctionExpressSyntax initFunction, bool isAddItem = true) {
+        private void AddInitFunction(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax initFunction, bool isAddItem = true) {
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, initFunction);
             Add(new LuaExpressionStatementSyntax(assignment));
             local_.Variables.Add(name);
@@ -284,7 +284,7 @@ namespace CSharpLua.LuaAst {
             Add(returnStatement);
 
             if(typeIdentifiers_.Count > 0) {
-                LuaFunctionExpressSyntax wrapFunction = new LuaFunctionExpressSyntax();
+                LuaFunctionExpressionSyntax wrapFunction = new LuaFunctionExpressionSyntax();
                 foreach(var type in typeIdentifiers_) {
                     wrapFunction.AddParameter(type);
                 }

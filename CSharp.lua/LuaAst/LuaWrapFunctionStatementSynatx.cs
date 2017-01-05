@@ -7,7 +7,7 @@ using System.Text;
 namespace CSharpLua.LuaAst {
     public abstract class LuaWrapFunctionStatementSynatx : LuaStatementSyntax {
         public LuaExpressionStatementSyntax Statement { get; private set; }
-        private LuaFunctionExpressSyntax function_ = new LuaFunctionExpressSyntax();
+        private LuaFunctionExpressionSyntax function_ = new LuaFunctionExpressionSyntax();
         protected List<LuaStatementSyntax> statements_ = new List<LuaStatementSyntax>();
 
         protected void UpdateIdentifiers(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax target, LuaIdentifierNameSyntax memberName, LuaIdentifierNameSyntax parameter = null) {

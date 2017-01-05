@@ -129,7 +129,7 @@ namespace CSharpLua {
             node.Expression.Render(this);
         }
 
-        internal void Render(LuaFunctionExpressSyntax node) {
+        internal void Render(LuaFunctionExpressionSyntax node) {
             Write(node.FunctionKeyword);
             WriteSpace();
             node.ParameterList.Render(this);

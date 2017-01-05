@@ -17,7 +17,7 @@ namespace CSharpLua {
 
         private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
-        private Stack<LuaFunctionExpressSyntax> functions_ = new Stack<LuaFunctionExpressSyntax>();
+        private Stack<LuaFunctionExpressionSyntax> functions_ = new Stack<LuaFunctionExpressionSyntax>();
         private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
 
@@ -64,13 +64,13 @@ namespace CSharpLua {
             }
         }
 
-        private LuaFunctionExpressSyntax CurFunction {
+        private LuaFunctionExpressionSyntax CurFunction {
             get {
                 return functions_.Peek();
             }
         }
 
-        private void PushFunction(LuaFunctionExpressSyntax function) {
+        private void PushFunction(LuaFunctionExpressionSyntax function) {
             functions_.Push(function);
             ++localMappingCounter_;
         }
@@ -177,14 +177,14 @@ namespace CSharpLua {
             return enumDeclaration;
         }
 
-        private void VisitYield(MethodDeclarationSyntax node, LuaFunctionExpressSyntax function) {
+        private void VisitYield(MethodDeclarationSyntax node, LuaFunctionExpressionSyntax function) {
             Contract.Assert(function.HasYield);
 
             var nameSyntax = (SimpleNameSyntax)node.ReturnType;
             string name = LuaSyntaxNode.Tokens.Yield + nameSyntax.Identifier.ValueText;
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
             LuaInvocationExpressionSyntax invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
-            LuaFunctionExpressSyntax wrapFunction = new LuaFunctionExpressSyntax();
+            LuaFunctionExpressionSyntax wrapFunction = new LuaFunctionExpressionSyntax();
 
             var parameters = function.ParameterList.Parameters;
             wrapFunction.ParameterList.Parameters.AddRange(parameters);
@@ -216,7 +216,7 @@ namespace CSharpLua {
             IMethodSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
             string methodName = XmlMetaProvider.GetMethodMapName(symbol);
             LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(methodName);
-            LuaFunctionExpressSyntax function = new LuaFunctionExpressSyntax();
+            LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
             PushFunction(function);
             if(!node.Modifiers.IsStatic()) {
                 function.AddParameter(LuaIdentifierNameSyntax.This);
@@ -371,7 +371,7 @@ namespace CSharpLua {
                 foreach(var accessor in node.AccessorList.Accessors) {
                     if(accessor.Body != null) {
                         var block = (LuaBlockSyntax)accessor.Body.Accept(this);
-                        LuaFunctionExpressSyntax functionExpress = new LuaFunctionExpressSyntax();
+                        LuaFunctionExpressionSyntax functionExpress = new LuaFunctionExpressionSyntax();
                         if(!isStatic) {
                             functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
                         }
@@ -395,7 +395,7 @@ namespace CSharpLua {
                 Contract.Assert(!hasGet);
                 LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(true, node.Identifier.ValueText);
                 var expression = (LuaExpressionSyntax)node.ExpressionBody.Expression.Accept(this);
-                LuaFunctionExpressSyntax functionExpress = new LuaFunctionExpressSyntax();
+                LuaFunctionExpressionSyntax functionExpress = new LuaFunctionExpressionSyntax();
                 if(!isStatic) {
                     functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
                 }
@@ -437,7 +437,7 @@ namespace CSharpLua {
             bool isPrivate = node.Modifiers.IsPrivate();
             foreach(var accessor in node.AccessorList.Accessors) {
                 var block = (LuaBlockSyntax)accessor.Body.Accept(this);
-                LuaFunctionExpressSyntax functionExpress = new LuaFunctionExpressSyntax();
+                LuaFunctionExpressionSyntax functionExpress = new LuaFunctionExpressionSyntax();
                 if(!isStatic) {
                     functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
                 }
@@ -559,7 +559,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
-            if(CurFunction is LuaSpecialAdapterFunctionExpressSyntax) {
+            if(CurFunction is LuaSpecialAdapterFunctionExpressionSyntax) {
                 LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
                 returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
                 if(node.Expression != null) {
@@ -863,7 +863,7 @@ namespace CSharpLua {
                     }
                 }
                 else {
-                    var constructor = CurFunction as LuaConstructorAdapterExpressSyntax;
+                    var constructor = CurFunction as LuaConstructorAdapterExpressionSyntax;
                     if(constructor != null && constructor.IsStaticCtor) {
                         name = LuaSyntaxNode.Tokens.This + '.' + symbol.Name;
                     }
