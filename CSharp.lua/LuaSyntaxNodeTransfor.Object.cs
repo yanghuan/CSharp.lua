@@ -408,8 +408,63 @@ namespace CSharpLua {
             return LuaIdentifierNameSyntax.Empty;
         }
 
+        private bool IsBaseEnable<T>(MemberAccessExpressionSyntax parent, T symbol, Func<T, ISymbol> overriddenFunc) where T : ISymbol {
+            if(symbol.IsOverridable()) {
+                var curTypeSymbol = GetTypeDeclarationSymbol(parent);
+                if(curTypeSymbol.IsSealed) {
+                    bool exists = curTypeSymbol.GetMembers().OfType<T>().Any(i => {
+                        var overriddenSymbol = overriddenFunc(i);
+                        return overriddenSymbol != null && overriddenSymbol.Equals(symbol);
+                    });
+                    if(!exists) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
         public override LuaSyntaxNode VisitBaseExpression(BaseExpressionSyntax node) {
-            return base.VisitBaseExpression(node);
+            var parent = (MemberAccessExpressionSyntax)node.Parent;
+            var symbol = semanticModel_.GetSymbolInfo(parent).Symbol;
+
+            bool hasBase = false;
+            switch(symbol.Kind) {
+                case SymbolKind.Method: {
+                        var methodSymbol = (IMethodSymbol)symbol;
+                        if(IsBaseEnable(parent, methodSymbol, i => i.OverriddenMethod)) {
+                            hasBase = true;
+                        }
+                        break;
+                    }
+                case SymbolKind.Property: {
+                        var propertySymbol = (IPropertySymbol)symbol;
+                        if(!IsPropertyField(propertySymbol)) {
+                            if(IsBaseEnable(parent, propertySymbol, i => i.OverriddenProperty)) {
+                                hasBase = true;
+                            }
+                        }
+                        break;
+                    }
+                case SymbolKind.Event: {
+                        var eventSymbol = (IEventSymbol)symbol;
+                        if(!eventSymbol.IsEventFiled()) {
+                            if(IsBaseEnable(parent, eventSymbol, i => i.OverriddenEvent)) {
+                                hasBase = true;
+                            }
+                        }
+                        break;
+                    }
+            }
+
+            if(hasBase) {
+                string typeName = XmlMetaProvider.GetTypeMapName(symbol.ContainingType);
+                return new LuaIdentifierNameSyntax(typeName);
+            }
+            else {
+                return LuaIdentifierNameSyntax.This;
+            }
         }
     }
 }

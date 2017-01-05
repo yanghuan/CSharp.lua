@@ -73,14 +73,18 @@ namespace CSharpLua {
             }
         }
 
-        private SyntaxNode FindParent(SyntaxNode node, SyntaxKind kind) {
+        private SyntaxNode FindParent(SyntaxNode node, Func<SyntaxNode, bool> macth) {
             var parent = node.Parent;
             while(true) {
-                if(parent.IsKind(kind)) {
+                if(macth(parent)) {
                     return parent;
                 }
                 parent = parent.Parent;
             }
+        }
+
+        private SyntaxNode FindParent(SyntaxNode node, SyntaxKind kind) {
+            return FindParent(node, i => i.IsKind(kind));
         }
 
         private string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
@@ -208,7 +212,7 @@ namespace CSharpLua {
                     string prevToken = codeTemplate.Substring(prevIndex, match.Index - prevIndex);
                     codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(prevToken));
                 }
-                string comma = match.Groups[1].Value; 
+                string comma = match.Groups[1].Value;
                 string key = match.Groups[2].Value;
                 if(key == "this") {
                     AddCodeTemplateExpression(BuildMemberAccessTargetExpression(targetExpression), comma, codeTemplateExpression);
@@ -264,6 +268,26 @@ namespace CSharpLua {
             }
 
             return codeTemplateExpression;
+        }
+
+        private bool IsPropertyField(IPropertySymbol symbol) {
+            return symbol.IsPropertyField() || XmlMetaProvider.IsPropertyField(symbol);
+        }
+
+        private INamedTypeSymbol GetTypeDeclarationSymbol(SyntaxNode node) {
+            var typeDeclaration = (TypeDeclarationSyntax)FindParent(node, i => i.IsKind(SyntaxKind.ClassDeclaration) || i.IsKind(SyntaxKind.StructDeclaration));
+            return semanticModel_.GetDeclaredSymbol(typeDeclaration);
+        }
+
+        private bool IsInternalMember(SyntaxNode node, ISymbol symbol) {
+            bool isVirtual = symbol.IsOverridable() && !symbol.ContainingType.IsSealed;
+            if(!isVirtual) {
+                var typeSymbol = GetTypeDeclarationSymbol(node);
+                if(typeSymbol == symbol.ContainingType) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
