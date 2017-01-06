@@ -253,6 +253,15 @@ namespace CSharpLua {
             return node.FilterExpression.Accept(this);    
         }
 
+
+        public override LuaSyntaxNode VisitCatchClause(CatchClauseSyntax node) {
+            throw new InvalidOperationException();
+        }
+
+        public override LuaSyntaxNode VisitCatchDeclaration(CatchDeclarationSyntax node) {
+            throw new InvalidOperationException();
+        }
+
         private LuaTryBlockAdapterExpressionSyntax VisitTryCatchesExpress(SyntaxList<CatchClauseSyntax> catches) {
             LuaTryBlockAdapterExpressionSyntax functionExpress = new LuaTryBlockAdapterExpressionSyntax();
             PushFunction(functionExpress);
@@ -526,7 +535,37 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {
-            return base.VisitInterpolatedStringExpression(node);
+            int index = 0;
+            StringBuilder sb = new StringBuilder();
+            List<LuaExpressionSyntax> expressions = new List<LuaExpressionSyntax>();
+            foreach(var content in node.Contents) {
+                if(content.IsKind(SyntaxKind.InterpolatedStringText)) {
+                    var stringText = (InterpolatedStringTextSyntax)content;
+                    sb.Append(stringText.TextToken.ValueText);
+                }
+                else {
+                    var expression = (LuaExpressionSyntax)content.Accept(this);
+                    expressions.Add(expression);
+                    sb.Append('{');
+                    sb.Append(index);
+                    sb.Append('}');
+                    ++index;
+                }
+            }
+
+            LuaStringLiteralExpressionSyntax format = new LuaStringLiteralExpressionSyntax(sb.ToString());
+            LuaMemberAccessExpressionSyntax memberAccessExpression = new LuaMemberAccessExpressionSyntax(new LuaParenthesizedExpressionSyntax(format), LuaIdentifierNameSyntax.Format, true);
+            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccessExpression);
+            invocation.ArgumentList.Arguments.AddRange(expressions.Select(i => new LuaArgumentSyntax(i)));
+            return invocation;
+        }
+
+        public override LuaSyntaxNode VisitInterpolation(InterpolationSyntax node) {
+            return node.Expression.Accept(this);
+        }
+
+        public override LuaSyntaxNode VisitInterpolatedStringText(InterpolatedStringTextSyntax node) {
+            throw new InvalidOperationException();
         }
     }
 }
