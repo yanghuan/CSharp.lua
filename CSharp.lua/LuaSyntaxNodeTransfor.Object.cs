@@ -90,7 +90,7 @@ namespace CSharpLua {
                 return GetMethodNameExpression((IMethodSymbol)symbol, node);
             }
             else {
-                string name = XmlMetaProvider.GetTypeMapName(symbol);
+                string name = XmlMetaProvider.GetTypeShortName(symbol);
                 LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
                 foreach(var typeArgument in node.TypeArgumentList.Arguments) {
                     var expression = (LuaExpressionSyntax)typeArgument.Accept(this);

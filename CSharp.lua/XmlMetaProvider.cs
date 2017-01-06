@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.CodeAnalysis;
+using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed class XmlMetaProvider {
@@ -269,10 +270,6 @@ namespace CSharpLua {
             }
         }
 
-        private static void FixName(ref string name) {
-            name = name.Replace('^', '_');
-        }
-
         private void LoadNamespace(XmlMetaModel.NamespaceModel model) {
             string namespaceName = model.name;
             if(string.IsNullOrEmpty(namespaceName)) {
@@ -287,7 +284,7 @@ namespace CSharpLua {
             }
 
             if(model.Classes != null) {
-                LoadType(string.IsNullOrEmpty(model.Name) ? namespaceName : model.Name, model.Classes);
+                LoadType(namespaceName, model.Classes);
             }
         }
 
@@ -299,7 +296,6 @@ namespace CSharpLua {
                 }
 
                 string classesfullName = namespaceName + '.' + className;
-                FixName(ref classesfullName);
                 if(!string.IsNullOrEmpty(classModel.Name)) {
                     if(typeNameMaps_.ContainsKey(classesfullName)) {
                         throw new ArgumentException($"class [{classesfullName}] is already has");
@@ -317,12 +313,8 @@ namespace CSharpLua {
 
         public string GetNamespaceMapName(INamespaceSymbol symbol) {
             string name = symbol.ToString();
-            if(name[0] == '<') {
-                return symbol.Name;
-            }
-            else {
-                return namespaceNameMaps_.GetOrDefault(name, name);
-            }
+            Contract.Assert(name[0] != '<');
+            return namespaceNameMaps_.GetOrDefault(name, name);
         }
 
         private string GetTypeName(ISymbol symbol) {
@@ -338,20 +330,41 @@ namespace CSharpLua {
             return name;
         }
 
-        private bool IsCodeTemplateEnable(ISymbol symbol) {
-            return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
-        }
-
         public string GetTypeMapName(ISymbol symbol) {
             string name = GetTypeName(symbol);
             if(IsCodeTemplateEnable(symbol)) {
                 return typeNameMaps_.GetOrDefault(name, name);
             }
-            return name;        
+            return name;
+        }
+
+        private bool IsCodeTemplateEnable(ISymbol symbol) {
+            return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
+        }
+
+        private string GetTypeShortString(ISymbol symbol) {
+            INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
+            string namespaceName = typeSymbol.ContainingNamespace.ToString();
+            string name;
+            if(typeSymbol.TypeArguments.Length == 0) {
+                name = $"{namespaceName}.{symbol.Name}";
+            }
+            else {
+                name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
+            }
+            return name;
+        }
+
+        public string GetTypeShortName(ISymbol symbol) {
+            string name = GetTypeShortString(symbol);
+             if(IsCodeTemplateEnable(symbol)) {
+                return typeNameMaps_.GetOrDefault(name, name);
+            }
+            return name;
         }
 
         private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
-            string typeName = GetTypeName(memberSymbol.ContainingType);
+            string typeName = GetTypeShortString(memberSymbol.ContainingType);
             return typeMetas_.GetOrDefault(typeName);
         }
 
@@ -417,8 +430,6 @@ namespace CSharpLua {
         }
 
         public string GetMethodCodeTemplate(IMethodSymbol symbol) {
-            Contract.Assert(symbol != null);
-
             if(symbol.DeclaredAccessibility != Accessibility.Public) {
                 return null;
             }
