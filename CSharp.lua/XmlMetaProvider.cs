@@ -377,8 +377,11 @@ namespace CSharpLua {
             string name = GetTypeShortString(symbol);
              if(HasCodeMeta(symbol)) {
                 TypeMetaInfo info = typeMetas_.GetOrDefault(name);
-                if(info != null && info.Model.Name != null) {
-                    name = info.Model.Name;
+                if(info != null) {
+                    string newName = info.Model.Name;
+                    if(newName != null) {
+                        name = newName;
+                    }
                 }
             }
             return new LuaIdentifierNameSyntax(name);
