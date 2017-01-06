@@ -343,20 +343,7 @@ namespace CSharpLua {
             }
         }
 
-        private string GetLastTypeName(ISymbol symbol) {
-            INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
-            string namespaceName = GetNamespaceMapName(typeSymbol.ContainingNamespace);
-            string name;
-            if(typeSymbol.TypeArguments.Length == 0) {
-                name = $"{namespaceName}.{symbol.Name}";
-            }
-            else {
-                name = $"{namespaceName}.{symbol.Name}_{typeSymbol.TypeArguments.Length}";
-            }
-            return name;
-        }
-
-        private bool HasCodeMeta(ISymbol symbol) {
+        private bool MayHaveCodeMeta(ISymbol symbol) {
             return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
         }
 
@@ -375,7 +362,7 @@ namespace CSharpLua {
 
         public LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {
             string name = GetTypeShortString(symbol);
-             if(HasCodeMeta(symbol)) {
+             if(MayHaveCodeMeta(symbol)) {
                 TypeMetaInfo info = typeMetas_.GetOrDefault(name);
                 if(info != null) {
                     string newName = info.Model.Name;
@@ -429,7 +416,7 @@ namespace CSharpLua {
         }
 
         public bool IsPropertyField(IPropertySymbol symbol) {
-            if(HasCodeMeta(symbol)) {
+            if(MayHaveCodeMeta(symbol)) {
                 var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
                 return info != null && info.IsAutoField;
             }
@@ -437,14 +424,14 @@ namespace CSharpLua {
         }
 
         public string GetFieldCodeTemplate(IFieldSymbol symbol) {
-            if(HasCodeMeta(symbol)) {
+            if(MayHaveCodeMeta(symbol)) {
                 return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
             }
             return null;
         }
 
         public string GetProertyCodeTemplate(IPropertySymbol symbol, bool isGet) {
-            if(HasCodeMeta(symbol)) {
+            if(MayHaveCodeMeta(symbol)) {
                 var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
                 if(info != null) {
                     return isGet ? info.get?.Template : info.set?.Template;
