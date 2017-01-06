@@ -405,7 +405,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitThisExpression(ThisExpressionSyntax node) {
-            return LuaIdentifierNameSyntax.Empty;
+            return LuaIdentifierNameSyntax.This;
         }
 
         private bool IsBaseEnable<T>(MemberAccessExpressionSyntax parent, T symbol, Func<T, ISymbol> overriddenFunc) where T : ISymbol {
@@ -465,6 +465,16 @@ namespace CSharpLua {
             else {
                 return LuaIdentifierNameSyntax.This;
             }
+        }
+
+        public override LuaSyntaxNode VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node) {
+            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            var whenNotNull = (LuaExpressionSyntax)node.WhenNotNull.Accept(this);
+            return base.VisitConditionalAccessExpression(node);
+        }
+
+        public override LuaSyntaxNode VisitMemberBindingExpression(MemberBindingExpressionSyntax node) {
+            return base.VisitMemberBindingExpression(node);
         }
     }
 }

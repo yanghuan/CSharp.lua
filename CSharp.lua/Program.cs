@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,8 @@ Options
                         ShowHelpInfo();
                         return;
                     }
+
+                    //Contract.Assert(false);
 
                     Console.WriteLine($"start {DateTime.Now}");
                     string folder = cmds.GetArgument("-s");

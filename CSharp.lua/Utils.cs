@@ -95,12 +95,12 @@ namespace CSharpLua {
             return Path.Combine(Environment.CurrentDirectory, path);
         }
 
-        public static string[] SplitPaths(string path) {
+        public static string[] Split(string s, bool isPath = true) {
             HashSet<string> list = new HashSet<string>();
-            if(!string.IsNullOrEmpty(path)) {
-                string[] paths = path.Split(';');
-                foreach(string file in paths) {
-                    list.Add(Utility.GetCurrentDirectory(file));
+            if(!string.IsNullOrEmpty(s)) {
+                string[] array = s.Split(';');
+                foreach(string i in array) {
+                    list.Add(isPath ? GetCurrentDirectory(i) : i);
                 }
             }
             return list.ToArray();

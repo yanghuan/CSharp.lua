@@ -20,6 +20,7 @@ namespace CSharpLua {
             "System.dll",
             "System.Core.dll",
         };
+        private const string kDllSuffix = ".dll";
         private const string kSystemMeta = "~/System.xml";
 
         private string folder_;
@@ -31,9 +32,9 @@ namespace CSharpLua {
         public Worker(string folder, string output, string lib, string meta, string defines) {
             folder_ = folder;
             output_ = output;
-            libs_ = Utility.SplitPaths(lib);
-            metas_ = Utility.SplitPaths(meta);
-            defines_ = Utility.SplitPaths(defines);
+            libs_ = Utility.Split(lib);
+            metas_ = Utility.Split(meta);
+            defines_ = Utility.Split(defines, false);
         }
 
         private IEnumerable<string> Metas {
@@ -45,6 +46,26 @@ namespace CSharpLua {
             }
         }
 
+        private IEnumerable<string> Libs {
+            get {
+                string runtimeDir = RuntimeEnvironment.GetRuntimeDirectory();
+                List<string> libs = new List<string>();
+                libs.AddRange(SystemDlls.Select(i => Path.Combine(runtimeDir, i)));
+                foreach(string lib in libs_) {
+                    string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
+                    if(!File.Exists(path)) {
+                        string file = Path.Combine(runtimeDir, Path.GetFileName(path));
+                        if(!File.Exists(file)) {
+                            throw new CmdArgumentException($"lib '{path}' is not found");
+                        }
+                        path = file;
+                    }
+                    libs.Add(path);
+                }
+                return libs;
+            }
+        }
+
         public void Do() {
             Compiler();
         }
@@ -53,11 +74,7 @@ namespace CSharpLua {
             CSharpParseOptions parseOptions = new CSharpParseOptions(preprocessorSymbols: defines_);
             var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
             var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), parseOptions, file));
-
-            string runtimeDir = RuntimeEnvironment.GetRuntimeDirectory();
-            var references = SystemDlls.Select(i => MetadataReference.CreateFromFile(Path.Combine(runtimeDir, i)))
-                .Concat(libs_.Select(i => MetadataReference.CreateFromFile(i)));
-
+            var references = Libs.Select(i => MetadataReference.CreateFromFile(i));
             CSharpCompilation compilation = CSharpCompilation.Create("out.dll", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
             using(MemoryStream ms = new MemoryStream()) {
                 EmitResult result = compilation.Emit(ms);
