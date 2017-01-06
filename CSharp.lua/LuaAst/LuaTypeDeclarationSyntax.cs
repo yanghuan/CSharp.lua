@@ -268,7 +268,7 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void AddBaseTypes(List<LuaIdentifierNameSyntax> baseTypes) {
+        public void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes) {
             LuaTableInitializerExpression table = new LuaTableInitializerExpression();
             table.Items.AddRange(baseTypes.Select(i => new LuaSingleTableItemSyntax(i)));
             AddResultTable(LuaIdentifierNameSyntax.Inherits, table);

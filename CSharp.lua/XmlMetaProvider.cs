@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -366,14 +367,18 @@ namespace CSharpLua {
 
             if(name == null) {
                 if(symbol.IsOverride) {
-                    name = GetMethodName(symbol.OverriddenMethod); 
+                    if(symbol.OverriddenMethod != null) {
+                        name = GetMethodName(symbol.OverriddenMethod);
+                    }
                 }
                 else {
                     var interfaceImplementations = symbol.InterfaceImplementations();
-                    foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
-                        name = GetMethodName(interfaceMethod);
-                        if(name != null) {
-                            break;
+                    if(interfaceImplementations != null) {
+                        foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
+                            name = GetMethodName(interfaceMethod);
+                            if(name != null) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -412,6 +417,8 @@ namespace CSharpLua {
         }
 
         public string GetMethodCodeTemplate(IMethodSymbol symbol) {
+            Contract.Assert(symbol != null);
+
             if(symbol.DeclaredAccessibility != Accessibility.Public) {
                 return null;
             }
@@ -423,14 +430,18 @@ namespace CSharpLua {
 
             if(codeTemplate == null) {
                 if(symbol.IsOverride) {
-                    codeTemplate = GetMethodCodeTemplate(symbol.OverriddenMethod);
+                    if(symbol.OverriddenMethod != null) {
+                        codeTemplate = GetMethodCodeTemplate(symbol.OverriddenMethod);
+                    }
                 }
                 else {
                     var interfaceImplementations = symbol.InterfaceImplementations();
-                    foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
-                        codeTemplate = GetMethodCodeTemplate(interfaceMethod);
-                        if(codeTemplate != null) {
-                            break;
+                    if(interfaceImplementations != null) {
+                        foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
+                            codeTemplate = GetMethodCodeTemplate(interfaceMethod);
+                            if(codeTemplate != null) {
+                                break;
+                            }
                         }
                     }
                 }

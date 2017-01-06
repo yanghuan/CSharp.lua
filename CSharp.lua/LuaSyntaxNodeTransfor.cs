@@ -125,9 +125,9 @@ namespace CSharpLua {
                 }
             }
             if(node.BaseList != null) {
-                List<LuaIdentifierNameSyntax> baseTypes = new List<LuaIdentifierNameSyntax>();
+                List<LuaExpressionSyntax> baseTypes = new List<LuaExpressionSyntax>();
                 foreach(var baseType in node.BaseList.Types) {
-                    var baseTypeName = (LuaIdentifierNameSyntax)baseType.Accept(this);
+                    var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
                     baseTypes.Add(baseTypeName);
                 }
                 typeDeclaration.AddBaseTypes(baseTypes);
@@ -910,8 +910,8 @@ namespace CSharpLua {
                 }
                 else {
                     var expression = BuildMemberAccessTargetExpression(node.Expression);
-                    var nameIdentifier = (LuaExpressionSyntax)node.Name.Accept(this);
-                    var propertyMethod = nameIdentifier as LuaPropertyAdapterExpressionSyntax;
+                    var nameExpression = (LuaExpressionSyntax)node.Name.Accept(this);
+                    var propertyMethod = nameExpression as LuaPropertyAdapterExpressionSyntax;
                     if(propertyMethod != null) {
                         var arguments = propertyMethod.InvocationExpression.ArgumentList.Arguments;
                         if(arguments.Count == 1) {
@@ -926,7 +926,7 @@ namespace CSharpLua {
                         return propertyMethod;
                     }
                     else {
-                        return new LuaMemberAccessExpressionSyntax(expression, nameIdentifier);
+                        return new LuaMemberAccessExpressionSyntax(expression, nameExpression);
                     }
                 }
             }
