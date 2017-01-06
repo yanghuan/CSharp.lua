@@ -31,11 +31,11 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax ArrayEmpty = new LuaIdentifierNameSyntax("System.Array.Empty");
         public readonly static LuaIdentifierNameSyntax Create = new LuaIdentifierNameSyntax("System.create");
         public readonly static LuaIdentifierNameSyntax ThisAdd = new LuaIdentifierNameSyntax("this:Add");
-        public readonly static LuaIdentifierNameSyntax Default = new LuaIdentifierNameSyntax("__default__");
         public readonly static LuaIdentifierNameSyntax StaticCtor = new LuaIdentifierNameSyntax("__staticCtor__");
         public readonly static LuaIdentifierNameSyntax Init = new LuaIdentifierNameSyntax("__init__");
         public readonly static LuaIdentifierNameSyntax Ctor = new LuaIdentifierNameSyntax("__ctor__");
         public readonly static LuaIdentifierNameSyntax Inherits = new LuaIdentifierNameSyntax("__inherits__");
+        public readonly static LuaIdentifierNameSyntax Default = new LuaIdentifierNameSyntax("__default__");
         public readonly static LuaIdentifierNameSyntax Property = new LuaIdentifierNameSyntax("System.property");
         public readonly static LuaIdentifierNameSyntax Event = new LuaIdentifierNameSyntax("System.event");
         public readonly static LuaIdentifierNameSyntax Nil = new LuaIdentifierNameSyntax("nil");

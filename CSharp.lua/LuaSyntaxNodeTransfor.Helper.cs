@@ -285,5 +285,14 @@ namespace CSharpLua {
             }
             return false;
         }
+
+        private string GetTypeArgumentName(ITypeSymbol symbol) {
+            if(symbol.Kind == SymbolKind.TypeParameter) {
+                return symbol.Name;
+            }
+            else {
+                return XmlMetaProvider.GetTypeMapName(symbol);
+            }
+        }
     }
 }

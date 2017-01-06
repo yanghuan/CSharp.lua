@@ -29,7 +29,7 @@ namespace CSharpLua.LuaAst {
             public const string Dot = ".";
             public const string Quote = "\"";
             public const string SingleQuote = "'";
-            public new const string Equals = " = ";
+            public new const string Equals = "=";
             public const string EqualsEquals = "==";
             public const string NotEquals = "~=";
             public const string Yield = "yield";

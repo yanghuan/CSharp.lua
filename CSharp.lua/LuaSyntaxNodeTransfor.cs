@@ -75,6 +75,14 @@ namespace CSharpLua {
             ++localMappingCounter_;
         }
 
+        private bool PushFunctionIfEmpty(LuaFunctionExpressionSyntax function) {
+            if(functions_.Count == 0) {
+                PushFunction(function);
+                return true;
+            }
+            return false;
+        }
+
         private void PopFunction() {
             functions_.Pop();
             --localMappingCounter_;
@@ -830,7 +838,7 @@ namespace CSharpLua {
                     --optionalCount;
                 }
                 foreach(var typeArgument in symbol.TypeArguments) {
-                    string typeName = XmlMetaProvider.GetTypeMapName(typeArgument);
+                    string typeName = GetTypeArgumentName(typeArgument);
                     invocation.AddArgument(new LuaIdentifierNameSyntax(typeName));
                 }
             }
@@ -1164,13 +1172,17 @@ namespace CSharpLua {
             return new LuaIdentifierNameSyntax(node.ToString());
         }
 
-        public override LuaSyntaxNode VisitArgumentList(ArgumentListSyntax node) {
+        private LuaArgumentListSyntax BuildArgumentList(SeparatedSyntaxList<ArgumentSyntax> arguments) {
             LuaArgumentListSyntax argumentList = new LuaArgumentListSyntax();
-            foreach(var argument in node.Arguments) {
+            foreach(var argument in arguments) {
                 var newNode = (LuaArgumentSyntax)argument.Accept(this);
                 argumentList.Arguments.Add(newNode);
             }
             return argumentList;
+        }
+
+        public override LuaSyntaxNode VisitArgumentList(ArgumentListSyntax node) {
+            return BuildArgumentList(node.Arguments);
         }
 
         public override LuaSyntaxNode VisitArgument(ArgumentSyntax node) {

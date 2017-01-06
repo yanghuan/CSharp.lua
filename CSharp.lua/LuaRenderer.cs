@@ -211,20 +211,26 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaEqualsValueClauseListSyntax node) {
+            WriteSpace();
             Write(node.EqualsToken);
+            WriteSpace();
             WriteSeparatedSyntaxList(node.Values);
         }
 
         internal void Render(LuaAssignmentExpressionSyntax node) {
             node.Left.Render(this);
+            WriteSpace();
             Write(node.OperatorToken);
+            WriteSpace();
             node.Right.Render(this);
         }
 
         internal void Render(LuaMultipleAssignmentExpressionSyntax node) {
             Contract.Assert(node.Lefts.Count > 0 && node.Rights.Count > 0);
             WriteSeparatedSyntaxList(node.Lefts);
+            WriteSpace();
             Write(node.OperatorToken);
+            WriteSpace();
             WriteSeparatedSyntaxList(node.Rights);
         }
 
@@ -290,7 +296,9 @@ namespace CSharpLua {
 
         internal void Render(LuaKeyValueTableItemSyntax node) {
             node.Key.Render(this);
+            WriteSpace();
             Write(node.OperatorToken);
+            WriteSpace();
             node.Value.Render(this);
         }
 
@@ -312,7 +320,9 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaEqualsValueClauseSyntax node) {
+            WriteSpace();
             Write(node.EqualsToken);
+            WriteSpace();
             node.Value.Render(this);
         }
 
