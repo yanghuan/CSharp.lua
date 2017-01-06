@@ -1246,7 +1246,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitPredefinedType(PredefinedTypeSyntax node) {
             ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
-            string typeName = XmlMetaProvider.GetTypeMapName(symbol);
+            string typeName = XmlMetaProvider.GetTypeShortName(symbol);
             return new LuaIdentifierNameSyntax(typeName);
         }
 
@@ -1369,14 +1369,7 @@ namespace CSharpLua {
                     return new LuaStringLiteralExpressionSyntax(symbol.Name);
                 }
                 else {
-                    ITypeSymbol type;
-                    if(symbol.Kind == SymbolKind.Parameter) {
-                        type = ((IParameterSymbol)symbol).Type;
-                    }
-                    else {
-                        type = ((IFieldSymbol)symbol).Type;
-                    }
-                    string typeName = XmlMetaProvider.GetTypeMapName(type);
+                    string typeName = XmlMetaProvider.GetTypeShortName(typeInfo);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(symbol.Name), LuaIdentifierNameSyntax.ToEnumString, true);
                     LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
                     invocation.AddArgument(new LuaIdentifierNameSyntax(typeName));
