@@ -90,8 +90,8 @@ namespace CSharpLua {
                 return GetMethodNameExpression((IMethodSymbol)symbol, node);
             }
             else {
-                string name = XmlMetaProvider.GetTypeShortName(symbol);
-                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
+                LuaIdentifierNameSyntax name = XmlMetaProvider.GetTypeShortName(symbol);
+                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(name);
                 foreach(var typeArgument in node.TypeArgumentList.Arguments) {
                     var expression = (LuaExpressionSyntax)typeArgument.Accept(this);
                     invocation.AddArgument(expression);
@@ -107,7 +107,10 @@ namespace CSharpLua {
             LuaExpressionSyntax size = null;
             foreach(var rank in node.RankSpecifiers.Reverse()) {
                 if(rank.Rank > 1) {
-                    throw new NotSupportedException();
+                
+                }
+                else {
+
                 }
                 size = (LuaExpressionSyntax)rank.Sizes.First().Accept(this);
                 LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array);
@@ -157,8 +160,8 @@ namespace CSharpLua {
                     function.IsInvokeThisCtor = true;
                 }
                 else {
-                    string typeName = XmlMetaProvider.GetTypeMapName(symbol.ReceiverType);
-                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(typeName), LuaIdentifierNameSyntax.Ctor);
+                    var typeName = XmlMetaProvider.GetTypeName(symbol.ReceiverType);
+                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
                     if(ctroCounter > 0) {
                         otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter.ToString())));
                     }
@@ -493,8 +496,7 @@ namespace CSharpLua {
             }
 
             if(hasBase) {
-                string typeName = XmlMetaProvider.GetTypeMapName(symbol.ContainingType);
-                return new LuaIdentifierNameSyntax(typeName);
+                return XmlMetaProvider.GetTypeName(symbol.ContainingType);
             }
             else {
                 return LuaIdentifierNameSyntax.This;

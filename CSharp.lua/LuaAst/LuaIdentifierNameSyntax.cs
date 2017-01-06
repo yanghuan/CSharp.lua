@@ -65,6 +65,8 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax New = new LuaIdentifierNameSyntax("new");
         public readonly static LuaIdentifierNameSyntax Access = new LuaIdentifierNameSyntax("System.access");
         public readonly static LuaIdentifierNameSyntax Format = new LuaIdentifierNameSyntax("Format");
+        public readonly static LuaIdentifierNameSyntax Delegate = new LuaIdentifierNameSyntax("System.Delegate");
+        public readonly static LuaIdentifierNameSyntax Int = new LuaIdentifierNameSyntax("System.Int");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

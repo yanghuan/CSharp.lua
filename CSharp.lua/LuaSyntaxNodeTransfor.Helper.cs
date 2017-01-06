@@ -219,16 +219,16 @@ namespace CSharpLua {
                 }
                 else if(key == "class") {
                     var type = semanticModel_.GetTypeInfo(targetExpression).Type;
-                    string typeName = XmlMetaProvider.GetTypeMapName(type);
-                    AddCodeTemplateExpression(new LuaIdentifierNameSyntax(typeName), comma, codeTemplateExpression);
+                    var typeName = XmlMetaProvider.GetTypeName(type);
+                    AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
                 }
                 else if(key[0] == '^') {
                     int typeIndex;
                     if(int.TryParse(key.Substring(1), out typeIndex)) {
                         var typeArgument = typeArguments.GetOrDefault(typeIndex);
                         if(typeArgument != null) {
-                            string typeName = XmlMetaProvider.GetTypeMapName(typeArgument);
-                            AddCodeTemplateExpression(new LuaIdentifierNameSyntax(typeName), comma, codeTemplateExpression);
+                            var typeName = XmlMetaProvider.GetTypeName(typeArgument);
+                            AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
                         }
                     }
                 }
@@ -286,12 +286,12 @@ namespace CSharpLua {
             return false;
         }
 
-        private string GetTypeArgumentName(ITypeSymbol symbol) {
+        private LuaExpressionSyntax GetTypeArgumentName(ITypeSymbol symbol) {
             if(symbol.Kind == SymbolKind.TypeParameter) {
-                return symbol.Name;
+                return new LuaIdentifierNameSyntax(symbol.Name);
             }
             else {
-                return XmlMetaProvider.GetTypeMapName(symbol);
+                return XmlMetaProvider.GetTypeName(symbol);
             }
         }
     }

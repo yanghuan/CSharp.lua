@@ -304,7 +304,7 @@ namespace CSharpLua {
         }
 
         private LuaInvocationExpressionSyntax BuildDefaultValueExpression(TypeSyntax type) {
-            var identifierName = (LuaIdentifierNameSyntax)type.Accept(this);
+            var identifierName = (LuaExpressionSyntax)type.Accept(this);
             return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(identifierName, LuaIdentifierNameSyntax.Default));
         }
 
@@ -838,8 +838,8 @@ namespace CSharpLua {
                     --optionalCount;
                 }
                 foreach(var typeArgument in symbol.TypeArguments) {
-                    string typeName = GetTypeArgumentName(typeArgument);
-                    invocation.AddArgument(new LuaIdentifierNameSyntax(typeName));
+                    var typeName = GetTypeArgumentName(typeArgument);
+                    invocation.AddArgument(typeName);
                 }
             }
             if(refOrOutArguments.Count > 0) {
@@ -1246,8 +1246,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitPredefinedType(PredefinedTypeSyntax node) {
             ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
-            string typeName = XmlMetaProvider.GetTypeShortName(symbol);
-            return new LuaIdentifierNameSyntax(typeName);
+            return XmlMetaProvider.GetTypeShortName(symbol);
         }
 
         private void WriteStatementOrBlock(StatementSyntax statement, LuaBlockSyntax block) {
@@ -1369,10 +1368,10 @@ namespace CSharpLua {
                     return new LuaStringLiteralExpressionSyntax(symbol.Name);
                 }
                 else {
-                    string typeName = XmlMetaProvider.GetTypeShortName(typeInfo);
+                    LuaIdentifierNameSyntax typeName = XmlMetaProvider.GetTypeShortName(typeInfo);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(symbol.Name), LuaIdentifierNameSyntax.ToEnumString, true);
                     LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
-                    invocation.AddArgument(new LuaIdentifierNameSyntax(typeName));
+                    invocation.AddArgument(typeName);
                     generator_.AddExportEnum(symbol.ToString());
                     return invocation;
                 }

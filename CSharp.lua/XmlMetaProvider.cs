@@ -248,7 +248,6 @@ namespace CSharpLua {
         }
 
         private Dictionary<string, string> namespaceNameMaps_ = new Dictionary<string, string>();
-        private Dictionary<string, string> typeNameMaps_ = new Dictionary<string, string>();
         private Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
 
         public XmlMetaProvider(IEnumerable<string> files) {
@@ -284,7 +283,8 @@ namespace CSharpLua {
             }
 
             if(model.Classes != null) {
-                LoadType(namespaceName, model.Classes);
+                string name = !string.IsNullOrEmpty(model.Name) ? model.Name : namespaceName;
+                LoadType(name, model.Classes);
             }
         }
 
@@ -296,13 +296,7 @@ namespace CSharpLua {
                 }
 
                 string classesfullName = namespaceName + '.' + className;
-                if(!string.IsNullOrEmpty(classModel.Name)) {
-                    if(typeNameMaps_.ContainsKey(classesfullName)) {
-                        throw new ArgumentException($"class [{classesfullName}] is already has");
-                    }
-                    typeNameMaps_.Add(classesfullName, classModel.Name);
-                }
-
+                classesfullName = classesfullName.Replace('^', '_');
                 if(typeMetas_.ContainsKey(classesfullName)) {
                     throw new ArgumentException($"type [{classesfullName}] is already has");
                 }
@@ -313,11 +307,43 @@ namespace CSharpLua {
 
         public string GetNamespaceMapName(INamespaceSymbol symbol) {
             string name = symbol.ToString();
-            Contract.Assert(name[0] != '<');
             return namespaceNameMaps_.GetOrDefault(name, name);
         }
 
-        private string GetTypeName(ISymbol symbol) {
+        public LuaExpressionSyntax GetTypeName(ISymbol symbol) {
+            symbol = symbol.OriginalDefinition;
+            if(symbol.Kind == SymbolKind.ArrayType) {
+                var arrayType = (IArrayTypeSymbol)symbol;
+                var invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array);
+                LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType);
+                invocationExpression.AddArgument(elementTypeExpression);
+                return invocationExpression;
+            }
+
+            var namedTypeSymbol = (INamedTypeSymbol)symbol;
+            if(namedTypeSymbol.TypeKind == TypeKind.Enum) {
+                return LuaIdentifierNameSyntax.Int;
+            }
+
+            if(namedTypeSymbol.IsDelegateType()) {
+                return LuaIdentifierNameSyntax.Delegate;
+            }
+
+            LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol);
+            if(namedTypeSymbol.TypeArguments.Length == 0) {
+                return baseTypeName;
+            }
+            else {
+                var invocationExpression = new LuaInvocationExpressionSyntax(baseTypeName);
+                foreach(var typeArgument in namedTypeSymbol.TypeArguments) {
+                    LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument);
+                    invocationExpression.AddArgument(typeArgumentExpression);
+                }
+                return invocationExpression;
+            }
+        }
+
+        private string GetLastTypeName(ISymbol symbol) {
             INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
             string namespaceName = GetNamespaceMapName(typeSymbol.ContainingNamespace);
             string name;
@@ -330,37 +356,32 @@ namespace CSharpLua {
             return name;
         }
 
-        public string GetTypeMapName(ISymbol symbol) {
-            string name = GetTypeName(symbol);
-            if(IsCodeTemplateEnable(symbol)) {
-                return typeNameMaps_.GetOrDefault(name, name);
-            }
-            return name;
-        }
-
-        private bool IsCodeTemplateEnable(ISymbol symbol) {
+        private bool HasCodeMeta(ISymbol symbol) {
             return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
         }
 
         private string GetTypeShortString(ISymbol symbol) {
             INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
-            string namespaceName = typeSymbol.ContainingNamespace.ToString();
+            string namespaceName = GetNamespaceMapName(typeSymbol.ContainingNamespace);
             string name;
             if(typeSymbol.TypeArguments.Length == 0) {
                 name = $"{namespaceName}.{symbol.Name}";
             }
             else {
-                name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
+                name = $"{namespaceName}.{symbol.Name}_{typeSymbol.TypeArguments.Length}";
             }
             return name;
         }
 
-        public string GetTypeShortName(ISymbol symbol) {
+        public LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {
             string name = GetTypeShortString(symbol);
-             if(IsCodeTemplateEnable(symbol)) {
-                return typeNameMaps_.GetOrDefault(name, name);
+             if(HasCodeMeta(symbol)) {
+                TypeMetaInfo info = typeMetas_.GetOrDefault(name);
+                if(info != null && info.Model.Name != null) {
+                    name = info.Model.Name;
+                }
             }
-            return name;
+            return new LuaIdentifierNameSyntax(name);
         }
 
         private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
@@ -405,7 +426,7 @@ namespace CSharpLua {
         }
 
         public bool IsPropertyField(IPropertySymbol symbol) {
-            if(IsCodeTemplateEnable(symbol)) {
+            if(HasCodeMeta(symbol)) {
                 var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
                 return info != null && info.IsAutoField;
             }
@@ -413,14 +434,14 @@ namespace CSharpLua {
         }
 
         public string GetFieldCodeTemplate(IFieldSymbol symbol) {
-            if(IsCodeTemplateEnable(symbol)) {
+            if(HasCodeMeta(symbol)) {
                 return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
             }
             return null;
         }
 
         public string GetProertyCodeTemplate(IPropertySymbol symbol, bool isGet) {
-            if(IsCodeTemplateEnable(symbol)) {
+            if(HasCodeMeta(symbol)) {
                 var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
                 if(info != null) {
                     return isGet ? info.get?.Template : info.set?.Template;
