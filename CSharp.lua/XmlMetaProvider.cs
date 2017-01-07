@@ -311,6 +311,7 @@ namespace CSharpLua {
         }
 
         public LuaExpressionSyntax GetTypeName(ISymbol symbol) {
+            Contract.Assert(symbol != null);
             symbol = symbol.OriginalDefinition;
             if(symbol.Kind == SymbolKind.TypeParameter) {
                 return new LuaIdentifierNameSyntax(symbol.Name);

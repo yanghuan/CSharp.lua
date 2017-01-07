@@ -226,7 +226,7 @@ function System.as(obj, cls)
     return nil
 end
 
-function System.cast(obj, cls)
+function System.cast(cls, obj)
     if is(obj, cls) then
         return obj
     end

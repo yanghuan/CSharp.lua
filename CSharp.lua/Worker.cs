@@ -85,11 +85,27 @@ namespace CSharpLua {
                 }
             }
 
+            if(!Directory.Exists(output_)) {
+                Directory.CreateDirectory(output_);
+            }
+
             LuaSyntaxGenerator generator = new LuaSyntaxGenerator(Metas);
             generator.Generate(compilation, luaCompilationUnit => {
-                string outFile = Path.Combine(output_, Path.GetFileNameWithoutExtension(luaCompilationUnit.FilePath));
-                return new StreamWriter(outFile + "2.lua", false, Encoding);
+                string outFile = GetOutFilePath(luaCompilationUnit.FilePath);
+                return new StreamWriter(outFile, false, Encoding);
             });
+        }
+
+        private string GetOutFilePath(string inFilePath) {
+            string path = inFilePath.Remove(0, folder_.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+            string extend = Path.GetExtension(path);
+            path = path.Remove(path.Length - extend.Length, extend.Length);
+            path = Path.Combine(output_, path + ".lua");
+            string dir = Path.GetDirectoryName(path);
+            if(!Directory.Exists(dir)) {
+                Directory.CreateDirectory(dir);
+            }
+            return path;
         }
     }
 }

@@ -75,7 +75,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
-            if(node.IsKind(SyntaxKind.ObjectInitializerExpression)) {
+            if(!node.IsKind(SyntaxKind.ArrayInitializerExpression)) {
                 return BuildObjectInitializerExpression(node);
             }
             else {

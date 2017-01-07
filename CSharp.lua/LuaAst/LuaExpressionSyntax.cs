@@ -163,5 +163,9 @@ namespace CSharpLua.LuaAst {
             }
             Expression = expression;
         }
+
+        internal override void Render(LuaRenderer renderer) {
+            Expression.Render(renderer);
+        }
     }
 }
