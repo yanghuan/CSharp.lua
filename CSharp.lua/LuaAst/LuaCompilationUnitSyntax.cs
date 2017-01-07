@@ -24,6 +24,12 @@ namespace CSharpLua.LuaAst {
             Statements.Add(HeadAreaStatements);
         }
 
+        public bool IsEmpty {
+            get {
+                return Statements.Count <= 1;
+            }
+        }
+
         public void AddTypeDeclaration(LuaTypeDeclarationSyntax memberNode) {
             LuaNamespaceDeclarationSyntax namespaceNode = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
             namespaceNode.Add(memberNode);

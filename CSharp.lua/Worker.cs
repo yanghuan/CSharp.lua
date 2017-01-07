@@ -21,6 +21,7 @@ namespace CSharpLua {
             "System.Core.dll",
         };
         private const string kDllSuffix = ".dll";
+        private const string kLuaSuffix = ".lua";
         private const string kSystemMeta = "~/System.xml";
 
         private string folder_;
@@ -75,7 +76,7 @@ namespace CSharpLua {
             var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
             var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), parseOptions, file));
             var references = Libs.Select(i => MetadataReference.CreateFromFile(i));
-            CSharpCompilation compilation = CSharpCompilation.Create("out.dll", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
             using(MemoryStream ms = new MemoryStream()) {
                 EmitResult result = compilation.Emit(ms);
                 if(!result.Success) {
@@ -100,7 +101,7 @@ namespace CSharpLua {
             string path = inFilePath.Remove(0, folder_.Length).TrimStart(Path.DirectorySeparatorChar, '/');
             string extend = Path.GetExtension(path);
             path = path.Remove(path.Length - extend.Length, extend.Length);
-            path = Path.Combine(output_, path + ".lua");
+            path = Path.Combine(output_, path + kLuaSuffix);
             string dir = Path.GetDirectoryName(path);
             if(!Directory.Exists(dir)) {
                 Directory.CreateDirectory(dir);

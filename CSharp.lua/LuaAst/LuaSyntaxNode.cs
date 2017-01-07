@@ -39,6 +39,8 @@ namespace CSharpLua.LuaAst {
             public const string ShortComment = "--";
             public const string OpenLongComment = "--[[";
             public const string CloseLongComment = "--]]";
+            public const string OpenDoubleBrace = "[[";
+            public const string CloseDoubleBrace = "]]";
             public const string Ctor = "ctor";
             public const string This = "this";
             public const string Get = "get";

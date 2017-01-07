@@ -287,9 +287,39 @@ namespace CSharpLua {
         }
 
         private LuaInvocationExpressionSyntax BuildEmptyArray(LuaExpressionSyntax baseType) {
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty);
-            invocation.AddArgument(baseType);
-            return invocation;
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty, baseType);
+        }
+
+        private LuaLiteralExpressionSyntax GetConstLiteralExpression(object constantValue) {
+            if(constantValue != null) {
+                var code = Type.GetTypeCode(constantValue.GetType());
+                switch(code) {
+                    case TypeCode.Char: {
+                            return new LuaCharacterLiteralExpression((char)constantValue);
+                        }
+                    case TypeCode.String: {
+                            return new LuaStringLiteralExpressionSyntax((string)constantValue);
+                        }
+                    default: {
+                            return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
+                        }
+                }
+            }
+            else {
+                return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
+            }
+        }
+
+        private LuaLiteralExpressionSyntax GetConstLiteralExpression(IFieldSymbol constField) {
+            Contract.Assert(constField.HasConstantValue);
+            if(constField.Type.SpecialType == SpecialType.System_Char) {
+                return new LuaCharacterLiteralExpression((char)constField.ConstantValue);
+            }
+            else {
+                var constExpression = GetConstLiteralExpression(constField.ConstantValue);
+                string identifierToken = constField.ContainingType.Name + '.' + constField.Name;
+                return new LuaConstLiteralExpression(constExpression, identifierToken);
+            }
         }
     }
 }

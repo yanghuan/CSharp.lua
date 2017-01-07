@@ -42,7 +42,6 @@ namespace CSharpLua.LuaAst {
             ArgumentList.Arguments.Add(new LuaArgumentSyntax(argument));
         }
 
-   
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }

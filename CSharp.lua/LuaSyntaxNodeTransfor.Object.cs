@@ -134,16 +134,13 @@ namespace CSharpLua {
             LuaInvocationExpressionSyntax typeExpress = null;
             foreach(var rank in node.RankSpecifiers.Reverse()) {
                 var arrayTypeName = rank.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
-                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayTypeName);
-                invocation.AddArgument(typeExpress ?? elementType);
-                typeExpress = invocation;
+                typeExpress = new LuaInvocationExpressionSyntax(arrayTypeName, typeExpress ?? elementType);
             }
 
             var arrayRankSpecifier = (LuaArrayRankSpecifierSyntax)node.RankSpecifiers[0].Accept(this);
             LuaArrayTypeAdapterExpressionSyntax arrayTypeAdapter = new LuaArrayTypeAdapterExpressionSyntax(typeExpress, arrayRankSpecifier);
             return arrayTypeAdapter;
         }
-
 
         private void FillMultiArrayInitializer(InitializerExpressionSyntax initializer, LuaTableInitializerExpression rankSpecifier, LuaInvocationExpressionSyntax invocation, bool isFirst) {
             if(isFirst) {

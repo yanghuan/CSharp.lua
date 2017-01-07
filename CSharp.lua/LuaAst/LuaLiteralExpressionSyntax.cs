@@ -75,28 +75,49 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaCharacterLiteralExpression : LuaLiteralExpressionSyntax {
-        public char Character { get; }
+    public class LuaConstLiteralExpression : LuaLiteralExpressionSyntax {
+        public LuaLiteralExpressionSyntax Value { get; }
+        public string OpenComment => Tokens.OpenLongComment;
+        public string IdentifierToken { get; }
+        public string CloseComment => Tokens.CloseDoubleBrace;
 
-        public LuaCharacterLiteralExpression(char character) {
-            Character = character;
+        public LuaConstLiteralExpression(string value, string identifierToken) : this(new LuaIdentifierLiteralExpressionSyntax(value), identifierToken) {
         }
 
-        public string Comment {
-            get {
-                string character = Character != '\0' ? Character.ToString() : "\\0";
-                return $"{Tokens.OpenLongComment} '{character}' {Tokens.CloseLongComment}";
-            }
+        public LuaConstLiteralExpression(LuaLiteralExpressionSyntax value, string identifierToken) {
+            Value = value;
+            IdentifierToken = identifierToken;
         }
 
         public override string Text {
             get {
-                return Character.ToString();
+                return Value.Text;
             }
         }
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
+        }
+    }
+
+    public sealed class LuaCharacterLiteralExpression : LuaConstLiteralExpression {
+        private static readonly Dictionary<char, string> Escapes = new Dictionary<char, string>() {
+            ['\0'] = "\\0",
+            ['\n'] = "\\n",
+            ['\t'] = "\\t",
+            ['\r'] = "\\r",
+            ['\b'] = "\\b",
+        };
+
+        public LuaCharacterLiteralExpression(char character) : base(((int)character).ToString(), GetIdentifierToken(character)) {
+        }
+
+        private static string GetIdentifierToken(char character) {
+            string s = Escapes.GetOrDefault(character);
+            if(s == null) {
+                s = character.ToString();
+            }
+            return $"'{s}'";
         }
     }
 }

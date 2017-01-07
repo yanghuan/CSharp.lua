@@ -463,7 +463,7 @@ namespace CSharpLua {
             IFieldSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
             Contract.Assert(symbol.HasConstantValue);
             LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-            LuaExpressionSyntax value = GetConstLiteralExpression(symbol.ConstantValue);
+            var value = new LuaIdentifierLiteralExpressionSyntax(symbol.ConstantValue.ToString());
             return new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(identifier), value);
         }
 
@@ -864,7 +864,7 @@ namespace CSharpLua {
                 }
 
                 if(fieldSymbol.HasConstantValue) {
-                    return GetConstLiteralExpression(fieldSymbol.ConstantValue);
+                    return GetConstLiteralExpression(fieldSymbol);
                 }
             }
             else if(symbol.Kind == SymbolKind.Property) {
@@ -1066,26 +1066,6 @@ namespace CSharpLua {
             return new LuaIdentifierNameSyntax(name);
         }
 
-        private LuaLiteralExpressionSyntax GetConstLiteralExpression(object constantValue) {
-            if(constantValue != null) {
-                var code = Type.GetTypeCode(constantValue.GetType());
-                switch(code) {
-                    case TypeCode.Char: {
-                            return new LuaCharacterLiteralExpression((char)constantValue);
-                        }
-                    case TypeCode.String: {
-                            return new LuaStringLiteralExpressionSyntax((string)constantValue);
-                        }
-                    default: {
-                            return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
-                        }
-                }
-            }
-            else {
-                return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
-            }
-        }
-
         private LuaExpressionSyntax GetMethodNameExpression(IMethodSymbol symbol, NameSyntax node) {
             string name;
             string methodName = XmlMetaProvider.GetMethodMapName(symbol);
@@ -1136,7 +1116,7 @@ namespace CSharpLua {
                         if(symbol.IsStatic) {
                             var fieldSymbol = (IFieldSymbol)symbol;
                             if(fieldSymbol.HasConstantValue) {
-                                return GetConstLiteralExpression(fieldSymbol.ConstantValue);
+                                return GetConstLiteralExpression(fieldSymbol);
                             }
                             else {
                                 name = BuildStaticFieldName(symbol, fieldSymbol.IsReadOnly, node);
@@ -1354,9 +1334,7 @@ namespace CSharpLua {
                     return new LuaCharacterStringLiteralExpressionSyntax((char)constValue.Value);
                 }
                 else {
-                    LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringChar);
-                    invocation.AddArgument(original);
-                    return invocation;
+                    return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringChar, original);
                 }
             }
             else if(typeInfo.SpecialType >= SpecialType.System_Boolean && typeInfo.SpecialType <= SpecialType.System_Double) {
@@ -1365,7 +1343,7 @@ namespace CSharpLua {
             else if(typeInfo.TypeKind == TypeKind.Enum) {
                 var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
                 if(original is LuaLiteralExpressionSyntax) {
-                    return new LuaStringLiteralExpressionSyntax(symbol.Name);
+                    return new LuaConstLiteralExpression(symbol.Name, symbol.ToString());
                 }
                 else {
                     generator_.AddExportEnum(symbol.ToString());

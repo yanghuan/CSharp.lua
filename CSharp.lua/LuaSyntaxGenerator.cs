@@ -53,7 +53,9 @@ namespace CSharpLua {
                 CompilationUnitSyntax compilationUnitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();
                 LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor(this, semanticModel);
                 var luaCompilationUnit = (LuaCompilationUnitSyntax)compilationUnitSyntax.Accept(transfor);
-                luaCompilationUnits.Add(luaCompilationUnit);
+                if(!luaCompilationUnit.IsEmpty) {
+                    luaCompilationUnits.Add(luaCompilationUnit);
+                }
             }
             return luaCompilationUnits;
         }
