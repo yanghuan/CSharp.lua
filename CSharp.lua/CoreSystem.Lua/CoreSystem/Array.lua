@@ -4,10 +4,17 @@ local buildArray = Collection.buildArray
 local checkIndex = Collection.checkIndex 
 local arrayEnumerator = Collection.arrayEnumerator
 
+local select = select
+
 local Array = {}
 local emptys = {}
 
-Array.__ctor__ = buildArray
+function Array__ctor__(this, ...)
+    local len = select("#", ...)
+    return buildArray(this, len, ...)
+end
+
+Array.new = buildArray
 Array.set = Collection.setArray
 Array.get = Collection.getArray
 Array.GetEnumerator = arrayEnumerator
