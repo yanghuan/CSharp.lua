@@ -273,7 +273,7 @@ namespace CSharpLua {
                 case SpecialType.System_UInt32:
                 case SpecialType.System_Int64:
                 case SpecialType.System_UInt64: {
-                        return new LuaIdentifierNameSyntax(0.ToString());
+                        return new LuaIdentifierNameSyntax(0);
                     }
                 case SpecialType.System_Single:
                 case SpecialType.System_Double: {
@@ -296,7 +296,7 @@ namespace CSharpLua {
 
         private LuaInvocationExpressionSyntax BuildDefaultValueExpression(TypeSyntax type) {
             var identifierName = (LuaExpressionSyntax)type.Accept(this);
-            return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(identifierName, LuaIdentifierNameSyntax.Default));
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, identifierName);
         }
 
         private void VisitBaseFieldDeclarationSyntax(BaseFieldDeclarationSyntax node) {
@@ -627,18 +627,12 @@ namespace CSharpLua {
 
         private LuaExpressionSyntax BuildDelegateAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, bool isPlus) {
             if(right is LuaInternalMethodIdentifierNameSyntax) {
-                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind);
-                invocation.AddArgument(LuaIdentifierNameSyntax.This);
-                invocation.AddArgument(right);
-                right = invocation;
+                right = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, LuaIdentifierNameSyntax.This, right);
             }
             else if(right is LuaMemberAccessExpressionSyntax) {
                 LuaMemberAccessExpressionSyntax memberAccess = (LuaMemberAccessExpressionSyntax)right;
                 if(memberAccess.IsObjectColon) {
-                    LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind);
-                    invocation.AddArgument(memberAccess.Expression);
-                    invocation.AddArgument(new LuaMemberAccessExpressionSyntax(memberAccess.Expression, memberAccess.Name));
-                    right = invocation;
+                    right = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, memberAccess.Expression, memberAccess.Name);
                 }
             }
 
@@ -646,7 +640,7 @@ namespace CSharpLua {
             var propertyAdapter = left as LuaPropertyAdapterExpressionSyntax;
             if(propertyAdapter != null) {
                 if(propertyAdapter.IsProperty) {
-                    propertyAdapter.InvocationExpression.AddArgument(BuildBinaryInvokeExpression(propertyAdapter.GetCloneOfGet(), right, methodName));
+                    propertyAdapter.InvocationExpression.AddArgument(new LuaInvocationExpressionSyntax(methodName, propertyAdapter.GetCloneOfGet(), right));
                     return propertyAdapter;
                 }
                 else {
@@ -656,7 +650,7 @@ namespace CSharpLua {
                 }
             }
             else {
-                return new LuaAssignmentExpressionSyntax(left, BuildBinaryInvokeExpression(left, right, methodName));
+                return new LuaAssignmentExpressionSyntax(left, new LuaInvocationExpressionSyntax(methodName, left, right));
             }
         }
 
@@ -1359,12 +1353,10 @@ namespace CSharpLua {
                     return new LuaStringLiteralExpressionSyntax(symbol.Name);
                 }
                 else {
+                    generator_.AddExportEnum(symbol.ToString());
                     LuaIdentifierNameSyntax typeName = XmlMetaProvider.GetTypeShortName(typeInfo);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(new LuaIdentifierNameSyntax(symbol.Name), LuaIdentifierNameSyntax.ToEnumString, true);
-                    LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
-                    invocation.AddArgument(typeName);
-                    generator_.AddExportEnum(symbol.ToString());
-                    return invocation;
+                    return new LuaInvocationExpressionSyntax(memberAccess, typeName);
                 }
             }
             else if(typeInfo.IsValueType) {
@@ -1388,17 +1380,10 @@ namespace CSharpLua {
             return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.Concatenation, right);
         }
 
-        private LuaExpressionSyntax BuildBinaryInvokeExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, LuaIdentifierNameSyntax name) {
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(name);
-            invocation.AddArgument(left);
-            invocation.AddArgument(right);
-            return invocation;
-        }
-
         private LuaExpressionSyntax BuildBinaryInvokeExpression(BinaryExpressionSyntax node, LuaIdentifierNameSyntax name) {
             var left = (LuaExpressionSyntax)node.Left.Accept(this);
             var right = (LuaExpressionSyntax)node.Right.Accept(this);
-            return BuildBinaryInvokeExpression(left, right, name);
+            return new LuaInvocationExpressionSyntax(name, left, right);
         }
 
         private LuaExpressionSyntax BuildIntegerDivExpression(BinaryExpressionSyntax node) {
@@ -1743,7 +1728,7 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitCastExpression(CastExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);
-            return BuildBinaryInvokeExpression(expression, typeExpression, LuaIdentifierNameSyntax.Cast);
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, expression, typeExpression);
         }
     }
 }

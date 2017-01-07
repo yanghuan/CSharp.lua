@@ -35,8 +35,7 @@ namespace CSharpLua.LuaAst {
             ArgumentList.Arguments.AddRange(arguments.Select(i => new LuaArgumentSyntax(i)));
         }
 
-        public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, params LuaExpressionSyntax[] arguments) : this(expression) {
-            ArgumentList.Arguments.AddRange(arguments.Select(i => new LuaArgumentSyntax(i)));
+        public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, params LuaExpressionSyntax[] arguments) : this(expression, (IEnumerable<LuaExpressionSyntax>)arguments) {
         }
 
         public void AddArgument(LuaExpressionSyntax argument) {

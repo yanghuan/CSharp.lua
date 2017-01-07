@@ -422,7 +422,7 @@ namespace CSharpLua {
         internal void Render(LuaForInStatementSyntax node) {
             Write(node.ForKeyword);
             WriteSpace();
-            LuaIdentifierNameSyntax.Placeholder.Render(this);
+            node.Placeholder.Render(this);
             WriteComma();
             node.Identifier.Render(this);
             WriteSpace();

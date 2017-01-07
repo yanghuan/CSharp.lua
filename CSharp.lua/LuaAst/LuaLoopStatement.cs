@@ -10,6 +10,7 @@ namespace CSharpLua.LuaAst {
         public string ForKeyword => Tokens.For;
         public LuaIdentifierNameSyntax Identifier { get; }
         public string InKeyword => Tokens.In;
+        public LuaExpressionSyntax Placeholder => LuaIdentifierNameSyntax.Placeholder;
 
         public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
             OpenBraceToken = Tokens.Do,
@@ -23,11 +24,8 @@ namespace CSharpLua.LuaAst {
             if(expression == null) {
                 throw new ArgumentNullException(nameof(expression));
             }
-            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each);
-            invocationExpression.AddArgument(expression);
-
             Identifier = identifier;
-            Expression = invocationExpression;
+            Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each, expression);
         }
 
         internal override void Render(LuaRenderer renderer) {

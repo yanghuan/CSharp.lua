@@ -13,7 +13,7 @@ namespace CSharpLua.LuaAst {
 
         public readonly static LuaIdentifierNameSyntax Empty = new LuaIdentifierNameSyntax("");
         public readonly static LuaIdentifierNameSyntax Placeholder = new LuaIdentifierNameSyntax("_");
-        public readonly static LuaIdentifierNameSyntax One = new LuaIdentifierNameSyntax("1");
+        public readonly static LuaIdentifierNameSyntax One = new LuaIdentifierNameSyntax(1);
         public readonly static LuaIdentifierNameSyntax System = new LuaIdentifierNameSyntax("System");
         public readonly static LuaIdentifierNameSyntax Namespace = new LuaIdentifierNameSyntax("namespace");
         public readonly static LuaIdentifierNameSyntax Class = new LuaIdentifierNameSyntax("class");
@@ -37,6 +37,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Ctor = new LuaIdentifierNameSyntax("__ctor__");
         public readonly static LuaIdentifierNameSyntax Inherits = new LuaIdentifierNameSyntax("__inherits__");
         public readonly static LuaIdentifierNameSyntax Default = new LuaIdentifierNameSyntax("__default__");
+        public readonly static LuaIdentifierNameSyntax SystemDefault = new LuaIdentifierNameSyntax("System.default");
         public readonly static LuaIdentifierNameSyntax Property = new LuaIdentifierNameSyntax("System.property");
         public readonly static LuaIdentifierNameSyntax Event = new LuaIdentifierNameSyntax("System.event");
         public readonly static LuaIdentifierNameSyntax Nil = new LuaIdentifierNameSyntax("nil");

@@ -238,8 +238,7 @@ namespace CSharpLua.LuaAst {
                     AddInitFunction(initIdentifier, initFunction_, false);
                     foreach(var ctor in ctors_) {
                         if(!ctor.IsInvokeThisCtor) {
-                            LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier);
-                            invocationInit.AddArgument(LuaIdentifierNameSyntax.This);
+                            LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier, LuaIdentifierNameSyntax.This);
                             ctor.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
                         }
                     }

@@ -23,7 +23,7 @@ namespace CSharpLua {
             var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
             LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(expression);
             if(index > 0) {
-                invocationExpression.AddArgument(new LuaIdentifierNameSyntax(index.ToString()));
+                invocationExpression.AddArgument(new LuaIdentifierNameSyntax(index));
             }
             invocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
             if(node.Initializer == null) {
@@ -31,7 +31,7 @@ namespace CSharpLua {
             }
             else {
                 var functionExpression = (LuaFunctionExpressionSyntax)node.Initializer.Accept(this);
-                return BuildBinaryInvokeExpression(invocationExpression, functionExpression, LuaIdentifierNameSyntax.Create);
+                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocationExpression, functionExpression);
             }
         }
 
@@ -112,12 +112,7 @@ namespace CSharpLua {
             }
             else {
                 LuaIdentifierNameSyntax name = XmlMetaProvider.GetTypeShortName(symbol);
-                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(name);
-                foreach(var typeArgument in node.TypeArgumentList.Arguments) {
-                    var expression = (LuaExpressionSyntax)typeArgument.Accept(this);
-                    invocation.AddArgument(expression);
-                }
-                return invocation;
+                return new LuaInvocationExpressionSyntax(name, node.TypeArgumentList.Arguments.Select(i => (LuaExpressionSyntax)i.Accept(this)));
             }
         }
 
@@ -234,7 +229,7 @@ namespace CSharpLua {
                     var typeName = XmlMetaProvider.GetTypeName(symbol.ReceiverType);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
                     if(ctroCounter > 0) {
-                        otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter.ToString())));
+                        otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter)));
                     }
                     else {
                         otherCtorInvoke = new LuaInvocationExpressionSyntax(memberAccess);
@@ -303,10 +298,8 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitTypeOfExpression(TypeOfExpressionSyntax node) {
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf);
             var typeName = (LuaIdentifierNameSyntax)node.Type.Accept(this);
-            invocation.AddArgument(typeName);
-            return invocation;
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf, typeName);
         }
 
         public override LuaSyntaxNode VisitThrowStatement(ThrowStatementSyntax node) {
@@ -354,9 +347,7 @@ namespace CSharpLua {
                 if(catchNode.Declaration != null) {
                     var typeName = (LuaIdentifierNameSyntax)catchNode.Declaration.Type.Accept(this);
                     if(typeName.ValueText != "System.Exception") {
-                        var mathcTypeInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is);
-                        mathcTypeInvocation.AddArgument(temp);
-                        mathcTypeInvocation.AddArgument(typeName);
+                        var mathcTypeInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, temp, typeName);
                         if(ifCondition != null) {
                             ifCondition = new LuaBinaryExpressionSyntax(ifCondition, LuaSyntaxNode.Tokens.And, mathcTypeInvocation);
                         }
@@ -577,7 +568,7 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             var whenNotNull = (LuaExpressionSyntax)node.WhenNotNull.Accept(this);
-            return BuildBinaryInvokeExpression(expression, whenNotNull, LuaIdentifierNameSyntax.Access);
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Access, expression, whenNotNull);
         }
 
         public override LuaSyntaxNode VisitMemberBindingExpression(MemberBindingExpressionSyntax node) {
@@ -626,9 +617,7 @@ namespace CSharpLua {
 
             LuaStringLiteralExpressionSyntax format = new LuaStringLiteralExpressionSyntax(sb.ToString());
             LuaMemberAccessExpressionSyntax memberAccessExpression = new LuaMemberAccessExpressionSyntax(new LuaParenthesizedExpressionSyntax(format), LuaIdentifierNameSyntax.Format, true);
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccessExpression);
-            invocation.ArgumentList.Arguments.AddRange(expressions.Select(i => new LuaArgumentSyntax(i)));
-            return invocation;
+            return new LuaInvocationExpressionSyntax(memberAccessExpression, expressions);
         }
 
         public override LuaSyntaxNode VisitInterpolation(InterpolationSyntax node) {
