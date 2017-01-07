@@ -150,6 +150,25 @@ namespace CSharpLua {
             return arrayTypeAdapter;
         }
 
+
+        private void FillMultiArrayInitializer(InitializerExpressionSyntax initializer, LuaTableInitializerExpression rankSpecifier, LuaInvocationExpressionSyntax invocation, bool isFirst) {
+            if(isFirst) {
+                rankSpecifier.Items.Add(new LuaSingleTableItemSyntax(new LuaIdentifierNameSyntax(initializer.Expressions.Count)));
+            }
+
+            int index = 0;
+            foreach(var expression in initializer.Expressions) {
+                if(expression.IsKind(SyntaxKind.ArrayInitializerExpression)) {
+                    FillMultiArrayInitializer((InitializerExpressionSyntax)expression, rankSpecifier, invocation, index == 0);
+                }
+                else {
+                    var item = (LuaExpressionSyntax)expression.Accept(this);
+                    invocation.AddArgument(item);
+                }
+                ++index;
+            }
+        }
+
         public override LuaSyntaxNode VisitArrayCreationExpression(ArrayCreationExpressionSyntax node) {
             var arrayType = (LuaArrayTypeAdapterExpressionSyntax)node.Type.Accept(this);
             if(node.Initializer != null && node.Initializer.Expressions.Count > 0) {
@@ -159,9 +178,7 @@ namespace CSharpLua {
                 else {
                     LuaTableInitializerExpression rankSpecifier = new LuaTableInitializerExpression();
                     LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(arrayType, rankSpecifier);
-                    foreach(var expression in node.Initializer.Expressions) {
-
-                    }
+                    FillMultiArrayInitializer(node.Initializer, rankSpecifier, invocationExpression, true);
                     return invocationExpression;
                 }
             }
@@ -187,7 +204,7 @@ namespace CSharpLua {
                             rankSpecifier.Items.Add(new LuaSingleTableItemSyntax(size));
                         }
                         else {
-                            rankSpecifier.Items.Add(new LuaSingleTableItemSyntax(new LuaIdentifierNameSyntax(0.ToString())));
+                            rankSpecifier.Items.Add(new LuaSingleTableItemSyntax(new LuaIdentifierNameSyntax(0)));
                         }
                     }
                     return new LuaInvocationExpressionSyntax(arrayType, rankSpecifier);

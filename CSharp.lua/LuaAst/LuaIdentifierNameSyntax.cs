@@ -73,6 +73,9 @@ namespace CSharpLua.LuaAst {
             ValueText = valueText;
         }
 
+        public LuaIdentifierNameSyntax(int v) : this(v.ToString()) {
+        }
+
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
