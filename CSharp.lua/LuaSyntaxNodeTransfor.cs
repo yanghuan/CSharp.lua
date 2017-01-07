@@ -626,7 +626,7 @@ namespace CSharpLua {
         }
 
         private LuaExpressionSyntax BuildDelegateAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, bool isPlus) {
-            if(right is LuaInternalMethodIdentifierNameSyntax) {
+            if(right is LuaInternalMethodExpressionSyntax) {
                 right = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, LuaIdentifierNameSyntax.This, right);
             }
             else if(right is LuaMemberAccessExpressionSyntax) {
@@ -794,7 +794,7 @@ namespace CSharpLua {
             if(!symbol.IsExtensionMethod) {
                 LuaMemberAccessExpressionSyntax memberAccess = expression as LuaMemberAccessExpressionSyntax;
                 if(memberAccess != null) {
-                    if(memberAccess.Name is LuaInternalMethodIdentifierNameSyntax) {
+                    if(memberAccess.Name is LuaInternalMethodExpressionSyntax) {
                         invocation = new LuaInvocationExpressionSyntax(memberAccess.Name);
                         invocation.AddArgument(memberAccess.Expression);
                     }
@@ -823,7 +823,7 @@ namespace CSharpLua {
                     --optionalCount;
                 }
                 foreach(var typeArgument in symbol.TypeArguments) {
-                    var typeName = GetTypeArgumentName(typeArgument);
+                    var typeName = XmlMetaProvider.GetTypeName(typeArgument);
                     invocation.AddArgument(typeName);
                 }
             }
@@ -929,13 +929,14 @@ namespace CSharpLua {
                 }
 
                 if(node.Expression.IsKind(SyntaxKind.BaseExpression)) {
-                    var baseExpression = (LuaIdentifierNameSyntax)node.Expression.Accept(this);
+                    var baseExpression = (LuaExpressionSyntax)node.Expression.Accept(this);
                     var identifier = (LuaIdentifierNameSyntax)node.Name.Accept(this);
                     if(baseExpression == LuaIdentifierNameSyntax.This) {
                         return new LuaMemberAccessExpressionSyntax(baseExpression, identifier, symbol.Kind == SymbolKind.Method);
                     }
                     else {
-                        return new LuaInternalMethodIdentifierNameSyntax(baseExpression.ValueText + '.' + identifier.ValueText);
+                        LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(baseExpression, identifier);
+                        return new LuaInternalMethodExpressionSyntax(memberAccess);
                     }
                 }
                 else {
@@ -1080,7 +1081,7 @@ namespace CSharpLua {
             }
             else {
                 if(IsInternalMember(node, symbol)) {
-                    return new LuaInternalMethodIdentifierNameSyntax(methodName);
+                    return new LuaInternalMethodExpressionSyntax(new LuaIdentifierNameSyntax(methodName));
                 }
                 else {
                     if(IsInternalNode(node)) {
@@ -1099,6 +1100,7 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
             SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
             ISymbol symbol = symbolInfo.Symbol;
+            Contract.Assert(symbol != null);
             string name;
             switch(symbol.Kind) {
                 case SymbolKind.Local:

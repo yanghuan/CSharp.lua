@@ -33,14 +33,6 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaWrapExpressionSyntax : LuaExpressionSyntax {
-        public LuaExpressionSyntax Expression { get; set; }
-
-        public LuaWrapExpressionSyntax() {
-
-        }
-    }
-
     public sealed class LuaPropertyAdapterExpressionSyntax : LuaExpressionSyntax {
         private LuaPropertyOrEventIdentifierNameSyntax identifier_;
         public LuaInvocationExpressionSyntax InvocationExpression { get; private set; }

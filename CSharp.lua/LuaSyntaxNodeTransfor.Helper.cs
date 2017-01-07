@@ -286,15 +286,6 @@ namespace CSharpLua {
             return false;
         }
 
-        private LuaExpressionSyntax GetTypeArgumentName(ITypeSymbol symbol) {
-            if(symbol.Kind == SymbolKind.TypeParameter) {
-                return new LuaIdentifierNameSyntax(symbol.Name);
-            }
-            else {
-                return XmlMetaProvider.GetTypeName(symbol);
-            }
-        }
-
         private LuaInvocationExpressionSyntax BuildEmptyArray(LuaExpressionSyntax baseType) {
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty);
             invocation.AddArgument(baseType);

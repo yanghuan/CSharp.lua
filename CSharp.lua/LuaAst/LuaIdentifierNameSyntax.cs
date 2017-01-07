@@ -105,9 +105,4 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
-
-    public sealed class LuaInternalMethodIdentifierNameSyntax : LuaIdentifierNameSyntax {
-        public LuaInternalMethodIdentifierNameSyntax(string valueText) : base(valueText) {
-        }
-    }
 }

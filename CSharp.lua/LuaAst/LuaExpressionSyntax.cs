@@ -153,4 +153,15 @@ namespace CSharpLua.LuaAst {
             InvocationExpression.Render(renderer);
         }
     }
+
+    public sealed class LuaInternalMethodExpressionSyntax : LuaExpressionSyntax {
+        public LuaExpressionSyntax Expression { get; }
+
+        public LuaInternalMethodExpressionSyntax(LuaExpressionSyntax expression) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
+            Expression = expression;
+        }
+    }
 }
