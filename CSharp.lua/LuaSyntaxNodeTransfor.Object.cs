@@ -63,10 +63,9 @@ namespace CSharpLua {
                     }
                 }
                 else {
-                    LuaInvocationExpressionSyntax add = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ThisAdd);
-                    var argument = (LuaExpressionSyntax)expression.Accept(this);
-                    add.AddArgument(argument);
-                    function.Body.Statements.Add(new LuaExpressionStatementSyntax(add));
+                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(temp, LuaIdentifierNameSyntax.Add, true);
+                    var value = (LuaExpressionSyntax)expression.Accept(this);
+                    function.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaInvocationExpressionSyntax(memberAccess, value)));
                 }
             }
 
