@@ -314,6 +314,11 @@ function System.access(t, f)
     end
 end
 
+function System.default(T)
+    assert(T)
+    return T.__default__()
+end
+
 function System.CreateInstance(type, ...)
     return type.c(...)
 end

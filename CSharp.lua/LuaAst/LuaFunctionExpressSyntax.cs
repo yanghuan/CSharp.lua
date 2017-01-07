@@ -43,13 +43,13 @@ namespace CSharpLua.LuaAst {
         public bool IsInvokeThisCtor { get; set; }
     }
 
-    public abstract class LuaSpecialAdapterFunctionExpressionSyntax : LuaFunctionExpressionSyntax {
+    public abstract class LuaCheckReturnFunctionExpressionSyntax : LuaFunctionExpressionSyntax {
     }
 
-    public sealed class LuaTryBlockAdapterExpressionSyntax : LuaSpecialAdapterFunctionExpressionSyntax {
+    public sealed class LuaTryAdapterExpressionSyntax : LuaCheckReturnFunctionExpressionSyntax {
         public LuaIdentifierNameSyntax CatchTemp { get; set; }
     }
 
-    public sealed class LuaUsingAdapterExpressionSyntax : LuaSpecialAdapterFunctionExpressionSyntax {
+    public sealed class LuaUsingAdapterExpressionSyntax : LuaCheckReturnFunctionExpressionSyntax {
     }
 }

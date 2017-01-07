@@ -75,14 +75,6 @@ namespace CSharpLua {
             ++localMappingCounter_;
         }
 
-        private bool PushFunctionIfEmpty(LuaFunctionExpressionSyntax function) {
-            if(functions_.Count == 0) {
-                PushFunction(function);
-                return true;
-            }
-            return false;
-        }
-
         private void PopFunction() {
             functions_.Pop();
             --localMappingCounter_;
@@ -600,7 +592,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
-            if(CurFunction is LuaSpecialAdapterFunctionExpressionSyntax) {
+            if(CurFunction is LuaCheckReturnFunctionExpressionSyntax) {
                 LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
                 returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
                 if(node.Expression != null) {

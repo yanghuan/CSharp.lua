@@ -37,7 +37,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
             LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
-            bool isPush = PushFunctionIfEmpty(function);
+            PushFunction(function);
             var temp = GetTempIdentifier(node);
             function.AddParameter(temp);
             foreach(var expression in node.Expressions) {
@@ -69,9 +69,8 @@ namespace CSharpLua {
                     function.Body.Statements.Add(new LuaExpressionStatementSyntax(add));
                 }
             }
-            if(isPush) {
-                PopFunction();
-            }
+
+            PopFunction();
             return function;
         }
 
@@ -245,7 +244,7 @@ namespace CSharpLua {
                 invocationExpression.AddArgument(expression);
             }
             else {
-                var curTryFunction = (LuaTryBlockAdapterExpressionSyntax)CurFunction;
+                var curTryFunction = (LuaTryAdapterExpressionSyntax)CurFunction;
                 Contract.Assert(curTryFunction.CatchTemp != null);
                 invocationExpression.AddArgument(curTryFunction.CatchTemp);
             }
@@ -265,8 +264,8 @@ namespace CSharpLua {
             throw new InvalidOperationException();
         }
 
-        private LuaTryBlockAdapterExpressionSyntax VisitTryCatchesExpress(SyntaxList<CatchClauseSyntax> catches) {
-            LuaTryBlockAdapterExpressionSyntax functionExpress = new LuaTryBlockAdapterExpressionSyntax();
+        private LuaTryAdapterExpressionSyntax VisitTryCatchesExpress(SyntaxList<CatchClauseSyntax> catches) {
+            LuaTryAdapterExpressionSyntax functionExpress = new LuaTryAdapterExpressionSyntax();
             PushFunction(functionExpress);
             var temp = GetTempIdentifier(catches.First());
             functionExpress.CatchTemp = temp;
@@ -358,7 +357,7 @@ namespace CSharpLua {
                 localVariables.Initializer = initializer;
 
                 LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(temp1);
-                if(CurFunction is LuaSpecialAdapterFunctionExpressionSyntax) {
+                if(CurFunction is LuaCheckReturnFunctionExpressionSyntax) {
                     LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
                     returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
                     returnStatement.Expressions.Add(temp2);
@@ -390,7 +389,7 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitTryStatement(TryStatementSyntax node) {
             LuaInvocationExpressionSyntax tryInvocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Try);
 
-            LuaTryBlockAdapterExpressionSyntax tryBlockFunctionExpress = new LuaTryBlockAdapterExpressionSyntax();
+            LuaTryAdapterExpressionSyntax tryBlockFunctionExpress = new LuaTryAdapterExpressionSyntax();
             PushFunction(tryBlockFunctionExpress);
             var block = (LuaBlockSyntax)node.Block.Accept(this);
             PopFunction();
@@ -511,14 +510,12 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitMemberBindingExpression(MemberBindingExpressionSyntax node) {
             LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
-            bool isPush = PushFunctionIfEmpty(functionExpression);
+            PushFunction(functionExpression);
             var temp = GetTempIdentifier(node.Name);
             var nameExpression = (LuaExpressionSyntax)node.Name.Accept(this);
             functionExpression.AddParameter(temp);
             functionExpression.Body.Statements.Add(new LuaReturnStatementSyntax(nameExpression));
-            if(isPush) {
-                PopFunction();
-            }
+            PopFunction();
             return new LuaSimpleLambdaAdapterExpression(functionExpression);
         }
 
