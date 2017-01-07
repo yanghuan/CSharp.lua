@@ -314,10 +314,8 @@ namespace CSharpLua {
             symbol = symbol.OriginalDefinition;
             if(symbol.Kind == SymbolKind.ArrayType) {
                 var arrayType = (IArrayTypeSymbol)symbol;
-                var invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array);
                 LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType);
-                invocationExpression.AddArgument(elementTypeExpression);
-                return invocationExpression;
+                return new LuaInvocationExpressionSyntax(arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray, elementTypeExpression);
             }
 
             var namedTypeSymbol = (INamedTypeSymbol)symbol;
