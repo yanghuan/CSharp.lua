@@ -121,45 +121,78 @@ namespace CSharpLua {
             }
         }
 
+        public override LuaSyntaxNode VisitOmittedArraySizeExpression(OmittedArraySizeExpressionSyntax node) {
+            return null;
+        }
+
+        public override LuaSyntaxNode VisitArrayRankSpecifier(ArrayRankSpecifierSyntax node) {
+            LuaArrayRankSpecifierSyntax rankSpecifier = new LuaArrayRankSpecifierSyntax(node.Rank);
+            foreach(var size in node.Sizes) {
+                var expression = (LuaExpressionSyntax)size.Accept(this);
+                rankSpecifier.Sizes.Add(expression);
+            }
+            return rankSpecifier;
+        }
+
         public override LuaSyntaxNode VisitArrayType(ArrayTypeSyntax node) {
             var elementType = (LuaExpressionSyntax)node.ElementType.Accept(this);
 
-            LuaExpressionSyntax typeExpress = null;
-            LuaExpressionSyntax size = null;
+            LuaInvocationExpressionSyntax typeExpress = null;
             foreach(var rank in node.RankSpecifiers.Reverse()) {
-                if(rank.Rank > 1) {
-                
-                }
-                else {
-
-                }
-                size = (LuaExpressionSyntax)rank.Sizes.First().Accept(this);
-                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array);
+                var arrayTypeName = rank.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
+                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayTypeName);
                 invocation.AddArgument(typeExpress ?? elementType);
                 typeExpress = invocation;
             }
 
-            LuaInvocationExpressionSyntax arrayInvocation = new LuaInvocationExpressionSyntax(typeExpress);
-            if(size != null) {
-                arrayInvocation.AddArgument(size);
-            }
-            return arrayInvocation;
+            var arrayRankSpecifier = (LuaArrayRankSpecifierSyntax)node.RankSpecifiers[0].Accept(this);
+            LuaArrayTypeAdapterExpressionSyntax arrayTypeAdapter = new LuaArrayTypeAdapterExpressionSyntax(typeExpress, arrayRankSpecifier);
+            return arrayTypeAdapter;
         }
 
         public override LuaSyntaxNode VisitArrayCreationExpression(ArrayCreationExpressionSyntax node) {
-            var arrayInvocation = (LuaInvocationExpressionSyntax)node.Type.Accept(this);
-            if(node.Initializer != null) {
-                bool hasSize = arrayInvocation.ArgumentList.Arguments.Count > 0;
-                if(!hasSize) {
-                    var sizeExprssion = new LuaIdentifierNameSyntax(node.Initializer.Expressions.Count.ToString());
-                    arrayInvocation.AddArgument(sizeExprssion);
+            var arrayType = (LuaArrayTypeAdapterExpressionSyntax)node.Type.Accept(this);
+            if(node.Initializer != null && node.Initializer.Expressions.Count > 0) {
+                if(arrayType.IsSimapleArray) {
+                    return new LuaInvocationExpressionSyntax(arrayType, node.Initializer.Expressions.Select(i => (LuaExpressionSyntax)i.Accept(this)));
                 }
-                foreach(var expression in node.Initializer.Expressions) {
-                    var itemExpression = (LuaExpressionSyntax)expression.Accept(this);
-                    arrayInvocation.AddArgument(itemExpression);
+                else {
+                    LuaTableInitializerExpression rankSpecifier = new LuaTableInitializerExpression();
+                    LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(arrayType, rankSpecifier);
+                    foreach(var expression in node.Initializer.Expressions) {
+
+                    }
+                    return invocationExpression;
                 }
             }
-            return arrayInvocation;
+            else {
+                if(arrayType.IsSimapleArray) {
+                    var size = arrayType.RankSpecifier.Sizes[0];
+                    if(size == null) {
+                        return BuildEmptyArray(arrayType.BaseType);
+                    }
+
+                    var constSize = size as LuaLiteralExpressionSyntax;
+                    if(constSize != null && constSize.Text == 0.ToString()) {
+                        return BuildEmptyArray(arrayType.BaseType);
+                    }
+
+                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(arrayType, LuaIdentifierNameSyntax.New, true);
+                    return new LuaInvocationExpressionSyntax(memberAccess, size);
+                }
+                else {
+                    LuaTableInitializerExpression rankSpecifier = new LuaTableInitializerExpression();
+                    foreach(var size in arrayType.RankSpecifier.Sizes) {
+                        if(size != null) {
+                            rankSpecifier.Items.Add(new LuaSingleTableItemSyntax(size));
+                        }
+                        else {
+                            rankSpecifier.Items.Add(new LuaSingleTableItemSyntax(new LuaIdentifierNameSyntax(0.ToString())));
+                        }
+                    }
+                    return new LuaInvocationExpressionSyntax(arrayType, rankSpecifier);
+                }
+            }
         }
 
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {

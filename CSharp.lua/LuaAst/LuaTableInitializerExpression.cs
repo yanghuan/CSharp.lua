@@ -22,6 +22,9 @@ namespace CSharpLua.LuaAst {
         public LuaExpressionSyntax Expression { get; }
 
         public LuaSingleTableItemSyntax(LuaExpressionSyntax expression) {
+            if(expression == null) {
+                throw new ArgumentNullException(nameof(expression));
+            }
             Expression = expression;
         }
 

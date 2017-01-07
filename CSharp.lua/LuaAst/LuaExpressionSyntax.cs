@@ -112,4 +112,45 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaArrayRankSpecifierSyntax : LuaSyntaxNode {
+        public int Rank { get; }
+        public readonly List<LuaExpressionSyntax> Sizes = new List<LuaExpressionSyntax>();
+
+        public LuaArrayRankSpecifierSyntax(int rank) {
+            Rank = rank;
+        }
+    }
+
+    public sealed class LuaArrayTypeAdapterExpressionSyntax : LuaExpressionSyntax {
+        public LuaInvocationExpressionSyntax InvocationExpression { get; }
+        public LuaArrayRankSpecifierSyntax RankSpecifier { get; }
+
+        public LuaArrayTypeAdapterExpressionSyntax(LuaInvocationExpressionSyntax invocationExpression, LuaArrayRankSpecifierSyntax rankSpecifier) {
+            if(invocationExpression == null) {
+                throw new ArgumentNullException(nameof(invocationExpression));
+            }
+            if(rankSpecifier == null) {
+                throw new ArgumentNullException(nameof(rankSpecifier));
+            }
+            InvocationExpression = invocationExpression;
+            RankSpecifier = rankSpecifier;
+        }
+
+        public LuaExpressionSyntax BaseType {
+            get {
+                return InvocationExpression.ArgumentList.Arguments[0].Expression;
+            }
+        }
+
+        public bool IsSimapleArray {
+            get {
+                return RankSpecifier.Rank == 1;
+            }
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            InvocationExpression.Render(renderer);
+        }
+    }
 }
