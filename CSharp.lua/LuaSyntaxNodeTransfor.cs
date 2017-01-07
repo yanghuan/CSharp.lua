@@ -234,9 +234,8 @@ namespace CSharpLua {
                 else {
                     if(parameter.Modifiers.IsParams()) {
                         var typeName = (LuaIdentifierNameSyntax)((ArrayTypeSyntax)parameter.Type).ElementType.Accept(this);
-                        LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty);
-                        invocation.AddArgument(typeName);
-                        var intiStatement = BuildMethodDefaultParameterInit(luaParameter.Identifier, invocation);
+                        var emptyArray = BuildEmptyArray(typeName);
+                        var intiStatement = BuildMethodDefaultParameterInit(luaParameter.Identifier, emptyArray);
                         function.Body.Statements.Add(intiStatement);
                     }
                 }

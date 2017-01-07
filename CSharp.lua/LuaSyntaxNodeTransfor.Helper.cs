@@ -294,5 +294,11 @@ namespace CSharpLua {
                 return XmlMetaProvider.GetTypeName(symbol);
             }
         }
+
+        private LuaInvocationExpressionSyntax BuildEmptyArray(LuaExpressionSyntax baseType) {
+            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty);
+            invocation.AddArgument(baseType);
+            return invocation;
+        }
     }
 }

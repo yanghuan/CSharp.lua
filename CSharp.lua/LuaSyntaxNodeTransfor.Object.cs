@@ -35,7 +35,7 @@ namespace CSharpLua {
             }
         }
 
-        public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
+        private LuaFunctionExpressionSyntax BuildObjectInitializerExpression(InitializerExpressionSyntax node) {
             LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
             PushFunction(function);
             var temp = GetTempIdentifier(node);
@@ -72,6 +72,28 @@ namespace CSharpLua {
 
             PopFunction();
             return function;
+        }
+
+        public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
+            if(node.IsKind(SyntaxKind.ObjectInitializerExpression)) {
+                return BuildObjectInitializerExpression(node);
+            }
+            else {
+                var symbol = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
+                if(node.Expressions.Count > 0) {
+                    LuaExpressionSyntax arrayType = XmlMetaProvider.GetTypeName(symbol);
+                    LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayType);
+                    foreach(var expression in node.Expressions) {
+                        var element = (LuaExpressionSyntax)expression.Accept(this);
+                        invocation.AddArgument(element);
+                    }
+                    return invocation;
+                }
+                else {
+                    LuaExpressionSyntax baseType = XmlMetaProvider.GetTypeName(symbol.ElementType);
+                    return BuildEmptyArray(baseType);
+                }
+            }
         }
 
         public override LuaSyntaxNode VisitBracketedArgumentList(BracketedArgumentListSyntax node) {
