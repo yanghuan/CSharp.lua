@@ -545,6 +545,12 @@ namespace CSharpLua {
                 return LineSpan.StartLinePosition.CompareTo(other.LineSpan.StartLinePosition);
             }
 
+            public bool Contains(BlockCommonNode other) {
+                var otherLineSpan = other.LineSpan;
+                return otherLineSpan.StartLinePosition > LineSpan.StartLinePosition
+                    && otherLineSpan.EndLinePosition < LineSpan.EndLinePosition;
+            }
+
             public void Visit(LuaSyntaxNodeTransfor transfor, LuaBlockSyntax block, ref int lastLine) {
                 if(lastLine != -1) {
                     int count = LineSpan.StartLinePosition.Line - lastLine - 1;
@@ -580,22 +586,28 @@ namespace CSharpLua {
             blocks_.Push(block);
 
             var comments = node.DescendantTrivia().Where(i => i.IsKind(SyntaxKind.SingleLineCommentTrivia) || i.IsKind(SyntaxKind.MultiLineCommentTrivia));
-            List<BlockCommonNode> commonNodes = new List<BlockCommonNode>();
-            commonNodes.AddRange(comments.Select(i => new BlockCommonNode(i)));
-            bool hasComments = commonNodes.Count > 0;
-            commonNodes.AddRange(node.Statements.Select(i => new BlockCommonNode(i)));
+            var commentNodes = comments.Select(i => new BlockCommonNode(i));
+
+            List<BlockCommonNode> nodes = node.Statements.Select(i => new BlockCommonNode(i)).ToList();
+            bool hasComments = false;
+            foreach(var comment in commentNodes) {
+                bool isContains = nodes.Any(i => i.Contains(comment));
+                if(!isContains) {
+                    nodes.Add(comment);
+                    hasComments = true;
+                }
+            }
             if(hasComments) {
-                commonNodes.Sort();
+                nodes.Sort();
             }
 
             int lastLine = -1;
-            foreach(var common in commonNodes) {
+            foreach(var common in nodes) {
                 common.Visit(this, block, ref lastLine);
             }
 
             blocks_.Pop();
-            SyntaxKind kind = node.Parent.Kind();
-            if(kind == SyntaxKind.Block || kind == SyntaxKind.SwitchSection) {
+            if(node.Parent.IsKind(SyntaxKind.Block)) {
                 return new LuaBlockBlockSyntax(block);
             }
             else {
