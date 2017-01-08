@@ -110,6 +110,8 @@ namespace CSharpLua.LuaAst {
         public static bool IsReservedWord(string identifier) {
             return ReservedWords.Contains(identifier);
         }
+
+        public const int StringConstInlineCount = 25;
     }
 
     public sealed class LuaSyntaxList<T> : List<T> where T : LuaSyntaxNode {

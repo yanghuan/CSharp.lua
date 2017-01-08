@@ -40,9 +40,6 @@ namespace CSharpLua.LuaAst {
             Identifier = identifier;
         }
 
-        public LuaStringLiteralExpressionSyntax(string identifier) : this(new LuaIdentifierNameSyntax(identifier)) {
-        }
-
         public override string Text {
             get {
                 return Identifier.ValueText;
@@ -54,6 +51,22 @@ namespace CSharpLua.LuaAst {
         }
 
         public static readonly LuaStringLiteralExpressionSyntax Empty = new LuaStringLiteralExpressionSyntax(LuaIdentifierNameSyntax.Empty); 
+    }
+
+    public sealed class LuaVerbatimStringLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
+        public override string Text { get; }
+        public int EqualsCount { get; }
+        public string OpenBracket => Tokens.OpenBracket;
+        public string CloseBracket => Tokens.CloseBracket;
+
+        public LuaVerbatimStringLiteralExpressionSyntax(string text, int equalsCount) {
+            Text = text;
+            EqualsCount = equalsCount;
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
     }
 
     public class LuaConstLiteralExpression : LuaLiteralExpressionSyntax {

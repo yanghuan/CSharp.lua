@@ -611,7 +611,13 @@ namespace CSharpLua {
                 }
             }
 
-            LuaStringLiteralExpressionSyntax format = new LuaStringLiteralExpressionSyntax(sb.ToString());
+            LuaLiteralExpressionSyntax format;
+            if(node.StringStartToken.ValueText.Contains('@')) {
+                format = BuildVerbatimStringExpression(sb.ToString());
+            }
+            else {
+                format = BuildStringLiteralExpression(sb.ToString());
+            }
             LuaMemberAccessExpressionSyntax memberAccessExpression = new LuaMemberAccessExpressionSyntax(new LuaParenthesizedExpressionSyntax(format), LuaIdentifierNameSyntax.Format, true);
             return new LuaInvocationExpressionSyntax(memberAccessExpression, expressions);
         }

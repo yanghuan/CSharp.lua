@@ -181,6 +181,22 @@ namespace CSharpLua {
             Write(node.CloseParenToken);
         }
 
+        private void WriteEquals(int count) {
+            for(int i = 0; i < count; ++i) {
+                Write(LuaSyntaxNode.Tokens.Equals);
+            }
+        }
+
+        internal void Render(LuaVerbatimStringLiteralExpressionSyntax node) {
+            Write(node.OpenBracket);
+            WriteEquals(node.EqualsCount);
+            Write(node.OpenBracket);
+            Write(node.Text);
+            Write(node.CloseBracket);
+            WriteEquals(node.EqualsCount);
+            Write(node.CloseBracket);
+        }
+
         internal void Render(LuaConstLiteralExpression node) {
             node.Value.Render(this);
             WriteSpace();

@@ -298,8 +298,7 @@ namespace CSharpLua {
                             return new LuaCharacterLiteralExpression((char)constantValue);
                         }
                     case TypeCode.String: {
-                            string text = SyntaxFactory.Literal((string)constantValue).Text;
-                            return new LuaIdentifierLiteralExpressionSyntax(text);
+                            return BuildStringLiteralExpression((string)constantValue);
                         }
                     default: {
                             return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
@@ -321,6 +320,37 @@ namespace CSharpLua {
                 string identifierToken = constField.ContainingType.Name + '.' + constField.Name;
                 return new LuaConstLiteralExpression(constExpression, identifierToken);
             }
+        }
+
+        private LuaLiteralExpressionSyntax BuildStringLiteralTokenExpression(SyntaxToken token) {
+            if(token.Text[0] == '@') {
+                return BuildVerbatimStringExpression(token.ValueText);
+            }
+            else {
+                return new LuaIdentifierLiteralExpressionSyntax(token.Text);
+            }
+        }
+
+        private LuaIdentifierLiteralExpressionSyntax BuildStringLiteralExpression(string value) {
+            string text = SyntaxFactory.Literal(value).Text;
+            return new LuaIdentifierLiteralExpressionSyntax(text);
+        }
+
+        private LuaVerbatimStringLiteralExpressionSyntax BuildVerbatimStringExpression(string value) {
+            const string kCloseBracket = LuaSyntaxNode.Tokens.CloseBracket;
+            char equals = LuaSyntaxNode.Tokens.Equals[0];
+            int count = 0;
+            while(true) {
+                string closeToken = kCloseBracket + new string(equals, count) + kCloseBracket;
+                if(!value.Contains(closeToken)) {
+                    break;
+                }
+                ++count;
+            }
+            if(value[0] == '\n') {
+                value = '\n' + value;
+            }
+            return new LuaVerbatimStringLiteralExpressionSyntax(value, count);
         }
     }
 }
