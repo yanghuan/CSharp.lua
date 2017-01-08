@@ -316,13 +316,12 @@ namespace CSharpLua {
             return node.FilterExpression.Accept(this);    
         }
 
-
         public override LuaSyntaxNode VisitCatchClause(CatchClauseSyntax node) {
             throw new InvalidOperationException();
         }
 
         public override LuaSyntaxNode VisitCatchDeclaration(CatchDeclarationSyntax node) {
-            throw new InvalidOperationException();
+            return new LuaVariableDeclaratorSyntax(new LuaIdentifierNameSyntax(node.Identifier.ValueText));
         }
 
         private LuaTryAdapterExpressionSyntax VisitTryCatchesExpress(SyntaxList<CatchClauseSyntax> catches) {
@@ -336,6 +335,7 @@ namespace CSharpLua {
             LuaIfStatementSyntax ifTailStatement = null;
             bool hasCatchRoot = false;
             foreach(var catchNode in catches) {
+                bool isRootExceptionDeclaration = false;
                 LuaExpressionSyntax ifCondition = null;
                 if(catchNode.Filter != null) {
                     ifCondition = (LuaExpressionSyntax)catchNode.Filter.Accept(this);
@@ -352,6 +352,9 @@ namespace CSharpLua {
                         }
                     }
                     else {
+                        if(!catchNode.Declaration.Identifier.IsKind(SyntaxKind.None)) {
+                            isRootExceptionDeclaration = true;
+                        }
                         hasCatchRoot = true;
                     }
                 }
@@ -363,7 +366,7 @@ namespace CSharpLua {
                 if(ifCondition != null) {
                     LuaIfStatementSyntax statement = new LuaIfStatementSyntax(ifCondition);
                     if(catchNode.Declaration != null && !catchNode.Declaration.Identifier.IsKind(SyntaxKind.None)) {
-                        var variableDeclarator = new LuaVariableDeclaratorSyntax(new LuaIdentifierNameSyntax(catchNode.Declaration.Identifier.ValueText));
+                        var variableDeclarator = (LuaVariableDeclaratorSyntax)catchNode.Declaration.Accept(this);
                         variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(temp);
                         statement.Body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
                     }
@@ -377,6 +380,12 @@ namespace CSharpLua {
                     ifTailStatement = statement;
                 }
                 else {
+                    if(isRootExceptionDeclaration) {
+                        var variableDeclarator = (LuaVariableDeclaratorSyntax)catchNode.Declaration.Accept(this);
+                        variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(temp);
+                        block.Statements.Insert(0, new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+                    }
+
                     if(ifTailStatement != null) {
                         ifTailStatement.Else = new LuaElseClauseSyntax(block);
                     }
