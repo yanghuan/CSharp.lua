@@ -673,7 +673,9 @@ namespace CSharpLua {
                 case SyntaxKind.AddAssignmentExpression: {
                         var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
                         if(leftType.IsStringType()) {
-                            return BuildStringConcatExpression(leftNode, rightNode);
+                            var left = (LuaExpressionSyntax)leftNode.Accept(this);
+                            var right = WrapStringConcatExpression(rightNode);
+                            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation);
                         }
                         else {
                             var left = (LuaExpressionSyntax)leftNode.Accept(this);
