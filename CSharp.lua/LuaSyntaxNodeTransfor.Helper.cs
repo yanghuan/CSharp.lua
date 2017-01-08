@@ -298,7 +298,8 @@ namespace CSharpLua {
                             return new LuaCharacterLiteralExpression((char)constantValue);
                         }
                     case TypeCode.String: {
-                            return new LuaStringLiteralExpressionSyntax((string)constantValue);
+                            string text = SyntaxFactory.Literal((string)constantValue).Text;
+                            return new LuaIdentifierLiteralExpressionSyntax(text);
                         }
                     default: {
                             return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());

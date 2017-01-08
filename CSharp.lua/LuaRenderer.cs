@@ -181,12 +181,6 @@ namespace CSharpLua {
             Write(node.CloseParenToken);
         }
 
-        internal void Render(LuaCharacterStringLiteralExpressionSyntax node) {
-            Write(node.OpenParenToken);
-            Write(node.Character.ToString());
-            Write(node.CloseParenToken);
-        }
-
         internal void Render(LuaConstLiteralExpression node) {
             node.Value.Render(this);
             WriteSpace();

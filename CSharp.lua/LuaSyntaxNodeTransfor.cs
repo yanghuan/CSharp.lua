@@ -655,11 +655,11 @@ namespace CSharpLua {
         }
 
         private LuaExpressionSyntax BuildLuaAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, SyntaxKind kind) {
-            var left = (LuaExpressionSyntax)leftNode.Accept(this);
-            var right = (LuaExpressionSyntax)rightNode.Accept(this);
-
             switch(kind) {
                 case SyntaxKind.SimpleAssignmentExpression: {
+                        var left = (LuaExpressionSyntax)leftNode.Accept(this);
+                        var right = (LuaExpressionSyntax)rightNode.Accept(this);
+
                         var propertyAdapter = left as LuaPropertyAdapterExpressionSyntax;
                         if(propertyAdapter != null) {
                             propertyAdapter.IsGetOrAdd = false;
@@ -673,16 +673,24 @@ namespace CSharpLua {
                 case SyntaxKind.AddAssignmentExpression: {
                         var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
                         if(leftType.IsStringType()) {
-                            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation);
-                        }
-                        else if(leftType.IsDelegateType()) {
-                            return BuildDelegateAssignmentExpression(left, right, true);
+                            return BuildStringConcatExpression(leftNode, rightNode);
                         }
                         else {
-                            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus);
+                            var left = (LuaExpressionSyntax)leftNode.Accept(this);
+                            var right = (LuaExpressionSyntax)rightNode.Accept(this);
+
+                            if(leftType.IsDelegateType()) {
+                                return BuildDelegateAssignmentExpression(left, right, true);
+                            }
+                            else {
+                                return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus);
+                            }
                         }
                     }
                 case SyntaxKind.SubtractAssignmentExpression: {
+                        var left = (LuaExpressionSyntax)leftNode.Accept(this);
+                        var right = (LuaExpressionSyntax)rightNode.Accept(this);
+
                         var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
                         if(leftType.IsDelegateType()) {
                             return BuildDelegateAssignmentExpression(left, right, false);
@@ -1331,7 +1339,8 @@ namespace CSharpLua {
             else if(typeInfo.SpecialType == SpecialType.System_Char) {
                 var constValue = semanticModel_.GetConstantValue(expression);
                 if(constValue.HasValue) {
-                    return new LuaCharacterStringLiteralExpressionSyntax((char)constValue.Value);
+                    string text = SyntaxFactory.Literal((char)constValue.Value).Text;
+                    return new LuaIdentifierLiteralExpressionSyntax(text);
                 }
                 else {
                     return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringChar, original);

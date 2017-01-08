@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +10,7 @@ namespace CSharpLua.LuaAst {
         public abstract string Text { get; }
     }
 
-    public class LuaIdentifierLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
+    public sealed class LuaIdentifierLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
         public LuaIdentifierNameSyntax Identifier { get; }
 
         public LuaIdentifierLiteralExpressionSyntax(string text) : this(new LuaIdentifierNameSyntax(text)) {
@@ -55,26 +56,6 @@ namespace CSharpLua.LuaAst {
         public static readonly LuaStringLiteralExpressionSyntax Empty = new LuaStringLiteralExpressionSyntax(LuaIdentifierNameSyntax.Empty); 
     }
 
-    public sealed class LuaCharacterStringLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
-        public string OpenParenToken => Tokens.SingleQuote;
-        public char Character { get; }
-        public string CloseParenToken => Tokens.SingleQuote;
-
-        public LuaCharacterStringLiteralExpressionSyntax(char character) {
-            Character = character;
-        }
-
-        public override string Text {
-            get {
-                return Character.ToString();
-            }
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-    }
-
     public class LuaConstLiteralExpression : LuaLiteralExpressionSyntax {
         public LuaLiteralExpressionSyntax Value { get; }
         public string OpenComment => Tokens.OpenLongComment;
@@ -101,23 +82,11 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaCharacterLiteralExpression : LuaConstLiteralExpression {
-        private static readonly Dictionary<char, string> Escapes = new Dictionary<char, string>() {
-            ['\0'] = "\\0",
-            ['\n'] = "\\n",
-            ['\t'] = "\\t",
-            ['\r'] = "\\r",
-            ['\b'] = "\\b",
-        };
-
         public LuaCharacterLiteralExpression(char character) : base(((int)character).ToString(), GetIdentifierToken(character)) {
         }
 
         private static string GetIdentifierToken(char character) {
-            string s = Escapes.GetOrDefault(character);
-            if(s == null) {
-                s = character.ToString();
-            }
-            return $"'{s}'";
+            return SyntaxFactory.Literal(character).Text;
         }
     }
 }
