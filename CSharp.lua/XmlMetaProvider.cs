@@ -430,9 +430,9 @@ namespace CSharpLua {
             return name;
         }
 
-        public string GetMethodMapName(IMethodSymbol symbol) {
+        public LuaIdentifierNameSyntax GetMethodMapName(IMethodSymbol symbol) {
             string name = GetMethodName(symbol);
-            return name ?? symbol.Name;
+            return new LuaIdentifierNameSyntax(name ?? symbol.Name);
         }
 
         public bool IsPropertyField(IPropertySymbol symbol) {

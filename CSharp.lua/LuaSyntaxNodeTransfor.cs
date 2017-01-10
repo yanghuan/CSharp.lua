@@ -295,8 +295,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
             IMethodSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
-            string methodName = XmlMetaProvider.GetMethodMapName(symbol);
-            LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(methodName);
+            LuaIdentifierNameSyntax methodName = XmlMetaProvider.GetMethodMapName(symbol);
             LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
             PushFunction(function);
             if(!node.Modifiers.IsStatic()) {
@@ -334,7 +333,7 @@ namespace CSharpLua {
                 VisitYield(node, function);
             }
             PopFunction();
-            CurType.AddMethod(name, function, node.Modifiers.IsPrivate());
+            CurType.AddMethod(methodName, function, node.Modifiers.IsPrivate());
             return function;
         }
 
@@ -939,8 +938,10 @@ namespace CSharpLua {
             else {
                 LuaMemberAccessExpressionSyntax memberAccess = (LuaMemberAccessExpressionSyntax)expression;
                 IMethodSymbol reducedFrom = symbol.ReducedFrom;
-                string name = XmlMetaProvider.GetMethodMapName(reducedFrom);
-                invocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(name));
+                LuaExpressionSyntax typeName = XmlMetaProvider.GetTypeName(reducedFrom.ContainingType);
+                LuaIdentifierNameSyntax methodName = XmlMetaProvider.GetMethodMapName(reducedFrom);
+                LuaMemberAccessExpressionSyntax typeMemberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
+                invocation = new LuaInvocationExpressionSyntax(typeMemberAccess);
                 invocation.AddArgument(memberAccess.Expression);
             }
 
@@ -1184,27 +1185,22 @@ namespace CSharpLua {
         }
 
         private LuaExpressionSyntax GetMethodNameExpression(IMethodSymbol symbol, NameSyntax node) {
-            string name;
-            string methodName = XmlMetaProvider.GetMethodMapName(symbol);
+            LuaIdentifierNameSyntax methodName = XmlMetaProvider.GetMethodMapName(symbol);
             if(symbol.IsStatic) {
-                name = methodName;
+                return methodName;
             }
             else {
                 if(IsInternalMember(node, symbol)) {
-                    return new LuaInternalMethodExpressionSyntax(new LuaIdentifierNameSyntax(methodName));
+                    return new LuaInternalMethodExpressionSyntax(methodName);
                 }
                 else {
                     if(IsInternalNode(node)) {
-                        LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(methodName);
-                        LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, identifierName, true);
+                        LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, methodName, true);
                         return memberAccess;
-                    }
-                    else {
-                        name = methodName;
                     }
                 }
             }
-            return new LuaIdentifierNameSyntax(name);
+            return methodName;
         }
 
         public override LuaSyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
