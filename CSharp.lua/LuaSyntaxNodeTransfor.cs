@@ -687,7 +687,7 @@ namespace CSharpLua {
             }
 
             blocks_.Pop();
-            if(node.Parent.IsKind(SyntaxKind.Block)) {
+            if(node.Parent.IsKind(SyntaxKind.Block) || node.Parent.IsKind(SyntaxKind.SwitchSection)) {
                 return new LuaBlockBlockSyntax(block);
             }
             else {
@@ -1760,6 +1760,24 @@ namespace CSharpLua {
                     mayBeNullOrFalse = false;
                 }
                 else {
+                    if(conditionalWhenTrue.IsKind(SyntaxKind.InvocationExpression)) {
+                        var invocation = (InvocationExpressionSyntax)conditionalWhenTrue;
+                        if(invocation.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+                            var memberAccess = (MemberAccessExpressionSyntax)invocation.Expression;
+                            if(memberAccess.Name.Identifier.ValueText == LuaIdentifierNameSyntax.ToStr.ValueText) {
+                                var typeInfo = semanticModel_.GetTypeInfo(memberAccess.Expression).Type;
+                                switch(typeInfo.SpecialType) {
+                                    case SpecialType.System_Object:
+                                    case SpecialType.System_Nullable_T: {
+                                            break;
+                                        }
+                                    default: {
+                                            return false;
+                                        }
+                                }
+                            }                        
+                        }
+                    }
                     mayBeNullOrFalse = true;
                 }
             }
