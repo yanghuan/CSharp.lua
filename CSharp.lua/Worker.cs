@@ -103,10 +103,6 @@ namespace CSharpLua {
                 }
             }
 
-            if(!Directory.Exists(output_)) {
-                Directory.CreateDirectory(output_);
-            }
-
             LuaSyntaxGenerator generator = new LuaSyntaxGenerator(Metas, compilation);
             generator.Generate(luaCompilationUnit => {
                 string outFile = GetOutFilePath(luaCompilationUnit.FilePath);

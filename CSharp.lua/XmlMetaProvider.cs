@@ -107,9 +107,22 @@ namespace CSharpLua {
 
         private sealed class MethodMetaInfo {
             private List<XmlMetaModel.MethodModel> models_ = new List<XmlMetaModel.MethodModel>();
+            private bool isSingleModel_;
 
             public void Add(XmlMetaModel.MethodModel model) {
                 models_.Add(model);
+                CheckIsSingleModel();
+            }
+
+            private void CheckIsSingleModel() {
+                bool isSingle = false;
+                if(models_.Count == 1) {
+                    var model = models_.First();
+                    if(model.ArgCount == -1 && model.Args == null && model.RetType == null && model.GenericArgCount == -1) {
+                        isSingle = true;
+                    }
+                }
+                isSingleModel_ = isSingle;
             }
 
             private bool IsTypeMatch(ITypeSymbol symbol, string typeString) {
@@ -167,7 +180,7 @@ namespace CSharpLua {
             }
 
             public string GetName(IMethodSymbol symbol) {
-                if(models_.Count == 1) {
+                if(isSingleModel_) {
                     return models_.First().Name;
                 }
 
@@ -176,7 +189,7 @@ namespace CSharpLua {
             }
 
             internal string GetCodeTemplate(IMethodSymbol symbol) {
-                if(models_.Count == 1) {
+                if(isSingleModel_) {
                     return models_.First().Template;
                 }
 
