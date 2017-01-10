@@ -107,8 +107,8 @@ namespace CSharpLua {
                 Directory.CreateDirectory(output_);
             }
 
-            LuaSyntaxGenerator generator = new LuaSyntaxGenerator(Metas);
-            generator.Generate(compilation, luaCompilationUnit => {
+            LuaSyntaxGenerator generator = new LuaSyntaxGenerator(Metas, compilation);
+            generator.Generate(luaCompilationUnit => {
                 string outFile = GetOutFilePath(luaCompilationUnit.FilePath);
                 return new StreamWriter(outFile, false, Encoding);
             });

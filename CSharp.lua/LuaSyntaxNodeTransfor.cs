@@ -133,7 +133,17 @@ namespace CSharpLua {
             return namespaceDeclaration;
         }
 
-        private void VisitTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
+        private void BuildTypeMembers(LuaTypeDeclarationSyntax typeDeclaration, SyntaxList<MemberDeclarationSyntax> members) {
+            foreach(var member in members) {
+                var newMember = member.Accept(this);
+                SyntaxKind kind = member.Kind();
+                if(kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration) {
+                    typeDeclaration.Add((LuaStatementSyntax)newMember);
+                }
+            }
+        }
+
+        private void BuildTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
             typeDeclarations_.Push(typeDeclaration);
             if(node.TypeParameterList != null) {
                 foreach(var typeParameter in node.TypeParameterList.Parameters) {
@@ -149,14 +159,68 @@ namespace CSharpLua {
                 }
                 typeDeclaration.AddBaseTypes(baseTypes);
             }
-            foreach(var member in node.Members) {
-                var newMember = member.Accept(this);
-                SyntaxKind kind = member.Kind();
-                if(kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration) {
-                    typeDeclaration.Add((LuaStatementSyntax)newMember);
+            BuildTypeMembers(typeDeclaration, node.Members);
+            typeDeclarations_.Pop();
+            CurCompilationUnit.AddTypeDeclarationCount();
+        }
+
+        private void VisitTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
+            if(node.Modifiers.IsPartial()) {
+                INamedTypeSymbol typeSymbol = semanticModel_.GetDeclaredSymbol(node);
+                if(typeSymbol.DeclaringSyntaxReferences.Length > 1) {
+                    generator_.AddPartialTypeDeclaration(typeSymbol, node, typeDeclaration, CurCompilationUnit);
+                    typeDeclaration.IsPartialMark = true;
+                }
+                else {
+                    BuildTypeDeclaration(node, typeDeclaration);
                 }
             }
+            else {
+                BuildTypeDeclaration(node, typeDeclaration);
+            }
+        }
+
+        internal void AcceptPartialType(PartialTypeDeclaration major, List<PartialTypeDeclaration> typeDeclarations) {
+            major.LuaNode.IsPartialMark = false;
+            major.CompilationUnit.AddTypeDeclarationCount();
+
+            compilationUnits_.Push(major.CompilationUnit);
+            typeDeclarations_.Push(major.LuaNode);
+
+            if(major.Node.TypeParameterList != null) {
+                foreach(var typeParameter in major.Node.TypeParameterList.Parameters) {
+                    var typeIdentifier = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
+                    major.LuaNode.AddTypeIdentifier(typeIdentifier);
+                }
+            }
+
+            var baseTypes = typeDeclarations.SelectMany(i => i.Node.BaseList != null ? (IEnumerable<BaseTypeSyntax>)i.Node.BaseList.Types : Array.Empty<BaseTypeSyntax>()).ToList();
+            if(baseTypes.Count > 0) {
+                if(baseTypes.Count > 1) {
+                    var baseTypeIndex = baseTypes.FindIndex(generator_.IsBaseType);
+                    if(baseTypeIndex > 0) {
+                        var baseType = baseTypes[baseTypeIndex];
+                        baseTypes.RemoveAt(baseTypeIndex);
+                        baseTypes.Insert(0, baseType);
+                    }
+                }
+
+                List<LuaExpressionSyntax> baseTypeExpressions = new List<LuaExpressionSyntax>();
+                foreach(var baseType in baseTypes) {
+                    semanticModel_ = generator_.GetSemanticModel(baseType.SyntaxTree);
+                    var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
+                    baseTypeExpressions.Add(baseTypeName);
+                }
+                major.LuaNode.AddBaseTypes(baseTypeExpressions);
+            }
+
+            foreach(var typeDeclaration in typeDeclarations) {
+                semanticModel_ = generator_.GetSemanticModel(typeDeclaration.Node.SyntaxTree);
+                BuildTypeMembers(typeDeclaration.LuaNode, typeDeclaration.Node.Members);
+            }
+
             typeDeclarations_.Pop();
+            compilationUnits_.Pop();
         }
 
         public override LuaSyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {

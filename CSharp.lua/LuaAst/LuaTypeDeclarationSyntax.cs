@@ -35,6 +35,7 @@ namespace CSharpLua.LuaAst {
         private LuaFunctionExpressionSyntax initFunction_;
         private List<LuaConstructorAdapterExpressionSyntax> ctors_ = new List<LuaConstructorAdapterExpressionSyntax>();
         private List<LuaIdentifierNameSyntax> typeIdentifiers_ = new List<LuaIdentifierNameSyntax>();
+        public bool IsPartialMark { get; set; }
 
         public LuaTypeDeclarationSyntax() {
         }
@@ -291,6 +292,10 @@ namespace CSharpLua.LuaAst {
         }
 
         internal override void Render(LuaRenderer renderer) {
+            if(IsPartialMark) {
+                return;
+            }
+
             Add(local_);
             AddStaticCtorFunction();
             AddCtorsFunction();

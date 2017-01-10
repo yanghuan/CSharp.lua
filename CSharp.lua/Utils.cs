@@ -143,6 +143,10 @@ namespace CSharpLua {
             return modifiers.Any(i => i.IsKind(SyntaxKind.ParamsKeyword));
         }
 
+        public static bool IsPartial(this SyntaxTokenList modifiers) {
+            return modifiers.Any(i => i.IsKind(SyntaxKind.PartialKeyword));
+        }
+
         public static bool IsStringType(this ITypeSymbol type) {
             return type.SpecialType == SpecialType.System_String;
         }

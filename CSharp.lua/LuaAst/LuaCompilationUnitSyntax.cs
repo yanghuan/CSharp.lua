@@ -30,6 +30,7 @@ namespace CSharpLua.LuaAst {
         public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
         private LuaStatementListSyntax HeadAreaStatements = new LuaStatementListSyntax();
         private bool isImportLinq_;
+        private int typeDeclarationCount_;
 
         public LuaCompilationUnitSyntax() {
             var info = Assembly.GetExecutingAssembly().GetName();
@@ -43,7 +44,7 @@ namespace CSharpLua.LuaAst {
 
         public bool IsEmpty {
             get {
-                return Statements.Count <= 1;
+                return typeDeclarationCount_ == 0;
             }
         }
 
@@ -68,6 +69,10 @@ namespace CSharpLua.LuaAst {
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
+        }
+
+        internal void AddTypeDeclarationCount() {
+            ++typeDeclarationCount_;
         }
     }
 }
