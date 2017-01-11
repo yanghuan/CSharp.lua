@@ -302,9 +302,13 @@ namespace CSharpLua {
                 function.ParameterList.Parameters.Add(luaParameter);
                 if(parameter.Default != null) {
                     if(!parameter.Default.Value.IsKind(SyntaxKind.NullLiteralExpression)) {
-                        var expression = (LuaExpressionSyntax)parameter.Default.Value.Accept(this);
-                        var intiStatement = new LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, expression);
-                        function.Body.Statements.Add(intiStatement);
+                        var attributes = parameter.AttributeLists.SelectMany(i => i.Attributes);
+                        bool hasCaller = attributes.Any(IsCallerAttribute);
+                        if(!hasCaller) {
+                            var expression = (LuaExpressionSyntax)parameter.Default.Value.Accept(this);
+                            var intiStatement = new LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, expression);
+                            function.Body.Statements.Add(intiStatement);
+                        }
                     }
                 }
                 else {
@@ -943,6 +947,16 @@ namespace CSharpLua {
             }
 
             invocation.ArgumentList.Arguments.AddRange(arguments);
+            CheckInvocationCallerAttribute(symbol, node, invocation);
+            AddInvocationTypeArguments(symbol, node, invocation);
+
+            if(refOrOutArguments.Count > 0) {
+                return BuildInvokeRefOrOut(node, invocation, refOrOutArguments);
+            }
+            return invocation;
+        }
+
+        private void AddInvocationTypeArguments(IMethodSymbol symbol, InvocationExpressionSyntax node, LuaInvocationExpressionSyntax invocation) {
             if(symbol.TypeArguments.Length > 0) {
                 int optionalCount = symbol.Parameters.Length - node.ArgumentList.Arguments.Count;
                 while(optionalCount > 0) {
@@ -954,10 +968,30 @@ namespace CSharpLua {
                     invocation.AddArgument(typeName);
                 }
             }
-            if(refOrOutArguments.Count > 0) {
-                return BuildInvokeRefOrOut(node, invocation, refOrOutArguments);
+        }
+
+        private void CheckInvocationCallerAttribute(IMethodSymbol symbol, InvocationExpressionSyntax node, LuaInvocationExpressionSyntax invocation) {
+            int argumentCount = node.ArgumentList.Arguments.Count;
+            int optionalCount = symbol.Parameters.Length - argumentCount;
+            if(optionalCount > 0) {
+                var optionalParameters = symbol.Parameters.Skip(argumentCount);
+                int prevCallerIndex = -1;
+                int index = 0;
+                foreach(var parameter in optionalParameters) {
+                    var callerExpression = CheckCallerAttribute(parameter, node);
+                    if(callerExpression != null) {
+                        int placeholderCount = index - prevCallerIndex - 1;
+                        if(placeholderCount > 0) {
+                            for(int i = 0; i < placeholderCount; ++i) {
+                                invocation.AddArgument(LuaIdentifierNameSyntax.Nil);
+                            }
+                        }
+                        invocation.AddArgument(callerExpression);
+                        prevCallerIndex = index;
+                    }
+                    ++index;
+                }
             }
-            return invocation;
         }
 
         private LuaExpressionSyntax BuildMemberAccessTargetExpression(ExpressionSyntax targetExpression) {

@@ -369,5 +369,59 @@ namespace CSharpLua {
             }
             return new LuaVerbatimStringLiteralExpressionSyntax(value, count);
         }
+
+        private enum CallerAttributeKind {
+            None,
+            Line,
+            Member,
+            FilePath,
+        }
+
+        private CallerAttributeKind GetCallerAttributeKind(INamedTypeSymbol typeSymbol) {
+            switch(typeSymbol.ToString()) {
+                case "System.Runtime.CompilerServices.CallerLineNumberAttribute":
+                    return CallerAttributeKind.Line;
+                case "System.Runtime.CompilerServices.CallerMemberNameAttribute":
+                    return CallerAttributeKind.Member;
+                case "System.Runtime.CompilerServices.CallerFilePathAttribute":
+                    return CallerAttributeKind.FilePath;
+                default:
+                    return CallerAttributeKind.None;
+            }
+        }
+
+        private CallerAttributeKind GetCallerAttributeKind(IParameterSymbol parameter) {
+            foreach(var attribute in parameter.GetAttributes()) {
+                var callerKind = GetCallerAttributeKind(attribute.AttributeClass);
+                if(callerKind != CallerAttributeKind.None) {
+                    return callerKind;
+                }
+            }
+            return CallerAttributeKind.None;
+        }
+
+        private bool IsCallerAttribute(AttributeSyntax attribute) {
+            var method = semanticModel_.GetSymbolInfo(attribute.Name).Symbol;
+            return GetCallerAttributeKind(method.ContainingType) != CallerAttributeKind.None;
+        }
+
+        private LuaExpressionSyntax CheckCallerAttribute(IParameterSymbol parameter, InvocationExpressionSyntax node) {
+            var kind = GetCallerAttributeKind(parameter);
+            switch(kind) {
+                case CallerAttributeKind.Line: {
+                        var lineSpan = node.SyntaxTree.GetLineSpan(node.Span);
+                        return new LuaIdentifierNameSyntax(lineSpan.StartLinePosition.Line + 1);
+                    }
+                case CallerAttributeKind.Member: {
+                        var parentMethod = (MethodDeclarationSyntax)FindParent(node, SyntaxKind.MethodDeclaration);
+                        return new LuaStringLiteralExpressionSyntax(new LuaIdentifierNameSyntax(parentMethod.Identifier.ValueText));
+                    }
+                case CallerAttributeKind.FilePath: {
+                        return BuildStringLiteralExpression(node.SyntaxTree.FilePath);
+                    }
+                default:
+                    return null;
+            }
+        }
     }
 }
