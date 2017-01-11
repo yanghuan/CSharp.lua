@@ -486,6 +486,19 @@ namespace CSharpLua {
             node.RepeatStatement.Render(this);
         }
 
+        internal void Render(LuaMethodParameterDefaultValueStatementSyntax node) {
+            Write(node.IfKeyword);
+            WriteSpace();
+            node.Condition.Render(this);
+            WriteSpace();
+            Write(node.OpenParenToken);
+            WriteSpace();
+            node.Assignment.Render(this);
+            WriteSpace();
+            Write(node.CloseParenToken);
+            WriteNewLine();
+        }
+
         internal void Render(LuaBreakStatementSyntax node) {
             Write(node.BreakKeyword);
             Write(node.SemicolonToken);

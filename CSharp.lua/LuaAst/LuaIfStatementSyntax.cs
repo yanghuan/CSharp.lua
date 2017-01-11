@@ -24,12 +24,12 @@ using System.Text;
 
 namespace CSharpLua.LuaAst {
     public sealed class LuaIfStatementSyntax : LuaStatementSyntax {
-        public string CloseParenToken => Tokens.End;
-        public LuaExpressionSyntax Condition { get; }
-        public LuaElseClauseSyntax Else { get; set; }
         public string IfKeyword => Tokens.If;
+        public LuaExpressionSyntax Condition { get; }
         public string OpenParenToken => Tokens.Then;
         public readonly LuaBlockSyntax Body = new LuaBlockSyntax();
+        public LuaElseClauseSyntax Else { get; set; }
+        public string CloseParenToken => Tokens.End;
 
         public LuaIfStatementSyntax(LuaExpressionSyntax condition) {
             if(condition == null) {
@@ -161,4 +161,28 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaMethodParameterDefaultValueStatementSyntax : LuaStatementSyntax {
+        public string IfKeyword => Tokens.If;
+        public LuaExpressionSyntax Condition { get; }
+        public string OpenParenToken => Tokens.Then;
+        public LuaAssignmentExpressionSyntax Assignment { get; }
+        public string CloseParenToken => Tokens.End;
+
+        public LuaMethodParameterDefaultValueStatementSyntax(LuaIdentifierNameSyntax parameter, LuaExpressionSyntax defaultValue) {
+            if(parameter == null) {
+                throw new ArgumentNullException(nameof(parameter));
+            }
+            if(defaultValue == null) {
+                throw new ArgumentNullException(nameof(defaultValue));
+            }
+            Condition = new LuaBinaryExpressionSyntax(parameter, LuaSyntaxNode.Tokens.EqualsEquals, LuaIdentifierNameSyntax.Nil);
+            Assignment = new LuaAssignmentExpressionSyntax(parameter, defaultValue);
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            renderer.Render(this);
+        }
+    }
+
 }
