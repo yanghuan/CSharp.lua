@@ -594,6 +594,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitMemberBindingExpression(MemberBindingExpressionSyntax node) {
+            //TODO Œ¥¥¶¿Ì
             LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
             PushFunction(functionExpression);
             var temp = GetTempIdentifier(node.Name);

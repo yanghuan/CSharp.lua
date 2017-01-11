@@ -37,6 +37,7 @@ namespace CSharpLua {
         private Stack<LuaFunctionExpressionSyntax> functions_ = new Stack<LuaFunctionExpressionSyntax>();
         private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
+        private int checkedStatementCounter_;
 
         private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
             ["!="] = LuaSyntaxNode.Tokens.NotEquals,
@@ -55,6 +56,12 @@ namespace CSharpLua {
         private XmlMetaProvider XmlMetaProvider {
             get {
                 return generator_.XmlMetaProvider;
+            }
+        }
+
+        private bool IsInCheckedBlock {
+            get {
+                return checkedStatementCounter_ > 0;
             }
         }
 
@@ -688,11 +695,13 @@ namespace CSharpLua {
             }
 
             blocks_.Pop();
-            if(node.Parent.IsKind(SyntaxKind.Block) || node.Parent.IsKind(SyntaxKind.SwitchSection)) {
-                return new LuaBlockBlockSyntax(block);
-            }
-            else {
-                return block;
+            switch(node.Parent.Kind()) {
+                case SyntaxKind.Block:
+                case SyntaxKind.SwitchSection:
+                case SyntaxKind.CheckedStatement:
+                    return new LuaBlockBlockSyntax(block);
+                default:
+                    return block;
             }
         }
 
@@ -1909,6 +1918,21 @@ namespace CSharpLua {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);
             return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, typeExpression, expression);
+        }
+
+        public override LuaSyntaxNode VisitCheckedStatement(CheckedStatementSyntax node) {
+            LuaStatementListSyntax statements = new LuaStatementListSyntax();
+            statements.Statements.Add(new LuaShortCommentStatement(" " + node.Keyword.ValueText));
+            ++checkedStatementCounter_;
+            var block = (LuaStatementSyntax)node.Block.Accept(this);
+            --checkedStatementCounter_;
+            statements.Statements.Add(block);
+            return statements;
+        }
+
+        public override LuaSyntaxNode VisitCheckedExpression(CheckedExpressionSyntax node) {
+            //TODO Œ¥¥¶¿Ì
+            return node.Expression.Accept(this);
         }
     }
 }
