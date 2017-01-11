@@ -2,7 +2,7 @@
 local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaCompilationUnitSyntax", function (namespace) 
-        local getIsEmpty, AddTypeDeclaration, ImportLinq, AddImport, Render, __init__, __ctor__;
+        local getIsEmpty, AddTypeDeclaration, ImportLinq, AddImport, Render, AddTypeDeclarationCount, __init__, __ctor__;
         __init__ = function (this) 
             this.Statements = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaStatementSyntax)();
             this.HeadAreaStatements = CSharpLua.LuaAst.LuaStatementListSyntax();
@@ -18,7 +18,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Statements:Add(this.HeadAreaStatements);
         end;
         getIsEmpty = function (this) 
-            return #this.Statements <= 1;
+            return this.typeDeclarationCount_ == 0;
         end;
         AddTypeDeclaration = function (this, memberNode) 
             local namespaceNode = CSharpLua.LuaAst.LuaNamespaceDeclarationSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax.Empty);
@@ -39,16 +39,21 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Render = function (this, renderer) 
             renderer:Render(this);
         end;
+        AddTypeDeclarationCount = function (this) 
+            this.typeDeclarationCount_ = this.typeDeclarationCount_ + 1;
+        end;
         return {
             __inherits__ = {
                 CSharpLua.LuaAst.LuaSyntaxNode
             }, 
             isImportLinq_ = False, 
+            typeDeclarationCount_ = 0, 
             getIsEmpty = getIsEmpty, 
             AddTypeDeclaration = AddTypeDeclaration, 
             ImportLinq = ImportLinq, 
             AddImport = AddImport, 
             Render = Render, 
+            AddTypeDeclarationCount = AddTypeDeclarationCount, 
             __ctor__ = __ctor__
         };
     end);

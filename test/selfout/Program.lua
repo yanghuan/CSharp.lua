@@ -23,18 +23,16 @@ Options
                         return true;
                     end
 
-                    --Contract.Assert(false);
-
-                    System.Console.WriteLineChar(("start {0}"):Format(System.DateTime.getNow()));
-                    local folder = GetArgument(cmds, "-s");
-                    local output = GetArgument(cmds, "-d");
-                    local lib = GetArgument(cmds, "-l", true);
-                    local meta = GetArgument(cmds, "-m", true);
-                    local defines = GetArgument(cmds, "-def", true);
+                    System.Console.WriteLine(("start {0}"):Format(System.DateTime.getNow()));
+                    local folder = CSharpLua.Utility.GetArgument(cmds, "-s");
+                    local output = CSharpLua.Utility.GetArgument(cmds, "-d");
+                    local lib = CSharpLua.Utility.GetArgument(cmds, "-l", true);
+                    local meta = CSharpLua.Utility.GetArgument(cmds, "-m", true);
+                    local defines = CSharpLua.Utility.GetArgument(cmds, "-def", true);
                     local w = CSharpLua.Worker:new(1, folder, output, lib, meta, defines);
                     w:Do();
-                    System.Console.WriteLineChar("all operator success");
-                    System.Console.WriteLineChar(("end {0}"):Format(System.DateTime.getNow()));
+                    System.Console.WriteLine("all operator success");
+                    System.Console.WriteLine(("end {0}"):Format(System.DateTime.getNow()));
                 end, function (default) 
                     if System.is(default, CSharpLua.CmdArgumentException) then
                         local e = default;

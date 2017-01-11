@@ -348,8 +348,7 @@ namespace CSharpLua {
             functionExpress.CatchTemp = temp;
             functionExpress.AddParameter(temp);
 
-            LuaIfStatementSyntax ifHeadStatement = null;
-            LuaIfStatementSyntax ifTailStatement = null;
+            LuaIfStatementSyntax ifStatement = null;
             bool hasCatchRoot = false;
             foreach(var catchNode in catches) {
                 bool isRootExceptionDeclaration = false;
@@ -381,20 +380,22 @@ namespace CSharpLua {
 
                 var block = (LuaBlockSyntax)catchNode.Block.Accept(this);
                 if(ifCondition != null) {
-                    LuaIfStatementSyntax statement = new LuaIfStatementSyntax(ifCondition);
+                    LuaBlockSyntax body;
+                    if(ifStatement == null) {
+                        ifStatement = new LuaIfStatementSyntax(ifCondition);
+                        body = ifStatement.Body;
+                    }
+                    else {
+                        LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(ifCondition);
+                        body = elseIfStatement.Body;
+                        ifStatement.ElseIfStatements.Add(elseIfStatement);
+                    }
                     if(catchNode.Declaration != null && !catchNode.Declaration.Identifier.IsKind(SyntaxKind.None)) {
                         var variableDeclarator = (LuaVariableDeclaratorSyntax)catchNode.Declaration.Accept(this);
                         variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(temp);
-                        statement.Body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+                        body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
                     }
-                    statement.Body.Statements.AddRange(block.Statements);
-                    if(ifTailStatement != null) {
-                        ifTailStatement.Else = new LuaElseClauseSyntax(statement);
-                    }
-                    else {
-                        ifHeadStatement = statement;
-                    }
-                    ifTailStatement = statement;
+                    body.Statements.AddRange(block.Statements);
                 }
                 else {
                     if(isRootExceptionDeclaration) {
@@ -403,8 +404,10 @@ namespace CSharpLua {
                         block.Statements.Insert(0, new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
                     }
 
-                    if(ifTailStatement != null) {
-                        ifTailStatement.Else = new LuaElseClauseSyntax(block);
+                    if(ifStatement != null) {
+                        LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
+                        elseClause.Body.Statements.AddRange(block.Statements);
+                        ifStatement.Else = elseClause;
                     }
                     else {
                         functionExpress.Body.Statements.AddRange(block.Statements);
@@ -413,17 +416,19 @@ namespace CSharpLua {
                 }
             }
 
-            if(ifHeadStatement != null) {
+            if(ifStatement != null) {
                 if(!hasCatchRoot) {
-                    Contract.Assert(ifTailStatement.Else == null);
+                    Contract.Assert(ifStatement.Else == null);
                     LuaMultipleReturnStatementSyntax rethrowStatement = new LuaMultipleReturnStatementSyntax();
                     rethrowStatement.Expressions.Add(LuaIdentifierNameSyntax.One);
                     rethrowStatement.Expressions.Add(temp);
                     LuaBlockSyntax block = new LuaBlockSyntax();
                     block.Statements.Add(rethrowStatement);
-                    ifTailStatement.Else = new LuaElseClauseSyntax(block);
+                    LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
+                    elseClause.Body.Statements.AddRange(block.Statements);
+                    ifStatement.Else = elseClause;
                 }
-                functionExpress.Body.Statements.Add(ifHeadStatement);
+                functionExpress.Body.Statements.Add(ifStatement);
             }
 
             PopFunction();
@@ -594,7 +599,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitMemberBindingExpression(MemberBindingExpressionSyntax node) {
-            //TODO Œ¥¥¶¿Ì
+            //TODO Êú™Â§ÑÁêÜ
             LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
             PushFunction(functionExpression);
             var temp = GetTempIdentifier(node.Name);

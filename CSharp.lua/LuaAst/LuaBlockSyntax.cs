@@ -22,7 +22,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
-    public sealed class LuaBlockSyntax : LuaStatementSyntax {
+    public class LuaBlockSyntax : LuaStatementSyntax {
         public string OpenBraceToken { get; set; }
         public string CloseBraceToken { get; set; }
         public LuaSyntaxList<LuaStatementSyntax> Statements { get; } = new LuaSyntaxList<LuaStatementSyntax>();
@@ -32,17 +32,10 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaBlockBlockSyntax : LuaStatementSyntax {
-        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-            OpenBraceToken = Tokens.Do,
-            CloseBraceToken = Tokens.End,
-        };
-
-        public LuaBlockBlockSyntax(LuaBlockSyntax block) {
-            if(block == null) {
-                throw new ArgumentNullException(nameof(block));
-            }
-            Body.Statements.AddRange(block.Statements);
+    public sealed class LuaBlockStatementSyntax : LuaBlockSyntax {
+        public LuaBlockStatementSyntax() {
+            OpenBraceToken = Tokens.Do;
+            CloseBraceToken = Tokens.End;
         }
 
         internal override void Render(LuaRenderer renderer) {

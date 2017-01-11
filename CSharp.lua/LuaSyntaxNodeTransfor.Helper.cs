@@ -425,7 +425,7 @@ namespace CSharpLua {
         }
 
         private LuaExpressionSyntax CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node) {
-            if(!node.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+            if(!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
                 if(symbol.ContainingType != GetTypeDeclarationSymbol(node)) {           //using static
                     var luadTypeExpression = XmlMetaProvider.GetTypeName(symbol.ContainingType);
                     return luadTypeExpression;

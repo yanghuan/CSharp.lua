@@ -8,7 +8,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.statements_ = System.List(CSharpLua.LuaAst.LuaStatementSyntax)();
         end;
         UpdateIdentifiers = function (this, name, target, memberName, parameter) 
-            parameter = parameter or nil;
             local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(target, memberName);
             local invoke = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
             invoke:AddArgument(CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax:new(1, name));

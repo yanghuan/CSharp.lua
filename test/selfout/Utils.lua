@@ -28,9 +28,9 @@ System.namespace("CSharpLua", function (namespace)
     end);
     namespace.class("Utility", function (namespace) 
         local GetCommondLines, First, Last, GetOrDefault, GetOrDefault, GetArgument, GetCurrentDirectory, Split, 
-        IsPrivate, IsStatic, IsReadOnly, IsConst, IsParams, IsStringType, IsDelegateType, IsIntegerType, 
-        IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, IsPropertyField, IsEventFiled, IsAssignment, 
-        systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString;
+        IsPrivate, IsStatic, IsReadOnly, IsConst, IsParams, IsPartial, IsStringType, IsDelegateType, 
+        IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, IsPropertyField, IsEventFiled, 
+        IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -63,7 +63,7 @@ System.namespace("CSharpLua", function (namespace)
             return list:get(list:getCount() - 1);
         end;
         GetOrDefault = function (list, index, v, T) 
-            v = v or System.default(T);
+            if v == nil then v = System.default(T) end
             local default;
             if index >= 0 and index < list:getCount() then
                 default = list:get(index);
@@ -73,7 +73,7 @@ System.namespace("CSharpLua", function (namespace)
             return default;
         end;
         GetOrDefault = function (dict, key, t, K, T) 
-            t = t or System.default(T);
+            if t == nil then t = System.default(T) end
             local v;
             local default;
             default, v = dict:TryGetValue(key, v);
@@ -83,8 +83,8 @@ System.namespace("CSharpLua", function (namespace)
             return t;
         end;
         GetArgument = function (args, name, isOption) 
-            isOption = isOption or false;
-            local values = GetOrDefault(args, name, nil, System.String, System.Array(System.String));
+            if isOption == nil then isOption = false end
+            local values = CSharpLua.Utility.GetOrDefault(args, name, nil, System.String, System.Array(System.String));
             if values == nil or #values == 0 then
                 if isOption then
                     return nil;
@@ -106,7 +106,7 @@ System.namespace("CSharpLua", function (namespace)
             return System.IO.Path.Combine(System.Environment.getCurrentDirectory(), path);
         end;
         Split = function (s, isPath) 
-            isPath = isPath or true;
+            if isPath == nil then isPath = true end
             local list = System.HashSet(System.String)();
             if not System.String.IsNullOrEmpty(s) then
                 local array = s:Split(59 --[[';']]);
@@ -123,19 +123,22 @@ System.namespace("CSharpLua", function (namespace)
             return Linq.ToArray(list);
         end;
         IsPrivate = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return IsKind(i, 8344 --[[SyntaxKind.PrivateKeyword]]); end);
+            return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8344 --[[SyntaxKind.PrivateKeyword]]); end);
         end;
         IsStatic = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]]); end);
+            return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]]); end);
         end;
         IsReadOnly = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return IsKind(i, 8348 --[[SyntaxKind.ReadOnlyKeyword]]); end);
+            return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8348 --[[SyntaxKind.ReadOnlyKeyword]]); end);
         end;
         IsConst = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return IsKind(i, 8350 --[[SyntaxKind.ConstKeyword]]); end);
+            return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8350 --[[SyntaxKind.ConstKeyword]]); end);
         end;
         IsParams = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return IsKind(i, 8365 --[[SyntaxKind.ParamsKeyword]]); end);
+            return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8365 --[[SyntaxKind.ParamsKeyword]]); end);
+        end;
+        IsPartial = function (modifiers) 
+            return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8406 --[[SyntaxKind.PartialKeyword]]); end);
         end;
         IsStringType = function (type) 
             return type:getSpecialType() == 20 --[[SpecialType.System_String]];
@@ -147,7 +150,7 @@ System.namespace("CSharpLua", function (namespace)
             return type:getSpecialType() >= 9 --[[SpecialType.System_SByte]] and type:getSpecialType() <= 16 --[[SpecialType.System_UInt64]];
         end;
         IsImmutable = function (type) 
-            local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or IsStringType(type) or IsDelegateType(type);
+            local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or CSharpLua.Utility.IsStringType(type) or CSharpLua.Utility.IsDelegateType(type);
             return isImmutable;
         end;
         IsInterfaceImplementation = function (symbol, T) 
@@ -177,11 +180,11 @@ System.namespace("CSharpLua", function (namespace)
             return not symbol:getIsStatic() and (symbol:getIsAbstract() or symbol:getIsVirtual() or symbol:getIsOverride());
         end;
         IsPropertyField = function (symbol) 
-            if IsOverridable(symbol) then
+            if CSharpLua.Utility.IsOverridable(symbol) then
                 return false;
             end
 
-            local syntaxReference = FirstOrDefault(symbol:getDeclaringSyntaxReferences(), Microsoft.CodeAnalysis.SyntaxReference);
+            local syntaxReference = System.Linq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), Microsoft.CodeAnalysis.SyntaxReference);
             if syntaxReference ~= nil then
                 local node = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax, syntaxReference:GetSyntax());
                 local hasGet = false;
@@ -189,7 +192,7 @@ System.namespace("CSharpLua", function (namespace)
                 if node:getAccessorList() ~= nil then
                     for _, accessor in System.each(node:getAccessorList():getAccessors()) do
                         if accessor:getBody() ~= nil then
-                            if IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
+                            if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
                                 assert(not hasGet);
                                 hasGet = true;
                             else
@@ -204,7 +207,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
                 local isAuto = not hasGet and not hasSet;
                 if isAuto then
-                    if IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IPropertySymbol) then
+                    if CSharpLua.Utility.IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IPropertySymbol) then
                         isAuto = false;
                     end
                 end
@@ -213,15 +216,15 @@ System.namespace("CSharpLua", function (namespace)
             return false;
         end;
         IsEventFiled = function (symbol) 
-            if IsOverridable(symbol) then
+            if CSharpLua.Utility.IsOverridable(symbol) then
                 return false;
             end
 
-            local syntaxReference = FirstOrDefault(symbol:getDeclaringSyntaxReferences(), Microsoft.CodeAnalysis.SyntaxReference);
+            local syntaxReference = System.Linq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), Microsoft.CodeAnalysis.SyntaxReference);
             if syntaxReference ~= nil then
-                local isField = IsKind(syntaxReference:GetSyntax(), 8795 --[[SyntaxKind.VariableDeclarator]]);
+                local isField = Microsoft.CodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(), 8795 --[[SyntaxKind.VariableDeclarator]]);
                 if isField then
-                    if IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IEventSymbol) then
+                    if CSharpLua.Utility.IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IEventSymbol) then
                         isField = false;
                     end
                 end
@@ -262,6 +265,7 @@ System.namespace("CSharpLua", function (namespace)
             IsReadOnly = IsReadOnly, 
             IsConst = IsConst, 
             IsParams = IsParams, 
+            IsPartial = IsPartial, 
             IsStringType = IsStringType, 
             IsDelegateType = IsDelegateType, 
             IsIntegerType = IsIntegerType, 

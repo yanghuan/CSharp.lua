@@ -36,12 +36,23 @@ System.namespace("CSharpLua", function (namespace)
             return {};
         end);
         namespace.class("MethodMetaInfo", function (namespace) 
-            local Add, IsTypeMatch, IsMethodMatch, GetName, GetCodeTemplate, __ctor__;
+            local Add, CheckIsSingleModel, IsTypeMatch, IsMethodMatch, GetName, GetCodeTemplate, GetMetaInfo, __ctor__;
             __ctor__ = function (this) 
                 this.models_ = System.List(XmlMetaModel.MethodModel)();
             end;
             Add = function (this, model) 
                 this.models_:Add(model);
+                CheckIsSingleModel(this);
+            end;
+            CheckIsSingleModel = function (this) 
+                local isSingle = false;
+                if #this.models_ == 1 then
+                    local model = CSharpLua.Utility.First(this.models_, CSharpLua.MethodModel);
+                    if model.ArgCount == - 1 and model.Args == nil and model.RetType == nil and model.GenericArgCount == - 1 then
+                        isSingle = true;
+                    end
+                end
+                this.isSingleModel_ = isSingle;
             end;
             IsTypeMatch = function (this, symbol, typeString) 
                 local typeSymbol = System.cast(Microsoft.CodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition());
@@ -95,25 +106,40 @@ System.namespace("CSharpLua", function (namespace)
                 return true;
             end;
             GetName = function (this, symbol) 
-                if #this.models_ == 1 then
-                    return First(this.models_, CSharpLua.MethodModel).Name;
+                if this.isSingleModel_ then
+                    return CSharpLua.Utility.First(this.models_, CSharpLua.MethodModel).Name;
                 end
 
                 local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol); end);
                 return System.access(methodModel, function (default) return this.Name; end);
             end;
             GetCodeTemplate = function (this, symbol) 
-                if #this.models_ == 1 then
-                    return First(this.models_, CSharpLua.MethodModel).Template;
+                if this.isSingleModel_ then
+                    return CSharpLua.Utility.First(this.models_, CSharpLua.MethodModel).Template;
                 end
 
                 local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol); end);
                 return System.access(methodModel, function (default) return this.Template; end);
             end;
+            GetMetaInfo = function (this, symbol, type) 
+                repeat
+                    local default = type;
+                    if default == 0 --[[MethodMetaType.Name]] then
+                        do
+                            return GetName(this, symbol);
+                        end
+                    elseif default == 1 --[[MethodMetaType.CodeTemplate]] then
+                    else
+                        do
+                            System.throw(System.InvalidOperationException());
+                        end
+                    end
+                until 1;
+            end;
             return {
+                isSingleModel_ = False, 
                 Add = Add, 
-                GetName = GetName, 
-                GetCodeTemplate = GetCodeTemplate, 
+                GetMetaInfo = GetMetaInfo, 
                 __ctor__ = __ctor__
             };
         end);
@@ -170,7 +196,7 @@ System.namespace("CSharpLua", function (namespace)
                             System.throw(System.ArgumentException(("type [{0}] has a method name is empty"):Format(this.model_.name)));
                         end
 
-                        local info = GetOrDefault(this.methods_, methodModel.name, nil, System.String, CSharpLua.MethodMetaInfo);
+                        local info = CSharpLua.Utility.GetOrDefault(this.methods_, methodModel.name, nil, System.String, CSharpLua.MethodMetaInfo);
                         if info == nil then
                             info = CSharpLua.XmlMetaProvider.MethodMetaInfo();
                             this.methods_:Add(methodModel.name, info);
@@ -180,13 +206,13 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end;
             GetFieldModel = function (this, name) 
-                return GetOrDefault(this.fields_, name, nil, System.String, CSharpLua.FieldModel);
+                return CSharpLua.Utility.GetOrDefault(this.fields_, name, nil, System.String, CSharpLua.FieldModel);
             end;
             GetPropertyModel = function (this, name) 
-                return GetOrDefault(this.propertys_, name, nil, System.String, CSharpLua.PropertyModel);
+                return CSharpLua.Utility.GetOrDefault(this.propertys_, name, nil, System.String, CSharpLua.PropertyModel);
             end;
             GetMethodMetaInfo = function (this, name) 
-                return GetOrDefault(this.methods_, name, nil, System.String, CSharpLua.MethodMetaInfo);
+                return CSharpLua.Utility.GetOrDefault(this.methods_, name, nil, System.String, CSharpLua.MethodMetaInfo);
             end;
             return {
                 getModel = getModel, 
@@ -197,7 +223,8 @@ System.namespace("CSharpLua", function (namespace)
             };
         end);
         local LoadNamespace, LoadType, GetNamespaceMapName, GetTypeName, MayHaveCodeMeta, GetTypeShortString, GetTypeShortName, GetTypeMetaInfo, 
-        GetMethodName, GetMethodMapName, IsPropertyField, GetFieldCodeTemplate, GetProertyCodeTemplate, GetMethodCodeTemplate, __init__, __ctor__;
+        IsPropertyField, GetFieldCodeTemplate, GetProertyCodeTemplate, GetInternalMethodMetaInfo, GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, __init__, 
+        __ctor__;
         __init__ = function (this) 
             this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)();
             this.typeMetas_ = System.Dictionary(System.String, CSharpLua.XmlMetaProvider.TypeMetaInfo)();
@@ -263,7 +290,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetNamespaceMapName = function (this, symbol) 
             local name = symbol:ToString();
-            return GetOrDefault(this.namespaceNameMaps_, name, name, System.String, System.String);
+            return CSharpLua.Utility.GetOrDefault(this.namespaceNameMaps_, name, name, System.String, System.String);
         end;
         GetTypeName = function (this, symbol) 
             assert(symbol ~= nil);
@@ -289,7 +316,7 @@ System.namespace("CSharpLua", function (namespace)
                 return CSharpLua.LuaAst.LuaIdentifierNameSyntax.Int;
             end
 
-            if IsDelegateType(namedTypeSymbol) then
+            if CSharpLua.Utility.IsDelegateType(namedTypeSymbol) then
                 return CSharpLua.LuaAst.LuaIdentifierNameSyntax.Delegate;
             end
 
@@ -306,7 +333,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         MayHaveCodeMeta = function (this, symbol) 
-            return symbol:getDeclaredAccessibility() == 6 --[[Accessibility.Public]] and not IsFromCode(symbol);
+            return symbol:getDeclaredAccessibility() == 6 --[[Accessibility.Public]] and not CSharpLua.Utility.IsFromCode(symbol);
         end;
         GetTypeShortString = function (this, symbol) 
             local typeSymbol = System.cast(Microsoft.CodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition());
@@ -322,7 +349,7 @@ System.namespace("CSharpLua", function (namespace)
         GetTypeShortName = function (this, symbol) 
             local name = GetTypeShortString(this, symbol);
             if MayHaveCodeMeta(this, symbol) then
-                local info = GetOrDefault(this.typeMetas_, name, nil, System.String, CSharpLua.TypeMetaInfo);
+                local info = CSharpLua.Utility.GetOrDefault(this.typeMetas_, name, nil, System.String, CSharpLua.TypeMetaInfo);
                 if info ~= nil then
                     local newName = info:getModel().Name;
                     if newName ~= nil then
@@ -334,40 +361,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetTypeMetaInfo = function (this, memberSymbol) 
             local typeName = GetTypeShortString(this, memberSymbol:getContainingType());
-            return GetOrDefault(this.typeMetas_, typeName, nil, System.String, CSharpLua.TypeMetaInfo);
-        end;
-        GetMethodName = function (this, symbol) 
-            if symbol:getDeclaredAccessibility() ~= 6 --[[Accessibility.Public]] then
-                return nil;
-            end
-
-            local name = nil;
-            if not IsFromCode(symbol) then
-                name = System.access(GetTypeMetaInfo(this, symbol), System.access(function (default) return this:GetMethodMetaInfo; end(this, symbol:getName()), function (default) return this:GetName; end(this, symbol)));
-            end
-
-            if name == nil then
-                if symbol:getIsOverride() then
-                    if symbol:getOverriddenMethod() ~= nil then
-                        name = GetMethodName(this, symbol:getOverriddenMethod());
-                    end
-                else
-                    local interfaceImplementations = InterfaceImplementations(symbol, Microsoft.CodeAnalysis.IMethodSymbol);
-                    if interfaceImplementations ~= nil then
-                        for _, interfaceMethod in System.each(interfaceImplementations) do
-                            name = GetMethodName(this, interfaceMethod);
-                            if name ~= nil then
-                                break;
-                            end
-                        end
-                    end
-                end
-            end
-            return name;
-        end;
-        GetMethodMapName = function (this, symbol) 
-            local name = GetMethodName(this, symbol);
-            return name or symbol:getName();
+            return CSharpLua.Utility.GetOrDefault(this.typeMetas_, typeName, nil, System.String, CSharpLua.TypeMetaInfo);
         end;
         IsPropertyField = function (this, symbol) 
             if MayHaveCodeMeta(this, symbol) then
@@ -397,26 +391,27 @@ System.namespace("CSharpLua", function (namespace)
             end
             return nil;
         end;
-        GetMethodCodeTemplate = function (this, symbol) 
+        GetInternalMethodMetaInfo = function (this, symbol, metaType) 
+            assert(symbol ~= nil);
             if symbol:getDeclaredAccessibility() ~= 6 --[[Accessibility.Public]] then
                 return nil;
             end
 
             local codeTemplate = nil;
-            if not IsFromCode(symbol) then
-                codeTemplate = System.access(GetTypeMetaInfo(this, symbol), System.access(function (default) return this:GetMethodMetaInfo; end(this, symbol:getName()), function (default) return this:GetCodeTemplate; end(this, symbol)));
+            if not CSharpLua.Utility.IsFromCode(symbol) then
+                codeTemplate = System.access(GetTypeMetaInfo(this, symbol), System.access(function (default) return this:GetMethodMetaInfo; end(this, symbol:getName()), function (default) return this:GetMetaInfo; end(this, symbol, metaType)));
             end
 
             if codeTemplate == nil then
                 if symbol:getIsOverride() then
                     if symbol:getOverriddenMethod() ~= nil then
-                        codeTemplate = GetMethodCodeTemplate(this, symbol:getOverriddenMethod());
+                        codeTemplate = GetInternalMethodMetaInfo(this, symbol:getOverriddenMethod(), metaType);
                     end
                 else
-                    local interfaceImplementations = InterfaceImplementations(symbol, Microsoft.CodeAnalysis.IMethodSymbol);
+                    local interfaceImplementations = CSharpLua.Utility.InterfaceImplementations(symbol, Microsoft.CodeAnalysis.IMethodSymbol);
                     if interfaceImplementations ~= nil then
                         for _, interfaceMethod in System.each(interfaceImplementations) do
-                            codeTemplate = GetMethodCodeTemplate(this, interfaceMethod);
+                            codeTemplate = GetInternalMethodMetaInfo(this, interfaceMethod, metaType);
                             if codeTemplate ~= nil then
                                 break;
                             end
@@ -426,14 +421,27 @@ System.namespace("CSharpLua", function (namespace)
             end
             return codeTemplate;
         end;
+        GetMethodMetaInfo = function (this, symbol, metaType) 
+            if symbol:getIsExtensionMethod() and symbol:getReducedFrom() ~= nil then
+                symbol = symbol:getReducedFrom();
+            end
+            return GetInternalMethodMetaInfo(this, symbol, metaType);
+        end;
+        GetMethodMapName = function (this, symbol) 
+            local name = GetMethodMetaInfo(this, symbol, 0 --[[MethodMetaType.Name]]);
+            return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, name or symbol:getName());
+        end;
+        GetMethodCodeTemplate = function (this, symbol) 
+            return GetMethodMetaInfo(this, symbol, 1 --[[MethodMetaType.CodeTemplate]]);
+        end;
         return {
             GetNamespaceMapName = GetNamespaceMapName, 
             GetTypeName = GetTypeName, 
             GetTypeShortName = GetTypeShortName, 
-            GetMethodMapName = GetMethodMapName, 
             IsPropertyField = IsPropertyField, 
             GetFieldCodeTemplate = GetFieldCodeTemplate, 
             GetProertyCodeTemplate = GetProertyCodeTemplate, 
+            GetMethodMapName = GetMethodMapName, 
             GetMethodCodeTemplate = GetMethodCodeTemplate, 
             __ctor__ = __ctor__
         };

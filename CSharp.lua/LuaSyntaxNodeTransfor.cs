@@ -35,10 +35,10 @@ namespace CSharpLua {
         private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
         private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
         private Stack<LuaFunctionExpressionSyntax> functions_ = new Stack<LuaFunctionExpressionSyntax>();
-        private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
-        private int checkedStatementCounter_;
-
+        private Stack<LuaIfStatementSyntax> ifStatements_ = new Stack<LuaIfStatementSyntax>();
+        private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
+  
         private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
             ["!="] = LuaSyntaxNode.Tokens.NotEquals,
             ["!"] = LuaSyntaxNode.Tokens.Not,
@@ -56,12 +56,6 @@ namespace CSharpLua {
         private XmlMetaProvider XmlMetaProvider {
             get {
                 return generator_.XmlMetaProvider;
-            }
-        }
-
-        private bool IsInCheckedBlock {
-            get {
-                return checkedStatementCounter_ > 0;
             }
         }
 
@@ -670,7 +664,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitBlock(BlockSyntax node) {
-            LuaBlockSyntax block = new LuaBlockSyntax();
+            LuaBlockStatementSyntax block = new LuaBlockStatementSyntax();
             blocks_.Push(block);
 
             var comments = node.DescendantTrivia().Where(i => i.IsKind(SyntaxKind.SingleLineCommentTrivia) || i.IsKind(SyntaxKind.MultiLineCommentTrivia));
@@ -695,14 +689,7 @@ namespace CSharpLua {
             }
 
             blocks_.Pop();
-            switch(node.Parent.Kind()) {
-                case SyntaxKind.Block:
-                case SyntaxKind.SwitchSection:
-                case SyntaxKind.CheckedStatement:
-                    return new LuaBlockBlockSyntax(block);
-                default:
-                    return block;
-            }
+            return block;
         }
 
         public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
@@ -1425,22 +1412,28 @@ namespace CSharpLua {
             var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
             LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
             WriteStatementOrBlock(node.Statement, ifStatement.Body);
-            ifStatement.Else = (LuaElseClauseSyntax)node.Else?.Accept(this);
+            ifStatements_.Push(ifStatement);
+            node.Else?.Accept(this);
+            ifStatements_.Pop();
             return ifStatement;
         }
 
         public override LuaSyntaxNode VisitElseClause(ElseClauseSyntax node) {
-            LuaStatementSyntax statement;
             if(node.Statement.IsKind(SyntaxKind.IfStatement)) {
-                statement = (LuaStatementSyntax)node.Statement.Accept(this);
+                var ifStatement = (IfStatementSyntax)node.Statement;
+                var condition = (LuaExpressionSyntax)ifStatement.Condition.Accept(this);
+                LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(condition);
+                WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
+                ifStatements_.Peek().ElseIfStatements.Add(elseIfStatement);
+                ifStatement.Else?.Accept(this);
+                return elseIfStatement;
             }
             else {
-                LuaBlockSyntax block = new LuaBlockSyntax();
-                WriteStatementOrBlock(node.Statement, block);
-                statement = block;
+                LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
+                WriteStatementOrBlock(node.Statement, elseClause.Body);
+                ifStatements_.Peek().Else = elseClause;
+                return elseClause;
             }
-            LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax(statement);
-            return elseClause;
         }
 
         public override LuaSyntaxNode VisitSwitchStatement(SwitchStatementSyntax node) {
@@ -1744,14 +1737,14 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitForStatement(ForStatementSyntax node) {
-            LuaBlockSyntax body = new LuaBlockSyntax();
-            blocks_.Push(body);
+            LuaBlockSyntax block = new LuaBlockStatementSyntax();
+            blocks_.Push(block);
 
             if(node.Declaration != null) {
-                body.Statements.Add((LuaVariableDeclarationSyntax)node.Declaration.Accept(this));
+                block.Statements.Add((LuaVariableDeclarationSyntax)node.Declaration.Accept(this));
             }
             var initializers = node.Initializers.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
-            body.Statements.AddRange(initializers);
+            block.Statements.AddRange(initializers);
 
             LuaExpressionSyntax condition = node.Condition != null ? (LuaExpressionSyntax)node.Condition.Accept(this) : LuaIdentifierNameSyntax.True;
             LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
@@ -1760,10 +1753,10 @@ namespace CSharpLua {
             var incrementors = node.Incrementors.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
             whileStatement.Body.Statements.AddRange(incrementors);
             blocks_.Pop();
-            body.Statements.Add(whileStatement);
+            block.Statements.Add(whileStatement);
             blocks_.Pop();
 
-            return new LuaBlockBlockSyntax(body);
+            return block;
         }
 
         public override LuaSyntaxNode VisitDoStatement(DoStatementSyntax node) {
@@ -1857,13 +1850,13 @@ namespace CSharpLua {
                 blocks_.Pop();
                 ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, whenTrue)));
 
-                LuaBlockSyntax block = new LuaBlockSyntax();
-                blocks_.Push(block);
+                LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
+                blocks_.Push(elseClause.Body);
                 var whenFalse = (LuaExpressionSyntax)node.WhenFalse.Accept(this);
                 blocks_.Pop();
-                block.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, whenFalse)));
+                elseClause.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, whenFalse)));
 
-                ifStatement.Else = new LuaElseClauseSyntax(block);
+                ifStatement.Else = elseClause;
                 CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(new LuaVariableDeclaratorSyntax(temp)));
                 CurBlock.Statements.Add(ifStatement);
                 return temp;
@@ -1923,15 +1916,13 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitCheckedStatement(CheckedStatementSyntax node) {
             LuaStatementListSyntax statements = new LuaStatementListSyntax();
             statements.Statements.Add(new LuaShortCommentStatement(" " + node.Keyword.ValueText));
-            ++checkedStatementCounter_;
             var block = (LuaStatementSyntax)node.Block.Accept(this);
-            --checkedStatementCounter_;
             statements.Statements.Add(block);
             return statements;
         }
 
         public override LuaSyntaxNode VisitCheckedExpression(CheckedExpressionSyntax node) {
-            //TODO Œ¥¥¶¿Ì
+            //TODO Êú™Â§ÑÁêÜ
             return node.Expression.Accept(this);
         }
     }

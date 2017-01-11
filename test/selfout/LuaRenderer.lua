@@ -5,12 +5,13 @@ System.namespace("CSharpLua", function (namespace)
         local getSetting, IsEnumExport, AddIndent, Outdent, WriteNewLine, WriteComma, WriteSpace, Write, 
         Write, Render, Render, Render, Render, Render, Render, Render, 
         WriteSeparatedSyntaxList, WriteArgumentList, Render, Render, Render, Render, Render, Render, 
-        Render, Render, Render, WriteEquals, Render, Render, Render, Render, 
+        Render, Render, Render, Render, WriteEquals, Render, Render, Render, 
         Render, Render, Render, Render, Render, Render, Render, Render, 
         Render, Render, Render, Render, Render, Render, Render, Render, 
         Render, Render, Render, Render, Render, Render, Render, Render, 
         Render, Render, Render, Render, Render, Render, Render, Render, 
-        Render, Render, Render, Render, Render, Render, __ctor__;
+        Render, Render, Render, Render, Render, Render, Render, Render, 
+        __ctor__;
         __ctor__ = function (this, generator, writer) 
             this.generator_ = generator;
             this.writer_ = writer;
@@ -122,7 +123,7 @@ System.namespace("CSharpLua", function (namespace)
             WriteSpace(this);
             function_.ParameterList:Render(this);
             WriteSpace(this);
-            local returnStatement = System.cast(CSharpLua.LuaAst.LuaReturnStatementSyntax, First(function_.Body.Statements, CSharpLua.LuaAst.LuaStatementSyntax));
+            local returnStatement = System.cast(CSharpLua.LuaAst.LuaReturnStatementSyntax, CSharpLua.Utility.First(function_.Body.Statements, CSharpLua.LuaAst.LuaStatementSyntax));
             Write(this, returnStatement:getReturnKeyword());
             WriteSpace(this);
             returnStatement.Expression:Render(this);
@@ -145,6 +146,10 @@ System.namespace("CSharpLua", function (namespace)
             end
             Outdent(this);
             Write(this, node.CloseBraceToken);
+        end;
+        Render = function (this, node) 
+            Render(this, System.cast(CSharpLua.LuaAst.LuaBlockSyntax, node));
+            WriteNewLine(this);
         end;
         Render = function (this, node) 
             node.Identifier:Render(this);
@@ -357,21 +362,24 @@ System.namespace("CSharpLua", function (namespace)
             WriteSpace(this);
             Write(this, node:getOpenParenToken());
             node.Body:Render(this);
-            local isClose = true;
-            if node.Else ~= nil then
-                node.Else:Render(this);
-                if System.is(node.Else.Statement, CSharpLua.LuaAst.LuaIfStatementSyntax) then
-                    isClose = false;
-                end
+            for _, elseIfNode in System.each(node.ElseIfStatements) do
+                elseIfNode:Render(this);
             end
-            if isClose then
-                Write(this, node:getCloseParenToken());
-                WriteNewLine(this);
-            end
+            System.access(node.Else, function (default) return this:Render; end(this, this));
+            Write(this, node:getCloseParenToken());
+            WriteNewLine(this);
+        end;
+        Render = function (this, node) 
+            Write(this, node:getElseIfKeyword());
+            WriteSpace(this);
+            node.Condition:Render(this);
+            WriteSpace(this);
+            Write(this, node:getOpenParenToken());
+            node.Body:Render(this);
         end;
         Render = function (this, node) 
             Write(this, node:getElseKeyword());
-            node.Statement:Render(this);
+            node.Body:Render(this);
         end;
         Render = function (this, node) 
             Write(this, node.OperatorToken);
@@ -413,6 +421,18 @@ System.namespace("CSharpLua", function (namespace)
             node.RepeatStatement:Render(this);
         end;
         Render = function (this, node) 
+            Write(this, node:getIfKeyword());
+            WriteSpace(this);
+            node.Condition:Render(this);
+            WriteSpace(this);
+            Write(this, node:getOpenParenToken());
+            WriteSpace(this);
+            node.Assignment:Render(this);
+            WriteSpace(this);
+            Write(this, node:getCloseParenToken());
+            WriteNewLine(this);
+        end;
+        Render = function (this, node) 
             Write(this, node:getBreakKeyword());
             Write(this, node:getSemicolonToken());
             WriteNewLine(this);
@@ -420,10 +440,6 @@ System.namespace("CSharpLua", function (namespace)
         Render = function (this, node) 
             node.Assignment:Render(this);
             node:getBreak():Render(this);
-        end;
-        Render = function (this, node) 
-            node.Body:Render(this);
-            WriteNewLine(this);
         end;
         Render = function (this, node) 
             do
@@ -481,6 +497,8 @@ System.namespace("CSharpLua", function (namespace)
             isNewLine_ = False, 
             indentLevel_ = 0, 
             IsEnumExport = IsEnumExport, 
+            Render = Render, 
+            Render = Render, 
             Render = Render, 
             Render = Render, 
             Render = Render, 

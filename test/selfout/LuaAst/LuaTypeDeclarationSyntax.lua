@@ -159,7 +159,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.ctors_:Add(function_);
         end;
         AddInitFunction = function (this, name, initFunction, isAddItem) 
-            isAddItem = isAddItem or true;
+            if isAddItem == nil then isAddItem = true end
             local assignment = CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(name, initFunction);
             this:Add(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
             this.local_.Variables:Add(name);
@@ -213,12 +213,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
 
                 if #this.ctors_ == 1 then
-                    AddInitFunction(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Ctor, First(this.ctors_, CSharpLua.LuaAst.LuaConstructorAdapterExpressionSyntax));
+                    AddInitFunction(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Ctor, CSharpLua.Utility.First(this.ctors_, CSharpLua.LuaAst.LuaConstructorAdapterExpressionSyntax));
                 else
                     local ctrosTable = CSharpLua.LuaAst.LuaTableInitializerExpression();
                     local index = 1;
                     for _, ctor in System.each(this.ctors_) do
-                        local name = SpecailWord(this, "ctor" --[[Tokens.Ctor]] .. index);
+                        local name = CSharpLua.LuaAst.LuaSyntaxNode.SpecailWord("ctor" --[[Tokens.Ctor]] .. index);
                         local nameIdentifier = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, name);
                         AddInitFunction(this, nameIdentifier, ctor, false);
                         ctrosTable.Items:Add(CSharpLua.LuaAst.LuaSingleTableItemSyntax(nameIdentifier));
@@ -238,6 +238,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             AddResultTable(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Inherits, table);
         end;
         Render = function (this, renderer) 
+            if this.IsPartialMark then
+                return;
+            end
+
             this:Add(this.local_);
             AddStaticCtorFunction(this);
             AddCtorsFunction(this);
@@ -261,6 +265,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __inherits__ = {
                 CSharpLua.LuaAst.LuaWrapFunctionStatementSynatx
             }, 
+            IsPartialMark = False, 
             AddStaticReadOnlyAssignmentName = AddStaticReadOnlyAssignmentName, 
             AddTypeIdentifier = AddTypeIdentifier, 
             AddMethod = AddMethod, 

@@ -59,18 +59,14 @@ System.namespace("CSharpLua", function (namespace)
             System.using(function (ms) 
                 local result = compilation:Emit(ms);
                 if not result:getSuccess() then
-                    local errors = Where(result:getDiagnostics(), function (i) return i:getSeverity() == 3 --[[DiagnosticSeverity.Error]]; end, Microsoft.CodeAnalysis.Diagnostic);
+                    local errors = System.Linq.ImmutableArrayExtensions.Where(result:getDiagnostics(), function (i) return i:getSeverity() == 3 --[[DiagnosticSeverity.Error]]; end, Microsoft.CodeAnalysis.Diagnostic);
                     local message = System.String.Join("\n", errors, Microsoft.CodeAnalysis.Diagnostic);
                     System.throw(CSharpLua.CompilationErrorException(message));
                 end
             end, System.IO.MemoryStream());
 
-            if not System.IO.Directory.Exists(this.output_) then
-                System.IO.Directory.CreateDirectory(this.output_);
-            end
-
-            local generator = CSharpLua.LuaSyntaxGenerator(getMetas(this));
-            generator:Generate(compilation, function (luaCompilationUnit) 
+            local generator = CSharpLua.LuaSyntaxGenerator(getMetas(this), compilation);
+            generator:Generate(function (luaCompilationUnit) 
                 local outFile = GetOutFilePath(this, luaCompilationUnit.FilePath);
                 return System.IO.StreamWriter(outFile, false, getEncoding());
             end);

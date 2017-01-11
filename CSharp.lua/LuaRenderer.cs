@@ -188,6 +188,11 @@ namespace CSharpLua {
             Write(node.CloseBraceToken);
         }
 
+        internal void Render(LuaBlockStatementSyntax node) {
+            Render((LuaBlockSyntax)node);
+            WriteNewLine();
+        }
+
         internal void Render(LuaIdentifierLiteralExpressionSyntax node) {
             node.Identifier.Render(this);
         }
@@ -424,22 +429,26 @@ namespace CSharpLua {
             WriteSpace();
             Write(node.OpenParenToken);
             node.Body.Render(this);
-            bool isClose = true;
-            if(node.Else != null) {
-                node.Else.Render(this);
-                if(node.Else.Statement is LuaIfStatementSyntax) {
-                    isClose = false;
-                }
+            foreach(var elseIfNode in node.ElseIfStatements) {
+                elseIfNode.Render(this);
             }
-            if(isClose) {
-                Write(node.CloseParenToken);
-                WriteNewLine();
-            }
+            node.Else?.Render(this);
+            Write(node.CloseParenToken);
+            WriteNewLine();
+        }
+
+        internal void Render(LuaElseIfStatementSyntax node) {
+            Write(node.ElseIfKeyword);
+            WriteSpace();
+            node.Condition.Render(this);
+            WriteSpace();
+            Write(node.OpenParenToken);
+            node.Body.Render(this);
         }
 
         internal void Render(LuaElseClauseSyntax node) {
             Write(node.ElseKeyword);
-            node.Statement.Render(this);
+            node.Body.Render(this);
         }
 
         internal void Render(LuaPrefixUnaryExpressionSyntax node) {
@@ -508,11 +517,6 @@ namespace CSharpLua {
         internal void Render(LuaContinueAdapterStatementSyntax node) {
             node.Assignment.Render(this);
             node.Break.Render(this);
-        }
-
-        internal void Render(LuaBlockBlockSyntax node) {
-            node.Body.Render(this);
-            WriteNewLine();
         }
 
         internal void Render(LuaBlankLinesStatement node) {

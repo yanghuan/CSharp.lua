@@ -17,27 +17,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __ctor__ = __ctor__
         };
     end);
-    namespace.class("LuaBlockBlockSyntax", function (namespace) 
-        local Render, __init__, __ctor__;
-        __init__ = function (this) 
-            this.Body = System.create(CSharpLua.LuaAst.LuaBlockSyntax(), function (default) 
-                default.OpenBraceToken = "do" --[[Keyword.Do]];
-                default.CloseBraceToken = "end" --[[Keyword.End]];
-            end);
-        end;
-        __ctor__ = function (this, block) 
-            __init__(this);
-            if block == nil then
-                System.throw(System.ArgumentNullException("block"));
-            end
-            this.Body.Statements:AddRange(block.Statements);
+    namespace.class("LuaBlockStatementSyntax", function (namespace) 
+        local Render, __ctor__;
+        __ctor__ = function (this) 
+            this.OpenBraceToken = "do" --[[Keyword.Do]];
+            this.CloseBraceToken = "end" --[[Keyword.End]];
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaStatementSyntax
+                CSharpLua.LuaAst.LuaBlockSyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
