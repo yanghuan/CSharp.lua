@@ -972,8 +972,7 @@ namespace CSharpLua {
 
         private void CheckInvocationCallerAttribute(IMethodSymbol symbol, InvocationExpressionSyntax node, LuaInvocationExpressionSyntax invocation) {
             int argumentCount = node.ArgumentList.Arguments.Count;
-            int optionalCount = symbol.Parameters.Length - argumentCount;
-            if(optionalCount > 0) {
+            if(symbol.Parameters.Length > argumentCount) {
                 var optionalParameters = symbol.Parameters.Skip(argumentCount);
                 int prevCallerIndex = -1;
                 int index = 0;
@@ -1109,7 +1108,7 @@ namespace CSharpLua {
             }
         }
 
-        private string BuildStaticFieldName(ISymbol symbol, bool isReadOnly, IdentifierNameSyntax node) {
+        private LuaExpressionSyntax BuildStaticFieldName(ISymbol symbol, bool isReadOnly, IdentifierNameSyntax node) {
             Contract.Assert(symbol.IsStatic);
             string name;
             if(symbol.DeclaredAccessibility == Accessibility.Private) {
@@ -1124,6 +1123,10 @@ namespace CSharpLua {
                             CurType.AddStaticReadOnlyAssignmentName(name);
                         }
                     }
+                    var usingStaticType = CheckUsingStaticNameSyntax(symbol, node);
+                    if(usingStaticType != null) {
+                        return new LuaMemberAccessExpressionSyntax(usingStaticType, new LuaIdentifierNameSyntax(name));
+                    }
                 }
                 else {
                     var constructor = CurFunction as LuaConstructorAdapterExpressionSyntax;
@@ -1136,11 +1139,15 @@ namespace CSharpLua {
                         }
                         else {
                             name = symbol.Name;
+                            var usingStaticType = CheckUsingStaticNameSyntax(symbol, node);
+                            if(usingStaticType != null) {
+                                return new LuaMemberAccessExpressionSyntax(usingStaticType, new LuaIdentifierNameSyntax(name));
+                            }
                         }
                     }
                 }
             }
-            return name;
+            return new LuaIdentifierNameSyntax(name);
         }
 
         private bool IsInternalNode(NameSyntax node) {
@@ -1179,10 +1186,15 @@ namespace CSharpLua {
 
             if(symbol.IsStatic) {
                 if(isField) {
-                    name = BuildStaticFieldName(symbol, isReadOnly, node);
+                    return BuildStaticFieldName(symbol, isReadOnly, node);
                 }
                 else {
-                    return new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, symbol.Name));
+                    var identifierExpression = new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, symbol.Name));
+                    var usingStaticType = CheckUsingStaticNameSyntax(symbol, node);
+                    if(usingStaticType != null) {
+                        return new LuaMemberAccessExpressionSyntax(usingStaticType, identifierExpression);
+                    }
+                    return identifierExpression;
                 }
             }
             else {
@@ -1218,6 +1230,10 @@ namespace CSharpLua {
         private LuaExpressionSyntax GetMethodNameExpression(IMethodSymbol symbol, NameSyntax node) {
             LuaIdentifierNameSyntax methodName = XmlMetaProvider.GetMethodMapName(symbol);
             if(symbol.IsStatic) {
+                var usingStaticType = CheckUsingStaticNameSyntax(symbol, node);
+                if(usingStaticType != null) {
+                    return new LuaMemberAccessExpressionSyntax(usingStaticType, methodName);
+                }
                 return methodName;
             }
             else {
@@ -1269,7 +1285,7 @@ namespace CSharpLua {
                                     return GetConstLiteralExpression(fieldSymbol);
                                 }
                             }
-                            name = BuildStaticFieldName(symbol, fieldSymbol.IsReadOnly, node);
+                            return BuildStaticFieldName(symbol, fieldSymbol.IsReadOnly, node);
                         }
                         else {
                             if(IsInternalNode(node)) {

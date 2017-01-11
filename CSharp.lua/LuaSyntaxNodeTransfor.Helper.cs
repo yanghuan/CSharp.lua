@@ -423,5 +423,15 @@ namespace CSharpLua {
                     return null;
             }
         }
+
+        private LuaExpressionSyntax CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node) {
+            if(!node.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+                if(symbol.ContainingType != GetTypeDeclarationSymbol(node)) {           //using static
+                    var luadTypeExpression = XmlMetaProvider.GetTypeName(symbol.ContainingType);
+                    return luadTypeExpression;
+                }
+            }
+            return null;
+        }
     }
 }
