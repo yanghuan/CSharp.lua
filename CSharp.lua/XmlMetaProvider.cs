@@ -105,6 +105,11 @@ namespace CSharpLua {
             public NamespaceModel[] Namespaces;
         }
 
+        private enum MethodMetaType {
+            Name,
+            CodeTemplate,
+        }
+
         private sealed class MethodMetaInfo {
             private List<XmlMetaModel.MethodModel> models_ = new List<XmlMetaModel.MethodModel>();
             private bool isSingleModel_;
@@ -179,7 +184,7 @@ namespace CSharpLua {
                 return true;
             }
 
-            public string GetName(IMethodSymbol symbol) {
+            private string GetName(IMethodSymbol symbol) {
                 if(isSingleModel_) {
                     return models_.First().Name;
                 }
@@ -188,13 +193,27 @@ namespace CSharpLua {
                 return methodModel?.Name;
             }
 
-            internal string GetCodeTemplate(IMethodSymbol symbol) {
+            private string GetCodeTemplate(IMethodSymbol symbol) {
                 if(isSingleModel_) {
                     return models_.First().Template;
                 }
 
                 var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
                 return methodModel?.Template;
+            }
+
+            public string GetMetaInfo(IMethodSymbol symbol, MethodMetaType type) {
+                switch(type) {
+                    case MethodMetaType.Name: {
+                            return GetName(symbol);
+                        }
+                    case MethodMetaType.CodeTemplate: {
+                            return GetCodeTemplate(symbol);
+                        }
+                    default: {
+                            throw new InvalidOperationException();
+                        }
+                }
             }
         }
 
@@ -412,42 +431,6 @@ namespace CSharpLua {
             return typeMetas_.GetOrDefault(typeName);
         }
 
-        private string GetMethodName(IMethodSymbol symbol) {
-            if(symbol.DeclaredAccessibility != Accessibility.Public) {
-                return null;
-            }
-
-            string name = null;
-            if(!symbol.IsFromCode()) {
-                name = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetName(symbol);
-            }
-
-            if(name == null) {
-                if(symbol.IsOverride) {
-                    if(symbol.OverriddenMethod != null) {
-                        name = GetMethodName(symbol.OverriddenMethod);
-                    }
-                }
-                else {
-                    var interfaceImplementations = symbol.InterfaceImplementations();
-                    if(interfaceImplementations != null) {
-                        foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
-                            name = GetMethodName(interfaceMethod);
-                            if(name != null) {
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            return name;
-        }
-
-        public LuaIdentifierNameSyntax GetMethodMapName(IMethodSymbol symbol) {
-            string name = GetMethodName(symbol);
-            return new LuaIdentifierNameSyntax(name ?? symbol.Name);
-        }
-
         public bool IsPropertyField(IPropertySymbol symbol) {
             if(MayHaveCodeMeta(symbol)) {
                 var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
@@ -473,27 +456,28 @@ namespace CSharpLua {
             return null;
         }
 
-        public string GetMethodCodeTemplate(IMethodSymbol symbol) {
+        private string GetInternalMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {
+            Contract.Assert(symbol != null);
             if(symbol.DeclaredAccessibility != Accessibility.Public) {
                 return null;
             }
 
             string codeTemplate = null;
             if(!symbol.IsFromCode()) {
-                codeTemplate = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetCodeTemplate(symbol);
+                codeTemplate = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetMetaInfo(symbol, metaType);
             }
 
             if(codeTemplate == null) {
                 if(symbol.IsOverride) {
                     if(symbol.OverriddenMethod != null) {
-                        codeTemplate = GetMethodCodeTemplate(symbol.OverriddenMethod);
+                        codeTemplate = GetInternalMethodMetaInfo(symbol.OverriddenMethod, metaType);
                     }
                 }
                 else {
                     var interfaceImplementations = symbol.InterfaceImplementations();
                     if(interfaceImplementations != null) {
                         foreach(IMethodSymbol interfaceMethod in interfaceImplementations) {
-                            codeTemplate = GetMethodCodeTemplate(interfaceMethod);
+                            codeTemplate = GetInternalMethodMetaInfo(interfaceMethod, metaType);
                             if(codeTemplate != null) {
                                 break;
                             }
@@ -502,6 +486,22 @@ namespace CSharpLua {
                 }
             }
             return codeTemplate;
+        }
+
+        private string GetMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {
+            if(symbol.IsExtensionMethod && symbol.ReducedFrom != null) {
+                symbol = symbol.ReducedFrom;
+            }
+            return GetInternalMethodMetaInfo(symbol, metaType);
+        }
+
+        public LuaIdentifierNameSyntax GetMethodMapName(IMethodSymbol symbol) {
+            string name = GetMethodMetaInfo(symbol, MethodMetaType.Name);
+            return new LuaIdentifierNameSyntax(name ?? symbol.Name);
+        }
+
+        public string GetMethodCodeTemplate(IMethodSymbol symbol) {
+            return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate);
         }
     }
 }

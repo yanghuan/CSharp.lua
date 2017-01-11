@@ -372,8 +372,8 @@ namespace CSharpLua {
         }
 
         private LuaInvocationExpressionSyntax BuildDefaultValueExpression(TypeSyntax type) {
-            var identifierName = (LuaExpressionSyntax)type.Accept(this);
-            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, identifierName);
+            var identifier = (LuaExpressionSyntax)type.Accept(this);
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, identifier);
         }
 
         private void VisitBaseFieldDeclarationSyntax(BaseFieldDeclarationSyntax node) {
