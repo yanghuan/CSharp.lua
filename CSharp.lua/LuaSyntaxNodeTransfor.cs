@@ -534,23 +534,24 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitEventDeclaration(EventDeclarationSyntax node) {
-            bool isStatic = node.Modifiers.IsStatic();
-            bool isPrivate = node.Modifiers.IsPrivate();
-            foreach(var accessor in node.AccessorList.Accessors) {
-                var block = (LuaBlockSyntax)accessor.Body.Accept(this);
-                LuaFunctionExpressionSyntax functionExpress = new LuaFunctionExpressionSyntax();
-                if(!isStatic) {
-                    functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
-                }
-                functionExpress.AddParameter(LuaIdentifierNameSyntax.Value);
-                functionExpress.Body.Statements.AddRange(block.Statements);
-                LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(false, node.Identifier.ValueText);
-                CurType.AddMethod(name, functionExpress, isPrivate);
-                if(accessor.IsKind(SyntaxKind.RemoveAccessorDeclaration)) {
-                    name.IsGetOrAdd = false;
+            if(!node.Modifiers.IsAbstract()) {
+                bool isStatic = node.Modifiers.IsStatic();
+                bool isPrivate = node.Modifiers.IsPrivate();
+                foreach(var accessor in node.AccessorList.Accessors) {
+                    var block = (LuaBlockSyntax)accessor.Body.Accept(this);
+                    LuaFunctionExpressionSyntax functionExpress = new LuaFunctionExpressionSyntax();
+                    if(!isStatic) {
+                        functionExpress.AddParameter(LuaIdentifierNameSyntax.This);
+                    }
+                    functionExpress.AddParameter(LuaIdentifierNameSyntax.Value);
+                    functionExpress.Body.Statements.AddRange(block.Statements);
+                    LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(false, node.Identifier.ValueText);
+                    CurType.AddMethod(name, functionExpress, isPrivate);
+                    if(accessor.IsKind(SyntaxKind.RemoveAccessorDeclaration)) {
+                        name.IsGetOrAdd = false;
+                    }
                 }
             }
-
             return base.VisitEventDeclaration(node);
         }
 
