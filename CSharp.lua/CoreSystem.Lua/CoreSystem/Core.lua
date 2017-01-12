@@ -293,11 +293,6 @@ function System.mod(x, y)
     return x % y;
 end
 
-function System.strconcat(t)    
-    if t == nil then return "" end
-    return t:ToString()
-end
-
 System.time = time
     
 function System.getTimeZone()

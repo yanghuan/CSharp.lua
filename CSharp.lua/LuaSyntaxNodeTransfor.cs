@@ -1534,9 +1534,10 @@ namespace CSharpLua {
                 return new LuaInvocationExpressionSyntax(memberAccess);
             }
             else {
-                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringConcat);
-                invocation.AddArgument(original);
-                return invocation;
+                LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);
+                var andExpression = new LuaBinaryExpressionSyntax(original, LuaSyntaxNode.Tokens.And, new LuaInvocationExpressionSyntax(memberAccess));
+                var orExpression = new LuaBinaryExpressionSyntax(andExpression, LuaSyntaxNode.Tokens.Or, LuaStringLiteralExpressionSyntax.Empty);
+                return new LuaParenthesizedExpressionSyntax(orExpression);
             }
         }
 

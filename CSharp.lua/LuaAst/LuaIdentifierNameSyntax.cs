@@ -63,7 +63,6 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax StringChar = new LuaIdentifierNameSyntax("string.char");
         public readonly static LuaIdentifierNameSyntax ToStr = new LuaIdentifierNameSyntax("ToString");
         public readonly static LuaIdentifierNameSyntax ToEnumString = new LuaIdentifierNameSyntax("ToEnumString");
-        public readonly static LuaIdentifierNameSyntax StringConcat = new LuaIdentifierNameSyntax("System.strconcat");
         public readonly static LuaIdentifierNameSyntax DelegateCombine = new LuaIdentifierNameSyntax("System.combine");
         public readonly static LuaIdentifierNameSyntax DelegateRemove = new LuaIdentifierNameSyntax("System.remove");
         public readonly static LuaIdentifierNameSyntax DelegateBind = new LuaIdentifierNameSyntax("System.bind");
