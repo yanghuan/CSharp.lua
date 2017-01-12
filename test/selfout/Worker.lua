@@ -5,16 +5,6 @@ System.namespace("CSharpLua", function (namespace)
     namespace.class("Worker", function (namespace) 
         local getEncoding, SystemDlls, getMetas, getLibs, Do, Compiler, GetOutFilePath, __staticCtor__, 
         __ctor__;
-        __staticCtor__ = function (this) 
-            SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll");
-        end;
-        __ctor__ = function (this, folder, output, lib, meta, defines) 
-            this.folder_ = folder;
-            this.output_ = output;
-            this.libs_ = CSharpLua.Utility.Split(lib);
-            this.metas_ = CSharpLua.Utility.Split(meta);
-            this.defines_ = CSharpLua.Utility.Split(defines, false);
-        end;
         getEncoding = function () 
             return System.Text.Encoding.getUTF8();
         end;
@@ -81,6 +71,16 @@ System.namespace("CSharpLua", function (namespace)
                 System.IO.Directory.CreateDirectory(dir);
             end
             return path;
+        end;
+        __staticCtor__ = function (this) 
+            SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll");
+        end;
+        __ctor__ = function (this, folder, output, lib, meta, defines) 
+            this.folder_ = folder;
+            this.output_ = output;
+            this.libs_ = CSharpLua.Utility.Split(lib);
+            this.metas_ = CSharpLua.Utility.Split(meta);
+            this.defines_ = CSharpLua.Utility.Split(defines, false);
         end;
         return {
             Do = Do, 

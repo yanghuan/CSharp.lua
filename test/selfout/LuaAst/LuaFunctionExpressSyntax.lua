@@ -3,13 +3,6 @@ local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaFunctionExpressionSyntax", function (namespace) 
         local getFunctionKeyword, AddParameter, Render, __ctor__;
-        __ctor__ = function (this) 
-            this.ParameterList = CSharpLua.LuaAst.LuaParameterListSyntax();
-            this.Body = System.create(CSharpLua.LuaAst.LuaBlockSyntax(), function (default) 
-                default.OpenBraceToken = CSharpLua.LuaAst.LuaSyntaxNode.Tokens.getEmpty();
-                default.CloseBraceToken = "end" --[[Keyword.End]];
-            end);
-        end;
         getFunctionKeyword = function (this) 
             return "function" --[[Keyword.Function]];
         end;
@@ -18,6 +11,13 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.ParameterList = CSharpLua.LuaAst.LuaParameterListSyntax();
+            this.Body = System.create(CSharpLua.LuaAst.LuaBlockSyntax(), function (default) 
+                default.OpenBraceToken = CSharpLua.LuaAst.LuaSyntaxNode.Tokens.getEmpty();
+                default.CloseBraceToken = "end" --[[Keyword.End]];
+            end);
         end;
         return {
             __inherits__ = {
@@ -33,14 +33,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaSimpleLambdaAdapterExpression", function (namespace) 
         local getEndToken, Render, __ctor__;
-        __ctor__ = function (this, functionExpress) 
-            this.FunctionExpress = functionExpress;
-        end;
         getEndToken = function (this) 
             return "end" --[[Keyword.End]];
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, functionExpress) 
+            this.FunctionExpress = functionExpress;
         end;
         return {
             __inherits__ = {

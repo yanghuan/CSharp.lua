@@ -161,7 +161,7 @@ namespace CSharpLua.LuaAst {
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(initMethodIdentifier);
             invocation.AddArgument(new LuaStringLiteralExpressionSyntax(identifierName));
             assignment.Rights.Add(invocation);
-            Add(new LuaExpressionStatementSyntax(assignment));
+            methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
 
             if(value != null) {
                 if(isStatic) {
@@ -207,7 +207,7 @@ namespace CSharpLua.LuaAst {
 
         private void AddInitFunction(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax initFunction, bool isAddItem = true) {
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, initFunction);
-            Add(new LuaExpressionStatementSyntax(assignment));
+            methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
             local_.Variables.Add(name);
             if(isAddItem) {
                 AddResultTable(name);
@@ -296,13 +296,13 @@ namespace CSharpLua.LuaAst {
                 return;
             }
 
-            Add(local_);
+            statements_.Add(local_);
             AddStaticCtorFunction();
             AddCtorsFunction();
-            Add(methodList_);
+            statements_.Add(methodList_);
 
             LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(resultTable_);
-            Add(returnStatement);
+            statements_.Add(returnStatement);
 
             if(typeIdentifiers_.Count > 0) {
                 LuaFunctionExpressionSyntax wrapFunction = new LuaFunctionExpressionSyntax();

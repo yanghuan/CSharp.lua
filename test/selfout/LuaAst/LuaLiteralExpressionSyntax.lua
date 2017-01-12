@@ -2,29 +2,25 @@
 local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaLiteralExpressionSyntax", function (namespace) 
-        getText, setText = System.property("Text");
-        local getText, setText;
         return {
             __inherits__ = {
                 CSharpLua.LuaAst.LuaExpressionSyntax
-            }, 
-            getText = getText, 
-            setText = setText
+            }
         };
     end);
     namespace.class("LuaIdentifierLiteralExpressionSyntax", function (namespace) 
         local getText, Render, __ctor1__, __ctor2__;
-        __ctor1__ = function (this, text) 
-            __ctor2__(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, text));
-        end;
-        __ctor2__ = function (this, identifier) 
-            this.Identifier = identifier;
-        end;
         getText = function (this) 
             return this.Identifier.ValueText;
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor1__ = function (this, text) 
+            __ctor2__(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, text));
+        end;
+        __ctor2__ = function (this, identifier) 
+            this.Identifier = identifier;
         end;
         return {
             __inherits__ = {
@@ -40,13 +36,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaStringLiteralExpressionSyntax", function (namespace) 
         local getOpenParenToken, getCloseParenToken, getText, Render, Empty, __staticCtor__, __ctor__;
-        __staticCtor__ = function (this) 
-            Empty = CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax:new(1, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Empty);
-            this.Empty = Empty;
-        end;
-        __ctor__ = function (this, identifier) 
-            this.Identifier = identifier;
-        end;
         getOpenParenToken = function (this) 
             return "\"" --[[Tokens.Quote]];
         end;
@@ -58,6 +47,13 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __staticCtor__ = function (this) 
+            Empty = CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax:new(1, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Empty);
+            this.Empty = Empty;
+        end;
+        __ctor__ = function (this, identifier) 
+            this.Identifier = identifier;
         end;
         return {
             __inherits__ = {
@@ -72,12 +68,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         };
     end);
     namespace.class("LuaVerbatimStringLiteralExpressionSyntax", function (namespace) 
-        getText, setText = System.property("Text");
         local getText, setText, getOpenBracket, getCloseBracket, Render, __ctor__;
-        __ctor__ = function (this, text, equalsCount) 
-            setText(this, text);
-            this.EqualsCount = equalsCount;
-        end;
+        getText, setText = System.property("Text");
         getOpenBracket = function (this) 
             return "[" --[[Tokens.OpenBracket]];
         end;
@@ -86,6 +78,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, text, equalsCount) 
+            setText(this, text);
+            this.EqualsCount = equalsCount;
         end;
         return {
             __inherits__ = {
@@ -102,13 +98,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaConstLiteralExpression", function (namespace) 
         local getOpenComment, getCloseComment, getText, Render, __ctor1__, __ctor2__;
-        __ctor1__ = function (this, value, identifierToken) 
-            __ctor2__(this, CSharpLua.LuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, value), identifierToken);
-        end;
-        __ctor2__ = function (this, value, identifierToken) 
-            this.Value = value;
-            this.IdentifierToken = identifierToken;
-        end;
         getOpenComment = function (this) 
             return "--[[" --[[Tokens.OpenLongComment]];
         end;
@@ -120,6 +109,13 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor1__ = function (this, value, identifierToken) 
+            __ctor2__(this, CSharpLua.LuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, value), identifierToken);
+        end;
+        __ctor2__ = function (this, value, identifierToken) 
+            this.Value = value;
+            this.IdentifierToken = identifierToken;
         end;
         return {
             __inherits__ = {
@@ -137,11 +133,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaCharacterLiteralExpression", function (namespace) 
         local GetIdentifierToken, __ctor__;
-        __ctor__ = function (this, character) 
-            CSharpLua.LuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(this, character));
-        end;
         GetIdentifierToken = function (character) 
             return Microsoft.CodeAnalysis.CSharp.SyntaxFactory.Literal(character):getText();
+        end;
+        __ctor__ = function (this, character) 
+            CSharpLua.LuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(this, character));
         end;
         return {
             __inherits__ = {

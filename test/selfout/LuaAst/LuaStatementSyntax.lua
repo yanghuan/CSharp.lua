@@ -14,12 +14,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             };
         end);
         local getSemicolonToken, Empty, __staticCtor__;
+        getSemicolonToken = function (this) 
+            return CSharpLua.LuaAst.LuaSyntaxNode.Tokens.Semicolon;
+        end;
         __staticCtor__ = function (this) 
             Empty = CSharpLua.LuaAst.LuaStatementSyntax.EmptyLuaStatementSyntax();
             this.Empty = Empty;
-        end;
-        getSemicolonToken = function (this) 
-            return CSharpLua.LuaAst.LuaSyntaxNode.Tokens.Semicolon;
         end;
         return {
             __inherits__ = {
@@ -31,14 +31,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaExpressionStatementSyntax", function (namespace) 
         local Render, __ctor__;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor__ = function (this, expression) 
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
             this.Expression = expression;
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -50,11 +50,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaStatementListSyntax", function (namespace) 
         local Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Statements = System.List(CSharpLua.LuaAst.LuaStatementSyntax)();
-        end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Statements = System.List(CSharpLua.LuaAst.LuaStatementSyntax)();
         end;
         return {
             __inherits__ = {
@@ -66,6 +66,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaReturnStatementSyntax", function (namespace) 
         local getReturnKeyword, Render, __ctor1__, __ctor2__;
+        getReturnKeyword = function (this) 
+            return "return" --[[Keyword.Return]];
+        end;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor1__ = function (this, expression) 
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
@@ -73,12 +79,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Expression = expression;
         end;
         __ctor2__ = function (this) 
-        end;
-        getReturnKeyword = function (this) 
-            return "return" --[[Keyword.Return]];
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -94,14 +94,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaMultipleReturnStatementSyntax", function (namespace) 
         local getReturnKeyword, Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Expressions = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
-        end;
         getReturnKeyword = function (this) 
             return "return" --[[Keyword.Return]];
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Expressions = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
         end;
         return {
             __inherits__ = {
@@ -114,17 +114,17 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaBreakStatementSyntax", function (namespace) 
         local getBreakKeyword, Render, Statement, __staticCtor__, __ctor__;
-        __staticCtor__ = function (this) 
-            Statement = CSharpLua.LuaAst.LuaBreakStatementSyntax:new(1);
-            this.Statement = Statement;
-        end;
-        __ctor__ = function (this) 
-        end;
         getBreakKeyword = function (this) 
             return "break" --[[Keyword.Break]];
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __staticCtor__ = function (this) 
+            Statement = CSharpLua.LuaAst.LuaBreakStatementSyntax:new(1);
+            this.Statement = Statement;
+        end;
+        __ctor__ = function (this) 
         end;
         return {
             __inherits__ = {
@@ -138,18 +138,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaContinueAdapterStatementSyntax", function (namespace) 
         local getBreak, Render, Statement, __staticCtor__, __ctor__;
+        getBreak = function (this) 
+            return CSharpLua.LuaAst.LuaBreakStatementSyntax.Statement;
+        end;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __staticCtor__ = function (this) 
             Statement = CSharpLua.LuaAst.LuaContinueAdapterStatementSyntax:new(1);
             this.Statement = Statement;
         end;
         __ctor__ = function (this) 
             this.Assignment = CSharpLua.LuaAst.LuaExpressionStatementSyntax(CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax.Continue, CSharpLua.LuaAst.LuaIdentifierNameSyntax.True));
-        end;
-        getBreak = function (this) 
-            return CSharpLua.LuaAst.LuaBreakStatementSyntax.Statement;
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -163,15 +163,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaBlankLinesStatement", function (namespace) 
         local Render, One, __staticCtor__, __ctor__;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __staticCtor__ = function (this) 
             One = CSharpLua.LuaAst.LuaBlankLinesStatement:new(1, 1);
             this.One = One;
         end;
         __ctor__ = function (this, count) 
             this.Count = count;
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -185,14 +185,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaShortCommentStatement", function (namespace) 
         local getSingleCommentToken, Render, __ctor__;
-        __ctor__ = function (this, comment) 
-            this.Comment = comment;
-        end;
         getSingleCommentToken = function (this) 
             return "--" --[[Tokens.ShortComment]];
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, comment) 
+            this.Comment = comment;
         end;
         return {
             __inherits__ = {
@@ -205,9 +205,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaLongCommentStatement", function (namespace) 
         local getOpenCommentToken, getCloseCommentToken, Render, __ctor__;
-        __ctor__ = function (this, comment) 
-            this.Comment = comment;
-        end;
         getOpenCommentToken = function (this) 
             return "--[[" --[[Tokens.OpenLongComment]];
         end;
@@ -216,6 +213,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, comment) 
+            this.Comment = comment;
         end;
         return {
             __inherits__ = {
@@ -229,17 +229,17 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaGotoStatement", function (namespace) 
         local getGotoKeyword, Render, __ctor__;
-        __ctor__ = function (this, identifier) 
-            if identifier == nil then
-                System.throw(System.ArgumentNullException("identifier"));
-            end
-            this.Identifier = identifier;
-        end;
         getGotoKeyword = function (this) 
             return "goto" --[[Keyword.Goto]];
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, identifier) 
+            if identifier == nil then
+                System.throw(System.ArgumentNullException("identifier"));
+            end
+            this.Identifier = identifier;
         end;
         return {
             __inherits__ = {
@@ -252,6 +252,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaGotoCaseAdapterStatement", function (namespace) 
         local Render, __ctor__;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor__ = function (this, identifier) 
             if identifier == nil then
                 System.throw(System.ArgumentNullException("identifier"));
@@ -260,9 +263,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             local assignment = CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(identifier, CSharpLua.LuaAst.LuaIdentifierNameSyntax.True);
             this.Assignment = CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment);
             this.GotoStatement = CSharpLua.LuaAst.LuaGotoStatement(identifier);
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -274,13 +274,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaLabeledStatement", function (namespace) 
         local getPrefixToken, getSuffixToken, Render, __ctor__;
-        __ctor__ = function (this, identifier, statement) 
-            if identifier == nil then
-                System.throw(System.ArgumentNullException("identifier"));
-            end
-            this.Identifier = identifier;
-            this.Statement = statement;
-        end;
         getPrefixToken = function (this) 
             return "::" --[[Tokens.Label]];
         end;
@@ -289,6 +282,13 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, identifier, statement) 
+            if identifier == nil then
+                System.throw(System.ArgumentNullException("identifier"));
+            end
+            this.Identifier = identifier;
+            this.Statement = statement;
         end;
         return {
             __inherits__ = {

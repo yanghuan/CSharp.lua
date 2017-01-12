@@ -3,6 +3,12 @@ local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaMemberAccessExpressionSyntax", function (namespace) 
         local getIsObjectColon, Render, __ctor__;
+        getIsObjectColon = function (this) 
+            return this.OperatorToken == ":" --[[Tokens.ObjectColon]];
+        end;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor__ = function (this, expression, name, isObjectColon) 
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
@@ -13,12 +19,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Expression = expression;
             this.Name = name;
             this.OperatorToken = isObjectColon and ":" --[[Tokens.ObjectColon]] or "." --[[Tokens.Dot]];
-        end;
-        getIsObjectColon = function (this) 
-            return this.OperatorToken == ":" --[[Tokens.ObjectColon]];
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -31,14 +31,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaPropertyAdapterExpressionSyntax", function (namespace) 
         local Update, setIsGetOrAdd, getIsProperty, GetCloneOfGet, Render, __ctor1__, __ctor2__;
-        __ctor1__ = function (this, identifier) 
-            this.identifier_ = identifier;
-            this.InvocationExpression = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, identifier);
-        end;
-        __ctor2__ = function (this, memberAccess, identifier) 
-            this.identifier_ = identifier;
-            this.InvocationExpression = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
-        end;
         Update = function (this, memberAccessExpression) 
             local invocationExpression = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccessExpression);
             invocationExpression.ArgumentList.Arguments:AddRange(this.InvocationExpression.ArgumentList.Arguments);
@@ -63,6 +55,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 setIsGetOrAdd(this, true);
             end
             this.InvocationExpression.ArgumentList:Render(renderer);
+        end;
+        __ctor1__ = function (this, identifier) 
+            this.identifier_ = identifier;
+            this.InvocationExpression = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, identifier);
+        end;
+        __ctor2__ = function (this, memberAccess, identifier) 
+            this.identifier_ = identifier;
+            this.InvocationExpression = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
         end;
         return {
             __inherits__ = {

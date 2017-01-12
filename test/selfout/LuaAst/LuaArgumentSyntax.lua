@@ -3,14 +3,14 @@ local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaArgumentSyntax", function (namespace) 
         local Render, __ctor__;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor__ = function (this, expression) 
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
             this.Expression = expression;
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -22,9 +22,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaArgumentListSyntax", function (namespace) 
         local getOpenParenToken, getCloseParenToken, Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Arguments = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaArgumentSyntax)();
-        end;
         getOpenParenToken = function (this) 
             return "(" --[[Tokens.OpenParentheses]];
         end;
@@ -33,6 +30,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Arguments = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaArgumentSyntax)();
         end;
         return {
             __inherits__ = {

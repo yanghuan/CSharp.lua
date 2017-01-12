@@ -38,7 +38,7 @@ namespace CSharpLua.LuaAst {
             Statement = new LuaExpressionStatementSyntax(invoke);
         }
 
-        public void Add(LuaStatementSyntax statement) {
+        public void AddMemberDeclaration(LuaWrapFunctionStatementSynatx statement) {
             if(statement == null) {
                 throw new ArgumentNullException(nameof(statement));
             }

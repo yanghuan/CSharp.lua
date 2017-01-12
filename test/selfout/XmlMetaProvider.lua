@@ -37,9 +37,6 @@ System.namespace("CSharpLua", function (namespace)
         end);
         namespace.class("MethodMetaInfo", function (namespace) 
             local Add, CheckIsSingleModel, IsTypeMatch, IsMethodMatch, GetName, GetCodeTemplate, GetMetaInfo, __ctor__;
-            __ctor__ = function (this) 
-                this.models_ = System.List(XmlMetaModel.MethodModel)();
-            end;
             Add = function (this, model) 
                 this.models_:Add(model);
                 CheckIsSingleModel(this);
@@ -136,6 +133,9 @@ System.namespace("CSharpLua", function (namespace)
                     end
                 until 1;
             end;
+            __ctor__ = function (this) 
+                this.models_ = System.List(XmlMetaModel.MethodModel)();
+            end;
             return {
                 isSingleModel_ = False, 
                 Add = Add, 
@@ -146,18 +146,6 @@ System.namespace("CSharpLua", function (namespace)
         namespace.class("TypeMetaInfo", function (namespace) 
             local getModel, Field, Property, Method, GetFieldModel, GetPropertyModel, GetMethodMetaInfo, __init__, 
             __ctor__;
-            __init__ = function (this) 
-                this.fields_ = System.Dictionary(System.String, XmlMetaModel.FieldModel)();
-                this.propertys_ = System.Dictionary(System.String, XmlMetaModel.PropertyModel)();
-                this.methods_ = System.Dictionary(System.String, CSharpLua.XmlMetaProvider.MethodMetaInfo)();
-            end;
-            __ctor__ = function (this, model) 
-                __init__(this);
-                this.model_ = model;
-                Field(this);
-                Property(this);
-                Method(this);
-            end;
             getModel = function (this) 
                 return this.model_;
             end;
@@ -214,6 +202,18 @@ System.namespace("CSharpLua", function (namespace)
             GetMethodMetaInfo = function (this, name) 
                 return CSharpLua.Utility.GetOrDefault(this.methods_, name, nil, System.String, CSharpLua.MethodMetaInfo);
             end;
+            __init__ = function (this) 
+                this.fields_ = System.Dictionary(System.String, XmlMetaModel.FieldModel)();
+                this.propertys_ = System.Dictionary(System.String, XmlMetaModel.PropertyModel)();
+                this.methods_ = System.Dictionary(System.String, CSharpLua.XmlMetaProvider.MethodMetaInfo)();
+            end;
+            __ctor__ = function (this, model) 
+                __init__(this);
+                this.model_ = model;
+                Field(this);
+                Property(this);
+                Method(this);
+            end;
             return {
                 getModel = getModel, 
                 GetFieldModel = GetFieldModel, 
@@ -225,29 +225,6 @@ System.namespace("CSharpLua", function (namespace)
         local LoadNamespace, LoadType, GetNamespaceMapName, GetTypeName, MayHaveCodeMeta, GetTypeShortString, GetTypeShortName, GetTypeMetaInfo, 
         IsPropertyField, GetFieldCodeTemplate, GetProertyCodeTemplate, GetInternalMethodMetaInfo, GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, __init__, 
         __ctor__;
-        __init__ = function (this) 
-            this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)();
-            this.typeMetas_ = System.Dictionary(System.String, CSharpLua.XmlMetaProvider.TypeMetaInfo)();
-        end;
-        __ctor__ = function (this, files) 
-            __init__(this);
-            for _, file in System.each(files) do
-                local xmlSeliz = System.Xml.Serialization.XmlSerializer(System.typeof(CSharpLua.XmlMetaProvider.XmlMetaModel));
-                System.try(function () 
-                    System.using(function (stream) 
-                        local model = System.cast(CSharpLua.XmlMetaProvider.XmlMetaModel, xmlSeliz:Deserialize(stream));
-                        if model.Namespaces ~= nil then
-                            for _, namespaceModel in System.each(model.Namespaces) do
-                                LoadNamespace(this, namespaceModel);
-                            end
-                        end
-                    end, System.IO.FileStream(file, 3 --[[FileMode.Open]], 1 --[[FileAccess.Read]], 1 --[[FileShare.Read]]));
-                end, function (default) 
-                    local e = default;
-                    System.throw(System.Exception(("load xml file wrong at {0}"):Format(file), e));
-                end);
-            end
-        end;
         LoadNamespace = function (this, model) 
             local namespaceName = model.name;
             if System.String.IsNullOrEmpty(namespaceName) then
@@ -433,6 +410,29 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetMethodCodeTemplate = function (this, symbol) 
             return GetMethodMetaInfo(this, symbol, 1 --[[MethodMetaType.CodeTemplate]]);
+        end;
+        __init__ = function (this) 
+            this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)();
+            this.typeMetas_ = System.Dictionary(System.String, CSharpLua.XmlMetaProvider.TypeMetaInfo)();
+        end;
+        __ctor__ = function (this, files) 
+            __init__(this);
+            for _, file in System.each(files) do
+                local xmlSeliz = System.Xml.Serialization.XmlSerializer(System.typeof(CSharpLua.XmlMetaProvider.XmlMetaModel));
+                System.try(function () 
+                    System.using(function (stream) 
+                        local model = System.cast(CSharpLua.XmlMetaProvider.XmlMetaModel, xmlSeliz:Deserialize(stream));
+                        if model.Namespaces ~= nil then
+                            for _, namespaceModel in System.each(model.Namespaces) do
+                                LoadNamespace(this, namespaceModel);
+                            end
+                        end
+                    end, System.IO.FileStream(file, 3 --[[FileMode.Open]], 1 --[[FileAccess.Read]], 1 --[[FileShare.Read]]));
+                end, function (default) 
+                    local e = default;
+                    System.throw(System.Exception(("load xml file wrong at {0}"):Format(file), e));
+                end);
+            end
         end;
         return {
             GetNamespaceMapName = GetNamespaceMapName, 

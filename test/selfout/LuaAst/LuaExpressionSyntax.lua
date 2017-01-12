@@ -10,6 +10,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaAssignmentExpressionSyntax", function (namespace) 
         local getOperatorToken, Render, __ctor__;
+        getOperatorToken = function (this) 
+            return "=" --[[Tokens.Equals]];
+        end;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor__ = function (this, left, right) 
             if left == nil then
                 System.throw(System.ArgumentNullException("left"));
@@ -19,12 +25,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
             this.Left = left;
             this.Right = right;
-        end;
-        getOperatorToken = function (this) 
-            return "=" --[[Tokens.Equals]];
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -37,15 +37,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaMultipleAssignmentExpressionSyntax", function (namespace) 
         local getOperatorToken, Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Lefts = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
-            this.Rights = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
-        end;
         getOperatorToken = function (this) 
             return "=" --[[Tokens.Equals]];
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Lefts = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
+            this.Rights = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
         end;
         return {
             __inherits__ = {
@@ -58,11 +58,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaLineMultipleExpressionSyntax", function (namespace) 
         local Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Assignments = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
-        end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Assignments = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
         end;
         return {
             __inherits__ = {
@@ -74,13 +74,13 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaBinaryExpressionSyntax", function (namespace) 
         local Render, __ctor__;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor__ = function (this, left, operatorToken, right) 
             this.Left = left;
             this.OperatorToken = operatorToken;
             this.Right = right;
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -92,15 +92,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaPrefixUnaryExpressionSyntax", function (namespace) 
         local Render, __ctor__;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __ctor__ = function (this, operand, operatorToken) 
             if operand == nil then
                 System.throw(System.ArgumentNullException("operand"));
             end
             this.Operand = operand;
             this.OperatorToken = operatorToken;
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {
@@ -112,12 +112,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaParenthesizedExpressionSyntax", function (namespace) 
         local getOpenParenToken, getCloseParenToken, Render, __ctor__;
-        __ctor__ = function (this, expression) 
-            if expression == nil then
-                System.throw(System.ArgumentNullException("expression"));
-            end
-            this.Expression = expression;
-        end;
         getOpenParenToken = function (this) 
             return "(" --[[Tokens.OpenParentheses]];
         end;
@@ -126,6 +120,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, expression) 
+            if expression == nil then
+                System.throw(System.ArgumentNullException("expression"));
+            end
+            this.Expression = expression;
         end;
         return {
             __inherits__ = {
@@ -139,11 +139,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaCodeTemplateExpressionSyntax", function (namespace) 
         local Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Codes = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
-        end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Codes = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
         end;
         return {
             __inherits__ = {
@@ -155,11 +155,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaCodeTemplateParamsExpressionSyntax", function (namespace) 
         local Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Expressions = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
-        end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Expressions = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
         end;
         return {
             __inherits__ = {
@@ -188,6 +188,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaArrayTypeAdapterExpressionSyntax", function (namespace) 
         local getBaseType, getIsSimapleArray, Render, __ctor__;
+        getBaseType = function (this) 
+            return this.InvocationExpression.ArgumentList.Arguments:get(0).Expression;
+        end;
+        getIsSimapleArray = function (this) 
+            return this.RankSpecifier.Rank == 1;
+        end;
+        Render = function (this, renderer) 
+            this.InvocationExpression:Render(renderer);
+        end;
         __ctor__ = function (this, invocationExpression, rankSpecifier) 
             if invocationExpression == nil then
                 System.throw(System.ArgumentNullException("invocationExpression"));
@@ -197,15 +206,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
             this.InvocationExpression = invocationExpression;
             this.RankSpecifier = rankSpecifier;
-        end;
-        getBaseType = function (this) 
-            return this.InvocationExpression.ArgumentList.Arguments:get(0).Expression;
-        end;
-        getIsSimapleArray = function (this) 
-            return this.RankSpecifier.Rank == 1;
-        end;
-        Render = function (this, renderer) 
-            this.InvocationExpression:Render(renderer);
         end;
         return {
             __inherits__ = {
@@ -219,14 +219,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaInternalMethodExpressionSyntax", function (namespace) 
         local Render, __ctor__;
+        Render = function (this, renderer) 
+            this.Expression:Render(renderer);
+        end;
         __ctor__ = function (this, expression) 
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
             this.Expression = expression;
-        end;
-        Render = function (this, renderer) 
-            this.Expression:Render(renderer);
         end;
         return {
             __inherits__ = {

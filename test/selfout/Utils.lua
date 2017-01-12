@@ -28,9 +28,9 @@ System.namespace("CSharpLua", function (namespace)
     end);
     namespace.class("Utility", function (namespace) 
         local GetCommondLines, First, Last, GetOrDefault, GetOrDefault, GetArgument, GetCurrentDirectory, Split, 
-        IsPrivate, IsStatic, IsReadOnly, IsConst, IsParams, IsPartial, IsStringType, IsDelegateType, 
-        IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, IsPropertyField, IsEventFiled, 
-        IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString;
+        IsPrivate, IsStatic, IsAbstract, IsReadOnly, IsConst, IsParams, IsPartial, IsStringType, 
+        IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, IsPropertyField, 
+        IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -127,6 +127,9 @@ System.namespace("CSharpLua", function (namespace)
         end;
         IsStatic = function (modifiers) 
             return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]]); end);
+        end;
+        IsAbstract = function (modifiers) 
+            return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8356 --[[SyntaxKind.AbstractKeyword]]); end);
         end;
         IsReadOnly = function (modifiers) 
             return Linq.Any(modifiers, function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8348 --[[SyntaxKind.ReadOnlyKeyword]]); end);
@@ -262,6 +265,7 @@ System.namespace("CSharpLua", function (namespace)
             Split = Split, 
             IsPrivate = IsPrivate, 
             IsStatic = IsStatic, 
+            IsAbstract = IsAbstract, 
             IsReadOnly = IsReadOnly, 
             IsConst = IsConst, 
             IsParams = IsParams, 

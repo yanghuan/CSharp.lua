@@ -12,10 +12,6 @@ System.namespace("CSharpLua", function (namespace)
         Render, Render, Render, Render, Render, Render, Render, Render, 
         Render, Render, Render, Render, Render, Render, Render, Render, 
         __ctor__;
-        __ctor__ = function (this, generator, writer) 
-            this.generator_ = generator;
-            this.writer_ = writer;
-        end;
         getSetting = function (this) 
             return this.generator_.Setting;
         end;
@@ -492,6 +488,10 @@ System.namespace("CSharpLua", function (namespace)
         end;
         Render = function (this, node) 
             WriteSeparatedSyntaxList(this, node.Expressions);
+        end;
+        __ctor__ = function (this, generator, writer) 
+            this.generator_ = generator;
+            this.writer_ = writer;
         end;
         return {
             isNewLine_ = False, 

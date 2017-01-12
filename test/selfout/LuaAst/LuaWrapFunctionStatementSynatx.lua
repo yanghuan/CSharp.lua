@@ -2,11 +2,7 @@
 local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaWrapFunctionStatementSynatx", function (namespace) 
-        local UpdateIdentifiers, Add, Render, __ctor__;
-        __ctor__ = function (this) 
-            this.function_ = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
-            this.statements_ = System.List(CSharpLua.LuaAst.LuaStatementSyntax)();
-        end;
+        local UpdateIdentifiers, AddMemberDeclaration, Render, __ctor__;
         UpdateIdentifiers = function (this, name, target, memberName, parameter) 
             local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(target, memberName);
             local invoke = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
@@ -17,7 +13,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
             this.Statement = CSharpLua.LuaAst.LuaExpressionStatementSyntax(invoke);
         end;
-        Add = function (this, statement) 
+        AddMemberDeclaration = function (this, statement) 
             if statement == nil then
                 System.throw(System.ArgumentNullException("statement"));
             end
@@ -27,12 +23,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.function_.Body.Statements:AddRange(this.statements_);
             renderer:Render(this);
         end;
+        __ctor__ = function (this) 
+            this.function_ = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
+            this.statements_ = System.List(CSharpLua.LuaAst.LuaStatementSyntax)();
+        end;
         return {
             __inherits__ = {
                 CSharpLua.LuaAst.LuaStatementSyntax
             }, 
             UpdateIdentifiers = UpdateIdentifiers, 
-            Add = Add, 
+            AddMemberDeclaration = AddMemberDeclaration, 
             Render = Render, 
             __ctor__ = __ctor__
         };

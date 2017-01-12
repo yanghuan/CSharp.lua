@@ -5,6 +5,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaInvocationExpressionSyntax", function (namespace) 
         local AddArgument, Render, __init__, __ctor1__, __ctor2__, __ctor3__, __ctor4__, __ctor5__, 
         __ctor6__;
+        AddArgument = function (this, argument) 
+            this.ArgumentList.Arguments:Add(CSharpLua.LuaAst.LuaArgumentSyntax(argument));
+        end;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __init__ = function (this) 
             this.ArgumentList = CSharpLua.LuaAst.LuaArgumentListSyntax();
         end;
@@ -36,12 +42,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor6__ = function (this, expression, arguments) 
             __ctor5__(this, expression, System.cast(System.IEnumerable_1(CSharpLua.LuaAst.LuaExpressionSyntax), arguments));
-        end;
-        AddArgument = function (this, argument) 
-            this.ArgumentList.Arguments:Add(CSharpLua.LuaAst.LuaArgumentSyntax(argument));
-        end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
         end;
         return {
             __inherits__ = {

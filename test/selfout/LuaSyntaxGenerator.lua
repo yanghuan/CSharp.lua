@@ -17,11 +17,6 @@ System.namespace("CSharpLua", function (namespace)
     namespace.class("LuaSyntaxGenerator", function (namespace) 
         namespace.class("SettingInfo", function (namespace) 
             local getIndent, setIndent, __ctor__;
-            __ctor__ = function (this) 
-                setIndent(this, 4);
-                this.HasSemicolon = true;
-                this.IsNewest = true;
-            end;
             getIndent = function (this) 
                 return this.indent_;
             end;
@@ -30,6 +25,11 @@ System.namespace("CSharpLua", function (namespace)
                     this.indent_ = value;
                     this.IndentString = System.String(32 --[[' ']], this.indent_);
                 end
+            end;
+            __ctor__ = function (this) 
+                setIndent(this, 4);
+                this.HasSemicolon = true;
+                this.IsNewest = true;
             end;
             return {
                 HasSemicolon = False, 
@@ -42,16 +42,6 @@ System.namespace("CSharpLua", function (namespace)
         end);
         local Create, Generate, IsEnumExport, AddExportEnum, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, 
         __init__, __ctor__;
-        __init__ = function (this) 
-            this.exportEnums_ = System.HashSet(System.String)();
-            this.partialTypes_ = System.Dictionary(Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(CSharpLua.PartialTypeDeclaration))();
-        end;
-        __ctor__ = function (this, metas, compilation) 
-            __init__(this);
-            this.XmlMetaProvider = CSharpLua.XmlMetaProvider(metas);
-            this.Setting = CSharpLua.LuaSyntaxGenerator.SettingInfo();
-            this.compilation_ = compilation;
-        end;
         Create = function (this) 
             local luaCompilationUnits = System.List(CSharpLua.LuaAst.LuaCompilationUnitSyntax)();
             for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
@@ -107,6 +97,16 @@ System.namespace("CSharpLua", function (namespace)
             local symbol = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetTypeInfo(semanticModel, type:getType()):getType();
             assert(symbol ~= nil);
             return symbol:getTypeKind() ~= 7 --[[TypeKind.Interface]];
+        end;
+        __init__ = function (this) 
+            this.exportEnums_ = System.HashSet(System.String)();
+            this.partialTypes_ = System.Dictionary(Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(CSharpLua.PartialTypeDeclaration))();
+        end;
+        __ctor__ = function (this, metas, compilation) 
+            __init__(this);
+            this.XmlMetaProvider = CSharpLua.XmlMetaProvider(metas);
+            this.Setting = CSharpLua.LuaSyntaxGenerator.SettingInfo();
+            this.compilation_ = compilation;
         end;
         return {
             Generate = Generate, 

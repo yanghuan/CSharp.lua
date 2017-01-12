@@ -10,6 +10,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, 
         As, Cast, Using, Linq, SystemLinqEnumerable, New, Access, Format, 
         Delegate, Int, Render, __staticCtor__, __ctor1__, __ctor2__;
+        Render = function (this, renderer) 
+            renderer:Render(this);
+        end;
         __staticCtor__ = function (this) 
             Empty = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, "");
             Placeholder = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, "_");
@@ -77,9 +80,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         __ctor2__ = function (this, v) 
             __ctor1__(this, v:ToString());
         end;
-        Render = function (this, renderer) 
-            renderer:Render(this);
-        end;
         return {
             __inherits__ = {
                 CSharpLua.LuaAst.LuaExpressionSyntax
@@ -94,10 +94,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaPropertyOrEventIdentifierNameSyntax", function (namespace) 
         local getPrefixToken, Render, __ctor__;
-        __ctor__ = function (this, isProperty, valueText) 
-            CSharpLua.LuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, valueText);
-            this.IsProperty = isProperty;
-        end;
         getPrefixToken = function (this) 
             if this.IsProperty then
                 return this.IsGetOrAdd and "get" --[[Tokens.Get]] or "set" --[[Tokens.Set]];
@@ -107,6 +103,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, isProperty, valueText) 
+            CSharpLua.LuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, valueText);
+            this.IsProperty = isProperty;
         end;
         return {
             __inherits__ = {

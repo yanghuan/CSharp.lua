@@ -3,9 +3,6 @@ local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaParameterListSyntax", function (namespace) 
         local getOpenParenToken, getCloseParenToken, Render, __ctor__;
-        __ctor__ = function (this) 
-            this.Parameters = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaParameterSyntax)();
-        end;
         getOpenParenToken = function (this) 
             return "(" --[[Tokens.OpenParentheses]];
         end;
@@ -14,6 +11,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this) 
+            this.Parameters = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaParameterSyntax)();
         end;
         return {
             __inherits__ = {
@@ -27,11 +27,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaParameterSyntax", function (namespace) 
         local Render, __ctor__;
-        __ctor__ = function (this, identifier) 
-            this.Identifier = identifier;
-        end;
         Render = function (this, renderer) 
             renderer:Render(this);
+        end;
+        __ctor__ = function (this, identifier) 
+            this.Identifier = identifier;
         end;
         return {
             __inherits__ = {

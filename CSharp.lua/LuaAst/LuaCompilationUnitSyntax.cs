@@ -50,7 +50,7 @@ namespace CSharpLua.LuaAst {
 
         public void AddTypeDeclaration(LuaTypeDeclarationSyntax memberNode) {
             LuaNamespaceDeclarationSyntax namespaceNode = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
-            namespaceNode.Add(memberNode);
+            namespaceNode.AddMemberDeclaration(memberNode);
             Statements.Add(namespaceNode);
         }
 

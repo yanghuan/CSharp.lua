@@ -131,6 +131,10 @@ namespace CSharpLua {
             return modifiers.Any(i => i.IsKind(SyntaxKind.StaticKeyword));
         }
 
+        public static bool IsAbstract(this SyntaxTokenList modifiers) {
+            return modifiers.Any(i => i.IsKind(SyntaxKind.AbstractKeyword));
+        }
+
         public static bool IsReadOnly(this SyntaxTokenList modifiers) {
             return modifiers.Any(i => i.IsKind(SyntaxKind.ReadOnlyKeyword));
         }

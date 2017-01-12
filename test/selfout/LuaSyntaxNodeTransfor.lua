@@ -5,14 +5,6 @@ System.namespace("CSharpLua", function (namespace)
     namespace.class("LuaSyntaxNodeTransfor", function (namespace) 
         namespace.class("BlockCommonNode", function (namespace) 
             local CompareTo, Contains, Visit, __ctor1__, __ctor2__;
-            __ctor1__ = function (this, comment) 
-                this.Comment = comment;
-                this.LineSpan = comment:getSyntaxTree():GetLineSpan(comment:getSpan());
-            end;
-            __ctor2__ = function (this, statement) 
-                this.Statement = statement;
-                this.LineSpan = statement:getSyntaxTree():GetLineSpan(statement:getSpan());
-            end;
             CompareTo = function (this, other) 
                 return this.LineSpan:getStartLinePosition():CompareTo(other.LineSpan:getStartLinePosition());
             end;
@@ -45,6 +37,14 @@ System.namespace("CSharpLua", function (namespace)
                 end
 
                 lastLine = this.LineSpan:getEndLinePosition():getLine();
+            end;
+            __ctor1__ = function (this, comment) 
+                this.Comment = comment;
+                this.LineSpan = comment:getSyntaxTree():GetLineSpan(comment:getSpan());
+            end;
+            __ctor2__ = function (this, statement) 
+                this.Statement = statement;
+                this.LineSpan = statement:getSyntaxTree():GetLineSpan(statement:getSpan());
             end;
             return {
                 __inherits__ = {
@@ -83,31 +83,6 @@ System.namespace("CSharpLua", function (namespace)
         VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, 
         IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, 
         VisitInterpolatedStringText, __staticCtor__, __init__, __ctor__;
-        __staticCtor__ = function (this) 
-            operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
-                default:set("!=", "~=" --[[Tokens.NotEquals]]);
-                default:set("!", "not" --[[Keyword.Not]]);
-                default:set("&&", "and" --[[Keyword.And]]);
-                default:set("||", "or" --[[Keyword.Or]]);
-                default:set("??", "or" --[[Keyword.Or]]);
-                default:set("^", "~");
-            end);
-            codeTemplateRegex_ = System.Text.RegularExpressions.Regex([[(,?\s*)\{(\*?[\w|^]+)\}]], 8 --[[RegexOptions.Compiled]]);
-        end;
-        __init__ = function (this) 
-            this.compilationUnits_ = System.Stack(CSharpLua.LuaAst.LuaCompilationUnitSyntax)();
-            this.typeDeclarations_ = System.Stack(CSharpLua.LuaAst.LuaTypeDeclarationSyntax)();
-            this.functions_ = System.Stack(CSharpLua.LuaAst.LuaFunctionExpressionSyntax)();
-            this.blocks_ = System.Stack(CSharpLua.LuaAst.LuaBlockSyntax)();
-            this.ifStatements_ = System.Stack(CSharpLua.LuaAst.LuaIfStatementSyntax)();
-            this.switchs_ = System.Stack(CSharpLua.LuaAst.LuaSwitchAdapterStatementSyntax)();
-            this.localReservedNames_ = System.Dictionary(Microsoft.CodeAnalysis.ISymbol, System.String)();
-        end;
-        __ctor__ = function (this, generator, semanticModel) 
-            __init__(this);
-            this.generator_ = generator;
-            this.semanticModel_ = semanticModel;
-        end;
         getXmlMetaProvider = function (this) 
             return this.generator_.XmlMetaProvider;
         end;
@@ -162,17 +137,19 @@ System.namespace("CSharpLua", function (namespace)
             local name = System.cast(CSharpLua.LuaAst.LuaIdentifierNameSyntax, node:getName():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
             local namespaceDeclaration = CSharpLua.LuaAst.LuaNamespaceDeclarationSyntax(name);
             for _, member in System.each(node:getMembers()) do
-                local memberNode = System.cast(CSharpLua.LuaAst.LuaTypeDeclarationSyntax, member:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                namespaceDeclaration:Add(memberNode);
+                local memberNode = System.cast(CSharpLua.LuaAst.LuaWrapFunctionStatementSynatx, member:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                namespaceDeclaration:AddMemberDeclaration(memberNode);
             end
             return namespaceDeclaration;
         end;
-        BuildTypeMembers = function (this, typeDeclaration, members) 
-            for _, member in System.each(members) do
-                local newMember = member:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode);
-                local kind = member:Kind();
-                if kind >= 8855 --[[SyntaxKind.ClassDeclaration]] and kind <= 8858 --[[SyntaxKind.EnumDeclaration]] then
-                    typeDeclaration:Add(System.cast(CSharpLua.LuaAst.LuaStatementSyntax, newMember));
+        BuildTypeMembers = function (this, typeDeclaration, node) 
+            if not Microsoft.CodeAnalysis.CSharpExtensions.IsKind(node, 8857 --[[SyntaxKind.InterfaceDeclaration]]) then
+                for _, member in System.each(node:getMembers()) do
+                    local newMember = member:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode);
+                    local kind = member:Kind();
+                    if kind >= 8855 --[[SyntaxKind.ClassDeclaration]] and kind <= 8858 --[[SyntaxKind.EnumDeclaration]] then
+                        typeDeclaration:AddMemberDeclaration(System.cast(CSharpLua.LuaAst.LuaWrapFunctionStatementSynatx, newMember));
+                    end
                 end
             end
         end;
@@ -192,7 +169,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
                 typeDeclaration:AddBaseTypes(baseTypes);
             end
-            BuildTypeMembers(this, typeDeclaration, node:getMembers());
+            BuildTypeMembers(this, typeDeclaration, node);
             this.typeDeclarations_:Pop();
             getCurCompilationUnit(this):AddTypeDeclarationCount();
         end;
@@ -253,7 +230,7 @@ System.namespace("CSharpLua", function (namespace)
 
             for _, typeDeclaration in System.each(typeDeclarations) do
                 this.semanticModel_ = this.generator_:GetSemanticModel(typeDeclaration.Node:getSyntaxTree());
-                BuildTypeMembers(this, typeDeclaration.LuaNode, typeDeclaration.Node:getMembers());
+                BuildTypeMembers(this, typeDeclaration.LuaNode, typeDeclaration.Node);
             end
 
             this.typeDeclarations_:Pop();
@@ -318,53 +295,57 @@ System.namespace("CSharpLua", function (namespace)
             function_.Body.Statements:Add(returnStatement);
         end;
         VisitMethodDeclaration = function (this, node) 
-            local symbol = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node);
-            local methodName = getXmlMetaProvider(this):GetMethodMapName(symbol);
-            local function_ = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
-            PushFunction(this, function_);
-            if not CSharpLua.Utility.IsStatic(node:getModifiers()) then
-                function_:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
-            end
+            if not CSharpLua.Utility.IsAbstract(node:getModifiers()) then
+                local symbol = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node);
+                local methodName = getXmlMetaProvider(this):GetMethodMapName(symbol);
+                local function_ = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
+                PushFunction(this, function_);
+                if not CSharpLua.Utility.IsStatic(node:getModifiers()) then
+                    function_:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
+                end
 
-            for _, parameter in System.each(node:getParameterList():getParameters()) do
-                local luaParameter = System.cast(CSharpLua.LuaAst.LuaParameterSyntax, parameter:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                luaParameter = CheckParameterName(this, luaParameter, parameter);
-                function_.ParameterList.Parameters:Add(luaParameter);
-                if parameter:getDefault() ~= nil then
-                    if not Microsoft.CodeAnalysis.CSharpExtensions.IsKind(parameter:getDefault():getValue(), 8754 --[[SyntaxKind.NullLiteralExpression]]) then
-                        local attributes = Linq.SelectMany(parameter:getAttributeLists(), function (i) return i:getAttributes(); end, Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax);
-                        local hasCaller = Linq.Any(attributes, IsCallerAttribute);
-                        if not hasCaller then
-                            local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, parameter:getDefault():getValue():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                            local intiStatement = CSharpLua.LuaAst.LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, expression);
+                for _, parameter in System.each(node:getParameterList():getParameters()) do
+                    local luaParameter = System.cast(CSharpLua.LuaAst.LuaParameterSyntax, parameter:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                    luaParameter = CheckParameterName(this, luaParameter, parameter);
+                    function_.ParameterList.Parameters:Add(luaParameter);
+                    if parameter:getDefault() ~= nil then
+                        if not Microsoft.CodeAnalysis.CSharpExtensions.IsKind(parameter:getDefault():getValue(), 8754 --[[SyntaxKind.NullLiteralExpression]]) then
+                            local attributes = Linq.SelectMany(parameter:getAttributeLists(), function (i) return i:getAttributes(); end, Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax);
+                            local hasCaller = Linq.Any(attributes, IsCallerAttribute);
+                            if not hasCaller then
+                                local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, parameter:getDefault():getValue():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                                local intiStatement = CSharpLua.LuaAst.LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, expression);
+                                function_.Body.Statements:Add(intiStatement);
+                            end
+                        end
+                    else
+                        if CSharpLua.Utility.IsParams(parameter:getModifiers()) then
+                            local typeName = System.cast(CSharpLua.LuaAst.LuaIdentifierNameSyntax, (System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.ArrayTypeSyntax, parameter:getType())):getElementType():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                            local emptyArray = BuildEmptyArray(this, typeName);
+                            local intiStatement = CSharpLua.LuaAst.LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, emptyArray);
                             function_.Body.Statements:Add(intiStatement);
                         end
                     end
-                else
-                    if CSharpLua.Utility.IsParams(parameter:getModifiers()) then
-                        local typeName = System.cast(CSharpLua.LuaAst.LuaIdentifierNameSyntax, (System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.ArrayTypeSyntax, parameter:getType())):getElementType():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                        local emptyArray = BuildEmptyArray(this, typeName);
-                        local intiStatement = CSharpLua.LuaAst.LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, emptyArray);
-                        function_.Body.Statements:Add(intiStatement);
+                end
+
+                if node:getTypeParameterList() ~= nil then
+                    for _, typeParameter in System.each(node:getTypeParameterList():getParameters()) do
+                        local typeName = System.cast(CSharpLua.LuaAst.LuaIdentifierNameSyntax, typeParameter:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                        function_:AddParameter(typeName);
                     end
                 end
-            end
 
-            if node:getTypeParameterList() ~= nil then
-                for _, typeParameter in System.each(node:getTypeParameterList():getParameters()) do
-                    local typeName = System.cast(CSharpLua.LuaAst.LuaIdentifierNameSyntax, typeParameter:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                    function_:AddParameter(typeName);
+                local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, node:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                function_.Body.Statements:AddRange(block.Statements);
+                if function_.HasYield then
+                    VisitYield(this, node, function_);
                 end
+                PopFunction(this);
+                getCurType(this):AddMethod(methodName, function_, CSharpLua.Utility.IsPrivate(node:getModifiers()));
+                return function_;
             end
 
-            local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, node:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-            function_.Body.Statements:AddRange(block.Statements);
-            if function_.HasYield then
-                VisitYield(this, node, function_);
-            end
-            PopFunction(this);
-            getCurType(this):AddMethod(methodName, function_, CSharpLua.Utility.IsPrivate(node:getModifiers()));
-            return function_;
+            return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor_1(TResult).VisitMethodDeclaration(this, node);
         end;
         GetPredefinedTypeDefaultValue = function (typeSymbol) 
             repeat
@@ -476,50 +457,50 @@ System.namespace("CSharpLua", function (namespace)
             getCurType(this):AddField(name, valueExpression, isImmutable and valueIsLiteral, isStatic, isPrivate, isReadOnly);
         end;
         VisitPropertyDeclaration = function (this, node) 
-            local isStatic = CSharpLua.Utility.IsStatic(node:getModifiers());
-            local isPrivate = CSharpLua.Utility.IsPrivate(node:getModifiers());
-            local hasGet = false;
-            local hasSet = false;
-            if node:getAccessorList() ~= nil then
-                for _, accessor in System.each(node:getAccessorList():getAccessors()) do
-                    if accessor:getBody() ~= nil then
-                        local functionExpression = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
-                        if not isStatic then
-                            functionExpression:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
-                        end
-                        PushFunction(this, functionExpression);
-                        local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, accessor:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                        PopFunction(this);
-                        functionExpression.Body.Statements:AddRange(block.Statements);
-                        local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, node:getIdentifier():getValueText());
-                        getCurType(this):AddMethod(name, functionExpression, isPrivate);
-                        if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
-                            assert(not hasGet);
-                            hasGet = true;
-                        else
-                            assert(not hasSet);
-                            functionExpression:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.Value);
-                            name.IsGetOrAdd = false;
-                            hasSet = true;
+            if not CSharpLua.Utility.IsAbstract(node:getModifiers()) then
+                local isStatic = CSharpLua.Utility.IsStatic(node:getModifiers());
+                local isPrivate = CSharpLua.Utility.IsPrivate(node:getModifiers());
+                local hasGet = false;
+                local hasSet = false;
+                if node:getAccessorList() ~= nil then
+                    for _, accessor in System.each(node:getAccessorList():getAccessors()) do
+                        if accessor:getBody() ~= nil then
+                            local functionExpression = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
+                            if not isStatic then
+                                functionExpression:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
+                            end
+                            PushFunction(this, functionExpression);
+                            local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, accessor:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                            PopFunction(this);
+                            functionExpression.Body.Statements:AddRange(block.Statements);
+                            local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, node:getIdentifier():getValueText());
+                            getCurType(this):AddMethod(name, functionExpression, isPrivate);
+                            if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
+                                assert(not hasGet);
+                                hasGet = true;
+                            else
+                                assert(not hasSet);
+                                functionExpression:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.Value);
+                                name.IsGetOrAdd = false;
+                                hasSet = true;
+                            end
                         end
                     end
+                else
+                    assert(not hasGet);
+                    local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, node:getIdentifier():getValueText());
+                    local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, node:getExpressionBody():getExpression():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
+                    local functionExpress = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
+                    if not isStatic then
+                        functionExpress:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
+                    end
+                    local returnStatement = CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, expression);
+                    functionExpress.Body.Statements:Add(returnStatement);
+                    getCurType(this):AddMethod(name, functionExpress, isPrivate);
+                    hasGet = true;
                 end
-            else
-                assert(not hasGet);
-                local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, node:getIdentifier():getValueText());
-                local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, node:getExpressionBody():getExpression():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                local functionExpress = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
-                if not isStatic then
-                    functionExpress:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
-                end
-                local returnStatement = CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, expression);
-                functionExpress.Body.Statements:Add(returnStatement);
-                getCurType(this):AddMethod(name, functionExpress, isPrivate);
-                hasGet = true;
-            end
 
-            if not hasGet and not hasSet then
-                if not Microsoft.CodeAnalysis.CSharpExtensions.IsKind(node:getParent(), 8857 --[[SyntaxKind.InterfaceDeclaration]]) then
+                if not hasGet and not hasSet then
                     local type = node:getType();
                     local typeSymbol = System.cast(Microsoft.CodeAnalysis.ITypeSymbol, Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, type):getSymbol());
                     local isImmutable = CSharpLua.Utility.IsImmutable(typeSymbol);
@@ -541,7 +522,6 @@ System.namespace("CSharpLua", function (namespace)
                     end
                 end
             end
-
             return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxVisitor_1(TResult).VisitPropertyDeclaration(this, node);
         end;
         VisitEventDeclaration = function (this, node) 
@@ -2537,6 +2517,31 @@ System.namespace("CSharpLua", function (namespace)
         end;
         VisitInterpolatedStringText = function (this, node) 
             System.throw(System.InvalidOperationException());
+        end;
+        __staticCtor__ = function (this) 
+            operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
+                default:set("!=", "~=" --[[Tokens.NotEquals]]);
+                default:set("!", "not" --[[Keyword.Not]]);
+                default:set("&&", "and" --[[Keyword.And]]);
+                default:set("||", "or" --[[Keyword.Or]]);
+                default:set("??", "or" --[[Keyword.Or]]);
+                default:set("^", "~");
+            end);
+            codeTemplateRegex_ = System.Text.RegularExpressions.Regex([[(,?\s*)\{(\*?[\w|^]+)\}]], 8 --[[RegexOptions.Compiled]]);
+        end;
+        __init__ = function (this) 
+            this.compilationUnits_ = System.Stack(CSharpLua.LuaAst.LuaCompilationUnitSyntax)();
+            this.typeDeclarations_ = System.Stack(CSharpLua.LuaAst.LuaTypeDeclarationSyntax)();
+            this.functions_ = System.Stack(CSharpLua.LuaAst.LuaFunctionExpressionSyntax)();
+            this.blocks_ = System.Stack(CSharpLua.LuaAst.LuaBlockSyntax)();
+            this.ifStatements_ = System.Stack(CSharpLua.LuaAst.LuaIfStatementSyntax)();
+            this.switchs_ = System.Stack(CSharpLua.LuaAst.LuaSwitchAdapterStatementSyntax)();
+            this.localReservedNames_ = System.Dictionary(Microsoft.CodeAnalysis.ISymbol, System.String)();
+        end;
+        __ctor__ = function (this, generator, semanticModel) 
+            __init__(this);
+            this.generator_ = generator;
+            this.semanticModel_ = semanticModel;
         end;
         return {
             __inherits__ = {

@@ -13,12 +13,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end);
         namespace.class("Tokens", function (namespace) 
             local getEmpty, Semicolon, __staticCtor__;
+            getEmpty = function () 
+                return System.String.Empty;
+            end;
             __staticCtor__ = function (this) 
                 Semicolon = CSharpLua.LuaAst.LuaSyntaxNode.Semicolon();
                 this.Semicolon = Semicolon;
-            end;
-            getEmpty = function () 
-                return System.String.Empty;
             end;
             return {
                 __inherits__ = {
@@ -32,6 +32,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return {};
         end);
         local Render, SpecailWord, ReservedWords, SpecialReservedWords, IsReservedWord, __staticCtor__;
+        Render = function (this, renderer) 
+            System.throw(System.NotSupportedException(("{0} is not override"):Format(this:GetType():getName())));
+        end;
+        SpecailWord = function (s) 
+            return "__" .. (s or "") .. "__";
+        end;
+        IsReservedWord = function (identifier) 
+            return ReservedWords:Contains(identifier);
+        end;
         __staticCtor__ = function (this) 
             this.TempIdentifiers = System.Array(System.String)("default", "extern", "ref", "out", "internal", "void", "case", "new", "object", "using", "fixed", "override", "abstract", "checked", "virtual");
             ReservedWords = System.create(System.HashSet(System.String)(), function (default) 
@@ -82,15 +91,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 default:Add("__default__");
             end);
             this.ReservedWords, this.SpecialReservedWords = ReservedWords, SpecialReservedWords;
-        end;
-        Render = function (this, renderer) 
-            System.throw(System.NotSupportedException(("{0} is not override"):Format(this:GetType():getName())));
-        end;
-        SpecailWord = function (s) 
-            return "__" .. (s or "") .. "__";
-        end;
-        IsReservedWord = function (identifier) 
-            return ReservedWords:Contains(identifier);
         end;
         return {
             Render = Render, 
