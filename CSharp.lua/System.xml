@@ -43,6 +43,7 @@
             <field name="PositiveInfinity" Template="System.Double.PosInf" />
         </class>
         <class name="String">
+            <field name="Empty" Template="&quot;&quot;" />
             <property name="Length">
                 <get Template="#{this}" />
             </property>

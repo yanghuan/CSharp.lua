@@ -1500,8 +1500,14 @@ namespace CSharpLua {
                     return original;
                 }
                 else {
-                    LuaBinaryExpressionSyntax binaryExpression = new LuaBinaryExpressionSyntax(original, LuaSyntaxNode.Tokens.Or, LuaStringLiteralExpressionSyntax.Empty);
-                    return new LuaParenthesizedExpressionSyntax(binaryExpression);
+                    bool mayBeNull = MayBeNull(expression, typeInfo);
+                    if(mayBeNull) {
+                        LuaBinaryExpressionSyntax binaryExpression = new LuaBinaryExpressionSyntax(original, LuaSyntaxNode.Tokens.Or, LuaStringLiteralExpressionSyntax.Empty);
+                        return new LuaParenthesizedExpressionSyntax(binaryExpression);
+                    }
+                    else {
+                        return original;
+                    }
                 }
             }
             else if(typeInfo.SpecialType == SpecialType.System_Char) {
@@ -1791,56 +1797,6 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             return new LuaParenthesizedExpressionSyntax(expression);
-        }
-        
-        private bool MayBeNullOrFalse(ExpressionSyntax conditionalWhenTrue) {
-            var type = semanticModel_.GetTypeInfo(conditionalWhenTrue).Type;
-            bool mayBeNullOrFalse;
-            if(type.IsValueType) {
-                if(type.SpecialType == SpecialType.System_Boolean) {
-                    var constValue = semanticModel_.GetConstantValue(conditionalWhenTrue);
-                    if(constValue.HasValue && (bool)constValue.Value) {
-                        mayBeNullOrFalse = false;
-                    }
-                    else {
-                        mayBeNullOrFalse = true;
-                    }
-                }
-                else {
-                    mayBeNullOrFalse = false;
-                }
-            }
-            else if(type.IsStringType()) {
-                var constValue = semanticModel_.GetConstantValue(conditionalWhenTrue);
-                if(constValue.HasValue) {
-                    mayBeNullOrFalse = false;
-                }
-                else {
-                    if(conditionalWhenTrue.IsKind(SyntaxKind.InvocationExpression)) {
-                        var invocation = (InvocationExpressionSyntax)conditionalWhenTrue;
-                        if(invocation.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-                            var memberAccess = (MemberAccessExpressionSyntax)invocation.Expression;
-                            if(memberAccess.Name.Identifier.ValueText == LuaIdentifierNameSyntax.ToStr.ValueText) {
-                                var typeInfo = semanticModel_.GetTypeInfo(memberAccess.Expression).Type;
-                                switch(typeInfo.SpecialType) {
-                                    case SpecialType.System_Object:
-                                    case SpecialType.System_Nullable_T: {
-                                            break;
-                                        }
-                                    default: {
-                                            return false;
-                                        }
-                                }
-                            }                        
-                        }
-                    }
-                    mayBeNullOrFalse = true;
-                }
-            }
-            else {
-                mayBeNullOrFalse = true;
-            }
-            return mayBeNullOrFalse;
         }
 
         /// <summary>

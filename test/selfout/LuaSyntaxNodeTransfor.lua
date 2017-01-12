@@ -1402,9 +1402,10 @@ System.namespace("CSharpLua", function (namespace)
                 local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(original, CSharpLua.LuaAst.LuaIdentifierNameSyntax.ToStr, true);
                 return CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
             else
-                local invocation = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, CSharpLua.LuaAst.LuaIdentifierNameSyntax.StringConcat);
-                invocation:AddArgument(original);
-                return invocation;
+                local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(original, CSharpLua.LuaAst.LuaIdentifierNameSyntax.ToStr, true);
+                local andExpression = CSharpLua.LuaAst.LuaBinaryExpressionSyntax(original, "and" --[[Keyword.And]], CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess));
+                local orExpression = CSharpLua.LuaAst.LuaBinaryExpressionSyntax(andExpression, "or" --[[Keyword.Or]], CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax.Empty);
+                return CSharpLua.LuaAst.LuaParenthesizedExpressionSyntax(orExpression);
             end
         end;
         BuildStringConcatExpression = function (this, node) 

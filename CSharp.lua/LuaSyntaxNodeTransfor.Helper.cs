@@ -192,7 +192,7 @@ namespace CSharpLua {
             var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
             int index = 0;
             foreach(var section in switchStatement.Sections) {
-               bool isFound = section.Labels.Any(i => {
+                bool isFound = section.Labels.Any(i => {
                     if(i.IsKind(SyntaxKind.CaseSwitchLabel)) {
                         var label = (CaseSwitchLabelSyntax)i;
                         if(label.Value.ToString() == node.Expression.ToString()) {
@@ -432,6 +432,69 @@ namespace CSharpLua {
                 }
             }
             return null;
+        }
+
+        private bool MayBeFalse(ExpressionSyntax expression, ITypeSymbol type) {
+            bool mayBeFalse = false;
+            if(type.IsValueType) {
+                if(type.SpecialType == SpecialType.System_Boolean) {
+                    var constValue = semanticModel_.GetConstantValue(expression);
+                    if(constValue.HasValue && (bool)constValue.Value) {
+                        mayBeFalse = false;
+                    }
+                    else {
+                        mayBeFalse = true;
+                    }
+                }
+            }
+            return mayBeFalse;
+        }
+
+        private bool MayBeNull(ExpressionSyntax expression, ITypeSymbol type) {
+            if(expression.IsKind(SyntaxKind.ObjectInitializerExpression)) {
+                return false;
+            }
+
+            bool mayBeNull;
+            if(type.IsValueType) {
+                mayBeNull = false;
+            }
+            else if(type.IsStringType()) {
+                var constValue = semanticModel_.GetConstantValue(expression);
+                if(constValue.HasValue) {
+                    mayBeNull = false;
+                }
+                else {
+                    if(expression.IsKind(SyntaxKind.InvocationExpression)) {
+                        var invocation = (InvocationExpressionSyntax)expression;
+                        if(invocation.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+                            var memberAccess = (MemberAccessExpressionSyntax)invocation.Expression;
+                            if(memberAccess.Name.Identifier.ValueText == LuaIdentifierNameSyntax.ToStr.ValueText) {
+                                var typeInfo = semanticModel_.GetTypeInfo(memberAccess.Expression).Type;
+                                switch(typeInfo.SpecialType) {
+                                    case SpecialType.System_Object:
+                                    case SpecialType.System_Nullable_T: {
+                                            break;
+                                        }
+                                    default: {
+                                            return false;
+                                        }
+                                }
+                            }
+                        }
+                    }
+                    mayBeNull = true;
+                }
+            }
+            else {
+                mayBeNull = true;
+            }
+            return mayBeNull;
+        }
+
+        private bool MayBeNullOrFalse(ExpressionSyntax conditionalWhenTrue) {
+            var type = semanticModel_.GetTypeInfo(conditionalWhenTrue).Type;
+            return MayBeNull(conditionalWhenTrue, type) || MayBeFalse(conditionalWhenTrue, type);
         }
     }
 }
