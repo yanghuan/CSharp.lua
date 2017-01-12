@@ -126,6 +126,9 @@ System.namespace("CSharpLua", function (namespace)
                             return GetName(this, symbol);
                         end
                     elseif default == 1 --[[MethodMetaType.CodeTemplate]] then
+                        do
+                            return GetCodeTemplate(this, symbol);
+                        end
                     else
                         do
                             System.throw(System.InvalidOperationException());

@@ -112,6 +112,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                         ifStatement = statement;
                     else
                         local elseIfStatement = CSharpLua.LuaAst.LuaElseIfStatementSyntax(statement.Condition);
+                        elseIfStatement.Body.Statements:AddRange(statement.Body.Statements);
                         ifStatement.ElseIfStatements:Add(elseIfStatement);
                     end
                 else

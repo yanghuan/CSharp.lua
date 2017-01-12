@@ -107,6 +107,7 @@ namespace CSharpLua.LuaAst {
                     }
                     else {
                         LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(statement.Condition);
+                        elseIfStatement.Body.Statements.AddRange(statement.Body.Statements);
                         ifStatement.ElseIfStatements.Add(elseIfStatement);
                     }
                 }
