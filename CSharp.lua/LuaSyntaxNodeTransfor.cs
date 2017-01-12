@@ -1010,7 +1010,7 @@ namespace CSharpLua {
                 IFieldSymbol fieldSymbol = (IFieldSymbol)symbol;
                 string codeTemplate = XmlMetaProvider.GetFieldCodeTemplate(fieldSymbol);
                 if(codeTemplate != null) {
-                    return new LuaIdentifierNameSyntax(codeTemplate);
+                    return BuildCodeTemplateExpression(codeTemplate, node.Expression);
                 }
 
                 if(fieldSymbol.HasConstantValue) {
