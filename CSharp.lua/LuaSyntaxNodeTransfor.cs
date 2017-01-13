@@ -1872,6 +1872,13 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitCastExpression(CastExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+
+            var originalType = semanticModel_.GetTypeInfo(node.Expression).Type;
+            var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
+            if(targetType.IsAssignableFrom(originalType)) {
+                return expression;
+            }
+
             var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);
             return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, typeExpression, expression);
         }

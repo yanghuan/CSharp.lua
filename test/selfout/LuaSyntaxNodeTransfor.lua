@@ -72,17 +72,17 @@ System.namespace("CSharpLua", function (namespace)
         VisitEqualsValueClause, VisitPredefinedType, WriteStatementOrBlock, VisitIfStatement, VisitElseClause, VisitSwitchStatement, VisitSwitchSection, VisitCaseSwitchLabel, 
         VisitBreakStatement, WrapStringConcatExpression, BuildStringConcatExpression, BuildStringConcatExpression, BuildBinaryInvokeExpression, BuildIntegerDivExpression, BuildBinaryExpression, BuildBitExpression, 
         VisitBinaryExpression, GetLuaAssignmentExpressionSyntax, VisitPrefixUnaryExpression, VisitPostfixUnaryExpression, VisitContinueStatement, VisitLoopBody, VisitForEachStatement, VisitWhileStatement, 
-        VisitForStatement, VisitDoStatement, VisitYieldStatement, VisitParenthesizedExpression, MayBeNullOrFalse, VisitConditionalExpression, VisitGotoStatement, VisitLabeledStatement, 
-        VisitEmptyStatement, VisitCastExpression, VisitCheckedStatement, VisitCheckedExpression, codeTemplateRegex_, IsLocalVarExists, GetNewIdentifierName, FindParent, 
-        FindParent, GetUniqueIdentifier, CheckReservedWord, AddReservedMapping, CheckParameterName, CheckVariableDeclaratorName, CheckReservedWord, GetConstructorIndex, 
-        IsContinueExists, IsReturnExists, GetCaseLabelIndex, BuildCodeTemplateExpression, AddCodeTemplateExpression, BuildCodeTemplateExpression, IsPropertyField, GetTypeDeclarationSymbol, 
-        IsInternalMember, BuildEmptyArray, GetConstLiteralExpression, GetConstLiteralExpression, BuildStringLiteralTokenExpression, BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, 
-        GetCallerAttributeKind, IsCallerAttribute, CheckCallerAttribute, CheckUsingStaticNameSyntax, VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitInitializerExpression, VisitBracketedArgumentList, 
-        VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, VisitConstructorDeclaration, 
-        VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, 
-        VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, 
-        IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, 
-        VisitInterpolatedStringText, __staticCtor__, __init__, __ctor__;
+        VisitForStatement, VisitDoStatement, VisitYieldStatement, VisitParenthesizedExpression, VisitConditionalExpression, VisitGotoStatement, VisitLabeledStatement, VisitEmptyStatement, 
+        VisitCastExpression, VisitCheckedStatement, VisitCheckedExpression, codeTemplateRegex_, IsLocalVarExists, GetNewIdentifierName, FindParent, FindParent, 
+        GetUniqueIdentifier, CheckReservedWord, AddReservedMapping, CheckParameterName, CheckVariableDeclaratorName, CheckReservedWord, GetConstructorIndex, IsContinueExists, 
+        IsReturnExists, GetCaseLabelIndex, BuildCodeTemplateExpression, AddCodeTemplateExpression, BuildCodeTemplateExpression, IsPropertyField, GetTypeDeclarationSymbol, IsInternalMember, 
+        BuildEmptyArray, GetConstLiteralExpression, GetConstLiteralExpression, BuildStringLiteralTokenExpression, BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind, 
+        IsCallerAttribute, CheckCallerAttribute, CheckUsingStaticNameSyntax, MayBeFalse, MayBeNull, MayBeNullOrFalse, VisitObjectCreationExpression, BuildObjectInitializerExpression, 
+        VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, 
+        VisitArrayCreationExpression, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitTypeParameter, VisitTypeOfExpression, 
+        VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, 
+        VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, 
+        VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, __staticCtor__, __init__, __ctor__;
         getXmlMetaProvider = function (this) 
             return this.generator_.XmlMetaProvider;
         end;
@@ -579,7 +579,7 @@ System.namespace("CSharpLua", function (namespace)
                 local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, accessor:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                 PopFunction(this);
                 functionExpression.Body.Statements:AddRange(block.Statements);
-                local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, System.String.Empty);
+                local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, "");
                 getCurType(this):AddMethod(name, functionExpression, isPrivate);
                 if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
                     assert(not hasGet);
@@ -932,7 +932,7 @@ System.namespace("CSharpLua", function (namespace)
                 local fieldSymbol = System.cast(Microsoft.CodeAnalysis.IFieldSymbol, symbol);
                 local codeTemplate = getXmlMetaProvider(this):GetFieldCodeTemplate(fieldSymbol);
                 if codeTemplate ~= nil then
-                    return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, codeTemplate);
+                    return BuildCodeTemplateExpression(this, codeTemplate, node:getExpression());
                 end
 
                 if fieldSymbol:getHasConstantValue() then
@@ -1375,8 +1375,13 @@ System.namespace("CSharpLua", function (namespace)
                 if constValue:getHasValue() then
                     return original;
                 else
-                    local binaryExpression = CSharpLua.LuaAst.LuaBinaryExpressionSyntax(original, "or" --[[Keyword.Or]], CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax.Empty);
-                    return CSharpLua.LuaAst.LuaParenthesizedExpressionSyntax(binaryExpression);
+                    local mayBeNull = MayBeNull(this, expression, typeInfo);
+                    if mayBeNull then
+                        local binaryExpression = CSharpLua.LuaAst.LuaBinaryExpressionSyntax(original, "or" --[[Keyword.Or]], CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax.Empty);
+                        return CSharpLua.LuaAst.LuaParenthesizedExpressionSyntax(binaryExpression);
+                    else
+                        return original;
+                    end
                 end
             elseif typeInfo:getSpecialType() == 8 --[[SpecialType.System_Char]] then
                 local constValue = this.semanticModel_:GetConstantValue(expression);
@@ -1651,53 +1656,6 @@ System.namespace("CSharpLua", function (namespace)
         VisitParenthesizedExpression = function (this, node) 
             local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
             return CSharpLua.LuaAst.LuaParenthesizedExpressionSyntax(expression);
-        end;
-        MayBeNullOrFalse = function (this, conditionalWhenTrue) 
-            local type = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, conditionalWhenTrue):getType();
-            local mayBeNullOrFalse;
-            if type:getIsValueType() then
-                if type:getSpecialType() == 7 --[[SpecialType.System_Boolean]] then
-                    local constValue = this.semanticModel_:GetConstantValue(conditionalWhenTrue);
-                    if constValue:getHasValue() and System.cast(System.Boolean, constValue:getValue()) then
-                        mayBeNullOrFalse = false;
-                    else
-                        mayBeNullOrFalse = true;
-                    end
-                else
-                    mayBeNullOrFalse = false;
-                end
-            elseif CSharpLua.Utility.IsStringType(type) then
-                local constValue = this.semanticModel_:GetConstantValue(conditionalWhenTrue);
-                if constValue:getHasValue() then
-                    mayBeNullOrFalse = false;
-                else
-                    if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(conditionalWhenTrue, 8634 --[[SyntaxKind.InvocationExpression]]) then
-                        local invocation = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.InvocationExpressionSyntax, conditionalWhenTrue);
-                        if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(invocation:getExpression(), 8689 --[[SyntaxKind.SimpleMemberAccessExpression]]) then
-                            local memberAccess = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax, invocation:getExpression());
-                            if memberAccess:getName():getIdentifier():getValueText() == CSharpLua.LuaAst.LuaIdentifierNameSyntax.ToStr.ValueText then
-                                local typeInfo = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, memberAccess:getExpression()):getType();
-                                repeat
-                                    local default = typeInfo:getSpecialType();
-                                    if default == 1 --[[SpecialType.System_Object]] or default == 32 --[[SpecialType.System_Nullable_T]] then
-                                        do
-                                            break;
-                                        end
-                                    else
-                                        do
-                                            return false;
-                                        end
-                                    end
-                                until 1;
-                            end
-                        end
-                    end
-                    mayBeNullOrFalse = true;
-                end
-            else
-                mayBeNullOrFalse = true;
-            end
-            return mayBeNullOrFalse;
         end;
         VisitConditionalExpression = function (this, node) 
             local mayBeNullOrFalse = MayBeNullOrFalse(this, node:getWhenTrue());
@@ -2106,6 +2064,62 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end
             return nil;
+        end;
+        MayBeFalse = function (this, expression, type) 
+            local mayBeFalse = false;
+            if type:getIsValueType() then
+                if type:getSpecialType() == 7 --[[SpecialType.System_Boolean]] then
+                    local constValue = this.semanticModel_:GetConstantValue(expression);
+                    if constValue:getHasValue() and System.cast(System.Boolean, constValue:getValue()) then
+                        mayBeFalse = false;
+                    else
+                        mayBeFalse = true;
+                    end
+                end
+            end
+            return mayBeFalse;
+        end;
+        MayBeNull = function (this, expression, type) 
+            if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(expression, 8644 --[[SyntaxKind.ObjectInitializerExpression]]) then
+                return false;
+            end
+
+            local mayBeNull;
+            if type:getIsValueType() then
+                mayBeNull = false;
+            elseif CSharpLua.Utility.IsStringType(type) then
+                local constValue = this.semanticModel_:GetConstantValue(expression);
+                if constValue:getHasValue() then
+                    mayBeNull = false;
+                else
+                    if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(expression, 8634 --[[SyntaxKind.InvocationExpression]]) then
+                        local invocation = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.InvocationExpressionSyntax, expression);
+                        if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(invocation:getExpression(), 8689 --[[SyntaxKind.SimpleMemberAccessExpression]]) then
+                            local memberAccess = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax, invocation:getExpression());
+                            if memberAccess:getName():getIdentifier():getValueText() == CSharpLua.LuaAst.LuaIdentifierNameSyntax.ToStr.ValueText then
+                                local typeInfo = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, memberAccess:getExpression()):getType();
+                                if typeInfo:getSpecialType() > 1 --[[SpecialType.System_Object]] then
+                                    return false;
+                                end
+                            end
+                        end
+                    elseif Microsoft.CodeAnalysis.CSharpExtensions.IsKind(expression, 8689 --[[SyntaxKind.SimpleMemberAccessExpression]]) then
+                        local memberAccess = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax, expression);
+                        local typeInfo = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, memberAccess:getExpression()):getType();
+                        if typeInfo:getSpecialType() > 1 --[[SpecialType.System_Object]] then
+                            return false;
+                        end
+                    end
+                    mayBeNull = true;
+                end
+            else
+                mayBeNull = true;
+            end
+            return mayBeNull;
+        end;
+        MayBeNullOrFalse = function (this, conditionalWhenTrue) 
+            local type = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, conditionalWhenTrue):getType();
+            return MayBeNull(this, conditionalWhenTrue, type) or MayBeFalse(this, conditionalWhenTrue, type);
         end;
         VisitObjectCreationExpression = function (this, node) 
             local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, node:getType():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
@@ -2647,7 +2661,7 @@ System.namespace("CSharpLua", function (namespace)
         VisitElementAccessExpression = function (this, node) 
             local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
             local argumentList = System.cast(CSharpLua.LuaAst.LuaArgumentListSyntax, node:getArgumentList():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-            local identifierName = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, System.String.Empty);
+            local identifierName = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, "");
             local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(expression, identifierName, true);
             local propertyAdapter = CSharpLua.LuaAst.LuaPropertyAdapterExpressionSyntax:new(2, memberAccess, identifierName);
             propertyAdapter.InvocationExpression.ArgumentList.Arguments:AddRange(argumentList.Arguments);

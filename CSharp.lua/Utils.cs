@@ -279,5 +279,93 @@ namespace CSharpLua {
             var methodInfo = location.GetType().GetMethod("GetDebuggerDisplay", BindingFlags.Instance | BindingFlags.NonPublic);
             return (string)methodInfo.Invoke(location, null);
         }
+
+        private static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
+            ITypeSymbol p = child;
+            if(p == parent) {
+                return false;
+            }
+
+            while(p != null) {
+                if(p == parent) {
+                    return true;
+                }
+                p = p.BaseType;
+            }
+            return false;
+        }
+
+        private static bool IsImplementInterface(this ITypeSymbol implementType, ITypeSymbol interfaceType) {
+            ITypeSymbol t = implementType;
+            while(t != null) {
+                var interfaces = implementType.AllInterfaces;
+                foreach(var i in interfaces) {
+                    if(i == interfaceType || i.IsImplementInterface(interfaceType)) {
+                        return true;
+                    }
+                }
+                t = t.BaseType;
+            }
+            return false;
+        }
+
+        private static bool IsBaseNumberType(this SpecialType specialType) {
+            return specialType >= SpecialType.System_Char && specialType <= SpecialType.System_Double;
+        }
+
+        private static bool IsNumberTypeAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
+            if(left.SpecialType.IsBaseNumberType() && right.SpecialType.IsBaseNumberType()) {
+                SpecialType begin;
+                switch(left.SpecialType) {
+                    case SpecialType.System_Char: 
+                    case SpecialType.System_SByte:
+                    case SpecialType.System_Byte: {
+                            begin = SpecialType.System_Int16;
+                            break;
+                        }
+                    case SpecialType.System_Int16:
+                    case SpecialType.System_UInt16: {
+                            begin = SpecialType.System_Int32;
+                            break;
+                        }
+                    case SpecialType.System_Int32:
+                    case SpecialType.System_UInt32: {
+                            begin = SpecialType.System_Int64;
+                            break;
+                        }
+                    case SpecialType.System_Int64:
+                    case SpecialType.System_UInt64: {
+                            begin = SpecialType.System_Decimal;
+                            break;
+                        }
+                    default: {
+                            begin = SpecialType.System_Double;
+                            break;
+                        }
+                }
+                SpecialType end = SpecialType.System_Double;
+                return left.SpecialType >= begin && left.SpecialType <= end;
+            }
+            return false;
+        }
+
+        public static bool IsAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
+            if(left == right) {
+                return true;
+            }
+
+            if(left.IsNumberTypeAssignableFrom(right)) {
+                return true;
+            }
+
+            if(right.IsSubclassOf(left)) {
+                return true;
+            }
+
+            if(left.TypeKind == TypeKind.Interface) {
+                return IsImplementInterface(right, left);
+            }
+            return false;
+        }
     }
 }

@@ -14,7 +14,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         namespace.class("Tokens", function (namespace) 
             local getEmpty, Semicolon, __staticCtor__;
             getEmpty = function () 
-                return System.String.Empty;
+                return "";
             end;
             __staticCtor__ = function (this) 
                 Semicolon = CSharpLua.LuaAst.LuaSyntaxNode.Semicolon();
