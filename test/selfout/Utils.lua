@@ -27,10 +27,11 @@ System.namespace("CSharpLua", function (namespace)
         };
     end);
     namespace.class("Utility", function (namespace) 
-        local GetCommondLines, First, Last, GetOrDefault, GetOrDefault, GetArgument, GetCurrentDirectory, Split, 
+        local GetCommondLines, First, Last, GetOrDefault, GetOrDefault1, GetArgument, GetCurrentDirectory, Split, 
         IsPrivate, IsStatic, IsAbstract, IsReadOnly, IsConst, IsParams, IsPartial, IsStringType, 
         IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, IsPropertyField, 
-        IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString;
+        IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, 
+        IsNumberTypeAssignableFrom, IsAssignableFrom;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -72,7 +73,7 @@ System.namespace("CSharpLua", function (namespace)
             end
             return default;
         end;
-        GetOrDefault = function (dict, key, t, K, T) 
+        GetOrDefault1 = function (dict, key, t, K, T) 
             if t == nil then t = System.default(T) end
             local v;
             local default;
@@ -84,7 +85,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetArgument = function (args, name, isOption) 
             if isOption == nil then isOption = false end
-            local values = CSharpLua.Utility.GetOrDefault(args, name, nil, System.String, System.Array(System.String));
+            local values = GetOrDefault1(args, name, nil, System.String, System.Array(System.String));
             if values == nil or #values == 0 then
                 if isOption then
                     return nil;
@@ -153,7 +154,7 @@ System.namespace("CSharpLua", function (namespace)
             return type:getSpecialType() >= 9 --[[SpecialType.System_SByte]] and type:getSpecialType() <= 16 --[[SpecialType.System_UInt64]];
         end;
         IsImmutable = function (type) 
-            local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or CSharpLua.Utility.IsStringType(type) or CSharpLua.Utility.IsDelegateType(type);
+            local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or IsStringType(type) or IsDelegateType(type);
             return isImmutable;
         end;
         IsInterfaceImplementation = function (symbol, T) 
@@ -183,7 +184,7 @@ System.namespace("CSharpLua", function (namespace)
             return not symbol:getIsStatic() and (symbol:getIsAbstract() or symbol:getIsVirtual() or symbol:getIsOverride());
         end;
         IsPropertyField = function (symbol) 
-            if CSharpLua.Utility.IsOverridable(symbol) then
+            if IsOverridable(symbol) then
                 return false;
             end
 
@@ -210,7 +211,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
                 local isAuto = not hasGet and not hasSet;
                 if isAuto then
-                    if CSharpLua.Utility.IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IPropertySymbol) then
+                    if IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IPropertySymbol) then
                         isAuto = false;
                     end
                 end
@@ -219,7 +220,7 @@ System.namespace("CSharpLua", function (namespace)
             return false;
         end;
         IsEventFiled = function (symbol) 
-            if CSharpLua.Utility.IsOverridable(symbol) then
+            if IsOverridable(symbol) then
                 return false;
             end
 
@@ -227,7 +228,7 @@ System.namespace("CSharpLua", function (namespace)
             if syntaxReference ~= nil then
                 local isField = Microsoft.CodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(), 8795 --[[SyntaxKind.VariableDeclarator]]);
                 if isField then
-                    if CSharpLua.Utility.IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IEventSymbol) then
+                    if IsInterfaceImplementation(symbol, Microsoft.CodeAnalysis.IEventSymbol) then
                         isField = false;
                     end
                 end
@@ -254,12 +255,97 @@ System.namespace("CSharpLua", function (namespace)
             local methodInfo = location:GetType():GetMethod("GetDebuggerDisplay", 4 --[[BindingFlags.Instance]] | 32 --[[BindingFlags.NonPublic]]);
             return System.cast(System.String, methodInfo:Invoke(location, nil));
         end;
+        IsSubclassOf = function (child, parent) 
+            local p = child;
+            if p == parent then
+                return false;
+            end
+
+            while p ~= nil do
+                if p == parent then
+                    return true;
+                end
+                p = p:getBaseType();
+            end
+            return false;
+        end;
+        IsImplementInterface = function (implementType, interfaceType) 
+            local t = implementType;
+            while t ~= nil do
+                local interfaces = implementType:getAllInterfaces();
+                for _, i in System.each(interfaces) do
+                    if i == interfaceType or IsImplementInterface(i, interfaceType) then
+                        return true;
+                    end
+                end
+                t = t:getBaseType();
+            end
+            return false;
+        end;
+        IsBaseNumberType = function (specialType) 
+            return specialType >= 8 --[[SpecialType.System_Char]] and specialType <= 19 --[[SpecialType.System_Double]];
+        end;
+        IsNumberTypeAssignableFrom = function (left, right) 
+            if IsBaseNumberType(left:getSpecialType()) and IsBaseNumberType(right:getSpecialType()) then
+                local begin;
+                repeat
+                    local default = left:getSpecialType();
+                    if default == 8 --[[SpecialType.System_Char]] or default == 9 --[[SpecialType.System_SByte]] or default == 10 --[[SpecialType.System_Byte]] then
+                        do
+                            begin = 11 --[[SpecialType.System_Int16]];
+                            break;
+                        end
+                    elseif default == 11 --[[SpecialType.System_Int16]] or default == 12 --[[SpecialType.System_UInt16]] then
+                        do
+                            begin = 13 --[[SpecialType.System_Int32]];
+                            break;
+                        end
+                    elseif default == 13 --[[SpecialType.System_Int32]] or default == 14 --[[SpecialType.System_UInt32]] then
+                        do
+                            begin = 15 --[[SpecialType.System_Int64]];
+                            break;
+                        end
+                    elseif default == 15 --[[SpecialType.System_Int64]] or default == 16 --[[SpecialType.System_UInt64]] then
+                        do
+                            begin = 17 --[[SpecialType.System_Decimal]];
+                            break;
+                        end
+                    else
+                        do
+                            begin = 19 --[[SpecialType.System_Double]];
+                            break;
+                        end
+                    end
+                until 1;
+                local end_ = 19 --[[SpecialType.System_Double]];
+                return left:getSpecialType() >= begin and left:getSpecialType() <= end_;
+            end
+            return false;
+        end;
+        IsAssignableFrom = function (left, right) 
+            if left == right then
+                return true;
+            end
+
+            if IsNumberTypeAssignableFrom(left, right) then
+                return true;
+            end
+
+            if IsSubclassOf(right, left) then
+                return true;
+            end
+
+            if left:getTypeKind() == 7 --[[TypeKind.Interface]] then
+                return IsImplementInterface(right, left);
+            end
+            return false;
+        end;
         return {
             GetCommondLines = GetCommondLines, 
             First = First, 
             Last = Last, 
             GetOrDefault = GetOrDefault, 
-            GetOrDefault = GetOrDefault, 
+            GetOrDefault1 = GetOrDefault1, 
             GetArgument = GetArgument, 
             GetCurrentDirectory = GetCurrentDirectory, 
             Split = Split, 
@@ -282,7 +368,8 @@ System.namespace("CSharpLua", function (namespace)
             IsEventFiled = IsEventFiled, 
             IsAssignment = IsAssignment, 
             IsSystemLinqEnumerable = IsSystemLinqEnumerable, 
-            GetLocationString = GetLocationString
+            GetLocationString = GetLocationString, 
+            IsAssignableFrom = IsAssignableFrom
         };
     end);
 end);

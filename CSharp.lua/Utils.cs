@@ -363,8 +363,9 @@ namespace CSharpLua {
             }
 
             if(left.TypeKind == TypeKind.Interface) {
-                return IsImplementInterface(right, left);
+                return right.IsImplementInterface(left);
             }
+
             return false;
         }
     }

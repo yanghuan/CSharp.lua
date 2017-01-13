@@ -9,7 +9,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         AddTypeDeclaration = function (this, memberNode) 
             local namespaceNode = CSharpLua.LuaAst.LuaNamespaceDeclarationSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax.Empty);
             namespaceNode:AddMemberDeclaration(memberNode);
-            this.Statements:Add(namespaceNode);
+            this.Statements:Add1(namespaceNode);
         end;
         ImportLinq = function (this) 
             if not this.isImportLinq_ then
@@ -40,7 +40,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
 
             local system = CSharpLua.LuaAst.LuaIdentifierNameSyntax.System;
             AddImport(this, system, system);
-            this.Statements:Add(this.HeadAreaStatements);
+            this.Statements:Add1(this.HeadAreaStatements);
         end;
         return {
             __inherits__ = {

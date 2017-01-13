@@ -13,7 +13,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "end" --[[Keyword.End]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render40(this);
         end;
         __init__ = function (this) 
             this.Body = CSharpLua.LuaAst.LuaBlockSyntax();
@@ -46,7 +46,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "then" --[[Keyword.Then]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render41(this);
         end;
         __init__ = function (this) 
             this.Body = CSharpLua.LuaAst.LuaBlockSyntax();
@@ -74,7 +74,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "else" --[[Keyword.Else]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render42(this);
         end;
         __ctor__ = function (this) 
             this.Body = CSharpLua.LuaAst.LuaBlockSyntax();
@@ -99,10 +99,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
 
             local body = this.RepeatStatement.Body;
-            body.Statements:Add(this.caseLabelVariables_);
+            body.Statements:Add1(this.caseLabelVariables_);
             local variableDeclarator = CSharpLua.LuaAst.LuaVariableDeclaratorSyntax(this.Temp);
             variableDeclarator.Initializer = CSharpLua.LuaAst.LuaEqualsValueClauseSyntax(expression);
-            body.Statements:Add(CSharpLua.LuaAst.LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+            body.Statements:Add1(CSharpLua.LuaAst.LuaLocalVariableDeclaratorSyntax(variableDeclarator));
 
             local ifStatement = nil;
             for _, section in System.each(sections) do
@@ -112,8 +112,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                         ifStatement = statement;
                     else
                         local elseIfStatement = CSharpLua.LuaAst.LuaElseIfStatementSyntax(statement.Condition);
-                        elseIfStatement.Body.Statements:AddRange(statement.Body.Statements);
-                        ifStatement.ElseIfStatements:Add(elseIfStatement);
+                        elseIfStatement.Body.Statements:AddRange1(statement.Body.Statements);
+                        ifStatement.ElseIfStatements:Add1(elseIfStatement);
                     end
                 else
                     assert(this.defaultBock_ == nil);
@@ -122,28 +122,28 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
 
             if ifStatement ~= nil then
-                body.Statements:Add(ifStatement);
+                body.Statements:Add1(ifStatement);
                 if this.defaultBock_ ~= nil then
                     local elseClause = CSharpLua.LuaAst.LuaElseClauseSyntax();
-                    elseClause.Body.Statements:AddRange(this.defaultBock_.Statements);
+                    elseClause.Body.Statements:AddRange1(this.defaultBock_.Statements);
                     ifStatement.Else = elseClause;
                 end
                 this.headIfStatement_ = ifStatement;
             else
                 if this.defaultBock_ ~= nil then
-                    body.Statements:AddRange(this.defaultBock_.Statements);
+                    body.Statements:AddRange1(this.defaultBock_.Statements);
                 end
             end
         end;
         CheckHasDefaultLabel = function (this) 
             if this.DefaultLabel ~= nil then
                 assert(this.defaultBock_ ~= nil);
-                this.caseLabelVariables_.Variables:Add(this.DefaultLabel);
+                this.caseLabelVariables_.Variables:Add1(this.DefaultLabel);
                 local labeledStatement = CSharpLua.LuaAst.LuaLabeledStatement(this.DefaultLabel);
-                this.RepeatStatement.Body.Statements:Add(labeledStatement);
+                this.RepeatStatement.Body.Statements:Add1(labeledStatement);
                 local IfStatement = CSharpLua.LuaAst.LuaIfStatementSyntax(this.DefaultLabel);
-                IfStatement.Body.Statements:AddRange(this.defaultBock_.Statements);
-                this.RepeatStatement.Body.Statements:Add(IfStatement);
+                IfStatement.Body.Statements:AddRange1(this.defaultBock_.Statements);
+                this.RepeatStatement.Body.Statements:Add1(IfStatement);
             end
         end;
         FindMatchIfStatement = function (this, index) 
@@ -156,21 +156,21 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         CheckHasCaseLabel = function (this) 
             if this.CaseLabels:getCount() > 0 then
                 assert(this.headIfStatement_ ~= nil);
-                this.caseLabelVariables_.Variables:AddRange(this.CaseLabels:getValues());
+                this.caseLabelVariables_.Variables:AddRange1(this.CaseLabels:getValues());
                 for _, pair in System.each(this.CaseLabels) do
                     local caseLabelStatement = FindMatchIfStatement(this, pair:getKey());
                     local labelIdentifier = pair:getValue();
-                    this.RepeatStatement.Body.Statements:Add(CSharpLua.LuaAst.LuaLabeledStatement(labelIdentifier));
+                    this.RepeatStatement.Body.Statements:Add1(CSharpLua.LuaAst.LuaLabeledStatement(labelIdentifier));
                     local ifStatement = CSharpLua.LuaAst.LuaIfStatementSyntax(labelIdentifier);
-                    ifStatement.Body.Statements:AddRange(caseLabelStatement.Statements);
-                    this.RepeatStatement.Body.Statements:Add(ifStatement);
+                    ifStatement.Body.Statements:AddRange1(caseLabelStatement.Statements);
+                    this.RepeatStatement.Body.Statements:Add1(ifStatement);
                 end
             end
         end;
         Render = function (this, renderer) 
             CheckHasCaseLabel(this);
             CheckHasDefaultLabel(this);
-            renderer:Render(this);
+            renderer:Render47(this);
         end;
         __init__ = function (this) 
             this.RepeatStatement = CSharpLua.LuaAst.LuaRepeatStatementSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax.One);
@@ -202,7 +202,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "end" --[[Keyword.End]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render48(this);
         end;
         __ctor__ = function (this, parameter, defaultValue) 
             if parameter == nil then

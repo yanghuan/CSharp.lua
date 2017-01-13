@@ -71,6 +71,7 @@ namespace CSharpLua {
         public SettingInfo Setting { get; }
         private HashSet<string> exportEnums_ = new HashSet<string>();
         private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
+        private Dictionary<IMethodSymbol, LuaIdentifierNameSyntax> methodNamesCache_ = new Dictionary<IMethodSymbol, LuaIdentifierNameSyntax>();
 
         public LuaSyntaxGenerator(IEnumerable<string> metas, CSharpCompilation compilation) {
             XmlMetaProvider = new XmlMetaProvider(metas);
@@ -140,6 +141,80 @@ namespace CSharpLua {
             var symbol = semanticModel.GetTypeInfo(type.Type).Type;
             Contract.Assert(symbol != null);
             return symbol.TypeKind != TypeKind.Interface;
+        }
+
+        internal LuaIdentifierNameSyntax GetMethodName(IMethodSymbol symbol) {
+            var name = methodNamesCache_.GetOrDefault(symbol);
+            if(name == null) {
+                name = InternalGetMethodName(symbol);
+                methodNamesCache_.Add(symbol, name);
+            }
+            return name;
+        }
+
+        private LuaIdentifierNameSyntax InternalGetMethodName(IMethodSymbol symbol) {
+            string name = XmlMetaProvider.GetMethodMapName(symbol);
+            if(name != null) {
+                return new LuaIdentifierNameSyntax(name);
+            }
+
+            if(!symbol.IsFromCode()) {
+                return new LuaIdentifierNameSyntax(symbol.Name);
+            }
+
+            var methods = GetSameNameMembers(symbol.ContainingType, symbol.Name);
+            if(methods.Count == 1) {
+                return new LuaIdentifierNameSyntax(symbol.Name);
+            }
+            else {
+                if(symbol.IsExtensionMethod) {
+                    if(symbol.ReducedFrom != null) {
+                        symbol = symbol.ReducedFrom;
+                    }
+                }
+                else if(symbol.IsOverride) {
+                    if(symbol.OverriddenMethod != null) {
+                        symbol = symbol.OverriddenMethod;
+                    }
+                }
+
+                int index = methods.IndexOf(symbol);
+                Contract.Assert(index != -1);
+                if(index == 0) {
+                    return new LuaIdentifierNameSyntax(symbol.Name);
+                }
+                else {
+                    return new LuaIdentifierNameSyntax(symbol.Name + index);
+                }
+            }
+        }
+
+        private List<ISymbol> GetSameNameMembers(INamedTypeSymbol typeSymbol, string name) {
+            List<ISymbol> members = new List<ISymbol>();
+            FillSameNameMembers(typeSymbol, name, members);
+            return members;
+        }
+
+        private void FillSameNameMembers(INamedTypeSymbol typeSymbol, string name, List<ISymbol> outList) {
+            if(typeSymbol.BaseType != null) {
+                FillSameNameMembers(typeSymbol.BaseType, name, outList);
+            }
+
+            bool isFromCode = typeSymbol.IsFromCode();
+            var members = typeSymbol.GetMembers(name);
+            foreach(ISymbol member in members) {
+                if(!isFromCode) {
+                    if(member.DeclaredAccessibility == Accessibility.Private || member.DeclaredAccessibility == Accessibility.Internal) {
+                        continue;
+                    }
+                }
+
+                if(member.IsOverride) {
+                    continue;
+                }
+
+                outList.Add(member);
+            }
         }
     }
 }

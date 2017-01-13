@@ -41,7 +41,7 @@ System.namespace("CSharpLua", function (namespace)
             };
         end);
         local Create, Generate, IsEnumExport, AddExportEnum, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, 
-        __init__, __ctor__;
+        GetMethodName, InternalGetMethodName, GetSameNameMembers, FillSameNameMembers, __init__, __ctor__;
         Create = function (this) 
             local luaCompilationUnits = System.List(CSharpLua.LuaAst.LuaCompilationUnitSyntax)();
             for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
@@ -69,7 +69,7 @@ System.namespace("CSharpLua", function (namespace)
             this.exportEnums_:Add(enumName);
         end;
         AddPartialTypeDeclaration = function (this, typeSymbol, node, luaNode, compilationUnit) 
-            local list = CSharpLua.Utility.GetOrDefault(this.partialTypes_, typeSymbol, nil, Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(T));
+            local list = CSharpLua.Utility.GetOrDefault1(this.partialTypes_, typeSymbol, nil, Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(T));
             if list == nil then
                 list = System.List(CSharpLua.PartialTypeDeclaration)();
                 this.partialTypes_:Add(typeSymbol, list);
@@ -98,14 +98,91 @@ System.namespace("CSharpLua", function (namespace)
             assert(symbol ~= nil);
             return symbol:getTypeKind() ~= 7 --[[TypeKind.Interface]];
         end;
+        GetMethodName = function (this, symbol) 
+            local name = CSharpLua.Utility.GetOrDefault1(this.methodNamesCache_, symbol, nil, Microsoft.CodeAnalysis.IMethodSymbol, CSharpLua.LuaAst.LuaIdentifierNameSyntax);
+            if name == nil then
+                name = InternalGetMethodName(this, symbol);
+                this.methodNamesCache_:Add(symbol, name);
+            end
+            return name;
+        end;
+        InternalGetMethodName = function (this, symbol) 
+            local name = this.XmlMetaProvider:GetMethodMapName(symbol);
+            if name ~= nil then
+                return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, name);
+            end
+
+            if not CSharpLua.Utility.IsFromCode(symbol) then
+                return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+            end
+
+            local methods = GetSameNameMembers(this, symbol:getContainingType(), symbol:getName());
+            if #methods == 1 then
+                return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+            else
+                if symbol:getIsExtensionMethod() then
+                    if symbol:getReducedFrom() ~= nil then
+                        symbol = symbol:getReducedFrom();
+                    end
+                elseif symbol:getIsOverride() then
+                    if symbol:getOverriddenMethod() ~= nil then
+                        symbol = symbol:getOverriddenMethod();
+                    end
+                end
+
+                local index = methods:IndexOf(symbol);
+                assert(index ~= - 1);
+                if index == 0 then
+                    return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+                else
+                    return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, (symbol:getName() or "") .. index);
+                end
+            end
+        end;
+        GetSameNameMembers = function (this, typeSymbol, name) 
+            local members = System.List(Microsoft.CodeAnalysis.ISymbol)();
+            FillSameNameMembers(this, typeSymbol, name, members);
+            return members;
+        end;
+        FillSameNameMembers = function (this, typeSymbol, name, outList) 
+            if typeSymbol:getBaseType() ~= nil then
+                FillSameNameMembers(this, typeSymbol:getBaseType(), name, outList);
+            end
+
+            local isFromCode = CSharpLua.Utility.IsFromCode(typeSymbol);
+            local members = typeSymbol:GetMembers(name);
+            for _, member in System.each(members) do
+                local continue;
+                repeat
+                    if not isFromCode then
+                        if member:getDeclaredAccessibility() == 1 --[[Accessibility.Private]] or member:getDeclaredAccessibility() == 4 --[[Accessibility.Internal]] then
+                            continue = true;
+                            break;
+                        end
+                    end
+
+                    if member:getIsOverride() then
+                        continue = true;
+                        break;
+                    end
+
+                    outList:Add(member);
+                    continue = true;
+                until 1;
+                if not continue then
+                    break;
+                end
+            end
+        end;
         __init__ = function (this) 
             this.exportEnums_ = System.HashSet(System.String)();
             this.partialTypes_ = System.Dictionary(Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(CSharpLua.PartialTypeDeclaration))();
+            this.methodNamesCache_ = System.Dictionary(Microsoft.CodeAnalysis.IMethodSymbol, CSharpLua.LuaAst.LuaIdentifierNameSyntax)();
         end;
         __ctor__ = function (this, metas, compilation) 
             __init__(this);
             this.XmlMetaProvider = CSharpLua.XmlMetaProvider(metas);
-            this.Setting = CSharpLua.LuaSyntaxGenerator.SettingInfo();
+            this.Setting = CSharpLua.SettingInfo();
             this.compilation_ = compilation;
         end;
         return {
@@ -115,6 +192,7 @@ System.namespace("CSharpLua", function (namespace)
             AddPartialTypeDeclaration = AddPartialTypeDeclaration, 
             GetSemanticModel = GetSemanticModel, 
             IsBaseType = IsBaseType, 
+            GetMethodName = GetMethodName, 
             __ctor__ = __ctor__
         };
     end);

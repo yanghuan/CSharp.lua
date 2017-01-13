@@ -10,7 +10,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "}" --[[Tokens.CloseBrace]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render27(this);
         end;
         __ctor__ = function (this) 
             this.Items = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaTableItemSyntax)();
@@ -35,7 +35,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaSingleTableItemSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render28(this);
         end;
         __ctor__ = function (this, expression) 
             if expression == nil then
@@ -67,7 +67,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "]" --[[Tokens.CloseBracket]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render30(this);
         end;
         __ctor__ = function (this, expression) 
             this.Expression = expression;
@@ -85,7 +85,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaTableLiteralKeySyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render31(this);
         end;
         __ctor__ = function (this, identifier) 
             this.Identifier = identifier;
@@ -104,7 +104,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "=" --[[Tokens.Equals]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render29(this);
         end;
         __ctor__ = function (this, key, value) 
             this.Key = key;
@@ -128,7 +128,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "]" --[[Tokens.CloseBracket]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render32(this);
         end;
         __ctor__ = function (this, expression, index) 
             if expression == nil then

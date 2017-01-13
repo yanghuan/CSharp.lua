@@ -495,9 +495,8 @@ namespace CSharpLua {
             return GetInternalMethodMetaInfo(symbol, metaType);
         }
 
-        public LuaIdentifierNameSyntax GetMethodMapName(IMethodSymbol symbol) {
-            string name = GetMethodMetaInfo(symbol, MethodMetaType.Name);
-            return new LuaIdentifierNameSyntax(name ?? symbol.Name);
+        public string GetMethodMapName(IMethodSymbol symbol) {
+            return GetMethodMetaInfo(symbol, MethodMetaType.Name);
         }
 
         public string GetMethodCodeTemplate(IMethodSymbol symbol) {

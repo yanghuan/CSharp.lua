@@ -4,7 +4,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaArgumentSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render8(this);
         end;
         __ctor__ = function (this, expression) 
             if expression == nil then
@@ -29,7 +29,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return ")" --[[Tokens.CloseParentheses]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render7(this);
         end;
         __ctor__ = function (this) 
             this.Arguments = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaArgumentSyntax)();

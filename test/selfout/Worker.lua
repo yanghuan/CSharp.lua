@@ -26,9 +26,9 @@ System.namespace("CSharpLua", function (namespace)
                     default = (lib or "") .. ".dll" --[[Worker.kDllSuffix]];
                 end
                 local path = default;
-                if not System.IO.File.Exists(path) then
+                if not System.File.Exists(path) then
                     local file = System.IO.Path.Combine(runtimeDir, System.IO.Path.GetFileName(path));
-                    if not System.IO.File.Exists(file) then
+                    if not System.File.Exists(file) then
                         System.throw(CSharpLua.CmdArgumentException(("lib '{0}' is not found"):Format(path)));
                     end
                     path = file;
@@ -43,7 +43,7 @@ System.namespace("CSharpLua", function (namespace)
         Compiler = function (this) 
             local parseOptions = Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(this.defines_);
             local files = System.IO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]]);
-            local syntaxTrees = Linq.Select(files, function (file) return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(System.IO.File.ReadAllText(file), parseOptions, file); end, Microsoft.CodeAnalysis.SyntaxTree);
+            local syntaxTrees = Linq.Select(files, function (file) return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(System.File.ReadAllText(file), parseOptions, file); end, Microsoft.CodeAnalysis.SyntaxTree);
             local references = Linq.Select(getLibs(this), function (i) return Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(i); end, Microsoft.CodeAnalysis.PortableExecutableReference);
             local compilation = Microsoft.CodeAnalysis.CSharp.CSharpCompilation.Create("_", syntaxTrees, references, Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions(2 --[[OutputKind.DynamicallyLinkedLibrary]]));
             System.using(function (ms) 

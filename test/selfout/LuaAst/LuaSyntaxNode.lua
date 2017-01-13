@@ -17,12 +17,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 return "";
             end;
             __staticCtor__ = function (this) 
-                Semicolon = CSharpLua.LuaAst.LuaSyntaxNode.Semicolon();
+                Semicolon = CSharpLua.LuaAst.Semicolon();
                 this.Semicolon = Semicolon;
             end;
             return {
                 __inherits__ = {
-                    CSharpLua.LuaAst.LuaSyntaxNode.Keyword
+                    CSharpLua.LuaAst.Keyword
                 }, 
                 getEmpty = getEmpty, 
                 __staticCtor__ = __staticCtor__
@@ -101,14 +101,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaSyntaxList", function (namespace) 
         return function (T) 
-            local Add, AddRange;
-            Add = function (this, node) 
+            local Add1, AddRange1;
+            Add1 = function (this, node) 
                 if node == nil then
                     System.throw(System.ArgumentNullException("node"));
                 end
                 this:Add(node);
             end;
-            AddRange = function (this, collection) 
+            AddRange1 = function (this, collection) 
                 for _, item in System.each(collection) do
                     if item == nil then
                         System.throw(System.ArgumentNullException("item"));
@@ -120,8 +120,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 __inherits__ = {
                     System.List(T)
                 }, 
-                Add = Add, 
-                AddRange = AddRange
+                Add1 = Add1, 
+                AddRange1 = AddRange1
             };
         end;
     end);

@@ -7,7 +7,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return this.OperatorToken == ":" --[[Tokens.ObjectColon]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render3(this);
         end;
         __ctor__ = function (this, expression, name, isObjectColon) 
             if expression == nil then
@@ -33,7 +33,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         local Update, setIsGetOrAdd, getIsProperty, GetCloneOfGet, Render, __ctor1__, __ctor2__;
         Update = function (this, memberAccessExpression) 
             local invocationExpression = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccessExpression);
-            invocationExpression.ArgumentList.Arguments:AddRange(this.InvocationExpression.ArgumentList.Arguments);
+            invocationExpression.ArgumentList.Arguments:AddRange1(this.InvocationExpression.ArgumentList.Arguments);
             this.InvocationExpression = invocationExpression;
         end;
         setIsGetOrAdd = function (this, value) 
@@ -46,7 +46,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             setIsGetOrAdd(this, false);
             this.isAutoGet_ = true;
             local invocationExpression = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, this.InvocationExpression.Expression);
-            invocationExpression.ArgumentList.Arguments:AddRange(this.InvocationExpression.ArgumentList.Arguments);
+            invocationExpression.ArgumentList.Arguments:AddRange1(this.InvocationExpression.ArgumentList.Arguments);
             return invocationExpression;
         end;
         Render = function (this, renderer) 

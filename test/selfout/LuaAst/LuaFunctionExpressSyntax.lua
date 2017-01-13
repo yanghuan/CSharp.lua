@@ -7,15 +7,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "function" --[[Keyword.Function]];
         end;
         AddParameter = function (this, identifier) 
-            this.ParameterList.Parameters:Add(CSharpLua.LuaAst.LuaParameterSyntax(identifier));
+            this.ParameterList.Parameters:Add1(CSharpLua.LuaAst.LuaParameterSyntax(identifier));
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render9(this);
         end;
         __ctor__ = function (this) 
             this.ParameterList = CSharpLua.LuaAst.LuaParameterListSyntax();
             this.Body = System.create(CSharpLua.LuaAst.LuaBlockSyntax(), function (default) 
-                default.OpenBraceToken = CSharpLua.LuaAst.LuaSyntaxNode.Tokens.getEmpty();
+                default.OpenBraceToken = CSharpLua.LuaAst.Tokens.getEmpty();
                 default.CloseBraceToken = "end" --[[Keyword.End]];
             end);
         end;
@@ -37,7 +37,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "end" --[[Keyword.End]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render10(this);
         end;
         __ctor__ = function (this, functionExpress) 
             this.FunctionExpress = functionExpress;

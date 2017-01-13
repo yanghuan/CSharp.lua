@@ -6,10 +6,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         local AddArgument, Render, __init__, __ctor1__, __ctor2__, __ctor3__, __ctor4__, __ctor5__, 
         __ctor6__;
         AddArgument = function (this, argument) 
-            this.ArgumentList.Arguments:Add(CSharpLua.LuaAst.LuaArgumentSyntax(argument));
+            this.ArgumentList.Arguments:Add1(CSharpLua.LuaAst.LuaArgumentSyntax(argument));
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render4(this);
         end;
         __init__ = function (this) 
             this.ArgumentList = CSharpLua.LuaAst.LuaArgumentListSyntax();
@@ -38,7 +38,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor5__ = function (this, expression, arguments) 
             __ctor1__(this, expression);
-            this.ArgumentList.Arguments:AddRange(Linq.Select(arguments, function (i) return CSharpLua.LuaAst.LuaArgumentSyntax(i); end, CSharpLua.LuaAst.LuaArgumentSyntax));
+            this.ArgumentList.Arguments:AddRange1(Linq.Select(arguments, function (i) return CSharpLua.LuaAst.LuaArgumentSyntax(i); end, CSharpLua.LuaAst.LuaArgumentSyntax));
         end;
         __ctor6__ = function (this, expression, arguments) 
             __ctor5__(this, expression, System.cast(System.IEnumerable_1(CSharpLua.LuaAst.LuaExpressionSyntax), arguments));
