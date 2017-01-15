@@ -144,12 +144,14 @@ namespace CSharpLua {
         }
 
         internal LuaIdentifierNameSyntax GetMethodName(IMethodSymbol symbol) {
+            return GetMemberMethodName(symbol);
+            /*
             var name = methodNamesCache_.GetOrDefault(symbol);
             if(name == null) {
                 name = InternalGetMethodName(symbol);
                 methodNamesCache_.Add(symbol, name);
             }
-            return name;
+            return name;*/
         }
 
         private LuaIdentifierNameSyntax InternalGetMethodName(IMethodSymbol symbol) {
@@ -216,5 +218,90 @@ namespace CSharpLua {
                 outList.Add(member);
             }
         }
+
+        #region     // member name refactor
+
+        private Dictionary<IMethodSymbol, LuaIdentifierNameSyntax> memberMethodNames_ = new Dictionary<IMethodSymbol, LuaIdentifierNameSyntax>();
+        private Dictionary<INamedTypeSymbol, HashSet<string>> typeNameUseds_ = new Dictionary<INamedTypeSymbol, HashSet<string>>();
+
+        internal LuaIdentifierNameSyntax GetMemberMethodName(IMethodSymbol symbol) {
+            var name = memberMethodNames_.GetOrDefault(symbol);
+            if(name == null) {
+                name = InternalGetMemberMethodName(symbol);
+                methodNamesCache_.Add(symbol, name);
+            }
+            return name;
+        }
+
+        private LuaIdentifierNameSyntax InternalGetMemberMethodName(IMethodSymbol symbol) {
+            string name = XmlMetaProvider.GetMethodMapName(symbol);
+            if(name != null) {
+                return new LuaIdentifierNameSyntax(name);
+            }
+
+            if(!symbol.IsFromCode()) {
+                return new LuaIdentifierNameSyntax(symbol.Name);
+            }
+
+            if(symbol.IsExtensionMethod) {
+                return GetExtensionMethodName(symbol);
+            }
+
+            if(symbol.IsStatic) {
+                if(symbol.ContainingType.IsStatic) {
+                    return GetStaticClassMethodName(symbol);
+                }
+            }
+
+            if(symbol.ContainingType.TypeKind == TypeKind.Interface) {
+                return new LuaIdentifierNameSyntax(symbol.Name);
+            }
+
+            return new LuaIdentifierNameSyntax(symbol.Name);
+        }
+
+        private LuaIdentifierNameSyntax GetExtensionMethodName(IMethodSymbol symbol) {
+            Contract.Assert(symbol.IsExtensionMethod);
+            if(symbol.ReducedFrom != null) {
+                symbol = symbol.ReducedFrom;
+            }
+            return GetStaticClassMethodName(symbol);
+        }
+
+        private LuaIdentifierNameSyntax GetStaticClassMethodName(IMethodSymbol symbol) {
+            Contract.Assert(symbol.ContainingType.IsStatic);
+            var members = symbol.ContainingType.GetMembers(symbol.Name);
+            int index = members.IndexOf(symbol);
+            return GetMethodNameFromIndex(symbol, index);
+        }
+
+        private LuaIdentifierNameSyntax GetMethodNameFromIndex(IMethodSymbol symbol, int index) {
+            Contract.Assert(index != -1);
+            if(index == 0) {
+                return new LuaIdentifierNameSyntax(symbol.Name);
+            }
+            else {
+                while(true) {
+                    string newName = symbol.Name + index;
+                    if(symbol.ContainingType.GetMembers(newName).IsEmpty) {
+                        if(TryAddNewUsedName(symbol.ContainingType, newName)) {
+                            return new LuaIdentifierNameSyntax(newName);
+                        }
+                    }
+                    ++index;
+                }
+            }
+        }
+
+        private bool TryAddNewUsedName(INamedTypeSymbol type, string newName) {
+            var set = typeNameUseds_.GetOrDefault(type);
+            if(set == null) {
+                set = new HashSet<string>();
+                typeNameUseds_.Add(type, set);
+            }
+            return set.Add(newName);
+        }
+
+        #endregion
     }
 }
