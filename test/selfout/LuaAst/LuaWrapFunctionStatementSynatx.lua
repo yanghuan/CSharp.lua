@@ -20,8 +20,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.statements_:Add(statement);
         end;
         Render = function (this, renderer) 
-            this.function_.Body.Statements:AddRange1(this.statements_);
-            renderer:Render1(this);
+            this.function_.Body.Statements:AddRange(this.statements_);
+            renderer:Render(this);
         end;
         __ctor__ = function (this) 
             this.function_ = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();

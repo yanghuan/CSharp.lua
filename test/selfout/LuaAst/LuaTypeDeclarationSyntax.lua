@@ -3,7 +3,7 @@ local System = System;
 local Linq = System.Linq.Enumerable;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaTypeDeclarationSyntax", function (namespace) 
-        local AddStaticReadOnlyAssignmentName, AddTypeIdentifier, AddResultTable, AddResultTable1, AddMethod, AddInitFiled, AddInitFiled1, AddField, 
+        local AddStaticReadOnlyAssignmentName, AddTypeIdentifier, AddResultTable, AddResultTable, AddMethod, AddInitFiled, AddInitFiled, AddField, 
         AddPropertyOrEvent, AddProperty, AddEvent, SetStaticCtor, AddCtor, AddInitFunction, AddStaticAssignmentNames, AddStaticCtorFunction, 
         AddCtorsFunction, AddBaseTypes, Render, __init__, __ctor__;
         AddStaticReadOnlyAssignmentName = function (this, name) 
@@ -16,14 +16,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         AddResultTable = function (this, name) 
             local item = CSharpLua.LuaAst.LuaKeyValueTableItemSyntax(CSharpLua.LuaAst.LuaTableLiteralKeySyntax(name), name);
-            this.resultTable_.Items:Add1(item);
+            this.resultTable_.Items:Add(item);
         end;
-        AddResultTable1 = function (this, name, value) 
+        AddResultTable = function (this, name, value) 
             local item = CSharpLua.LuaAst.LuaKeyValueTableItemSyntax(CSharpLua.LuaAst.LuaTableLiteralKeySyntax(name), value);
-            this.resultTable_.Items:Add1(item);
+            this.resultTable_.Items:Add(item);
         end;
         AddMethod = function (this, name, method, isPrivate) 
-            this.local_.Variables:Add1(name);
+            this.local_.Variables:Add(name);
             local assignment = CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(name, method);
             this.methodList_.Statements:Add(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
             if not isPrivate then
@@ -35,9 +35,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 initFunction = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
                 initFunction:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
             end
-            initFunction.Body.Statements:Add1(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
+            initFunction.Body.Statements:Add(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
         end;
-        AddInitFiled1 = function (this, initFunction, name, value) 
+        AddInitFiled = function (this, initFunction, name, value) 
             local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This, name);
             local assignment = CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(memberAccess, value);
             initFunction = AddInitFiled(this, initFunction, assignment);
@@ -45,7 +45,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         AddField = function (this, name, value, isImmutable, isStatic, isPrivate, isReadOnly) 
             if isStatic then
                 if isPrivate then
-                    this.local_.Variables:Add1(name);
+                    this.local_.Variables:Add(name);
                     if value ~= nil then
                         local assignment = CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(name, value);
                         if isImmutable then
@@ -56,7 +56,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                     end
                 else
                     if isReadOnly then
-                        this.local_.Variables:Add1(name);
+                        this.local_.Variables:Add(name);
                         if value ~= nil then
                             local assignment = CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(name, value);
                             if isImmutable then
@@ -70,9 +70,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                     else
                         if value ~= nil then
                             if isImmutable then
-                                AddResultTable1(this, name, value);
+                                AddResultTable(this, name, value);
                             else
-                                this.staticInitFunction_ = AddInitFiled1(this, this.staticInitFunction_, name, value);
+                                this.staticInitFunction_ = AddInitFiled(this, this.staticInitFunction_, name, value);
                             end
                         end
                     end
@@ -80,9 +80,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             else
                 if value ~= nil then
                     if isImmutable then
-                        AddResultTable1(this, name, value);
+                        AddResultTable(this, name, value);
                     else
-                        this.initFunction_ = AddInitFiled1(this, this.initFunction_, name, value);
+                        this.initFunction_ = AddInitFiled(this, this.initFunction_, name, value);
                     end
                 end
             end
@@ -103,28 +103,28 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             local identifierName = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, name);
             local get = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, (getToken or "") .. (name or ""));
             local set = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, (setToken or "") .. (name or ""));
-            this.local_.Variables:Add1(get);
-            this.local_.Variables:Add1(set);
+            this.local_.Variables:Add(get);
+            this.local_.Variables:Add(set);
             local assignment = CSharpLua.LuaAst.LuaMultipleAssignmentExpressionSyntax();
-            assignment.Lefts:Add1(get);
-            assignment.Lefts:Add1(set);
+            assignment.Lefts:Add(get);
+            assignment.Lefts:Add(set);
             local invocation = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, initMethodIdentifier);
             invocation:AddArgument(CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax:new(1, identifierName));
-            assignment.Rights:Add1(invocation);
+            assignment.Rights:Add(invocation);
             this.methodList_.Statements:Add(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
 
             if value ~= nil then
                 if isStatic then
                     if isImmutable then
-                        AddResultTable1(this, identifierName, value);
+                        AddResultTable(this, identifierName, value);
                     else
-                        this.staticInitFunction_ = AddInitFiled1(this, this.staticInitFunction_, identifierName, value);
+                        this.staticInitFunction_ = AddInitFiled(this, this.staticInitFunction_, identifierName, value);
                     end
                 else
                     if isImmutable then
-                        AddResultTable1(this, identifierName, value);
+                        AddResultTable(this, identifierName, value);
                     else
-                        this.initFunction_ = AddInitFiled1(this, this.initFunction_, identifierName, value);
+                        this.initFunction_ = AddInitFiled(this, this.initFunction_, identifierName, value);
                     end
                 end
             end
@@ -151,7 +151,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             if isAddItem == nil then isAddItem = true end
             local assignment = CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(name, initFunction);
             this.methodList_.Statements:Add(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
-            this.local_.Variables:Add1(name);
+            this.local_.Variables:Add(name);
             if isAddItem then
                 AddResultTable(this, name);
             end
@@ -162,10 +162,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 for _, name in System.each(this.staticAssignmentNames_) do
                     local identifierName = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, name);
                     local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This, identifierName);
-                    assignment.Lefts:Add1(memberAccess);
-                    assignment.Rights:Add1(identifierName);
+                    assignment.Lefts:Add(memberAccess);
+                    assignment.Rights:Add(identifierName);
                 end
-                body.Statements:Add1(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
+                body.Statements:Add(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
             end
         end;
         AddStaticCtorFunction = function (this) 
@@ -210,10 +210,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                         local name = CSharpLua.LuaAst.LuaSyntaxNode.SpecailWord("ctor" --[[Tokens.Ctor]] .. index);
                         local nameIdentifier = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, name);
                         AddInitFunction(this, nameIdentifier, ctor, false);
-                        ctrosTable.Items:Add1(CSharpLua.LuaAst.LuaSingleTableItemSyntax(nameIdentifier));
+                        ctrosTable.Items:Add(CSharpLua.LuaAst.LuaSingleTableItemSyntax(nameIdentifier));
                         index = index + 1;
                     end
-                    AddResultTable1(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Ctor, ctrosTable);
+                    AddResultTable(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Ctor, ctrosTable);
                 end
             else
                 if hasInit then
@@ -223,8 +223,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         AddBaseTypes = function (this, baseTypes) 
             local table = CSharpLua.LuaAst.LuaTableInitializerExpression();
-            table.Items:AddRange1(Linq.Select(baseTypes, function (i) return CSharpLua.LuaAst.LuaSingleTableItemSyntax(i); end, CSharpLua.LuaAst.LuaSingleTableItemSyntax));
-            AddResultTable1(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Inherits, table);
+            table.Items:AddRange(Linq.Select(baseTypes, function (i) return CSharpLua.LuaAst.LuaSingleTableItemSyntax(i); end, CSharpLua.LuaAst.LuaSingleTableItemSyntax));
+            AddResultTable(this, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Inherits, table);
         end;
         Render = function (this, renderer) 
             if this.IsPartialMark then
@@ -244,7 +244,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 for _, type in System.each(this.typeIdentifiers_) do
                     wrapFunction:AddParameter(type);
                 end
-                wrapFunction.Body.Statements:AddRange1(this.statements_);
+                wrapFunction.Body.Statements:AddRange(this.statements_);
                 this.statements_:Clear();
                 this.statements_:Add(CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, wrapFunction));
             end
@@ -318,7 +318,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaEnumDeclarationSyntax", function (namespace) 
         local Add, Render, __ctor__;
         Add = function (this, statement) 
-            this.resultTable_.Items:Add1(statement);
+            this.resultTable_.Items:Add(statement);
         end;
         Render = function (this, renderer) 
             if renderer:IsEnumExport(this.FullName) then

@@ -101,14 +101,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaSyntaxList", function (namespace) 
         return function (T) 
-            local Add1, AddRange1;
-            Add1 = function (this, node) 
+            local Add, AddRange;
+            Add = function (this, node) 
                 if node == nil then
                     System.throw(System.ArgumentNullException("node"));
                 end
                 this:Add(node);
             end;
-            AddRange1 = function (this, collection) 
+            AddRange = function (this, collection) 
                 for _, item in System.each(collection) do
                     if item == nil then
                         System.throw(System.ArgumentNullException("item"));
@@ -120,8 +120,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 __inherits__ = {
                     System.List(T)
                 }, 
-                Add1 = Add1, 
-                AddRange1 = AddRange1
+                Add = Add, 
+                AddRange = AddRange
             };
         end;
     end);

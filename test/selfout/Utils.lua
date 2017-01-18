@@ -338,6 +338,7 @@ System.namespace("CSharpLua", function (namespace)
             if left:getTypeKind() == 7 --[[TypeKind.Interface]] then
                 return IsImplementInterface(right, left);
             end
+
             return false;
         end;
         return {

@@ -41,7 +41,8 @@ System.namespace("CSharpLua", function (namespace)
             };
         end);
         local Create, Generate, IsEnumExport, AddExportEnum, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, 
-        GetMethodName, InternalGetMethodName, GetSameNameMembers, FillSameNameMembers, __init__, __ctor__;
+        GetMethodName, InternalGetMethodName, GetSameNameMembers, FillSameNameMembers, GetMemberMethodName, InternalGetMemberMethodName, GetExtensionMethodName, GetStaticClassMethodName, 
+        GetMethodNameFromIndex, TryAddNewUsedName, __init__, __ctor__;
         Create = function (this) 
             local luaCompilationUnits = System.List(CSharpLua.LuaAst.LuaCompilationUnitSyntax)();
             for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
@@ -99,12 +100,14 @@ System.namespace("CSharpLua", function (namespace)
             return symbol:getTypeKind() ~= 7 --[[TypeKind.Interface]];
         end;
         GetMethodName = function (this, symbol) 
-            local name = CSharpLua.Utility.GetOrDefault1(this.methodNamesCache_, symbol, nil, Microsoft.CodeAnalysis.IMethodSymbol, CSharpLua.LuaAst.LuaIdentifierNameSyntax);
-            if name == nil then
-                name = InternalGetMethodName(this, symbol);
-                this.methodNamesCache_:Add(symbol, name);
-            end
-            return name;
+            return GetMemberMethodName(this, symbol);
+            --[[
+            var name = methodNamesCache_.GetOrDefault(symbol);
+            if(name == null) {
+                name = InternalGetMethodName(symbol);
+                methodNamesCache_.Add(symbol, name);
+            }
+            return name;--]]
         end;
         InternalGetMethodName = function (this, symbol) 
             local name = this.XmlMetaProvider:GetMethodMapName(symbol);
@@ -174,10 +177,83 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end
         end;
+        GetMemberMethodName = function (this, symbol) 
+            if symbol:getIsExtensionMethod() and symbol:getReducedFrom() ~= nil then
+                symbol = symbol:getReducedFrom();
+            end
+
+            local name = CSharpLua.Utility.GetOrDefault1(this.memberMethodNames_, symbol, nil, Microsoft.CodeAnalysis.IMethodSymbol, CSharpLua.LuaAst.LuaIdentifierNameSyntax);
+            if name == nil then
+                name = InternalGetMemberMethodName(this, symbol);
+                this.memberMethodNames_:Add(symbol, name);
+            end
+            return name;
+        end;
+        InternalGetMemberMethodName = function (this, symbol) 
+            local name = this.XmlMetaProvider:GetMethodMapName(symbol);
+            if name ~= nil then
+                return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, name);
+            end
+
+            if not CSharpLua.Utility.IsFromCode(symbol) then
+                return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+            end
+
+            if symbol:getIsExtensionMethod() then
+                return GetExtensionMethodName(this, symbol);
+            end
+
+            if symbol:getIsStatic() then
+                if symbol:getContainingType():getIsStatic() then
+                    return GetStaticClassMethodName(this, symbol);
+                end
+            end
+
+            if symbol:getContainingType():getTypeKind() == 7 --[[TypeKind.Interface]] then
+                return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+            end
+
+            return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+        end;
+        GetExtensionMethodName = function (this, symbol) 
+            assert(symbol:getIsExtensionMethod());
+            return GetStaticClassMethodName(this, symbol);
+        end;
+        GetStaticClassMethodName = function (this, symbol) 
+            assert(symbol:getContainingType():getIsStatic());
+            local members = symbol:getContainingType():GetMembers(symbol:getName());
+            local index = members:IndexOf(symbol);
+            return GetMethodNameFromIndex(this, symbol, index);
+        end;
+        GetMethodNameFromIndex = function (this, symbol, index) 
+            assert(index ~= - 1);
+            if index == 0 then
+                return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+            else
+                while true do
+                    local newName = (symbol:getName() or "") .. index;
+                    if symbol:getContainingType():GetMembers(newName):getIsEmpty() then
+                        if TryAddNewUsedName(this, symbol:getContainingType(), newName) then
+                            return CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, newName);
+                        end
+                    end
+                    index = index + 1;
+                end
+            end
+        end;
+        TryAddNewUsedName = function (this, type, newName) 
+            local set = CSharpLua.Utility.GetOrDefault1(this.typeNameUseds_, type, nil, Microsoft.CodeAnalysis.INamedTypeSymbol, System.HashSet(T));
+            if set == nil then
+                set = System.HashSet(System.String)();
+                this.typeNameUseds_:Add(type, set);
+            end
+            return set:Add(newName);
+        end;
         __init__ = function (this) 
             this.exportEnums_ = System.HashSet(System.String)();
             this.partialTypes_ = System.Dictionary(Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(CSharpLua.PartialTypeDeclaration))();
-            this.methodNamesCache_ = System.Dictionary(Microsoft.CodeAnalysis.IMethodSymbol, CSharpLua.LuaAst.LuaIdentifierNameSyntax)();
+            this.memberMethodNames_ = System.Dictionary(Microsoft.CodeAnalysis.IMethodSymbol, CSharpLua.LuaAst.LuaIdentifierNameSyntax)();
+            this.typeNameUseds_ = System.Dictionary(Microsoft.CodeAnalysis.INamedTypeSymbol, System.HashSet(System.String))();
         end;
         __ctor__ = function (this, metas, compilation) 
             __init__(this);
@@ -193,6 +269,7 @@ System.namespace("CSharpLua", function (namespace)
             GetSemanticModel = GetSemanticModel, 
             IsBaseType = IsBaseType, 
             GetMethodName = GetMethodName, 
+            GetMemberMethodName = GetMemberMethodName, 
             __ctor__ = __ctor__
         };
     end);

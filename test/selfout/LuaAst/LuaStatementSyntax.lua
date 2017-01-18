@@ -32,7 +32,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaExpressionStatementSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render2(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this, expression) 
             if expression == nil then
@@ -51,7 +51,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaStatementListSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render19(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this) 
             this.Statements = System.List(CSharpLua.LuaAst.LuaStatementSyntax)();
@@ -70,7 +70,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "return" --[[Keyword.Return]];
         end;
         Render = function (this, renderer) 
-            renderer:Render26(this);
+            renderer:Render(this);
         end;
         __ctor1__ = function (this, expression) 
             if expression == nil then
@@ -98,7 +98,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "return" --[[Keyword.Return]];
         end;
         Render = function (this, renderer) 
-            renderer:Render25(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this) 
             this.Expressions = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
@@ -118,7 +118,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "break" --[[Keyword.Break]];
         end;
         Render = function (this, renderer) 
-            renderer:Render49(this);
+            renderer:Render(this);
         end;
         __staticCtor__ = function (this) 
             Statement = CSharpLua.LuaAst.LuaBreakStatementSyntax:new(1);
@@ -142,7 +142,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return CSharpLua.LuaAst.LuaBreakStatementSyntax.Statement;
         end;
         Render = function (this, renderer) 
-            renderer:Render50(this);
+            renderer:Render(this);
         end;
         __staticCtor__ = function (this) 
             Statement = CSharpLua.LuaAst.LuaContinueAdapterStatementSyntax:new(1);
@@ -164,7 +164,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaBlankLinesStatement", function (namespace) 
         local Render, One, __staticCtor__, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render51(this);
+            renderer:Render(this);
         end;
         __staticCtor__ = function (this) 
             One = CSharpLua.LuaAst.LuaBlankLinesStatement:new(1, 1);
@@ -189,7 +189,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "--" --[[Tokens.ShortComment]];
         end;
         Render = function (this, renderer) 
-            renderer:Render52(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this, comment) 
             this.Comment = comment;
@@ -212,7 +212,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "--]]" --[[Tokens.CloseLongComment]];
         end;
         Render = function (this, renderer) 
-            renderer:Render53(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this, comment) 
             this.Comment = comment;
@@ -233,7 +233,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "goto" --[[Keyword.Goto]];
         end;
         Render = function (this, renderer) 
-            renderer:Render55(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this, identifier) 
             if identifier == nil then
@@ -253,7 +253,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaGotoCaseAdapterStatement", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render57(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this, identifier) 
             if identifier == nil then
@@ -281,7 +281,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "::" --[[Tokens.Label]];
         end;
         Render = function (this, renderer) 
-            renderer:Render56(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this, identifier, statement) 
             if identifier == nil then

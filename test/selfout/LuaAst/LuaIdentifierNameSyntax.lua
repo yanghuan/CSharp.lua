@@ -11,7 +11,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Cast, Using, Linq, SystemLinqEnumerable, New, Access, Format, Delegate, 
         Int, Render, __staticCtor__, __ctor1__, __ctor2__;
         Render = function (this, renderer) 
-            renderer:Render5(this);
+            renderer:Render(this);
         end;
         __staticCtor__ = function (this) 
             Empty = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, "");
@@ -101,7 +101,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
         end;
         Render = function (this, renderer) 
-            renderer:Render6(this);
+            renderer:Render(this);
         end;
         __ctor__ = function (this, isProperty, valueText) 
             CSharpLua.LuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, valueText);

@@ -71,7 +71,6 @@ namespace CSharpLua {
         public SettingInfo Setting { get; }
         private HashSet<string> exportEnums_ = new HashSet<string>();
         private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
-        private Dictionary<IMethodSymbol, LuaIdentifierNameSyntax> methodNamesCache_ = new Dictionary<IMethodSymbol, LuaIdentifierNameSyntax>();
 
         public LuaSyntaxGenerator(IEnumerable<string> metas, CSharpCompilation compilation) {
             XmlMetaProvider = new XmlMetaProvider(metas);
@@ -225,10 +224,14 @@ namespace CSharpLua {
         private Dictionary<INamedTypeSymbol, HashSet<string>> typeNameUseds_ = new Dictionary<INamedTypeSymbol, HashSet<string>>();
 
         internal LuaIdentifierNameSyntax GetMemberMethodName(IMethodSymbol symbol) {
+            if(symbol.IsExtensionMethod && symbol.ReducedFrom != null) {
+                symbol = symbol.ReducedFrom;
+            }
+
             var name = memberMethodNames_.GetOrDefault(symbol);
             if(name == null) {
                 name = InternalGetMemberMethodName(symbol);
-                methodNamesCache_.Add(symbol, name);
+                memberMethodNames_.Add(symbol, name);
             }
             return name;
         }
@@ -262,9 +265,6 @@ namespace CSharpLua {
 
         private LuaIdentifierNameSyntax GetExtensionMethodName(IMethodSymbol symbol) {
             Contract.Assert(symbol.IsExtensionMethod);
-            if(symbol.ReducedFrom != null) {
-                symbol = symbol.ReducedFrom;
-            }
             return GetStaticClassMethodName(symbol);
         }
 
