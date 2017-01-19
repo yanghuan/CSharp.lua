@@ -4,7 +4,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaBlockSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render13(this);
         end;
         __ctor__ = function (this) 
             this.Statements = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaStatementSyntax)();
@@ -20,7 +20,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaBlockStatementSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render14(this);
         end;
         __ctor__ = function (this) 
             this.OpenBraceToken = "do" --[[Keyword.Do]];

@@ -402,9 +402,7 @@ System.namespace("CSharpLua", function (namespace)
             return codeTemplate;
         end;
         GetMethodMetaInfo = function (this, symbol, metaType) 
-            if symbol:getIsExtensionMethod() and symbol:getReducedFrom() ~= nil then
-                symbol = symbol:getReducedFrom();
-            end
+            symbol = CSharpLua.Utility.CheckOriginalDefinition(symbol);
             return GetInternalMethodMetaInfo(this, symbol, metaType);
         end;
         GetMethodMapName = function (this, symbol) 

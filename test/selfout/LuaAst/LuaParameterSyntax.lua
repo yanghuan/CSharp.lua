@@ -10,7 +10,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return ")" --[[Tokens.CloseParentheses]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render11(this);
         end;
         __ctor__ = function (this) 
             this.Parameters = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaParameterSyntax)();
@@ -28,7 +28,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaParameterSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render12(this);
         end;
         __ctor__ = function (this, identifier) 
             this.Identifier = identifier;

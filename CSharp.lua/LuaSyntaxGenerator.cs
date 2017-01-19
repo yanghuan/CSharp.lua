@@ -88,6 +88,7 @@ namespace CSharpLua {
                 luaCompilationUnits.Add(luaCompilationUnit);
             }
             CheckPartialTypes();
+            CheckRefactorNames();
             return luaCompilationUnits.Where(i => !i.IsEmpty);
         }
 
@@ -144,94 +145,53 @@ namespace CSharpLua {
 
         internal LuaIdentifierNameSyntax GetMethodName(IMethodSymbol symbol) {
             return GetMemberMethodName(symbol);
-            /*
-            var name = methodNamesCache_.GetOrDefault(symbol);
-            if(name == null) {
-                name = InternalGetMethodName(symbol);
-                methodNamesCache_.Add(symbol, name);
-            }
-            return name;*/
-        }
-
-        private LuaIdentifierNameSyntax InternalGetMethodName(IMethodSymbol symbol) {
-            string name = XmlMetaProvider.GetMethodMapName(symbol);
-            if(name != null) {
-                return new LuaIdentifierNameSyntax(name);
-            }
-
-            if(!symbol.IsFromCode()) {
-                return new LuaIdentifierNameSyntax(symbol.Name);
-            }
-
-            var methods = GetSameNameMembers(symbol.ContainingType, symbol.Name);
-            if(methods.Count == 1) {
-                return new LuaIdentifierNameSyntax(symbol.Name);
-            }
-            else {
-                if(symbol.IsExtensionMethod) {
-                    if(symbol.ReducedFrom != null) {
-                        symbol = symbol.ReducedFrom;
-                    }
-                }
-                else if(symbol.IsOverride) {
-                    if(symbol.OverriddenMethod != null) {
-                        symbol = symbol.OverriddenMethod;
-                    }
-                }
-
-                int index = methods.IndexOf(symbol);
-                Contract.Assert(index != -1);
-                if(index == 0) {
-                    return new LuaIdentifierNameSyntax(symbol.Name);
-                }
-                else {
-                    return new LuaIdentifierNameSyntax(symbol.Name + index);
-                }
-            }
-        }
-
-        private List<ISymbol> GetSameNameMembers(INamedTypeSymbol typeSymbol, string name) {
-            List<ISymbol> members = new List<ISymbol>();
-            FillSameNameMembers(typeSymbol, name, members);
-            return members;
-        }
-
-        private void FillSameNameMembers(INamedTypeSymbol typeSymbol, string name, List<ISymbol> outList) {
-            if(typeSymbol.BaseType != null) {
-                FillSameNameMembers(typeSymbol.BaseType, name, outList);
-            }
-
-            bool isFromCode = typeSymbol.IsFromCode();
-            var members = typeSymbol.GetMembers(name);
-            foreach(ISymbol member in members) {
-                if(!isFromCode) {
-                    if(member.DeclaredAccessibility == Accessibility.Private || member.DeclaredAccessibility == Accessibility.Internal) {
-                        continue;
-                    }
-                }
-
-                if(member.IsOverride) {
-                    continue;
-                }
-
-                outList.Add(member);
-            }
         }
 
         #region     // member name refactor
 
-        private Dictionary<IMethodSymbol, LuaIdentifierNameSyntax> memberMethodNames_ = new Dictionary<IMethodSymbol, LuaIdentifierNameSyntax>();
+        private Dictionary<ISymbol, LuaSymbolNameSyntax> memberNames_ = new Dictionary<ISymbol, LuaSymbolNameSyntax>();
         private Dictionary<INamedTypeSymbol, HashSet<string>> typeNameUseds_ = new Dictionary<INamedTypeSymbol, HashSet<string>>();
+        private HashSet<ISymbol> refactorNames_ = new HashSet<ISymbol>();
+        private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
 
-        internal LuaIdentifierNameSyntax GetMemberMethodName(IMethodSymbol symbol) {
-            if(symbol.IsExtensionMethod && symbol.ReducedFrom != null) {
-                symbol = symbol.ReducedFrom;
+        internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
+            CheckExtends(typeSymbol);
+        }
+
+        private void CheckExtends(INamedTypeSymbol typeSymbol) {
+            if(typeSymbol.SpecialType != SpecialType.System_Object) {
+                if(typeSymbol.BaseType != null) {
+                    var super = typeSymbol.BaseType;
+                    if(super.IsFromCode()) {
+                        TryAddExtend(super, typeSymbol);
+                    }
+                }
             }
 
-            var name = memberMethodNames_.GetOrDefault(symbol);
+            foreach(INamedTypeSymbol super in typeSymbol.AllInterfaces) {
+                if(super.IsFromCode()) {
+                    TryAddExtend(super, typeSymbol);
+                }
+            }
+        }
+
+        private bool TryAddExtend(INamedTypeSymbol super, INamedTypeSymbol children) {
+            var set = extends_.GetOrDefault(super);
+            if(set == null) {
+                set = new HashSet<INamedTypeSymbol>();
+                extends_.Add(super, set);
+            }
+            return set.Add(children);
+        }
+
+        internal LuaIdentifierNameSyntax GetMemberMethodName(IMethodSymbol symbol) {
+            Utility.CheckOriginalDefinition(ref symbol);
+            var name = memberNames_.GetOrDefault(symbol);
             if(name == null) {
-                name = InternalGetMemberMethodName(symbol);
-                memberMethodNames_.Add(symbol, name);
+                var identifierName = InternalGetMemberMethodName(symbol);
+                LuaSymbolNameSyntax symbolName = new LuaSymbolNameSyntax(identifierName);
+                memberNames_.Add(symbol, symbolName);
+                name = symbolName;
             }
             return name;
         }
@@ -260,7 +220,35 @@ namespace CSharpLua {
                 return new LuaIdentifierNameSyntax(symbol.Name);
             }
 
-            return new LuaIdentifierNameSyntax(symbol.Name);
+            while(symbol.OverriddenMethod != null) {
+                symbol = symbol.OverriddenMethod;
+            }
+
+            List<ISymbol> sameNameMembers = GetSameNameMembers(symbol);
+            LuaIdentifierNameSyntax symbolExpression = null;
+            int index = 0;
+            foreach(ISymbol member in sameNameMembers) {
+                if(member.Equals(symbol)) {
+                    symbolExpression = new LuaIdentifierNameSyntax(symbol.Name);
+                }
+                else {
+                    if(!memberNames_.ContainsKey(member)) {
+                        LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(member.Name);
+                        memberNames_.Add(member, new LuaSymbolNameSyntax(identifierName));
+                    }
+                }
+                if(index > 0) {
+                    if(member.ContainingType.IsFromCode()) {
+                        refactorNames_.Add(member);
+                    }
+                }
+                ++index;
+            }
+
+            if(symbolExpression == null) {
+                throw new InvalidOperationException();
+            }
+            return symbolExpression;
         }
 
         private LuaIdentifierNameSyntax GetExtensionMethodName(IMethodSymbol symbol) {
@@ -270,12 +258,29 @@ namespace CSharpLua {
 
         private LuaIdentifierNameSyntax GetStaticClassMethodName(IMethodSymbol symbol) {
             Contract.Assert(symbol.ContainingType.IsStatic);
-            var members = symbol.ContainingType.GetMembers(symbol.Name);
-            int index = members.IndexOf(symbol);
-            return GetMethodNameFromIndex(symbol, index);
+            var sameNameMembers = symbol.ContainingType.GetMembers(symbol.Name);
+            LuaIdentifierNameSyntax symbolExpression = null;
+            int index = 0;
+            foreach(ISymbol member in sameNameMembers) {
+                LuaIdentifierNameSyntax identifierName = GetMethodNameFromIndex(symbol, index);
+                if(member.Equals(symbol)) {
+                    symbolExpression = identifierName;
+                }
+                else {
+                    if(!memberNames_.ContainsKey(member)) {
+                        memberNames_.Add(member, new LuaSymbolNameSyntax(identifierName));
+                    }
+                }
+                ++index;
+            }
+
+            if(symbolExpression == null) {
+                throw new InvalidOperationException();
+            }
+            return symbolExpression;
         }
 
-        private LuaIdentifierNameSyntax GetMethodNameFromIndex(IMethodSymbol symbol, int index) {
+        private LuaIdentifierNameSyntax GetMethodNameFromIndex(ISymbol symbol, int index) {
             Contract.Assert(index != -1);
             if(index == 0) {
                 return new LuaIdentifierNameSyntax(symbol.Name);
@@ -300,6 +305,275 @@ namespace CSharpLua {
                 typeNameUseds_.Add(type, set);
             }
             return set.Add(newName);
+        }
+
+        private List<ISymbol> GetSameNameMembers(ISymbol symbol) {
+            List<ISymbol> members = new List<ISymbol>();
+            FillSameNameMembers(symbol.ContainingType, symbol.Name, members);
+            members.Sort(MemberSymbolComparison);
+            return members;
+        }
+
+        private string MethodSymbolToString(IMethodSymbol symbol) {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(symbol.Name);
+            sb.Append('(');
+            bool isFirst = true;
+            foreach(var p in symbol.Parameters) {
+                if(isFirst) {
+                    isFirst = false;
+                }
+                else {
+                    sb.Append(",");
+                }
+                sb.Append(p.Type.ToString());
+            }
+            sb.Append(')');
+            return sb.ToString();
+        }
+
+        private string MemberSymbolToString(ISymbol symbol) {
+            if(symbol.Kind == SymbolKind.Method) {
+                return MethodSymbolToString((IMethodSymbol)symbol);
+            }
+            else {
+                return symbol.Name;
+            }
+        }
+
+        private int GetSymbolWright(ISymbol symbol) {
+            if(symbol.Kind == SymbolKind.Method) {
+                var methodSymbol = (IMethodSymbol)symbol;
+                return methodSymbol.Parameters.Length;
+            }
+            else {
+                return 0;
+            }
+        }
+
+        private int MemberSymbolCommonComparison(ISymbol a, ISymbol b) {
+            int weightOfA = GetSymbolWright(a);
+            int weightOfB = GetSymbolWright(b);
+            if(weightOfA != weightOfB) {
+                return weightOfA.CompareTo(weightOfB);
+            }
+            else {
+                string nameOfA = MemberSymbolToString(a);
+                string nameOfB = MemberSymbolToString(b);
+                return nameOfA.CompareTo(nameOfB);
+            }
+        }
+
+        private bool MemberSymbolBoolComparison(ISymbol a, ISymbol b, Func<ISymbol, bool> boolFunc, out int v) {
+            bool boolOfA = boolFunc(a);
+            bool boolOfB = boolFunc(b);
+
+            if(boolOfA) {
+                if(boolOfB) {
+                    v = MemberSymbolCommonComparison(a, b);
+                }
+                else {
+                    v = -1;
+                }
+                return true;
+            }
+
+            if(b.IsAbstract) {
+                v =  1;
+                return true;
+            }
+
+            v = 0;
+            return false;
+        }
+
+        private int MemberSymbolComparison(ISymbol a, ISymbol b) {
+            bool isFromCodeOfA = a.ContainingType.IsFromCode();
+            bool isFromCodeOfB = b.ContainingType.IsFromCode();
+
+            if(!isFromCodeOfA) {
+                if(!isFromCodeOfB) {
+                    return 0;
+                }
+                else {
+                    return -1;
+                }
+            }
+
+            if(!isFromCodeOfB) {
+                return 1;
+            }
+
+            int countOfA = a.InterfaceImplementations().Count();
+            int countOfB = b.InterfaceImplementations().Count();
+            if(countOfA > 0 || countOfB > 0) {
+                if(countOfA != countOfB) {
+                    return countOfA > countOfB ? -1 : 1;
+                }
+                else {
+                    return MemberSymbolCommonComparison(a, b);
+                }
+            }
+
+            int v;
+            if(MemberSymbolBoolComparison(a, b, i => i.IsAbstract, out v)) {
+                return v;
+            }
+            if(MemberSymbolBoolComparison(a, b, i => i.IsVirtual, out v)) {
+                return v;
+            }
+            if(MemberSymbolBoolComparison(a, b, i => i.IsOverride, out v)) {
+                return v;
+            }
+
+            if(a.ContainingType.Equals(b.ContainingType)) {
+                string name = a.Name;
+                var type = a.ContainingType;
+                var members = type.GetMembers(name);
+                int indexOfA = members.IndexOf(a);
+                Contract.Assert(indexOfA != -1);
+                int indexOfB = members.IndexOf(b);
+                Contract.Assert(indexOfB != -1);
+                Contract.Assert(indexOfA != indexOfB);
+                return indexOfA.CompareTo(indexOfB);
+            }
+            else {
+                bool isSubclassOf = a.ContainingType.IsSubclassOf(b.ContainingType);
+                return isSubclassOf ? 1 : -1;
+            }
+        }
+
+        private void FillSameNameMembers(INamedTypeSymbol typeSymbol, string name, List<ISymbol> outList) {
+            if(typeSymbol.BaseType != null) {
+                FillSameNameMembers(typeSymbol.BaseType, name, outList);
+            }
+
+            bool isFromCode = typeSymbol.IsFromCode();
+            var members = typeSymbol.GetMembers(name);
+            foreach(ISymbol member in members) {
+                if(!isFromCode) {
+                    if(member.DeclaredAccessibility == Accessibility.Private || member.DeclaredAccessibility == Accessibility.Internal) {
+                        continue;
+                    }
+                }
+
+                if(member.IsOverride) {
+                    continue;
+                }
+
+                outList.Add(member);
+            }
+        }
+
+        private void CheckRefactorNames() {
+            HashSet<ISymbol> alreadyRefactorSymbols = new HashSet<ISymbol>();
+
+            foreach(ISymbol symbol in refactorNames_) {
+                bool hasImplementation = false;
+                foreach(ISymbol implementation in symbol.InterfaceImplementations()) {
+                    RefactorInterfaceSymbol(implementation, alreadyRefactorSymbols);
+                    hasImplementation = true;
+                }
+
+                if(!hasImplementation) {
+                    RefactorCurTypeSymbol(symbol, alreadyRefactorSymbols);
+                }
+            }
+        }
+
+        private void RefactorCurTypeSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
+            INamedTypeSymbol typeSymbol = symbol.ContainingType;
+            var childrens = extends_.GetOrDefault(typeSymbol);
+            string newName = GetRefactorName(typeSymbol, childrens, symbol.Name);
+            RefactorName(symbol, newName, alreadyRefactorSymbols);
+        }
+
+        private void RefactorInterfaceSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
+            if(symbol.IsFromCode()) {
+                INamedTypeSymbol typeSymbol = symbol.ContainingType;
+                Contract.Assert(typeSymbol.TypeKind == TypeKind.Interface);
+                var childrens = extends_[typeSymbol];
+                string newName = GetRefactorName(null, childrens, symbol.Name);
+                foreach(INamedTypeSymbol children in childrens) {
+                    ISymbol childrenSymbol = children.FindImplementationForInterfaceMember(symbol);
+                    Contract.Assert(childrenSymbol != null);
+                    RefactorName(childrenSymbol, newName, alreadyRefactorSymbols);
+                }
+            }
+        }
+
+        private void RefactorName(ISymbol symbol, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {
+            if(!alreadyRefactorSymbols.Contains(symbol)) {
+                if(symbol.IsOverridable()) {
+                    RefactorChildrensOverridden(symbol, symbol.ContainingType, newName, alreadyRefactorSymbols);
+                }
+                UpdateName(symbol, newName, alreadyRefactorSymbols);
+            }
+        }
+
+        private void RefactorChildrensOverridden(ISymbol originalSymbol, INamedTypeSymbol curType, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {
+            var childrens = extends_.GetOrDefault(curType);
+            if(childrens != null) {
+                foreach(INamedTypeSymbol children in childrens) {
+                    var curSymbol = children.GetMembers(originalSymbol.Name).FirstOrDefault(i => i.IsOverridden(originalSymbol));
+                    if(curSymbol != null) {
+                        UpdateName(curSymbol, newName, alreadyRefactorSymbols);
+                    }
+                    RefactorChildrensOverridden(originalSymbol, children, newName, alreadyRefactorSymbols);
+                }
+            }
+        }
+
+        private void UpdateName(ISymbol symbol, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {
+            memberNames_[symbol].Update(newName);
+            TryAddNewUsedName(symbol.ContainingType, newName);
+            alreadyRefactorSymbols.Add(symbol);
+        }
+
+        private string GetRefactorName(INamedTypeSymbol typeSymbol, IEnumerable<INamedTypeSymbol> childrens, string originalName) {
+            int index = 1;
+            while(true) {
+                string newName = originalName + index;
+                bool isEnable = true;
+                if(typeSymbol != null) {
+                    isEnable = CheckNewNameEnable(typeSymbol, newName);
+                }
+
+                if(isEnable) {
+                    if(childrens != null) {
+                        isEnable = childrens.All(i => CheckNewNameEnable(i, newName));
+                    }
+                }
+
+                if(isEnable) {
+                    return newName;
+                }
+                ++index;
+            }
+        }
+
+        private bool IsTypeNameUsed(INamedTypeSymbol typeSymbol, string newName) {
+            var set = typeNameUseds_.GetOrDefault(typeSymbol);
+            return set != null && set.Contains(newName);
+        }
+
+        private bool CheckNewNameEnable(INamedTypeSymbol typeSymbol, string newName) {
+            if(typeSymbol.GetMembers(newName).IsEmpty) {
+                if(IsTypeNameUsed(typeSymbol, newName)) {
+                    return false;
+                }
+            }
+
+            var childrens = extends_.GetOrDefault(typeSymbol);
+            if(childrens != null) {
+                foreach(INamedTypeSymbol children in childrens) {
+                    if(!CheckNewNameEnable(children, newName)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         #endregion

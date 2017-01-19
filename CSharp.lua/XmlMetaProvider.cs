@@ -489,9 +489,7 @@ namespace CSharpLua {
         }
 
         private string GetMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {
-            if(symbol.IsExtensionMethod && symbol.ReducedFrom != null) {
-                symbol = symbol.ReducedFrom;
-            }
+            Utility.CheckOriginalDefinition(ref symbol);
             return GetInternalMethodMetaInfo(symbol, metaType);
         }
 

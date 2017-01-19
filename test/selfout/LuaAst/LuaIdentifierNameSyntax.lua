@@ -11,7 +11,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Cast, Using, Linq, SystemLinqEnumerable, New, Access, Format, Delegate, 
         Int, Render, __staticCtor__, __ctor1__, __ctor2__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render5(this);
         end;
         __staticCtor__ = function (this) 
             Empty = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, "");
@@ -101,7 +101,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render6(this);
         end;
         __ctor__ = function (this, isProperty, valueText) 
             CSharpLua.LuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, valueText);
@@ -114,6 +114,27 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             IsGetOrAdd = true, 
             IsProperty = False, 
             getPrefixToken = getPrefixToken, 
+            Render = Render, 
+            __ctor__ = __ctor__
+        };
+    end);
+    namespace.class("LuaSymbolNameSyntax", function (namespace) 
+        local Update, Render, __ctor__;
+        Update = function (this, newName) 
+            this.IdentifierName = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, newName);
+        end;
+        Render = function (this, renderer) 
+            this.IdentifierName:Render(renderer);
+        end;
+        __ctor__ = function (this, identifierName) 
+            CSharpLua.LuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, "");
+            this.IdentifierName = identifierName;
+        end;
+        return {
+            __inherits__ = {
+                CSharpLua.LuaAst.LuaIdentifierNameSyntax
+            }, 
+            Update = Update, 
             Render = Render, 
             __ctor__ = __ctor__
         };

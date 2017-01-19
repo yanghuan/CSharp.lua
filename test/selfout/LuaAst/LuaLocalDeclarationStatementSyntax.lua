@@ -7,7 +7,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "local" --[[Keyword.Local]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render20(this);
         end;
         __ctor__ = function (this) 
             this.Variables = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaIdentifierNameSyntax)();
@@ -27,7 +27,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "=" --[[Tokens.Equals]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render21(this);
         end;
         __ctor__ = function (this) 
             this.Values = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
@@ -44,7 +44,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaLocalDeclarationStatementSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render34(this);
         end;
         __ctor__ = function (this, declaration) 
             this.Declaration = declaration;
@@ -67,7 +67,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaVariableListDeclarationSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render35(this);
         end;
         __ctor__ = function (this) 
             this.Variables = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaVariableDeclaratorSyntax)();
@@ -83,7 +83,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaLocalVariableDeclaratorSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render37(this);
         end;
         __ctor__ = function (this, declarator) 
             if declarator == nil then
@@ -105,7 +105,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "local" --[[Keyword.Local]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render36(this);
         end;
         __ctor__ = function (this, identifier) 
             if identifier == nil then
@@ -128,7 +128,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "=" --[[Tokens.Equals]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render33(this);
         end;
         __ctor__ = function (this, value) 
             if value == nil then
@@ -151,7 +151,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "local" --[[Keyword.Local]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render38(this);
         end;
         __ctor__ = function (this) 
             this.Variables = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaIdentifierNameSyntax)();

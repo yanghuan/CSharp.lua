@@ -14,7 +14,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "=" --[[Tokens.Equals]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render22(this);
         end;
         __ctor__ = function (this, left, right) 
             if left == nil then
@@ -41,7 +41,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "=" --[[Tokens.Equals]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render23(this);
         end;
         __ctor__ = function (this) 
             this.Lefts = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
@@ -59,7 +59,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaLineMultipleExpressionSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render24(this);
         end;
         __ctor__ = function (this) 
             this.Assignments = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
@@ -75,7 +75,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaBinaryExpressionSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render39(this);
         end;
         __ctor__ = function (this, left, operatorToken, right) 
             this.Left = left;
@@ -93,7 +93,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaPrefixUnaryExpressionSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render43(this);
         end;
         __ctor__ = function (this, operand, operatorToken) 
             if operand == nil then
@@ -119,7 +119,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return ")" --[[Tokens.CloseParentheses]];
         end;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render54(this);
         end;
         __ctor__ = function (this, expression) 
             if expression == nil then
@@ -140,7 +140,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaCodeTemplateExpressionSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render58(this);
         end;
         __ctor__ = function (this) 
             this.Codes = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
@@ -156,7 +156,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaCodeTemplateParamsExpressionSyntax", function (namespace) 
         local Render, __ctor__;
         Render = function (this, renderer) 
-            renderer:Render(this);
+            renderer:Render59(this);
         end;
         __ctor__ = function (this) 
             this.Expressions = CSharpLua.LuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();

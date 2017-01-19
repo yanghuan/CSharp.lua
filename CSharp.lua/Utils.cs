@@ -191,11 +191,44 @@ namespace CSharpLua {
         }
 
         public static bool IsFromCode(this ISymbol symbol) {
-            return symbol.DeclaringSyntaxReferences.Length > 0;
+            return !symbol.DeclaringSyntaxReferences.IsEmpty;
         }
 
         public static bool IsOverridable(this ISymbol symbol) {
             return !symbol.IsStatic && (symbol.IsAbstract || symbol.IsVirtual || symbol.IsOverride);
+        }
+
+        public static ISymbol OverriddenSymbol(this ISymbol symbol) {
+            switch(symbol.Kind) {
+                case SymbolKind.Method: {
+                        IMethodSymbol methodSymbol = (IMethodSymbol)symbol;
+                        return methodSymbol.OverriddenMethod;
+                    }
+                case SymbolKind.Property: {
+                        IPropertySymbol propertySymbol = (IPropertySymbol)symbol;
+                        return propertySymbol.OverriddenProperty;
+                    }
+                case SymbolKind.Event: {
+                        IEventSymbol eventSymbol = (IEventSymbol)symbol;
+                        return eventSymbol.OverriddenEvent;
+                    }
+            }
+            return null;
+        }
+
+        public static bool IsOverridden(this ISymbol symbol, ISymbol superSymbol) {
+            while(true) {
+                ISymbol overriddenSymbol = symbol.OverriddenSymbol();
+                if(overriddenSymbol != null) {
+                    if(overriddenSymbol.Equals(superSymbol)) {
+                        return true;
+                    }
+                }
+                else {
+                    break;
+                }
+            }
+            return false;
         }
 
         public static bool IsPropertyField(this IPropertySymbol symbol) {
@@ -280,7 +313,7 @@ namespace CSharpLua {
             return (string)methodInfo.Invoke(location, null);
         }
 
-        private static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
+        public static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
             ITypeSymbol p = child;
             if(p == parent) {
                 return false;
@@ -367,6 +400,19 @@ namespace CSharpLua {
             }
 
             return false;
+        }
+
+        public static void CheckOriginalDefinition(ref IMethodSymbol symbol) {
+            if(symbol.IsExtensionMethod) {
+                if(symbol.ReducedFrom != null) {
+                    symbol = symbol.ReducedFrom;
+                }
+            }
+            else {
+                if(symbol.OriginalDefinition != symbol) {
+                    symbol = symbol.OriginalDefinition;
+                }
+            }
         }
     }
 }

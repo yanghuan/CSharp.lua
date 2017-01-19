@@ -29,9 +29,9 @@ System.namespace("CSharpLua", function (namespace)
     namespace.class("Utility", function (namespace) 
         local GetCommondLines, First, Last, GetOrDefault, GetOrDefault1, GetArgument, GetCurrentDirectory, Split, 
         IsPrivate, IsStatic, IsAbstract, IsReadOnly, IsConst, IsParams, IsPartial, IsStringType, 
-        IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, IsPropertyField, 
-        IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, 
-        IsNumberTypeAssignableFrom, IsAssignableFrom;
+        IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, 
+        IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, 
+        IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -178,10 +178,45 @@ System.namespace("CSharpLua", function (namespace)
             return nil;
         end;
         IsFromCode = function (symbol) 
-            return symbol:getDeclaringSyntaxReferences():getLength() > 0;
+            return not symbol:getDeclaringSyntaxReferences():getIsEmpty();
         end;
         IsOverridable = function (symbol) 
             return not symbol:getIsStatic() and (symbol:getIsAbstract() or symbol:getIsVirtual() or symbol:getIsOverride());
+        end;
+        OverriddenSymbol = function (symbol) 
+            repeat
+                local default = symbol:getKind();
+                if default == 9 --[[SymbolKind.Method]] then
+                    do
+                        local methodSymbol = System.cast(Microsoft.CodeAnalysis.IMethodSymbol, symbol);
+                        return methodSymbol:getOverriddenMethod();
+                    end
+                elseif default == 15 --[[SymbolKind.Property]] then
+                    do
+                        local propertySymbol = System.cast(Microsoft.CodeAnalysis.IPropertySymbol, symbol);
+                        return propertySymbol:getOverriddenProperty();
+                    end
+                elseif default == 5 --[[SymbolKind.Event]] then
+                    do
+                        local eventSymbol = System.cast(Microsoft.CodeAnalysis.IEventSymbol, symbol);
+                        return eventSymbol:getOverriddenEvent();
+                    end
+                end
+            until 1;
+            return nil;
+        end;
+        IsOverridden = function (symbol, superSymbol) 
+            while true do
+                local overriddenSymbol = OverriddenSymbol(symbol);
+                if overriddenSymbol ~= nil then
+                    if overriddenSymbol:Equals(superSymbol) then
+                        return true;
+                    end
+                else
+                    break;
+                end
+            end
+            return false;
         end;
         IsPropertyField = function (symbol) 
             if IsOverridable(symbol) then
@@ -341,6 +376,17 @@ System.namespace("CSharpLua", function (namespace)
 
             return false;
         end;
+        CheckOriginalDefinition = function (symbol) 
+            if symbol:getIsExtensionMethod() then
+                if symbol:getReducedFrom() ~= nil then
+                    symbol = symbol:getReducedFrom();
+                end
+            else
+                if symbol:getOriginalDefinition() ~= symbol then
+                    symbol = symbol:getOriginalDefinition();
+                end
+            end
+        end;
         return {
             GetCommondLines = GetCommondLines, 
             First = First, 
@@ -365,12 +411,16 @@ System.namespace("CSharpLua", function (namespace)
             InterfaceImplementations = InterfaceImplementations, 
             IsFromCode = IsFromCode, 
             IsOverridable = IsOverridable, 
+            OverriddenSymbol = OverriddenSymbol, 
+            IsOverridden = IsOverridden, 
             IsPropertyField = IsPropertyField, 
             IsEventFiled = IsEventFiled, 
             IsAssignment = IsAssignment, 
             IsSystemLinqEnumerable = IsSystemLinqEnumerable, 
             GetLocationString = GetLocationString, 
-            IsAssignableFrom = IsAssignableFrom
+            IsSubclassOf = IsSubclassOf, 
+            IsAssignableFrom = IsAssignableFrom, 
+            CheckOriginalDefinition = CheckOriginalDefinition
         };
     end);
 end);

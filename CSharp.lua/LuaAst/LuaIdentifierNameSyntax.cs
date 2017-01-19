@@ -121,4 +121,20 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
+
+    public sealed class LuaSymbolNameSyntax : LuaIdentifierNameSyntax {
+        public LuaIdentifierNameSyntax IdentifierName { get; private set; }
+
+        public LuaSymbolNameSyntax(LuaIdentifierNameSyntax identifierName) : base("") {
+            IdentifierName = identifierName;
+        }
+
+        public void Update(string newName) {
+            IdentifierName = new LuaIdentifierNameSyntax(newName);
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            IdentifierName.Render(renderer);
+        }
+    }
 }
