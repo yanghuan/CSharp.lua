@@ -162,26 +162,24 @@ namespace CSharpLua {
             if(typeSymbol.SpecialType != SpecialType.System_Object) {
                 if(typeSymbol.BaseType != null) {
                     var super = typeSymbol.BaseType;
-                    if(super.IsFromCode()) {
-                        TryAddExtend(super, typeSymbol);
-                    }
+                    TryAddExtend(super, typeSymbol);
                 }
             }
 
             foreach(INamedTypeSymbol super in typeSymbol.AllInterfaces) {
-                if(super.IsFromCode()) {
-                    TryAddExtend(super, typeSymbol);
-                }
+                TryAddExtend(super, typeSymbol);
             }
         }
 
-        private bool TryAddExtend(INamedTypeSymbol super, INamedTypeSymbol children) {
-            var set = extends_.GetOrDefault(super);
-            if(set == null) {
-                set = new HashSet<INamedTypeSymbol>();
-                extends_.Add(super, set);
+        private void TryAddExtend(INamedTypeSymbol super, INamedTypeSymbol children) {
+            if(super.IsFromCode()) {
+                var set = extends_.GetOrDefault(super);
+                if(set == null) {
+                    set = new HashSet<INamedTypeSymbol>();
+                    extends_.Add(super, set);
+                }
+                set.Add(children);
             }
-            return set.Add(children);
         }
 
         internal LuaIdentifierNameSyntax GetMemberMethodName(IMethodSymbol symbol) {
