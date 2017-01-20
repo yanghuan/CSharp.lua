@@ -104,22 +104,7 @@ namespace CSharpLua {
             }
 
             LuaSyntaxGenerator generator = new LuaSyntaxGenerator(Metas, compilation);
-            generator.Generate(luaCompilationUnit => {
-                string outFile = GetOutFilePath(luaCompilationUnit.FilePath);
-                return new StreamWriter(outFile, false, Encoding);
-            });
-        }
-
-        private string GetOutFilePath(string inFilePath) {
-            string path = inFilePath.Remove(0, folder_.Length).TrimStart(Path.DirectorySeparatorChar, '/');
-            string extend = Path.GetExtension(path);
-            path = path.Remove(path.Length - extend.Length, extend.Length);
-            path = Path.Combine(output_, path + kLuaSuffix);
-            string dir = Path.GetDirectoryName(path);
-            if(!Directory.Exists(dir)) {
-                Directory.CreateDirectory(dir);
-            }
-            return path;
+            generator.Generate(folder_, output_);
         }
     }
 }

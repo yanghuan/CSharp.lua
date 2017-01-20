@@ -66,6 +66,9 @@ namespace CSharpLua {
             }
         }
 
+        private const string kLuaSuffix = ".lua";
+        private static Encoding Encoding => Encoding.UTF8;
+
         private CSharpCompilation compilation_;
         public XmlMetaProvider XmlMetaProvider { get; }
         public SettingInfo Setting { get; }
@@ -99,6 +102,33 @@ namespace CSharpLua {
                     luaCompilationUnit.Render(rener);
                 }
             }
+        }
+
+        public void Generate(string baseFolder, string outFolder) {
+            List<string> modules = new List<string>();
+            foreach(var luaCompilationUnit in Create()) {
+                string module;
+                string outFile = GetOutFilePath(luaCompilationUnit.FilePath, baseFolder, outFolder, out module);
+                using(var writer = new StreamWriter(outFile, false, Encoding)) {
+                    LuaRenderer rener = new LuaRenderer(this, writer);
+                    luaCompilationUnit.Render(rener);
+                }
+                modules.Add(module);
+            }
+        }
+
+        private string GetOutFilePath(string inFilePath, string folder_, string output_, out string module) {
+            string path = inFilePath.Remove(0, folder_.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+            string extend = Path.GetExtension(path);
+            path = path.Remove(path.Length - extend.Length, extend.Length);
+            path = path.Replace('.', '_');
+            string outPath = Path.Combine(output_, path + kLuaSuffix);
+            string dir = Path.GetDirectoryName(outPath);
+            if(!Directory.Exists(dir)) {
+                Directory.CreateDirectory(dir);
+            }
+            module = path.Replace(Path.DirectorySeparatorChar, '.');
+            return outPath;
         }
 
         internal bool IsEnumExport(string enumName) {
@@ -147,14 +177,54 @@ namespace CSharpLua {
             return GetMemberMethodName(symbol);
         }
 
+        private void ExportManifestFile() {
+            List<INamedTypeSymbol> allTypes = new List<INamedTypeSymbol>(types_);
+            if(allTypes.Count > 0) {
+                allTypes.Sort((x ,y) => x.ToString().CompareTo(y.ToString()));
+
+                List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>>();
+                typesList.Add(allTypes);
+
+                while(true) {
+                    HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>();
+                    var lastTypes = typesList.Last();
+                    foreach(var type in lastTypes) {
+                        if(type.BaseType != null) {
+                            if(type.BaseType.IsFromCode()) {
+                                parentTypes.Add(type.BaseType);
+                            }
+                        }
+                        foreach(var interfaceType in type.Interfaces) {
+                            if(interfaceType.IsFromCode()) {
+                                parentTypes.Add(interfaceType);
+                            }
+                        }
+                    }
+
+                    if(parentTypes.Count == 0) {
+                        break;
+                    }
+
+                    typesList.Add(parentTypes.ToList());
+                }
+
+                typesList.Reverse();
+                var types = typesList.SelectMany(i => i).Distinct();
+                allTypes.Clear();
+                allTypes.AddRange(types);
+            }
+        }
+
         #region     // member name refactor
 
         private Dictionary<ISymbol, LuaSymbolNameSyntax> memberNames_ = new Dictionary<ISymbol, LuaSymbolNameSyntax>();
         private Dictionary<INamedTypeSymbol, HashSet<string>> typeNameUseds_ = new Dictionary<INamedTypeSymbol, HashSet<string>>();
         private HashSet<ISymbol> refactorNames_ = new HashSet<ISymbol>();
         private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
+        private List<INamedTypeSymbol> types_ = new List<INamedTypeSymbol>();
 
         internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
+            types_.Add(typeSymbol);
             CheckExtends(typeSymbol);
         }
 

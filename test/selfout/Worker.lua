@@ -3,8 +3,7 @@ local System = System;
 local Linq = System.Linq.Enumerable;
 System.namespace("CSharpLua", function (namespace) 
     namespace.class("Worker", function (namespace) 
-        local getEncoding, SystemDlls, getMetas, getLibs, Do, Compiler, GetOutFilePath, __staticCtor__, 
-        __ctor__;
+        local getEncoding, SystemDlls, getMetas, getLibs, Do, Compiler, __staticCtor__, __ctor__;
         getEncoding = function () 
             return System.Text.Encoding.getUTF8();
         end;
@@ -56,21 +55,7 @@ System.namespace("CSharpLua", function (namespace)
             end, System.IO.MemoryStream());
 
             local generator = CSharpLua.LuaSyntaxGenerator(getMetas(this), compilation);
-            generator:Generate(function (luaCompilationUnit) 
-                local outFile = GetOutFilePath(this, luaCompilationUnit.FilePath);
-                return System.IO.StreamWriter(outFile, false, getEncoding());
-            end);
-        end;
-        GetOutFilePath = function (this, inFilePath) 
-            local path = inFilePath:Remove(0, #this.folder_):TrimStart(System.IO.Path.DirectorySeparatorChar, 47 --[['/']]);
-            local extend = System.IO.Path.GetExtension(path);
-            path = path:Remove(#path - #extend, #extend);
-            path = System.IO.Path.Combine(this.output_, (path or "") .. ".lua" --[[Worker.kLuaSuffix]]);
-            local dir = System.IO.Path.GetDirectoryName(path);
-            if not System.IO.Directory.Exists(dir) then
-                System.IO.Directory.CreateDirectory(dir);
-            end
-            return path;
+            generator:Generate1(this.folder_, this.output_);
         end;
         __staticCtor__ = function (this) 
             SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll");
