@@ -39,10 +39,6 @@ namespace CSharpLua {
             }
         }
 
-        public bool IsEnumExport(string fullName) {
-            return generator_.IsEnumExport(fullName);
-        }
-
         private void AddIndent() {
             ++indentLevel_;
         }

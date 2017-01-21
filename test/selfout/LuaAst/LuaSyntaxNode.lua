@@ -17,12 +17,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 return "";
             end;
             __staticCtor__ = function (this) 
-                Semicolon = CSharpLua.LuaAst.Semicolon();
+                Semicolon = CSharpLua.LuaAst.LuaSyntaxNode.Semicolon();
                 this.Semicolon = Semicolon;
             end;
             return {
                 __inherits__ = {
-                    CSharpLua.LuaAst.Keyword
+                    CSharpLua.LuaAst.LuaSyntaxNode.Keyword
                 }, 
                 getEmpty = getEmpty, 
                 __staticCtor__ = __staticCtor__

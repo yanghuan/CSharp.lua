@@ -73,6 +73,7 @@ namespace CSharpLua {
         public XmlMetaProvider XmlMetaProvider { get; }
         public SettingInfo Setting { get; }
         private HashSet<string> exportEnums_ = new HashSet<string>();
+        private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
         private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
 
         public LuaSyntaxGenerator(IEnumerable<string> metas, CSharpCompilation compilation) {
@@ -90,18 +91,10 @@ namespace CSharpLua {
                 var luaCompilationUnit = (LuaCompilationUnitSyntax)compilationUnitSyntax.Accept(transfor);
                 luaCompilationUnits.Add(luaCompilationUnit);
             }
+            CheckExportEnums();
             CheckPartialTypes();
             CheckRefactorNames();
             return luaCompilationUnits.Where(i => !i.IsEmpty);
-        }
-
-        public void Generate(Func<LuaCompilationUnitSyntax, TextWriter> writerFunctor) {
-            foreach(var luaCompilationUnit in Create()) {
-                using(var writer = writerFunctor(luaCompilationUnit)) {
-                    LuaRenderer rener = new LuaRenderer(this, writer);
-                    luaCompilationUnit.Render(rener);
-                }
-            }
         }
 
         public void Generate(string baseFolder, string outFolder) {
@@ -115,6 +108,7 @@ namespace CSharpLua {
                 }
                 modules.Add(module);
             }
+            ExportManifestFile(modules, outFolder);
         }
 
         private string GetOutFilePath(string inFilePath, string folder_, string output_, out string module) {
@@ -131,12 +125,25 @@ namespace CSharpLua {
             return outPath;
         }
 
-        internal bool IsEnumExport(string enumName) {
-            return exportEnums_.Contains(enumName);
+        internal bool IsEnumExport(string enumTypeSymbol) {
+            return exportEnums_.Contains(enumTypeSymbol);
         }
 
-        internal void AddExportEnum(string enumName) {
-            exportEnums_.Add(enumName);
+        internal void AddExportEnum(string enumTypeSymbol) {
+            exportEnums_.Add(enumTypeSymbol);
+        }
+
+        internal void AddEnumDeclaration(LuaEnumDeclarationSyntax enumDeclaration) {
+            enumDeclarations_.Add(enumDeclaration);
+        }
+
+        private void CheckExportEnums() {
+            foreach(var enumDeclaration in enumDeclarations_) {
+                if(IsEnumExport(enumDeclaration.FullName)) {
+                    enumDeclaration.IsExport = true;
+                    enumDeclaration.CompilationUnit.AddTypeDeclarationCount();
+                }
+            }
         }
 
         internal void AddPartialTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax luaNode, LuaCompilationUnitSyntax compilationUnit) {
@@ -177,13 +184,20 @@ namespace CSharpLua {
             return GetMemberMethodName(symbol);
         }
 
-        private void ExportManifestFile() {
-            List<INamedTypeSymbol> allTypes = new List<INamedTypeSymbol>(types_);
-            if(allTypes.Count > 0) {
-                allTypes.Sort((x ,y) => x.ToString().CompareTo(y.ToString()));
+        private bool IsTypeEnable(INamedTypeSymbol type) {
+            if(type.TypeKind == TypeKind.Enum) {
+                return IsEnumExport(type.ToString());
+            }
+            return true;
+        }
+
+        private List<INamedTypeSymbol> GetExportTypes() {
+            List<INamedTypeSymbol> allTypes = new List<INamedTypeSymbol>();
+            if(types_.Count > 0) {
+                types_.Sort((x, y) => x.ToString().CompareTo(y.ToString()));
 
                 List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>>();
-                typesList.Add(allTypes);
+                typesList.Add(types_);
 
                 while(true) {
                     HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>();
@@ -209,9 +223,61 @@ namespace CSharpLua {
                 }
 
                 typesList.Reverse();
-                var types = typesList.SelectMany(i => i).Distinct();
-                allTypes.Clear();
+                var types = typesList.SelectMany(i => i).Distinct().Where(IsTypeEnable);
                 allTypes.AddRange(types);
+            }
+            return allTypes;
+        }
+
+        private void ExportManifestFile(List<string> modules, string outFolder) {
+            const string kDir = "dir";
+            const string kDirInitCode = "dir = (dir and #dir > 0) and (dir .. '.') or \"\"";
+            const string kRequire = "require";
+            const string kLoadCode = "local load = function(module) return require(dir .. module) end";
+            const string kLoad = "load";
+            const string kInit = "System.init";
+            const string kManifestFile = "manifest.lua";
+
+            if(modules.Count > 0) {
+                modules.Sort();
+                var types = GetExportTypes();
+                if(types.Count > 0) {
+                    LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+                    functionExpression.AddParameter(new LuaIdentifierNameSyntax(kDir));
+                    functionExpression.AddStatement(new LuaIdentifierNameSyntax(kDirInitCode));
+
+                    LuaIdentifierNameSyntax requireIdentifier = new LuaIdentifierNameSyntax(kRequire);
+                    LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(requireIdentifier);
+                    variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(requireIdentifier);
+                    functionExpression.AddStatement(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+
+                    functionExpression.AddStatement(new LuaIdentifierNameSyntax(kLoadCode));
+                    functionExpression.AddStatement(LuaBlankLinesStatement.One);
+
+                    LuaIdentifierNameSyntax loadIdentifier = new LuaIdentifierNameSyntax(kLoad);
+                    foreach(string module in modules) {
+                        var argument = new LuaStringLiteralExpressionSyntax(new LuaIdentifierNameSyntax(module));
+                        var invocation = new LuaInvocationExpressionSyntax(loadIdentifier, argument);
+                        functionExpression.AddStatement(invocation);
+                    }
+                    functionExpression.AddStatement(LuaBlankLinesStatement.One);
+
+                    LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+                    foreach(var type in types) {
+                        LuaIdentifierNameSyntax typeName = XmlMetaProvider.GetTypeShortName(type);
+                        table.Items.Add(new LuaSingleTableItemSyntax(new LuaStringLiteralExpressionSyntax(typeName)));
+                    }
+                    functionExpression.AddStatement(new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(kInit), table));
+
+                    LuaCompilationUnitSyntax luaCompilationUnit = new LuaCompilationUnitSyntax();
+                    luaCompilationUnit.Statements.Add(new LuaReturnStatementSyntax(functionExpression));
+
+                    string outFile = Path.Combine(outFolder, kManifestFile);
+                    using(var writer = new StreamWriter(outFile, false, Encoding)) {
+                        LuaRenderer rener = new LuaRenderer(this, writer);
+                        luaCompilationUnit.Render(rener);
+                    }
+                }
             }
         }
 

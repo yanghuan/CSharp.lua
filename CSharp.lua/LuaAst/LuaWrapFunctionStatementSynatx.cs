@@ -46,7 +46,7 @@ namespace CSharpLua.LuaAst {
         }
 
         internal override void Render(LuaRenderer renderer) {
-            function_.Body.Statements.AddRange(statements_);
+            function_.AddStatements(statements_);
             renderer.Render(this);
         }
     }

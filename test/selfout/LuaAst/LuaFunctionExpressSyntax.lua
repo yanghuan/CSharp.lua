@@ -2,12 +2,21 @@
 local System = System;
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaFunctionExpressionSyntax", function (namespace) 
-        local getFunctionKeyword, AddParameter, Render, __ctor__;
+        local getFunctionKeyword, AddParameter, AddStatement, AddStatement1, AddStatements, Render, __ctor__;
         getFunctionKeyword = function (this) 
             return "function" --[[Keyword.Function]];
         end;
         AddParameter = function (this, identifier) 
             this.ParameterList.Parameters:Add1(CSharpLua.LuaAst.LuaParameterSyntax(identifier));
+        end;
+        AddStatement = function (this, statement) 
+            this.Body.Statements:Add1(statement);
+        end;
+        AddStatement1 = function (this, expression) 
+            AddStatement(this, CSharpLua.LuaAst.LuaExpressionStatementSyntax(expression));
+        end;
+        AddStatements = function (this, statements) 
+            this.Body.Statements:AddRange1(statements);
         end;
         Render = function (this, renderer) 
             renderer:Render9(this);
@@ -15,7 +24,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         __ctor__ = function (this) 
             this.ParameterList = CSharpLua.LuaAst.LuaParameterListSyntax();
             this.Body = System.create(CSharpLua.LuaAst.LuaBlockSyntax(), function (default) 
-                default.OpenBraceToken = CSharpLua.LuaAst.Tokens.getEmpty();
+                default.OpenBraceToken = CSharpLua.LuaAst.LuaSyntaxNode.Tokens.getEmpty();
                 default.CloseBraceToken = "end" --[[Keyword.End]];
             end);
         end;
@@ -27,6 +36,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             HasYield = False, 
             TempIndex = 0, 
             AddParameter = AddParameter, 
+            AddStatement = AddStatement, 
+            AddStatement1 = AddStatement1, 
+            AddStatements = AddStatements, 
             Render = Render, 
             __ctor__ = __ctor__
         };

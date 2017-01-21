@@ -28,13 +28,25 @@ namespace CSharpLua.LuaAst {
         public bool HasYield { get; set; }
         public int TempIndex;
 
-        public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
+        public readonly LuaBlockSyntax Body = new LuaBlockSyntax() {
             OpenBraceToken = Tokens.Empty,
             CloseBraceToken = Tokens.End,
         };
 
         public void AddParameter(LuaIdentifierNameSyntax identifier) {
             ParameterList.Parameters.Add(new LuaParameterSyntax(identifier));
+        }
+
+        public void AddStatement(LuaStatementSyntax statement) {
+            Body.Statements.Add(statement);
+        }
+
+        public void AddStatement(LuaExpressionSyntax expression) {
+            AddStatement(new LuaExpressionStatementSyntax(expression));
+        }
+
+        public void AddStatements(IEnumerable<LuaStatementSyntax> statements) {
+            Body.Statements.AddRange(statements);
         }
 
         internal override void Render(LuaRenderer renderer) {

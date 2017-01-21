@@ -40,12 +40,12 @@ System.namespace("CSharpLua", function (namespace)
                 __ctor__ = __ctor__
             };
         end);
-        local getEncoding, Create, Generate, Generate1, GetOutFilePath, IsEnumExport, AddExportEnum, AddPartialTypeDeclaration, 
-        CheckPartialTypes, GetSemanticModel, IsBaseType, GetMethodName, ExportManifestFile, AddTypeSymbol, CheckExtends, TryAddExtend, 
-        GetMemberMethodName, InternalGetMemberMethodName, GetExtensionMethodName, GetStaticClassMethodName, GetMethodNameFromIndex, TryAddNewUsedName, GetSameNameMembers, MethodSymbolToString, 
-        MemberSymbolToString, GetSymbolWright, MemberSymbolCommonComparison, MemberSymbolBoolComparison, MemberSymbolComparison, FillSameNameMembers, CheckRefactorNames, RefactorCurTypeSymbol, 
-        RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorName, IsTypeNameUsed, CheckNewNameEnable, __init__, 
-        __ctor__;
+        local getEncoding, Create, Generate, GetOutFilePath, IsEnumExport, AddExportEnum, AddEnumDeclaration, CheckExportEnums, 
+        AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, GetMethodName, IsTypeEnable, GetExportTypes, ExportManifestFile, 
+        AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberMethodName, InternalGetMemberMethodName, GetExtensionMethodName, GetStaticClassMethodName, GetMethodNameFromIndex, 
+        TryAddNewUsedName, GetSameNameMembers, MethodSymbolToString, MemberSymbolToString, GetSymbolWright, MemberSymbolCommonComparison, MemberSymbolBoolComparison, MemberSymbolComparison, 
+        FillSameNameMembers, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorName, 
+        IsTypeNameUsed, CheckNewNameEnable, __init__, __ctor__;
         getEncoding = function () 
             return System.Text.Encoding.getUTF8();
         end;
@@ -58,19 +58,13 @@ System.namespace("CSharpLua", function (namespace)
                 local luaCompilationUnit = System.cast(CSharpLua.LuaAst.LuaCompilationUnitSyntax, compilationUnitSyntax:Accept(transfor, CSharpLua.LuaAst.LuaSyntaxNode));
                 luaCompilationUnits:Add(luaCompilationUnit);
             end
+            CheckExportEnums(this);
             CheckPartialTypes(this);
             CheckRefactorNames(this);
             return Linq.Where(luaCompilationUnits, function (i) return not i:getIsEmpty(); end);
         end;
-        Generate = function (this, writerFunctor) 
-            for _, luaCompilationUnit in System.each(Create(this)) do
-                System.using(function (writer) 
-                    local rener = CSharpLua.LuaRenderer(this, writer);
-                    luaCompilationUnit:Render(rener);
-                end, writerFunctor(this, luaCompilationUnit));
-            end
-        end;
-        Generate1 = function (this, baseFolder, outFolder) 
+        Generate = function (this, baseFolder, outFolder) 
+            local modules = System.List(System.String)();
             for _, luaCompilationUnit in System.each(Create(this)) do
                 local module;
                 local default;
@@ -80,7 +74,9 @@ System.namespace("CSharpLua", function (namespace)
                     local rener = CSharpLua.LuaRenderer(this, writer);
                     luaCompilationUnit:Render(rener);
                 end, System.IO.StreamWriter(outFile, false, getEncoding()));
+                modules:Add(module);
             end
+            ExportManifestFile(this, modules, outFolder);
         end;
         GetOutFilePath = function (this, inFilePath, folder_, output_, module) 
             local path = inFilePath:Remove(0, #folder_):TrimStart(System.IO.Path.DirectorySeparatorChar, 47 --[['/']]);
@@ -95,11 +91,22 @@ System.namespace("CSharpLua", function (namespace)
             module = path:Replace(System.IO.Path.DirectorySeparatorChar, 46 --[['.']]);
             return outPath;
         end;
-        IsEnumExport = function (this, enumName) 
-            return this.exportEnums_:Contains(enumName);
+        IsEnumExport = function (this, enumTypeSymbol) 
+            return this.exportEnums_:Contains(enumTypeSymbol);
         end;
-        AddExportEnum = function (this, enumName) 
-            this.exportEnums_:Add(enumName);
+        AddExportEnum = function (this, enumTypeSymbol) 
+            this.exportEnums_:Add(enumTypeSymbol);
+        end;
+        AddEnumDeclaration = function (this, enumDeclaration) 
+            this.enumDeclarations_:Add(enumDeclaration);
+        end;
+        CheckExportEnums = function (this) 
+            for _, enumDeclaration in System.each(this.enumDeclarations_) do
+                if IsEnumExport(this, enumDeclaration.FullName) then
+                    enumDeclaration.IsExport = true;
+                    enumDeclaration.CompilationUnit:AddTypeDeclarationCount();
+                end
+            end
         end;
         AddPartialTypeDeclaration = function (this, typeSymbol, node, luaNode, compilationUnit) 
             local list = CSharpLua.Utility.GetOrDefault1(this.partialTypes_, typeSymbol, nil, Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(T));
@@ -134,13 +141,19 @@ System.namespace("CSharpLua", function (namespace)
         GetMethodName = function (this, symbol) 
             return GetMemberMethodName(this, symbol);
         end;
-        ExportManifestFile = function (this) 
-            local allTypes = System.List(Microsoft.CodeAnalysis.INamedTypeSymbol)(this.types_);
-            if #allTypes > 0 then
-                allTypes:Sort(function (x, y) return x:ToString():CompareTo(y:ToString()); end);
+        IsTypeEnable = function (this, type) 
+            if type:getTypeKind() == 5 --[[TypeKind.Enum]] then
+                return IsEnumExport(this, type:ToString());
+            end
+            return true;
+        end;
+        GetExportTypes = function (this) 
+            local allTypes = System.List(Microsoft.CodeAnalysis.INamedTypeSymbol)();
+            if #this.types_ > 0 then
+                this.types_:Sort(function (x, y) return x:ToString():CompareTo(y:ToString()); end);
 
                 local typesList = System.List(System.List(Microsoft.CodeAnalysis.INamedTypeSymbol))();
-                typesList:Add(allTypes);
+                typesList:Add(this.types_);
 
                 while true do
                     local parentTypes = System.HashSet(Microsoft.CodeAnalysis.INamedTypeSymbol)();
@@ -166,9 +179,60 @@ System.namespace("CSharpLua", function (namespace)
                 end
 
                 typesList:Reverse();
-                local types = Linq.Distinct(Linq.SelectMany(typesList, function (i) return i; end, Microsoft.CodeAnalysis.INamedTypeSymbol));
-                allTypes:Clear();
+                local types = Linq.Where(Linq.Distinct(Linq.SelectMany(typesList, function (i) return i; end, Microsoft.CodeAnalysis.INamedTypeSymbol)), IsTypeEnable);
                 allTypes:AddRange(types);
+            end
+            return allTypes;
+        end;
+        ExportManifestFile = function (this, modules, outFolder) 
+            local kDir = "dir";
+            local kDirInitCode = "dir = (dir and #dir > 0) and (dir .. '.') or \"\"";
+            local kRequire = "require";
+            local kLoadCode = "local load = function(module) return require(dir .. module) end";
+            local kLoad = "load";
+            local kInit = "System.init";
+            local kManifestFile = "manifest.lua";
+
+            if #modules > 0 then
+                modules:Sort();
+                local types = GetExportTypes(this);
+                if #types > 0 then
+                    local functionExpression = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
+                    functionExpression:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, kDir));
+                    functionExpression:AddStatement1(CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, kDirInitCode));
+
+                    local requireIdentifier = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, kRequire);
+                    local variableDeclarator = CSharpLua.LuaAst.LuaVariableDeclaratorSyntax(requireIdentifier);
+                    variableDeclarator.Initializer = CSharpLua.LuaAst.LuaEqualsValueClauseSyntax(requireIdentifier);
+                    functionExpression:AddStatement(CSharpLua.LuaAst.LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+
+                    functionExpression:AddStatement1(CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, kLoadCode));
+                    functionExpression:AddStatement(CSharpLua.LuaAst.LuaBlankLinesStatement.One);
+
+                    local loadIdentifier = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, kLoad);
+                    for _, module in System.each(modules) do
+                        local argument = CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax:new(1, CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, module));
+                        local invocation = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(2, loadIdentifier, argument);
+                        functionExpression:AddStatement1(invocation);
+                    end
+                    functionExpression:AddStatement(CSharpLua.LuaAst.LuaBlankLinesStatement.One);
+
+                    local table = CSharpLua.LuaAst.LuaTableInitializerExpression();
+                    for _, type in System.each(types) do
+                        local typeName = this.XmlMetaProvider:GetTypeShortName(type);
+                        table.Items:Add1(CSharpLua.LuaAst.LuaSingleTableItemSyntax(CSharpLua.LuaAst.LuaStringLiteralExpressionSyntax:new(1, typeName)));
+                    end
+                    functionExpression:AddStatement1(CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, kInit), table));
+
+                    local luaCompilationUnit = CSharpLua.LuaAst.LuaCompilationUnitSyntax();
+                    luaCompilationUnit.Statements:Add1(CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, functionExpression));
+
+                    local outFile = System.IO.Path.Combine(outFolder, kManifestFile);
+                    System.using(function (writer) 
+                        local rener = CSharpLua.LuaRenderer(this, writer);
+                        luaCompilationUnit:Render(rener);
+                    end, System.IO.StreamWriter(outFile, false, getEncoding()));
+                end
             end
         end;
         AddTypeSymbol = function (this, typeSymbol) 
@@ -572,6 +636,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         __init__ = function (this) 
             this.exportEnums_ = System.HashSet(System.String)();
+            this.enumDeclarations_ = System.List(CSharpLua.LuaAst.LuaEnumDeclarationSyntax)();
             this.partialTypes_ = System.Dictionary(Microsoft.CodeAnalysis.INamedTypeSymbol, System.List(CSharpLua.PartialTypeDeclaration))();
             this.memberNames_ = System.Dictionary(Microsoft.CodeAnalysis.ISymbol, CSharpLua.LuaAst.LuaSymbolNameSyntax)();
             this.typeNameUseds_ = System.Dictionary(Microsoft.CodeAnalysis.INamedTypeSymbol, System.HashSet(System.String))();
@@ -582,14 +647,14 @@ System.namespace("CSharpLua", function (namespace)
         __ctor__ = function (this, metas, compilation) 
             __init__(this);
             this.XmlMetaProvider = CSharpLua.XmlMetaProvider(metas);
-            this.Setting = CSharpLua.SettingInfo();
+            this.Setting = CSharpLua.LuaSyntaxGenerator.SettingInfo();
             this.compilation_ = compilation;
         end;
         return {
             Generate = Generate, 
-            Generate1 = Generate1, 
             IsEnumExport = IsEnumExport, 
             AddExportEnum = AddExportEnum, 
+            AddEnumDeclaration = AddEnumDeclaration, 
             AddPartialTypeDeclaration = AddPartialTypeDeclaration, 
             GetSemanticModel = GetSemanticModel, 
             IsBaseType = IsBaseType, 

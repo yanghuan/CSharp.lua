@@ -44,7 +44,7 @@ System.namespace("CSharpLua", function (namespace)
             CheckIsSingleModel = function (this) 
                 local isSingle = false;
                 if #this.models_ == 1 then
-                    local model = CSharpLua.Utility.First(this.models_, CSharpLua.MethodModel);
+                    local model = CSharpLua.Utility.First(this.models_, CSharpLua.XmlMetaProvider.XmlMetaModel.MethodModel);
                     if model.ArgCount == - 1 and model.Args == nil and model.RetType == nil and model.GenericArgCount == - 1 then
                         isSingle = true;
                     end
@@ -104,7 +104,7 @@ System.namespace("CSharpLua", function (namespace)
             end;
             GetName = function (this, symbol) 
                 if this.isSingleModel_ then
-                    return CSharpLua.Utility.First(this.models_, CSharpLua.MethodModel).Name;
+                    return CSharpLua.Utility.First(this.models_, CSharpLua.XmlMetaProvider.XmlMetaModel.MethodModel).Name;
                 end
 
                 local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol); end);
@@ -112,7 +112,7 @@ System.namespace("CSharpLua", function (namespace)
             end;
             GetCodeTemplate = function (this, symbol) 
                 if this.isSingleModel_ then
-                    return CSharpLua.Utility.First(this.models_, CSharpLua.MethodModel).Template;
+                    return CSharpLua.Utility.First(this.models_, CSharpLua.XmlMetaProvider.XmlMetaModel.MethodModel).Template;
                 end
 
                 local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol); end);
@@ -187,9 +187,9 @@ System.namespace("CSharpLua", function (namespace)
                             System.throw(System.ArgumentException(("type [{0}] has a method name is empty"):Format(this.model_.name)));
                         end
 
-                        local info = CSharpLua.Utility.GetOrDefault1(this.methods_, methodModel.name, nil, System.String, CSharpLua.MethodMetaInfo);
+                        local info = CSharpLua.Utility.GetOrDefault1(this.methods_, methodModel.name, nil, System.String, CSharpLua.XmlMetaProvider.MethodMetaInfo);
                         if info == nil then
-                            info = CSharpLua.MethodMetaInfo();
+                            info = CSharpLua.XmlMetaProvider.MethodMetaInfo();
                             this.methods_:Add(methodModel.name, info);
                         end
                         info:Add(methodModel);
@@ -197,18 +197,18 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end;
             GetFieldModel = function (this, name) 
-                return CSharpLua.Utility.GetOrDefault1(this.fields_, name, nil, System.String, CSharpLua.FieldModel);
+                return CSharpLua.Utility.GetOrDefault1(this.fields_, name, nil, System.String, CSharpLua.XmlMetaProvider.XmlMetaModel.FieldModel);
             end;
             GetPropertyModel = function (this, name) 
-                return CSharpLua.Utility.GetOrDefault1(this.propertys_, name, nil, System.String, CSharpLua.PropertyModel);
+                return CSharpLua.Utility.GetOrDefault1(this.propertys_, name, nil, System.String, CSharpLua.XmlMetaProvider.XmlMetaModel.PropertyModel);
             end;
             GetMethodMetaInfo = function (this, name) 
-                return CSharpLua.Utility.GetOrDefault1(this.methods_, name, nil, System.String, CSharpLua.MethodMetaInfo);
+                return CSharpLua.Utility.GetOrDefault1(this.methods_, name, nil, System.String, CSharpLua.XmlMetaProvider.MethodMetaInfo);
             end;
             __init__ = function (this) 
                 this.fields_ = System.Dictionary(System.String, XmlMetaModel.FieldModel)();
                 this.propertys_ = System.Dictionary(System.String, XmlMetaModel.PropertyModel)();
-                this.methods_ = System.Dictionary(System.String, CSharpLua.MethodMetaInfo)();
+                this.methods_ = System.Dictionary(System.String, CSharpLua.XmlMetaProvider.MethodMetaInfo)();
             end;
             __ctor__ = function (this, model) 
                 __init__(this);
@@ -264,7 +264,7 @@ System.namespace("CSharpLua", function (namespace)
                 if this.typeMetas_:ContainsKey(classesfullName) then
                     System.throw(System.ArgumentException(("type [{0}] is already has"):Format(classesfullName)));
                 end
-                local info = CSharpLua.TypeMetaInfo(classModel);
+                local info = CSharpLua.XmlMetaProvider.TypeMetaInfo(classModel);
                 this.typeMetas_:Add(classesfullName, info);
             end
         end;
@@ -319,17 +319,29 @@ System.namespace("CSharpLua", function (namespace)
             local typeSymbol = System.cast(Microsoft.CodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition());
             local namespaceName = GetNamespaceMapName(this, typeSymbol:getContainingNamespace());
             local name;
-            if typeSymbol:getTypeArguments():getLength() == 0 then
-                name = ("{0}.{1}"):Format(namespaceName, symbol:getName());
+            if typeSymbol:getContainingType() ~= nil then
+                name = "";
+                local containingType = typeSymbol:getContainingType();
+                repeat
+                    name = (containingType:getName() or "") .. '.' .. (name or "");
+                    containingType = containingType:getContainingType();
+                until not (containingType ~= nil);
+                name = name .. (typeSymbol:getName() or "");
             else
-                name = ("{0}.{1}_{2}"):Format(namespaceName, symbol:getName(), typeSymbol:getTypeArguments():getLength());
+                name = typeSymbol:getName();
             end
-            return name;
+            local fullName;
+            if typeSymbol:getTypeArguments():getLength() == 0 then
+                fullName = ("{0}.{1}"):Format(namespaceName, name);
+            else
+                fullName = ("{0}.{1}_{2}"):Format(namespaceName, name, typeSymbol:getTypeArguments():getLength());
+            end
+            return fullName;
         end;
         GetTypeShortName = function (this, symbol) 
             local name = GetTypeShortString(this, symbol);
             if MayHaveCodeMeta(this, symbol) then
-                local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, name, nil, System.String, CSharpLua.TypeMetaInfo);
+                local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, name, nil, System.String, CSharpLua.XmlMetaProvider.TypeMetaInfo);
                 if info ~= nil then
                     local newName = info:getModel().Name;
                     if newName ~= nil then
@@ -341,7 +353,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetTypeMetaInfo = function (this, memberSymbol) 
             local typeName = GetTypeShortString(this, memberSymbol:getContainingType());
-            return CSharpLua.Utility.GetOrDefault1(this.typeMetas_, typeName, nil, System.String, CSharpLua.TypeMetaInfo);
+            return CSharpLua.Utility.GetOrDefault1(this.typeMetas_, typeName, nil, System.String, CSharpLua.XmlMetaProvider.TypeMetaInfo);
         end;
         IsPropertyField = function (this, symbol) 
             if MayHaveCodeMeta(this, symbol) then
@@ -413,15 +425,15 @@ System.namespace("CSharpLua", function (namespace)
         end;
         __init__ = function (this) 
             this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)();
-            this.typeMetas_ = System.Dictionary(System.String, CSharpLua.TypeMetaInfo)();
+            this.typeMetas_ = System.Dictionary(System.String, CSharpLua.XmlMetaProvider.TypeMetaInfo)();
         end;
         __ctor__ = function (this, files) 
             __init__(this);
             for _, file in System.each(files) do
-                local xmlSeliz = System.Xml.Serialization.XmlSerializer(System.typeof(CSharpLua.XmlMetaModel));
+                local xmlSeliz = System.Xml.Serialization.XmlSerializer(System.typeof(CSharpLua.XmlMetaProvider.XmlMetaModel));
                 System.try(function () 
                     System.using(function (stream) 
-                        local model = System.cast(CSharpLua.XmlMetaModel, xmlSeliz:Deserialize(stream));
+                        local model = System.cast(CSharpLua.XmlMetaProvider.XmlMetaModel, xmlSeliz:Deserialize(stream));
                         if model.Namespaces ~= nil then
                             for _, namespaceModel in System.each(model.Namespaces) do
                                 LoadNamespace(this, namespaceModel);

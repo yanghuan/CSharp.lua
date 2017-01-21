@@ -2,21 +2,17 @@
 local System = System;
 System.namespace("CSharpLua", function (namespace) 
     namespace.class("LuaRenderer", function (namespace) 
-        local getSetting, IsEnumExport, AddIndent, Outdent, WriteNewLine, WriteComma, WriteSpace, Write, 
-        Write1, Render, Render1, Render2, Render3, Render4, Render5, Render6, 
-        WriteSeparatedSyntaxList, WriteArgumentList, Render7, Render8, Render9, Render10, Render11, Render12, 
-        Render13, Render14, Render15, Render16, WriteEquals, Render17, Render18, Render19, 
-        Render20, Render21, Render22, Render23, Render24, Render25, Render26, Render27, 
-        Render28, Render29, Render30, Render31, Render32, Render33, Render34, Render35, 
-        Render36, Render37, Render38, Render39, Render40, Render41, Render42, Render43, 
-        Render44, Render45, Render46, Render47, Render48, Render49, Render50, Render51, 
-        Render52, Render53, Render54, Render55, Render56, Render57, Render58, Render59, 
-        __ctor__;
+        local getSetting, AddIndent, Outdent, WriteNewLine, WriteComma, WriteSpace, Write, Write1, 
+        Render, Render1, Render2, Render3, Render4, Render5, Render6, WriteSeparatedSyntaxList, 
+        WriteArgumentList, Render7, Render8, Render9, Render10, Render11, Render12, Render13, 
+        Render14, Render15, Render16, WriteEquals, Render17, Render18, Render19, Render20, 
+        Render21, Render22, Render23, Render24, Render25, Render26, Render27, Render28, 
+        Render29, Render30, Render31, Render32, Render33, Render34, Render35, Render36, 
+        Render37, Render38, Render39, Render40, Render41, Render42, Render43, Render44, 
+        Render45, Render46, Render47, Render48, Render49, Render50, Render51, Render52, 
+        Render53, Render54, Render55, Render56, Render57, Render58, Render59, __ctor__;
         getSetting = function (this) 
             return this.generator_.Setting;
-        end;
-        IsEnumExport = function (this, fullName) 
-            return this.generator_:IsEnumExport(fullName);
         end;
         AddIndent = function (this) 
             this.indentLevel_ = this.indentLevel_ + 1;
@@ -222,7 +218,7 @@ System.namespace("CSharpLua", function (namespace)
                 if isFirst then
                     isFirst = false;
                 else
-                    Write1(this, CSharpLua.LuaAst.LuaSyntaxNode.CSharpLua.LuaAst.Tokens.Semicolon);
+                    Write1(this, CSharpLua.LuaAst.LuaSyntaxNode.CSharpLua.LuaAst.LuaSyntaxNode.Tokens.Semicolon);
                     WriteSpace(this);
                 end
                 assignment:Render(this);
@@ -496,7 +492,6 @@ System.namespace("CSharpLua", function (namespace)
         return {
             isNewLine_ = False, 
             indentLevel_ = 0, 
-            IsEnumExport = IsEnumExport, 
             Render = Render, 
             Render1 = Render1, 
             Render2 = Render2, 

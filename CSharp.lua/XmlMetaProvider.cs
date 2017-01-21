@@ -403,13 +403,26 @@ namespace CSharpLua {
             INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
             string namespaceName = GetNamespaceMapName(typeSymbol.ContainingNamespace);
             string name;
-            if(typeSymbol.TypeArguments.Length == 0) {
-                name = $"{namespaceName}.{symbol.Name}";
+            if(typeSymbol.ContainingType != null) {
+                name = "";
+                INamedTypeSymbol containingType = typeSymbol.ContainingType;
+                do {
+                    name = containingType.Name + '.' + name;
+                    containingType = containingType.ContainingType;
+                } while(containingType != null);
+                name += typeSymbol.Name;
             }
             else {
-                name = $"{namespaceName}.{symbol.Name}_{typeSymbol.TypeArguments.Length}";
+                name = typeSymbol.Name;
             }
-            return name;
+            string fullName;
+            if(typeSymbol.TypeArguments.Length == 0) {
+                fullName = $"{namespaceName}.{name}";
+            }
+            else {
+                fullName = $"{namespaceName}.{name}_{typeSymbol.TypeArguments.Length}";
+            }
+            return fullName;
         }
 
         public LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {

@@ -74,7 +74,7 @@ namespace CSharpLua.LuaAst {
                 initFunction = new LuaFunctionExpressionSyntax();
                 initFunction.AddParameter(LuaIdentifierNameSyntax.This);
             }
-            initFunction.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+            initFunction.AddStatement(assignment);
         }
 
         private void AddInitFiled(ref LuaFunctionExpressionSyntax initFunction, LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
@@ -309,7 +309,7 @@ namespace CSharpLua.LuaAst {
                 foreach(var type in typeIdentifiers_) {
                     wrapFunction.AddParameter(type);
                 }
-                wrapFunction.Body.Statements.AddRange(statements_);
+                wrapFunction.AddStatements(statements_);
                 statements_.Clear();
                 statements_.Add(new LuaReturnStatementSyntax(wrapFunction));
             }
@@ -337,9 +337,12 @@ namespace CSharpLua.LuaAst {
 
     public sealed class LuaEnumDeclarationSyntax : LuaTypeDeclarationSyntax {
         public string FullName { get; }
+        public LuaCompilationUnitSyntax CompilationUnit { get; }
+        public bool IsExport { get; set; }
 
-        public LuaEnumDeclarationSyntax(string fullName, LuaIdentifierNameSyntax name) {
+        public LuaEnumDeclarationSyntax(string fullName, LuaIdentifierNameSyntax name, LuaCompilationUnitSyntax compilationUnit) {
             FullName = fullName;
+            CompilationUnit = compilationUnit;
             UpdateIdentifiers(name, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Enum);
         }
 
@@ -348,7 +351,7 @@ namespace CSharpLua.LuaAst {
         }
 
         internal override void Render(LuaRenderer renderer) {
-            if(renderer.IsEnumExport(FullName)) {
+            if(IsExport) {
                 base.Render(renderer);
             }
         }

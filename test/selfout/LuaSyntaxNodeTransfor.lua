@@ -48,7 +48,7 @@ System.namespace("CSharpLua", function (namespace)
             end;
             return {
                 __inherits__ = {
-                    System.IComparable_1(CSharpLua.BlockCommonNode)
+                    System.IComparable_1(CSharpLua.LuaSyntaxNodeTransfor.BlockCommonNode)
                 }, 
                 Comment = System.default(Microsoft.CodeAnalysis.SyntaxTrivia), 
                 LineSpan = System.default(Microsoft.CodeAnalysis.FileLinePositionSpan), 
@@ -257,15 +257,16 @@ System.namespace("CSharpLua", function (namespace)
         end;
         VisitEnumDeclaration = function (this, node) 
             local symbol = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node);
-            local fullName = symbol:ToString();
             local name = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, node:getIdentifier():getValueText());
-            local enumDeclaration = CSharpLua.LuaAst.LuaEnumDeclarationSyntax(fullName, name);
+            local enumDeclaration = CSharpLua.LuaAst.LuaEnumDeclarationSyntax(symbol:ToString(), name, getCurCompilationUnit(this));
             this.typeDeclarations_:Push(enumDeclaration);
             for _, member in System.each(node:getMembers()) do
                 local statement = System.cast(CSharpLua.LuaAst.LuaKeyValueTableItemSyntax, member:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                 enumDeclaration:Add(statement);
             end
             this.typeDeclarations_:Pop();
+            this.generator_:AddTypeSymbol(symbol);
+            this.generator_:AddEnumDeclaration(enumDeclaration);
             return enumDeclaration;
         end;
         VisitYield = function (this, node, function_) 
@@ -279,7 +280,7 @@ System.namespace("CSharpLua", function (namespace)
 
             local parameters = function_.ParameterList.Parameters;
             wrapFunction.ParameterList.Parameters:AddRange1(parameters);
-            wrapFunction.Body.Statements:AddRange1(function_.Body.Statements);
+            wrapFunction:AddStatements(function_.Body.Statements);
             invokeExpression:AddArgument(wrapFunction);
             if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(node:getReturnType(), 8618 --[[SyntaxKind.GenericName]]) then
                 local genericNameSyntax = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.GenericNameSyntax, nameSyntax);
@@ -293,7 +294,7 @@ System.namespace("CSharpLua", function (namespace)
 
             local returnStatement = CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, invokeExpression);
             function_.Body.Statements:Clear();
-            function_.Body.Statements:Add1(returnStatement);
+            function_:AddStatement(returnStatement);
         end;
         VisitMethodDeclaration = function (this, node) 
             if not CSharpLua.Utility.IsAbstract(node:getModifiers()) then
@@ -316,7 +317,7 @@ System.namespace("CSharpLua", function (namespace)
                             if not hasCaller then
                                 local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, parameter:getDefault():getValue():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                                 local intiStatement = CSharpLua.LuaAst.LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, expression);
-                                function_.Body.Statements:Add1(intiStatement);
+                                function_:AddStatement(intiStatement);
                             end
                         end
                     else
@@ -324,7 +325,7 @@ System.namespace("CSharpLua", function (namespace)
                             local typeName = System.cast(CSharpLua.LuaAst.LuaIdentifierNameSyntax, (System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.ArrayTypeSyntax, parameter:getType())):getElementType():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                             local emptyArray = BuildEmptyArray(this, typeName);
                             local intiStatement = CSharpLua.LuaAst.LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, emptyArray);
-                            function_.Body.Statements:Add1(intiStatement);
+                            function_:AddStatement(intiStatement);
                         end
                     end
                 end
@@ -337,7 +338,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
 
                 local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, node:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                function_.Body.Statements:AddRange1(block.Statements);
+                function_:AddStatements(block.Statements);
                 if function_.HasYield then
                     VisitYield(this, node, function_);
                 end
@@ -482,7 +483,7 @@ System.namespace("CSharpLua", function (namespace)
                             PushFunction(this, functionExpression);
                             local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, accessor:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                             PopFunction(this);
-                            functionExpression.Body.Statements:AddRange1(block.Statements);
+                            functionExpression:AddStatements(block.Statements);
                             local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, node:getIdentifier():getValueText());
                             getCurType(this):AddMethod(name, functionExpression, isPrivate);
                             if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
@@ -505,7 +506,7 @@ System.namespace("CSharpLua", function (namespace)
                         functionExpress:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
                     end
                     local returnStatement = CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, expression);
-                    functionExpress.Body.Statements:Add1(returnStatement);
+                    functionExpress:AddStatement(returnStatement);
                     getCurType(this):AddMethod(name, functionExpress, isPrivate);
                     hasGet = true;
                 end
@@ -545,7 +546,7 @@ System.namespace("CSharpLua", function (namespace)
                         functionExpress:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
                     end
                     functionExpress:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.Value);
-                    functionExpress.Body.Statements:AddRange1(block.Statements);
+                    functionExpress:AddStatements(block.Statements);
                     local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(false, node:getIdentifier():getValueText());
                     getCurType(this):AddMethod(name, functionExpress, isPrivate);
                     if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(accessor, 8899 --[[SyntaxKind.RemoveAccessorDeclaration]]) then
@@ -579,7 +580,7 @@ System.namespace("CSharpLua", function (namespace)
                 PushFunction(this, functionExpression);
                 local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, accessor:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                 PopFunction(this);
-                functionExpression.Body.Statements:AddRange1(block.Statements);
+                functionExpression:AddStatements(block.Statements);
                 local name = CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax(true, "");
                 getCurType(this):AddMethod(name, functionExpression, isPrivate);
                 if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
@@ -612,9 +613,9 @@ System.namespace("CSharpLua", function (namespace)
             this.blocks_:Push(block);
 
             local comments = Linq.Where(node:DescendantTrivia(), function (i) return Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8541 --[[SyntaxKind.SingleLineCommentTrivia]]) or Microsoft.CodeAnalysis.CSharpExtensions.IsKind(i, 8542 --[[SyntaxKind.MultiLineCommentTrivia]]); end);
-            local commentNodes = Linq.Select(comments, function (i) return CSharpLua.BlockCommonNode:new(1, i); end, CSharpLua.BlockCommonNode);
+            local commentNodes = Linq.Select(comments, function (i) return CSharpLua.LuaSyntaxNodeTransfor.BlockCommonNode:new(1, i); end, CSharpLua.LuaSyntaxNodeTransfor.BlockCommonNode);
 
-            local nodes = Linq.ToList(Linq.Select(node:getStatements(), function (i) return CSharpLua.BlockCommonNode:new(2, i); end, CSharpLua.BlockCommonNode));
+            local nodes = Linq.ToList(Linq.Select(node:getStatements(), function (i) return CSharpLua.LuaSyntaxNodeTransfor.BlockCommonNode:new(2, i); end, CSharpLua.LuaSyntaxNodeTransfor.BlockCommonNode));
             local hasComments = false;
             for _, comment in System.each(commentNodes) do
                 local isContains = Linq.Any(nodes, function (i) return i:Contains(comment); end);
@@ -1432,13 +1433,13 @@ System.namespace("CSharpLua", function (namespace)
             elseif typeInfo:getSpecialType() >= 7 --[[SpecialType.System_Boolean]] and typeInfo:getSpecialType() <= 19 --[[SpecialType.System_Double]] then
                 return original;
             elseif typeInfo:getTypeKind() == 5 --[[TypeKind.Enum]] then
-                local symbol = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, expression):getSymbol();
                 if System.is(original, CSharpLua.LuaAst.LuaLiteralExpressionSyntax) then
-                    return CSharpLua.LuaAst.LuaConstLiteralExpression:new(1, symbol:getName(), symbol:ToString());
+                    local symbol = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, expression):getSymbol();
+                    return CSharpLua.LuaAst.LuaConstLiteralExpression:new(1, symbol:getName(), typeInfo:ToString());
                 else
-                    this.generator_:AddExportEnum(symbol:ToString());
+                    this.generator_:AddExportEnum(typeInfo:ToString());
                     local typeName = getXmlMetaProvider(this):GetTypeShortName(typeInfo);
-                    local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName()), CSharpLua.LuaAst.LuaIdentifierNameSyntax.ToEnumString, true);
+                    local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(original, CSharpLua.LuaAst.LuaIdentifierNameSyntax.ToEnumString, true);
                     return CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(2, memberAccess, typeName);
                 end
             elseif typeInfo:getIsValueType() then
@@ -1780,7 +1781,7 @@ System.namespace("CSharpLua", function (namespace)
             return node:getExpression():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode);
         end;
         IsLocalVarExists = function (this, name, root) 
-            local searcher = CSharpLua.LocalVarSearcher(name);
+            local searcher = CSharpLua.LuaSyntaxNodeTransfor.LocalVarSearcher(name);
             return searcher:Find(root);
         end;
         GetNewIdentifierName = function (this, name, index) 
@@ -1870,11 +1871,11 @@ System.namespace("CSharpLua", function (namespace)
             return 0;
         end;
         IsContinueExists = function (this, node) 
-            local searcher = CSharpLua.ContinueSearcher();
+            local searcher = CSharpLua.LuaSyntaxNodeTransfor.ContinueSearcher();
             return searcher:Find(node);
         end;
         IsReturnExists = function (this, node) 
-            local searcher = CSharpLua.ReturnStatementSearcher();
+            local searcher = CSharpLua.LuaSyntaxNodeTransfor.ReturnStatementSearcher();
             return searcher:Find(node);
         end;
         GetCaseLabelIndex = function (this, node) 
@@ -2206,17 +2207,17 @@ System.namespace("CSharpLua", function (namespace)
                         local invocation = CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
                         invocation.ArgumentList.Arguments:AddRange1(argumentList.Arguments);
                         invocation:AddArgument(right);
-                        function_.Body.Statements:Add1(CSharpLua.LuaAst.LuaExpressionStatementSyntax(invocation));
+                        function_:AddStatement1(invocation);
                     else
                         local identifierName = System.cast(CSharpLua.LuaAst.LuaIdentifierNameSyntax, left);
                         local newIdentifier = identifierName.ValueText:Replace(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This.ValueText, temp.ValueText);
                         identifierName = CSharpLua.LuaAst.LuaIdentifierNameSyntax:new(1, newIdentifier);
-                        function_.Body.Statements:Add1(CSharpLua.LuaAst.LuaExpressionStatementSyntax(CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(identifierName, right)));
+                        function_:AddStatement1(CSharpLua.LuaAst.LuaAssignmentExpressionSyntax(identifierName, right));
                     end
                 else
                     local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(temp, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Add, true);
                     local value = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, expression:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                    function_.Body.Statements:Add1(CSharpLua.LuaAst.LuaExpressionStatementSyntax(CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(2, memberAccess, value)));
+                    function_:AddStatement1(CSharpLua.LuaAst.LuaInvocationExpressionSyntax:new(2, memberAccess, value));
                 end
             end
 
@@ -2372,10 +2373,10 @@ System.namespace("CSharpLua", function (namespace)
                 otherCtorInvoke:AddArgument(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
                 local argumentList = System.cast(CSharpLua.LuaAst.LuaArgumentListSyntax, node:getInitializer():getArgumentList():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                 otherCtorInvoke.ArgumentList.Arguments:AddRange1(argumentList.Arguments);
-                function_.Body.Statements:Add1(CSharpLua.LuaAst.LuaExpressionStatementSyntax(otherCtorInvoke));
+                function_:AddStatement1(otherCtorInvoke);
             end
             local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, node:getBody():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-            function_.Body.Statements:AddRange1(block.Statements);
+            function_:AddStatements(block.Statements);
             PopFunction(this);
             if isStatic then
                 getCurType(this):SetStaticCtor(function_);
@@ -2399,12 +2400,12 @@ System.namespace("CSharpLua", function (namespace)
             local resultExpression = function_;
             if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(body, 8792 --[[SyntaxKind.Block]]) then
                 local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, body:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
-                function_.Body.Statements:AddRange1(block.Statements);
+                function_:AddStatements(block.Statements);
             else
                 this.blocks_:Push(function_.Body);
                 local expression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, body:Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
                 this.blocks_:Pop();
-                function_.Body.Statements:Add1(CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, expression));
+                function_:AddStatement(CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, expression));
                 if #function_.Body.Statements == 1 then
                     resultExpression = CSharpLua.LuaAst.LuaSimpleLambdaAdapterExpression(function_);
                 end
@@ -2510,7 +2511,7 @@ System.namespace("CSharpLua", function (namespace)
                         elseClause.Body.Statements:AddRange1(block.Statements);
                         ifStatement.Else = elseClause;
                     else
-                        functionExpress.Body.Statements:AddRange1(block.Statements);
+                        functionExpress:AddStatements(block.Statements);
                     end
                     break;
                 end
@@ -2528,7 +2529,7 @@ System.namespace("CSharpLua", function (namespace)
                     elseClause.Body.Statements:AddRange1(block.Statements);
                     ifStatement.Else = elseClause;
                 end
-                functionExpress.Body.Statements:Add1(ifStatement);
+                functionExpress:AddStatement(ifStatement);
             end
 
             PopFunction(this);
@@ -2568,7 +2569,7 @@ System.namespace("CSharpLua", function (namespace)
             PushFunction(this, functionExpress);
             local finallyBlock = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, node:getBlock():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
             PopFunction(this);
-            functionExpress.Body.Statements:AddRange1(finallyBlock.Statements);
+            functionExpress:AddStatements(finallyBlock.Statements);
             return functionExpress;
         end;
         VisitTryStatement = function (this, node) 
@@ -2578,7 +2579,7 @@ System.namespace("CSharpLua", function (namespace)
             PushFunction(this, tryBlockFunctionExpress);
             local block = System.cast(CSharpLua.LuaAst.LuaBlockSyntax, node:getBlock():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
             PopFunction(this);
-            tryBlockFunctionExpress.Body.Statements:AddRange1(block.Statements);
+            tryBlockFunctionExpress:AddStatements(block.Statements);
             tryInvocationExpression:AddArgument(tryBlockFunctionExpress);
 
             if node:getCatches():getCount() > 0 then
@@ -2696,7 +2697,7 @@ System.namespace("CSharpLua", function (namespace)
             local temp = GetTempIdentifier(this, node:getName());
             local nameExpression = System.cast(CSharpLua.LuaAst.LuaExpressionSyntax, node:getName():Accept(this, CSharpLua.LuaAst.LuaSyntaxNode));
             functionExpression:AddParameter(temp);
-            functionExpression.Body.Statements:Add1(CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, nameExpression));
+            functionExpression:AddStatement(CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, nameExpression));
             PopFunction(this);
             return CSharpLua.LuaAst.LuaSimpleLambdaAdapterExpression(functionExpression);
         end;

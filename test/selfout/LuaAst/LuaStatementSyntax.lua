@@ -15,10 +15,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end);
         local getSemicolonToken, Empty, __staticCtor__;
         getSemicolonToken = function (this) 
-            return CSharpLua.LuaAst.Tokens.Semicolon;
+            return CSharpLua.LuaAst.LuaSyntaxNode.Tokens.Semicolon;
         end;
         __staticCtor__ = function (this) 
-            Empty = CSharpLua.LuaAst.EmptyLuaStatementSyntax();
+            Empty = CSharpLua.LuaAst.LuaStatementSyntax.EmptyLuaStatementSyntax();
             this.Empty = Empty;
         end;
         return {

@@ -70,19 +70,19 @@ namespace CSharpLua {
                         LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
                         invocation.ArgumentList.Arguments.AddRange(argumentList.Arguments);
                         invocation.AddArgument(right);
-                        function.Body.Statements.Add(new LuaExpressionStatementSyntax(invocation));
+                        function.AddStatement(invocation);
                     }
                     else {
                         var identifierName = (LuaIdentifierNameSyntax)left;
                         string newIdentifier = identifierName.ValueText.Replace(LuaIdentifierNameSyntax.This.ValueText, temp.ValueText);
                         identifierName = new LuaIdentifierNameSyntax(newIdentifier);
-                        function.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(identifierName, right)));
+                        function.AddStatement(new LuaAssignmentExpressionSyntax(identifierName, right));
                     }
                 }
                 else {
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(temp, LuaIdentifierNameSyntax.Add, true);
                     var value = (LuaExpressionSyntax)expression.Accept(this);
-                    function.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaInvocationExpressionSyntax(memberAccess, value)));
+                    function.AddStatement(new LuaInvocationExpressionSyntax(memberAccess, value));
                 }
             }
 
@@ -252,10 +252,10 @@ namespace CSharpLua {
                 otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
                 var argumentList = (LuaArgumentListSyntax)node.Initializer.ArgumentList.Accept(this);
                 otherCtorInvoke.ArgumentList.Arguments.AddRange(argumentList.Arguments);
-                function.Body.Statements.Add(new LuaExpressionStatementSyntax(otherCtorInvoke));
+                function.AddStatement(otherCtorInvoke);
             }
             LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
-            function.Body.Statements.AddRange(block.Statements);
+            function.AddStatements(block.Statements);
             PopFunction();
             if(isStatic) {
                 CurType.SetStaticCtor(function);
@@ -282,13 +282,13 @@ namespace CSharpLua {
             LuaExpressionSyntax resultExpression = function;
             if(body.IsKind(SyntaxKind.Block)) {
                 var block = (LuaBlockSyntax)body.Accept(this);
-                function.Body.Statements.AddRange(block.Statements);
+                function.AddStatements(block.Statements);
             }
             else {
                 blocks_.Push(function.Body);
                 var expression = (LuaExpressionSyntax)body.Accept(this);
                 blocks_.Pop();
-                function.Body.Statements.Add(new LuaReturnStatementSyntax(expression));
+                function.AddStatement(new LuaReturnStatementSyntax(expression));
                 if(function.Body.Statements.Count == 1) {
                     resultExpression = new LuaSimpleLambdaAdapterExpression(function);
                 }
@@ -410,7 +410,7 @@ namespace CSharpLua {
                         ifStatement.Else = elseClause;
                     }
                     else {
-                        functionExpress.Body.Statements.AddRange(block.Statements);
+                        functionExpress.AddStatements(block.Statements);
                     }
                     break;
                 }
@@ -428,7 +428,7 @@ namespace CSharpLua {
                     elseClause.Body.Statements.AddRange(block.Statements);
                     ifStatement.Else = elseClause;
                 }
-                functionExpress.Body.Statements.Add(ifStatement);
+                functionExpress.AddStatement(ifStatement);
             }
 
             PopFunction();
@@ -472,7 +472,7 @@ namespace CSharpLua {
             PushFunction(functionExpress);
             var finallyBlock = (LuaBlockSyntax)node.Block.Accept(this);
             PopFunction();
-            functionExpress.Body.Statements.AddRange(finallyBlock.Statements);
+            functionExpress.AddStatements(finallyBlock.Statements);
             return functionExpress;
         }
 
@@ -483,7 +483,7 @@ namespace CSharpLua {
             PushFunction(tryBlockFunctionExpress);
             var block = (LuaBlockSyntax)node.Block.Accept(this);
             PopFunction();
-            tryBlockFunctionExpress.Body.Statements.AddRange(block.Statements);
+            tryBlockFunctionExpress.AddStatements(block.Statements);
             tryInvocationExpression.AddArgument(tryBlockFunctionExpress);
 
             if(node.Catches.Count > 0) {
@@ -605,7 +605,7 @@ namespace CSharpLua {
             var temp = GetTempIdentifier(node.Name);
             var nameExpression = (LuaExpressionSyntax)node.Name.Accept(this);
             functionExpression.AddParameter(temp);
-            functionExpression.Body.Statements.Add(new LuaReturnStatementSyntax(nameExpression));
+            functionExpression.AddStatement(new LuaReturnStatementSyntax(nameExpression));
             PopFunction();
             return new LuaSimpleLambdaAdapterExpression(functionExpression);
         }

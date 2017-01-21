@@ -35,7 +35,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 initFunction = CSharpLua.LuaAst.LuaFunctionExpressionSyntax();
                 initFunction:AddParameter(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This);
             end
-            initFunction.Body.Statements:Add1(CSharpLua.LuaAst.LuaExpressionStatementSyntax(assignment));
+            initFunction:AddStatement1(assignment);
         end;
         AddInitFiled1 = function (this, initFunction, name, value) 
             local memberAccess = CSharpLua.LuaAst.LuaMemberAccessExpressionSyntax(CSharpLua.LuaAst.LuaIdentifierNameSyntax.This, name);
@@ -244,7 +244,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 for _, type in System.each(this.typeIdentifiers_) do
                     wrapFunction:AddParameter(type);
                 end
-                wrapFunction.Body.Statements:AddRange1(this.statements_);
+                wrapFunction:AddStatements(this.statements_);
                 this.statements_:Clear();
                 this.statements_:Add(CSharpLua.LuaAst.LuaReturnStatementSyntax:new(1, wrapFunction));
             end
@@ -321,18 +321,20 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.resultTable_.Items:Add1(statement);
         end;
         Render = function (this, renderer) 
-            if renderer:IsEnumExport(this.FullName) then
+            if this.IsExport then
                 CSharpLua.LuaAst.LuaTypeDeclarationSyntax.Render(this, renderer);
             end
         end;
-        __ctor__ = function (this, fullName, name) 
+        __ctor__ = function (this, fullName, name, compilationUnit) 
             this.FullName = fullName;
+            this.CompilationUnit = compilationUnit;
             this:UpdateIdentifiers(name, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLua.LuaAst.LuaIdentifierNameSyntax.Enum);
         end;
         return {
             __inherits__ = {
                 CSharpLua.LuaAst.LuaTypeDeclarationSyntax
             }, 
+            IsExport = False, 
             Add = Add, 
             Render = Render, 
             __ctor__ = __ctor__

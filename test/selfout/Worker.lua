@@ -55,7 +55,7 @@ System.namespace("CSharpLua", function (namespace)
             end, System.IO.MemoryStream());
 
             local generator = CSharpLua.LuaSyntaxGenerator(getMetas(this), compilation);
-            generator:Generate1(this.folder_, this.output_);
+            generator:Generate(this.folder_, this.output_);
         end;
         __staticCtor__ = function (this) 
             SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll");
