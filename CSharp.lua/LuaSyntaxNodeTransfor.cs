@@ -1443,7 +1443,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitPredefinedType(PredefinedTypeSyntax node) {
             ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
-            return XmlMetaProvider.GetTypeShortName(symbol);
+            return GetTypeShortName(symbol);
         }
 
         private void WriteStatementOrBlock(StatementSyntax statement, LuaBlockSyntax block) {
@@ -1577,7 +1577,7 @@ namespace CSharpLua {
                 }
                 else {
                     generator_.AddExportEnum(typeInfo.ToString());
-                    LuaIdentifierNameSyntax typeName = XmlMetaProvider.GetTypeShortName(typeInfo);
+                    LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToEnumString, true);
                     return new LuaInvocationExpressionSyntax(memberAccess, typeName);
                 }

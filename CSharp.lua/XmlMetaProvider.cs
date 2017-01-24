@@ -354,7 +354,7 @@ namespace CSharpLua {
             }
         }
 
-        public string GetNamespaceMapName(INamespaceSymbol symbol) {
+        private string GetNamespaceMapName(INamespaceSymbol symbol) {
             string name = symbol.ToString();
             return namespaceNameMaps_.GetOrDefault(name, name);
         }

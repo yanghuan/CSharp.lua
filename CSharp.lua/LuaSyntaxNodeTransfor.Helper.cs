@@ -497,5 +497,25 @@ namespace CSharpLua {
             var type = semanticModel_.GetTypeInfo(conditionalWhenTrue).Type;
             return MayBeNull(conditionalWhenTrue, type) || MayBeFalse(conditionalWhenTrue, type);
         }
+
+        private void CheckTypeName(ref LuaIdentifierNameSyntax identifierName, ISymbol symbol) {
+            string name = identifierName.ValueText;
+            int pos = name.LastIndexOf('.');
+            if(pos != -1) {
+                string prefix = name.Substring(0, pos);
+                if(prefix != LuaIdentifierNameSyntax.System.ValueText) {
+                    string newPrefix = prefix.Replace(".", "");
+                    name = newPrefix + name.Substring(pos);
+                    identifierName = new LuaIdentifierNameSyntax(name);
+                    CurCompilationUnit.AddImport(prefix, newPrefix, symbol.IsFromCode());
+                }
+            }
+        }
+
+        private LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {
+            LuaIdentifierNameSyntax identifierName = XmlMetaProvider.GetTypeShortName(symbol);
+            CheckTypeName(ref identifierName, symbol);
+            return identifierName;
+        }
     }
 }

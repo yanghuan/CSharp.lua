@@ -26,11 +26,18 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSharpLua.LuaAst {
     public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
+        public sealed class UsingDeclare {
+            public string Prefix;
+            public string NewPrefix;
+            public bool IsFromCode;
+        }
+
         public string FilePath { get; set; }
         public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
         private LuaStatementListSyntax HeadAreaStatements = new LuaStatementListSyntax();
         private bool isImportLinq_;
         private int typeDeclarationCount_;
+        private List<UsingDeclare> usingDeclares_ = new List<UsingDeclare>();
 
         public LuaCompilationUnitSyntax() {
             var info = Assembly.GetExecutingAssembly().GetName();
@@ -61,18 +68,67 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void AddImport(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
+        private void AddImport(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
             LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(name);
-            variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(value);
+            if(value != null) {
+                variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(value);
+            }
             HeadAreaStatements.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
         }
 
         internal void AddTypeDeclarationCount() {
             ++typeDeclarationCount_;
+        }
+
+        internal void AddImport(string prefix, string newPrefix, bool isFromCode) {
+            if(!usingDeclares_.Exists(i => i.Prefix == prefix)) {
+                usingDeclares_.Add(new UsingDeclare() {
+                    Prefix = prefix,
+                    NewPrefix = newPrefix,
+                    IsFromCode = isFromCode,
+                });
+            }
+        }
+
+        private void CheckUsingDeclares() {
+            var imports = usingDeclares_.Where(i => !i.IsFromCode).ToList();
+            if(imports.Count > 0) {
+                imports.Sort((x, y) => x.Prefix.CompareTo(y.Prefix));
+                foreach(var import in imports) {
+                    AddImport(new LuaIdentifierNameSyntax(import.NewPrefix), new LuaIdentifierNameSyntax(import.Prefix));
+                }
+            }
+
+            var usingDeclares = usingDeclares_.Where(i => i.IsFromCode).ToList();
+            if(usingDeclares.Count > 0) {
+                usingDeclares.Sort((x, y) => x.Prefix.CompareTo(y.Prefix));
+                foreach(var usingDeclare in usingDeclares) {
+                    AddImport(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), null);
+                }
+
+                var global = LuaIdentifierNameSyntax.Global;
+                LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+                functionExpression.AddParameter(global);
+                foreach(var usingDeclare in usingDeclares) {
+                    if(usingDeclare.Prefix != usingDeclare.NewPrefix) {
+                        LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), new LuaIdentifierNameSyntax(usingDeclare.Prefix));
+                        functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+                    }
+                    else {
+                        LuaMemberAccessExpressionSyntax right = new LuaMemberAccessExpressionSyntax(global, new LuaIdentifierNameSyntax(usingDeclare.Prefix));
+                        LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), right);
+                        functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+                    }
+                }
+
+                LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.UsingDeclare, functionExpression);
+                HeadAreaStatements.Statements.Add(new LuaExpressionStatementSyntax(invocationExpression));
+            }
+        }
+
+        internal override void Render(LuaRenderer renderer) {
+            CheckUsingDeclares();
+            renderer.Render(this);
         }
     }
 }

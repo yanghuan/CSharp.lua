@@ -65,6 +65,7 @@ return function (dir)
         "CSharpLua.LuaAst.LuaCodeTemplateExpressionSyntax", 
         "CSharpLua.LuaAst.LuaCodeTemplateParamsExpressionSyntax", 
         "CSharpLua.LuaAst.LuaCompilationUnitSyntax", 
+        "CSharpLua.LuaAst.LuaCompilationUnitSyntax.UsingDeclare", 
         "CSharpLua.LuaAst.LuaConstructorAdapterExpressionSyntax", 
         "CSharpLua.LuaAst.LuaContinueAdapterStatementSyntax", 
         "CSharpLua.LuaAst.LuaElseClauseSyntax", 

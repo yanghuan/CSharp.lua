@@ -447,7 +447,6 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         return {
-            GetNamespaceMapName = GetNamespaceMapName, 
             GetTypeName = GetTypeName, 
             GetTypeShortName = GetTypeShortName, 
             IsPropertyField = IsPropertyField, 
