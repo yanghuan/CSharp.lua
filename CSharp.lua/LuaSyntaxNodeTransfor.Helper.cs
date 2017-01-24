@@ -236,7 +236,7 @@ namespace CSharpLua {
                 }
                 else if(key == "class") {
                     var type = semanticModel_.GetTypeInfo(targetExpression).Type;
-                    var typeName = XmlMetaProvider.GetTypeName(type);
+                    var typeName = GetTypeName(type);
                     AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
                 }
                 else if(key[0] == '^') {
@@ -244,7 +244,7 @@ namespace CSharpLua {
                     if(int.TryParse(key.Substring(1), out typeIndex)) {
                         var typeArgument = typeArguments.GetOrDefault(typeIndex);
                         if(typeArgument != null) {
-                            var typeName = XmlMetaProvider.GetTypeName(typeArgument);
+                            var typeName = GetTypeName(typeArgument);
                             AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
                         }
                     }
@@ -427,7 +427,7 @@ namespace CSharpLua {
         private LuaExpressionSyntax CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node) {
             if(!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
                 if(symbol.ContainingType != GetTypeDeclarationSymbol(node)) {           //using static
-                    var luadTypeExpression = XmlMetaProvider.GetTypeName(symbol.ContainingType);
+                    var luadTypeExpression = GetTypeName(symbol.ContainingType);
                     return luadTypeExpression;
                 }
             }
@@ -498,24 +498,24 @@ namespace CSharpLua {
             return MayBeNull(conditionalWhenTrue, type) || MayBeFalse(conditionalWhenTrue, type);
         }
 
-        private void CheckTypeName(ref LuaIdentifierNameSyntax identifierName, ISymbol symbol) {
-            string name = identifierName.ValueText;
+        internal void ImportTypeName(ref string name, ISymbol symbol) {
             int pos = name.LastIndexOf('.');
             if(pos != -1) {
                 string prefix = name.Substring(0, pos);
                 if(prefix != LuaIdentifierNameSyntax.System.ValueText) {
                     string newPrefix = prefix.Replace(".", "");
                     name = newPrefix + name.Substring(pos);
-                    identifierName = new LuaIdentifierNameSyntax(name);
                     CurCompilationUnit.AddImport(prefix, newPrefix, symbol.IsFromCode());
                 }
             }
         }
 
         private LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {
-            LuaIdentifierNameSyntax identifierName = XmlMetaProvider.GetTypeShortName(symbol);
-            CheckTypeName(ref identifierName, symbol);
-            return identifierName;
+            return XmlMetaProvider.GetTypeShortName(symbol, this);
+        }
+
+        private LuaExpressionSyntax GetTypeName(ISymbol symbol) {
+            return XmlMetaProvider.GetTypeName(symbol, this);
         }
     }
 }

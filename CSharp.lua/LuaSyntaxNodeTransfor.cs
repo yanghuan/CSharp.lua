@@ -967,7 +967,7 @@ namespace CSharpLua {
         }
 
         private LuaInvocationExpressionSyntax BuildExtensionMethodInvocation(IMethodSymbol reducedFrom, LuaExpressionSyntax expression) {
-            LuaExpressionSyntax typeName = XmlMetaProvider.GetTypeName(reducedFrom.ContainingType);
+            LuaExpressionSyntax typeName = GetTypeName(reducedFrom.ContainingType);
             LuaIdentifierNameSyntax methodName = generator_.GetMethodName(reducedFrom);
             LuaMemberAccessExpressionSyntax typeMemberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(typeMemberAccess);
@@ -983,7 +983,7 @@ namespace CSharpLua {
                     --optionalCount;
                 }
                 foreach(var typeArgument in symbol.TypeArguments) {
-                    var typeName = XmlMetaProvider.GetTypeName(typeArgument);
+                    var typeName = GetTypeName(typeArgument);
                     invocation.AddArgument(typeName);
                 }
             }
@@ -1315,7 +1315,7 @@ namespace CSharpLua {
                                 break;
                             }
                         }
-                        return XmlMetaProvider.GetTypeName(symbol);
+                        return GetTypeName(symbol);
                     }
                 case SymbolKind.Namespace: {
                         name = symbol.ToString();

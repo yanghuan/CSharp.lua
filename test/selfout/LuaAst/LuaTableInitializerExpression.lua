@@ -17,11 +17,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render27(this);
         end;
         __ctor__ = function (this) 
-            this.Items = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaTableItemSyntax)();
+            this.Items = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaTableItemSyntax)();
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaExpressionSyntax
+                CSharpLuaLuaAst.LuaExpressionSyntax
             }, 
             getOpenBraceToken = getOpenBraceToken, 
             getCloseBraceToken = getCloseBraceToken, 
@@ -32,7 +32,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaTableItemSyntax", function (namespace) 
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaSyntaxNode
+                CSharpLuaLuaAst.LuaSyntaxNode
             }
         };
     end);
@@ -49,7 +49,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaTableItemSyntax
+                CSharpLuaLuaAst.LuaTableItemSyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -58,7 +58,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaTableKeySyntax", function (namespace) 
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaSyntaxNode
+                CSharpLuaLuaAst.LuaSyntaxNode
             }
         };
     end);
@@ -78,7 +78,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaTableKeySyntax
+                CSharpLuaLuaAst.LuaTableKeySyntax
             }, 
             getOpenBracketToken = getOpenBracketToken, 
             getCloseBracketToken = getCloseBracketToken, 
@@ -96,7 +96,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaTableKeySyntax
+                CSharpLuaLuaAst.LuaTableKeySyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -116,7 +116,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaTableItemSyntax
+                CSharpLuaLuaAst.LuaTableItemSyntax
             }, 
             getOperatorToken = getOperatorToken, 
             Render = Render, 
@@ -146,7 +146,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaExpressionSyntax
+                CSharpLuaLuaAst.LuaExpressionSyntax
             }, 
             getOpenBracketToken = getOpenBracketToken, 
             getCloseBracketToken = getCloseBracketToken, 

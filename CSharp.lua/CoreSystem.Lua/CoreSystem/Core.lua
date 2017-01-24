@@ -300,13 +300,29 @@ function System.getTimeZone()
     return os.difftime(now, os.time(os.date("!*t", now)))
 end
 
-function System.using(f, ...)
+function System.using(t, f)
+    local ok, status, ret = pcall(f, t)
+    if t ~= nil then
+        local dispose = t.Dispose
+        if dispose ~= nil and dispose ~= emptyFn then
+            dispose(t)
+        end
+    end
+    if not ok then
+        throw(status)
+    end
+    return status, ret
+end
+
+function System.usingX(f, ...)
     local ok, status, ret = pcall(f, ...)
     for i = 1, select("#", ...) do
         local t = select(i, ...)
-        local dispose = t.Dispose
-        if dispose ~= nil and dispose ~= emptyFn then
-            t:Dispose()
+        if t ~= nil then
+            local dispose = t.Dispose
+            if dispose ~= nil and dispose ~= emptyFn then
+                dispose(t)
+            end
         end
     end
     if not ok then

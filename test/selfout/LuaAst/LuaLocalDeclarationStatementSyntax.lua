@@ -14,11 +14,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render20(this);
         end;
         __ctor__ = function (this) 
-            this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaIdentifierNameSyntax)();
+            this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaIdentifierNameSyntax)();
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaVariableDeclarationSyntax
+                CSharpLuaLuaAst.LuaVariableDeclarationSyntax
             }, 
             getLocalKeyword = getLocalKeyword, 
             Render = Render, 
@@ -34,11 +34,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render21(this);
         end;
         __ctor__ = function (this) 
-            this.Values = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaExpressionSyntax)();
+            this.Values = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)();
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaSyntaxNode
+                CSharpLuaLuaAst.LuaSyntaxNode
             }, 
             getEqualsToken = getEqualsToken, 
             Render = Render, 
@@ -55,7 +55,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaStatementSyntax
+                CSharpLuaLuaAst.LuaStatementSyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -64,7 +64,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaVariableDeclarationSyntax", function (namespace) 
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaStatementSyntax
+                CSharpLuaLuaAst.LuaStatementSyntax
             }
         };
     end);
@@ -74,11 +74,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render35(this);
         end;
         __ctor__ = function (this) 
-            this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaVariableDeclaratorSyntax)();
+            this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaVariableDeclaratorSyntax)();
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaVariableDeclarationSyntax
+                CSharpLuaLuaAst.LuaVariableDeclarationSyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -97,7 +97,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaStatementSyntax
+                CSharpLuaLuaAst.LuaStatementSyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -119,7 +119,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaStatementSyntax
+                CSharpLuaLuaAst.LuaStatementSyntax
             }, 
             getLocalKeyword = getLocalKeyword, 
             Render = Render, 
@@ -142,7 +142,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaSyntaxNode
+                CSharpLuaLuaAst.LuaSyntaxNode
             }, 
             getEqualsToken = getEqualsToken, 
             Render = Render, 
@@ -158,11 +158,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render38(this);
         end;
         __ctor__ = function (this) 
-            this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaIdentifierNameSyntax)();
+            this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaIdentifierNameSyntax)();
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaStatementSyntax
+                CSharpLuaLuaAst.LuaStatementSyntax
             }, 
             getLocalKeyword = getLocalKeyword, 
             Render = Render, 

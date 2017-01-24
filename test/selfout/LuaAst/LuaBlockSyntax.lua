@@ -11,11 +11,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render13(this);
         end;
         __ctor__ = function (this) 
-            this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLua.LuaAst.LuaStatementSyntax)();
+            this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)();
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaStatementSyntax
+                CSharpLuaLuaAst.LuaStatementSyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -32,7 +32,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         return {
             __inherits__ = {
-                CSharpLua.LuaAst.LuaBlockSyntax
+                CSharpLuaLuaAst.LuaBlockSyntax
             }, 
             Render = Render, 
             __ctor__ = __ctor__
