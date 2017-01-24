@@ -1308,6 +1308,13 @@ namespace CSharpLua {
                         break;
                     }
                 case SymbolKind.NamedType: {
+                        if(node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+                            var parent = (MemberAccessExpressionSyntax)node.Parent;
+                            if(parent.Name == node) {
+                                name = symbol.Name;
+                                break;
+                            }
+                        }
                         return XmlMetaProvider.GetTypeName(symbol);
                     }
                 case SymbolKind.Namespace: {

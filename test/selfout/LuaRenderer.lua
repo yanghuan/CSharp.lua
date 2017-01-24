@@ -218,7 +218,7 @@ System.namespace("CSharpLua", function (namespace)
                 if isFirst then
                     isFirst = false;
                 else
-                    Write1(this, CSharpLua.LuaAst.LuaSyntaxNode.CSharpLua.LuaAst.LuaSyntaxNode.Tokens.Semicolon);
+                    Write1(this, CSharpLua.LuaAst.LuaSyntaxNode.Tokens.Semicolon);
                     WriteSpace(this);
                 end
                 assignment:Render(this);

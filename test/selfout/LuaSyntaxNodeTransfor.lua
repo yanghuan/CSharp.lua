@@ -1199,6 +1199,13 @@ System.namespace("CSharpLua", function (namespace)
                     end
                 elseif default == 11 --[[SymbolKind.NamedType]] then
                     do
+                        if Microsoft.CodeAnalysis.CSharpExtensions.IsKind(node:getParent(), 8689 --[[SyntaxKind.SimpleMemberAccessExpression]]) then
+                            local parent = System.cast(Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax, node:getParent());
+                            if parent:getName() == node then
+                                name = symbol:getName();
+                                break;
+                            end
+                        end
                         return getXmlMetaProvider(this):GetTypeName(symbol);
                     end
                 elseif default == 12 --[[SymbolKind.Namespace]] then
