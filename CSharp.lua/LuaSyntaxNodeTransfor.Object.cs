@@ -94,7 +94,7 @@ namespace CSharpLua {
             Contract.Assert(node.IsKind(SyntaxKind.ArrayInitializerExpression));
             var symbol = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
             if(node.Expressions.Count > 0) {
-                LuaExpressionSyntax arrayType = GetTypeName(symbol);
+                LuaExpressionSyntax arrayType = GetTypeName(symbol, node);
                 LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayType);
                 foreach(var expression in node.Expressions) {
                     var element = (LuaExpressionSyntax)expression.Accept(this);
@@ -103,7 +103,7 @@ namespace CSharpLua {
                 return invocation;
             }
             else {
-                LuaExpressionSyntax baseType = GetTypeName(symbol.ElementType);
+                LuaExpressionSyntax baseType = GetTypeName(symbol.ElementType, node);
                 return BuildEmptyArray(baseType);
             }
         }
@@ -123,7 +123,7 @@ namespace CSharpLua {
                 return GetMethodNameExpression((IMethodSymbol)symbol, node);
             }
             else {
-                LuaIdentifierNameSyntax name = GetTypeShortName(symbol);
+                LuaIdentifierNameSyntax name = GetTypeShortName(symbol, node);
                 return new LuaInvocationExpressionSyntax(name, node.TypeArgumentList.Arguments.Select(i => (LuaExpressionSyntax)i.Accept(this)));
             }
         }
@@ -218,7 +218,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitImplicitArrayCreationExpression(ImplicitArrayCreationExpressionSyntax node) {
             var symbol = semanticModel_.GetTypeInfo(node.Initializer.Expressions.First()).Type;
-            LuaExpressionSyntax elementTypeExpression = GetTypeName(symbol);
+            LuaExpressionSyntax elementTypeExpression = GetTypeName(symbol, node);
             LuaInvocationExpressionSyntax arrayTypeExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExpression);
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayTypeExpression);
             foreach(var expression in node.Initializer.Expressions) {
@@ -247,7 +247,7 @@ namespace CSharpLua {
                     function.IsInvokeThisCtor = true;
                 }
                 else {
-                    var typeName = GetTypeName(symbol.ReceiverType);
+                    var typeName = GetTypeName(symbol.ReceiverType, node);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
                     if(ctroCounter > 0) {
                         otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter)));

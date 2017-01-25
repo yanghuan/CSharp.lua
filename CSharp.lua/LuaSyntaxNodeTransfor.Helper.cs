@@ -72,7 +72,7 @@ namespace CSharpLua {
             }
         }
 
-        private bool IsLocalVarExists(string name, MethodDeclarationSyntax root) {
+        private bool IsLocalVarExists(string name, BaseMethodDeclarationSyntax root) {
             LocalVarSearcher searcher = new LocalVarSearcher(name);
             return searcher.Find(root);
         }
@@ -88,6 +88,17 @@ namespace CSharpLua {
                 default:
                     return name + (index - 2);
             }
+        }
+
+        private SyntaxNode FindFromCur(SyntaxNode node, Func<SyntaxNode, bool> macth) {
+            var cur = node;
+            while(cur != null) {
+                if(macth(cur)) {
+                    return cur;
+                }
+                cur = cur.Parent;
+            }
+            return null;
         }
 
         private SyntaxNode FindParent(SyntaxNode node, Func<SyntaxNode, bool> macth) {
@@ -236,7 +247,7 @@ namespace CSharpLua {
                 }
                 else if(key == "class") {
                     var type = semanticModel_.GetTypeInfo(targetExpression).Type;
-                    var typeName = GetTypeName(type);
+                    var typeName = GetTypeName(type, targetExpression);
                     AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
                 }
                 else if(key[0] == '^') {
@@ -244,7 +255,7 @@ namespace CSharpLua {
                     if(int.TryParse(key.Substring(1), out typeIndex)) {
                         var typeArgument = typeArguments.GetOrDefault(typeIndex);
                         if(typeArgument != null) {
-                            var typeName = GetTypeName(typeArgument);
+                            var typeName = GetTypeName(typeArgument, targetExpression);
                             AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
                         }
                     }
@@ -427,7 +438,7 @@ namespace CSharpLua {
         private LuaExpressionSyntax CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node) {
             if(!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
                 if(symbol.ContainingType != GetTypeDeclarationSymbol(node)) {           //using static
-                    var luadTypeExpression = GetTypeName(symbol.ContainingType);
+                    var luadTypeExpression = GetTypeName(symbol.ContainingType, node);
                     return luadTypeExpression;
                 }
             }
@@ -498,24 +509,32 @@ namespace CSharpLua {
             return MayBeNull(conditionalWhenTrue, type) || MayBeFalse(conditionalWhenTrue, type);
         }
 
-        internal void ImportTypeName(ref string name, ISymbol symbol) {
+        internal void ImportTypeName(ref string name, ISymbol symbol, SyntaxNode node = null) {
             int pos = name.LastIndexOf('.');
             if(pos != -1) {
                 string prefix = name.Substring(0, pos);
                 if(prefix != LuaIdentifierNameSyntax.System.ValueText) {
                     string newPrefix = prefix.Replace(".", "");
+                    if(node != null) {
+                        var root = (BaseMethodDeclarationSyntax)FindFromCur(node, i => i is BaseMethodDeclarationSyntax);
+                        if(root != null) {
+                            if(IsLocalVarExists(newPrefix, root)) {
+                                return;
+                            }
+                        }
+                    }
                     name = newPrefix + name.Substring(pos);
                     CurCompilationUnit.AddImport(prefix, newPrefix, symbol.IsFromCode());
                 }
             }
         }
 
-        private LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {
-            return XmlMetaProvider.GetTypeShortName(symbol, this);
+        private LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, SyntaxNode node = null) {
+            return XmlMetaProvider.GetTypeShortName(symbol, this, node);
         }
 
-        private LuaExpressionSyntax GetTypeName(ISymbol symbol) {
-            return XmlMetaProvider.GetTypeName(symbol, this);
+        private LuaExpressionSyntax GetTypeName(ISymbol symbol, SyntaxNode node = null) {
+            return XmlMetaProvider.GetTypeName(symbol, this, node);
         }
     }
 }

@@ -351,7 +351,7 @@ System.namespace("CSharpLua", function (namespace)
             end
             return fullName;
         end;
-        GetTypeShortName = function (this, symbol, transfor) 
+        GetTypeShortName = function (this, symbol, transfor, node) 
             local name = GetTypeShortString(this, symbol);
             if MayHaveCodeMeta(this, symbol) then
                 local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, name, nil, System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo);
@@ -363,7 +363,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end
             if transfor ~= nil then
-                name = transfor:ImportTypeName(name, symbol);
+                name = transfor:ImportTypeName(name, symbol, node);
             end
             return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name);
         end;

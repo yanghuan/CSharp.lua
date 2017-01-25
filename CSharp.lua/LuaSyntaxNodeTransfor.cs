@@ -986,7 +986,7 @@ namespace CSharpLua {
                         invocation.AddArgument(memberAccess.Expression);
                     }
                     else {
-                        invocation = BuildExtensionMethodInvocation(symbol.ReducedFrom, memberAccess.Expression);
+                        invocation = BuildExtensionMethodInvocation(symbol.ReducedFrom, memberAccess.Expression, node);
                     }
                 }
                 else {
@@ -1004,8 +1004,8 @@ namespace CSharpLua {
             return invocation;
         }
 
-        private LuaInvocationExpressionSyntax BuildExtensionMethodInvocation(IMethodSymbol reducedFrom, LuaExpressionSyntax expression) {
-            LuaExpressionSyntax typeName = GetTypeName(reducedFrom.ContainingType);
+        private LuaInvocationExpressionSyntax BuildExtensionMethodInvocation(IMethodSymbol reducedFrom, LuaExpressionSyntax expression, InvocationExpressionSyntax node) {
+            LuaExpressionSyntax typeName = GetTypeName(reducedFrom.ContainingType, node);
             LuaIdentifierNameSyntax methodName = generator_.GetMethodName(reducedFrom);
             LuaMemberAccessExpressionSyntax typeMemberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(typeMemberAccess);
@@ -1021,7 +1021,7 @@ namespace CSharpLua {
                     --optionalCount;
                 }
                 foreach(var typeArgument in symbol.TypeArguments) {
-                    var typeName = GetTypeName(typeArgument);
+                    var typeName = GetTypeName(typeArgument, node);
                     invocation.AddArgument(typeName);
                 }
             }
@@ -1353,7 +1353,7 @@ namespace CSharpLua {
                                 break;
                             }
                         }
-                        return GetTypeName(symbol);
+                        return GetTypeName(symbol, node);
                     }
                 case SymbolKind.Namespace: {
                         name = symbol.ToString();
@@ -1615,7 +1615,7 @@ namespace CSharpLua {
                 }
                 else {
                     generator_.AddExportEnum(typeInfo.ToString());
-                    LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo);
+                    LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo, expression);
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToEnumString, true);
                     return new LuaInvocationExpressionSyntax(memberAccess, typeName);
                 }
