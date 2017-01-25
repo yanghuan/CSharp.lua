@@ -31,7 +31,6 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed class Worker {
-        private static Encoding Encoding => Encoding.UTF8;
         private static readonly string[] SystemDlls = new string[] {
             "mscorlib.dll",
             "System.dll",

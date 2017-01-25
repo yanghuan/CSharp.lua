@@ -65,7 +65,7 @@ namespace CSharpLua {
         }
 
         private const string kLuaSuffix = ".lua";
-        private static Encoding Encoding => Encoding.UTF8;
+        private static readonly Encoding Encoding = new UTF8Encoding(false);
 
         private CSharpCompilation compilation_;
         public XmlMetaProvider XmlMetaProvider { get; }
@@ -95,15 +95,19 @@ namespace CSharpLua {
             return luaCompilationUnits.Where(i => !i.IsEmpty);
         }
 
+        private void Write(LuaCompilationUnitSyntax luaCompilationUnit, string outFile) {
+            using(var writer = new StreamWriter(outFile, false, Encoding)) {
+                LuaRenderer rener = new LuaRenderer(this, writer);
+                luaCompilationUnit.Render(rener);
+            }
+        }
+
         public void Generate(string baseFolder, string outFolder) {
             List<string> modules = new List<string>();
             foreach(var luaCompilationUnit in Create()) {
                 string module;
                 string outFile = GetOutFilePath(luaCompilationUnit.FilePath, baseFolder, outFolder, out module);
-                using(var writer = new StreamWriter(outFile, false, Encoding)) {
-                    LuaRenderer rener = new LuaRenderer(this, writer);
-                    luaCompilationUnit.Render(rener);
-                }
+                Write(luaCompilationUnit, outFile);
                 modules.Add(module);
             }
             ExportManifestFile(modules, outFolder);
@@ -271,10 +275,7 @@ namespace CSharpLua {
                     luaCompilationUnit.Statements.Add(new LuaReturnStatementSyntax(functionExpression));
 
                     string outFile = Path.Combine(outFolder, kManifestFile);
-                    using(var writer = new StreamWriter(outFile, false, Encoding)) {
-                        LuaRenderer rener = new LuaRenderer(this, writer);
-                        luaCompilationUnit.Render(rener);
-                    }
+                    Write(luaCompilationUnit, outFile);
                 }
             }
         }
