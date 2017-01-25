@@ -47,7 +47,7 @@ namespace CSharpLua {
                 return invocationExpression;
             }
             else {
-                var functionExpression = (LuaFunctionExpressionSyntax)node.Initializer.Accept(this);
+                var functionExpression = BuildObjectInitializerExpression(node.Initializer);
                 return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocationExpression, functionExpression);
             }
         }
@@ -91,24 +91,20 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
-            if(!node.IsKind(SyntaxKind.ArrayInitializerExpression)) {
-                return BuildObjectInitializerExpression(node);
+            Contract.Assert(node.IsKind(SyntaxKind.ArrayInitializerExpression));
+            var symbol = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
+            if(node.Expressions.Count > 0) {
+                LuaExpressionSyntax arrayType = GetTypeName(symbol);
+                LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayType);
+                foreach(var expression in node.Expressions) {
+                    var element = (LuaExpressionSyntax)expression.Accept(this);
+                    invocation.AddArgument(element);
+                }
+                return invocation;
             }
             else {
-                var symbol = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
-                if(node.Expressions.Count > 0) {
-                    LuaExpressionSyntax arrayType = GetTypeName(symbol);
-                    LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayType);
-                    foreach(var expression in node.Expressions) {
-                        var element = (LuaExpressionSyntax)expression.Accept(this);
-                        invocation.AddArgument(element);
-                    }
-                    return invocation;
-                }
-                else {
-                    LuaExpressionSyntax baseType = GetTypeName(symbol.ElementType);
-                    return BuildEmptyArray(baseType);
-                }
+                LuaExpressionSyntax baseType = GetTypeName(symbol.ElementType);
+                return BuildEmptyArray(baseType);
             }
         }
 
@@ -218,6 +214,18 @@ namespace CSharpLua {
                     return new LuaInvocationExpressionSyntax(arrayType, rankSpecifier);
                 }
             }
+        }
+
+        public override LuaSyntaxNode VisitImplicitArrayCreationExpression(ImplicitArrayCreationExpressionSyntax node) {
+            var symbol = semanticModel_.GetTypeInfo(node.Initializer.Expressions.First()).Type;
+            LuaExpressionSyntax elementTypeExpression = GetTypeName(symbol);
+            LuaInvocationExpressionSyntax arrayTypeExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExpression);
+            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayTypeExpression);
+            foreach(var expression in node.Initializer.Expressions) {
+                var element = (LuaExpressionSyntax)expression.Accept(this);
+                invocation.AddArgument(element);
+            }
+            return invocation;
         }
 
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
