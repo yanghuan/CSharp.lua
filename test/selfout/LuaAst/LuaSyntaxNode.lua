@@ -93,6 +93,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 default:Add("__inherits__");
                 default:Add("__interfaces__");
                 default:Add("__default__");
+                default:Add("__recursion__");
             end);
             this.ReservedWords, this.SpecialReservedWords = ReservedWords, SpecialReservedWords;
         end;
@@ -103,7 +104,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __staticCtor__ = __staticCtor__
         };
     end);
-    namespace.class("LuaSyntaxList", function (namespace) 
+    namespace.class("LuaSyntaxList_1", function (namespace) 
         return function (T) 
             local Add1, AddRange1;
             Add1 = function (this, node) 

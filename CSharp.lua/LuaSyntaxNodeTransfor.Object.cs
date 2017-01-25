@@ -293,10 +293,18 @@ namespace CSharpLua {
                 function.AddStatements(block.Statements);
             }
             else {
+                var type = (INamedTypeSymbol)semanticModel_.GetTypeInfo(body.Parent).ConvertedType;
+                var delegateInvokeMethod = type.DelegateInvokeMethod;
+
                 blocks_.Push(function.Body);
                 var expression = (LuaExpressionSyntax)body.Accept(this);
                 blocks_.Pop();
-                function.AddStatement(new LuaReturnStatementSyntax(expression));
+                if(delegateInvokeMethod.ReturnsVoid) {
+                    function.AddStatement(expression);
+                }
+                else {
+                    function.AddStatement(new LuaReturnStatementSyntax(expression));
+                }
                 if(function.Body.Statements.Count == 1) {
                     resultExpression = new LuaSimpleLambdaAdapterExpression(function);
                 }

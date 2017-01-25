@@ -146,7 +146,33 @@ namespace CSharpLua {
             }
         }
 
-        private void BuildTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
+        private void CheckBaseTypeGenericKind(ref BaseTypeGenericKind kind, INamedTypeSymbol typeSymbol, BaseTypeSyntax baseType) {
+            if(kind != BaseTypeGenericKind.ExtendSelf) {
+                if(baseType.IsKind(SyntaxKind.SimpleBaseType)) {
+                    var baseNode = (SimpleBaseTypeSyntax)baseType;
+                    if(baseNode.Type.IsKind(SyntaxKind.GenericName)) {
+                        var baseGenericNameNode = (GenericNameSyntax)baseNode.Type;
+                        var baseTypeSymbol = (INamedTypeSymbol)semanticModel_.GetTypeInfo(baseGenericNameNode).Type;
+                        foreach(var baseTypeArgument in baseTypeSymbol.TypeArguments) {
+                            if(baseTypeSymbol.Kind != SymbolKind.TypeParameter) {
+                                if(baseTypeArgument.Equals(typeSymbol)) {
+                                    if(kind == BaseTypeGenericKind.None) {
+                                        kind = BaseTypeGenericKind.HasSelf;
+                                    }
+                                }
+                                else if(typeSymbol.IsAssignableFrom(baseTypeArgument)) {
+                                    if(kind != BaseTypeGenericKind.ExtendSelf) {
+                                        kind = BaseTypeGenericKind.ExtendSelf;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
             typeDeclarations_.Push(typeDeclaration);
             if(node.TypeParameterList != null) {
                 foreach(var typeParameter in node.TypeParameterList.Parameters) {
@@ -155,12 +181,14 @@ namespace CSharpLua {
                 }
             }
             if(node.BaseList != null) {
+                BaseTypeGenericKind baseTypeGenericKind = BaseTypeGenericKind.None;
                 List<LuaExpressionSyntax> baseTypes = new List<LuaExpressionSyntax>();
                 foreach(var baseType in node.BaseList.Types) {
                     var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
                     baseTypes.Add(baseTypeName);
+                    CheckBaseTypeGenericKind(ref baseTypeGenericKind, typeSymbol, baseType);
                 }
-                typeDeclaration.AddBaseTypes(baseTypes);
+                typeDeclaration.AddBaseTypes(baseTypes, baseTypeGenericKind);
             }
             BuildTypeMembers(typeDeclaration, node);
             typeDeclarations_.Pop();
@@ -175,11 +203,11 @@ namespace CSharpLua {
                     typeDeclaration.IsPartialMark = true;
                 }
                 else {
-                    BuildTypeDeclaration(node, typeDeclaration);
+                    BuildTypeDeclaration(typeSymbol, node, typeDeclaration);
                 }
             }
             else {
-                BuildTypeDeclaration(node, typeDeclaration);
+                BuildTypeDeclaration(typeSymbol, node, typeDeclaration);
             }
             generator_.AddTypeSymbol(typeSymbol);
         }
@@ -209,13 +237,15 @@ namespace CSharpLua {
                     }
                 }
 
+                BaseTypeGenericKind baseTypeGenericKind = BaseTypeGenericKind.None;
                 List<LuaExpressionSyntax> baseTypeExpressions = new List<LuaExpressionSyntax>();
                 foreach(var baseType in baseTypes) {
                     semanticModel_ = generator_.GetSemanticModel(baseType.SyntaxTree);
                     var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
                     baseTypeExpressions.Add(baseTypeName);
+                    CheckBaseTypeGenericKind(ref baseTypeGenericKind, major.Symbol, baseType);
                 }
-                major.LuaNode.AddBaseTypes(baseTypeExpressions);
+                major.LuaNode.AddBaseTypes(baseTypeExpressions, BaseTypeGenericKind.None);
             }
 
             foreach(var typeDeclaration in typeDeclarations) {
@@ -227,22 +257,30 @@ namespace CSharpLua {
             compilationUnits_.Pop();
         }
 
+        private LuaIdentifierNameSyntax GetTypeDeclarationName(TypeDeclarationSyntax typeDeclaration) {
+            string name = typeDeclaration.Identifier.ValueText;
+            if(typeDeclaration.TypeParameterList != null) {
+                name += "_" + typeDeclaration.TypeParameterList.Parameters.Count;
+            }
+            return new LuaIdentifierNameSyntax(name);
+        }
+
         public override LuaSyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
-            LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
             LuaClassDeclarationSyntax classDeclaration = new LuaClassDeclarationSyntax(name);
             VisitTypeDeclaration(node, classDeclaration);
             return classDeclaration;
         }
 
         public override LuaSyntaxNode VisitStructDeclaration(StructDeclarationSyntax node) {
-            LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
             LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
             VisitTypeDeclaration(node, structDeclaration);
             return structDeclaration;
         }
 
         public override LuaSyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node) {
-            LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+            LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
             LuaInterfaceDeclarationSyntax interfaceDeclaration = new LuaInterfaceDeclarationSyntax(name);
             VisitTypeDeclaration(node, interfaceDeclaration);
             return interfaceDeclaration;

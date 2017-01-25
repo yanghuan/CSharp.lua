@@ -121,11 +121,17 @@ System.namespace("CSharpLua", function (namespace)
             WriteSpace(this);
             function_.ParameterList:Render(this);
             WriteSpace(this);
-            local returnStatement = System.cast(CSharpLuaLuaAst.LuaReturnStatementSyntax, CSharpLua.Utility.First(function_.Body.Statements, CSharpLuaLuaAst.LuaStatementSyntax));
-            Write(this, returnStatement:getReturnKeyword());
-            WriteSpace(this);
-            returnStatement.Expression:Render(this);
-            Write1(this, returnStatement:getSemicolonToken());
+            local statement = CSharpLua.Utility.First(function_.Body.Statements, CSharpLuaLuaAst.LuaStatementSyntax);
+            local returnStatement = System.as(statement, CSharpLuaLuaAst.LuaReturnStatementSyntax);
+            if returnStatement ~= nil then
+                Write(this, returnStatement:getReturnKeyword());
+                WriteSpace(this);
+                returnStatement.Expression:Render(this);
+            else
+                local expressionStatement = System.cast(CSharpLuaLuaAst.LuaExpressionStatementSyntax, statement);
+                expressionStatement.Expression:Render(this);
+            end
+            Write1(this, statement:getSemicolonToken());
             WriteSpace(this);
             Write(this, node:getEndToken());
         end;

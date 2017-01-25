@@ -193,6 +193,25 @@ namespace CSharpLua {
             return true;
         }
 
+        private void AddBaseTypeTo(HashSet<INamedTypeSymbol> parentTypes, INamedTypeSymbol rootType, INamedTypeSymbol baseType) {
+            if(baseType.IsFromCode()) {
+                if(baseType.IsGenericType) {
+                    parentTypes.Add(baseType.OriginalDefinition);
+                    foreach(var typeArgument in baseType.TypeArguments) {
+                        if(typeArgument.Kind != SymbolKind.TypeParameter) {
+                            if(!rootType.IsAssignableFrom(typeArgument)) {
+                                INamedTypeSymbol typeArgumentType = (INamedTypeSymbol)typeArgument;
+                                AddBaseTypeTo(parentTypes, rootType, typeArgumentType);
+                            }
+                        }
+                    }
+                }
+                else {
+                    parentTypes.Add(baseType);
+                }
+            }
+        }
+
         private List<INamedTypeSymbol> GetExportTypes() {
             List<INamedTypeSymbol> allTypes = new List<INamedTypeSymbol>();
             if(types_.Count > 0) {
@@ -206,14 +225,11 @@ namespace CSharpLua {
                     var lastTypes = typesList.Last();
                     foreach(var type in lastTypes) {
                         if(type.BaseType != null) {
-                            if(type.BaseType.IsFromCode()) {
-                                parentTypes.Add(type.BaseType);
-                            }
+                            AddBaseTypeTo(parentTypes, type, type.BaseType);
                         }
+
                         foreach(var interfaceType in type.Interfaces) {
-                            if(interfaceType.IsFromCode()) {
-                                parentTypes.Add(interfaceType);
-                            }
+                            AddBaseTypeTo(parentTypes, type, interfaceType);
                         }
                     }
 

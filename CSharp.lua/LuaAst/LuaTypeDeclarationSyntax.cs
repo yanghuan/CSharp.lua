@@ -23,6 +23,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
+    public enum BaseTypeGenericKind {
+        None,
+        HasSelf,
+        ExtendSelf,
+    }
+
     public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
         private LuaTypeLocalAreaSyntax local_ = new LuaTypeLocalAreaSyntax();
         private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
@@ -140,13 +146,13 @@ namespace CSharpLua.LuaAst {
             string getToken, setToken;
             LuaIdentifierNameSyntax initMethodIdentifier;
             if(isProperty) {
-                getToken = LuaSyntaxNode.Tokens.Get;
-                setToken = LuaSyntaxNode.Tokens.Set;
+                getToken = Tokens.Get;
+                setToken = Tokens.Set;
                 initMethodIdentifier = LuaIdentifierNameSyntax.Property;
             }
             else {
-                getToken = LuaSyntaxNode.Tokens.Add;
-                setToken = LuaSyntaxNode.Tokens.Remove;
+                getToken = Tokens.Add;
+                setToken = Tokens.Remove;
                 initMethodIdentifier = LuaIdentifierNameSyntax.Event;
             }
 
@@ -285,10 +291,20 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes) {
+        internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, BaseTypeGenericKind kind) {
             LuaTableInitializerExpression table = new LuaTableInitializerExpression();
             table.Items.AddRange(baseTypes.Select(i => new LuaSingleTableItemSyntax(i)));
-            AddResultTable(LuaIdentifierNameSyntax.Inherits, table);
+            if(kind == BaseTypeGenericKind.None) {
+                AddResultTable(LuaIdentifierNameSyntax.Inherits, table);
+            }
+            else {
+                LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+                functionExpression.AddStatement(new LuaReturnStatementSyntax(table));
+                AddResultTable(LuaIdentifierNameSyntax.Inherits, functionExpression);
+                if(kind == BaseTypeGenericKind.ExtendSelf) {
+                    AddResultTable(LuaIdentifierNameSyntax.InheritRecursion, LuaIdentifierNameSyntax.True);
+                }
+            }
         }
 
         internal override void Render(LuaRenderer renderer) {

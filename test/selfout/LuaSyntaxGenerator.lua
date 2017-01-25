@@ -22,9 +22,11 @@ System.namespace("CSharpLua", function (namespace)
             return #this.CompilationUnit.FilePath:CompareTo(#other.CompilationUnit.FilePath);
         end;
         return {
-            __inherits__ = {
-                System.IComparable_1(CSharpLua.PartialTypeDeclaration)
-            }, 
+            __inherits__ = function () 
+                return {
+                    System.IComparable_1(CSharpLua.PartialTypeDeclaration)
+                };
+            end, 
             CompareTo = CompareTo
         };
     end);
@@ -55,11 +57,11 @@ System.namespace("CSharpLua", function (namespace)
             };
         end);
         local Encoding, Create, Write, Generate, GetOutFilePath, IsEnumExport, AddExportEnum, AddEnumDeclaration, 
-        CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, GetMethodName, IsTypeEnable, GetExportTypes, 
-        ExportManifestFile, AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberMethodName, InternalGetMemberMethodName, GetExtensionMethodName, GetStaticClassMethodName, 
-        GetMethodNameFromIndex, TryAddNewUsedName, GetSameNameMembers, MethodSymbolToString, MemberSymbolToString, GetSymbolWright, MemberSymbolCommonComparison, MemberSymbolBoolComparison, 
-        MemberSymbolComparison, FillSameNameMembers, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, 
-        GetRefactorName, IsTypeNameUsed, CheckNewNameEnable, __staticCtor__, __init__, __ctor__;
+        CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, GetMethodName, IsTypeEnable, AddBaseTypeTo, 
+        GetExportTypes, ExportManifestFile, AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberMethodName, InternalGetMemberMethodName, GetExtensionMethodName, 
+        GetStaticClassMethodName, GetMethodNameFromIndex, TryAddNewUsedName, GetSameNameMembers, MethodSymbolToString, MemberSymbolToString, GetSymbolWright, MemberSymbolCommonComparison, 
+        MemberSymbolBoolComparison, MemberSymbolComparison, FillSameNameMembers, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, 
+        UpdateName, GetRefactorName, IsTypeNameUsed, CheckNewNameEnable, __staticCtor__, __init__, __ctor__;
         Create = function (this) 
             local luaCompilationUnits = System.List(CSharpLuaLuaAst.LuaCompilationUnitSyntax)();
             for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
@@ -161,6 +163,23 @@ System.namespace("CSharpLua", function (namespace)
             end
             return true;
         end;
+        AddBaseTypeTo = function (this, parentTypes, rootType, baseType) 
+            if CSharpLua.Utility.IsFromCode(baseType) then
+                if baseType:getIsGenericType() then
+                    parentTypes:Add(baseType:getOriginalDefinition());
+                    for _, typeArgument in System.each(baseType:getTypeArguments()) do
+                        if typeArgument:getKind() ~= 17 --[[SymbolKind.TypeParameter]] then
+                            if not CSharpLua.Utility.IsAssignableFrom(rootType, typeArgument) then
+                                local typeArgumentType = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, typeArgument);
+                                AddBaseTypeTo(this, parentTypes, rootType, typeArgumentType);
+                            end
+                        end
+                    end
+                else
+                    parentTypes:Add(baseType);
+                end
+            end
+        end;
         GetExportTypes = function (this) 
             local allTypes = System.List(MicrosoftCodeAnalysis.INamedTypeSymbol)();
             if #this.types_ > 0 then
@@ -174,14 +193,11 @@ System.namespace("CSharpLua", function (namespace)
                     local lastTypes = CSharpLua.Utility.Last(typesList, System.List(T));
                     for _, type in System.each(lastTypes) do
                         if type:getBaseType() ~= nil then
-                            if CSharpLua.Utility.IsFromCode(type:getBaseType()) then
-                                parentTypes:Add(type:getBaseType());
-                            end
+                            AddBaseTypeTo(this, parentTypes, type, type:getBaseType());
                         end
+
                         for _, interfaceType in System.each(type:getInterfaces()) do
-                            if CSharpLua.Utility.IsFromCode(interfaceType) then
-                                parentTypes:Add(interfaceType);
-                            end
+                            AddBaseTypeTo(this, parentTypes, type, interfaceType);
                         end
                     end
 

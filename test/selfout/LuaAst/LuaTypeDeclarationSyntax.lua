@@ -227,10 +227,19 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
             end
         end;
-        AddBaseTypes = function (this, baseTypes) 
+        AddBaseTypes = function (this, baseTypes, kind) 
             local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
             table.Items:AddRange1(Linq.Select(baseTypes, function (i) return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i); end, CSharpLuaLuaAst.LuaSingleTableItemSyntax));
-            AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, table);
+            if kind == 0 --[[BaseTypeGenericKind.None]] then
+                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, table);
+            else
+                local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
+                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, table));
+                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, functionExpression);
+                if kind == 2 --[[BaseTypeGenericKind.ExtendSelf]] then
+                    AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.InheritRecursion, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True);
+                end
+            end
         end;
         Render = function (this, renderer) 
             if this.IsPartialMark then

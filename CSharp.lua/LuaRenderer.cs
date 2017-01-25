@@ -156,11 +156,18 @@ namespace CSharpLua {
             WriteSpace();
             function.ParameterList.Render(this);
             WriteSpace();
-            var returnStatement = (LuaReturnStatementSyntax)function.Body.Statements.First();
-            Write(returnStatement.ReturnKeyword);
-            WriteSpace();
-            returnStatement.Expression.Render(this);
-            Write(returnStatement.SemicolonToken);
+            var statement = function.Body.Statements.First();
+            var returnStatement = statement as LuaReturnStatementSyntax;
+            if(returnStatement != null) {
+                Write(returnStatement.ReturnKeyword);
+                WriteSpace();
+                returnStatement.Expression.Render(this);
+            }
+            else {
+                var expressionStatement = (LuaExpressionStatementSyntax)statement;
+                expressionStatement.Expression.Render(this);
+            }
+            Write(statement.SemicolonToken);
             WriteSpace();
             Write(node.EndToken);
         }

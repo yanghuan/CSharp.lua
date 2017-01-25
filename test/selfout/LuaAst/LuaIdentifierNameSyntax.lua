@@ -9,11 +9,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         local Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, 
         Enum, Value, This, True, Throw, Each, YieldReturn, Object, 
         Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, 
-        Inherits, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, 
-        StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerMod, 
-        BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, As, 
-        Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Access, Format, 
-        Delegate, Int, UsingDeclare, Global, Render, __staticCtor__, __ctor1__, __ctor2__;
+        Inherits, InheritRecursion, Default, SystemDefault, Property, Event, Nil, TypeOf, 
+        Continue, StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, 
+        IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, 
+        As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Access, 
+        Format, Delegate, Int, UsingDeclare, Global, Render, __staticCtor__, __ctor1__, 
+        __ctor2__;
         Render = function (this, renderer) 
             renderer:Render5(this);
         end;
@@ -43,6 +44,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             Init = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "__init__");
             Ctor = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "__ctor__");
             Inherits = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "__inherits__");
+            InheritRecursion = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "__recursion__");
             Default = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "__default__");
             SystemDefault = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.default");
             Property = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.property");
@@ -78,7 +80,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             Int = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.Int");
             UsingDeclare = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.usingDeclare");
             Global = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "global");
-            this.Empty, this.Placeholder, this.One, this.System, this.Namespace, this.Class, this.Struct, this.Interface, this.Enum, this.Value, this.This, this.True, this.Throw, this.Each, this.YieldReturn, this.Object, this.Array, this.ArrayEmpty, this.MultiArray, this.Create, this.Add, this.StaticCtor, this.Init, this.Ctor, this.Inherits, this.Default, this.SystemDefault, this.Property, this.Event, this.Nil, this.TypeOf, this.Continue, this.StringChar, this.ToStr, this.ToEnumString, this.DelegateCombine, this.DelegateRemove, this.DelegateBind, this.IntegerDiv, this.IntegerMod, this.BitAnd, this.BitOr, this.BitXor, this.ShiftRight, this.ShiftLeft, this.Try, this.Is, this.As, this.Cast, this.Using, this.UsingX, this.Linq, this.SystemLinqEnumerable, this.New, this.Access, this.Format, this.Delegate, this.Int, this.UsingDeclare, this.Global = Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, Enum, Value, This, True, Throw, Each, YieldReturn, Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, Inherits, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Access, Format, Delegate, Int, UsingDeclare, Global;
+            this.Empty, this.Placeholder, this.One, this.System, this.Namespace, this.Class, this.Struct, this.Interface, this.Enum, this.Value, this.This, this.True, this.Throw, this.Each, this.YieldReturn, this.Object, this.Array, this.ArrayEmpty, this.MultiArray, this.Create, this.Add, this.StaticCtor, this.Init, this.Ctor, this.Inherits, this.InheritRecursion, this.Default, this.SystemDefault, this.Property, this.Event, this.Nil, this.TypeOf, this.Continue, this.StringChar, this.ToStr, this.ToEnumString, this.DelegateCombine, this.DelegateRemove, this.DelegateBind, this.IntegerDiv, this.IntegerMod, this.BitAnd, this.BitOr, this.BitXor, this.ShiftRight, this.ShiftLeft, this.Try, this.Is, this.As, this.Cast, this.Using, this.UsingX, this.Linq, this.SystemLinqEnumerable, this.New, this.Access, this.Format, this.Delegate, this.Int, this.UsingDeclare, this.Global = Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, Enum, Value, This, True, Throw, Each, YieldReturn, Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, Inherits, InheritRecursion, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Access, Format, Delegate, Int, UsingDeclare, Global;
         end;
         __ctor1__ = function (this, valueText) 
             this.ValueText = valueText;
