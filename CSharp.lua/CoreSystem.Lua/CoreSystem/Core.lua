@@ -160,6 +160,28 @@ enumMetatable.__index = enumMetatable
 local interfaceMetatable = { __kind__ = "I", __default__ = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
+local function setExtends(cls, extends)
+    local base = extends[1]
+    if base.__kind__ == "C" then
+        cls.__base__ = base
+        setmetatable(cls, base)
+        tremove(extends, 1)
+        if #extends > 0 then
+            cls.__interfaces__ = extends
+        end
+        if cls.__ctor__ == emptyFn then
+            local baseCtor = base.__ctor__
+            if type(baseCtor) == "table" then
+                cls.__ctor__ = baseCtor[1]
+            end
+        end 
+    else
+        setmetatable(cls, Object)
+        cls.__interfaces__ = extends
+    end
+    cls.__inherits__ = nil
+end
+
 local function def(name, kind, cls, generic)
     if type(cls) == "function" then
         if generic then
@@ -193,37 +215,28 @@ local function def(name, kind, cls, generic)
     if kind == "C" or kind == "S" then
         cls.__index = cls 
         cls.__call = new
+        local recursion   
         local extends = cls.__inherits__
         if extends then
             if type(extends) == "function" then
-                extends = extends()
-            end
-            local base = extends[1]
-            if base.__kind__ == "C" then
-                cls.__base__ = base
-                setmetatable(cls, base)
-                tremove(extends, 1)
-                if #extends > 0 then
-                    cls.__interfaces__ = extends
+                if not cls.__recursion__ then
+                    setExtends(cls, extends())
+                else 
+                    cls.__recursion__ = function() setExtends(cls, extends()) end
+                    recursion = true
                 end
-                if cls.__ctor__ == emptyFn then
-                    local baseCtor = base.__ctor__
-                    if type(baseCtor) == "table" then
-                        cls.__ctor__ = baseCtor[1]
-                    end
-                end 
-            else
-                setmetatable(cls, Object)
-                cls.__interfaces__ = extends
+            else            
+                setExtends(cls, extends)
             end
-            cls.__inherits__ = nil
         elseif cls ~= Object then
              setmetatable(cls, Object)
         end   
         if kind == "S" then
             cls.__kind__ = kind
         end 
-        tinsert(class, cls)
+        if recursion or cls.__staticCtor__ then         
+            tinsert(class, cls)
+        end
     elseif kind == "I" then
         local extends = cls.__inherits__
         if extends then
@@ -377,16 +390,16 @@ end
 
 function System.init(namelist)
     for _, name in ipairs(namelist) do
-       assert(modules[name], name)()
+        assert(modules[name], name)()
     end
     for _, f in ipairs(usings) do
         f()
     end
     for _, cls in ipairs(class) do
-        local staticInit, staticCtor =  cls.__staticInit__, cls.__staticCtor__
-        if staticInit then
-            staticInit(cls)
-            cls.__staticInit__ = nil
+        local recursion, staticCtor = cls.__recursion__, cls.__staticCtor__
+        if recursion then
+            recursion()
+            cls.__recursion__ = nil
         end
         if staticCtor then
             staticCtor(cls)
