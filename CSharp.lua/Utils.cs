@@ -123,8 +123,24 @@ namespace CSharpLua {
             return list.ToArray();
         }
 
+        public static bool IsPrivate(this ISymbol symbol) {
+            return symbol.DeclaredAccessibility == Accessibility.Private;
+        }
+
         public static bool IsPrivate(this SyntaxTokenList modifiers) {
-            return modifiers.Any(i => i.IsKind(SyntaxKind.PrivateKeyword));
+            foreach(var modifier in modifiers) {
+                switch(modifier.Kind()) {
+                    case SyntaxKind.PrivateKeyword: {
+                            return true;
+                        }
+                    case SyntaxKind.PublicKeyword:
+                    case SyntaxKind.InternalKeyword:
+                    case SyntaxKind.ProtectedKeyword: {
+                            return false;
+                        }
+                }
+            }
+            return true;
         }
 
         public static bool IsStatic(this SyntaxTokenList modifiers) {

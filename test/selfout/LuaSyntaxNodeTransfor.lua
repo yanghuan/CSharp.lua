@@ -78,29 +78,29 @@ System.namespace("CSharpLua", function (namespace)
                 }
             };
         end);
-        local operatorTokenMapps_, getXmlMetaProvider, GetOperatorToken, getIsLuaNewest, getCurCompilationUnit, getCurType, getCurFunction, PushFunction, 
-        PopFunction, getCurBlock, VisitCompilationUnit, VisitNamespaceDeclaration, BuildTypeMembers, CheckBaseTypeGenericKind, BuildTypeDeclaration, VisitTypeDeclaration, 
-        AcceptPartialType, GetTypeDeclarationName, VisitClassDeclaration, VisitStructDeclaration, VisitInterfaceDeclaration, VisitEnumDeclaration, VisitYield, VisitMethodDeclaration, 
-        GetPredefinedTypeDefaultValue, GetTempIdentifier, BuildDefaultValueExpression, VisitBaseFieldDeclarationSyntax, VisitFieldDeclaration, GetFieldValueExpression, AddField, VisitPropertyDeclaration, 
-        VisitEventDeclaration, VisitEventFieldDeclaration, VisitEnumMemberDeclaration, VisitIndexerDeclaration, VisitParameterList, VisitParameter, VisitBlock, VisitReturnStatement, 
-        VisitExpressionStatement, BuildCommonAssignmentExpression, BuildDelegateAssignmentExpression, BuildLuaAssignmentExpression, VisitAssignmentExpression, BuildInvokeRefOrOut, CheckCodeTemplateInvocationExpression, VisitInvocationExpression, 
-        BuildExtensionMethodInvocation, AddInvocationTypeArguments, CheckInvocationCallerAttribute, BuildMemberAccessTargetExpression, CheckMemberAccessCodeTemplate, VisitMemberAccessExpression, BuildStaticFieldName, IsInternalNode, 
-        VisitFieldOrEventIdentifierName, GetMethodNameExpression, VisitIdentifierName, VisitQualifiedName, BuildArgumentList, VisitArgumentList, VisitArgument, VisitLiteralExpression, 
-        VisitLocalDeclarationStatement, VisitVariableDeclaration, VisitVariableDeclarator, VisitEqualsValueClause, VisitPredefinedType, WriteStatementOrBlock, VisitIfStatement, VisitElseClause, 
-        VisitSwitchStatement, VisitSwitchSection, VisitCaseSwitchLabel, VisitBreakStatement, WrapStringConcatExpression, BuildStringConcatExpression, BuildStringConcatExpression1, BuildBinaryInvokeExpression, 
-        BuildIntegerDivExpression, BuildBinaryExpression, BuildBitExpression, VisitBinaryExpression, GetLuaAssignmentExpressionSyntax, VisitPrefixUnaryExpression, VisitPostfixUnaryExpression, VisitContinueStatement, 
-        VisitLoopBody, VisitForEachStatement, VisitWhileStatement, VisitForStatement, VisitDoStatement, VisitYieldStatement, VisitParenthesizedExpression, VisitConditionalExpression, 
-        VisitGotoStatement, VisitLabeledStatement, VisitEmptyStatement, VisitCastExpression, VisitCheckedStatement, VisitCheckedExpression, codeTemplateRegex_, IsLocalVarExists, 
-        GetNewIdentifierName, FindFromCur, FindParent, FindParent1, GetUniqueIdentifier, CheckReservedWord, AddReservedMapping, CheckParameterName, 
-        CheckVariableDeclaratorName, CheckReservedWord1, GetConstructorIndex, IsContinueExists, IsReturnExists, GetCaseLabelIndex, BuildCodeTemplateExpression, AddCodeTemplateExpression, 
-        BuildCodeTemplateExpression1, IsPropertyField, GetTypeDeclarationSymbol, IsInternalMember, BuildEmptyArray, GetConstLiteralExpression, GetConstLiteralExpression1, BuildStringLiteralTokenExpression, 
-        BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind1, IsCallerAttribute, CheckCallerAttribute, CheckUsingStaticNameSyntax, MayBeFalse, 
-        MayBeNull, MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitInitializerExpression, 
-        VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, 
-        VisitImplicitArrayCreationExpression, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitTypeParameter, VisitTypeOfExpression, 
-        VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, 
-        VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, 
-        VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, __staticCtor__, __init__, __ctor__;
+        local operatorTokenMapps_, getXmlMetaProvider, GetOperatorToken, getIsLuaNewest, getCurCompilationUnit, getCurType, getCurFunction, getCurFunctionOrNull, 
+        PushFunction, PopFunction, getCurBlock, VisitCompilationUnit, VisitNamespaceDeclaration, BuildTypeMembers, CheckBaseTypeGenericKind, BuildTypeDeclaration, 
+        VisitTypeDeclaration, AcceptPartialType, GetTypeDeclarationName, VisitClassDeclaration, VisitStructDeclaration, VisitInterfaceDeclaration, VisitEnumDeclaration, VisitYield, 
+        VisitMethodDeclaration, GetPredefinedTypeDefaultValue, GetTempIdentifier, BuildDefaultValueExpression, VisitBaseFieldDeclarationSyntax, VisitFieldDeclaration, GetFieldValueExpression, AddField, 
+        VisitPropertyDeclaration, VisitEventDeclaration, VisitEventFieldDeclaration, VisitEnumMemberDeclaration, VisitIndexerDeclaration, VisitParameterList, VisitParameter, VisitBlock, 
+        VisitReturnStatement, VisitExpressionStatement, BuildCommonAssignmentExpression, BuildDelegateAssignmentExpression, BuildLuaAssignmentExpression, VisitAssignmentExpression, BuildInvokeRefOrOut, CheckCodeTemplateInvocationExpression, 
+        VisitInvocationExpression, BuildExtensionMethodInvocation, AddInvocationTypeArguments, CheckInvocationCallerAttribute, BuildMemberAccessTargetExpression, CheckMemberAccessCodeTemplate, VisitMemberAccessExpression, BuildStaticFieldName, 
+        IsInternalNode, VisitFieldOrEventIdentifierName, GetMethodNameExpression, VisitIdentifierName, VisitQualifiedName, BuildArgumentList, VisitArgumentList, VisitArgument, 
+        VisitLiteralExpression, VisitLocalDeclarationStatement, VisitVariableDeclaration, VisitVariableDeclarator, VisitEqualsValueClause, VisitPredefinedType, WriteStatementOrBlock, VisitIfStatement, 
+        VisitElseClause, VisitSwitchStatement, VisitSwitchSection, VisitCaseSwitchLabel, VisitBreakStatement, WrapStringConcatExpression, BuildStringConcatExpression, BuildStringConcatExpression1, 
+        BuildBinaryInvokeExpression, BuildIntegerDivExpression, BuildBinaryExpression, BuildBitExpression, VisitBinaryExpression, GetLuaAssignmentExpressionSyntax, VisitPrefixUnaryExpression, VisitPostfixUnaryExpression, 
+        VisitContinueStatement, VisitLoopBody, VisitForEachStatement, VisitWhileStatement, VisitForStatement, VisitDoStatement, VisitYieldStatement, VisitParenthesizedExpression, 
+        VisitConditionalExpression, VisitGotoStatement, VisitLabeledStatement, VisitEmptyStatement, VisitCastExpression, VisitCheckedStatement, VisitCheckedExpression, codeTemplateRegex_, 
+        IsLocalVarExists, GetNewIdentifierName, FindFromCur, FindParent, FindParent1, GetUniqueIdentifier, CheckReservedWord, AddReservedMapping, 
+        CheckParameterName, CheckVariableDeclaratorName, CheckReservedWord1, GetConstructorIndex, IsContinueExists, IsReturnExists, GetCaseLabelIndex, BuildCodeTemplateExpression, 
+        AddCodeTemplateExpression, BuildCodeTemplateExpression1, IsPropertyField, GetTypeDeclarationSymbol, IsInternalMember, BuildEmptyArray, GetConstLiteralExpression, GetConstLiteralExpression1, 
+        BuildStringLiteralTokenExpression, BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind1, IsCallerAttribute, CheckCallerAttribute, CheckUsingStaticNameSyntax, 
+        MayBeFalse, MayBeNull, MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, VisitObjectCreationExpression, BuildObjectInitializerExpression, 
+        VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, 
+        VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitTypeParameter, 
+        VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, 
+        VisitTryStatement, VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitDefaultExpression, 
+        VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, __staticCtor__, __init__, __ctor__;
         getXmlMetaProvider = function (this) 
             return this.generator_.XmlMetaProvider;
         end;
@@ -119,6 +119,15 @@ System.namespace("CSharpLua", function (namespace)
         end;
         getCurFunction = function (this) 
             return this.functions_:Peek();
+        end;
+        getCurFunctionOrNull = function (this) 
+            local default;
+            if #this.functions_ > 0 then
+                default = this.functions_:Peek();
+            else
+                default = nil;
+            end
+            return default;
         end;
         PushFunction = function (this, function_) 
             this.functions_:Push(function_);
@@ -396,7 +405,7 @@ System.namespace("CSharpLua", function (namespace)
                     VisitYield(this, node, function_);
                 end
                 PopFunction(this);
-                getCurType(this):AddMethod(methodName, function_, CSharpLua.Utility.IsPrivate(node:getModifiers()));
+                getCurType(this):AddMethod(methodName, function_, CSharpLua.Utility.IsPrivate(symbol));
                 return function_;
             end
 
@@ -443,7 +452,7 @@ System.namespace("CSharpLua", function (namespace)
         VisitBaseFieldDeclarationSyntax = function (this, node) 
             if not CSharpLua.Utility.IsConst(node:getModifiers()) then
                 local isStatic = CSharpLua.Utility.IsStatic(node:getModifiers());
-                local isPrivate = CSharpLua.Utility.IsPrivate(node:getModifiers());
+                local isPrivate = CSharpLua.Utility.IsPrivate1(node:getModifiers());
                 local isReadOnly = CSharpLua.Utility.IsReadOnly(node:getModifiers());
                 local type = node:getDeclaration():getType();
                 local typeSymbol = System.cast(MicrosoftCodeAnalysis.ITypeSymbol, MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, type):getSymbol());
@@ -471,7 +480,7 @@ System.namespace("CSharpLua", function (namespace)
                     end
                 end
             else
-                local isPrivate = CSharpLua.Utility.IsPrivate(node:getModifiers());
+                local isPrivate = CSharpLua.Utility.IsPrivate1(node:getModifiers());
                 local type = node:getDeclaration():getType();
                 local typeSymbol = System.cast(MicrosoftCodeAnalysis.ITypeSymbol, MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, type):getSymbol());
                 if typeSymbol:getSpecialType() == 20 --[[SpecialType.System_String]] then
@@ -523,7 +532,7 @@ System.namespace("CSharpLua", function (namespace)
         VisitPropertyDeclaration = function (this, node) 
             if not CSharpLua.Utility.IsAbstract(node:getModifiers()) then
                 local isStatic = CSharpLua.Utility.IsStatic(node:getModifiers());
-                local isPrivate = CSharpLua.Utility.IsPrivate(node:getModifiers());
+                local isPrivate = CSharpLua.Utility.IsPrivate1(node:getModifiers());
                 local hasGet = false;
                 local hasSet = false;
                 if node:getAccessorList() ~= nil then
@@ -591,7 +600,7 @@ System.namespace("CSharpLua", function (namespace)
         VisitEventDeclaration = function (this, node) 
             if not CSharpLua.Utility.IsAbstract(node:getModifiers()) then
                 local isStatic = CSharpLua.Utility.IsStatic(node:getModifiers());
-                local isPrivate = CSharpLua.Utility.IsPrivate(node:getModifiers());
+                local isPrivate = CSharpLua.Utility.IsPrivate1(node:getModifiers());
                 for _, accessor in System.each(node:getAccessorList():getAccessors()) do
                     local block = System.cast(CSharpLuaLuaAst.LuaBlockSyntax, accessor:getBody():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
                     local functionExpress = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
@@ -622,7 +631,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         VisitIndexerDeclaration = function (this, node) 
             local isStatic = CSharpLua.Utility.IsStatic(node:getModifiers());
-            local isPrivate = CSharpLua.Utility.IsPrivate(node:getModifiers());
+            local isPrivate = CSharpLua.Utility.IsPrivate1(node:getModifiers());
             local hasGet = false;
             local hasSet = false;
             for _, accessor in System.each(node:getAccessorList():getAccessors()) do
@@ -1109,7 +1118,7 @@ System.namespace("CSharpLua", function (namespace)
         BuildStaticFieldName = function (this, symbol, isReadOnly, node) 
             assert(symbol:getIsStatic());
             local name;
-            if symbol:getDeclaredAccessibility() == 1 --[[Accessibility.Private]] then
+            if CSharpLua.Utility.IsPrivate(symbol) then
                 name = symbol:getName();
             else
                 if isReadOnly then
@@ -1125,18 +1134,18 @@ System.namespace("CSharpLua", function (namespace)
                         return CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(usingStaticType, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name));
                     end
                 else
-                    local constructor = System.as(getCurFunction(this), CSharpLuaLuaAst.LuaConstructorAdapterExpressionSyntax);
-                    if constructor ~= nil and constructor.IsStaticCtor then
-                        name = "this" --[[Tokens.This]] .. '.' .. (symbol:getName() or "");
-                    else
-                        if IsInternalNode(this, node) then
-                            name = symbol:ToString();
+                    if IsInternalNode(this, node) then
+                        local constructor = System.as(getCurFunctionOrNull(this), CSharpLuaLuaAst.LuaConstructorAdapterExpressionSyntax);
+                        if constructor ~= nil then
+                            name = "this" --[[Tokens.This]] .. '.' .. (symbol:getName() or "");
                         else
-                            name = symbol:getName();
-                            local usingStaticType = CheckUsingStaticNameSyntax(this, symbol, node);
-                            if usingStaticType ~= nil then
-                                return CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(usingStaticType, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name));
-                            end
+                            name = symbol:ToString();
+                        end
+                    else
+                        name = symbol:getName();
+                        local usingStaticType = CheckUsingStaticNameSyntax(this, symbol, node);
+                        if usingStaticType ~= nil then
+                            return CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(usingStaticType, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name));
                         end
                     end
                 end
@@ -2260,7 +2269,7 @@ System.namespace("CSharpLua", function (namespace)
             return getXmlMetaProvider(this):GetTypeShortName(symbol, this, node);
         end;
         GetTypeName = function (this, symbol, node) 
-            return getXmlMetaProvider(this):GetTypeName(symbol, this);
+            return getXmlMetaProvider(this):GetTypeName(symbol, this, node);
         end;
         VisitObjectCreationExpression = function (this, node) 
             local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getType():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));

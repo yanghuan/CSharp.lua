@@ -2,6 +2,7 @@
 local System = System;
 local Linq = System.Linq.Enumerable;
 local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis;
+local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp;
 local MicrosoftCodeAnalysisCSharpSyntax = Microsoft.CodeAnalysis.CSharp.Syntax;
 local SystemIO = System.IO;
 local SystemLinq = System.Linq;
@@ -38,10 +39,10 @@ System.namespace("CSharpLua", function (namespace)
     end);
     namespace.class("Utility", function (namespace) 
         local GetCommondLines, First, Last, GetOrDefault, GetOrDefault1, GetArgument, GetCurrentDirectory, Split, 
-        IsPrivate, IsStatic, IsAbstract, IsReadOnly, IsConst, IsParams, IsPartial, IsStringType, 
-        IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, 
-        IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, 
-        IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition;
+        IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, IsConst, IsParams, IsPartial, 
+        IsStringType, IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, 
+        OverriddenSymbol, IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
+        IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -133,8 +134,25 @@ System.namespace("CSharpLua", function (namespace)
             end
             return Linq.ToArray(list);
         end;
-        IsPrivate = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8344 --[[SyntaxKind.PrivateKeyword]]); end);
+        IsPrivate = function (symbol) 
+            return symbol:getDeclaredAccessibility() == 1 --[[Accessibility.Private]];
+        end;
+        IsPrivate1 = function (modifiers) 
+            for _, modifier in System.each(modifiers) do
+                repeat
+                    local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(modifier);
+                    if default == 8344 --[[SyntaxKind.PrivateKeyword]] then
+                        do
+                            return true;
+                        end
+                    elseif default == 8343 --[[SyntaxKind.PublicKeyword]] or default == 8345 --[[SyntaxKind.InternalKeyword]] or default == 8346 --[[SyntaxKind.ProtectedKeyword]] then
+                        do
+                            return false;
+                        end
+                    end
+                until 1;
+            end
+            return true;
         end;
         IsStatic = function (modifiers) 
             return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]]); end);
@@ -407,6 +425,7 @@ System.namespace("CSharpLua", function (namespace)
             GetCurrentDirectory = GetCurrentDirectory, 
             Split = Split, 
             IsPrivate = IsPrivate, 
+            IsPrivate1 = IsPrivate1, 
             IsStatic = IsStatic, 
             IsAbstract = IsAbstract, 
             IsReadOnly = IsReadOnly, 

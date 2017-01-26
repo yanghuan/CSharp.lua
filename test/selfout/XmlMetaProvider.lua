@@ -285,7 +285,7 @@ System.namespace("CSharpLua", function (namespace)
             local name = symbol:ToString();
             return CSharpLua.Utility.GetOrDefault1(this.namespaceNameMaps_, name, name, System.String, System.String);
         end;
-        GetTypeName = function (this, symbol, transfor) 
+        GetTypeName = function (this, symbol, transfor, node) 
             assert(symbol ~= nil);
             symbol = symbol:getOriginalDefinition();
             if symbol:getKind() == 17 --[[SymbolKind.TypeParameter]] then
@@ -294,7 +294,7 @@ System.namespace("CSharpLua", function (namespace)
 
             if symbol:getKind() == 1 --[[SymbolKind.ArrayType]] then
                 local arrayType = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, symbol);
-                local elementTypeExpression = GetTypeName(this, arrayType:getElementType(), transfor);
+                local elementTypeExpression = GetTypeName(this, arrayType:getElementType(), transfor, node);
                 local default;
                 if arrayType:getRank() == 1 then
                     default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Array;
@@ -313,13 +313,13 @@ System.namespace("CSharpLua", function (namespace)
                 return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Delegate;
             end
 
-            local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor);
+            local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor, node);
             if namedTypeSymbol:getTypeArguments():getLength() == 0 then
                 return baseTypeName;
             else
                 local invocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, baseTypeName);
                 for _, typeArgument in System.each(namedTypeSymbol:getTypeArguments()) do
-                    local typeArgumentExpression = GetTypeName(this, typeArgument, transfor);
+                    local typeArgumentExpression = GetTypeName(this, typeArgument, transfor, node);
                     invocationExpression:AddArgument(typeArgumentExpression);
                 end
                 return invocationExpression;

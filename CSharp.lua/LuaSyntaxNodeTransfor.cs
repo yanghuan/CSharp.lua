@@ -88,6 +88,12 @@ namespace CSharpLua {
             }
         }
 
+        private LuaFunctionExpressionSyntax CurFunctionOrNull {
+            get {
+                return functions_.Count > 0 ? functions_.Peek() : null;
+            }
+        }
+
         private void PushFunction(LuaFunctionExpressionSyntax function) {
             functions_.Push(function);
             ++localMappingCounter_;
@@ -378,7 +384,7 @@ namespace CSharpLua {
                     VisitYield(node, function);
                 }
                 PopFunction();
-                CurType.AddMethod(methodName, function, node.Modifiers.IsPrivate());
+                CurType.AddMethod(methodName, function, symbol.IsPrivate());
                 return function;
             }
 
@@ -1186,7 +1192,7 @@ namespace CSharpLua {
         private LuaExpressionSyntax BuildStaticFieldName(ISymbol symbol, bool isReadOnly, IdentifierNameSyntax node) {
             Contract.Assert(symbol.IsStatic);
             string name;
-            if(symbol.DeclaredAccessibility == Accessibility.Private) {
+            if(symbol.IsPrivate()) {
                 name = symbol.Name;
             }
             else {
@@ -1204,20 +1210,20 @@ namespace CSharpLua {
                     }
                 }
                 else {
-                    var constructor = CurFunction as LuaConstructorAdapterExpressionSyntax;
-                    if(constructor != null && constructor.IsStaticCtor) {
-                        name = LuaSyntaxNode.Tokens.This + '.' + symbol.Name;
-                    }
-                    else {
-                        if(IsInternalNode(node)) {
-                            name = symbol.ToString();
+                    if(IsInternalNode(node)) {
+                        var constructor = CurFunctionOrNull as LuaConstructorAdapterExpressionSyntax;
+                        if(constructor != null) {
+                            name = LuaSyntaxNode.Tokens.This + '.' + symbol.Name;
                         }
                         else {
-                            name = symbol.Name;
-                            var usingStaticType = CheckUsingStaticNameSyntax(symbol, node);
-                            if(usingStaticType != null) {
-                                return new LuaMemberAccessExpressionSyntax(usingStaticType, new LuaIdentifierNameSyntax(name));
-                            }
+                            name = symbol.ToString();
+                        }
+                    }
+                    else {
+                        name = symbol.Name;
+                        var usingStaticType = CheckUsingStaticNameSyntax(symbol, node);
+                        if(usingStaticType != null) {
+                            return new LuaMemberAccessExpressionSyntax(usingStaticType, new LuaIdentifierNameSyntax(name));
                         }
                     }
                 }

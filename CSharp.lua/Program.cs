@@ -35,7 +35,7 @@ Options
 -h              : show the help message    
 -def            : defines name as a conditional symbol, use ';' to separate
 ";
-        static void Main(string[] args) {
+       public static void Main(string[] args) {
             if(args.Length > 0) {
                 try {
                     var cmds = Utility.GetCommondLines(args);
