@@ -52,7 +52,15 @@ namespace CSharpLua.LuaAst {
             public const string Yield = "yield";
             public const string Plus = "+";
             public const string Sub = "-";
-            public const string Div = "//";
+            public const string Multiply = "*";
+            public const string IntegerDiv = "//";
+            public const string Div = "/";
+            public const string Mod = "%";
+            public const string BitAnd = "&";
+            public const string BitOr = "|";
+            public const string BitXor = "~";
+            public const string LeftShift = "<<";
+            public const string RightShift = ">>";
             public const string ShortComment = "--";
             public const string OpenLongComment = "--[[";
             public const string CloseLongComment = "--]]";
