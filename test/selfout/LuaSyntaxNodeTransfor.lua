@@ -78,35 +78,39 @@ System.namespace("CSharpLua", function (namespace)
                 }
             };
         end);
-        local operatorTokenMapps_, getXmlMetaProvider, GetOperatorToken, getIsLuaNewest, getCurCompilationUnit, getCurType, getCurFunction, getCurFunctionOrNull, 
-        PushFunction, PopFunction, getCurBlock, VisitCompilationUnit, VisitNamespaceDeclaration, BuildTypeMembers, CheckBaseTypeGenericKind, BuildTypeDeclaration, 
-        VisitTypeDeclaration, AcceptPartialType, GetTypeDeclarationName, VisitClassDeclaration, VisitStructDeclaration, VisitInterfaceDeclaration, VisitEnumDeclaration, VisitYield, 
-        VisitMethodDeclaration, GetPredefinedTypeDefaultValue, GetTempIdentifier, BuildDefaultValueExpression, VisitBaseFieldDeclarationSyntax, VisitFieldDeclaration, GetFieldValueExpression, AddField, 
-        VisitPropertyDeclaration, VisitEventDeclaration, VisitEventFieldDeclaration, VisitEnumMemberDeclaration, VisitIndexerDeclaration, VisitBracketedParameterList, VisitParameterList, BuildParameterList, 
-        VisitParameter, VisitBlock, VisitReturnStatement, VisitExpressionStatement, BuildCommonAssignmentExpression, BuildDelegateAssignmentExpression, BuildLuaAssignmentExpression, VisitAssignmentExpression, 
-        BuildInvokeRefOrOut, CheckCodeTemplateInvocationExpression, VisitInvocationExpression, BuildExtensionMethodInvocation, AddInvocationTypeArguments, CheckInvocationCallerAttribute, BuildMemberAccessTargetExpression, CheckMemberAccessCodeTemplate, 
-        VisitMemberAccessExpression, BuildStaticFieldName, IsInternalNode, VisitFieldOrEventIdentifierName, GetMethodNameExpression, VisitIdentifierName, VisitQualifiedName, BuildArgumentList, 
-        VisitArgumentList, VisitArgument, VisitLiteralExpression, VisitLocalDeclarationStatement, VisitVariableDeclaration, VisitVariableDeclarator, VisitEqualsValueClause, VisitPredefinedType, 
-        WriteStatementOrBlock, VisitIfStatement, VisitElseClause, VisitSwitchStatement, VisitSwitchSection, VisitCaseSwitchLabel, VisitBreakStatement, WrapStringConcatExpression, 
-        BuildStringConcatExpression, BuildStringConcatExpression1, BuildBinaryInvokeExpression, BuildIntegerDivExpression, BuildBinaryExpression, BuildBitExpression, VisitBinaryExpression, GetLuaAssignmentExpressionSyntax, 
-        VisitPrefixUnaryExpression, VisitPostfixUnaryExpression, VisitContinueStatement, VisitLoopBody, VisitForEachStatement, VisitWhileStatement, VisitForStatement, VisitDoStatement, 
-        VisitYieldStatement, VisitParenthesizedExpression, VisitConditionalExpression, VisitGotoStatement, VisitLabeledStatement, VisitEmptyStatement, VisitCastExpression, VisitCheckedStatement, 
-        VisitCheckedExpression, codeTemplateRegex_, IsLocalVarExists, GetNewIdentifierName, FindFromCur, FindParent, FindParent1, GetUniqueIdentifier, 
-        CheckReservedWord, AddReservedMapping, CheckParameterName, CheckVariableDeclaratorName, CheckReservedWord1, GetConstructorIndex, IsContinueExists, IsReturnExists, 
-        GetCaseLabelIndex, BuildCodeTemplateExpression, AddCodeTemplateExpression, BuildCodeTemplateExpression1, IsPropertyField, GetTypeDeclarationSymbol, IsInternalMember, BuildEmptyArray, 
-        GetConstLiteralExpression, GetConstLiteralExpression1, BuildStringLiteralTokenExpression, BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind1, IsCallerAttribute, 
-        CheckCallerAttribute, CheckUsingStaticNameSyntax, MayBeFalse, MayBeNull, MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, 
-        VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, 
-        VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, 
-        VisitParenthesizedLambdaExpression, VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, 
-        BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, 
-        VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, __staticCtor__, 
+        local operatorTokenMapps_, getXmlMetaProvider, GetOperatorToken, GetOperatorToken1, getIsLuaNewest, getCurCompilationUnit, getCurType, getCurFunction, 
+        getCurFunctionOrNull, PushFunction, PopFunction, getCurBlock, VisitCompilationUnit, VisitNamespaceDeclaration, BuildTypeMembers, CheckBaseTypeGenericKind, 
+        BuildTypeDeclaration, VisitTypeDeclaration, AcceptPartialType, GetTypeDeclarationName, VisitClassDeclaration, VisitStructDeclaration, VisitInterfaceDeclaration, VisitEnumDeclaration, 
+        VisitYield, VisitMethodDeclaration, GetPredefinedTypeDefaultValue, GetTempIdentifier, BuildDefaultValueExpression, VisitBaseFieldDeclarationSyntax, VisitFieldDeclaration, GetFieldValueExpression, 
+        AddField, VisitPropertyDeclaration, VisitEventDeclaration, VisitEventFieldDeclaration, VisitEnumMemberDeclaration, VisitIndexerDeclaration, VisitBracketedParameterList, VisitParameterList, 
+        BuildParameterList, VisitParameter, VisitBlock, VisitReturnStatement, VisitExpressionStatement, BuildCommonAssignmentExpression, BuildCommonAssignmentExpression1, BuildDelegateAssignmentExpression, 
+        BuildBinaryInvokeAssignmentExpression, BuildBinaryInvokeAssignmentExpression1, BuildIntegerDivAssignmentExpression, BuildLuaAssignmentExpression, BuildBitAssignmentExpression, VisitAssignmentExpression, BuildInvokeRefOrOut, CheckCodeTemplateInvocationExpression, 
+        VisitInvocationExpression, BuildExtensionMethodInvocation, AddInvocationTypeArguments, CheckInvocationCallerAttribute, BuildMemberAccessTargetExpression, CheckMemberAccessCodeTemplate, VisitMemberAccessExpression, BuildStaticFieldName, 
+        IsInternalNode, VisitFieldOrEventIdentifierName, GetMethodNameExpression, VisitIdentifierName, VisitQualifiedName, BuildArgumentList, VisitArgumentList, VisitArgument, 
+        VisitLiteralExpression, VisitLocalDeclarationStatement, VisitVariableDeclaration, VisitVariableDeclarator, VisitEqualsValueClause, VisitPredefinedType, WriteStatementOrBlock, VisitIfStatement, 
+        VisitElseClause, VisitSwitchStatement, VisitSwitchSection, VisitCaseSwitchLabel, VisitBreakStatement, WrapStringConcatExpression, BuildStringConcatExpression, BuildStringConcatExpression1, 
+        BuildBinaryInvokeExpression, BuildIntegerDivExpression, BuildBinaryExpression, BuildBitExpression, VisitBinaryExpression, GetLuaAssignmentExpressionSyntax, VisitPrefixUnaryExpression, VisitPostfixUnaryExpression, 
+        VisitContinueStatement, VisitLoopBody, VisitForEachStatement, VisitWhileStatement, VisitForStatement, VisitDoStatement, VisitYieldStatement, VisitParenthesizedExpression, 
+        VisitConditionalExpression, VisitGotoStatement, VisitLabeledStatement, VisitEmptyStatement, VisitCastExpression, VisitCheckedStatement, VisitCheckedExpression, codeTemplateRegex_, 
+        IsLocalVarExists, GetNewIdentifierName, FindFromCur, FindParent, FindParent1, FindParent2, GetUniqueIdentifier, CheckReservedWord, 
+        AddReservedMapping, CheckParameterName, CheckVariableDeclaratorName, CheckReservedWord1, GetConstructorIndex, IsContinueExists, IsReturnExists, GetCaseLabelIndex, 
+        BuildCodeTemplateExpression, AddCodeTemplateExpression, BuildCodeTemplateExpression1, IsPropertyField, GetTypeDeclarationSymbol, IsInternalMember, BuildEmptyArray, GetConstLiteralExpression, 
+        GetConstLiteralExpression1, BuildStringLiteralTokenExpression, BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind1, IsCallerAttribute, CheckCallerAttribute, 
+        CheckUsingStaticNameSyntax, MayBeFalse, MayBeNull, MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, VisitObjectCreationExpression, 
+        BuildObjectInitializerExpression, VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, 
+        FillMultiArrayInitializer, VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, 
+        VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, 
+        VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, 
+        VisitElementBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, __staticCtor__, 
         __init__, __ctor__;
         getXmlMetaProvider = function (this) 
             return this.generator_.XmlMetaProvider;
         end;
         GetOperatorToken = function (operatorToken) 
             local token = operatorToken:getValueText();
+            return CSharpLua.Utility.GetOrDefault1(operatorTokenMapps_, token, token, System.String, System.String);
+        end;
+        GetOperatorToken1 = function (token) 
             return CSharpLua.Utility.GetOrDefault1(operatorTokenMapps_, token, token, System.String, System.String);
         end;
         getIsLuaNewest = function (this) 
@@ -230,7 +234,7 @@ System.namespace("CSharpLua", function (namespace)
         VisitTypeDeclaration = function (this, node, typeDeclaration) 
             local typeSymbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node);
             if CSharpLua.Utility.IsPartial(node:getModifiers()) then
-                if not typeSymbol:getDeclaringSyntaxReferences():getIsEmpty() then
+                if typeSymbol:getDeclaringSyntaxReferences():getLength() > 1 then
                     this.generator_:AddPartialTypeDeclaration(typeSymbol, node, typeDeclaration, getCurCompilationUnit(this));
                     typeDeclaration.IsPartialMark = true;
                 else
@@ -371,7 +375,6 @@ System.namespace("CSharpLua", function (namespace)
 
                 for _, parameter in System.each(node:getParameterList():getParameters()) do
                     local luaParameter = System.cast(CSharpLuaLuaAst.LuaParameterSyntax, parameter:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
-                    luaParameter = CheckParameterName(this, luaParameter, parameter);
                     function_.ParameterList.Parameters:Add1(luaParameter);
                     if parameter:getDefault() ~= nil then
                         if not MicrosoftCodeAnalysis.CSharpExtensions.IsKind(parameter:getDefault():getValue(), 8754 --[[SyntaxKind.NullLiteralExpression]]) then
@@ -696,7 +699,9 @@ System.namespace("CSharpLua", function (namespace)
         end;
         VisitParameter = function (this, node) 
             local identifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, node:getIdentifier():getValueText());
-            return CSharpLuaLuaAst.LuaParameterSyntax(identifier);
+            local luaParameter = CSharpLuaLuaAst.LuaParameterSyntax(identifier);
+            luaParameter = CheckParameterName(this, luaParameter, node);
+            return luaParameter;
         end;
         VisitBlock = function (this, node) 
             local block = CSharpLuaLuaAst.LuaBlockStatementSyntax();
@@ -760,6 +765,11 @@ System.namespace("CSharpLua", function (namespace)
                 return CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(left, CSharpLuaLuaAst.LuaBinaryExpressionSyntax(left, operatorToken, right));
             end
         end;
+        BuildCommonAssignmentExpression1 = function (this, leftNode, rightNode, operatorToken) 
+            local left = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, leftNode:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
+            local right = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, rightNode:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
+            return BuildCommonAssignmentExpression(this, left, right, operatorToken);
+        end;
         BuildDelegateAssignmentExpression = function (this, left, right, isPlus) 
             if System.is(right, CSharpLuaLuaAst.LuaInternalMethodExpressionSyntax) then
                 right = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.DelegateBind, CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, right);
@@ -789,6 +799,29 @@ System.namespace("CSharpLua", function (namespace)
                 end
             else
                 return CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(left, CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, methodName, left, right));
+            end
+        end;
+        BuildBinaryInvokeAssignmentExpression = function (this, left, right, methodName) 
+            local propertyAdapter = System.as(left, CSharpLuaLuaAst.LuaPropertyAdapterExpressionSyntax);
+            if propertyAdapter ~= nil then
+                local invocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, methodName, propertyAdapter:GetCloneOfGet(), right);
+                propertyAdapter.InvocationExpression:AddArgument(invocation);
+                return propertyAdapter;
+            else
+                local invocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, methodName, left, right);
+                return CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(left, invocation);
+            end
+        end;
+        BuildBinaryInvokeAssignmentExpression1 = function (this, leftNode, rightNode, methodName) 
+            local left = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, leftNode:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
+            local right = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, rightNode:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
+            return BuildBinaryInvokeAssignmentExpression(this, left, right, methodName);
+        end;
+        BuildIntegerDivAssignmentExpression = function (this, leftNode, rightNode) 
+            if getIsLuaNewest(this) then
+                return BuildCommonAssignmentExpression1(this, leftNode, rightNode, "//" --[[Tokens.IntegerDiv]]);
+            else
+                return BuildBinaryInvokeAssignmentExpression1(this, leftNode, rightNode, CSharpLuaLuaAst.LuaIdentifierNameSyntax.IntegerDiv);
             end
         end;
         BuildLuaAssignmentExpression = function (this, leftNode, rightNode, kind) 
@@ -838,10 +871,74 @@ System.namespace("CSharpLua", function (namespace)
                             return BuildCommonAssignmentExpression(this, left, right, "-" --[[Tokens.Sub]]);
                         end
                     end
+                elseif default == 8717 --[[SyntaxKind.MultiplyAssignmentExpression]] then
+                    do
+                        return BuildCommonAssignmentExpression1(this, leftNode, rightNode, "*" --[[Tokens.Multiply]]);
+                    end
+                elseif default == 8718 --[[SyntaxKind.DivideAssignmentExpression]] then
+                    do
+                        local leftType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, leftNode):getType();
+                        local rightType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, rightNode):getType();
+                        if CSharpLua.Utility.IsIntegerType(leftType) and CSharpLua.Utility.IsIntegerType(rightType) then
+                            return BuildIntegerDivAssignmentExpression(this, leftNode, rightNode);
+                        else
+                            return BuildCommonAssignmentExpression1(this, leftNode, rightNode, "/" --[[Tokens.Div]]);
+                        end
+                    end
+                elseif default == 8719 --[[SyntaxKind.ModuloAssignmentExpression]] then
+                    do
+                        if not getIsLuaNewest(this) then
+                            local leftType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, leftNode):getType();
+                            local rightType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, rightNode):getType();
+                            if CSharpLua.Utility.IsIntegerType(leftType) and CSharpLua.Utility.IsIntegerType(rightType) then
+                                return BuildBinaryInvokeAssignmentExpression1(this, leftNode, rightNode, CSharpLuaLuaAst.LuaIdentifierNameSyntax.IntegerMod);
+                            end
+                        end
+                        return BuildCommonAssignmentExpression1(this, leftNode, rightNode, "%" --[[Tokens.Mod]]);
+                    end
+                elseif default == 8720 --[[SyntaxKind.AndAssignmentExpression]] then
+                    do
+                        return BuildBitAssignmentExpression(this, leftNode, rightNode, "and" --[[Keyword.And]], "&" --[[Tokens.BitAnd]], CSharpLuaLuaAst.LuaIdentifierNameSyntax.BitAnd);
+                    end
+                elseif default == 8721 --[[SyntaxKind.ExclusiveOrAssignmentExpression]] then
+                    do
+                        return BuildBitAssignmentExpression(this, leftNode, rightNode, "~=" --[[Tokens.NotEquals]], "~" --[[Tokens.BitXor]], CSharpLuaLuaAst.LuaIdentifierNameSyntax.BitXor);
+                    end
+                elseif default == 8722 --[[SyntaxKind.OrAssignmentExpression]] then
+                    do
+                        return BuildBitAssignmentExpression(this, leftNode, rightNode, "or" --[[Keyword.Or]], "|" --[[Tokens.BitOr]], CSharpLuaLuaAst.LuaIdentifierNameSyntax.BitOr);
+                    end
+                elseif default == 8723 --[[SyntaxKind.LeftShiftAssignmentExpression]] then
+                    do
+                        if getIsLuaNewest(this) then
+                            return BuildCommonAssignmentExpression1(this, leftNode, rightNode, "<<" --[[Tokens.LeftShift]]);
+                        else
+                            return BuildBinaryInvokeAssignmentExpression1(this, leftNode, rightNode, CSharpLuaLuaAst.LuaIdentifierNameSyntax.ShiftLeft);
+                        end
+                    end
+                elseif default == 8724 --[[SyntaxKind.RightShiftAssignmentExpression]] then
+                    do
+                        if getIsLuaNewest(this) then
+                            return BuildCommonAssignmentExpression1(this, leftNode, rightNode, ">>" --[[Tokens.RightShift]]);
+                        else
+                            return BuildBinaryInvokeAssignmentExpression1(this, leftNode, rightNode, CSharpLuaLuaAst.LuaIdentifierNameSyntax.ShiftRight);
+                        end
+                    end
                 else
                     System.throw(System.NotImplementedException());
                 end
             until 1;
+        end;
+        BuildBitAssignmentExpression = function (this, leftNode, rightNode, boolOperatorToken, otherOperatorToken, methodName) 
+            local leftType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, leftNode):getType();
+            if leftType:getSpecialType() == 7 --[[SpecialType.System_Boolean]] then
+                return BuildCommonAssignmentExpression1(this, leftNode, rightNode, boolOperatorToken);
+            elseif not getIsLuaNewest(this) then
+                return BuildBinaryInvokeAssignmentExpression1(this, leftNode, rightNode, methodName);
+            else
+                local operatorToken = GetOperatorToken1(this, otherOperatorToken);
+                return BuildCommonAssignmentExpression1(this, leftNode, rightNode, operatorToken);
+            end
         end;
         VisitAssignmentExpression = function (this, node) 
             local assignments = System.List(CSharpLuaLuaAst.LuaExpressionSyntax)();
@@ -1144,6 +1241,7 @@ System.namespace("CSharpLua", function (namespace)
                     end
 
                     local expression = BuildMemberAccessTargetExpression(this, node:getExpression());
+                    assert(expression ~= nil);
                     local identifier = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getName():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
                     return CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(expression, identifier, not symbol:getIsStatic() and symbol:getKind() == 9 --[[SymbolKind.Method]]);
                 end
@@ -1187,11 +1285,12 @@ System.namespace("CSharpLua", function (namespace)
             return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name);
         end;
         IsInternalNode = function (this, node) 
+            local parentNode = node:getParent();
             repeat
-                local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(node:getParent());
+                local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(parentNode);
                 if default == 8689 --[[SyntaxKind.SimpleMemberAccessExpression]] then
                     do
-                        local parent = System.cast(MicrosoftCodeAnalysisCSharpSyntax.MemberAccessExpressionSyntax, node:getParent());
+                        local parent = System.cast(MicrosoftCodeAnalysisCSharpSyntax.MemberAccessExpressionSyntax, parentNode);
                         if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(parent:getExpression(), 8746 --[[SyntaxKind.ThisExpression]]) then
                             return true;
                         elseif parent:getExpression() == node then
@@ -1203,12 +1302,16 @@ System.namespace("CSharpLua", function (namespace)
                     do
                         return false;
                     end
-                else
+                elseif default == 8714 --[[SyntaxKind.SimpleAssignmentExpression]] then
                     do
-                        return true;
+                        if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(parentNode:getParent(), 8644 --[[SyntaxKind.ObjectInitializerExpression]]) then
+                            return false;
+                        end
+                        break;
                     end
                 end
             until 1;
+            return true;
         end;
         VisitFieldOrEventIdentifierName = function (this, node, symbol, isProperty) 
             local name;
@@ -1511,7 +1614,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         VisitCaseSwitchLabel = function (this, node) 
             local left = this.switchs_:Peek().Temp;
-            local right = System.cast(CSharpLuaLuaAst.LuaLiteralExpressionSyntax, node:getValue():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
+            local right = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getValue():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
             local BinaryExpression = CSharpLuaLuaAst.LuaBinaryExpressionSyntax(left, "==" --[[Tokens.EqualsEquals]], right);
             return BinaryExpression;
         end;
@@ -1583,7 +1686,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         BuildIntegerDivExpression = function (this, node) 
             if getIsLuaNewest(this) then
-                return BuildBinaryExpression(this, node, "//" --[[Tokens.Div]]);
+                return BuildBinaryExpression(this, node, "//" --[[Tokens.IntegerDiv]]);
             else
                 return BuildBinaryInvokeExpression(this, node, CSharpLuaLuaAst.LuaIdentifierNameSyntax.IntegerDiv);
             end
@@ -1934,9 +2037,12 @@ System.namespace("CSharpLua", function (namespace)
         FindParent1 = function (this, node, kind) 
             return FindParent(this, node, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, kind); end);
         end;
+        FindParent2 = function (this, node, T) 
+            return System.cast(T, FindParent(this, node, function (i) return System.is(i, T); end));
+        end;
         GetUniqueIdentifier = function (this, name, node, index) 
             if index == nil then index = 0 end
-            local root = System.cast(MicrosoftCodeAnalysisCSharpSyntax.MethodDeclarationSyntax, FindParent1(this, node, 8875 --[[SyntaxKind.MethodDeclaration]]));
+            local root = FindParent2(this, node, MicrosoftCodeAnalysisCSharpSyntax.BaseMethodDeclarationSyntax);
             while true do
                 local newName = GetNewIdentifierName(this, name, index);
                 local exists = IsLocalVarExists(this, newName, root);
@@ -1979,10 +2085,12 @@ System.namespace("CSharpLua", function (namespace)
         end;
         CheckReservedWord1 = function (this, name, symbol) 
             if CSharpLuaLuaAst.LuaSyntaxNode.IsReservedWord(name) then
+                assert(this.localReservedNames_:ContainsKey(symbol));
                 name = this.localReservedNames_:get(symbol);
             end
         end;
         GetConstructorIndex = function (this, constructorSymbol) 
+            assert(constructorSymbol ~= nil);
             if CSharpLua.Utility.IsFromCode(constructorSymbol) then
                 local typeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, constructorSymbol:getReceiverType());
                 if typeSymbol:getConstructors():getLength() > 1 then
@@ -2319,16 +2427,19 @@ System.namespace("CSharpLua", function (namespace)
         VisitObjectCreationExpression = function (this, node) 
             local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getType():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
 
+            local constructorIndex = 0;
             local symbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, node):getSymbol());
-            local index = GetConstructorIndex(this, symbol);
-            if index > 0 then
-                expression = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(expression, CSharpLuaLuaAst.LuaIdentifierNameSyntax.New, true);
+            if symbol ~= nil then
+                constructorIndex = GetConstructorIndex(this, symbol);
+                if constructorIndex > 0 then
+                    expression = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(expression, CSharpLuaLuaAst.LuaIdentifierNameSyntax.New, true);
+                end
             end
 
             local argumentList = System.cast(CSharpLuaLuaAst.LuaArgumentListSyntax, node:getArgumentList():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
             local invocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, expression);
-            if index > 0 then
-                invocationExpression:AddArgument(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(2, index));
+            if constructorIndex > 0 then
+                invocationExpression:AddArgument(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(2, constructorIndex));
             end
             invocationExpression.ArgumentList.Arguments:AddRange1(argumentList.Arguments);
             if node:getInitializer() == nil then
@@ -2358,10 +2469,8 @@ System.namespace("CSharpLua", function (namespace)
                         invocation:AddArgument(right);
                         function_:AddStatement1(invocation);
                     else
-                        local identifierName = System.cast(CSharpLuaLuaAst.LuaIdentifierNameSyntax, left);
-                        local newIdentifier = identifierName.ValueText:Replace(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This.ValueText, temp.ValueText);
-                        identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, newIdentifier);
-                        function_:AddStatement1(CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(identifierName, right));
+                        local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(temp, System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, left));
+                        function_:AddStatement1(CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(memberAccess, right));
                     end
                 else
                     local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(temp, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Add, true);
@@ -2943,6 +3052,9 @@ System.namespace("CSharpLua", function (namespace)
         VisitInterpolatedStringText = function (this, node) 
             System.throw(System.InvalidOperationException());
         end;
+        VisitAliasQualifiedName = function (this, node) 
+            return node:getName():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode);
+        end;
         __staticCtor__ = function (this) 
             operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
                 default:set("!=", "~=" --[[Tokens.NotEquals]]);
@@ -2950,7 +3062,7 @@ System.namespace("CSharpLua", function (namespace)
                 default:set("&&", "and" --[[Keyword.And]]);
                 default:set("||", "or" --[[Keyword.Or]]);
                 default:set("??", "or" --[[Keyword.Or]]);
-                default:set("^", "~");
+                default:set("^", "~" --[[Tokens.BitXor]]);
             end);
             codeTemplateRegex_ = SystemTextRegularExpressions.Regex([[(,?\s*)\{(\*?[\w|^]+)\}]], 8 --[[RegexOptions.Compiled]]);
         end;
@@ -3064,6 +3176,7 @@ System.namespace("CSharpLua", function (namespace)
             VisitInterpolatedStringExpression = VisitInterpolatedStringExpression, 
             VisitInterpolation = VisitInterpolation, 
             VisitInterpolatedStringText = VisitInterpolatedStringText, 
+            VisitAliasQualifiedName = VisitAliasQualifiedName, 
             __staticCtor__ = __staticCtor__, 
             __ctor__ = __ctor__
         };

@@ -203,7 +203,7 @@ System.namespace("CSharpLua", function (namespace)
                     return Linq.Where(interfaceSymbols, function (i) return symbol:Equals(type:FindImplementationForInterfaceMember(i)); end);
                 end
             end
-            return nil;
+            return System.Array.Empty(T);
         end;
         IsFromCode = function (symbol) 
             return not symbol:getDeclaringSyntaxReferences():getIsEmpty();

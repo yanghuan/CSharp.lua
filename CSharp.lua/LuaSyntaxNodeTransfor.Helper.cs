@@ -115,8 +115,12 @@ namespace CSharpLua {
             return FindParent(node, i => i.IsKind(kind));
         }
 
+        private T FindParent<T>(SyntaxNode node) where T : CSharpSyntaxNode {
+            return (T)FindParent(node, i => i is T);
+        }
+
         private string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
-            var root = (MethodDeclarationSyntax)FindParent(node, SyntaxKind.MethodDeclaration);
+            var root = FindParent<BaseMethodDeclarationSyntax>(node);
             while(true) {
                 string newName = GetNewIdentifierName(name, index);
                 bool exists = IsLocalVarExists(newName, root);

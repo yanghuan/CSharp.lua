@@ -163,10 +163,14 @@ namespace CSharpLua {
         }
 
         private void CheckPartialTypes() {
-            foreach(var typeDeclarations in partialTypes_.Values) {
-                PartialTypeDeclaration major = typeDeclarations.Min();
-                LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor(this, null);
-                transfor.AcceptPartialType(major, typeDeclarations);
+            while(partialTypes_.Count > 0) {
+                var types = partialTypes_.Values.ToArray();
+                partialTypes_.Clear();
+                foreach(var typeDeclarations in types) {
+                    PartialTypeDeclaration major = typeDeclarations.Min();
+                    LuaSyntaxNodeTransfor transfor = new LuaSyntaxNodeTransfor(this, null);
+                    transfor.AcceptPartialType(major, typeDeclarations);
+                }
             }
         }
 
@@ -322,6 +326,9 @@ namespace CSharpLua {
 
         private void TryAddExtend(INamedTypeSymbol super, INamedTypeSymbol children) {
             if(super.IsFromCode()) {
+                if(super.OriginalDefinition != super) {
+                    super = super.OriginalDefinition;
+                }
                 var set = extends_.GetOrDefault(super);
                 if(set == null) {
                     set = new HashSet<INamedTypeSymbol>();
@@ -386,7 +393,11 @@ namespace CSharpLua {
                 }
                 if(index > 0) {
                     if(member.ContainingType.IsFromCode()) {
-                        refactorNames_.Add(member);
+                        ISymbol refactorSymbol = member;
+                        if(refactorSymbol.OriginalDefinition != refactorSymbol) {
+                            refactorSymbol = refactorSymbol.OriginalDefinition;
+                        }
+                        refactorNames_.Add(refactorSymbol);
                     }
                 }
                 ++index;
@@ -614,7 +625,6 @@ namespace CSharpLua {
 
         private void CheckRefactorNames() {
             HashSet<ISymbol> alreadyRefactorSymbols = new HashSet<ISymbol>();
-
             foreach(ISymbol symbol in refactorNames_) {
                 bool hasImplementation = false;
                 foreach(ISymbol implementation in symbol.InterfaceImplementations()) {

@@ -203,7 +203,7 @@ namespace CSharpLua {
                     return interfaceSymbols.Where(i => symbol.Equals(type.FindImplementationForInterfaceMember(i)));
                 }
             }
-            return null;
+            return Array.Empty<T>();
         }
 
         public static bool IsFromCode(this ISymbol symbol) {
@@ -236,15 +236,19 @@ namespace CSharpLua {
             while(true) {
                 ISymbol overriddenSymbol = symbol.OverriddenSymbol();
                 if(overriddenSymbol != null) {
+                    if(overriddenSymbol.OriginalDefinition != overriddenSymbol) {
+                        overriddenSymbol = overriddenSymbol.OriginalDefinition;
+                    }
+
                     if(overriddenSymbol.Equals(superSymbol)) {
                         return true;
                     }
+                    symbol = overriddenSymbol;
                 }
                 else {
-                    break;
+                    return false;
                 }
             }
-            return false;
         }
 
         public static bool IsPropertyField(this IPropertySymbol symbol) {

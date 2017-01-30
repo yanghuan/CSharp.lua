@@ -138,10 +138,14 @@ System.namespace("CSharpLua", function (namespace)
             end));
         end;
         CheckPartialTypes = function (this) 
-            for _, typeDeclarations in System.each(this.partialTypes_:getValues()) do
-                local major = Linq.Min(typeDeclarations);
-                local transfor = CSharpLua.LuaSyntaxNodeTransfor:new(1, this, nil);
-                transfor:AcceptPartialType(major, typeDeclarations);
+            while this.partialTypes_:getCount() > 0 do
+                local types = Linq.ToArray(this.partialTypes_:getValues());
+                this.partialTypes_:Clear();
+                for _, typeDeclarations in System.each(types) do
+                    local major = Linq.Min(typeDeclarations);
+                    local transfor = CSharpLua.LuaSyntaxNodeTransfor:new(1, this, nil);
+                    transfor:AcceptPartialType(major, typeDeclarations);
+                end
             end
         end;
         GetSemanticModel = function (this, syntaxTree) 

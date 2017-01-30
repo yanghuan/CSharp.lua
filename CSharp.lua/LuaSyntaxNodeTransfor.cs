@@ -208,7 +208,7 @@ namespace CSharpLua {
         private void VisitTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
             INamedTypeSymbol typeSymbol = semanticModel_.GetDeclaredSymbol(node);
             if(node.Modifiers.IsPartial()) {
-                if(!typeSymbol.DeclaringSyntaxReferences.IsEmpty) {
+                if(typeSymbol.DeclaringSyntaxReferences.Length > 1) {
                     generator_.AddPartialTypeDeclaration(typeSymbol, node, typeDeclaration, CurCompilationUnit);
                     typeDeclaration.IsPartialMark = true;
                 }
@@ -352,7 +352,6 @@ namespace CSharpLua {
 
                 foreach(var parameter in node.ParameterList.Parameters) {
                     var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
-                    CheckParameterName(ref luaParameter, parameter);
                     function.ParameterList.Parameters.Add(luaParameter);
                     if(parameter.Default != null) {
                         if(!parameter.Default.Value.IsKind(SyntaxKind.NullLiteralExpression)) {
@@ -669,7 +668,9 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitParameter(ParameterSyntax node) {
             LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-            return new LuaParameterSyntax(identifier);
+            LuaParameterSyntax luaParameter = new LuaParameterSyntax(identifier);
+            CheckParameterName(ref luaParameter, node);
+            return luaParameter;
         }
 
         private sealed class BlockCommonNode : IComparable<BlockCommonNode> {
@@ -1348,9 +1349,10 @@ namespace CSharpLua {
         }
 
         private bool IsInternalNode(NameSyntax node) {
-            switch(node.Parent.Kind()) {
+            var parentNode = node.Parent;
+            switch(parentNode.Kind()) {
                 case SyntaxKind.SimpleMemberAccessExpression: {
-                        MemberAccessExpressionSyntax parent = (MemberAccessExpressionSyntax)node.Parent;
+                        MemberAccessExpressionSyntax parent = (MemberAccessExpressionSyntax)parentNode;
                         if(parent.Expression.IsKind(SyntaxKind.ThisExpression)) {
                             return true;
                         }
@@ -1362,10 +1364,14 @@ namespace CSharpLua {
                 case SyntaxKind.MemberBindingExpression: {
                         return false;
                     }
-                default: {
-                        return true;
+                case SyntaxKind.SimpleAssignmentExpression: {
+                        if(parentNode.Parent.IsKind(SyntaxKind.ObjectInitializerExpression)) {
+                            return false;
+                        }
+                        break;
                     }
             }
+            return true;
         }
 
         private LuaExpressionSyntax VisitFieldOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty) {
@@ -1684,7 +1690,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitCaseSwitchLabel(CaseSwitchLabelSyntax node) {
             var left = switchs_.Peek().Temp;
-            var right = (LuaLiteralExpressionSyntax)node.Value.Accept(this);
+            var right = (LuaExpressionSyntax)node.Value.Accept(this);
             LuaBinaryExpressionSyntax BinaryExpression = new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.EqualsEquals, right);
             return BinaryExpression;
         }

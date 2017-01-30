@@ -31,16 +31,19 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Type.Accept(this);
 
+            int constructorIndex = 0;
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-            int index = GetConstructorIndex(symbol);
-            if(index > 0) {
-                expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
+            if(symbol != null) {
+                constructorIndex = GetConstructorIndex(symbol);
+                if(constructorIndex > 0) {
+                    expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
+                }
             }
 
             var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
             LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(expression);
-            if(index > 0) {
-                invocationExpression.AddArgument(new LuaIdentifierNameSyntax(index));
+            if(constructorIndex > 0) {
+                invocationExpression.AddArgument(new LuaIdentifierNameSyntax(constructorIndex));
             }
             invocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
             if(node.Initializer == null) {
@@ -73,10 +76,8 @@ namespace CSharpLua {
                         function.AddStatement(invocation);
                     }
                     else {
-                        var identifierName = (LuaIdentifierNameSyntax)left;
-                        string newIdentifier = identifierName.ValueText.Replace(LuaIdentifierNameSyntax.This.ValueText, temp.ValueText);
-                        identifierName = new LuaIdentifierNameSyntax(newIdentifier);
-                        function.AddStatement(new LuaAssignmentExpressionSyntax(identifierName, right));
+                        LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(temp, (LuaExpressionSyntax)left);
+                        function.AddStatement(new LuaAssignmentExpressionSyntax(memberAccess, right));
                     }
                 }
                 else {
@@ -714,6 +715,10 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitInterpolatedStringText(InterpolatedStringTextSyntax node) {
             throw new InvalidOperationException();
+        }
+
+        public override LuaSyntaxNode VisitAliasQualifiedName(AliasQualifiedNameSyntax node) {
+            return node.Name.Accept(this);
         }
     }
 }

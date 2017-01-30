@@ -133,7 +133,9 @@ namespace CSharpLua.LuaAst {
         }
 
         public void Update(string newName) {
-            IdentifierName = new LuaIdentifierNameSyntax(newName);
+            if(IdentifierName.ValueText != newName) {
+                IdentifierName = new LuaIdentifierNameSyntax(newName);
+            }
         }
 
         internal override void Render(LuaRenderer renderer) {
