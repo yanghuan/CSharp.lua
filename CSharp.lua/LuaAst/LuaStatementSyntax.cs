@@ -48,7 +48,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaStatementListSyntax : LuaStatementSyntax {
-        public List<LuaStatementSyntax> Statements { get; } = new List<LuaStatementSyntax>();
+        public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
 
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);

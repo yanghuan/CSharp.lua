@@ -265,9 +265,7 @@ namespace CSharpLua {
                     functionExpression.AddStatement(new LuaIdentifierNameSyntax(kDirInitCode));
 
                     LuaIdentifierNameSyntax requireIdentifier = new LuaIdentifierNameSyntax(kRequire);
-                    LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(requireIdentifier);
-                    variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(requireIdentifier);
-                    functionExpression.AddStatement(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+                    functionExpression.AddStatement(new LuaLocalVariableDeclaratorSyntax(requireIdentifier, requireIdentifier));
 
                     functionExpression.AddStatement(new LuaIdentifierNameSyntax(kLoadCode));
                     functionExpression.AddStatement(LuaBlankLinesStatement.One);

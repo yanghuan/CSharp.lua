@@ -349,12 +349,6 @@ function System.create(t, f)
     return t
 end
 
-function System.access(t, f)
-    if t ~= nil then
-        return f(t)
-    end
-end
-
 function System.default(T)
     assert(T)
     return T.__default__()

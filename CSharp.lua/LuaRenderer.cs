@@ -570,13 +570,9 @@ namespace CSharpLua {
         }
 
         internal void Render(LuaCodeTemplateExpressionSyntax node) {
-            foreach(var code in node.Codes) {
+            foreach(var code in node.Expressions) {
                 code.Render(this);
             }
-        }
-
-        internal void Render(LuaCodeTemplateParamsExpressionSyntax node) {
-            WriteSeparatedSyntaxList(node.Expressions);
         }
     }
 }

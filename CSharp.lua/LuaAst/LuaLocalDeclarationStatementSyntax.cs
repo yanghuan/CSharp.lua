@@ -74,6 +74,10 @@ namespace CSharpLua.LuaAst {
             Declarator = declarator;
         }
 
+        public LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
+            Declarator = new LuaVariableDeclaratorSyntax(identifier, expression);
+        }
+        
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
@@ -84,11 +88,14 @@ namespace CSharpLua.LuaAst {
         public LuaIdentifierNameSyntax Identifier { get; }
         public LuaEqualsValueClauseSyntax Initializer { get; set; }
 
-        public LuaVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier) {
+        public LuaVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
             if(identifier == null) {
                 throw new ArgumentNullException(nameof(identifier));
             }
             Identifier = identifier;
+            if(expression != null) {
+                Initializer = new LuaEqualsValueClauseSyntax(expression);
+            }
         }
 
         internal override void Render(LuaRenderer renderer) {

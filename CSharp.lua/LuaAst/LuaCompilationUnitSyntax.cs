@@ -69,11 +69,7 @@ namespace CSharpLua.LuaAst {
         }
 
         private void AddImport(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
-            LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(name);
-            if(value != null) {
-                variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(value);
-            }
-            HeadAreaStatements.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+            HeadAreaStatements.Statements.Add(new LuaLocalVariableDeclaratorSyntax(name, value));
         }
 
         internal void AddTypeDeclarationCount() {

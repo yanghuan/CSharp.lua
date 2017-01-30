@@ -85,22 +85,28 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         };
     end);
     namespace.class("LuaLocalVariableDeclaratorSyntax", function (namespace) 
-        local Render, __ctor__;
+        local Render, __ctor1__, __ctor2__;
         Render = function (this, renderer) 
             renderer:Render37(this);
         end;
-        __ctor__ = function (this, declarator) 
+        __ctor1__ = function (this, declarator) 
             if declarator == nil then
                 System.throw(System.ArgumentNullException("declarator"));
             end
             this.Declarator = declarator;
+        end;
+        __ctor2__ = function (this, identifier, expression) 
+            this.Declarator = CSharpLuaLuaAst.LuaVariableDeclaratorSyntax(identifier, expression);
         end;
         return {
             __inherits__ = {
                 CSharpLuaLuaAst.LuaStatementSyntax
             }, 
             Render = Render, 
-            __ctor__ = __ctor__
+            __ctor__ = {
+                __ctor1__, 
+                __ctor2__
+            }
         };
     end);
     namespace.class("LuaVariableDeclaratorSyntax", function (namespace) 
@@ -111,11 +117,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Render = function (this, renderer) 
             renderer:Render36(this);
         end;
-        __ctor__ = function (this, identifier) 
+        __ctor__ = function (this, identifier, expression) 
             if identifier == nil then
                 System.throw(System.ArgumentNullException("identifier"));
             end
             this.Identifier = identifier;
+            if expression ~= nil then
+                this.Initializer = CSharpLuaLuaAst.LuaEqualsValueClauseSyntax(expression);
+            end
         end;
         return {
             __inherits__ = {

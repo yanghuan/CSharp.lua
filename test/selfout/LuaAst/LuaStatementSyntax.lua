@@ -62,7 +62,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render19(this);
         end;
         __ctor__ = function (this) 
-            this.Statements = System.List(CSharpLuaLuaAst.LuaStatementSyntax)();
+            this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)();
         end;
         return {
             __inherits__ = {

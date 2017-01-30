@@ -121,7 +121,11 @@ System.namespace("CSharpLua", function (namespace)
                 end
 
                 local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol); end);
-                return System.access(methodModel, function (default) return this.Name; end);
+                local default = methodModel;
+                if default ~= nil then
+                    default = default.Name;
+                end
+                return default;
             end;
             GetCodeTemplate = function (this, symbol) 
                 if this.isSingleModel_ then
@@ -129,7 +133,11 @@ System.namespace("CSharpLua", function (namespace)
                 end
 
                 local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol); end);
-                return System.access(methodModel, function (default) return this.Template; end);
+                local default = methodModel;
+                if default ~= nil then
+                    default = default.Template;
+                end
+                return default;
             end;
             GetMetaInfo = function (this, symbol, type) 
                 repeat
@@ -373,28 +381,52 @@ System.namespace("CSharpLua", function (namespace)
         end;
         IsPropertyField = function (this, symbol) 
             if MayHaveCodeMeta(this, symbol) then
-                local info = System.access(GetTypeMetaInfo(this, symbol), function (default) return this:GetPropertyModel; end(this, symbol:getName()));
+                local default = GetTypeMetaInfo(this, symbol);
+                if default ~= nil then
+                    default = default:GetPropertyModel(symbol:getName());
+                end
+                local info = default;
                 return info ~= nil and info.IsAutoField;
             end
             return false;
         end;
         GetFieldCodeTemplate = function (this, symbol) 
             if MayHaveCodeMeta(this, symbol) then
-                return System.access(GetTypeMetaInfo(this, symbol), System.access(function (default) return this:GetFieldModel; end(this, symbol:getName()), function (default) return this.Template; end));
+                local default = GetTypeMetaInfo(this, symbol);
+                if default ~= nil then
+                    local extern = extern:GetFieldModel(symbol:getName());
+                    if extern ~= nil then
+                        extern = extern.Template;
+                    end
+                    default = extern;
+                end
+                return default;
             end
             return nil;
         end;
         GetProertyCodeTemplate = function (this, symbol, isGet) 
             if MayHaveCodeMeta(this, symbol) then
-                local info = System.access(GetTypeMetaInfo(this, symbol), function (default) return this:GetPropertyModel; end(this, symbol:getName()));
+                local default = GetTypeMetaInfo(this, symbol);
+                if default ~= nil then
+                    default = default:GetPropertyModel(symbol:getName());
+                end
+                local info = default;
                 if info ~= nil then
-                    local default;
+                    local extern;
                     if isGet then
-                        default = System.access(info.get, function (default) return this.Template; end);
+                        local ref = info.get;
+                        if ref ~= nil then
+                            ref = ref.Template;
+                        end
+                        extern = ref;
                     else
-                        default = System.access(info.set, function (default) return this.Template; end);
+                        local out = info.set;
+                        if out ~= nil then
+                            out = out.Template;
+                        end
+                        extern = out;
                     end
-                    return default;
+                    return extern;
                 end
             end
             return nil;
@@ -407,7 +439,15 @@ System.namespace("CSharpLua", function (namespace)
 
             local codeTemplate = nil;
             if not CSharpLua.Utility.IsFromCode(symbol) then
-                codeTemplate = System.access(GetTypeMetaInfo(this, symbol), System.access(function (default) return this:GetMethodMetaInfo; end(this, symbol:getName()), function (default) return this:GetMetaInfo; end(this, symbol, metaType)));
+                local default = GetTypeMetaInfo(this, symbol);
+                if default ~= nil then
+                    local extern = extern:GetMethodMetaInfo(symbol:getName());
+                    if extern ~= nil then
+                        extern = extern:GetMetaInfo(symbol, metaType);
+                    end
+                    default = extern;
+                end
+                codeTemplate = default;
             end
 
             if codeTemplate == nil then

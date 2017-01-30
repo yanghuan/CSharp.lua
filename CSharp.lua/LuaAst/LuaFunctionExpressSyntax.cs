@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
     public class LuaFunctionExpressionSyntax : LuaExpressionSyntax {
-        public LuaParameterListSyntax ParameterList { get; } = new LuaParameterListSyntax();
+        public readonly LuaParameterListSyntax ParameterList = new LuaParameterListSyntax();
         public string FunctionKeyword => Tokens.Function;
         public bool HasYield { get; set; }
         public int TempIndex;

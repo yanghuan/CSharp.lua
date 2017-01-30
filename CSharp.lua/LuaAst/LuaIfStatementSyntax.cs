@@ -94,9 +94,7 @@ namespace CSharpLua.LuaAst {
 
             var body = RepeatStatement.Body;
             body.Statements.Add(caseLabelVariables_);
-            LuaVariableDeclaratorSyntax variableDeclarator = new LuaVariableDeclaratorSyntax(Temp);
-            variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(expression);
-            body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+            body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(Temp, expression));
 
             LuaIfStatementSyntax ifStatement = null;
             foreach(var section in sections) {

@@ -225,9 +225,9 @@ namespace CSharpLua {
 
         private void AddCodeTemplateExpression(LuaExpressionSyntax expression, string comma, LuaCodeTemplateExpressionSyntax codeTemplateExpression) {
             if(!string.IsNullOrEmpty(comma)) {
-                codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(comma));
+                codeTemplateExpression.Expressions.Add(new LuaIdentifierNameSyntax(comma));
             }
-            codeTemplateExpression.Codes.Add(expression);
+            codeTemplateExpression.Expressions.Add(expression);
         }
 
         private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IList<ExpressionSyntax> arguments, ImmutableArray<ITypeSymbol> typeArguments) {
@@ -238,7 +238,7 @@ namespace CSharpLua {
             foreach(Match match in matchs) {
                 if(match.Index > prevIndex) {
                     string prevToken = codeTemplate.Substring(prevIndex, match.Index - prevIndex);
-                    codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(prevToken));
+                    codeTemplateExpression.Expressions.Add(new LuaIdentifierNameSyntax(prevToken));
                 }
                 string comma = match.Groups[1].Value;
                 string key = match.Groups[2].Value;
@@ -263,7 +263,7 @@ namespace CSharpLua {
                 else if(key[0] == '*') {
                     int paramsIndex;
                     if(int.TryParse(key.Substring(1), out paramsIndex)) {
-                        LuaCodeTemplateParamsExpressionSyntax paramsExpression = new LuaCodeTemplateParamsExpressionSyntax();
+                        LuaCodeTemplateExpressionSyntax paramsExpression = new LuaCodeTemplateExpressionSyntax();
                         foreach(var argument in arguments.Skip(paramsIndex)) {
                             var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
                             paramsExpression.Expressions.Add(argumentExpression);
@@ -288,7 +288,7 @@ namespace CSharpLua {
 
             if(prevIndex < codeTemplate.Length) {
                 string last = codeTemplate.Substring(prevIndex);
-                codeTemplateExpression.Codes.Add(new LuaIdentifierNameSyntax(last));
+                codeTemplateExpression.Expressions.Add(new LuaIdentifierNameSyntax(last));
             }
 
             return codeTemplateExpression;
@@ -307,7 +307,7 @@ namespace CSharpLua {
             bool isVirtual = symbol.IsOverridable() && !symbol.ContainingType.IsSealed;
             if(!isVirtual) {
                 var typeSymbol = GetTypeDeclarationSymbol(node);
-                if(typeSymbol == symbol.ContainingType) {
+                if(typeSymbol.Equals(symbol.ContainingType)) {
                     return true;
                 }
             }

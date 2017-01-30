@@ -23,6 +23,12 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
     public abstract class LuaExpressionSyntax : LuaSyntaxNode {
+        private sealed class EmptyLuaExpressionSyntax : LuaExpressionSyntax {
+            internal override void Render(LuaRenderer renderer) {
+            }
+        }
+
+        public static readonly LuaExpressionSyntax EmptyExpression = new EmptyLuaExpressionSyntax();
     }
 
     public sealed class LuaAssignmentExpressionSyntax : LuaExpressionSyntax {
@@ -115,14 +121,6 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaCodeTemplateExpressionSyntax : LuaExpressionSyntax {
-        public readonly LuaSyntaxList<LuaExpressionSyntax> Codes = new LuaSyntaxList<LuaExpressionSyntax>();
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-    }
-
-    public sealed class LuaCodeTemplateParamsExpressionSyntax : LuaExpressionSyntax {
         public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
 
         internal override void Render(LuaRenderer renderer) {

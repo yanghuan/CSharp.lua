@@ -16,7 +16,7 @@ System.namespace("CSharpLua", function (namespace)
         Render29, Render30, Render31, Render32, Render33, Render34, Render35, Render36, 
         Render37, Render38, Render39, Render40, Render41, Render42, Render43, Render44, 
         Render45, Render46, Render47, Render48, Render49, Render50, Render51, Render52, 
-        Render53, Render54, Render55, Render56, Render57, Render58, Render59, __ctor__;
+        Render53, Render54, Render55, Render56, Render57, Render58, __ctor__;
         getSetting = function (this) 
             return this.generator_.Setting;
         end;
@@ -198,7 +198,10 @@ System.namespace("CSharpLua", function (namespace)
                 Write(this, node:getLocalKeyword());
                 WriteSpace(this);
                 WriteSeparatedSyntaxList(this, node.Variables);
-                System.access(node.Initializer, function (default) return this:Render; end(this, this));
+                local default = node.Initializer;
+                if default ~= nil then
+                    default:Render(this);
+                end
                 Write1(this, node:getSemicolonToken());
                 WriteNewLine(this);
             end
@@ -325,7 +328,10 @@ System.namespace("CSharpLua", function (namespace)
             Write(this, node:getLocalKeyword());
             WriteSpace(this);
             node.Identifier:Render(this);
-            System.access(node.Initializer, function (default) return this:Render; end(this, this));
+            local default = node.Initializer;
+            if default ~= nil then
+                default:Render(this);
+            end
             Write1(this, node:getSemicolonToken());
         end;
         Render37 = function (this, node) 
@@ -369,7 +375,10 @@ System.namespace("CSharpLua", function (namespace)
             for _, elseIfNode in System.each(node.ElseIfStatements) do
                 elseIfNode:Render(this);
             end
-            System.access(node.Else, function (default) return this:Render; end(this, this));
+            local default = node.Else;
+            if default ~= nil then
+                default:Render(this);
+            end
             Write(this, node:getCloseParenToken());
             WriteNewLine(this);
         end;
@@ -483,19 +492,19 @@ System.namespace("CSharpLua", function (namespace)
             Write(this, node:getSuffixToken());
             Write1(this, node:getSemicolonToken());
             WriteNewLine(this);
-            System.access(node.Statement, function (default) return this:Render; end(this, this));
+            local default = node.Statement;
+            if default ~= nil then
+                default:Render(this);
+            end
         end;
         Render57 = function (this, node) 
             node.Assignment:Render(this);
             node.GotoStatement:Render(this);
         end;
         Render58 = function (this, node) 
-            for _, code in System.each(node.Codes) do
+            for _, code in System.each(node.Expressions) do
                 code:Render(this);
             end
-        end;
-        Render59 = function (this, node) 
-            WriteSeparatedSyntaxList(this, node.Expressions);
         end;
         __ctor__ = function (this, generator, writer) 
             this.generator_ = generator;
@@ -563,7 +572,6 @@ System.namespace("CSharpLua", function (namespace)
             Render56 = Render56, 
             Render57 = Render57, 
             Render58 = Render58, 
-            Render59 = Render59, 
             __ctor__ = __ctor__
         };
     end);

@@ -104,9 +104,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
 
             local body = this.RepeatStatement.Body;
             body.Statements:Add1(this.caseLabelVariables_);
-            local variableDeclarator = CSharpLuaLuaAst.LuaVariableDeclaratorSyntax(this.Temp);
-            variableDeclarator.Initializer = CSharpLuaLuaAst.LuaEqualsValueClauseSyntax(expression);
-            body.Statements:Add1(CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+            body.Statements:Add1(CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax:new(2, this.Temp, expression));
 
             local ifStatement = nil;
             for _, section in System.each(sections) do

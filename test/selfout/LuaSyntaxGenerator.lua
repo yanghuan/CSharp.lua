@@ -232,9 +232,7 @@ System.namespace("CSharpLua", function (namespace)
                     functionExpression:AddStatement1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kDirInitCode));
 
                     local requireIdentifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kRequire);
-                    local variableDeclarator = CSharpLuaLuaAst.LuaVariableDeclaratorSyntax(requireIdentifier);
-                    variableDeclarator.Initializer = CSharpLuaLuaAst.LuaEqualsValueClauseSyntax(requireIdentifier);
-                    functionExpression:AddStatement(CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+                    functionExpression:AddStatement(CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax:new(2, requireIdentifier, requireIdentifier));
 
                     functionExpression:AddStatement1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kLoadCode));
                     functionExpression:AddStatement(CSharpLuaLuaAst.LuaBlankLinesStatement.One);
@@ -451,8 +449,8 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         MemberSymbolBoolComparison = function (this, a, b, boolFunc, v) 
-            local boolOfA = boolFunc(this, a);
-            local boolOfB = boolFunc(this, b);
+            local boolOfA = boolFunc(a);
+            local boolOfB = boolFunc(b);
 
             if boolOfA then
                 if boolOfB then
