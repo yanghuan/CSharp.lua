@@ -314,17 +314,17 @@ function System.getTimeZone()
 end
 
 function System.using(t, f)
-    local ok, status, ret = pcall(f, t)
-    if t ~= nil then
-        local dispose = t.Dispose
-        if dispose ~= nil and dispose ~= emptyFn then
-            dispose(t)
+    local dispose = t and t.Dispose
+    if dispose ~= nil then
+        local ok, status, ret = pcall(f, t)   
+        dispose(t)
+        if not ok then
+            throw(status)
         end
+        return status, ret
+    else
+        return f(t)    
     end
-    if not ok then
-        throw(status)
-    end
-    return status, ret
 end
 
 function System.usingX(f, ...)
@@ -333,7 +333,7 @@ function System.usingX(f, ...)
         local t = select(i, ...)
         if t ~= nil then
             local dispose = t.Dispose
-            if dispose ~= nil and dispose ~= emptyFn then
+            if dispose ~= nil then
                 dispose(t)
             end
         end
