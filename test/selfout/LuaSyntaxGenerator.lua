@@ -57,11 +57,12 @@ System.namespace("CSharpLua", function (namespace)
             };
         end);
         local Encoding, Create, Write, Generate, GetOutFilePath, IsEnumExport, AddExportEnum, AddEnumDeclaration, 
-        CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, GetMethodName, IsTypeEnable, AddBaseTypeTo, 
-        GetExportTypes, ExportManifestFile, AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberMethodName, InternalGetMemberMethodName, GetExtensionMethodName, 
-        GetStaticClassMethodName, GetMethodNameFromIndex, TryAddNewUsedName, GetSameNameMembers, MethodSymbolToString, MemberSymbolToString, GetSymbolWright, MemberSymbolCommonComparison, 
-        MemberSymbolBoolComparison, MemberSymbolComparison, FillSameNameMembers, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, 
-        UpdateName, GetRefactorName, IsTypeNameUsed, CheckNewNameEnable, __staticCtor__, __init__, __ctor__;
+        IsExportAttribute, CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, GetMethodName, IsTypeEnable, 
+        AddBaseTypeTo, GetExportTypes, ExportManifestFile, AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberMethodName, InternalGetMemberMethodName, 
+        GetSymbolName, GetExtensionMethodName, GetStaticClassMethodName, GetMethodNameFromIndex, TryAddNewUsedName, GetSameNameMembers, MethodSymbolToString, MemberSymbolToString, 
+        GetSymbolWright, MemberSymbolCommonComparison, MemberSymbolBoolComparison, MemberSymbolComparison, FillSameNameMembers, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, 
+        RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorName, IsTypeNameUsed, CheckNewNameEnable, __staticCtor__, __init__, 
+        __ctor__;
         Create = function (this) 
             local luaCompilationUnits = System.List(CSharpLuaLuaAst.LuaCompilationUnitSyntax)();
             for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
@@ -116,6 +117,9 @@ System.namespace("CSharpLua", function (namespace)
         AddEnumDeclaration = function (this, enumDeclaration) 
             this.enumDeclarations_:Add(enumDeclaration);
         end;
+        IsExportAttribute = function (this, attributeTypeSymbol) 
+            return true;
+        end;
         CheckExportEnums = function (this) 
             for _, enumDeclaration in System.each(this.enumDeclarations_) do
                 if IsEnumExport(this, enumDeclaration.FullName) then
@@ -125,7 +129,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         AddPartialTypeDeclaration = function (this, typeSymbol, node, luaNode, compilationUnit) 
-            local list = CSharpLua.Utility.GetOrDefault1(this.partialTypes_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.List(T));
+            local list = CSharpLua.Utility.GetOrDefault1(this.partialTypes_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.List(CSharpLua.PartialTypeDeclaration));
             if list == nil then
                 list = System.List(CSharpLua.PartialTypeDeclaration)();
                 this.partialTypes_:Add(typeSymbol, list);
@@ -133,7 +137,7 @@ System.namespace("CSharpLua", function (namespace)
             list:Add(System.create(CSharpLua.PartialTypeDeclaration(), function (default) 
                 default.Symbol = typeSymbol;
                 default.Node = node;
-                default.LuaNode = luaNode;
+                default.TypeDeclaration = luaNode;
                 default.CompilationUnit = compilationUnit;
             end));
         end;
@@ -194,7 +198,7 @@ System.namespace("CSharpLua", function (namespace)
 
                 while true do
                     local parentTypes = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)();
-                    local lastTypes = CSharpLua.Utility.Last(typesList, System.List(T));
+                    local lastTypes = CSharpLua.Utility.Last(typesList, System.List(MicrosoftCodeAnalysis.INamedTypeSymbol));
                     for _, type in System.each(lastTypes) do
                         if type:getBaseType() ~= nil then
                             AddBaseTypeTo(this, parentTypes, type, type:getBaseType());
@@ -285,7 +289,7 @@ System.namespace("CSharpLua", function (namespace)
                 if super:getIsGenericType() then
                     super = super:getOriginalDefinition();
                 end
-                local set = CSharpLua.Utility.GetOrDefault1(this.extends_, super, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(T));
+                local set = CSharpLua.Utility.GetOrDefault1(this.extends_, super, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol));
                 if set == nil then
                     set = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)();
                     this.extends_:Add(super, set);
@@ -337,10 +341,10 @@ System.namespace("CSharpLua", function (namespace)
             local index = 0;
             for _, member in System.each(sameNameMembers) do
                 if member:Equals(symbol) then
-                    symbolExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
+                    symbolExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(this, symbol));
                 else
                     if not this.memberNames_:ContainsKey(member) then
-                        local identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, member:getName());
+                        local identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(this, member));
                         this.memberNames_:Add(member, CSharpLuaLuaAst.LuaSymbolNameSyntax(identifierName));
                     end
                 end
@@ -358,6 +362,15 @@ System.namespace("CSharpLua", function (namespace)
                 System.throw(System.InvalidOperationException());
             end
             return symbolExpression;
+        end;
+        GetSymbolName = function (symbol) 
+            if symbol:getKind() == 9 --[[SymbolKind.Method]] then
+                local method = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol);
+                if not method:getExplicitInterfaceImplementations():getIsEmpty() then
+                    return method:getExplicitInterfaceImplementations():get(0):getName();
+                end
+            end
+            return symbol:getName();
         end;
         GetExtensionMethodName = function (this, symbol) 
             assert(symbol:getIsExtensionMethod());
@@ -403,7 +416,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         TryAddNewUsedName = function (this, type, newName) 
-            local set = CSharpLua.Utility.GetOrDefault1(this.typeNameUseds_, type, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(T));
+            local set = CSharpLua.Utility.GetOrDefault1(this.typeNameUseds_, type, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(System.String));
             if set == nil then
                 set = System.HashSet(System.String)();
                 this.typeNameUseds_:Add(type, set);
@@ -412,7 +425,11 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetSameNameMembers = function (this, symbol) 
             local members = System.List(MicrosoftCodeAnalysis.ISymbol)();
-            FillSameNameMembers(this, symbol:getContainingType(), symbol:getName(), members);
+            local name = GetSymbolName(this, symbol);
+            FillSameNameMembers(this, symbol:getContainingType(), name, members);
+            if name ~= symbol:getName() then
+                FillSameNameMembers(this, symbol:getContainingType(), symbol:getName(), members);
+            end
             members:Sort(MemberSymbolComparison);
             return members;
         end;
@@ -583,7 +600,7 @@ System.namespace("CSharpLua", function (namespace)
         end;
         RefactorCurTypeSymbol = function (this, symbol, alreadyRefactorSymbols) 
             local typeSymbol = symbol:getContainingType();
-            local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(T));
+            local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol));
             local newName = GetRefactorName(this, typeSymbol, childrens, symbol:getName());
             RefactorName(this, symbol, newName, alreadyRefactorSymbols);
         end;
@@ -609,7 +626,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         RefactorChildrensOverridden = function (this, originalSymbol, curType, newName, alreadyRefactorSymbols) 
-            local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, curType, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(T));
+            local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, curType, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol));
             if childrens ~= nil then
                 for _, children in System.each(childrens) do
                     local curSymbol = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(children:GetMembers(originalSymbol:getName()), function (i) return CSharpLua.Utility.IsOverridden(i, originalSymbol); end, MicrosoftCodeAnalysis.ISymbol);
@@ -647,7 +664,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         IsTypeNameUsed = function (this, typeSymbol, newName) 
-            local set = CSharpLua.Utility.GetOrDefault1(this.typeNameUseds_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(T));
+            local set = CSharpLua.Utility.GetOrDefault1(this.typeNameUseds_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(System.String));
             return set ~= nil and set:Contains(newName);
         end;
         CheckNewNameEnable = function (this, typeSymbol, newName) 
@@ -657,7 +674,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end
 
-            local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(T));
+            local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol));
             if childrens ~= nil then
                 for _, children in System.each(childrens) do
                     if not CheckNewNameEnable(this, children, newName) then
@@ -692,6 +709,7 @@ System.namespace("CSharpLua", function (namespace)
             IsEnumExport = IsEnumExport, 
             AddExportEnum = AddExportEnum, 
             AddEnumDeclaration = AddEnumDeclaration, 
+            IsExportAttribute = IsExportAttribute, 
             AddPartialTypeDeclaration = AddPartialTypeDeclaration, 
             GetSemanticModel = GetSemanticModel, 
             IsBaseType = IsBaseType, 

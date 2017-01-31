@@ -25,7 +25,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         };
     end);
     namespace.class("LuaArgumentListSyntax", function (namespace) 
-        local getOpenParenToken, getCloseParenToken, Render, __ctor__;
+        local getOpenParenToken, getCloseParenToken, Render, AddArgument, AddArgument1, __ctor__;
         getOpenParenToken = function (this) 
             return "(" --[[Tokens.OpenParentheses]];
         end;
@@ -34,6 +34,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         Render = function (this, renderer) 
             renderer:Render7(this);
+        end;
+        AddArgument = function (this, argument) 
+            this.Arguments:Add1(argument);
+        end;
+        AddArgument1 = function (this, argument) 
+            AddArgument(this, CSharpLuaLuaAst.LuaArgumentSyntax(argument));
         end;
         __ctor__ = function (this) 
             this.Arguments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaArgumentSyntax)();
@@ -45,6 +51,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             getOpenParenToken = getOpenParenToken, 
             getCloseParenToken = getCloseParenToken, 
             Render = Render, 
+            AddArgument = AddArgument, 
+            AddArgument1 = AddArgument1, 
             __ctor__ = __ctor__
         };
     end);

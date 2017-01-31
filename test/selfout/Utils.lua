@@ -38,11 +38,12 @@ System.namespace("CSharpLua", function (namespace)
         };
     end);
     namespace.class("Utility", function (namespace) 
-        local GetCommondLines, First, Last, GetOrDefault, GetOrDefault1, GetArgument, GetCurrentDirectory, Split, 
-        IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, IsConst, IsParams, IsPartial, 
-        IsStringType, IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, 
-        OverriddenSymbol, IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
-        IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition, CheckOriginalDefinition1;
+        local GetCommondLines, First, Last, GetOrDefault, GetOrDefault1, AddAt, IndexOf, GetArgument, 
+        GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, IsConst, 
+        IsParams, IsPartial, IsStringType, IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, 
+        IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, systemLinqEnumerableType_, 
+        IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition, 
+        CheckOriginalDefinition1;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -93,6 +94,31 @@ System.namespace("CSharpLua", function (namespace)
                 return v;
             end
             return t;
+        end;
+        AddAt = function (list, index, v, T) 
+            if index < list:getCount() then
+                list:set(index, v);
+            else
+                local count = index - list:getCount();
+                do
+                    local i = 0;
+                    while i < count do
+                        list:Add(System.default(T));
+                        i = i + 1;
+                    end
+                end
+                list:Add(v);
+            end
+        end;
+        IndexOf = function (source, match, T) 
+            local index = 0;
+            for _, item in System.each(source) do
+                if match(item) then
+                    return index;
+                end
+                index = index + 1;
+            end
+            return - 1;
         end;
         GetArgument = function (args, name, isOption) 
             if isOption == nil then isOption = false end
@@ -427,6 +453,8 @@ System.namespace("CSharpLua", function (namespace)
             Last = Last, 
             GetOrDefault = GetOrDefault, 
             GetOrDefault1 = GetOrDefault1, 
+            AddAt = AddAt, 
+            IndexOf = IndexOf, 
             GetArgument = GetArgument, 
             GetCurrentDirectory = GetCurrentDirectory, 
             Split = Split, 

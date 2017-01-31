@@ -184,8 +184,11 @@ namespace CSharpLua {
 
         private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
             typeDeclarations_.Push(typeDeclaration);
-            BuildAttributes(node.AttributeLists);
-
+            var attributes = BuildAttributes(node.AttributeLists);
+            if(attributes.Count > 0) {
+                typeDeclaration.AddClassAttributes(attributes);
+            }
+                      
             if(node.TypeParameterList != null) {
                 foreach(var typeParameter in node.TypeParameterList.Parameters) {
                     var typeIdentifier = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
@@ -225,20 +228,50 @@ namespace CSharpLua {
         }
 
         internal void AcceptPartialType(PartialTypeDeclaration major, List<PartialTypeDeclaration> typeDeclarations) {
-            major.LuaNode.IsPartialMark = false;
+            major.TypeDeclaration.IsPartialMark = false;
             major.CompilationUnit.AddTypeDeclarationCount();
 
             compilationUnits_.Push(major.CompilationUnit);
-            typeDeclarations_.Push(major.LuaNode);
+            typeDeclarations_.Push(major.TypeDeclaration);
+
+            List<LuaExpressionSyntax> attributes = new List<LuaExpressionSyntax>();
+            foreach(var typeDeclaration in typeDeclarations) {
+                foreach(var attributeList in typeDeclaration.Node.AttributeLists) {
+                    foreach(var attribute in attributeList.Attributes) {
+                        semanticModel_ = generator_.GetSemanticModel(attribute.SyntaxTree);
+                        var attributeExpression = (LuaExpressionSyntax)attribute.Accept(this);
+                        if(attributeExpression != null) {
+                            attributes.Add(attributeExpression);
+                        }
+                    }
+                }
+            }
+
+            if(attributes.Count > 0) {
+                major.TypeDeclaration.AddClassAttributes(attributes);
+            }
 
             if(major.Node.TypeParameterList != null) {
                 foreach(var typeParameter in major.Node.TypeParameterList.Parameters) {
                     var typeIdentifier = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
-                    major.LuaNode.AddTypeIdentifier(typeIdentifier);
+                    major.TypeDeclaration.AddTypeIdentifier(typeIdentifier);
                 }
             }
 
-            var baseTypes = typeDeclarations.SelectMany(i => i.Node.BaseList != null ? (IEnumerable<BaseTypeSyntax>)i.Node.BaseList.Types : Array.Empty<BaseTypeSyntax>()).ToList();
+            List<BaseTypeSyntax> baseTypes = new List<BaseTypeSyntax>();
+            HashSet<ITypeSymbol> baseSymbols = new HashSet<ITypeSymbol>();
+            foreach(var typeDeclaration in typeDeclarations) {
+                if(typeDeclaration.Node.BaseList != null) {
+                    foreach(var baseTypeSyntax in typeDeclaration.Node.BaseList.Types) {
+                        var semanticModel = generator_.GetSemanticModel(baseTypeSyntax.SyntaxTree);
+                        var baseTypeSymbol = semanticModel.GetTypeInfo(baseTypeSyntax.Type).Type;
+                        if(baseSymbols.Add(baseTypeSymbol)) {
+                            baseTypes.Add(baseTypeSyntax);
+                        }
+                    }
+                }
+            }
+
             if(baseTypes.Count > 0) {
                 if(baseTypes.Count > 1) {
                     var baseTypeIndex = baseTypes.FindIndex(generator_.IsBaseType);
@@ -257,12 +290,12 @@ namespace CSharpLua {
                     baseTypeExpressions.Add(baseTypeName);
                     CheckBaseTypeGenericKind(ref baseTypeGenericKind, major.Symbol, baseType);
                 }
-                major.LuaNode.AddBaseTypes(baseTypeExpressions, BaseTypeGenericKind.None);
+                major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, BaseTypeGenericKind.None);
             }
 
             foreach(var typeDeclaration in typeDeclarations) {
                 semanticModel_ = generator_.GetSemanticModel(typeDeclaration.Node.SyntaxTree);
-                BuildTypeMembers(typeDeclaration.LuaNode, typeDeclaration.Node);
+                BuildTypeMembers(typeDeclaration.TypeDeclaration, typeDeclaration.Node);
             }
 
             typeDeclarations_.Pop();
@@ -342,6 +375,40 @@ namespace CSharpLua {
             function.AddStatement(returnStatement);
         }
 
+        private void FillMethodParameterList(LuaFunctionExpressionSyntax function, ParameterListSyntax parameterList, bool isCheckCallerAttribute = true) {
+            foreach(var parameter in parameterList.Parameters) {
+                var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
+                function.ParameterList.Parameters.Add(luaParameter);
+                if(parameter.Default != null) {
+                    if(!parameter.Default.Value.IsKind(SyntaxKind.NullLiteralExpression)) {
+                        bool hasDefault;
+                        if(isCheckCallerAttribute) {
+                            var attributes = parameter.AttributeLists.SelectMany(i => i.Attributes);
+                            bool hasCaller = attributes.Any(IsCallerAttribute);
+                            hasDefault = !hasCaller;
+                        }
+                        else {
+                            hasDefault = true;
+                        }
+
+                        if(hasDefault) {
+                            var expression = (LuaExpressionSyntax)parameter.Default.Value.Accept(this);
+                            var intiStatement = new LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, expression);
+                            function.AddStatement(intiStatement);
+                        }
+                    }
+                }
+                else {
+                    if(parameter.Modifiers.IsParams()) {
+                        var typeName = (LuaIdentifierNameSyntax)((ArrayTypeSyntax)parameter.Type).ElementType.Accept(this);
+                        var emptyArray = BuildEmptyArray(typeName);
+                        var intiStatement = new LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, emptyArray);
+                        function.AddStatement(intiStatement);
+                    }
+                }
+            }
+        }
+
         public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
             if(!node.Modifiers.IsAbstract()) {
                 IMethodSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
@@ -352,30 +419,7 @@ namespace CSharpLua {
                     function.AddParameter(LuaIdentifierNameSyntax.This);
                 }
 
-                foreach(var parameter in node.ParameterList.Parameters) {
-                    var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
-                    function.ParameterList.Parameters.Add(luaParameter);
-                    if(parameter.Default != null) {
-                        if(!parameter.Default.Value.IsKind(SyntaxKind.NullLiteralExpression)) {
-                            var attributes = parameter.AttributeLists.SelectMany(i => i.Attributes);
-                            bool hasCaller = attributes.Any(IsCallerAttribute);
-                            if(!hasCaller) {
-                                var expression = (LuaExpressionSyntax)parameter.Default.Value.Accept(this);
-                                var intiStatement = new LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, expression);
-                                function.AddStatement(intiStatement);
-                            }
-                        }
-                    }
-                    else {
-                        if(parameter.Modifiers.IsParams()) {
-                            var typeName = (LuaIdentifierNameSyntax)((ArrayTypeSyntax)parameter.Type).ElementType.Accept(this);
-                            var emptyArray = BuildEmptyArray(typeName);
-                            var intiStatement = new LuaMethodParameterDefaultValueStatementSyntax(luaParameter.Identifier, emptyArray);
-                            function.AddStatement(intiStatement);
-                        }
-                    }
-                }
-
+                FillMethodParameterList(function, node.ParameterList);
                 if(node.TypeParameterList != null) {
                     foreach(var typeParameter in node.TypeParameterList.Parameters) {
                         var typeName = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
@@ -1123,7 +1167,7 @@ namespace CSharpLua {
             }
 
             invocation.ArgumentList.Arguments.AddRange(arguments);
-            CheckInvocationCallerAttribute(symbol, node, invocation);
+            CheckInvocationCallerAttribute(symbol, invocation, node.ArgumentList.Arguments.Count, node);
             AddInvocationTypeArguments(symbol, node, invocation);
 
             if(refOrOutArguments.Count > 0) {
@@ -1155,8 +1199,7 @@ namespace CSharpLua {
             }
         }
 
-        private void CheckInvocationCallerAttribute(IMethodSymbol symbol, InvocationExpressionSyntax node, LuaInvocationExpressionSyntax invocation) {
-            int argumentCount = node.ArgumentList.Arguments.Count;
+        private void CheckInvocationCallerAttribute(IMethodSymbol symbol, LuaInvocationExpressionSyntax invocation, int argumentCount, SyntaxNode node) {
             if(symbol.Parameters.Length > argumentCount) {
                 var optionalParameters = symbol.Parameters.Skip(argumentCount);
                 int prevCallerIndex = -1;
@@ -1523,7 +1566,7 @@ namespace CSharpLua {
             return node.Right.Accept(this);
         }
 
-        private LuaExpressionSyntax FillArgumentTo(List<LuaArgumentSyntax> arguments, ArgumentSyntax node, ImmutableArray<IParameterSymbol> parameters) {
+        private LuaExpressionSyntax FillArgumentTo(List<LuaArgumentSyntax> arguments, ArgumentSyntax node, IEnumerable<IParameterSymbol> parameters) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             LuaArgumentSyntax argument = new LuaArgumentSyntax(expression);
             if(node.NameColon != null) {
@@ -1538,12 +1581,22 @@ namespace CSharpLua {
             return expression;
         }
 
-        private LuaArgumentListSyntax BuildArgumentList(BaseArgumentListSyntax node, ImmutableArray<IParameterSymbol> parameters) {
-            LuaArgumentListSyntax argumentList = new LuaArgumentListSyntax();
-            foreach(var argumentNode in node.Arguments) {
-                FillArgumentTo(argumentList.Arguments, argumentNode, parameters);
+        private LuaArgumentListSyntax BuildArgumentList(BaseArgumentListSyntax node, IEnumerable<IParameterSymbol> parameters) {
+            if(parameters != null) {
+                LuaArgumentListSyntax argumentList = new LuaArgumentListSyntax();
+                foreach(var argumentNode in node.Arguments) {
+                    FillArgumentTo(argumentList.Arguments, argumentNode, parameters);
+                }
+                for(int i = 0; i < argumentList.Arguments.Count; ++i) {
+                    if(argumentList.Arguments[i] == null) {
+                        argumentList.Arguments[i] = new LuaArgumentSyntax(LuaIdentifierNameSyntax.Nil);
+                    }
+                }
+                return argumentList;
             }
-            return argumentList;
+            else {
+                return BuildArgumentList(node.Arguments);
+            }
         }
 
         private LuaArgumentListSyntax BuildArgumentList(SeparatedSyntaxList<ArgumentSyntax> arguments) {

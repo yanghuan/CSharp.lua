@@ -30,7 +30,7 @@ namespace CSharpLua {
     internal sealed class PartialTypeDeclaration : IComparable<PartialTypeDeclaration> {
         public INamedTypeSymbol Symbol;
         public TypeDeclarationSyntax Node;
-        public LuaTypeDeclarationSyntax LuaNode;
+        public LuaTypeDeclarationSyntax TypeDeclaration;
         public LuaCompilationUnitSyntax CompilationUnit;
 
         public int CompareTo(PartialTypeDeclaration other) {
@@ -140,7 +140,7 @@ namespace CSharpLua {
         }
 
         internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
-            return false;
+            return true;
         }
 
         private void CheckExportEnums() {
@@ -161,7 +161,7 @@ namespace CSharpLua {
             list.Add(new PartialTypeDeclaration() {
                 Symbol = typeSymbol,
                 Node = node,
-                LuaNode = luaNode,
+                TypeDeclaration = luaNode,
                 CompilationUnit = compilationUnit,
             });
         }

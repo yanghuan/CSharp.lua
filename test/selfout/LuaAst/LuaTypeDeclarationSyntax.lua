@@ -9,16 +9,38 @@ System.usingDeclare(function (global)
 end);
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaTypeDeclarationSyntax", function (namespace) 
-        local AddStaticReadOnlyAssignmentName, AddTypeIdentifier, AddResultTable, AddResultTable1, AddMethod, AddInitFiled, AddInitFiled1, AddField, 
-        AddPropertyOrEvent, AddProperty, AddEvent, SetStaticCtor, AddCtor, AddInitFunction, AddStaticAssignmentNames, AddStaticCtorFunction, 
-        AddCtorsFunction, AddBaseTypes, Render, __init__, __ctor__;
+        local AddStaticReadOnlyAssignmentName, AddClassAttributes, AddTypeIdentifier, AddBaseTypes, AddResultTable, AddResultTable1, AddMethod, AddInitFiled, 
+        AddInitFiled1, AddField, AddPropertyOrEvent, AddProperty, AddEvent, SetStaticCtor, AddCtor, AddInitFunction, 
+        AddStaticAssignmentNames, CheckStaticCtorFunction, CheckCtorsFunction, CheckAttributes, Render, __init__, __ctor__;
         AddStaticReadOnlyAssignmentName = function (this, name) 
             if not this.staticAssignmentNames_:Contains(name) then
                 this.staticAssignmentNames_:Add(name);
             end
         end;
+        AddClassAttributes = function (this, attributes) 
+            local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
+            for _, expression in System.each(attributes) do
+                table.Items:Add1(CSharpLuaLuaAst.LuaSingleTableItemSyntax(expression));
+            end
+            local item = CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(CSharpLuaLuaAst.LuaTableLiteralKeySyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Class), table);
+            this.attributes_.Items:Add1(item);
+        end;
         AddTypeIdentifier = function (this, identifier) 
             this.typeIdentifiers_:Add(identifier);
+        end;
+        AddBaseTypes = function (this, baseTypes, kind) 
+            local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
+            table.Items:AddRange1(Linq.Select(baseTypes, function (i) return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i); end, CSharpLuaLuaAst.LuaSingleTableItemSyntax));
+            if kind == 0 --[[BaseTypeGenericKind.None]] then
+                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, table);
+            else
+                local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
+                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, table));
+                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, functionExpression);
+                if kind == 2 --[[BaseTypeGenericKind.ExtendSelf]] then
+                    AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.InheritRecursion, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True);
+                end
+            end
         end;
         AddResultTable = function (this, name) 
             local item = CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(CSharpLuaLuaAst.LuaTableLiteralKeySyntax(name), name);
@@ -174,7 +196,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 body.Statements:Add1(CSharpLuaLuaAst.LuaExpressionStatementSyntax(assignment));
             end
         end;
-        AddStaticCtorFunction = function (this) 
+        CheckStaticCtorFunction = function (this) 
             local hasStaticInit = this.staticInitFunction_ ~= nil;
             local hasStaticCtor = this.staticCtorFunction_ ~= nil;
 
@@ -191,7 +213,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
             end
         end;
-        AddCtorsFunction = function (this) 
+        CheckCtorsFunction = function (this) 
             local hasInit = this.initFunction_ ~= nil;
             local hasCtors = #this.ctors_ > 0;
 
@@ -227,18 +249,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
             end
         end;
-        AddBaseTypes = function (this, baseTypes, kind) 
-            local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
-            table.Items:AddRange1(Linq.Select(baseTypes, function (i) return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i); end, CSharpLuaLuaAst.LuaSingleTableItemSyntax));
-            if kind == 0 --[[BaseTypeGenericKind.None]] then
-                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, table);
-            else
+        CheckAttributes = function (this) 
+            if #this.attributes_.Items > 0 then
                 local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
-                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, table));
-                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, functionExpression);
-                if kind == 2 --[[BaseTypeGenericKind.ExtendSelf]] then
-                    AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.InheritRecursion, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True);
-                end
+                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, this.attributes_));
+                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Attributes, functionExpression);
             end
         end;
         Render = function (this, renderer) 
@@ -247,8 +262,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
 
             this.statements_:Add(this.local_);
-            AddStaticCtorFunction(this);
-            AddCtorsFunction(this);
+            CheckStaticCtorFunction(this);
+            CheckCtorsFunction(this);
+            CheckAttributes(this);
             this.statements_:Add(this.methodList_);
 
             local returnStatement = CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, this.resultTable_);
@@ -272,6 +288,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.staticAssignmentNames_ = System.List(System.String)();
             this.ctors_ = System.List(CSharpLuaLuaAst.LuaConstructorAdapterExpressionSyntax)();
             this.typeIdentifiers_ = System.List(CSharpLuaLuaAst.LuaIdentifierNameSyntax)();
+            this.attributes_ = CSharpLuaLuaAst.LuaTableInitializerExpression();
         end;
         __ctor__ = function (this) 
             __init__(this);
@@ -282,14 +299,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             }, 
             IsPartialMark = False, 
             AddStaticReadOnlyAssignmentName = AddStaticReadOnlyAssignmentName, 
+            AddClassAttributes = AddClassAttributes, 
             AddTypeIdentifier = AddTypeIdentifier, 
+            AddBaseTypes = AddBaseTypes, 
             AddMethod = AddMethod, 
             AddField = AddField, 
             AddProperty = AddProperty, 
             AddEvent = AddEvent, 
             SetStaticCtor = SetStaticCtor, 
             AddCtor = AddCtor, 
-            AddBaseTypes = AddBaseTypes, 
             Render = Render, 
             __ctor__ = __ctor__
         };

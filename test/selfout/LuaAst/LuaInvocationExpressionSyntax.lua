@@ -7,10 +7,13 @@ System.usingDeclare(function (global)
 end);
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaInvocationExpressionSyntax", function (namespace) 
-        local AddArgument, Render, __init__, __ctor1__, __ctor2__, __ctor3__, __ctor4__, __ctor5__, 
-        __ctor6__;
+        local AddArgument, AddArguments, Render, __init__, __ctor1__, __ctor2__, __ctor3__, __ctor4__, 
+        __ctor5__, __ctor6__;
         AddArgument = function (this, argument) 
             this.ArgumentList.Arguments:Add1(CSharpLuaLuaAst.LuaArgumentSyntax(argument));
+        end;
+        AddArguments = function (this, arguments) 
+            this.ArgumentList.Arguments:AddRange1(Linq.Select(arguments, function (i) return CSharpLuaLuaAst.LuaArgumentSyntax(i); end, CSharpLuaLuaAst.LuaArgumentSyntax));
         end;
         Render = function (this, renderer) 
             renderer:Render4(this);
@@ -42,16 +45,19 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor5__ = function (this, expression, arguments) 
             __ctor1__(this, expression);
-            this.ArgumentList.Arguments:AddRange1(Linq.Select(arguments, function (i) return CSharpLuaLuaAst.LuaArgumentSyntax(i); end, CSharpLuaLuaAst.LuaArgumentSyntax));
+            AddArguments(this, arguments);
         end;
         __ctor6__ = function (this, expression, arguments) 
-            __ctor5__(this, expression, System.cast(System.IEnumerable_1(CSharpLuaLuaAst.LuaExpressionSyntax), arguments));
+            if arguments == nil then arguments = System.Array.Empty(CSharpLuaLuaAst.LuaExpressionSyntax) end
+            __ctor1__(this, expression);
+            AddArguments(this, arguments);
         end;
         return {
             __inherits__ = {
                 CSharpLuaLuaAst.LuaExpressionSyntax
             }, 
             AddArgument = AddArgument, 
+            AddArguments = AddArguments, 
             Render = Render, 
             __ctor__ = {
                 __ctor1__, 

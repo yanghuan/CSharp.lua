@@ -14,6 +14,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render3(this);
         end;
         __ctor__ = function (this, expression, name, isObjectColon) 
+            if isObjectColon == nil then isObjectColon = false end
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end

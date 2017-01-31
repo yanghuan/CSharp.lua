@@ -31,16 +31,20 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             var expression = (LuaExpressionSyntax)node.Type.Accept(this);
-            LuaInvocationExpressionSyntax invocationExpression = BuildObjectCreationInvocation(symbol, expression);
+            LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, expression);
 
-            var argumentList = BuildArgumentList(node.ArgumentList, symbol.Parameters);
-            invocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+            var argumentList = BuildArgumentList(node.ArgumentList, symbol?.Parameters);
+            invocation.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+            if(symbol != null) {
+                CheckInvocationCallerAttribute(symbol, invocation, node.ArgumentList.Arguments.Count, node);
+            }
+
             if(node.Initializer == null) {
-                return invocationExpression;
+                return invocation;
             }
             else {
                 var functionExpression = BuildObjectInitializerExpression(node.Initializer);
-                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocationExpression, functionExpression);
+                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocation, functionExpression);
             }
         }
 
@@ -223,9 +227,10 @@ namespace CSharpLua {
             PushFunction(function);
             bool isStatic = node.Modifiers.IsStatic();
             function.IsStaticCtor = isStatic;
-            var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
+
             function.AddParameter(LuaIdentifierNameSyntax.This);
-            function.ParameterList.Parameters.AddRange(parameterList.Parameters);
+            FillMethodParameterList(function, node.ParameterList, false);
+
             if(node.Initializer != null) {
                 var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
                 int ctroCounter = GetConstructorIndex(symbol);
@@ -659,9 +664,10 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
-            var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            var argumentList = BuildArgumentList(node.ArgumentList, symbol.Parameters);
+
+            var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+            LuaArgumentListSyntax argumentList = BuildArgumentList(node.ArgumentList, symbol?.Parameters);
             LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, string.Empty);
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(expression, identifierName, true);
             LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(memberAccess, identifierName);

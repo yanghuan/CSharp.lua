@@ -420,7 +420,7 @@ namespace CSharpLua {
             return GetCallerAttributeKind(method.ContainingType) != CallerAttributeKind.None;
         }
 
-        private LuaExpressionSyntax CheckCallerAttribute(IParameterSymbol parameter, InvocationExpressionSyntax node) {
+        private LuaExpressionSyntax CheckCallerAttribute(IParameterSymbol parameter, SyntaxNode node) {
             var kind = GetCallerAttributeKind(parameter);
             switch(kind) {
                 case CallerAttributeKind.Line: {
@@ -605,33 +605,43 @@ namespace CSharpLua {
             }
 
             var expression = GetTypeName(typeSymbol);
-            LuaInvocationExpressionSyntax invocationExpression = BuildObjectCreationInvocation(symbol, expression);
+            LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, expression);
 
             List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();
             List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>> initializers = new List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>>();
 
-            foreach(var argumentNode in node.ArgumentList.Arguments) {
-                var argumentExpression = (LuaExpressionSyntax)argumentNode.Expression.Accept(this);
-                if(argumentNode.NameEquals == null) {
-                    if(argumentNode.NameColon != null) {
-                        string name = argumentNode.NameColon.Name.Identifier.ValueText;
-                        int index = symbol.Parameters.IndexOf(i => i.Name == name);
-                        Contract.Assert(index != -1);
-                        arguments.AddAt(index, argumentExpression);
+            if(node.ArgumentList != null) {
+                foreach(var argumentNode in node.ArgumentList.Arguments) {
+                    var argumentExpression = (LuaExpressionSyntax)argumentNode.Expression.Accept(this);
+                    if(argumentNode.NameEquals == null) {
+                        if(argumentNode.NameColon != null) {
+                            string name = argumentNode.NameColon.Name.Identifier.ValueText;
+                            int index = symbol.Parameters.IndexOf(i => i.Name == name);
+                            Contract.Assert(index != -1);
+                            arguments.AddAt(index, argumentExpression);
+                        }
+                        else {
+                            arguments.Add(argumentExpression);
+                        }
                     }
                     else {
-                        arguments.Add(argumentExpression);
+                        var name = (LuaExpressionSyntax)argumentNode.NameEquals.Accept(this);
+                        initializers.Add(Tuple.Create(name, argumentExpression));
                     }
-                }
-                else {
-                    var name = (LuaExpressionSyntax)argumentNode.NameEquals.Accept(this);
-                    initializers.Add(Tuple.Create(name, argumentExpression));
                 }
             }
 
-            invocationExpression.AddArguments(arguments);
+            foreach(var argument in arguments) {
+                if(argument != null) {
+                    invocation.AddArgument(argument);
+                }
+                else {
+                    invocation.AddArgument(LuaIdentifierNameSyntax.Nil);
+                }
+            }
+
             if(initializers.Count == 0) {
-                return invocationExpression;
+                return invocation;
             }
             else {
                 LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
@@ -646,11 +656,11 @@ namespace CSharpLua {
                 }
 
                 PopFunction();
-                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocationExpression, function);
+                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocation, function);
             }
         }
 
-        private LuaSyntaxList<LuaExpressionSyntax> BuildAttributes(SyntaxList<AttributeListSyntax> attributeLists) {
+        private LuaSyntaxList<LuaExpressionSyntax> BuildAttributes(IEnumerable<AttributeListSyntax> attributeLists) {
             LuaSyntaxList<LuaExpressionSyntax> expressions = new LuaSyntaxList<LuaExpressionSyntax>();
             var attributes = attributeLists.SelectMany(i => i.Attributes);
             foreach(var node in attributes) {

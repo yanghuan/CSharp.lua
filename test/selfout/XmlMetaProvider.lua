@@ -46,7 +46,15 @@ System.namespace("CSharpLua", function (namespace)
             namespace.class("NamespaceModel", function (namespace) 
                 return {};
             end);
-            return {};
+            return {
+                __attributes__ = function () 
+                    return {
+                        class = {
+                            SystemXmlSerialization.XmlRootAttribute("assembly")
+                        }
+                    };
+                end
+            };
         end);
         namespace.class("MethodMetaInfo", function (namespace) 
             local Add, CheckIsSingleModel, IsTypeMatch, IsMethodMatch, GetName, GetCodeTemplate, GetMetaInfo, __ctor__;
@@ -158,7 +166,7 @@ System.namespace("CSharpLua", function (namespace)
                 until 1;
             end;
             __ctor__ = function (this) 
-                this.models_ = System.List(XmlMetaModel.MethodModel)();
+                this.models_ = System.List(CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel)();
             end;
             return {
                 isSingleModel_ = False, 
@@ -227,8 +235,8 @@ System.namespace("CSharpLua", function (namespace)
                 return CSharpLua.Utility.GetOrDefault1(this.methods_, name, nil, System.String, CSharpLuaXmlMetaProvider.MethodMetaInfo);
             end;
             __init__ = function (this) 
-                this.fields_ = System.Dictionary(System.String, XmlMetaModel.FieldModel)();
-                this.propertys_ = System.Dictionary(System.String, XmlMetaModel.PropertyModel)();
+                this.fields_ = System.Dictionary(System.String, CSharpLuaXmlMetaProviderXmlMetaModel.FieldModel)();
+                this.propertys_ = System.Dictionary(System.String, CSharpLuaXmlMetaProviderXmlMetaModel.PropertyModel)();
                 this.methods_ = System.Dictionary(System.String, CSharpLuaXmlMetaProvider.MethodMetaInfo)();
             end;
             __ctor__ = function (this, model) 
@@ -295,7 +303,6 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetTypeName = function (this, symbol, transfor, node) 
             assert(symbol ~= nil);
-            symbol = symbol:getOriginalDefinition();
             if symbol:getKind() == 17 --[[SymbolKind.TypeParameter]] then
                 return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName());
             end

@@ -46,7 +46,7 @@ System.namespace("CSharpLua", function (namespace)
             Compiler(this);
         end;
         Compiler = function (this) 
-            local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(this.defines_);
+            local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(nil, nil, nil, this.defines_);
             local files = SystemIO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]]);
             local syntaxTrees = Linq.Select(files, function (file) return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(System.File.ReadAllText(file), parseOptions, file); end, MicrosoftCodeAnalysis.SyntaxTree);
             local references = Linq.Select(getLibs(this), function (i) return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i); end, MicrosoftCodeAnalysis.PortableExecutableReference);
