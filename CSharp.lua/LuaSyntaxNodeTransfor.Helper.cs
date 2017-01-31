@@ -540,5 +540,126 @@ namespace CSharpLua {
         private LuaExpressionSyntax GetTypeName(ISymbol symbol, SyntaxNode node = null) {
             return XmlMetaProvider.GetTypeName(symbol, this, node);
         }
+
+        private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
+            var propertyMethod = name as LuaPropertyAdapterExpressionSyntax;
+            if(propertyMethod != null) {
+                var arguments = propertyMethod.InvocationExpression.ArgumentList.Arguments;
+                if(arguments.Count == 1) {
+                    if(arguments[0].Expression == LuaIdentifierNameSyntax.This) {
+                        propertyMethod.InvocationExpression.ArgumentList.Arguments[0] = new LuaArgumentSyntax(expression);
+                    }
+                }
+                else {
+                    var memberAccessExpression = new LuaMemberAccessExpressionSyntax(expression, propertyMethod.InvocationExpression.Expression, !isStatic);
+                    propertyMethod.Update(memberAccessExpression);
+                }
+                return propertyMethod;
+            }
+            else {
+                return new LuaMemberAccessExpressionSyntax(expression, name);
+            }
+        }
+
+        public override LuaSyntaxNode VisitAttributeList(AttributeListSyntax node) {
+            throw new InvalidOperationException();
+        }
+
+        public override LuaSyntaxNode VisitAttributeArgument(AttributeArgumentSyntax node) {
+            throw new InvalidOperationException();
+        }
+
+        public override LuaSyntaxNode VisitNameColon(NameColonSyntax node) {
+            throw new InvalidOperationException();
+        }
+
+        public override LuaSyntaxNode VisitAttributeArgumentList(AttributeArgumentListSyntax node) {
+            throw new InvalidOperationException();
+        }
+
+        public override LuaSyntaxNode VisitNameEquals(NameEqualsSyntax node) {
+            return node.Name.Accept(this);
+        }
+
+        private LuaInvocationExpressionSyntax BuildObjectCreationInvocation(IMethodSymbol symbol, LuaExpressionSyntax expression) {
+            int constructorIndex = 0;
+            if(symbol != null) {
+                constructorIndex = GetConstructorIndex(symbol);
+                if(constructorIndex > 0) {
+                    expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
+                }
+            }
+
+            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(expression);
+            if(constructorIndex > 0) {
+                invocationExpression.AddArgument(new LuaIdentifierNameSyntax(constructorIndex));
+            }
+            return invocationExpression;
+        }
+
+        public override LuaSyntaxNode VisitAttribute(AttributeSyntax node) {
+            var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Name).Symbol;
+            INamedTypeSymbol typeSymbol = symbol.ContainingType;
+            if(!generator_.IsExportAttribute(typeSymbol)) {
+                return null;
+            }
+
+            var expression = GetTypeName(typeSymbol);
+            LuaInvocationExpressionSyntax invocationExpression = BuildObjectCreationInvocation(symbol, expression);
+
+            List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();
+            List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>> initializers = new List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>>();
+
+            foreach(var argumentNode in node.ArgumentList.Arguments) {
+                var argumentExpression = (LuaExpressionSyntax)argumentNode.Expression.Accept(this);
+                if(argumentNode.NameEquals == null) {
+                    if(argumentNode.NameColon != null) {
+                        string name = argumentNode.NameColon.Name.Identifier.ValueText;
+                        int index = symbol.Parameters.IndexOf(i => i.Name == name);
+                        Contract.Assert(index != -1);
+                        arguments.AddAt(index, argumentExpression);
+                    }
+                    else {
+                        arguments.Add(argumentExpression);
+                    }
+                }
+                else {
+                    var name = (LuaExpressionSyntax)argumentNode.NameEquals.Accept(this);
+                    initializers.Add(Tuple.Create(name, argumentExpression));
+                }
+            }
+
+            invocationExpression.AddArguments(arguments);
+            if(initializers.Count == 0) {
+                return invocationExpression;
+            }
+            else {
+                LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
+                PushFunction(function);
+                var temp = GetTempIdentifier(node);
+                function.AddParameter(temp);
+
+                foreach(var initializer in initializers) {
+                    var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, initializer.Item1, false);
+                    var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, initializer.Item2);
+                    function.AddStatement(assignmentExpression);
+                }
+
+                PopFunction();
+                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocationExpression, function);
+            }
+        }
+
+        private LuaSyntaxList<LuaExpressionSyntax> BuildAttributes(SyntaxList<AttributeListSyntax> attributeLists) {
+            LuaSyntaxList<LuaExpressionSyntax> expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+            var attributes = attributeLists.SelectMany(i => i.Attributes);
+            foreach(var node in attributes) {
+                var expression = (LuaExpressionSyntax)node.Accept(this);
+                if(expression != null) {
+                    expressions.Add(expression);
+                }
+            }
+            return expressions;
+        }
     }
 }

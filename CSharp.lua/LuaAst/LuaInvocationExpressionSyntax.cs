@@ -49,14 +49,19 @@ namespace CSharpLua.LuaAst {
         }
 
         public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, IEnumerable<LuaExpressionSyntax> arguments) : this(expression) {
-            ArgumentList.Arguments.AddRange(arguments.Select(i => new LuaArgumentSyntax(i)));
+            AddArguments(arguments);
         }
 
-        public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, params LuaExpressionSyntax[] arguments) : this(expression, (IEnumerable<LuaExpressionSyntax>)arguments) {
+        public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, params LuaExpressionSyntax[] arguments) : this(expression) {
+            AddArguments(arguments);
         }
 
         public void AddArgument(LuaExpressionSyntax argument) {
             ArgumentList.Arguments.Add(new LuaArgumentSyntax(argument));
+        }
+
+        public void AddArguments(IEnumerable<LuaExpressionSyntax> arguments) {
+            ArgumentList.Arguments.AddRange(arguments.Select(i => new LuaArgumentSyntax(i)));
         }
 
         internal override void Render(LuaRenderer renderer) {

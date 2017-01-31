@@ -87,6 +87,30 @@ namespace CSharpLua {
             return t;
         }
 
+        public static void AddAt<T>(this IList<T> list, int index, T v) {
+            if(index < list.Count) {
+                list[index] = v;
+            }
+            else {
+                int count = index - list.Count;
+                for(int i = 0; i < count; ++i) {
+                    list.Add(default(T));
+                }
+                list.Add(v);
+            }
+        }
+
+        public static int IndexOf<T>(this IEnumerable<T> source, Predicate<T> match) {
+            int index = 0;
+            foreach(var item in source) {
+                if(match(item)) {
+                    return index;
+                }
+                ++index;
+            }
+            return -1;
+        }
+
         public static string GetArgument(this Dictionary<string, string[]> args, string name, bool isOption = false) {
             string[] values = args.GetOrDefault(name);
             if(values == null || values.Length == 0) {

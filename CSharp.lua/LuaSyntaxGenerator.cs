@@ -139,6 +139,10 @@ namespace CSharpLua {
             enumDeclarations_.Add(enumDeclaration);
         }
 
+        internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
+            return false;
+        }
+
         private void CheckExportEnums() {
             foreach(var enumDeclaration in enumDeclarations_) {
                 if(IsEnumExport(enumDeclaration.FullName)) {

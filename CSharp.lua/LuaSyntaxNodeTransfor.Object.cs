@@ -29,22 +29,11 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor {
         public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
-            var expression = (LuaExpressionSyntax)node.Type.Accept(this);
-
-            int constructorIndex = 0;
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-            if(symbol != null) {
-                constructorIndex = GetConstructorIndex(symbol);
-                if(constructorIndex > 0) {
-                    expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
-                }
-            }
+            var expression = (LuaExpressionSyntax)node.Type.Accept(this);
+            LuaInvocationExpressionSyntax invocationExpression = BuildObjectCreationInvocation(symbol, expression);
 
-            var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
-            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(expression);
-            if(constructorIndex > 0) {
-                invocationExpression.AddArgument(new LuaIdentifierNameSyntax(constructorIndex));
-            }
+            var argumentList = BuildArgumentList(node.ArgumentList, symbol.Parameters);
             invocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
             if(node.Initializer == null) {
                 return invocationExpression;
@@ -76,8 +65,9 @@ namespace CSharpLua {
                         function.AddStatement(invocation);
                     }
                     else {
-                        LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(temp, (LuaExpressionSyntax)left);
-                        function.AddStatement(new LuaAssignmentExpressionSyntax(memberAccess, right));
+                        var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, (LuaExpressionSyntax)left, false);
+                        var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, right);
+                        function.AddStatement(assignmentExpression);
                     }
                 }
                 else {
@@ -669,8 +659,9 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
+            var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
+            var argumentList = BuildArgumentList(node.ArgumentList, symbol.Parameters);
             LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, string.Empty);
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(expression, identifierName, true);
             LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(memberAccess, identifierName);
