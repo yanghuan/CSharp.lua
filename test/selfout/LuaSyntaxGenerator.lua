@@ -282,6 +282,9 @@ System.namespace("CSharpLua", function (namespace)
         end;
         TryAddExtend = function (this, super, children) 
             if CSharpLua.Utility.IsFromCode(super) then
+                if super:getIsGenericType() then
+                    super = super:getOriginalDefinition();
+                end
                 local set = CSharpLua.Utility.GetOrDefault1(this.extends_, super, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(T));
                 if set == nil then
                     set = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)();
@@ -343,7 +346,9 @@ System.namespace("CSharpLua", function (namespace)
                 end
                 if index > 0 then
                     if CSharpLua.Utility.IsFromCode(member:getContainingType()) then
-                        this.refactorNames_:Add(member);
+                        local refactorSymbol = member;
+                        refactorSymbol = CSharpLua.Utility.CheckOriginalDefinition1(refactorSymbol);
+                        this.refactorNames_:Add(refactorSymbol);
                     end
                 end
                 index = index + 1;
@@ -362,6 +367,7 @@ System.namespace("CSharpLua", function (namespace)
             assert(symbol:getContainingType():getIsStatic());
             local sameNameMembers = symbol:getContainingType():GetMembers(symbol:getName());
             local symbolExpression = nil;
+
             local index = 0;
             for _, member in System.each(sameNameMembers) do
                 local identifierName = GetMethodNameFromIndex(this, symbol, index);
@@ -563,7 +569,6 @@ System.namespace("CSharpLua", function (namespace)
         end;
         CheckRefactorNames = function (this) 
             local alreadyRefactorSymbols = System.HashSet(MicrosoftCodeAnalysis.ISymbol)();
-
             for _, symbol in System.each(this.refactorNames_) do
                 local hasImplementation = false;
                 for _, implementation in System.each(CSharpLua.Utility.InterfaceImplementations(symbol, MicrosoftCodeAnalysis.ISymbol)) do

@@ -42,7 +42,7 @@ System.namespace("CSharpLua", function (namespace)
         IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, IsConst, IsParams, IsPartial, 
         IsStringType, IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, 
         OverriddenSymbol, IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
-        IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition;
+        IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition, CheckOriginalDefinition1;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -237,14 +237,15 @@ System.namespace("CSharpLua", function (namespace)
             while true do
                 local overriddenSymbol = OverriddenSymbol(symbol);
                 if overriddenSymbol ~= nil then
+                    overriddenSymbol = CheckOriginalDefinition1(this, overriddenSymbol);
                     if overriddenSymbol:Equals(superSymbol) then
                         return true;
                     end
+                    symbol = overriddenSymbol;
                 else
-                    break;
+                    return false;
                 end
             end
-            return false;
         end;
         IsPropertyField = function (symbol) 
             if IsOverridable(symbol) then
@@ -415,6 +416,11 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end
         end;
+        CheckOriginalDefinition1 = function (symbol) 
+            if symbol:getOriginalDefinition() ~= symbol then
+                symbol = symbol:getOriginalDefinition();
+            end
+        end;
         return {
             GetCommondLines = GetCommondLines, 
             First = First, 
@@ -449,7 +455,8 @@ System.namespace("CSharpLua", function (namespace)
             GetLocationString = GetLocationString, 
             IsSubclassOf = IsSubclassOf, 
             IsAssignableFrom = IsAssignableFrom, 
-            CheckOriginalDefinition = CheckOriginalDefinition
+            CheckOriginalDefinition = CheckOriginalDefinition, 
+            CheckOriginalDefinition1 = CheckOriginalDefinition1
         };
     end);
 end);

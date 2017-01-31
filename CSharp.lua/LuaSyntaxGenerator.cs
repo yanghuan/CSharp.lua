@@ -326,7 +326,7 @@ namespace CSharpLua {
 
         private void TryAddExtend(INamedTypeSymbol super, INamedTypeSymbol children) {
             if(super.IsFromCode()) {
-                if(super.OriginalDefinition != super) {
+                if(super.IsGenericType) {
                     super = super.OriginalDefinition;
                 }
                 var set = extends_.GetOrDefault(super);
@@ -383,20 +383,18 @@ namespace CSharpLua {
             int index = 0;
             foreach(ISymbol member in sameNameMembers) {
                 if(member.Equals(symbol)) {
-                    symbolExpression = new LuaIdentifierNameSyntax(symbol.Name);
+                    symbolExpression = new LuaIdentifierNameSyntax(GetSymbolName(symbol));
                 }
                 else {
                     if(!memberNames_.ContainsKey(member)) {
-                        LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(member.Name);
+                        LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(GetSymbolName(member));
                         memberNames_.Add(member, new LuaSymbolNameSyntax(identifierName));
                     }
                 }
                 if(index > 0) {
                     if(member.ContainingType.IsFromCode()) {
                         ISymbol refactorSymbol = member;
-                        if(refactorSymbol.OriginalDefinition != refactorSymbol) {
-                            refactorSymbol = refactorSymbol.OriginalDefinition;
-                        }
+                        Utility.CheckOriginalDefinition(ref refactorSymbol);
                         refactorNames_.Add(refactorSymbol);
                     }
                 }
@@ -409,6 +407,16 @@ namespace CSharpLua {
             return symbolExpression;
         }
 
+        private static string GetSymbolName(ISymbol symbol) {
+            if(symbol.Kind == SymbolKind.Method) {
+                IMethodSymbol method = (IMethodSymbol)symbol;
+                if(!method.ExplicitInterfaceImplementations.IsEmpty) {
+                    return method.ExplicitInterfaceImplementations[0].Name;
+                }
+            }
+            return symbol.Name;
+        }
+
         private LuaIdentifierNameSyntax GetExtensionMethodName(IMethodSymbol symbol) {
             Contract.Assert(symbol.IsExtensionMethod);
             return GetStaticClassMethodName(symbol);
@@ -418,6 +426,7 @@ namespace CSharpLua {
             Contract.Assert(symbol.ContainingType.IsStatic);
             var sameNameMembers = symbol.ContainingType.GetMembers(symbol.Name);
             LuaIdentifierNameSyntax symbolExpression = null;
+
             int index = 0;
             foreach(ISymbol member in sameNameMembers) {
                 LuaIdentifierNameSyntax identifierName = GetMethodNameFromIndex(symbol, index);
@@ -467,7 +476,11 @@ namespace CSharpLua {
 
         private List<ISymbol> GetSameNameMembers(ISymbol symbol) {
             List<ISymbol> members = new List<ISymbol>();
-            FillSameNameMembers(symbol.ContainingType, symbol.Name, members);
+            string name = GetSymbolName(symbol);
+            FillSameNameMembers(symbol.ContainingType, name, members);
+            if(name != symbol.Name) {
+                FillSameNameMembers(symbol.ContainingType, symbol.Name, members);
+            }
             members.Sort(MemberSymbolComparison);
             return members;
         }

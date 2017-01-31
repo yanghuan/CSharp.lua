@@ -1241,7 +1241,6 @@ System.namespace("CSharpLua", function (namespace)
                     end
 
                     local expression = BuildMemberAccessTargetExpression(this, node:getExpression());
-                    assert(expression ~= nil);
                     local identifier = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getName():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode));
                     return CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(expression, identifier, not symbol:getIsStatic() and symbol:getKind() == 9 --[[SymbolKind.Method]]);
                 end
@@ -2085,12 +2084,10 @@ System.namespace("CSharpLua", function (namespace)
         end;
         CheckReservedWord1 = function (this, name, symbol) 
             if CSharpLuaLuaAst.LuaSyntaxNode.IsReservedWord(name) then
-                assert(this.localReservedNames_:ContainsKey(symbol));
                 name = this.localReservedNames_:get(symbol);
             end
         end;
         GetConstructorIndex = function (this, constructorSymbol) 
-            assert(constructorSymbol ~= nil);
             if CSharpLua.Utility.IsFromCode(constructorSymbol) then
                 local typeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, constructorSymbol:getReceiverType());
                 if typeSymbol:getConstructors():getLength() > 1 then

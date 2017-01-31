@@ -387,7 +387,8 @@ namespace CSharpLua {
                     VisitYield(node, function);
                 }
                 PopFunction();
-                CurType.AddMethod(methodName, function, symbol.IsPrivate());
+                bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
+                CurType.AddMethod(methodName, function, isPrivate);
                 return function;
             }
 
@@ -1530,7 +1531,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitQualifiedName(QualifiedNameSyntax node) {
-            return new LuaIdentifierNameSyntax(node.ToString());
+            return node.Right.Accept(this);
         }
 
         private LuaArgumentListSyntax BuildArgumentList(SeparatedSyntaxList<ArgumentSyntax> arguments) {

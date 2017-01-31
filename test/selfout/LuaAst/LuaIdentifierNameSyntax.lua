@@ -128,7 +128,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaSymbolNameSyntax", function (namespace) 
         local Update, Render, __ctor__;
         Update = function (this, newName) 
-            this.IdentifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, newName);
+            if this.IdentifierName.ValueText ~= newName then
+                this.IdentifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, newName);
+            end
         end;
         Render = function (this, renderer) 
             this.IdentifierName:Render(renderer);

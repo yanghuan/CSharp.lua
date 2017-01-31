@@ -236,10 +236,7 @@ namespace CSharpLua {
             while(true) {
                 ISymbol overriddenSymbol = symbol.OverriddenSymbol();
                 if(overriddenSymbol != null) {
-                    if(overriddenSymbol.OriginalDefinition != overriddenSymbol) {
-                        overriddenSymbol = overriddenSymbol.OriginalDefinition;
-                    }
-
+                    CheckOriginalDefinition(ref overriddenSymbol);
                     if(overriddenSymbol.Equals(superSymbol)) {
                         return true;
                     }
@@ -432,6 +429,12 @@ namespace CSharpLua {
                 if(symbol.OriginalDefinition != symbol) {
                     symbol = symbol.OriginalDefinition;
                 }
+            }
+        }
+
+        public static void CheckOriginalDefinition(ref ISymbol symbol) {
+            if(symbol.OriginalDefinition != symbol) {
+                symbol = symbol.OriginalDefinition;
             }
         }
     }
