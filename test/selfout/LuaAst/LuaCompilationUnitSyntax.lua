@@ -12,7 +12,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaCompilationUnitSyntax", function (namespace) 
         namespace.class("UsingDeclare", function (namespace) 
             return {
-                IsFromCode = False
+                IsFromCode = false
             };
         end);
         local getIsEmpty, AddTypeDeclaration, ImportLinq, AddImport, AddTypeDeclarationCount, AddImport1, CheckUsingDeclares, Render, 
@@ -70,7 +70,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                         local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.NewPrefix), CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.Prefix));
                         functionExpression.Body.Statements:Add1(CSharpLuaLuaAst.LuaExpressionStatementSyntax(assignment));
                     else
-                        local right = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(global, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.Prefix));
+                        local right = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(global, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.Prefix), false);
                         local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.NewPrefix), right);
                         functionExpression.Body.Statements:Add1(CSharpLuaLuaAst.LuaExpressionStatementSyntax(assignment));
                     end
@@ -103,7 +103,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __inherits__ = {
                 CSharpLuaLuaAst.LuaSyntaxNode
             }, 
-            isImportLinq_ = False, 
+            isImportLinq_ = false, 
             typeDeclarationCount_ = 0, 
             getIsEmpty = getIsEmpty, 
             AddTypeDeclaration = AddTypeDeclaration, 

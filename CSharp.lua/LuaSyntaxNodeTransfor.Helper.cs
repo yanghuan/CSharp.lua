@@ -322,6 +322,18 @@ namespace CSharpLua {
             return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty, baseType);
         }
 
+        private LuaInvocationExpressionSyntax BuildArray(ITypeSymbol elementType, params LuaExpressionSyntax[] elements) {
+            IEnumerable<LuaExpressionSyntax> expressions = elements;
+            return BuildArray(elementType, expressions);
+        }
+
+        private LuaInvocationExpressionSyntax BuildArray(ITypeSymbol elementType, IEnumerable<LuaExpressionSyntax> elements) {
+            LuaExpressionSyntax baseType = GetTypeName(elementType);
+            var arrayType = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, baseType);
+            return new LuaInvocationExpressionSyntax(arrayType, elements);
+        }
+
+
         private LuaLiteralExpressionSyntax GetConstLiteralExpression(object constantValue) {
             if(constantValue != null) {
                 var code = Type.GetTypeCode(constantValue.GetType());
@@ -331,6 +343,10 @@ namespace CSharpLua {
                         }
                     case TypeCode.String: {
                             return BuildStringLiteralExpression((string)constantValue);
+                        }
+                    case TypeCode.Boolean: {
+                            bool v = (bool)constantValue;
+                            return new LuaIdentifierLiteralExpressionSyntax(v ? LuaIdentifierNameSyntax.True : LuaIdentifierNameSyntax.False);
                         }
                     default: {
                             return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
@@ -413,11 +429,6 @@ namespace CSharpLua {
                 }
             }
             return CallerAttributeKind.None;
-        }
-
-        private bool IsCallerAttribute(AttributeSyntax attribute) {
-            var method = semanticModel_.GetSymbolInfo(attribute.Name).Symbol;
-            return GetCallerAttributeKind(method.ContainingType) != CallerAttributeKind.None;
         }
 
         private LuaExpressionSyntax CheckCallerAttribute(IParameterSymbol parameter, SyntaxNode node) {
@@ -582,14 +593,10 @@ namespace CSharpLua {
         }
 
         private LuaInvocationExpressionSyntax BuildObjectCreationInvocation(IMethodSymbol symbol, LuaExpressionSyntax expression) {
-            int constructorIndex = 0;
-            if(symbol != null) {
-                constructorIndex = GetConstructorIndex(symbol);
-                if(constructorIndex > 0) {
-                    expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
-                }
+            int constructorIndex = GetConstructorIndex(symbol);
+            if(constructorIndex > 0) {
+                expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
             }
-
             LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(expression);
             if(constructorIndex > 0) {
                 invocationExpression.AddArgument(new LuaIdentifierNameSyntax(constructorIndex));
@@ -607,10 +614,11 @@ namespace CSharpLua {
             var expression = GetTypeName(typeSymbol);
             LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, expression);
 
-            List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();
-            List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>> initializers = new List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>>();
-
             if(node.ArgumentList != null) {
+                List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();
+                List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>> initializers = new List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>>();
+                List<Tuple<NameColonSyntax, ExpressionSyntax>> argumentNodeInfos = new List<Tuple<NameColonSyntax, ExpressionSyntax>>();
+
                 foreach(var argumentNode in node.ArgumentList.Arguments) {
                     var argumentExpression = (LuaExpressionSyntax)argumentNode.Expression.Accept(this);
                     if(argumentNode.NameEquals == null) {
@@ -629,34 +637,31 @@ namespace CSharpLua {
                         initializers.Add(Tuple.Create(name, argumentExpression));
                     }
                 }
-            }
 
-            foreach(var argument in arguments) {
-                if(argument != null) {
-                    invocation.AddArgument(argument);
+                CheckInvocationDeafultArguments(symbol, symbol.Parameters, arguments, argumentNodeInfos, node, false);
+                invocation.AddArguments(arguments);
+
+                if(initializers.Count == 0) {
+                    return invocation;
                 }
                 else {
-                    invocation.AddArgument(LuaIdentifierNameSyntax.Nil);
-                }
-            }
+                    LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
+                    PushFunction(function);
+                    var temp = GetTempIdentifier(node);
+                    function.AddParameter(temp);
 
-            if(initializers.Count == 0) {
-                return invocation;
+                    foreach(var initializer in initializers) {
+                        var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, initializer.Item1, false);
+                        var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, initializer.Item2);
+                        function.AddStatement(assignmentExpression);
+                    }
+
+                    PopFunction();
+                    return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocation, function);
+                }
             }
             else {
-                LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
-                PushFunction(function);
-                var temp = GetTempIdentifier(node);
-                function.AddParameter(temp);
-
-                foreach(var initializer in initializers) {
-                    var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, initializer.Item1, false);
-                    var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, initializer.Item2);
-                    function.AddStatement(assignmentExpression);
-                }
-
-                PopFunction();
-                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocation, function);
+                return invocation;
             }
         }
 

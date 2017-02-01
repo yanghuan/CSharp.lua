@@ -8,7 +8,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaWrapFunctionStatementSynatx", function (namespace) 
         local UpdateIdentifiers, AddMemberDeclaration, Render, __ctor__;
         UpdateIdentifiers = function (this, name, target, memberName, parameter) 
-            local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(target, memberName);
+            local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(target, memberName, false);
             local invoke = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
             invoke:AddArgument(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax:new(1, name));
             invoke:AddArgument(this.function_);

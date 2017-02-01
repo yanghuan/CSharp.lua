@@ -48,7 +48,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             AddArguments(this, arguments);
         end;
         __ctor6__ = function (this, expression, arguments) 
-            if arguments == nil then arguments = System.Array.Empty(CSharpLuaLuaAst.LuaExpressionSyntax) end
             __ctor1__(this, expression);
             AddArguments(this, arguments);
         end;

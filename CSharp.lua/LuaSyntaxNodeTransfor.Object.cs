@@ -31,12 +31,17 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             var expression = (LuaExpressionSyntax)node.Type.Accept(this);
-            LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, expression);
 
-            var argumentList = BuildArgumentList(node.ArgumentList, symbol?.Parameters);
-            invocation.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+            LuaInvocationExpressionSyntax invocation;
             if(symbol != null) {
-                CheckInvocationCallerAttribute(symbol, invocation, node.ArgumentList.Arguments.Count, node);
+                invocation = BuildObjectCreationInvocation(symbol, expression);
+                var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+                invocation.AddArguments(arguments);
+            }
+            else {
+                invocation = new LuaInvocationExpressionSyntax(expression);
+                var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
+                invocation.ArgumentList.Arguments.AddRange(argumentList.Arguments);
             }
 
             if(node.Initializer == null) {
@@ -229,7 +234,8 @@ namespace CSharpLua {
             function.IsStaticCtor = isStatic;
 
             function.AddParameter(LuaIdentifierNameSyntax.This);
-            FillMethodParameterList(function, node.ParameterList, false);
+            var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
+            function.ParameterList.Parameters.AddRange(parameterList.Parameters);
 
             if(node.Initializer != null) {
                 var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
@@ -253,10 +259,11 @@ namespace CSharpLua {
                 }
 
                 otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
-                var argumentList = (LuaArgumentListSyntax)node.Initializer.ArgumentList.Accept(this);
-                otherCtorInvoke.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+                var arguments = BuildArgumentList(symbol, symbol.Parameters, node.Initializer.ArgumentList);
+                otherCtorInvoke.AddArguments(arguments);
                 function.AddStatement(otherCtorInvoke);
             }
+
             LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
             function.AddStatements(block.Statements);
             PopFunction();
@@ -665,13 +672,19 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-
-            var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-            LuaArgumentListSyntax argumentList = BuildArgumentList(node.ArgumentList, symbol?.Parameters);
             LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, string.Empty);
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(expression, identifierName, true);
             LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(memberAccess, identifierName);
-            propertyAdapter.InvocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+
+            var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+            if(symbol != null) {
+                List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+                propertyAdapter.InvocationExpression.AddArguments(arguments);
+            }
+            else {
+                var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
+                propertyAdapter.InvocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+            }
             return propertyAdapter;
         }
 

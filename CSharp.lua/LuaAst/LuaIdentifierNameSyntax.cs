@@ -40,6 +40,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Value = new LuaIdentifierNameSyntax("value");
         public readonly static LuaIdentifierNameSyntax This = new LuaIdentifierNameSyntax("this");
         public readonly static LuaIdentifierNameSyntax True = new LuaIdentifierNameSyntax("true");
+        public readonly static LuaIdentifierNameSyntax False = new LuaIdentifierNameSyntax("false");
         public readonly static LuaIdentifierNameSyntax Throw = new LuaIdentifierNameSyntax("System.throw");
         public readonly static LuaIdentifierNameSyntax Each = new LuaIdentifierNameSyntax("System.each");
         public readonly static LuaIdentifierNameSyntax YieldReturn = new LuaIdentifierNameSyntax("System.yieldReturn");

@@ -511,7 +511,7 @@ System.namespace("CSharpLua", function (namespace)
             this.writer_ = writer;
         end;
         return {
-            isNewLine_ = False, 
+            isNewLine_ = false, 
             indentLevel_ = 0, 
             Render = Render, 
             Render1 = Render1, 

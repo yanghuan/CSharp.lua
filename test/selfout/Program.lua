@@ -28,8 +28,8 @@ Options
                     end
 
                     System.Console.WriteLine(("start {0}"):Format(System.DateTime.getNow()));
-                    local folder = CSharpLua.Utility.GetArgument(cmds, "-s");
-                    local output = CSharpLua.Utility.GetArgument(cmds, "-d");
+                    local folder = CSharpLua.Utility.GetArgument(cmds, "-s", false);
+                    local output = CSharpLua.Utility.GetArgument(cmds, "-d", false);
                     local lib = CSharpLua.Utility.GetArgument(cmds, "-l", true);
                     local meta = CSharpLua.Utility.GetArgument(cmds, "-m", true);
                     local defines = CSharpLua.Utility.GetArgument(cmds, "-def", true);

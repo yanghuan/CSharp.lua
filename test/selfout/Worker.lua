@@ -46,13 +46,13 @@ System.namespace("CSharpLua", function (namespace)
             Compiler(this);
         end;
         Compiler = function (this) 
-            local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(nil, nil, nil, this.defines_);
+            local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(6, 1, 0, this.defines_);
             local files = SystemIO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]]);
-            local syntaxTrees = Linq.Select(files, function (file) return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(System.File.ReadAllText(file), parseOptions, file); end, MicrosoftCodeAnalysis.SyntaxTree);
-            local references = Linq.Select(getLibs(this), function (i) return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i); end, MicrosoftCodeAnalysis.PortableExecutableReference);
-            local compilation = MicrosoftCodeAnalysisCSharp.CSharpCompilation.Create("_", syntaxTrees, references, MicrosoftCodeAnalysisCSharp.CSharpCompilationOptions(2 --[[OutputKind.DynamicallyLinkedLibrary]]));
+            local syntaxTrees = Linq.Select(files, function (file) return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(System.File.ReadAllText(file), parseOptions, file, nil, nil); end, MicrosoftCodeAnalysis.SyntaxTree);
+            local references = Linq.Select(getLibs(this), function (i) return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, nil, nil); end, MicrosoftCodeAnalysis.PortableExecutableReference);
+            local compilation = MicrosoftCodeAnalysisCSharp.CSharpCompilation.Create("_", syntaxTrees, references, MicrosoftCodeAnalysisCSharp.CSharpCompilationOptions(2 --[[OutputKind.DynamicallyLinkedLibrary]], false, nil, nil, nil, nil, 0, false, false, nil, nil, nil, nil, 0, 0, 4, nil, true, false, nil, nil, nil, nil, nil, false));
             System.using(SystemIO.MemoryStream(), function (ms) 
-                local result = compilation:Emit(ms);
+                local result = compilation:Emit(ms, nil, nil, nil, nil, nil, nil, nil);
                 if not result:getSuccess() then
                     local errors = SystemLinq.ImmutableArrayExtensions.Where(result:getDiagnostics(), function (i) return i:getSeverity() == 3 --[[DiagnosticSeverity.Error]]; end, MicrosoftCodeAnalysis.Diagnostic);
                     local message = System.String.Join("\n", errors, MicrosoftCodeAnalysis.Diagnostic);
@@ -69,8 +69,8 @@ System.namespace("CSharpLua", function (namespace)
         __ctor__ = function (this, folder, output, lib, meta, defines) 
             this.folder_ = folder;
             this.output_ = output;
-            this.libs_ = CSharpLua.Utility.Split(lib);
-            this.metas_ = CSharpLua.Utility.Split(meta);
+            this.libs_ = CSharpLua.Utility.Split(lib, true);
+            this.metas_ = CSharpLua.Utility.Split(meta, true);
             this.defines_ = CSharpLua.Utility.Split(defines, false);
         end;
         return {

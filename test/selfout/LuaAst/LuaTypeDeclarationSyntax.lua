@@ -66,7 +66,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             initFunction:AddStatement1(assignment);
         end;
         AddInitFiled1 = function (this, initFunction, name, value) 
-            local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, name);
+            local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, name, false);
             local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(memberAccess, value);
             initFunction = AddInitFiled(this, initFunction, assignment);
         end;
@@ -176,7 +176,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.ctors_:Add(function_);
         end;
         AddInitFunction = function (this, name, initFunction, isAddItem) 
-            if isAddItem == nil then isAddItem = true end
             local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(name, initFunction);
             this.methodList_.Statements:Add1(CSharpLuaLuaAst.LuaExpressionStatementSyntax(assignment));
             this.local_.Variables:Add1(name);
@@ -189,7 +188,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 local assignment = CSharpLuaLuaAst.LuaMultipleAssignmentExpressionSyntax();
                 for _, name in System.each(this.staticAssignmentNames_) do
                     local identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name);
-                    local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, identifierName);
+                    local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, identifierName, false);
                     assignment.Lefts:Add1(memberAccess);
                     assignment.Rights:Add1(identifierName);
                 end
@@ -205,11 +204,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                     this.staticCtorFunction_.Body.Statements:InsertRange(0, this.staticInitFunction_.Body.Statements);
                 end
                 AddStaticAssignmentNames(this, this.staticCtorFunction_.Body);
-                AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.StaticCtor, this.staticCtorFunction_);
+                AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.StaticCtor, this.staticCtorFunction_, true);
             else
                 if hasStaticInit then
                     AddStaticAssignmentNames(this, this.staticInitFunction_.Body);
-                    AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.StaticCtor, this.staticInitFunction_);
+                    AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.StaticCtor, this.staticInitFunction_, true);
                 end
             end
         end;
@@ -230,7 +229,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
 
                 if #this.ctors_ == 1 then
-                    AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Ctor, CSharpLua.Utility.First(this.ctors_, CSharpLuaLuaAst.LuaConstructorAdapterExpressionSyntax));
+                    AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Ctor, CSharpLua.Utility.First(this.ctors_, CSharpLuaLuaAst.LuaConstructorAdapterExpressionSyntax), true);
                 else
                     local ctrosTable = CSharpLuaLuaAst.LuaTableInitializerExpression();
                     local index = 1;
@@ -245,7 +244,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
             else
                 if hasInit then
-                    AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Ctor, this.initFunction_);
+                    AddInitFunction(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Ctor, this.initFunction_, true);
                 end
             end
         end;
@@ -297,7 +296,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __inherits__ = {
                 CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx
             }, 
-            IsPartialMark = False, 
+            IsPartialMark = false, 
             AddStaticReadOnlyAssignmentName = AddStaticReadOnlyAssignmentName, 
             AddClassAttributes = AddClassAttributes, 
             AddTypeIdentifier = AddTypeIdentifier, 
@@ -339,7 +338,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaInterfaceDeclarationSyntax", function (namespace) 
         local __ctor__;
         __ctor__ = function (this, name) 
-            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Interface);
+            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Interface, nil);
         end;
         return {
             __inherits__ = {
@@ -361,13 +360,13 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         __ctor__ = function (this, fullName, name, compilationUnit) 
             this.FullName = fullName;
             this.CompilationUnit = compilationUnit;
-            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Enum);
+            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Enum, nil);
         end;
         return {
             __inherits__ = {
                 CSharpLuaLuaAst.LuaTypeDeclarationSyntax
             }, 
-            IsExport = False, 
+            IsExport = false, 
             Add = Add, 
             Render = Render, 
             __ctor__ = __ctor__

@@ -141,7 +141,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             if this.DefaultLabel ~= nil then
                 assert(this.defaultBock_ ~= nil);
                 this.caseLabelVariables_.Variables:Add1(this.DefaultLabel);
-                local labeledStatement = CSharpLuaLuaAst.LuaLabeledStatement(this.DefaultLabel);
+                local labeledStatement = CSharpLuaLuaAst.LuaLabeledStatement(this.DefaultLabel, nil);
                 this.RepeatStatement.Body.Statements:Add1(labeledStatement);
                 local IfStatement = CSharpLuaLuaAst.LuaIfStatementSyntax(this.DefaultLabel);
                 IfStatement.Body.Statements:AddRange1(this.defaultBock_.Statements);
@@ -162,7 +162,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 for _, pair in System.each(this.CaseLabels) do
                     local caseLabelStatement = FindMatchIfStatement(this, pair:getKey());
                     local labelIdentifier = pair:getValue();
-                    this.RepeatStatement.Body.Statements:Add1(CSharpLuaLuaAst.LuaLabeledStatement(labelIdentifier));
+                    this.RepeatStatement.Body.Statements:Add1(CSharpLuaLuaAst.LuaLabeledStatement(labelIdentifier, nil));
                     local ifStatement = CSharpLuaLuaAst.LuaIfStatementSyntax(labelIdentifier);
                     ifStatement.Body.Statements:AddRange1(caseLabelStatement.Statements);
                     this.RepeatStatement.Body.Statements:Add1(ifStatement);

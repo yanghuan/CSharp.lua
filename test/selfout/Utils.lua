@@ -76,7 +76,6 @@ System.namespace("CSharpLua", function (namespace)
             return list:get(list:getCount() - 1);
         end;
         GetOrDefault = function (list, index, v, T) 
-            if v == nil then v = System.default(T) end
             local default;
             if index >= 0 and index < list:getCount() then
                 default = list:get(index);
@@ -86,7 +85,6 @@ System.namespace("CSharpLua", function (namespace)
             return default;
         end;
         GetOrDefault1 = function (dict, key, t, K, T) 
-            if t == nil then t = System.default(T) end
             local v;
             local default;
             default, v = dict:TryGetValue(key, v);
@@ -121,7 +119,6 @@ System.namespace("CSharpLua", function (namespace)
             return - 1;
         end;
         GetArgument = function (args, name, isOption) 
-            if isOption == nil then isOption = false end
             local values = GetOrDefault1(args, name, nil, System.String, System.Array(System.String));
             if values == nil or #values == 0 then
                 if isOption then
@@ -144,7 +141,6 @@ System.namespace("CSharpLua", function (namespace)
             return SystemIO.Path.Combine(System.Environment.getCurrentDirectory(), path);
         end;
         Split = function (s, isPath) 
-            if isPath == nil then isPath = true end
             local list = System.HashSet(System.String)();
             if not System.String.IsNullOrEmpty(s) then
                 local array = s:Split(59 --[[';']]);
@@ -280,7 +276,7 @@ System.namespace("CSharpLua", function (namespace)
 
             local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference);
             if syntaxReference ~= nil then
-                local node = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax, syntaxReference:GetSyntax());
+                local node = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax, syntaxReference:GetSyntax(nil));
                 local hasGet = false;
                 local hasSet = false;
                 if node:getAccessorList() ~= nil then
@@ -316,7 +312,7 @@ System.namespace("CSharpLua", function (namespace)
 
             local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference);
             if syntaxReference ~= nil then
-                local isField = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(), 8795 --[[SyntaxKind.VariableDeclarator]]);
+                local isField = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(nil), 8795 --[[SyntaxKind.VariableDeclarator]]);
                 if isField then
                     if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IEventSymbol) then
                         isField = false;

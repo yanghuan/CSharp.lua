@@ -39,7 +39,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 CSharpLuaLuaAst.LuaExpressionSyntax
             }, 
             getFunctionKeyword = getFunctionKeyword, 
-            HasYield = False, 
+            HasYield = false, 
             TempIndex = 0, 
             AddParameter = AddParameter, 
             AddStatement = AddStatement, 
@@ -74,8 +74,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __inherits__ = {
                 CSharpLuaLuaAst.LuaFunctionExpressionSyntax
             }, 
-            IsStaticCtor = False, 
-            IsInvokeThisCtor = False
+            IsStaticCtor = false, 
+            IsInvokeThisCtor = false
         };
     end);
     namespace.class("LuaCheckReturnFunctionExpressionSyntax", function (namespace) 

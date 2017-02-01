@@ -14,7 +14,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render3(this);
         end;
         __ctor__ = function (this, expression, name, isObjectColon) 
-            if isObjectColon == nil then isObjectColon = false end
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
@@ -76,7 +75,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             Update = Update, 
             setIsGetOrAdd = setIsGetOrAdd, 
             getIsProperty = getIsProperty, 
-            isAutoGet_ = False, 
+            isAutoGet_ = false, 
             GetCloneOfGet = GetCloneOfGet, 
             Render = Render, 
             __ctor__ = {

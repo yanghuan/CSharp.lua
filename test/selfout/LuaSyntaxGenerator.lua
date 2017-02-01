@@ -48,9 +48,9 @@ System.namespace("CSharpLua", function (namespace)
                 this.IsNewest = true;
             end;
             return {
-                HasSemicolon = False, 
+                HasSemicolon = false, 
                 indent_ = 0, 
-                IsNewest = False, 
+                IsNewest = false, 
                 getIndent = getIndent, 
                 setIndent = setIndent, 
                 __ctor__ = __ctor__
@@ -67,7 +67,7 @@ System.namespace("CSharpLua", function (namespace)
             local luaCompilationUnits = System.List(CSharpLuaLuaAst.LuaCompilationUnitSyntax)();
             for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
                 local semanticModel = GetSemanticModel(this, syntaxTree);
-                local compilationUnitSyntax = System.cast(MicrosoftCodeAnalysisCSharpSyntax.CompilationUnitSyntax, syntaxTree:GetRoot());
+                local compilationUnitSyntax = System.cast(MicrosoftCodeAnalysisCSharpSyntax.CompilationUnitSyntax, syntaxTree:GetRoot(nil));
                 local transfor = CSharpLua.LuaSyntaxNodeTransfor:new(1, this, semanticModel);
                 local luaCompilationUnit = System.cast(CSharpLuaLuaAst.LuaCompilationUnitSyntax, compilationUnitSyntax:Accept(transfor, CSharpLuaLuaAst.LuaSyntaxNode));
                 luaCompilationUnits:Add(luaCompilationUnit);
@@ -153,12 +153,12 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         GetSemanticModel = function (this, syntaxTree) 
-            return this.compilation_:GetSemanticModel(syntaxTree);
+            return this.compilation_:GetSemanticModel(syntaxTree, false);
         end;
         IsBaseType = function (this, type) 
             local syntaxTree = type:getSyntaxTree();
             local semanticModel = GetSemanticModel(this, syntaxTree);
-            local symbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(semanticModel, type:getType()):getType();
+            local symbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(semanticModel, type:getType(), nil):getType();
             assert(symbol ~= nil);
             return symbol:getTypeKind() ~= 7 --[[TypeKind.Interface]];
         end;
@@ -255,7 +255,7 @@ System.namespace("CSharpLua", function (namespace)
 
                     local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
                     for _, type in System.each(types) do
-                        local typeName = this.XmlMetaProvider:GetTypeShortName(type);
+                        local typeName = this.XmlMetaProvider:GetTypeShortName(type, nil, nil);
                         table.Items:Add1(CSharpLuaLuaAst.LuaSingleTableItemSyntax(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax:new(1, typeName)));
                     end
                     functionExpression:AddStatement1(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kInit), table));

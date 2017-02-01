@@ -21,7 +21,7 @@ System.namespace("CSharpLua", function (namespace)
             end);
             namespace.class("PropertyModel", function (namespace) 
                 return {
-                    IsAutoField = False
+                    IsAutoField = false
                 };
             end);
             namespace.class("FieldModel", function (namespace) 
@@ -169,7 +169,7 @@ System.namespace("CSharpLua", function (namespace)
                 this.models_ = System.List(CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel)();
             end;
             return {
-                isSingleModel_ = False, 
+                isSingleModel_ = false, 
                 Add = Add, 
                 GetMetaInfo = GetMetaInfo, 
                 __ctor__ = __ctor__
