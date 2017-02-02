@@ -35,6 +35,7 @@ namespace CSharpLua {
             "mscorlib.dll",
             "System.dll",
             "System.Core.dll",
+            "Microsoft.CSharp.dll",
         };
         private const string kDllSuffix = ".dll";
         private const string kLuaSuffix = ".lua";

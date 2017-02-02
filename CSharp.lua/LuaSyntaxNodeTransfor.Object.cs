@@ -117,8 +117,7 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitGenericName(GenericNameSyntax node) {
-            SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
-            ISymbol symbol = symbolInfo.Symbol;
+            ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
             if(symbol.Kind == SymbolKind.Method) {
                 return GetMethodNameExpression((IMethodSymbol)symbol, node);
             }

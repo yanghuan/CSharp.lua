@@ -1084,21 +1084,54 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node) {
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-            var codeTemplateExpression = CheckCodeTemplateInvocationExpression(symbol, node);
-            if(codeTemplateExpression != null) {
-                return codeTemplateExpression;
+            if(symbol != null) {
+                var codeTemplateExpression = CheckCodeTemplateInvocationExpression(symbol, node);
+                if(codeTemplateExpression != null) {
+                    return codeTemplateExpression;
+                }
             }
 
             List<LuaExpressionSyntax> refOrOutArguments = new List<LuaExpressionSyntax>();
-            List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
-            foreach(var typeArgument in symbol.TypeArguments) {
-                LuaExpressionSyntax typeName = GetTypeName(typeArgument, node);
-                arguments.Add(typeName);
+            List<LuaExpressionSyntax> arguments;
+            if(symbol != null) {
+                arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
+                foreach(var typeArgument in symbol.TypeArguments) {
+                    LuaExpressionSyntax typeName = GetTypeName(typeArgument, node);
+                    arguments.Add(typeName);
+                }
+            }
+            else {
+                arguments = new List<LuaExpressionSyntax>();
+                foreach(var argument in node.ArgumentList.Arguments) {
+                    if(argument.NameColon != null) {
+                        throw new CompilationErrorException($"{argument.GetLocationString()} : named argument is not support.");
+                    }
+                    var argumentExpression = (LuaExpressionSyntax)argument.Expression.Accept(this);
+                    arguments.Add(argumentExpression);
+                    if(argument.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || argument.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
+                        refOrOutArguments.Add(argumentExpression);
+                    }
+                }
             }
 
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             LuaInvocationExpressionSyntax invocation;
-            if(!symbol.IsExtensionMethod) {
+            if(symbol != null && symbol.IsExtensionMethod) {
+                LuaMemberAccessExpressionSyntax memberAccess = expression as LuaMemberAccessExpressionSyntax;
+                if(memberAccess != null) {
+                    if(memberAccess.Name is LuaInternalMethodExpressionSyntax) {
+                        invocation = new LuaInvocationExpressionSyntax(memberAccess.Name);
+                        invocation.AddArgument(memberAccess.Expression);
+                    }
+                    else {
+                        invocation = BuildExtensionMethodInvocation(symbol.ReducedFrom, memberAccess.Expression, node);
+                    }
+                }
+                else {
+                    invocation = new LuaInvocationExpressionSyntax(expression);
+                }
+            }
+            else {
                 LuaMemberAccessExpressionSyntax memberAccess = expression as LuaMemberAccessExpressionSyntax;
                 if(memberAccess != null) {
                     if(memberAccess.Name is LuaInternalMethodExpressionSyntax) {
@@ -1114,21 +1147,6 @@ namespace CSharpLua {
                     if(expression is LuaInternalMethodExpressionSyntax) {
                         invocation.AddArgument(LuaIdentifierNameSyntax.This);
                     }
-                }
-            }
-            else {
-                LuaMemberAccessExpressionSyntax memberAccess = expression as LuaMemberAccessExpressionSyntax;
-                if(memberAccess != null) {
-                    if(memberAccess.Name is LuaInternalMethodExpressionSyntax) {
-                        invocation = new LuaInvocationExpressionSyntax(memberAccess.Name);
-                        invocation.AddArgument(memberAccess.Expression);
-                    }
-                    else {
-                        invocation = BuildExtensionMethodInvocation(symbol.ReducedFrom, memberAccess.Expression, node);
-                    }
-                }
-                else {
-                    invocation = new LuaInvocationExpressionSyntax(expression);
                 }
             }
 
@@ -1252,6 +1270,12 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
             ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
+            if(symbol == null) {  // dynamic
+                var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+                var name = new LuaIdentifierNameSyntax(node.Name.Identifier.ValueText);
+                return new LuaMemberAccessExpressionSyntax(expression, name, node.Parent.IsKind(SyntaxKind.InvocationExpression));
+            }
+
             var codeTemplateExpression = CheckMemberAccessCodeTemplate(symbol, node);
             if(codeTemplateExpression != null) {
                 return codeTemplateExpression;
