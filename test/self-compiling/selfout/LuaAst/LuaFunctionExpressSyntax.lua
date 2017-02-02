@@ -8,12 +8,15 @@ System.usingDeclare(function (global)
 end);
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaFunctionExpressionSyntax", function (namespace) 
-        local getFunctionKeyword, AddParameter, AddStatement, AddStatement1, AddStatements, Render, __ctor__;
+        local getFunctionKeyword, AddParameter, AddParameter1, AddStatement, AddStatement1, AddStatements, Render, __ctor__;
         getFunctionKeyword = function (this) 
             return "function" --[[Keyword.Function]];
         end;
-        AddParameter = function (this, identifier) 
-            this.ParameterList.Parameters:Add1(CSharpLuaLuaAst.LuaParameterSyntax(identifier));
+        AddParameter = function (this, parameter) 
+            this.ParameterList.Parameters:Add1(parameter);
+        end;
+        AddParameter1 = function (this, identifier) 
+            AddParameter(this, CSharpLuaLuaAst.LuaParameterSyntax(identifier));
         end;
         AddStatement = function (this, statement) 
             this.Body.Statements:Add1(statement);
@@ -42,6 +45,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             HasYield = false, 
             TempIndex = 0, 
             AddParameter = AddParameter, 
+            AddParameter1 = AddParameter1, 
             AddStatement = AddStatement, 
             AddStatement1 = AddStatement1, 
             AddStatements = AddStatements, 

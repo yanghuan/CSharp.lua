@@ -20,10 +20,10 @@ Options
 ]];
         Main = function (args) 
             if #args > 0 then
-                local default, extern = System.try(function () 
+                local default = System.try(function () 
                     local cmds = CSharpLua.Utility.GetCommondLines(args);
                     if cmds:ContainsKey("-h") then
-                        ShowHelpInfo(this);
+                        ShowHelpInfo();
                         return true;
                     end
 
@@ -41,7 +41,7 @@ Options
                     if System.is(default, CSharpLua.CmdArgumentException) then
                         local e = default;
                         System.Console.getError():WriteLine(e:getMessage());
-                        ShowHelpInfo(this);
+                        ShowHelpInfo();
                         System.Environment.setExitCode(- 1);
                     elseif System.is(default, CSharpLua.CompilationErrorException) then
                         local e = default;
@@ -54,10 +54,10 @@ Options
                     end
                 end);
                 if default then
-                    return extern;
+                    return;
                 end
             else
-                ShowHelpInfo(this);
+                ShowHelpInfo();
                 System.Environment.setExitCode(- 1);
             end
         end;

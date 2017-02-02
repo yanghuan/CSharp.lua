@@ -33,8 +33,12 @@ namespace CSharpLua.LuaAst {
             CloseBraceToken = Tokens.End,
         };
 
+        public void AddParameter(LuaParameterSyntax parameter) {
+            ParameterList.Parameters.Add(parameter);
+        }
+
         public void AddParameter(LuaIdentifierNameSyntax identifier) {
-            ParameterList.Parameters.Add(new LuaParameterSyntax(identifier));
+            AddParameter(new LuaParameterSyntax(identifier));
         }
 
         public void AddStatement(LuaStatementSyntax statement) {

@@ -28,6 +28,8 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed partial class LuaSyntaxNodeTransfor {
+        private Stack<LuaIdentifierNameSyntax> conditionalTemps_ = new Stack<LuaIdentifierNameSyntax>();
+
         public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             var expression = (LuaExpressionSyntax)node.Type.Accept(this);
@@ -454,11 +456,16 @@ namespace CSharpLua {
 
         private LuaStatementSyntax BuildCheckReturnInvocationExpression(LuaInvocationExpressionSyntax invocationExpression, SyntaxNode node) {
             if(IsReturnExists(node)) {
+                var curMethodInfo = CurMethodInfoOrNull;
+                bool isReturnVoid = curMethodInfo != null && curMethodInfo.Symbol.ReturnsVoid;
+
                 var temp1 = GetTempIdentifier(node);
-                var temp2 = GetTempIdentifier(node);
+                var temp2 = isReturnVoid ? null :  GetTempIdentifier(node);
                 LuaLocalVariablesStatementSyntax localVariables = new LuaLocalVariablesStatementSyntax();
                 localVariables.Variables.Add(temp1);
-                localVariables.Variables.Add(temp2);
+                if(temp2 != null) {
+                    localVariables.Variables.Add(temp2);
+                }
                 LuaEqualsValueClauseListSyntax initializer = new LuaEqualsValueClauseListSyntax();
                 initializer.Values.Add(invocationExpression);
                 localVariables.Initializer = initializer;
@@ -467,11 +474,23 @@ namespace CSharpLua {
                 if(CurFunction is LuaCheckReturnFunctionExpressionSyntax) {
                     LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
                     returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
-                    returnStatement.Expressions.Add(temp2);
+                    if(temp2 != null) {
+                        returnStatement.Expressions.Add(temp2);
+                    }
                     ifStatement.Body.Statements.Add(returnStatement);
                 }
                 else {
-                    ifStatement.Body.Statements.Add(new LuaReturnStatementSyntax(temp2));
+                    if(curMethodInfo != null && curMethodInfo.RefOrOutParameters.Count > 0) {
+                        LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
+                        if(temp2 != null) {
+                            returnStatement.Expressions.Add(temp2);
+                        }
+                        returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
+                        ifStatement.Body.Statements.Add(returnStatement);
+                    }
+                    else {
+                        ifStatement.Body.Statements.Add(new LuaReturnStatementSyntax(temp2));
+                    }
                 }
 
                 LuaStatementListSyntax statements = new LuaStatementListSyntax();
@@ -615,8 +634,6 @@ namespace CSharpLua {
                 return LuaIdentifierNameSyntax.This;
             }
         }
-
-        private Stack<LuaIdentifierNameSyntax> conditionalTemps_ = new Stack<LuaIdentifierNameSyntax>();
 
         public override LuaSyntaxNode VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node) {
             var temp = GetTempIdentifier(node.Expression);

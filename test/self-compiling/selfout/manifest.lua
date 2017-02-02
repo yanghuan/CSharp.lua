@@ -133,6 +133,7 @@ return function (dir)
         "CSharpLua.LuaSyntaxNodeTransfor.ContinueSearcher", 
         "CSharpLua.LuaSyntaxNodeTransfor.LocalVarSearcher", 
         "CSharpLua.LuaSyntaxNodeTransfor.LuaSyntaxSearcher.FoundException", 
+        "CSharpLua.LuaSyntaxNodeTransfor.MethodInfo", 
         "CSharpLua.LuaSyntaxNodeTransfor.ReturnStatementSearcher", 
         "CSharpLua.PartialTypeDeclaration", 
         "CSharpLua.Program", 

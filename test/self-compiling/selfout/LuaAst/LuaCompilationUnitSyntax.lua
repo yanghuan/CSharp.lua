@@ -64,7 +64,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
 
                 local global = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Global;
                 local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
-                functionExpression:AddParameter(global);
+                functionExpression:AddParameter1(global);
                 for _, usingDeclare in System.each(usingDeclares) do
                     if usingDeclare.Prefix ~= usingDeclare.NewPrefix then
                         local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.NewPrefix), CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.Prefix));

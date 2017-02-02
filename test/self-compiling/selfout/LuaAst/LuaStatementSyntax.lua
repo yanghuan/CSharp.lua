@@ -73,20 +73,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         };
     end);
     namespace.class("LuaReturnStatementSyntax", function (namespace) 
-        local getReturnKeyword, Render, __ctor1__, __ctor2__;
+        local getReturnKeyword, Render, __ctor__;
         getReturnKeyword = function (this) 
             return "return" --[[Keyword.Return]];
         end;
         Render = function (this, renderer) 
             renderer:Render26(this);
         end;
-        __ctor1__ = function (this, expression) 
-            if expression == nil then
-                System.throw(System.ArgumentNullException("expression"));
-            end
+        __ctor__ = function (this, expression) 
             this.Expression = expression;
-        end;
-        __ctor2__ = function (this) 
         end;
         return {
             __inherits__ = {
@@ -94,10 +89,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             }, 
             getReturnKeyword = getReturnKeyword, 
             Render = Render, 
-            __ctor__ = {
-                __ctor1__, 
-                __ctor2__
-            }
+            __ctor__ = __ctor__
         };
     end);
     namespace.class("LuaMultipleReturnStatementSyntax", function (namespace) 

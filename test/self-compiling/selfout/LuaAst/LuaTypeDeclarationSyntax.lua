@@ -44,7 +44,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, table);
             else
                 local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
-                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, table));
+                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(table));
                 AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, functionExpression);
                 if kind == 2 --[[BaseTypeGenericKind.ExtendSelf]] then
                     AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.InheritRecursion, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True);
@@ -70,14 +70,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         AddInitFiled = function (this, initFunction, assignment) 
             if initFunction == nil then
                 initFunction = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
-                initFunction:AddParameter(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This);
+                initFunction:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This);
             end
             initFunction:AddStatement1(assignment);
+            return initFunction;
         end;
         AddInitFiled1 = function (this, initFunction, name, value) 
             local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, name, false);
             local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(memberAccess, value);
             initFunction = AddInitFiled(this, initFunction, assignment);
+            return initFunction;
         end;
         AddField = function (this, name, value, isImmutable, isStatic, isPrivate, isReadOnly) 
             if isStatic then
@@ -260,7 +262,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         CheckAttributes = function (this) 
             if #this.attributes_.Items > 0 then
                 local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
-                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, this.attributes_));
+                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(this.attributes_));
                 AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Attributes, functionExpression);
             end
         end;
@@ -275,17 +277,17 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             CheckAttributes(this);
             this.statements_:Add(this.methodList_);
 
-            local returnStatement = CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, this.resultTable_);
+            local returnStatement = CSharpLuaLuaAst.LuaReturnStatementSyntax(this.resultTable_);
             this.statements_:Add(returnStatement);
 
             if #this.typeIdentifiers_ > 0 then
                 local wrapFunction = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
                 for _, type in System.each(this.typeIdentifiers_) do
-                    wrapFunction:AddParameter(type);
+                    wrapFunction:AddParameter1(type);
                 end
                 wrapFunction:AddStatements(this.statements_);
                 this.statements_:Clear();
-                this.statements_:Add(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, wrapFunction));
+                this.statements_:Add(CSharpLuaLuaAst.LuaReturnStatementSyntax(wrapFunction));
             end
             CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx.Render(this, renderer);
         end;

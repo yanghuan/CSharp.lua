@@ -13,7 +13,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             invoke:AddArgument(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax:new(1, name));
             invoke:AddArgument(this.function_);
             if parameter ~= nil then
-                this.function_:AddParameter(parameter);
+                this.function_:AddParameter1(parameter);
             end
             this.Statement = CSharpLuaLuaAst.LuaExpressionStatementSyntax(invoke);
         end;

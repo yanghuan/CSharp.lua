@@ -191,6 +191,10 @@ namespace CSharpLua {
             return modifiers.Any(i => i.IsKind(SyntaxKind.PartialKeyword));
         }
 
+        public static bool IsOutOrRef(this SyntaxTokenList modifiers) {
+            return modifiers.Any(i => i.IsKind(SyntaxKind.OutKeyword) || i.IsKind(SyntaxKind.RefKeyword));
+        }
+
         public static bool IsStringType(this ITypeSymbol type) {
             return type.SpecialType == SpecialType.System_String;
         }

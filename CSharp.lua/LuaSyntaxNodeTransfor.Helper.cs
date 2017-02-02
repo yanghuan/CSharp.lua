@@ -481,6 +481,7 @@ namespace CSharpLua {
                 return false;
             }
 
+            Contract.Assert(type != null);
             bool mayBeNull;
             if(type.IsValueType) {
                 mayBeNull = false;
@@ -520,6 +521,9 @@ namespace CSharpLua {
         }
 
         private bool MayBeNullOrFalse(ExpressionSyntax conditionalWhenTrue) {
+            if(conditionalWhenTrue.IsKind(SyntaxKind.NullLiteralExpression)) {
+                return true;
+            }
             var type = semanticModel_.GetTypeInfo(conditionalWhenTrue).Type;
             return MayBeNull(conditionalWhenTrue, type) || MayBeFalse(conditionalWhenTrue, type);
         }

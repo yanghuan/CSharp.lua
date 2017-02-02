@@ -40,10 +40,10 @@ System.namespace("CSharpLua", function (namespace)
     namespace.class("Utility", function (namespace) 
         local GetCommondLines, First, Last, GetOrDefault, GetOrDefault1, AddAt, IndexOf, GetArgument, 
         GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, IsConst, 
-        IsParams, IsPartial, IsStringType, IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, 
-        IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, systemLinqEnumerableType_, 
-        IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckOriginalDefinition, 
-        CheckOriginalDefinition1;
+        IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, 
+        InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, 
+        systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, 
+        CheckOriginalDefinition, CheckOriginalDefinition1;
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))();
 
@@ -147,7 +147,7 @@ System.namespace("CSharpLua", function (namespace)
                 for _, i in System.each(array) do
                     local default;
                     if isPath then
-                        default = GetCurrentDirectory(this, i);
+                        default = GetCurrentDirectory(i);
                     else
                         default = i;
                     end
@@ -193,6 +193,9 @@ System.namespace("CSharpLua", function (namespace)
         end;
         IsPartial = function (modifiers) 
             return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8406 --[[SyntaxKind.PartialKeyword]]); end);
+        end;
+        IsOutOrRef = function (modifiers) 
+            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8361 --[[SyntaxKind.OutKeyword]]) or MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8360 --[[SyntaxKind.RefKeyword]]); end);
         end;
         IsStringType = function (type) 
             return type:getSpecialType() == 20 --[[SpecialType.System_String]];
@@ -259,7 +262,7 @@ System.namespace("CSharpLua", function (namespace)
             while true do
                 local overriddenSymbol = OverriddenSymbol(symbol);
                 if overriddenSymbol ~= nil then
-                    overriddenSymbol = CheckOriginalDefinition1(this, overriddenSymbol);
+                    overriddenSymbol = CheckOriginalDefinition1(overriddenSymbol);
                     if overriddenSymbol:Equals(superSymbol) then
                         return true;
                     end
@@ -437,11 +440,13 @@ System.namespace("CSharpLua", function (namespace)
                     symbol = symbol:getOriginalDefinition();
                 end
             end
+            return symbol;
         end;
         CheckOriginalDefinition1 = function (symbol) 
             if symbol:getOriginalDefinition() ~= symbol then
                 symbol = symbol:getOriginalDefinition();
             end
+            return symbol;
         end;
         return {
             GetCommondLines = GetCommondLines, 
@@ -462,6 +467,7 @@ System.namespace("CSharpLua", function (namespace)
             IsConst = IsConst, 
             IsParams = IsParams, 
             IsPartial = IsPartial, 
+            IsOutOrRef = IsOutOrRef, 
             IsStringType = IsStringType, 
             IsDelegateType = IsDelegateType, 
             IsIntegerType = IsIntegerType, 

@@ -106,7 +106,7 @@ System.namespace("CSharpLua", function (namespace)
                 SystemIO.Directory.CreateDirectory(dir);
             end
             module = path:Replace(SystemIO.Path.DirectorySeparatorChar, 46 --[['.']]);
-            return outPath;
+            return outPath, module;
         end;
         IsEnumExport = function (this, enumTypeSymbol) 
             return this.exportEnums_:Contains(enumTypeSymbol);
@@ -217,7 +217,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
 
                 typesList:Reverse();
-                local types = Linq.Where(Linq.Distinct(Linq.SelectMany(typesList, function (i) return i; end, MicrosoftCodeAnalysis.INamedTypeSymbol)), IsTypeEnable);
+                local types = Linq.Where(Linq.Distinct(Linq.SelectMany(typesList, function (i) return i; end, MicrosoftCodeAnalysis.INamedTypeSymbol)), System.bind(this, IsTypeEnable));
                 allTypes:AddRange(types);
             end
             return allTypes;
@@ -236,7 +236,7 @@ System.namespace("CSharpLua", function (namespace)
                 local types = GetExportTypes(this);
                 if #types > 0 then
                     local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
-                    functionExpression:AddParameter(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kDir));
+                    functionExpression:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kDir));
                     functionExpression:AddStatement1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kDirInitCode));
 
                     local requireIdentifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kRequire);
@@ -261,7 +261,7 @@ System.namespace("CSharpLua", function (namespace)
                     functionExpression:AddStatement1(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kInit), table));
 
                     local luaCompilationUnit = CSharpLuaLuaAst.LuaCompilationUnitSyntax();
-                    luaCompilationUnit.Statements:Add1(CSharpLuaLuaAst.LuaReturnStatementSyntax:new(1, functionExpression));
+                    luaCompilationUnit.Statements:Add1(CSharpLuaLuaAst.LuaReturnStatementSyntax(functionExpression));
 
                     local outFile = SystemIO.Path.Combine(outFolder, kManifestFile);
                     Write(this, luaCompilationUnit, outFile);
@@ -341,10 +341,10 @@ System.namespace("CSharpLua", function (namespace)
             local index = 0;
             for _, member in System.each(sameNameMembers) do
                 if member:Equals(symbol) then
-                    symbolExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(this, symbol));
+                    symbolExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(symbol));
                 else
                     if not this.memberNames_:ContainsKey(member) then
-                        local identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(this, member));
+                        local identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(member));
                         this.memberNames_:Add(member, CSharpLuaLuaAst.LuaSymbolNameSyntax(identifierName));
                     end
                 end
@@ -425,12 +425,12 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetSameNameMembers = function (this, symbol) 
             local members = System.List(MicrosoftCodeAnalysis.ISymbol)();
-            local name = GetSymbolName(this, symbol);
+            local name = GetSymbolName(symbol);
             FillSameNameMembers(this, symbol:getContainingType(), name, members);
             if name ~= symbol:getName() then
                 FillSameNameMembers(this, symbol:getContainingType(), symbol:getName(), members);
             end
-            members:Sort(MemberSymbolComparison);
+            members:Sort(System.bind(this, MemberSymbolComparison));
             return members;
         end;
         MethodSymbolToString = function (this, symbol) 
@@ -485,16 +485,16 @@ System.namespace("CSharpLua", function (namespace)
                 else
                     v = - 1;
                 end
-                return true;
+                return true, v;
             end
 
             if b:getIsAbstract() then
                 v = 1;
-                return true;
+                return true, v;
             end
 
             v = 0;
-            return false;
+            return false, v;
         end;
         MemberSymbolComparison = function (this, a, b) 
             local isFromCodeOfA = CSharpLua.Utility.IsFromCode(a:getContainingType());

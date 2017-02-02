@@ -142,7 +142,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return MicrosoftCodeAnalysisCSharp.SyntaxFactory.Literal(character):getText();
         end;
         __ctor__ = function (this, character) 
-            CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(this, character));
+            CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(character));
         end;
         return {
             __inherits__ = {

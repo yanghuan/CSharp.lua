@@ -59,14 +59,8 @@ namespace CSharpLua.LuaAst {
         public LuaExpressionSyntax Expression { get; }
         public string ReturnKeyword => Tokens.Return;
 
-        public LuaReturnStatementSyntax(LuaExpressionSyntax expression) {
-            if(expression == null) {
-                throw new ArgumentNullException(nameof(expression));
-            }
+        public LuaReturnStatementSyntax(LuaExpressionSyntax expression = null) {
             Expression = expression;
-        }
-
-        public LuaReturnStatementSyntax() {
         }
 
         internal override void Render(LuaRenderer renderer) {
