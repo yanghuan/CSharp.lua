@@ -35,6 +35,7 @@ local ceil = math.ceil
 local error = error
 local select = select
 local pcall = pcall
+local global = _G
 
 local emptyFn = function() end
 local identityFn = function(x) return x end
@@ -387,7 +388,7 @@ function System.init(namelist)
         assert(modules[name], name)()
     end
     for _, f in ipairs(usings) do
-        f()
+        f(global)
     end
     for _, cls in ipairs(class) do
         local recursion, staticCtor = cls.__recursion__, cls.__staticCtor__

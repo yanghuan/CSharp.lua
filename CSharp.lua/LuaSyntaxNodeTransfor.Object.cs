@@ -228,6 +228,19 @@ namespace CSharpLua {
             return invocation;
         }
 
+        private LuaInvocationExpressionSyntax BuildCallBaseConstructor(ITypeSymbol baseType, int ctroCounter) {
+            LuaInvocationExpressionSyntax otherCtorInvoke;
+            var typeName = GetTypeName(baseType);
+            LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
+            if(ctroCounter > 0) {
+                otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter)));
+            }
+            else {
+                otherCtorInvoke = new LuaInvocationExpressionSyntax(memberAccess);
+            }
+            return otherCtorInvoke;
+        }
+
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
             LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
             PushFunction(function);
@@ -249,20 +262,29 @@ namespace CSharpLua {
                     function.IsInvokeThisCtor = true;
                 }
                 else {
-                    var typeName = GetTypeName(symbol.ReceiverType, node);
-                    LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
-                    if(ctroCounter > 0) {
-                        otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter)));
-                    }
-                    else {
-                        otherCtorInvoke = new LuaInvocationExpressionSyntax(memberAccess);
-                    }
+                    otherCtorInvoke = BuildCallBaseConstructor(symbol.ReceiverType, ctroCounter);
                 }
-
                 otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
                 var arguments = BuildArgumentList(symbol, symbol.Parameters, node.Initializer.ArgumentList);
                 otherCtorInvoke.AddArguments(arguments);
                 function.AddStatement(otherCtorInvoke);
+            }
+            else {
+                var symbol = semanticModel_.GetDeclaredSymbol(node);
+                var baseType = symbol.ContainingType.BaseType;
+                if(baseType.SpecialType != SpecialType.System_Object) {
+                    int ctroCounter = 0;
+                    if(baseType.IsFromCode()) {
+                        if(baseType.Constructors.Length > 1) {
+                            int index = baseType.Constructors.IndexOf(i => i.Parameters.IsEmpty);
+                            Contract.Assert(index != -1);
+                            ctroCounter = index + 1;
+                        }
+                    }
+                    var otherCtorInvoke = BuildCallBaseConstructor(baseType, ctroCounter);
+                    otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
+                    function.AddStatement(otherCtorInvoke);
+                }
             }
 
             LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
