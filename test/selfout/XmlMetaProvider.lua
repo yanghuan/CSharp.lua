@@ -298,8 +298,12 @@ System.namespace("CSharpLua", function (namespace)
             end
         end;
         GetNamespaceMapName = function (this, symbol) 
-            local name = symbol:ToString();
-            return CSharpLua.Utility.GetOrDefault1(this.namespaceNameMaps_, name, name, System.String, System.String);
+            if symbol:getIsGlobalNamespace() then
+                return "";
+            else
+                local name = symbol:ToString();
+                return CSharpLua.Utility.GetOrDefault1(this.namespaceNameMaps_, name, name, System.String, System.String);
+            end
         end;
         GetTypeName = function (this, symbol, transfor, node) 
             assert(symbol ~= nil);
@@ -360,9 +364,17 @@ System.namespace("CSharpLua", function (namespace)
             end
             local fullName;
             if typeSymbol:getTypeArguments():getLength() == 0 then
-                fullName = ("{0}.{1}"):Format(namespaceName, name);
+                if #namespaceName > 0 then
+                    fullName = ("{0}.{1}"):Format(namespaceName, name);
+                else
+                    fullName = name;
+                end
             else
-                fullName = ("{0}.{1}_{2}"):Format(namespaceName, name, typeSymbol:getTypeArguments():getLength());
+                if #namespaceName > 0 then
+                    fullName = ("{0}.{1}_{2}"):Format(namespaceName, name, typeSymbol:getTypeArguments():getLength());
+                else
+                    fullName = ("{0}_{1}"):Format(name, typeSymbol:getTypeArguments():getLength());
+                end
             end
             return fullName;
         end;

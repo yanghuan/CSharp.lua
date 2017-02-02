@@ -1052,11 +1052,6 @@ namespace CSharpLua {
         }
 
         private LuaExpressionSyntax CheckCodeTemplateInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node) {
-            var constValue = semanticModel_.GetConstantValue(node);
-            if(constValue.HasValue) {
-                return GetConstLiteralExpression(constValue.Value);
-            }
-
             if(node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
                 string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
                 if(codeTemplate != null) {
@@ -1083,6 +1078,11 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node) {
+            var constValue = semanticModel_.GetConstantValue(node);
+            if(constValue.HasValue) {
+                return GetConstLiteralExpression(constValue.Value);
+            }
+
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             if(symbol != null) {
                 var codeTemplateExpression = CheckCodeTemplateInvocationExpression(symbol, node);

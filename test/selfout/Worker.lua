@@ -64,7 +64,7 @@ System.namespace("CSharpLua", function (namespace)
             generator:Generate(this.folder_, this.output_);
         end;
         __staticCtor__ = function (this) 
-            SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll");
+            SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll", "Microsoft.CSharp.dll");
         end;
         __ctor__ = function (this, folder, output, lib, meta, defines) 
             this.folder_ = folder;
