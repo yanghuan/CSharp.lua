@@ -355,12 +355,13 @@ namespace CSharpLua {
         }
 
         private string GetNamespaceMapName(INamespaceSymbol symbol) {
-            if(symbol.IsGlobalNamespace)
-            {
-                return LuaIdentifierNameSyntax.Global.ValueText;
+            if(symbol.IsGlobalNamespace) {
+                return string.Empty;
             }
-            string name = symbol.ToString();
-            return namespaceNameMaps_.GetOrDefault(name, name);
+            else {
+                string name = symbol.ToString();
+                return namespaceNameMaps_.GetOrDefault(name, name);
+            }
         }
 
         public LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransfor transfor, SyntaxNode node) {
@@ -420,10 +421,20 @@ namespace CSharpLua {
             }
             string fullName;
             if(typeSymbol.TypeArguments.Length == 0) {
-                fullName = $"{namespaceName}.{name}";
+                if(namespaceName.Length > 0) {
+                    fullName = $"{namespaceName}.{name}";
+                }
+                else {
+                    fullName = name;
+                }
             }
             else {
-                fullName = $"{namespaceName}.{name}_{typeSymbol.TypeArguments.Length}";
+                if(namespaceName.Length > 0) {
+                    fullName = $"{namespaceName}.{name}_{typeSymbol.TypeArguments.Length}";
+                }
+                else {
+                    fullName = $"{name}_{typeSymbol.TypeArguments.Length}";
+                }
             }
             return fullName;
         }
