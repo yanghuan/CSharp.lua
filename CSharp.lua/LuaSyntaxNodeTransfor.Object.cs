@@ -658,6 +658,13 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node) {
+            bool isEmpty = functions_.Count == 0;
+            if(isEmpty) {
+                LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
+                PushFunction(function);
+                blocks_.Push(function.Body);
+            }
+
             var temp = GetTempIdentifier(node.Expression);
             conditionalTemps_.Push(temp);
 
@@ -674,13 +681,25 @@ namespace CSharpLua {
             conditionalTemps_.Pop();
 
             if(node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
+                if(isEmpty) {
+                    throw new InvalidOperationException();
+                }
                 ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(whenNotNull));
                 return LuaExpressionSyntax.EmptyExpression;
             }
             else {
                 LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(temp, whenNotNull);
                 ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-                return temp;
+                if(isEmpty) {
+                    var function = CurFunction;
+                    function.AddStatement(new LuaReturnStatementSyntax(temp));
+                    blocks_.Pop();
+                    PopFunction();
+                    return new LuaInvocationExpressionSyntax(new LuaParenthesizedExpressionSyntax(function));
+                }
+                else {
+                    return temp;
+                }
             }
         }
 
