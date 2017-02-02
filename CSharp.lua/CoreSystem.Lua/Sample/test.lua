@@ -34,7 +34,7 @@ local function testDateTimeAndTimeSpan()
 end
 
 local function testArray() 
-    local arr = System.Array(System.Int)(10)
+    local arr = System.Array(System.Int):new(10)
     print(arr:ToString(), #arr)
     printList(arr)
     arr:set(0, 2)
@@ -172,7 +172,7 @@ local function testType()
     print(t:getName())
     print(System.is("ddd", System.String))
     print(System.as("ddd", System.String))
-    print(System.cast("ddd", System.String))
+    print(System.cast(System.String, "ddd"))
 end
 
 local function testConsole()

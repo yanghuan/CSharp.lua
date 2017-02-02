@@ -1145,7 +1145,9 @@ namespace CSharpLua {
                 else {
                     invocation = new LuaInvocationExpressionSyntax(expression);
                     if(expression is LuaInternalMethodExpressionSyntax) {
-                        invocation.AddArgument(LuaIdentifierNameSyntax.This);
+                        if(!symbol.IsStatic) {
+                            invocation.AddArgument(LuaIdentifierNameSyntax.This);
+                        }
                     }
                 }
             }

@@ -26,12 +26,17 @@ local select = select
 local Array = {}
 local emptys = {}
 
-function Array__ctor__(this, ...)
+function Array.__ctor__(this, ...)
     local len = select("#", ...)
-    return buildArray(this, len, ...)
+    buildArray(this, len, ...)
 end
 
-Array.new = buildArray
+function Array.new(cls, len)
+    local this = setmetatable({}, cls)
+    buildArray(this, len)
+    return this;
+end
+
 Array.set = Collection.setArray
 Array.get = Collection.getArray
 Array.GetEnumerator = arrayEnumerator
