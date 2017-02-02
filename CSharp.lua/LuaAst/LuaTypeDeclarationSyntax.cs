@@ -53,13 +53,23 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        internal void AddClassAttributes(IEnumerable<LuaExpressionSyntax> attributes) {
-            LuaTableInitializerExpression table = new LuaTableInitializerExpression();
-            foreach(var expression in attributes) {
-                table.Items.Add(new LuaSingleTableItemSyntax(expression));
+        internal void AddClassAttributes(List<LuaExpressionSyntax> attributes) {
+            if(attributes.Count > 0) {
+                LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+                table.Items.AddRange(attributes.Select(i => new LuaSingleTableItemSyntax(i)));
+                LuaKeyValueTableItemSyntax item = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(LuaIdentifierNameSyntax.Class), table);
+                attributes_.Items.Add(item);
             }
-            LuaKeyValueTableItemSyntax item = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(LuaIdentifierNameSyntax.Class), table);
-            attributes_.Items.Add(item);
+        }
+
+        internal void AddMethodAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
+            if(attributes.Count > 0) {
+                LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+                table.Items.AddRange(attributes.Select(i => new LuaSingleTableItemSyntax(i)));
+                LuaTableExpressionKeySyntax key = new LuaTableExpressionKeySyntax(name);
+                LuaKeyValueTableItemSyntax item = new LuaKeyValueTableItemSyntax(key, table);
+                attributes_.Items.Add(item);
+            }
         }
 
         internal void AddTypeIdentifier(LuaIdentifierNameSyntax identifier) {

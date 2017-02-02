@@ -665,7 +665,7 @@ namespace CSharpLua {
             }
         }
 
-        private LuaSyntaxList<LuaExpressionSyntax> BuildAttributes(IEnumerable<AttributeListSyntax> attributeLists) {
+        private LuaSyntaxList<LuaExpressionSyntax> BuildAttributes(SyntaxList<AttributeListSyntax> attributeLists) {
             LuaSyntaxList<LuaExpressionSyntax> expressions = new LuaSyntaxList<LuaExpressionSyntax>();
             var attributes = attributeLists.SelectMany(i => i.Attributes);
             foreach(var node in attributes) {

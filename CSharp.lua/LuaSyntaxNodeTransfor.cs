@@ -185,10 +185,8 @@ namespace CSharpLua {
         private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
             typeDeclarations_.Push(typeDeclaration);
             var attributes = BuildAttributes(node.AttributeLists);
-            if(attributes.Count > 0) {
-                typeDeclaration.AddClassAttributes(attributes);
-            }
-                      
+            typeDeclaration.AddClassAttributes(attributes);
+
             if(node.TypeParameterList != null) {
                 foreach(var typeParameter in node.TypeParameterList.Parameters) {
                     var typeIdentifier = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
@@ -246,10 +244,7 @@ namespace CSharpLua {
                     }
                 }
             }
-
-            if(attributes.Count > 0) {
-                major.TypeDeclaration.AddClassAttributes(attributes);
-            }
+            major.TypeDeclaration.AddClassAttributes(attributes);
 
             if(major.Node.TypeParameterList != null) {
                 foreach(var typeParameter in major.Node.TypeParameterList.Parameters) {
@@ -381,8 +376,15 @@ namespace CSharpLua {
                 LuaIdentifierNameSyntax methodName = generator_.GetMethodName(symbol);
                 LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
                 PushFunction(function);
+
+                bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
                 if(!node.Modifiers.IsStatic()) {
                     function.AddParameter(LuaIdentifierNameSyntax.This);
+                }
+
+                if(!isPrivate) {
+                    var attributes = BuildAttributes(node.AttributeLists);
+                    CurType.AddMethodAttributes(methodName, attributes);
                 }
 
                 var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
@@ -401,7 +403,6 @@ namespace CSharpLua {
                     VisitYield(node, function);
                 }
                 PopFunction();
-                bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
                 CurType.AddMethod(methodName, function, isPrivate);
                 return function;
             }
