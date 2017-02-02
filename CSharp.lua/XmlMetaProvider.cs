@@ -355,6 +355,10 @@ namespace CSharpLua {
         }
 
         private string GetNamespaceMapName(INamespaceSymbol symbol) {
+            if(symbol.IsGlobalNamespace)
+            {
+                return LuaIdentifierNameSyntax.Global.ValueText;
+            }
             string name = symbol.ToString();
             return namespaceNameMaps_.GetOrDefault(name, name);
         }
