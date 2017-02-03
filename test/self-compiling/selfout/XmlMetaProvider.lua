@@ -17,18 +17,64 @@ System.namespace("CSharpLua", function (namespace)
     namespace.class("XmlMetaProvider", function (namespace) 
         namespace.class("XmlMetaModel", function (namespace) 
             namespace.class("TemplateModel", function (namespace) 
-                return {};
+                return {
+                    __attributes__ = function () 
+                        return {
+                            Template = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }
+                        };
+                    end
+                };
             end);
             namespace.class("PropertyModel", function (namespace) 
                 return {
-                    IsAutoField = false
+                    IsAutoField = false, 
+                    __attributes__ = function () 
+                        return {
+                            name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            IsAutoField = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            set = {
+                                SystemXmlSerialization.XmlElementAttribute()
+                            }, 
+                            get = {
+                                SystemXmlSerialization.XmlElementAttribute()
+                            }
+                        };
+                    end
                 };
             end);
             namespace.class("FieldModel", function (namespace) 
-                return {};
+                return {
+                    __attributes__ = function () 
+                        return {
+                            name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Template = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }
+                        };
+                    end
+                };
             end);
             namespace.class("ArgumentModel", function (namespace) 
-                return {};
+                return {
+                    __attributes__ = function () 
+                        return {
+                            type = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }
+                        };
+                    end
+                };
             end);
             namespace.class("MethodModel", function (namespace) 
                 local __ctor__;
@@ -37,20 +83,85 @@ System.namespace("CSharpLua", function (namespace)
                     this.GenericArgCount = - 1;
                 end;
                 return {
-                    __ctor__ = __ctor__
+                    __ctor__ = __ctor__, 
+                    __attributes__ = function () 
+                        return {
+                            name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Template = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            ArgCount = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Args = {
+                                SystemXmlSerialization.XmlElementAttribute("arg")
+                            }, 
+                            RetType = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            GenericArgCount = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }
+                        };
+                    end
                 };
             end);
             namespace.class("ClassModel", function (namespace) 
-                return {};
+                return {
+                    __attributes__ = function () 
+                        return {
+                            name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Propertys = {
+                                SystemXmlSerialization.XmlElementAttribute("property")
+                            }, 
+                            Fields = {
+                                SystemXmlSerialization.XmlElementAttribute("field")
+                            }, 
+                            Methods = {
+                                SystemXmlSerialization.XmlElementAttribute("method")
+                            }, 
+                            Import = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }
+                        };
+                    end
+                };
             end);
             namespace.class("NamespaceModel", function (namespace) 
-                return {};
+                return {
+                    __attributes__ = function () 
+                        return {
+                            name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Name = {
+                                SystemXmlSerialization.XmlAttributeAttribute()
+                            }, 
+                            Classes = {
+                                SystemXmlSerialization.XmlElementAttribute("class")
+                            }
+                        };
+                    end
+                };
             end);
             return {
                 __attributes__ = function () 
                     return {
                         class = {
                             SystemXmlSerialization.XmlRootAttribute("assembly")
+                        }, 
+                        Namespaces = {
+                            SystemXmlSerialization.XmlElementAttribute("namespace")
                         }
                     };
                 end

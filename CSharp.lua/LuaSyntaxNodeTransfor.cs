@@ -558,9 +558,10 @@ namespace CSharpLua {
 
         private void AddField(TypeSyntax type, ITypeSymbol typeSymbol, SyntaxToken identifier, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, SyntaxList<AttributeListSyntax> attributeLists) {
             LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(identifier.ValueText);
-            var attributes = BuildAttributes(attributeLists);
-            CurType.AddFieldAttributes(name, attributes);
-
+            if(!(isStatic && isPrivate)) {
+                var attributes = BuildAttributes(attributeLists);
+                CurType.AddFieldAttributes(name, attributes);
+            }
             bool valueIsLiteral;
             LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, expression, out valueIsLiteral);
             CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly);
@@ -594,6 +595,11 @@ namespace CSharpLua {
                                 functionExpression.AddParameter(LuaIdentifierNameSyntax.Value);
                                 name.IsGetOrAdd = false;
                                 hasSet = true;
+                            }
+
+                            if(!isPrivate) {
+                                var attributes = BuildAttributes(accessor.AttributeLists);
+                                CurType.AddMethodAttributes(name, attributes);
                             }
                         }
                     }
@@ -639,10 +645,11 @@ namespace CSharpLua {
                         }
                     }
                 }
-                else
-                {
-                    var attributes = BuildAttributes(node.AttributeLists);
-                    CurType.AddFieldAttributes(new LuaIdentifierNameSyntax(node.Identifier.ValueText), attributes);
+                else {
+                    if(!isPrivate) {
+                        var attributes = BuildAttributes(node.AttributeLists);
+                        CurType.AddFieldAttributes(new LuaIdentifierNameSyntax(node.Identifier.ValueText), attributes);
+                    }
                 }
             }
             return base.VisitPropertyDeclaration(node);
@@ -666,6 +673,11 @@ namespace CSharpLua {
                     CurType.AddMethod(name, functionExpression, isPrivate);
                     if(accessor.IsKind(SyntaxKind.RemoveAccessorDeclaration)) {
                         name.IsGetOrAdd = false;
+                    }
+
+                    if(!isPrivate) {
+                        var attributes = BuildAttributes(accessor.AttributeLists);
+                        CurType.AddMethodAttributes(name, attributes);
                     }
                 }
             }

@@ -537,7 +537,7 @@ System.namespace("CSharpLua", function (namespace)
                         if ref ~= nil then
                             ref = ref.getValue();
                         end
-                        AddField(this, type, typeSymbol, variable:getIdentifier(), ref, isImmutable, isStatic, isPrivate, isReadOnly);
+                        AddField(this, type, typeSymbol, variable:getIdentifier(), ref, isImmutable, isStatic, isPrivate, isReadOnly, node:getAttributeLists());
                         continue = true;
                     until 1;
                     if not continue then
@@ -552,7 +552,7 @@ System.namespace("CSharpLua", function (namespace)
                     for _, variable in System.each(node:getDeclaration():getVariables()) do
                         local value = System.cast(MicrosoftCodeAnalysisCSharpSyntax.LiteralExpressionSyntax, variable:getInitializer():getValue());
                         if #value:getToken():getValueText() > 25 --[[LuaSyntaxNode.StringConstInlineCount]] then
-                            AddField(this, type, typeSymbol, variable:getIdentifier(), value, true, true, isPrivate, true);
+                            AddField(this, type, typeSymbol, variable:getIdentifier(), value, true, true, isPrivate, true, node:getAttributeLists());
                         end
                     end
                 end
@@ -586,8 +586,12 @@ System.namespace("CSharpLua", function (namespace)
             end
             return valueExpression, valueIsLiteral;
         end;
-        AddField = function (this, type, typeSymbol, identifier, expression, isImmutable, isStatic, isPrivate, isReadOnly) 
+        AddField = function (this, type, typeSymbol, identifier, expression, isImmutable, isStatic, isPrivate, isReadOnly, attributeLists) 
             local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, identifier:getValueText());
+            if not (isStatic and isPrivate) then
+                local attributes = BuildAttributes(this, attributeLists);
+                getCurType(this):AddFieldAttributes(name, attributes);
+            end
             local valueIsLiteral;
             local default;
             default, valueIsLiteral = GetFieldValueExpression(this, type, typeSymbol, expression, valueIsLiteral);
@@ -622,6 +626,11 @@ System.namespace("CSharpLua", function (namespace)
                                 name.IsGetOrAdd = false;
                                 hasSet = true;
                             end
+
+                            if not isPrivate then
+                                local attributes = BuildAttributes(this, accessor:getAttributeLists());
+                                getCurType(this):AddMethodAttributes(name, attributes);
+                            end
                         end
                     end
                 else
@@ -654,7 +663,7 @@ System.namespace("CSharpLua", function (namespace)
                         if default ~= nil then
                             default = default.getValue();
                         end
-                        AddField(this, type, typeSymbol, node:getIdentifier(), default, isImmutable, isStatic, isPrivate, isReadOnly);
+                        AddField(this, type, typeSymbol, node:getIdentifier(), default, isImmutable, isStatic, isPrivate, isReadOnly, node:getAttributeLists());
                     else
                         local isAuto = CSharpLua.Utility.IsPropertyField(MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node, nil));
                         if isAuto then
@@ -663,7 +672,7 @@ System.namespace("CSharpLua", function (namespace)
                             if extern ~= nil then
                                 extern = extern.getValue();
                             end
-                            AddField(this, type, typeSymbol, node:getIdentifier(), extern, isImmutable, isStatic, isPrivate, isReadOnly);
+                            AddField(this, type, typeSymbol, node:getIdentifier(), extern, isImmutable, isStatic, isPrivate, isReadOnly, node:getAttributeLists());
                         else
                             local valueIsLiteral;
                             local ref = node:getInitializer();
@@ -675,6 +684,11 @@ System.namespace("CSharpLua", function (namespace)
                             local valueExpression = out;
                             getCurType(this):AddProperty(node:getIdentifier():getValueText(), valueExpression, isImmutable and valueIsLiteral, isStatic, isPrivate);
                         end
+                    end
+                else
+                    if not isPrivate then
+                        local attributes = BuildAttributes(this, node:getAttributeLists());
+                        getCurType(this):AddFieldAttributes(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, node:getIdentifier():getValueText()), attributes);
                     end
                 end
             end
@@ -698,6 +712,11 @@ System.namespace("CSharpLua", function (namespace)
                     getCurType(this):AddMethod(name, functionExpression, isPrivate);
                     if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(accessor, 8899 --[[SyntaxKind.RemoveAccessorDeclaration]]) then
                         name.IsGetOrAdd = false;
+                    end
+
+                    if not isPrivate then
+                        local attributes = BuildAttributes(this, accessor:getAttributeLists());
+                        getCurType(this):AddMethodAttributes(name, attributes);
                     end
                 end
             end

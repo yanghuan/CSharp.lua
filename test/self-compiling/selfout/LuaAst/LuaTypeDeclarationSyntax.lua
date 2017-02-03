@@ -9,27 +9,32 @@ System.usingDeclare(function (global)
 end);
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaTypeDeclarationSyntax", function (namespace) 
-        local AddStaticReadOnlyAssignmentName, AddClassAttributes, AddMethodAttributes, AddTypeIdentifier, AddBaseTypes, AddResultTable, AddResultTable1, AddMethod, 
-        AddInitFiled, AddInitFiled1, AddField, AddPropertyOrEvent, AddProperty, AddEvent, SetStaticCtor, AddCtor, 
-        AddInitFunction, AddStaticAssignmentNames, CheckStaticCtorFunction, CheckCtorsFunction, CheckAttributes, Render, __init__, __ctor__;
+        local AddStaticReadOnlyAssignmentName, AddClassAttributes, AddMethodAttributes, AddFieldAttributes, AddTypeIdentifier, AddBaseTypes, AddResultTable, AddResultTable1, 
+        AddMethod, AddInitFiled, AddInitFiled1, AddField, AddPropertyOrEvent, AddProperty, AddEvent, SetStaticCtor, 
+        AddCtor, AddInitFunction, AddStaticAssignmentNames, CheckStaticCtorFunction, CheckCtorsFunction, CheckAttributes, Render, __init__, 
+        __ctor__;
         AddStaticReadOnlyAssignmentName = function (this, name) 
             if not this.staticAssignmentNames_:Contains(name) then
                 this.staticAssignmentNames_:Add(name);
             end
         end;
         AddClassAttributes = function (this, attributes) 
-            if #attributes > 0 then
-                local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
-                table.Items:AddRange1(Linq.Select(attributes, function (i) return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i); end, CSharpLuaLuaAst.LuaSingleTableItemSyntax));
-                local item = CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(CSharpLuaLuaAst.LuaTableLiteralKeySyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Class), table);
-                this.attributes_.Items:Add1(item);
-            end
+            AddFieldAttributes(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Class, attributes);
         end;
         AddMethodAttributes = function (this, name, attributes) 
             if #attributes > 0 then
                 local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
                 table.Items:AddRange1(Linq.Select(attributes, function (i) return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i); end, CSharpLuaLuaAst.LuaSingleTableItemSyntax));
                 local key = CSharpLuaLuaAst.LuaTableExpressionKeySyntax(name);
+                local item = CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(key, table);
+                this.attributes_.Items:Add1(item);
+            end
+        end;
+        AddFieldAttributes = function (this, name, attributes) 
+            if #attributes > 0 then
+                local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
+                table.Items:AddRange1(Linq.Select(attributes, function (i) return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i); end, CSharpLuaLuaAst.LuaSingleTableItemSyntax));
+                local key = CSharpLuaLuaAst.LuaTableLiteralKeySyntax(name);
                 local item = CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(key, table);
                 this.attributes_.Items:Add1(item);
             end
@@ -310,6 +315,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             AddStaticReadOnlyAssignmentName = AddStaticReadOnlyAssignmentName, 
             AddClassAttributes = AddClassAttributes, 
             AddMethodAttributes = AddMethodAttributes, 
+            AddFieldAttributes = AddFieldAttributes, 
             AddTypeIdentifier = AddTypeIdentifier, 
             AddBaseTypes = AddBaseTypes, 
             AddMethod = AddMethod, 

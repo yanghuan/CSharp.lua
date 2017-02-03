@@ -48,12 +48,7 @@ namespace CSharpLua.LuaAst {
         }
 
         internal void AddClassAttributes(List<LuaExpressionSyntax> attributes) {
-            if(attributes.Count > 0) {
-                LuaTableInitializerExpression table = new LuaTableInitializerExpression();
-                table.Items.AddRange(attributes.Select(i => new LuaSingleTableItemSyntax(i)));
-                LuaKeyValueTableItemSyntax item = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(LuaIdentifierNameSyntax.Class), table);
-                attributes_.Items.Add(item);
-            }
+            AddFieldAttributes(LuaIdentifierNameSyntax.Class, attributes);
         }
 
         internal void AddMethodAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
@@ -66,10 +61,8 @@ namespace CSharpLua.LuaAst {
             }
         }
         
-        internal void AddFieldAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes)
-        {
-            if (attributes.Count > 0)
-            {
+        internal void AddFieldAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
+            if (attributes.Count > 0) {
                 LuaTableInitializerExpression table = new LuaTableInitializerExpression();
                 table.Items.AddRange(attributes.Select(i => new LuaSingleTableItemSyntax(i)));
                 LuaTableLiteralKeySyntax key = new LuaTableLiteralKeySyntax(name);
