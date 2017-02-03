@@ -65,6 +65,18 @@ namespace CSharpLua.LuaAst {
                 attributes_.Items.Add(item);
             }
         }
+        
+        internal void AddFieldAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes)
+        {
+            if (attributes.Count > 0)
+            {
+                LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+                table.Items.AddRange(attributes.Select(i => new LuaSingleTableItemSyntax(i)));
+                LuaTableLiteralKeySyntax key = new LuaTableLiteralKeySyntax(name);
+                LuaKeyValueTableItemSyntax item = new LuaKeyValueTableItemSyntax(key, table);
+                attributes_.Items.Add(item);
+            }
+        }
 
         internal void AddTypeIdentifier(LuaIdentifierNameSyntax identifier) {
             typeIdentifiers_.Add(identifier);

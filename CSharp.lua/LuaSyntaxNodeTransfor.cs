@@ -506,7 +506,7 @@ namespace CSharpLua {
                             continue;
                         }
                     }
-                    AddField(type, typeSymbol, variable.Identifier, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly);
+                    AddField(type, typeSymbol, variable.Identifier, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
                 }
             }
             else {
@@ -517,7 +517,7 @@ namespace CSharpLua {
                     foreach(var variable in node.Declaration.Variables) {
                         var value = (LiteralExpressionSyntax)variable.Initializer.Value;
                         if(value.Token.ValueText.Length > LuaSyntaxNode.StringConstInlineCount) {
-                            AddField(type, typeSymbol, variable.Identifier, value, true, true, isPrivate, true);
+                            AddField(type, typeSymbol, variable.Identifier, value, true, true, isPrivate, true, node.AttributeLists);
                         }
                     }
                 }
@@ -556,8 +556,11 @@ namespace CSharpLua {
             return valueExpression;
         }
 
-        private void AddField(TypeSyntax type, ITypeSymbol typeSymbol, SyntaxToken identifier, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly) {
+        private void AddField(TypeSyntax type, ITypeSymbol typeSymbol, SyntaxToken identifier, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, SyntaxList<AttributeListSyntax> attributeLists) {
             LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(identifier.ValueText);
+            var attributes = BuildAttributes(attributeLists);
+            CurType.AddFieldAttributes(name, attributes);
+
             bool valueIsLiteral;
             LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, expression, out valueIsLiteral);
             CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly);
@@ -621,13 +624,13 @@ namespace CSharpLua {
                     bool isImmutable = typeSymbol.IsImmutable();
                     if(isStatic) {
                         bool isReadOnly = node.AccessorList.Accessors.Count == 1 && node.AccessorList.Accessors[0].Body == null;
-                        AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly);
+                        AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
                     }
                     else {
                         bool isAuto = semanticModel_.GetDeclaredSymbol(node).IsPropertyField();
                         if(isAuto) {
                             bool isReadOnly = node.AccessorList.Accessors.Count == 1 && node.AccessorList.Accessors[0].Body == null;
-                            AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly);
+                            AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
                         }
                         else {
                             bool valueIsLiteral;
@@ -635,6 +638,11 @@ namespace CSharpLua {
                             CurType.AddProperty(node.Identifier.ValueText, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
                         }
                     }
+                }
+                else
+                {
+                    var attributes = BuildAttributes(node.AttributeLists);
+                    CurType.AddFieldAttributes(new LuaIdentifierNameSyntax(node.Identifier.ValueText), attributes);
                 }
             }
             return base.VisitPropertyDeclaration(node);
