@@ -644,6 +644,11 @@ namespace CSharpLua {
                         }
                     }
                 }
+                else
+                {
+                    var attributes = BuildAttributes(node.AttributeLists);
+                    CurType.AddFieldAttributes(new LuaIdentifierNameSyntax(node.Identifier.ValueText), attributes);
+                }
             }
             return base.VisitPropertyDeclaration(node);
         }
