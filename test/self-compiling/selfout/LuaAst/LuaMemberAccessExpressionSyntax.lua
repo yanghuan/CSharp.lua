@@ -14,6 +14,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render3(this);
         end;
         __ctor__ = function (this, expression, name, isObjectColon) 
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this);
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
@@ -25,9 +26,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.OperatorToken = isObjectColon and ":" --[[Tokens.ObjectColon]] or "." --[[Tokens.Dot]];
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end, 
             getIsObjectColon = getIsObjectColon, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -61,17 +64,21 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.InvocationExpression.ArgumentList:Render(renderer);
         end;
         __ctor1__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this);
             this.identifier_ = identifier;
             this.InvocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, identifier);
         end;
         __ctor2__ = function (this, memberAccess, identifier) 
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this);
             this.identifier_ = identifier;
             this.InvocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end, 
             Update = Update, 
             setIsGetOrAdd = setIsGetOrAdd, 
             getIsProperty = getIsProperty, 

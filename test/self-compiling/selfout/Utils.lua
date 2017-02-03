@@ -19,9 +19,11 @@ System.namespace("CSharpLua", function (namespace)
             System.Exception.__ctor__(this, message);
         end;
         return {
-            __inherits__ = {
-                System.Exception
-            }, 
+            __inherits__ = function () 
+                return {
+                    System.Exception
+                };
+            end, 
             __ctor__ = __ctor__
         };
     end);
@@ -31,9 +33,11 @@ System.namespace("CSharpLua", function (namespace)
             System.Exception.__ctor__(this, message);
         end;
         return {
-            __inherits__ = {
-                System.Exception
-            }, 
+            __inherits__ = function () 
+                return {
+                    System.Exception
+                };
+            end, 
             __ctor__ = __ctor__
         };
     end);

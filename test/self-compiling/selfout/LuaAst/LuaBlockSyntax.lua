@@ -14,9 +14,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
@@ -27,13 +29,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render14(this);
         end;
         __ctor__ = function (this) 
+            CSharpLuaLuaAst.LuaBlockSyntax.__ctor__(this);
             this.OpenBraceToken = "do" --[[Keyword.Do]];
             this.CloseBraceToken = "end" --[[Keyword.End]];
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaBlockSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaBlockSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };

@@ -11,15 +11,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render8(this);
         end;
         __ctor__ = function (this, expression) 
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__[1](this);
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
             this.Expression = expression;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
@@ -45,9 +48,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Arguments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaArgumentSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             getOpenParenToken = getOpenParenToken, 
             getCloseParenToken = getCloseParenToken, 
             Render = Render, 

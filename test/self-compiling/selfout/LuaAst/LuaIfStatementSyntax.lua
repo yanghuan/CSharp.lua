@@ -25,15 +25,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor__ = function (this, condition) 
             __init__(this);
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if condition == nil then
                 System.throw(System.ArgumentNullException("condition"));
             end
             this.Condition = condition;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getIfKeyword = getIfKeyword, 
             getOpenParenToken = getOpenParenToken, 
             getCloseParenToken = getCloseParenToken, 
@@ -57,15 +60,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor__ = function (this, condition) 
             __init__(this);
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if condition == nil then
                 System.throw(System.ArgumentNullException("condition"));
             end
             this.Condition = condition;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getElseIfKeyword = getElseIfKeyword, 
             getOpenParenToken = getOpenParenToken, 
             Render = Render, 
@@ -84,9 +90,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Body = CSharpLuaLuaAst.LuaBlockSyntax();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             getElseKeyword = getElseKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -181,12 +189,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor__ = function (this, temp) 
             __init__(this);
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Temp = temp;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Fill = Fill, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -207,6 +218,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render48(this);
         end;
         __ctor__ = function (this, parameter, defaultValue) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if parameter == nil then
                 System.throw(System.ArgumentNullException("parameter"));
             end
@@ -217,9 +229,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(parameter, defaultValue);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getIfKeyword = getIfKeyword, 
             getOpenParenToken = getOpenParenToken, 
             getCloseParenToken = getCloseParenToken, 

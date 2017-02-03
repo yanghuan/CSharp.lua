@@ -15,9 +15,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             Render = function (this, renderer) 
             end;
             return {
-                __inherits__ = {
-                    CSharpLuaLuaAst.LuaStatementSyntax
-                }, 
+                __inherits__ = function () 
+                    return {
+                        CSharpLuaLuaAst.LuaStatementSyntax
+                    };
+                end, 
                 Render = Render
             };
         end);
@@ -30,9 +32,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Empty = Empty;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             getSemicolonToken = getSemicolonToken, 
             __staticCtor__ = __staticCtor__
         };
@@ -43,15 +47,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render2(this);
         end;
         __ctor__ = function (this, expression) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
             this.Expression = expression;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
@@ -65,9 +72,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
@@ -81,12 +90,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render26(this);
         end;
         __ctor__ = function (this, expression) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Expression = expression;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getReturnKeyword = getReturnKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -104,9 +116,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Expressions = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getReturnKeyword = getReturnKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -125,11 +139,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Statement = Statement;
         end;
         __ctor__ = function (this) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getBreakKeyword = getBreakKeyword, 
             Render = Render, 
             __staticCtor__ = __staticCtor__, 
@@ -149,12 +166,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Statement = Statement;
         end;
         __ctor__ = function (this) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Assignment = CSharpLuaLuaAst.LuaExpressionStatementSyntax(CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Continue, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True));
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getBreak = getBreak, 
             Render = Render, 
             __staticCtor__ = __staticCtor__, 
@@ -171,12 +191,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.One = One;
         end;
         __ctor__ = function (this, count) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Count = count;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Count = 0, 
             Render = Render, 
             __staticCtor__ = __staticCtor__, 
@@ -192,12 +215,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render52(this);
         end;
         __ctor__ = function (this, comment) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Comment = comment;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getSingleCommentToken = getSingleCommentToken, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -215,12 +241,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render53(this);
         end;
         __ctor__ = function (this, comment) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Comment = comment;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getOpenCommentToken = getOpenCommentToken, 
             getCloseCommentToken = getCloseCommentToken, 
             Render = Render, 
@@ -236,15 +265,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render55(this);
         end;
         __ctor__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if identifier == nil then
                 System.throw(System.ArgumentNullException("identifier"));
             end
             this.Identifier = identifier;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getGotoKeyword = getGotoKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -256,6 +288,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render57(this);
         end;
         __ctor__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if identifier == nil then
                 System.throw(System.ArgumentNullException("identifier"));
             end
@@ -265,9 +298,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.GotoStatement = CSharpLuaLuaAst.LuaGotoStatement(identifier);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
@@ -284,6 +319,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render56(this);
         end;
         __ctor__ = function (this, identifier, statement) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if identifier == nil then
                 System.throw(System.ArgumentNullException("identifier"));
             end
@@ -291,9 +327,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Statement = statement;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getPrefixToken = getPrefixToken, 
             getSuffixToken = getSuffixToken, 
             Render = Render, 

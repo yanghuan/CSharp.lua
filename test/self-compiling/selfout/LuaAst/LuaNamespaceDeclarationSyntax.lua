@@ -8,12 +8,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaNamespaceDeclarationSyntax", function (namespace) 
         local __ctor__;
         __ctor__ = function (this, name) 
+            CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx.__ctor__(this);
             this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.System, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx
+                };
+            end, 
             __ctor__ = __ctor__
         };
     end);

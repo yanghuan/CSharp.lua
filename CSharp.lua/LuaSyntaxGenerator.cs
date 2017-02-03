@@ -411,9 +411,14 @@ namespace CSharpLua {
             return symbolExpression;
         }
 
-        private static string GetSymbolName(ISymbol symbol) {
+        private string GetSymbolName(ISymbol symbol) {
             if(symbol.Kind == SymbolKind.Method) {
                 IMethodSymbol method = (IMethodSymbol)symbol;
+                string name = XmlMetaProvider.GetMethodMapName(method);
+                if(name != null) {
+                    return name;
+                }
+
                 if(!method.ExplicitInterfaceImplementations.IsEmpty) {
                     return method.ExplicitInterfaceImplementations[0].Name;
                 }
@@ -482,9 +487,6 @@ namespace CSharpLua {
             List<ISymbol> members = new List<ISymbol>();
             string name = GetSymbolName(symbol);
             FillSameNameMembers(symbol.ContainingType, name, members);
-            if(name != symbol.Name) {
-                FillSameNameMembers(symbol.ContainingType, symbol.Name, members);
-            }
             members.Sort(MemberSymbolComparison);
             return members;
         }
@@ -624,7 +626,7 @@ namespace CSharpLua {
             }
 
             bool isFromCode = typeSymbol.IsFromCode();
-            var members = typeSymbol.GetMembers(name);
+            var members = typeSymbol.GetMembers();
             foreach(ISymbol member in members) {
                 if(!isFromCode) {
                     if(member.DeclaredAccessibility == Accessibility.Private || member.DeclaredAccessibility == Accessibility.Internal) {
@@ -636,7 +638,10 @@ namespace CSharpLua {
                     continue;
                 }
 
-                outList.Add(member);
+                string memberName = GetSymbolName(member);
+                if(memberName == name) {
+                    outList.Add(member);
+                }
             }
         }
 

@@ -20,9 +20,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Items = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaTableItemSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end, 
             getOpenBraceToken = getOpenBraceToken, 
             getCloseBraceToken = getCloseBraceToken, 
             Render = Render, 
@@ -31,9 +33,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaTableItemSyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end
         };
     end);
     namespace.class("LuaSingleTableItemSyntax", function (namespace) 
@@ -42,24 +46,29 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render28(this);
         end;
         __ctor__ = function (this, expression) 
+            CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this);
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
             this.Expression = expression;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTableItemSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTableItemSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
     end);
     namespace.class("LuaTableKeySyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end
         };
     end);
     namespace.class("LuaTableExpressionKeySyntax", function (namespace) 
@@ -74,12 +83,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render30(this);
         end;
         __ctor__ = function (this, expression) 
+            CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this);
             this.Expression = expression;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTableKeySyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTableKeySyntax
+                };
+            end, 
             getOpenBracketToken = getOpenBracketToken, 
             getCloseBracketToken = getCloseBracketToken, 
             Render = Render, 
@@ -92,12 +104,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render31(this);
         end;
         __ctor__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this);
             this.Identifier = identifier;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTableKeySyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTableKeySyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
@@ -111,13 +126,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render29(this);
         end;
         __ctor__ = function (this, key, value) 
+            CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this);
             this.Key = key;
             this.Value = value;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTableItemSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTableItemSyntax
+                };
+            end, 
             getOperatorToken = getOperatorToken, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -135,6 +153,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render32(this);
         end;
         __ctor__ = function (this, expression, index) 
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this);
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
@@ -145,9 +164,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Index = index;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end, 
             getOpenBracketToken = getOpenBracketToken, 
             getCloseBracketToken = getCloseBracketToken, 
             Render = Render, 

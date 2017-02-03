@@ -37,18 +37,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         AddTypeIdentifier = function (this, identifier) 
             this.typeIdentifiers_:Add(identifier);
         end;
-        AddBaseTypes = function (this, baseTypes, kind) 
+        AddBaseTypes = function (this, baseTypes, hasExtendSelf) 
             local table = CSharpLuaLuaAst.LuaTableInitializerExpression();
             table.Items:AddRange1(Linq.Select(baseTypes, function (i) return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i); end, CSharpLuaLuaAst.LuaSingleTableItemSyntax));
-            if kind == 0 --[[BaseTypeGenericKind.None]] then
-                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, table);
-            else
-                local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
-                functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(table));
-                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, functionExpression);
-                if kind == 2 --[[BaseTypeGenericKind.ExtendSelf]] then
-                    AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.InheritRecursion, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True);
-                end
+            local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax();
+            functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(table));
+            AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, functionExpression);
+            if hasExtendSelf then
+                AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.InheritRecursion, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True);
             end
         end;
         AddResultTable = function (this, name) 
@@ -302,11 +298,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor__ = function (this) 
             __init__(this);
+            CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx.__ctor__(this);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx
+                };
+            end, 
             IsPartialMark = false, 
             AddStaticReadOnlyAssignmentName = AddStaticReadOnlyAssignmentName, 
             AddClassAttributes = AddClassAttributes, 
@@ -326,36 +325,45 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaClassDeclarationSyntax", function (namespace) 
         local __ctor__;
         __ctor__ = function (this, name) 
+            CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this);
             this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Class, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTypeDeclarationSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTypeDeclarationSyntax
+                };
+            end, 
             __ctor__ = __ctor__
         };
     end);
     namespace.class("LuaStructDeclarationSyntax", function (namespace) 
         local __ctor__;
         __ctor__ = function (this, name) 
+            CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this);
             this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Struct, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTypeDeclarationSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTypeDeclarationSyntax
+                };
+            end, 
             __ctor__ = __ctor__
         };
     end);
     namespace.class("LuaInterfaceDeclarationSyntax", function (namespace) 
         local __ctor__;
         __ctor__ = function (this, name) 
+            CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this);
             this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Interface, nil);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTypeDeclarationSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTypeDeclarationSyntax
+                };
+            end, 
             __ctor__ = __ctor__
         };
     end);
@@ -370,14 +378,17 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
         end;
         __ctor__ = function (this, fullName, name, compilationUnit) 
+            CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this);
             this.FullName = fullName;
             this.CompilationUnit = compilationUnit;
             this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Enum, nil);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaTypeDeclarationSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaTypeDeclarationSyntax
+                };
+            end, 
             IsExport = false, 
             Add = Add, 
             Render = Render, 

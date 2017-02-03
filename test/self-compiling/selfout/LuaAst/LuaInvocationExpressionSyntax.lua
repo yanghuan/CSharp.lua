@@ -23,6 +23,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor1__ = function (this, expression) 
             __init__(this);
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this);
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"));
             end
@@ -52,9 +53,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             AddArguments(this, arguments);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end, 
             AddArgument = AddArgument, 
             AddArguments = AddArguments, 
             Render = Render, 

@@ -38,9 +38,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end, 
             getFunctionKeyword = getFunctionKeyword, 
             HasYield = false, 
             TempIndex = 0, 
@@ -62,12 +64,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render10(this);
         end;
         __ctor__ = function (this, functionExpress) 
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this);
             this.FunctionExpress = functionExpress;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end, 
             getEndToken = getEndToken, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -75,32 +80,40 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end);
     namespace.class("LuaConstructorAdapterExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaFunctionExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaFunctionExpressionSyntax
+                };
+            end, 
             IsStaticCtor = false, 
             IsInvokeThisCtor = false
         };
     end);
     namespace.class("LuaCheckReturnFunctionExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaFunctionExpressionSyntax
-            }
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaFunctionExpressionSyntax
+                };
+            end
         };
     end);
     namespace.class("LuaTryAdapterExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaCheckReturnFunctionExpressionSyntax
-            }
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaCheckReturnFunctionExpressionSyntax
+                };
+            end
         };
     end);
     namespace.class("LuaUsingAdapterExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaCheckReturnFunctionExpressionSyntax
-            }
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaCheckReturnFunctionExpressionSyntax
+                };
+            end
         };
     end);
 end);

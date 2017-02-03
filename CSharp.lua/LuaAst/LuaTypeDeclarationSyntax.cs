@@ -23,12 +23,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
-    public enum BaseTypeGenericKind {
-        None,
-        HasSelf,
-        ExtendSelf,
-    }
-
     public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
         public bool IsPartialMark { get; set; }
         private LuaTypeLocalAreaSyntax local_ = new LuaTypeLocalAreaSyntax();
@@ -76,19 +70,14 @@ namespace CSharpLua.LuaAst {
             typeIdentifiers_.Add(identifier);
         }
 
-        internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, BaseTypeGenericKind kind) {
+        internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, bool hasExtendSelf) {
             LuaTableInitializerExpression table = new LuaTableInitializerExpression();
             table.Items.AddRange(baseTypes.Select(i => new LuaSingleTableItemSyntax(i)));
-            if(kind == BaseTypeGenericKind.None) {
-                AddResultTable(LuaIdentifierNameSyntax.Inherits, table);
-            }
-            else {
-                LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
-                functionExpression.AddStatement(new LuaReturnStatementSyntax(table));
-                AddResultTable(LuaIdentifierNameSyntax.Inherits, functionExpression);
-                if(kind == BaseTypeGenericKind.ExtendSelf) {
-                    AddResultTable(LuaIdentifierNameSyntax.InheritRecursion, LuaIdentifierNameSyntax.True);
-                }
+            LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+            functionExpression.AddStatement(new LuaReturnStatementSyntax(table));
+            AddResultTable(LuaIdentifierNameSyntax.Inherits, functionExpression);
+            if(hasExtendSelf) {
+                AddResultTable(LuaIdentifierNameSyntax.InheritRecursion, LuaIdentifierNameSyntax.True);
             }
         }
 

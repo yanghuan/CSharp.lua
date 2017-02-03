@@ -178,8 +178,8 @@ namespace CSharpLua {
             }
         }
 
-        private void CheckBaseTypeGenericKind(ref BaseTypeGenericKind kind, INamedTypeSymbol typeSymbol, BaseTypeSyntax baseType) {
-            if(kind != BaseTypeGenericKind.ExtendSelf) {
+        private void CheckBaseTypeGenericKind(ref bool hasExtendSelf, INamedTypeSymbol typeSymbol, BaseTypeSyntax baseType) {
+            if(!hasExtendSelf) {
                 if(baseType.IsKind(SyntaxKind.SimpleBaseType)) {
                     var baseNode = (SimpleBaseTypeSyntax)baseType;
                     if(baseNode.Type.IsKind(SyntaxKind.GenericName)) {
@@ -187,14 +187,9 @@ namespace CSharpLua {
                         var baseTypeSymbol = (INamedTypeSymbol)semanticModel_.GetTypeInfo(baseGenericNameNode).Type;
                         foreach(var baseTypeArgument in baseTypeSymbol.TypeArguments) {
                             if(baseTypeSymbol.Kind != SymbolKind.TypeParameter) {
-                                if(baseTypeArgument.Equals(typeSymbol)) {
-                                    if(kind == BaseTypeGenericKind.None) {
-                                        kind = BaseTypeGenericKind.HasSelf;
-                                    }
-                                }
-                                else if(typeSymbol.IsAssignableFrom(baseTypeArgument)) {
-                                    if(kind != BaseTypeGenericKind.ExtendSelf) {
-                                        kind = BaseTypeGenericKind.ExtendSelf;
+                                if(!baseTypeArgument.Equals(typeSymbol)) {
+                                    if(typeSymbol.IsAssignableFrom(baseTypeArgument)) {
+                                        hasExtendSelf = true;
                                     }
                                 }
                             }
@@ -216,14 +211,14 @@ namespace CSharpLua {
                 }
             }
             if(node.BaseList != null) {
-                BaseTypeGenericKind baseTypeGenericKind = BaseTypeGenericKind.None;
+                bool hasExtendSelf = false;
                 List<LuaExpressionSyntax> baseTypes = new List<LuaExpressionSyntax>();
                 foreach(var baseType in node.BaseList.Types) {
                     var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
                     baseTypes.Add(baseTypeName);
-                    CheckBaseTypeGenericKind(ref baseTypeGenericKind, typeSymbol, baseType);
+                    CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
                 }
-                typeDeclaration.AddBaseTypes(baseTypes, baseTypeGenericKind);
+                typeDeclaration.AddBaseTypes(baseTypes, hasExtendSelf);
             }
             BuildTypeMembers(typeDeclaration, node);
             typeDeclarations_.Pop();
@@ -299,15 +294,15 @@ namespace CSharpLua {
                     }
                 }
 
-                BaseTypeGenericKind baseTypeGenericKind = BaseTypeGenericKind.None;
+                bool hasExtendSelf = false;
                 List<LuaExpressionSyntax> baseTypeExpressions = new List<LuaExpressionSyntax>();
                 foreach(var baseType in baseTypes) {
                     semanticModel_ = generator_.GetSemanticModel(baseType.SyntaxTree);
                     var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
                     baseTypeExpressions.Add(baseTypeName);
-                    CheckBaseTypeGenericKind(ref baseTypeGenericKind, major.Symbol, baseType);
+                    CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
                 }
-                major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, BaseTypeGenericKind.None);
+                major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, hasExtendSelf);
             }
 
             foreach(var typeDeclaration in typeDeclarations) {

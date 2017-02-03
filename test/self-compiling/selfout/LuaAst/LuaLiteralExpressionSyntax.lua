@@ -8,9 +8,11 @@ end);
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaLiteralExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaExpressionSyntax
-            }
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaExpressionSyntax
+                };
+            end
         };
     end);
     namespace.class("LuaIdentifierLiteralExpressionSyntax", function (namespace) 
@@ -25,12 +27,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, text));
         end;
         __ctor2__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this);
             this.Identifier = identifier;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaLiteralExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaLiteralExpressionSyntax
+                };
+            end, 
             getText = getText, 
             Render = Render, 
             __ctor__ = {
@@ -58,12 +63,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Empty = Empty;
         end;
         __ctor__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this);
             this.Identifier = identifier;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaLiteralExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaLiteralExpressionSyntax
+                };
+            end, 
             getOpenParenToken = getOpenParenToken, 
             getCloseParenToken = getCloseParenToken, 
             getText = getText, 
@@ -85,13 +93,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render17(this);
         end;
         __ctor__ = function (this, text, equalsCount) 
+            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this);
             setText(this, text);
             this.EqualsCount = equalsCount;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaLiteralExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaLiteralExpressionSyntax
+                };
+            end, 
             getText = getText, 
             setText = setText, 
             EqualsCount = 0, 
@@ -119,13 +130,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, value), identifierToken);
         end;
         __ctor2__ = function (this, value, identifierToken) 
+            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this);
             this.Value = value;
             this.IdentifierToken = identifierToken;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaLiteralExpressionSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaLiteralExpressionSyntax
+                };
+            end, 
             getOpenComment = getOpenComment, 
             getCloseComment = getCloseComment, 
             getText = getText, 
@@ -145,9 +159,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(character));
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaConstLiteralExpression
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaConstLiteralExpression
+                };
+            end, 
             __ctor__ = __ctor__
         };
     end);

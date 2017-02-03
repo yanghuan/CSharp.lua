@@ -27,6 +27,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor__ = function (this, identifier, expression) 
             __init__(this);
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if identifier == nil then
                 System.throw(System.ArgumentNullException("identifier"));
             end
@@ -37,9 +38,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Expression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Each, expression);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getForKeyword = getForKeyword, 
             getInKeyword = getInKeyword, 
             getPlaceholder = getPlaceholder, 
@@ -63,15 +66,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor__ = function (this, condition) 
             __init__(this);
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if condition == nil then
                 System.throw(System.ArgumentNullException("condition"));
             end
             this.Condition = condition;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getWhileKeyword = getWhileKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -93,15 +99,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end;
         __ctor__ = function (this, condition) 
             __init__(this);
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if condition == nil then
                 System.throw(System.ArgumentNullException("condition"));
             end
             this.Condition = condition;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getRepeatKeyword = getRepeatKeyword, 
             getUntilKeyword = getUntilKeyword, 
             Render = Render, 

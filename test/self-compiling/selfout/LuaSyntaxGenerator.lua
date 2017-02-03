@@ -341,10 +341,10 @@ System.namespace("CSharpLua", function (namespace)
             local index = 0;
             for _, member in System.each(sameNameMembers) do
                 if member:Equals(symbol) then
-                    symbolExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(symbol));
+                    symbolExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(this, symbol));
                 else
                     if not this.memberNames_:ContainsKey(member) then
-                        local identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(member));
+                        local identifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolName(this, member));
                         this.memberNames_:Add(member, CSharpLuaLuaAst.LuaSymbolNameSyntax(identifierName));
                     end
                 end
@@ -363,9 +363,14 @@ System.namespace("CSharpLua", function (namespace)
             end
             return symbolExpression;
         end;
-        GetSymbolName = function (symbol) 
+        GetSymbolName = function (this, symbol) 
             if symbol:getKind() == 9 --[[SymbolKind.Method]] then
                 local method = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol);
+                local name = this.XmlMetaProvider:GetMethodMapName(method);
+                if name ~= nil then
+                    return name;
+                end
+
                 if not method:getExplicitInterfaceImplementations():getIsEmpty() then
                     return method:getExplicitInterfaceImplementations():get(0):getName();
                 end
@@ -425,11 +430,8 @@ System.namespace("CSharpLua", function (namespace)
         end;
         GetSameNameMembers = function (this, symbol) 
             local members = System.List(MicrosoftCodeAnalysis.ISymbol)();
-            local name = GetSymbolName(symbol);
+            local name = GetSymbolName(this, symbol);
             FillSameNameMembers(this, symbol:getContainingType(), name, members);
-            if name ~= symbol:getName() then
-                FillSameNameMembers(this, symbol:getContainingType(), symbol:getName(), members);
-            end
             members:Sort(System.bind(this, MemberSymbolComparison));
             return members;
         end;
@@ -560,7 +562,7 @@ System.namespace("CSharpLua", function (namespace)
             end
 
             local isFromCode = CSharpLua.Utility.IsFromCode(typeSymbol);
-            local members = typeSymbol:GetMembers(name);
+            local members = typeSymbol:GetMembers();
             for _, member in System.each(members) do
                 local continue;
                 repeat
@@ -576,7 +578,10 @@ System.namespace("CSharpLua", function (namespace)
                         break;
                     end
 
-                    outList:Add(member);
+                    local memberName = GetSymbolName(this, member);
+                    if memberName == name then
+                        outList:Add(member);
+                    end
                     continue = true;
                 until 1;
                 if not continue then

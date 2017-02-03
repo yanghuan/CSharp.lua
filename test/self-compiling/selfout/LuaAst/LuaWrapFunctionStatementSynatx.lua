@@ -32,9 +32,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.statements_ = System.List(CSharpLuaLuaAst.LuaStatementSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             UpdateIdentifiers = UpdateIdentifiers, 
             AddMemberDeclaration = AddMemberDeclaration, 
             Render = Render, 

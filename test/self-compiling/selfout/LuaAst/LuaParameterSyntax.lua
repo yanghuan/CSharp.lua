@@ -20,9 +20,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Parameters = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaParameterSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             getOpenParenToken = getOpenParenToken, 
             getCloseParenToken = getCloseParenToken, 
             Render = Render, 
@@ -35,12 +37,15 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render12(this);
         end;
         __ctor__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__[1](this);
             this.Identifier = identifier;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };

@@ -25,9 +25,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 this.Semicolon = Semicolon;
             end;
             return {
-                __inherits__ = {
-                    CSharpLuaLuaAstLuaSyntaxNode.Keyword
-                }, 
+                __inherits__ = function () 
+                    return {
+                        CSharpLuaLuaAstLuaSyntaxNode.Keyword
+                    };
+                end, 
                 getEmpty = getEmpty, 
                 __staticCtor__ = __staticCtor__
             };
@@ -123,9 +125,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
             end;
             return {
-                __inherits__ = {
-                    System.List(T)
-                }, 
+                __inherits__ = function () 
+                    return {
+                        System.List(T)
+                    };
+                end, 
                 Add1 = Add1, 
                 AddRange1 = AddRange1
             };

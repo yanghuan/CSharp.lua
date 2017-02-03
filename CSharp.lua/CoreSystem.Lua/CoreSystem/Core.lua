@@ -406,42 +406,6 @@ function System.init(namelist)
     usings = {}
 end
 
-local namespace = {}
-local curName
-
-local function namespaceDef(kind, name, f)
-    if #curName > 0 then
-        name = curName .. "." .. name
-    end
-    assert(modules[name] == nil, name)
-    modules[name] = function()
-       local t = f()
-       def(name, kind, t)
-    end
-end
-
-function namespace.class(name, f)
-    namespaceDef("C", name, f) 
-end
-
-function namespace.struct(name, f)
-    namespaceDef("S", name, f) 
-end
-
-function namespace.interface(name, f)
-    namespaceDef("I", name, f) 
-end
-
-function namespace.enum(name, f)
-    namespaceDef("E", name, f)
-end
-
-function System.namespace(name, f)
-    curName = name
-    f(namespace)
-    curName = nil
-end
-
 local function multiNew(cls, inx, ...) 
     local this = setmetatable({}, cls)
     cls.__ctor__[inx](this, ...)
@@ -473,3 +437,41 @@ end
 
 defCls("System.Object", Object)
 
+local namespace = {}
+local curName
+
+local function namespaceDef(kind, name, f)
+    if #curName > 0 then
+        name = curName .. "." .. name
+    end
+    assert(modules[name] == nil, name)
+    local prevName = curName
+    curName = name
+    local t = f(namespace)
+    curName = prevName
+    modules[name] = function()
+        def(name, kind, t)
+    end
+end
+
+function namespace.class(name, f)
+    namespaceDef("C", name, f) 
+end
+
+function namespace.struct(name, f)
+    namespaceDef("S", name, f) 
+end
+
+function namespace.interface(name, f)
+    namespaceDef("I", name, f) 
+end
+
+function namespace.enum(name, f)
+    namespaceDef("E", name, f)
+end
+
+function System.namespace(name, f)
+    curName = name
+    f(namespace)
+    curName = nil
+end

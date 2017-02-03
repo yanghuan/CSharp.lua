@@ -17,9 +17,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaIdentifierNameSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaVariableDeclarationSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaVariableDeclarationSyntax
+                };
+            end, 
             getLocalKeyword = getLocalKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -37,9 +39,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Values = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             getEqualsToken = getEqualsToken, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -51,21 +55,26 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render34(this);
         end;
         __ctor__ = function (this, declaration) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Declaration = declaration;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
     end);
     namespace.class("LuaVariableDeclarationSyntax", function (namespace) 
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end
         };
     end);
     namespace.class("LuaVariableListDeclarationSyntax", function (namespace) 
@@ -77,9 +86,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaVariableDeclaratorSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaVariableDeclarationSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaVariableDeclarationSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = __ctor__
         };
@@ -90,18 +101,22 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render37(this);
         end;
         __ctor1__ = function (this, declarator) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if declarator == nil then
                 System.throw(System.ArgumentNullException("declarator"));
             end
             this.Declarator = declarator;
         end;
         __ctor2__ = function (this, identifier, expression) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             this.Declarator = CSharpLuaLuaAst.LuaVariableDeclaratorSyntax(identifier, expression);
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             Render = Render, 
             __ctor__ = {
                 __ctor1__, 
@@ -118,6 +133,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render36(this);
         end;
         __ctor__ = function (this, identifier, expression) 
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this);
             if identifier == nil then
                 System.throw(System.ArgumentNullException("identifier"));
             end
@@ -127,9 +143,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getLocalKeyword = getLocalKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -144,15 +162,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render33(this);
         end;
         __ctor__ = function (this, value) 
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__[1](this);
             if value == nil then
                 System.throw(System.ArgumentNullException("value"));
             end
             this.Value = value;
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaSyntaxNode
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaSyntaxNode
+                };
+            end, 
             getEqualsToken = getEqualsToken, 
             Render = Render, 
             __ctor__ = __ctor__
@@ -170,9 +191,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaIdentifierNameSyntax)();
         end;
         return {
-            __inherits__ = {
-                CSharpLuaLuaAst.LuaStatementSyntax
-            }, 
+            __inherits__ = function () 
+                return {
+                    CSharpLuaLuaAst.LuaStatementSyntax
+                };
+            end, 
             getLocalKeyword = getLocalKeyword, 
             Render = Render, 
             __ctor__ = __ctor__
