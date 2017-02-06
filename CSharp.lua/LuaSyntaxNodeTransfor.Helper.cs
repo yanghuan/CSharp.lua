@@ -680,5 +680,13 @@ namespace CSharpLua {
             }
             return expressions;
         }
+
+        private void BuildStructMethods(INamedTypeSymbol symbol, LuaStructDeclarationSyntax declaration) {
+            LuaFunctionExpressionSyntax defalutFn = new LuaFunctionExpressionSyntax();
+            LuaExpressionSyntax typeName = GetTypeName(symbol);
+            var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.setmetatable, LuaTableInitializerExpression.Empty, typeName);
+            defalutFn.AddStatement(new LuaReturnStatementSyntax(invocation));
+            declaration.AddMethod(LuaIdentifierNameSyntax.Default, defalutFn, false);
+        }
     }
 }

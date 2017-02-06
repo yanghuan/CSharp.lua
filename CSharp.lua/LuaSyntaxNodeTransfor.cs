@@ -225,7 +225,7 @@ namespace CSharpLua {
             CurCompilationUnit.AddTypeDeclarationCount();
         }
 
-        private void VisitTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
+        private INamedTypeSymbol VisitTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
             INamedTypeSymbol typeSymbol = semanticModel_.GetDeclaredSymbol(node);
             if(node.Modifiers.IsPartial()) {
                 if(typeSymbol.DeclaringSyntaxReferences.Length > 1) {
@@ -240,6 +240,7 @@ namespace CSharpLua {
                 BuildTypeDeclaration(typeSymbol, node, typeDeclaration);
             }
             generator_.AddTypeSymbol(typeSymbol);
+            return typeSymbol;
         }
 
         internal void AcceptPartialType(PartialTypeDeclaration major, List<PartialTypeDeclaration> typeDeclarations) {
@@ -332,7 +333,8 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitStructDeclaration(StructDeclarationSyntax node) {
             LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
             LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
-            VisitTypeDeclaration(node, structDeclaration);
+            INamedTypeSymbol symbol = VisitTypeDeclaration(node, structDeclaration);
+            BuildStructMethods(symbol, structDeclaration);
             return structDeclaration;
         }
 

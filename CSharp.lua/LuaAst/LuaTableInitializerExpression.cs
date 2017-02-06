@@ -30,6 +30,8 @@ namespace CSharpLua.LuaAst {
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
+
+        public static readonly LuaTableInitializerExpression Empty = new LuaTableInitializerExpression();
     }
 
     public abstract class LuaTableItemSyntax : LuaSyntaxNode {

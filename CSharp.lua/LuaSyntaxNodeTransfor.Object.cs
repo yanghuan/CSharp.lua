@@ -272,7 +272,8 @@ namespace CSharpLua {
             else {
                 var symbol = semanticModel_.GetDeclaredSymbol(node);
                 var baseType = symbol.ContainingType.BaseType;
-                if(baseType.SpecialType != SpecialType.System_Object) {
+                if(baseType.SpecialType != SpecialType.System_Object
+                    && baseType.SpecialType != SpecialType.System_ValueType) {
                     int ctroCounter = 0;
                     if(baseType.IsFromCode()) {
                         if(baseType.Constructors.Length > 1) {

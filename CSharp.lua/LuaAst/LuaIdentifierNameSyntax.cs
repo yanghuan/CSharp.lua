@@ -91,6 +91,7 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Global = new LuaIdentifierNameSyntax("global");
         public readonly static LuaIdentifierNameSyntax Attributes = new LuaIdentifierNameSyntax("__attributes__");
         public readonly static LuaIdentifierNameSyntax Trunc = new LuaIdentifierNameSyntax("System.trunc");
+        public readonly static LuaIdentifierNameSyntax setmetatable = new LuaIdentifierNameSyntax("setmetatable");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;
