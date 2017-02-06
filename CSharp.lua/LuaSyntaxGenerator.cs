@@ -25,6 +25,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using CSharpLua.LuaAst;
 using System.Diagnostics.Contracts;
+using Microsoft.CodeAnalysis.Emit;
 
 namespace CSharpLua {
     internal sealed class PartialTypeDeclaration : IComparable<PartialTypeDeclaration> {
@@ -40,14 +41,14 @@ namespace CSharpLua {
 
     public sealed class LuaSyntaxGenerator {
         public sealed class SettingInfo {
-            public bool HasSemicolon { get; }
+            public bool HasSemicolon { get; set; }
             private int indent_;
             public string IndentString { get; private set; }
-            public bool IsNewest { get; }
+            public bool IsNewest { get; set; }
 
             public SettingInfo() {
                 Indent = 4;
-                HasSemicolon = true;
+                HasSemicolon = false;
                 IsNewest = true;
             }
 
@@ -56,7 +57,7 @@ namespace CSharpLua {
                     return indent_;
                 }
                 set {
-                    if(indent_ != value) {
+                    if(value > 0 && indent_ != value) {
                         indent_ = value;
                         IndentString = new string(' ', indent_);
                     }
@@ -69,15 +70,28 @@ namespace CSharpLua {
 
         private CSharpCompilation compilation_;
         public XmlMetaProvider XmlMetaProvider { get; }
-        public SettingInfo Setting { get; }
+        public SettingInfo Setting { get; set; }
         private HashSet<string> exportEnums_ = new HashSet<string>();
+        private HashSet<string> exportAttributes_;
         private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
         private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
 
-        public LuaSyntaxGenerator(IEnumerable<string> metas, CSharpCompilation compilation) {
-            XmlMetaProvider = new XmlMetaProvider(metas);
-            Setting = new SettingInfo();
+        public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, IEnumerable<string> metas, SettingInfo setting, string[] attributes) {
+            CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            using(MemoryStream ms = new MemoryStream()) {
+                EmitResult result = compilation.Emit(ms);
+                if(!result.Success) {
+                    var errors = result.Diagnostics.Where(i => i.Severity == DiagnosticSeverity.Error);
+                    string message = string.Join("\n", errors);
+                    throw new CompilationErrorException(message);
+                }
+            }
             compilation_ = compilation;
+            XmlMetaProvider = new XmlMetaProvider(metas);
+            Setting = setting;
+            if(attributes != null) {
+                exportAttributes_ = new HashSet<string>(attributes);
+            }
         }
 
         private IEnumerable<LuaCompilationUnitSyntax> Create() {
@@ -140,7 +154,13 @@ namespace CSharpLua {
         }
 
         internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
-            return true;
+            if(exportAttributes_ != null) {
+                if(exportAttributes_.Count > 0) {
+                    return exportAttributes_.Contains(attributeTypeSymbol.ToString());
+                }
+                return true;
+            }
+            return false;
         }
 
         private void CheckExportEnums() {

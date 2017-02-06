@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,7 +37,6 @@ namespace CSharpLua {
             "Microsoft.CSharp.dll",
         };
         private const string kDllSuffix = ".dll";
-        private const string kLuaSuffix = ".lua";
         private const string kSystemMeta = "~/System.xml";
 
         private string folder_;
@@ -46,13 +44,23 @@ namespace CSharpLua {
         private string[] libs_;
         private string[] metas_;
         private string[] defines_;
+        private bool isNewest_;
+        private int indent_;
+        private bool hasSemicolon_;
+        private string[] attributes_;
 
-        public Worker(string folder, string output, string lib, string meta, string defines) {
+        public Worker(string folder, string output, string lib, string meta, string defines, bool isClassic, string indent, bool hasSemicolon, string atts) {
             folder_ = folder;
             output_ = output;
             libs_ = Utility.Split(lib);
             metas_ = Utility.Split(meta);
             defines_ = Utility.Split(defines, false);
+            isNewest_ = !isClassic;
+            hasSemicolon_ = hasSemicolon;
+            int.TryParse(indent, out indent_);
+            if(atts != null) {
+                attributes_ = Utility.Split(atts, false);
+            }
         }
 
         private IEnumerable<string> Metas {
@@ -93,17 +101,12 @@ namespace CSharpLua {
             var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
             var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), parseOptions, file));
             var references = Libs.Select(i => MetadataReference.CreateFromFile(i));
-            CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-            using(MemoryStream ms = new MemoryStream()) {
-                EmitResult result = compilation.Emit(ms);
-                if(!result.Success) {
-                    var errors = result.Diagnostics.Where(i => i.Severity == DiagnosticSeverity.Error);
-                    string message = string.Join("\n", errors);
-                    throw new CompilationErrorException(message);
-                }
-            }
-
-            LuaSyntaxGenerator generator = new LuaSyntaxGenerator(Metas, compilation);
+            LuaSyntaxGenerator.SettingInfo setting = new LuaSyntaxGenerator.SettingInfo() {
+                IsNewest = isNewest_,
+                HasSemicolon = hasSemicolon_,
+                Indent = indent_,
+            };
+            LuaSyntaxGenerator generator = new LuaSyntaxGenerator(syntaxTrees, references, Metas, setting, attributes_);
             generator.Generate(folder_, output_);
         }
     }
