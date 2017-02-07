@@ -448,8 +448,16 @@ namespace CSharpLua {
             return base.VisitMethodDeclaration(node);
         }
 
-        private static LuaExpressionSyntax GetPredefinedTypeDefaultValue(ITypeSymbol typeSymbol) {
+        private static LuaExpressionSyntax GetPredefinedValueTypeDefaultValue(ITypeSymbol typeSymbol) {
             switch(typeSymbol.SpecialType) {
+                case SpecialType.None: {
+                        if(typeSymbol.ContainingNamespace.Name == "System") {
+                            if(typeSymbol.Name == "TimeSpan") {
+                                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, LuaIdentifierNameSyntax.TimeSpan);
+                            }
+                        }
+                        return null;
+                    }
                 case SpecialType.System_Boolean: {
                         return LuaIdentifierNameSyntax.False;
                     }
@@ -469,6 +477,9 @@ namespace CSharpLua {
                 case SpecialType.System_Single:
                 case SpecialType.System_Double: {
                         return new LuaIdentifierNameSyntax(0.0.ToString());
+                    }
+                case SpecialType.System_DateTime: {
+                        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, LuaIdentifierNameSyntax.DateTime);
                     }
                 default:
                     return null;
@@ -540,14 +551,9 @@ namespace CSharpLua {
             }
             if(valueExpression == null) {
                 if(typeSymbol.IsValueType) {
-                    if(typeSymbol.IsDefinition) {
-                        LuaExpressionSyntax defalutValue = GetPredefinedTypeDefaultValue(typeSymbol);
-                        if(defalutValue != null) {
-                            valueExpression = defalutValue;
-                        }
-                        else {
-                            valueExpression = BuildDefaultValueExpression(type);
-                        }
+                    LuaExpressionSyntax defalutValue = GetPredefinedValueTypeDefaultValue(typeSymbol);
+                    if(defalutValue != null) {
+                        valueExpression = defalutValue;
                         valueIsLiteral = true;
                     }
                     else {
@@ -566,7 +572,8 @@ namespace CSharpLua {
             }
             bool valueIsLiteral;
             LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, expression, out valueIsLiteral);
-            CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly);
+            bool isStructDefaultValue = expression == null && valueExpression != null && typeSymbol.IsValueType && !valueIsLiteral;
+            CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly, isStructDefaultValue);
         }
 
         public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {

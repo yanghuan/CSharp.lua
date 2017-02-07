@@ -119,7 +119,7 @@ namespace CSharpLua.LuaAst {
             AddInitFiled(ref initFunction, assignment);
         }
 
-        public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly) {
+        public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, bool isStructDefaultValue = false) {
             if(isStatic) {
                 if(isPrivate) {
                     local_.Variables.Add(name);
@@ -166,7 +166,12 @@ namespace CSharpLua.LuaAst {
                         AddResultTable(name, value);
                     }
                     else {
-                        AddInitFiled(ref initFunction_, name, value);
+                        if(isStructDefaultValue) {
+                            AddInitFiled(ref staticInitFunction_, name, value);
+                        }
+                        else {
+                            AddInitFiled(ref initFunction_, name, value);
+                        }
                     }
                 }
             }
