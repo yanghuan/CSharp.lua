@@ -1351,14 +1351,7 @@ namespace CSharpLua {
 
             if(symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Event) {
                 if(node.Expression.IsKind(SyntaxKind.ThisExpression)) {
-                    var propertyIdentifier = (LuaExpressionSyntax)node.Name.Accept(this);
-                    var propertyAdapter = propertyIdentifier as LuaPropertyAdapterExpressionSyntax;
-                    if(propertyAdapter != null) {
-                        return propertyAdapter;
-                    }
-                    else {
-                        return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, propertyIdentifier);
-                    }
+                    return node.Name.Accept(this);
                 }
 
                 if(node.Expression.IsKind(SyntaxKind.BaseExpression)) {

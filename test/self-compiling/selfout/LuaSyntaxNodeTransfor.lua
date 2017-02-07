@@ -1333,13 +1333,16 @@ System.namespace("CSharpLua", function (namespace)
 
             if symbol:getKind() == 15 --[[SymbolKind.Property]] or symbol:getKind() == 5 --[[SymbolKind.Event]] then
                 if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(node:getExpression(), 8746 --[[SyntaxKind.ThisExpression]]) then
-                    local propertyIdentifier = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getName():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-                    local propertyAdapter = System.as(propertyIdentifier, CSharpLuaLuaAst.LuaPropertyAdapterExpressionSyntax)
-                    if propertyAdapter ~= nil then
-                        return propertyAdapter
-                    else
-                        return CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, propertyIdentifier, false)
-                    end
+                    return node:getName():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode)
+                    --[[
+                    var propertyIdentifier = (LuaExpressionSyntax)node.Name.Accept(this);
+                    var propertyAdapter = propertyIdentifier as LuaPropertyAdapterExpressionSyntax;
+                    if(propertyAdapter != null) {
+                        return propertyAdapter;
+                    }
+                    else {
+                        return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, propertyIdentifier);
+                    }--]]
                 end
 
                 if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(node:getExpression(), 8747 --[[SyntaxKind.BaseExpression]]) then
