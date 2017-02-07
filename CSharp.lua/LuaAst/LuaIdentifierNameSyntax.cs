@@ -92,6 +92,12 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax Attributes = new LuaIdentifierNameSyntax("__attributes__");
         public readonly static LuaIdentifierNameSyntax Trunc = new LuaIdentifierNameSyntax("System.trunc");
         public readonly static LuaIdentifierNameSyntax setmetatable = new LuaIdentifierNameSyntax("setmetatable");
+        public readonly static LuaIdentifierNameSyntax getmetatable = new LuaIdentifierNameSyntax("getmetatable");
+        public readonly static LuaIdentifierNameSyntax Clone = new LuaIdentifierNameSyntax("__clone__");
+        public readonly static LuaIdentifierNameSyntax EqualsObj = new LuaIdentifierNameSyntax("EqualsObj");
+        public readonly static LuaIdentifierNameSyntax Obj = new LuaIdentifierNameSyntax("obj");
+        public readonly static LuaIdentifierNameSyntax EqualsStatic = new LuaIdentifierNameSyntax("equalsStatic");
+        public readonly static LuaIdentifierNameSyntax SystemObjectEqualsStatic = new LuaIdentifierNameSyntax("System.Object.EqualsStatic");
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

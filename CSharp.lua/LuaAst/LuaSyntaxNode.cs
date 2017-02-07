@@ -131,7 +131,7 @@ namespace CSharpLua.LuaAst {
 
             // adapter special methods 
             "__id__", "__name__", "__kind__", "__base__", "__ctor__", "__inherits__",
-            "__interfaces__", "__default__", "__recursion__", "__attributes__", 
+            "__interfaces__", "__default__", "__recursion__", "__attributes__", "__clone__",
         };
 
         public static bool IsReservedWord(string identifier) {
