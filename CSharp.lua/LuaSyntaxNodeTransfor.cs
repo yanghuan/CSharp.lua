@@ -143,14 +143,8 @@ namespace CSharpLua {
             LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax() { FilePath = node.SyntaxTree.FilePath };
             compilationUnits_.Push(compilationUnit);
             foreach(var member in node.Members) {
-                LuaStatementSyntax memberNode = (LuaStatementSyntax)member.Accept(this);
-                var typeDeclaration = memberNode as LuaTypeDeclarationSyntax;
-                if(typeDeclaration != null) {
-                    compilationUnit.AddTypeDeclaration(typeDeclaration);
-                }
-                else {
-                    compilationUnit.Statements.Add(memberNode);
-                }
+                LuaStatementSyntax luaMember = (LuaStatementSyntax)member.Accept(this);
+                compilationUnit.AddMember(luaMember);
             }
             compilationUnits_.Pop();
             return compilationUnit;

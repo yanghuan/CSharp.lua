@@ -332,9 +332,6 @@ namespace CSharpLua {
                 else {
                     function.AddStatement(new LuaReturnStatementSyntax(expression));
                 }
-                if(function.Body.Statements.Count == 1) {
-                    resultExpression = new LuaSimpleLambdaAdapterExpression(function);
-                }
             }
 
             PopFunction();
