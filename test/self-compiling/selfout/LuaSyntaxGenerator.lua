@@ -73,7 +73,9 @@ System.namespace("CSharpLua", function (namespace)
             CheckExportEnums(this)
             CheckPartialTypes(this)
             CheckRefactorNames(this)
-            return Linq.Where(luaCompilationUnits, function (i) return not i:getIsEmpty() end)
+            return Linq.Where(luaCompilationUnits, function (i) 
+                return not i:getIsEmpty()
+            end)
         end
         Write = function (this, luaCompilationUnit, outFile) 
             System.using(SystemIO.StreamWriter(outFile, false, Encoding), function (writer) 
@@ -195,7 +197,9 @@ System.namespace("CSharpLua", function (namespace)
         GetExportTypes = function (this) 
             local allTypes = System.List(MicrosoftCodeAnalysis.INamedTypeSymbol)()
             if #this.types_ > 0 then
-                this.types_:Sort(function (x, y) return x:ToString():CompareTo(y:ToString()) end)
+                this.types_:Sort(function (x, y) 
+                    return x:ToString():CompareTo(y:ToString())
+                end)
 
                 local typesList = System.List(System.List(MicrosoftCodeAnalysis.INamedTypeSymbol))()
                 typesList:Add(this.types_)
@@ -221,7 +225,9 @@ System.namespace("CSharpLua", function (namespace)
                 end
 
                 typesList:Reverse()
-                local types = Linq.Where(Linq.Distinct(Linq.SelectMany(typesList, function (i) return i end, MicrosoftCodeAnalysis.INamedTypeSymbol)), System.bind(this, IsTypeEnable))
+                local types = Linq.Where(Linq.Distinct(Linq.SelectMany(typesList, function (i) 
+                    return i
+                end, MicrosoftCodeAnalysis.INamedTypeSymbol)), System.bind(this, IsTypeEnable))
                 allTypes:AddRange(types)
             end
             return allTypes
@@ -530,17 +536,23 @@ System.namespace("CSharpLua", function (namespace)
 
             local v
             local default
-            default, v = MemberSymbolBoolComparison(this, a, b, function (i) return i:getIsAbstract() end, v)
+            default, v = MemberSymbolBoolComparison(this, a, b, function (i) 
+                return i:getIsAbstract()
+            end, v)
             if default then
                 return v
             end
             local extern
-            extern, v = MemberSymbolBoolComparison(this, a, b, function (i) return i:getIsVirtual() end, v)
+            extern, v = MemberSymbolBoolComparison(this, a, b, function (i) 
+                return i:getIsVirtual()
+            end, v)
             if extern then
                 return v
             end
             local ref
-            ref, v = MemberSymbolBoolComparison(this, a, b, function (i) return i:getIsOverride() end, v)
+            ref, v = MemberSymbolBoolComparison(this, a, b, function (i) 
+                return i:getIsOverride()
+            end, v)
             if ref then
                 return v
             end
@@ -638,7 +650,9 @@ System.namespace("CSharpLua", function (namespace)
             local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, curType, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))
             if childrens ~= nil then
                 for _, children in System.each(childrens) do
-                    local curSymbol = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(children:GetMembers(originalSymbol:getName()), function (i) return CSharpLua.Utility.IsOverridden(i, originalSymbol) end, MicrosoftCodeAnalysis.ISymbol)
+                    local curSymbol = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(children:GetMembers(originalSymbol:getName()), function (i) 
+                        return CSharpLua.Utility.IsOverridden(i, originalSymbol)
+                    end, MicrosoftCodeAnalysis.ISymbol)
                     if curSymbol ~= nil then
                         UpdateName(this, curSymbol, newName, alreadyRefactorSymbols)
                     end
@@ -662,7 +676,9 @@ System.namespace("CSharpLua", function (namespace)
 
                 if isEnable then
                     if childrens ~= nil then
-                        isEnable = Linq.All(childrens, function (i) return CheckNewNameEnable(this, i, newName) end)
+                        isEnable = Linq.All(childrens, function (i) 
+                            return CheckNewNameEnable(this, i, newName)
+                        end)
                     end
                 end
 
@@ -713,7 +729,9 @@ System.namespace("CSharpLua", function (namespace)
             System.using(SystemIO.MemoryStream(), function (ms) 
                 local result = compilation:Emit(ms, nil, nil, nil, nil, nil, nil, nil)
                 if not result:getSuccess() then
-                    local errors = SystemLinq.ImmutableArrayExtensions.Where(result:getDiagnostics(), function (i) return i:getSeverity() == 3 --[[DiagnosticSeverity.Error]] end, MicrosoftCodeAnalysis.Diagnostic)
+                    local errors = SystemLinq.ImmutableArrayExtensions.Where(result:getDiagnostics(), function (i) 
+                        return i:getSeverity() == 3 --[[DiagnosticSeverity.Error]]
+                    end, MicrosoftCodeAnalysis.Diagnostic)
                     local message = System.String.Join("\n", errors, MicrosoftCodeAnalysis.Diagnostic)
                     System.throw(CSharpLua.CompilationErrorException(message))
                 end

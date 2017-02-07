@@ -15,15 +15,20 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 IsFromCode = false
             }
         end)
-        local getIsEmpty, AddTypeDeclaration, ImportLinq, AddImport, AddTypeDeclarationCount, AddImport1, CheckUsingDeclares, Render, 
+        local getIsEmpty, AddMember, ImportLinq, AddImport, AddTypeDeclarationCount, AddImport1, CheckUsingDeclares, Render, 
         __init__, __ctor__
         getIsEmpty = function (this) 
             return this.typeDeclarationCount_ == 0
         end
-        AddTypeDeclaration = function (this, memberNode) 
-            local namespaceNode = CSharpLuaLuaAst.LuaNamespaceDeclarationSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Empty)
-            namespaceNode:AddMemberDeclaration(memberNode)
-            this.Statements:Add1(namespaceNode)
+        AddMember = function (this, member) 
+            local typeDeclaration = System.as(member, CSharpLuaLuaAst.LuaTypeDeclarationSyntax)
+            if typeDeclaration ~= nil then
+                local namespaceNode = CSharpLuaLuaAst.LuaNamespaceDeclarationSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Empty)
+                namespaceNode:AddMemberDeclaration(typeDeclaration)
+                this.Statements:Add1(namespaceNode)
+            else
+                this.Statements:Add1(member)
+            end
         end
         ImportLinq = function (this) 
             if not this.isImportLinq_ then
@@ -38,7 +43,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.typeDeclarationCount_ = this.typeDeclarationCount_ + 1
         end
         AddImport1 = function (this, prefix, newPrefix, isFromCode) 
-            if not this.usingDeclares_:Exists(function (i) return i.Prefix == prefix end) then
+            if not this.usingDeclares_:Exists(function (i) 
+                return i.Prefix == prefix
+            end) then
                 this.usingDeclares_:Add(System.create(CSharpLuaLuaAstLuaCompilationUnitSyntax.UsingDeclare(), function (default) 
                     default.Prefix = prefix
                     default.NewPrefix = newPrefix
@@ -47,17 +54,25 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
         end
         CheckUsingDeclares = function (this) 
-            local imports = Linq.ToList(Linq.Where(this.usingDeclares_, function (i) return not i.IsFromCode end))
+            local imports = Linq.ToList(Linq.Where(this.usingDeclares_, function (i) 
+                return not i.IsFromCode
+            end))
             if #imports > 0 then
-                imports:Sort(function (x, y) return x.Prefix:CompareTo(y.Prefix) end)
+                imports:Sort(function (x, y) 
+                    return x.Prefix:CompareTo(y.Prefix)
+                end)
                 for _, import in System.each(imports) do
                     AddImport(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, import.NewPrefix), CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, import.Prefix))
                 end
             end
 
-            local usingDeclares = Linq.ToList(Linq.Where(this.usingDeclares_, function (i) return i.IsFromCode end))
+            local usingDeclares = Linq.ToList(Linq.Where(this.usingDeclares_, function (i) 
+                return i.IsFromCode
+            end))
             if #usingDeclares > 0 then
-                usingDeclares:Sort(function (x, y) return x.Prefix:CompareTo(y.Prefix) end)
+                usingDeclares:Sort(function (x, y) 
+                    return x.Prefix:CompareTo(y.Prefix)
+                end)
                 for _, usingDeclare in System.each(usingDeclares) do
                     AddImport(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.NewPrefix), nil)
                 end
@@ -109,7 +124,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             isImportLinq_ = false, 
             typeDeclarationCount_ = 0, 
             getIsEmpty = getIsEmpty, 
-            AddTypeDeclaration = AddTypeDeclaration, 
+            AddMember = AddMember, 
             ImportLinq = ImportLinq, 
             AddTypeDeclarationCount = AddTypeDeclarationCount, 
             AddImport1 = AddImport1, 

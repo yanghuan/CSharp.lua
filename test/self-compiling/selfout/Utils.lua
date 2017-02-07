@@ -181,25 +181,39 @@ System.namespace("CSharpLua", function (namespace)
             return true
         end
         IsStatic = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]]) end)
+            return Linq.Any(modifiers, function (i) 
+                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]])
+            end)
         end
         IsAbstract = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8356 --[[SyntaxKind.AbstractKeyword]]) end)
+            return Linq.Any(modifiers, function (i) 
+                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8356 --[[SyntaxKind.AbstractKeyword]])
+            end)
         end
         IsReadOnly = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8348 --[[SyntaxKind.ReadOnlyKeyword]]) end)
+            return Linq.Any(modifiers, function (i) 
+                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8348 --[[SyntaxKind.ReadOnlyKeyword]])
+            end)
         end
         IsConst = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8350 --[[SyntaxKind.ConstKeyword]]) end)
+            return Linq.Any(modifiers, function (i) 
+                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8350 --[[SyntaxKind.ConstKeyword]])
+            end)
         end
         IsParams = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8365 --[[SyntaxKind.ParamsKeyword]]) end)
+            return Linq.Any(modifiers, function (i) 
+                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8365 --[[SyntaxKind.ParamsKeyword]])
+            end)
         end
         IsPartial = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8406 --[[SyntaxKind.PartialKeyword]]) end)
+            return Linq.Any(modifiers, function (i) 
+                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8406 --[[SyntaxKind.PartialKeyword]])
+            end)
         end
         IsOutOrRef = function (modifiers) 
-            return Linq.Any(modifiers, function (i) return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8361 --[[SyntaxKind.OutKeyword]]) or MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8360 --[[SyntaxKind.RefKeyword]]) end)
+            return Linq.Any(modifiers, function (i) 
+                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8361 --[[SyntaxKind.OutKeyword]]) or MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8360 --[[SyntaxKind.RefKeyword]])
+            end)
         end
         IsStringType = function (type) 
             return type:getSpecialType() == 20 --[[SpecialType.System_String]]
@@ -218,8 +232,12 @@ System.namespace("CSharpLua", function (namespace)
             if not symbol:getIsStatic() then
                 local type = symbol:getContainingType()
                 if type ~= nil then
-                    local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) return i:GetMembers():OfType(T) end, T)
-                    return Linq.Any(interfaceSymbols, function (i) return symbol:Equals(type:FindImplementationForInterfaceMember(i)) end)
+                    local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) 
+                        return i:GetMembers():OfType(T)
+                    end, T)
+                    return Linq.Any(interfaceSymbols, function (i) 
+                        return symbol:Equals(type:FindImplementationForInterfaceMember(i))
+                    end)
                 end
             end
             return false
@@ -228,8 +246,12 @@ System.namespace("CSharpLua", function (namespace)
             if not symbol:getIsStatic() then
                 local type = symbol:getContainingType()
                 if type ~= nil then
-                    local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) return i:GetMembers():OfType(T) end, T)
-                    return Linq.Where(interfaceSymbols, function (i) return symbol:Equals(type:FindImplementationForInterfaceMember(i)) end)
+                    local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) 
+                        return i:GetMembers():OfType(T)
+                    end, T)
+                    return Linq.Where(interfaceSymbols, function (i) 
+                        return symbol:Equals(type:FindImplementationForInterfaceMember(i))
+                    end)
                 end
             end
             return System.Array.Empty(T)

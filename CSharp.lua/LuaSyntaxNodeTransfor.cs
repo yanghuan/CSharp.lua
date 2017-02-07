@@ -1493,8 +1493,11 @@ namespace CSharpLua {
                         return false;
                     }
                 case SyntaxKind.SimpleAssignmentExpression: {
-                        if(parentNode.Parent.IsKind(SyntaxKind.ObjectInitializerExpression)) {
-                            return false;
+                        AssignmentExpressionSyntax parent = (AssignmentExpressionSyntax)parentNode;
+                        if(parent.Right != node) {
+                            if(parent.Parent.IsKind(SyntaxKind.ObjectInitializerExpression)) {
+                                return false;
+                            }
                         }
                         break;
                     }

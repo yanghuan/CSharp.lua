@@ -23,7 +23,9 @@ System.namespace("CSharpLua", function (namespace)
         getLibs = function (this) 
             local runtimeDir = SystemRuntimeInteropServices.RuntimeEnvironment.GetRuntimeDirectory()
             local libs = System.List(System.String)()
-            libs:AddRange(Linq.Select(SystemDlls, function (i) return SystemIO.Path.Combine(runtimeDir, i) end, System.String))
+            libs:AddRange(Linq.Select(SystemDlls, function (i) 
+                return SystemIO.Path.Combine(runtimeDir, i)
+            end, System.String))
             for _, lib in System.each(this.libs_) do
                 local default
                 if lib:EndsWith(".dll" --[[Worker.kDllSuffix]]) then
@@ -49,12 +51,16 @@ System.namespace("CSharpLua", function (namespace)
         Compiler = function (this) 
             local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(6, 1, 0, this.defines_)
             local files = SystemIO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]])
-            local syntaxTrees = Linq.Select(files, function (file) return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(System.File.ReadAllText(file), parseOptions, file, nil, nil) end, MicrosoftCodeAnalysis.SyntaxTree)
-            local references = Linq.Select(getLibs(this), function (i) return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, nil, nil) end, MicrosoftCodeAnalysis.PortableExecutableReference)
+            local syntaxTrees = Linq.Select(files, function (file) 
+                return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(System.File.ReadAllText(file), parseOptions, file, nil, nil)
+            end, MicrosoftCodeAnalysis.SyntaxTree)
+            local references = Linq.Select(getLibs(this), function (i) 
+                return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, nil, nil)
+            end, MicrosoftCodeAnalysis.PortableExecutableReference)
             local setting = System.create(CSharpLuaLuaSyntaxGenerator.SettingInfo(), function (default) 
-                default.IsNewest = isNewest_
-                default.HasSemicolon = hasSemicolon_
-                default:setIndent(indent_)
+                default.IsNewest = this.isNewest_
+                default.HasSemicolon = this.hasSemicolon_
+                default:setIndent(this.indent_)
             end)
             local generator = CSharpLua.LuaSyntaxGenerator:new(1, syntaxTrees, references, getMetas(this), setting, this.attributes_)
             generator:Generate(this.folder_, this.output_)

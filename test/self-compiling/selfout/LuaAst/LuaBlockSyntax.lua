@@ -8,7 +8,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaBlockSyntax", function (namespace) 
         local Render, __ctor__
         Render = function (this, renderer) 
-            renderer:Render13(this)
+            renderer:Render12(this)
         end
         __ctor__ = function (this) 
             this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)()
@@ -26,7 +26,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaBlockStatementSyntax", function (namespace) 
         local Render, __ctor__
         Render = function (this, renderer) 
-            renderer:Render14(this)
+            renderer:Render13(this)
         end
         __ctor__ = function (this) 
             CSharpLuaLuaAst.LuaBlockSyntax.__ctor__(this)
