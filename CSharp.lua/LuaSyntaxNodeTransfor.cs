@@ -572,8 +572,7 @@ namespace CSharpLua {
             }
             bool valueIsLiteral;
             LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, expression, out valueIsLiteral);
-            bool isStructDefaultValue = expression == null && valueExpression != null && typeSymbol.IsValueType && !valueIsLiteral;
-            CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly, isStructDefaultValue);
+            CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly);
         }
 
         public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
