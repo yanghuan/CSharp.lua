@@ -120,7 +120,9 @@ System.namespace("CSharpLua", function (namespace)
                     return CSharpLua.Utility.First(this.models_, CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel).Name
                 end
 
-                local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol) end)
+                local methodModel = this.models_:Find(function (i) 
+                    return IsMethodMatch(this, i, symbol)
+                end)
                 local default = methodModel
                 if default ~= nil then
                     default = default.Name
@@ -132,7 +134,9 @@ System.namespace("CSharpLua", function (namespace)
                     return CSharpLua.Utility.First(this.models_, CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel).Template
                 end
 
-                local methodModel = this.models_:Find(function (i) return IsMethodMatch(this, i, symbol) end)
+                local methodModel = this.models_:Find(function (i) 
+                    return IsMethodMatch(this, i, symbol)
+                end)
                 local default = methodModel
                 if default ~= nil then
                     default = default.Template

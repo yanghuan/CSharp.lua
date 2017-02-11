@@ -14,7 +14,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "}" --[[Tokens.CloseBrace]]
         end
         Render = function (this, renderer) 
-            renderer:Render27(this)
+            renderer:Render26(this)
         end
         __staticCtor__ = function (this) 
             Empty = CSharpLuaLuaAst.LuaTableInitializerExpression()
@@ -48,7 +48,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaSingleTableItemSyntax", function (namespace) 
         local Render, __ctor__
         Render = function (this, renderer) 
-            renderer:Render28(this)
+            renderer:Render27(this)
         end
         __ctor__ = function (this, expression) 
             CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
@@ -85,7 +85,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "]" --[[Tokens.CloseBracket]]
         end
         Render = function (this, renderer) 
-            renderer:Render30(this)
+            renderer:Render29(this)
         end
         __ctor__ = function (this, expression) 
             CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this)
@@ -106,7 +106,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaTableLiteralKeySyntax", function (namespace) 
         local Render, __ctor__
         Render = function (this, renderer) 
-            renderer:Render31(this)
+            renderer:Render30(this)
         end
         __ctor__ = function (this, identifier) 
             CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this)
@@ -128,7 +128,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "=" --[[Tokens.Equals]]
         end
         Render = function (this, renderer) 
-            renderer:Render29(this)
+            renderer:Render28(this)
         end
         __ctor__ = function (this, key, value) 
             CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
@@ -155,7 +155,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "]" --[[Tokens.CloseBracket]]
         end
         Render = function (this, renderer) 
-            renderer:Render32(this)
+            renderer:Render31(this)
         end
         __ctor__ = function (this, expression, index) 
             CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)

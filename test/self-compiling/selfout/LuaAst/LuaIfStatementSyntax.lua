@@ -17,7 +17,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "end" --[[Keyword.End]]
         end
         Render = function (this, renderer) 
-            renderer:Render40(this)
+            renderer:Render39(this)
         end
         __init__ = function (this) 
             this.Body = CSharpLuaLuaAst.LuaBlockSyntax()
@@ -53,7 +53,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "then" --[[Keyword.Then]]
         end
         Render = function (this, renderer) 
-            renderer:Render41(this)
+            renderer:Render40(this)
         end
         __init__ = function (this) 
             this.Body = CSharpLuaLuaAst.LuaBlockSyntax()
@@ -84,7 +84,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "else" --[[Keyword.Else]]
         end
         Render = function (this, renderer) 
-            renderer:Render42(this)
+            renderer:Render41(this)
         end
         __ctor__ = function (this) 
             this.Body = CSharpLuaLuaAst.LuaBlockSyntax()
@@ -180,7 +180,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Render = function (this, renderer) 
             CheckHasCaseLabel(this)
             CheckHasDefaultLabel(this)
-            renderer:Render47(this)
+            renderer:Render46(this)
         end
         __init__ = function (this) 
             this.RepeatStatement = CSharpLuaLuaAst.LuaRepeatStatementSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.One)
@@ -215,7 +215,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "end" --[[Keyword.End]]
         end
         Render = function (this, renderer) 
-            renderer:Render48(this)
+            renderer:Render47(this)
         end
         __ctor__ = function (this, parameter, defaultValue) 
             CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this)

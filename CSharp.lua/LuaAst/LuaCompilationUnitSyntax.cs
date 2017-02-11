@@ -55,10 +55,16 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void AddTypeDeclaration(LuaTypeDeclarationSyntax memberNode) {
-            LuaNamespaceDeclarationSyntax namespaceNode = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
-            namespaceNode.AddMemberDeclaration(memberNode);
-            Statements.Add(namespaceNode);
+        public void AddMember(LuaStatementSyntax member) {
+            var typeDeclaration = member as LuaTypeDeclarationSyntax;
+            if(typeDeclaration != null) {
+                LuaNamespaceDeclarationSyntax namespaceNode = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
+                namespaceNode.AddMemberDeclaration(typeDeclaration);
+                Statements.Add(namespaceNode);
+            }
+            else {
+                Statements.Add(member);
+            }
         }
 
         public void ImportLinq() {

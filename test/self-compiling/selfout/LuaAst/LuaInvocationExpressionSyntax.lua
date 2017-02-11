@@ -13,7 +13,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.ArgumentList.Arguments:Add1(CSharpLuaLuaAst.LuaArgumentSyntax(argument))
         end
         AddArguments = function (this, arguments) 
-            this.ArgumentList.Arguments:AddRange1(Linq.Select(arguments, function (i) return CSharpLuaLuaAst.LuaArgumentSyntax(i) end, CSharpLuaLuaAst.LuaArgumentSyntax))
+            this.ArgumentList.Arguments:AddRange1(Linq.Select(arguments, function (i) 
+                return CSharpLuaLuaAst.LuaArgumentSyntax(i)
+            end, CSharpLuaLuaAst.LuaArgumentSyntax))
         end
         Render = function (this, renderer) 
             renderer:Render4(this)

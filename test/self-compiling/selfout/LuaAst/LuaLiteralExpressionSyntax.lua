@@ -21,7 +21,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return this.Identifier.ValueText
         end
         Render = function (this, renderer) 
-            renderer:Render15(this)
+            renderer:Render14(this)
         end
         __ctor1__ = function (this, text) 
             __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, text))
@@ -56,7 +56,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return this.Identifier.ValueText
         end
         Render = function (this, renderer) 
-            renderer:Render16(this)
+            renderer:Render15(this)
         end
         __staticCtor__ = function (this) 
             Empty = CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax:new(1, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Empty)
@@ -90,7 +90,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "]" --[[Tokens.CloseBracket]]
         end
         Render = function (this, renderer) 
-            renderer:Render17(this)
+            renderer:Render16(this)
         end
         __ctor__ = function (this, text, equalsCount) 
             CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
@@ -124,7 +124,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return this.Value:getText()
         end
         Render = function (this, renderer) 
-            renderer:Render18(this)
+            renderer:Render17(this)
         end
         __ctor1__ = function (this, value, identifierToken) 
             __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, value), identifierToken)

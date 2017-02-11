@@ -682,8 +682,9 @@ namespace CSharpLua {
             return expressions;
         }
 
-        private void AddStructCloneMethodItem(LuaTableInitializerExpression table, LuaIdentifierNameSyntax name) {
-            LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name);
+        private void AddStructCloneMethodItem(LuaTableInitializerExpression table, LuaIdentifierNameSyntax name, ITypeSymbol typeSymbol) {
+            LuaExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name);
+            CheckValueTypeClone(typeSymbol, ref memberAccess);
             table.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), memberAccess));
         }
 
@@ -704,16 +705,17 @@ namespace CSharpLua {
                 if(!member.IsStatic && member.Kind != SymbolKind.Method) {
                     switch(member.Kind) {
                         case SymbolKind.Field: {
-                                LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(symbol.Name);
-                                AddStructCloneMethodItem(cloneTable, name);
+                                IFieldSymbol memberSymbol = (IFieldSymbol)member;
+                                LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
+                                AddStructCloneMethodItem(cloneTable, name, memberSymbol.Type);
                                 filelds.Add(name);
                                 break;
                             }
                         case SymbolKind.Property: {
                                 IPropertySymbol memberSymbol = (IPropertySymbol)member;
                                 if(memberSymbol.IsPropertyField()) {
-                                    LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(symbol.Name);
-                                    AddStructCloneMethodItem(cloneTable, name);
+                                    LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
+                                    AddStructCloneMethodItem(cloneTable, name, memberSymbol.Type);
                                     filelds.Add(name);
                                 }
                                 break;
@@ -721,8 +723,8 @@ namespace CSharpLua {
                         case SymbolKind.Event: {
                                 IEventSymbol memberSymbol = (IEventSymbol)member;
                                 if(memberSymbol.IsEventFiled()) {
-                                    LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(symbol.Name);
-                                    AddStructCloneMethodItem(cloneTable, name);
+                                    LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
+                                    AddStructCloneMethodItem(cloneTable, name, null);
                                     filelds.Add(name);
                                 }
                                 break;
@@ -777,6 +779,10 @@ namespace CSharpLua {
 
         private void CheckValueTypeClone(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
             ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(node).Type;
+            CheckValueTypeClone(typeSymbol, ref expression);
+        }
+
+        private void CheckValueTypeClone(ITypeSymbol typeSymbol, ref LuaExpressionSyntax expression) {
             if(typeSymbol != null) {
                 if(typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.IsFromCode()) {
                     expression = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Default, true));

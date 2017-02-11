@@ -66,7 +66,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaStatementListSyntax", function (namespace) 
         local Render, __ctor__
         Render = function (this, renderer) 
-            renderer:Render19(this)
+            renderer:Render18(this)
         end
         __ctor__ = function (this) 
             this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)()
@@ -87,7 +87,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "return" --[[Keyword.Return]]
         end
         Render = function (this, renderer) 
-            renderer:Render26(this)
+            renderer:Render25(this)
         end
         __ctor__ = function (this, expression) 
             CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this)
@@ -110,7 +110,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "return" --[[Keyword.Return]]
         end
         Render = function (this, renderer) 
-            renderer:Render25(this)
+            renderer:Render24(this)
         end
         __ctor__ = function (this) 
             this.Expressions = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
@@ -132,7 +132,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "break" --[[Keyword.Break]]
         end
         Render = function (this, renderer) 
-            renderer:Render49(this)
+            renderer:Render48(this)
         end
         __staticCtor__ = function (this) 
             Statement = CSharpLuaLuaAst.LuaBreakStatementSyntax:new(1)
@@ -159,7 +159,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return CSharpLuaLuaAst.LuaBreakStatementSyntax.Statement
         end
         Render = function (this, renderer) 
-            renderer:Render50(this)
+            renderer:Render49(this)
         end
         __staticCtor__ = function (this) 
             Statement = CSharpLuaLuaAst.LuaContinueAdapterStatementSyntax:new(1)
@@ -184,7 +184,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaBlankLinesStatement", function (namespace) 
         local Render, One, __staticCtor__, __ctor__
         Render = function (this, renderer) 
-            renderer:Render51(this)
+            renderer:Render50(this)
         end
         __staticCtor__ = function (this) 
             One = CSharpLuaLuaAst.LuaBlankLinesStatement:new(1, 1)
@@ -212,7 +212,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "--" --[[Tokens.ShortComment]]
         end
         Render = function (this, renderer) 
-            renderer:Render52(this)
+            renderer:Render51(this)
         end
         __ctor__ = function (this, comment) 
             CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this)
@@ -238,7 +238,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "--]]" --[[Tokens.CloseLongComment]]
         end
         Render = function (this, renderer) 
-            renderer:Render53(this)
+            renderer:Render52(this)
         end
         __ctor__ = function (this, comment) 
             CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this)
@@ -262,7 +262,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "goto" --[[Keyword.Goto]]
         end
         Render = function (this, renderer) 
-            renderer:Render55(this)
+            renderer:Render54(this)
         end
         __ctor__ = function (this, identifier) 
             CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this)
@@ -285,7 +285,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("LuaGotoCaseAdapterStatement", function (namespace) 
         local Render, __ctor__
         Render = function (this, renderer) 
-            renderer:Render57(this)
+            renderer:Render56(this)
         end
         __ctor__ = function (this, identifier) 
             CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this)
@@ -316,7 +316,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return "::" --[[Tokens.Label]]
         end
         Render = function (this, renderer) 
-            renderer:Render56(this)
+            renderer:Render55(this)
         end
         __ctor__ = function (this, identifier, statement) 
             CSharpLuaLuaAst.LuaStatementSyntax.__ctor__[1](this)

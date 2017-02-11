@@ -103,7 +103,6 @@ return function (dir)
         "CSharpLua.LuaAst.LuaRepeatStatementSyntax", 
         "CSharpLua.LuaAst.LuaReturnStatementSyntax", 
         "CSharpLua.LuaAst.LuaShortCommentStatement", 
-        "CSharpLua.LuaAst.LuaSimpleLambdaAdapterExpression", 
         "CSharpLua.LuaAst.LuaSingleTableItemSyntax", 
         "CSharpLua.LuaAst.LuaStatementListSyntax", 
         "CSharpLua.LuaAst.LuaStatementSyntax.EmptyLuaStatementSyntax", 

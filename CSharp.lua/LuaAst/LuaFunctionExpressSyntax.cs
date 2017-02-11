@@ -58,19 +58,6 @@ namespace CSharpLua.LuaAst {
         }
     }
 
-    public sealed class LuaSimpleLambdaAdapterExpression : LuaExpressionSyntax {
-        public LuaFunctionExpressionSyntax FunctionExpress { get; }
-        public string EndToken => Tokens.End;
-
-        public LuaSimpleLambdaAdapterExpression(LuaFunctionExpressionSyntax functionExpress) {
-            FunctionExpress = functionExpress;
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-    }
-
     public sealed class LuaConstructorAdapterExpressionSyntax : LuaFunctionExpressionSyntax {
         public bool IsStaticCtor { get; set; }
         public bool IsInvokeThisCtor { get; set; }

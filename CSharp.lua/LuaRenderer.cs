@@ -150,28 +150,6 @@ namespace CSharpLua {
             node.Body.Render(this);
         }
 
-        internal void Render(LuaSimpleLambdaAdapterExpression node) {
-            var function = node.FunctionExpress;
-            Write(function.FunctionKeyword);
-            WriteSpace();
-            function.ParameterList.Render(this);
-            WriteSpace();
-            var statement = function.Body.Statements.First();
-            var returnStatement = statement as LuaReturnStatementSyntax;
-            if(returnStatement != null) {
-                Write(returnStatement.ReturnKeyword);
-                WriteSpace();
-                returnStatement.Expression.Render(this);
-            }
-            else {
-                var expressionStatement = (LuaExpressionStatementSyntax)statement;
-                expressionStatement.Expression.Render(this);
-            }
-            Write(statement.SemicolonToken);
-            WriteSpace();
-            Write(node.EndToken);
-        }
-
         internal void Render(LuaParameterListSyntax node) {
             WriteArgumentList(node.OpenParenToken, node.Parameters, node.CloseParenToken);
         }

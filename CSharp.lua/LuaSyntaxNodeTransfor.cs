@@ -143,14 +143,8 @@ namespace CSharpLua {
             LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax() { FilePath = node.SyntaxTree.FilePath };
             compilationUnits_.Push(compilationUnit);
             foreach(var member in node.Members) {
-                LuaStatementSyntax memberNode = (LuaStatementSyntax)member.Accept(this);
-                var typeDeclaration = memberNode as LuaTypeDeclarationSyntax;
-                if(typeDeclaration != null) {
-                    compilationUnit.AddTypeDeclaration(typeDeclaration);
-                }
-                else {
-                    compilationUnit.Statements.Add(memberNode);
-                }
+                LuaStatementSyntax luaMember = (LuaStatementSyntax)member.Accept(this);
+                compilationUnit.AddMember(luaMember);
             }
             compilationUnits_.Pop();
             return compilationUnit;
@@ -1357,14 +1351,7 @@ namespace CSharpLua {
 
             if(symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Event) {
                 if(node.Expression.IsKind(SyntaxKind.ThisExpression)) {
-                    var propertyIdentifier = (LuaExpressionSyntax)node.Name.Accept(this);
-                    var propertyAdapter = propertyIdentifier as LuaPropertyAdapterExpressionSyntax;
-                    if(propertyAdapter != null) {
-                        return propertyAdapter;
-                    }
-                    else {
-                        return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, propertyIdentifier);
-                    }
+                    return node.Name.Accept(this);
                 }
 
                 if(node.Expression.IsKind(SyntaxKind.BaseExpression)) {
@@ -1499,8 +1486,11 @@ namespace CSharpLua {
                         return false;
                     }
                 case SyntaxKind.SimpleAssignmentExpression: {
-                        if(parentNode.Parent.IsKind(SyntaxKind.ObjectInitializerExpression)) {
-                            return false;
+                        AssignmentExpressionSyntax parent = (AssignmentExpressionSyntax)parentNode;
+                        if(parent.Right != node) {
+                            if(parent.Parent.IsKind(SyntaxKind.ObjectInitializerExpression)) {
+                                return false;
+                            }
                         }
                         break;
                     }

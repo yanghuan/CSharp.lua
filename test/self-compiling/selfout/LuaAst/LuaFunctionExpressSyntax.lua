@@ -55,29 +55,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             __ctor__ = __ctor__
         }
     end)
-    namespace.class("LuaSimpleLambdaAdapterExpression", function (namespace) 
-        local getEndToken, Render, __ctor__
-        getEndToken = function (this) 
-            return "end" --[[Keyword.End]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render10(this)
-        end
-        __ctor__ = function (this, functionExpress) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)
-            this.FunctionExpress = functionExpress
-        end
-        return {
-            __inherits__ = function () 
-                return {
-                    CSharpLuaLuaAst.LuaExpressionSyntax
-                }
-            end, 
-            getEndToken = getEndToken, 
-            Render = Render, 
-            __ctor__ = __ctor__
-        }
-    end)
     namespace.class("LuaConstructorAdapterExpressionSyntax", function (namespace) 
         return {
             __inherits__ = function () 
