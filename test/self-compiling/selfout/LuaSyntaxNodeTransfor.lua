@@ -289,8 +289,16 @@ System.namespace("CSharpLua", function (namespace)
             return compilationUnit
         end
         VisitNamespaceDeclaration = function (this, node) 
-            local name = System.cast(CSharpLuaLuaAst.LuaIdentifierNameSyntax, node:getName():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-            local namespaceDeclaration = CSharpLuaLuaAst.LuaNamespaceDeclarationSyntax(name)
+            local symbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node, nil)
+            local isContained = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(node:getParent(), 8842 --[[SyntaxKind.NamespaceDeclaration]])
+            local default
+            if isContained then
+                default = symbol:getName()
+            else
+                default = symbol:ToString()
+            end
+            local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, default)
+            local namespaceDeclaration = CSharpLuaLuaAst.LuaNamespaceDeclarationSyntax(name, isContained)
             for _, member in System.each(node:getMembers()) do
                 local memberNode = System.cast(CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx, member:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
                 namespaceDeclaration:AddMemberDeclaration(memberNode)

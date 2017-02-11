@@ -7,9 +7,15 @@ end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaNamespaceDeclarationSyntax", function (namespace) 
         local __ctor__
-        __ctor__ = function (this, name) 
+        __ctor__ = function (this, name, isContained) 
             CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx.__ctor__(this)
-            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.System, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace)
+            local default
+            if isContained then
+                default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace
+            else
+                default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.System
+            end
+            this:UpdateIdentifiers(name, default, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace)
         end
         return {
             __inherits__ = function () 

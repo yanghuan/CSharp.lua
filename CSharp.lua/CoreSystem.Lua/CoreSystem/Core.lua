@@ -470,6 +470,14 @@ function namespace.enum(name, f)
     namespaceDef("E", name, f)
 end
 
+function namespace.namespace(name, f)
+    name = curName .. "." .. name
+    local prevName = curName
+    curName = name
+    f(namespace)
+    curName = prevName
+end
+
 function System.namespace(name, f)
     curName = name
     f(namespace)

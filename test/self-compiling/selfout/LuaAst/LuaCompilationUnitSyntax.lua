@@ -23,7 +23,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         AddMember = function (this, member) 
             local typeDeclaration = System.as(member, CSharpLuaLuaAst.LuaTypeDeclarationSyntax)
             if typeDeclaration ~= nil then
-                local namespaceNode = CSharpLuaLuaAst.LuaNamespaceDeclarationSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Empty)
+                local namespaceNode = CSharpLuaLuaAst.LuaNamespaceDeclarationSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Empty, false)
                 namespaceNode:AddMemberDeclaration(typeDeclaration)
                 this.Statements:Add1(namespaceNode)
             else
