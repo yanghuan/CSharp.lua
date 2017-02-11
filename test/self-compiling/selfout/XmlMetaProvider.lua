@@ -297,7 +297,7 @@ System.namespace("CSharpLua", function (namespace)
                 return CSharpLua.Utility.GetOrDefault1(this.namespaceNameMaps_, name, name, System.String, System.String)
             end
         end
-        GetTypeName = function (this, symbol, transfor, node) 
+        GetTypeName = function (this, symbol, transfor) 
             assert(symbol ~= nil)
             if symbol:getKind() == 17 --[[SymbolKind.TypeParameter]] then
                 return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName())
@@ -305,7 +305,7 @@ System.namespace("CSharpLua", function (namespace)
 
             if symbol:getKind() == 1 --[[SymbolKind.ArrayType]] then
                 local arrayType = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, symbol)
-                local elementTypeExpression = GetTypeName(this, arrayType:getElementType(), transfor, node)
+                local elementTypeExpression = GetTypeName(this, arrayType:getElementType(), transfor)
                 local default
                 if arrayType:getRank() == 1 then
                     default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Array
@@ -324,13 +324,13 @@ System.namespace("CSharpLua", function (namespace)
                 return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Delegate
             end
 
-            local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor, node)
+            local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor)
             if namedTypeSymbol:getTypeArguments():getLength() == 0 then
                 return baseTypeName
             else
                 local invocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, baseTypeName)
                 for _, typeArgument in System.each(namedTypeSymbol:getTypeArguments()) do
-                    local typeArgumentExpression = GetTypeName(this, typeArgument, transfor, node)
+                    local typeArgumentExpression = GetTypeName(this, typeArgument, transfor)
                     invocationExpression:AddArgument(typeArgumentExpression)
                 end
                 return invocationExpression
@@ -370,7 +370,7 @@ System.namespace("CSharpLua", function (namespace)
             end
             return fullName
         end
-        GetTypeShortName = function (this, symbol, transfor, node) 
+        GetTypeShortName = function (this, symbol, transfor) 
             local name = GetTypeShortString(this, symbol)
             if MayHaveCodeMeta(this, symbol) then
                 local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, name, nil, System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo)
@@ -382,7 +382,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end
             if transfor ~= nil then
-                name = transfor:ImportTypeName(name, symbol, node)
+                name = transfor:ImportTypeName(name, symbol)
             end
             return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name)
         end

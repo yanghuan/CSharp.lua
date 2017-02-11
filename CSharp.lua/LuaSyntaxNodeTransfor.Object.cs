@@ -97,7 +97,7 @@ namespace CSharpLua {
             Contract.Assert(node.IsKind(SyntaxKind.ArrayInitializerExpression));
             var symbol = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
             if(node.Expressions.Count > 0) {
-                LuaExpressionSyntax arrayType = GetTypeName(symbol, node);
+                LuaExpressionSyntax arrayType = GetTypeName(symbol);
                 LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayType);
                 foreach(var expression in node.Expressions) {
                     var element = (LuaExpressionSyntax)expression.Accept(this);
@@ -106,7 +106,7 @@ namespace CSharpLua {
                 return invocation;
             }
             else {
-                LuaExpressionSyntax baseType = GetTypeName(symbol.ElementType, node);
+                LuaExpressionSyntax baseType = GetTypeName(symbol.ElementType);
                 return BuildEmptyArray(baseType);
             }
         }
@@ -125,7 +125,7 @@ namespace CSharpLua {
                 return GetMethodNameExpression((IMethodSymbol)symbol, node);
             }
             else {
-                return GetTypeName(symbol, node);
+                return GetTypeName(symbol);
             }
         }
 
@@ -219,7 +219,7 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitImplicitArrayCreationExpression(ImplicitArrayCreationExpressionSyntax node) {
             var symbol = semanticModel_.GetTypeInfo(node.Initializer.Expressions.First()).Type;
-            LuaExpressionSyntax elementTypeExpression = GetTypeName(symbol, node);
+            LuaExpressionSyntax elementTypeExpression = GetTypeName(symbol);
             LuaInvocationExpressionSyntax arrayTypeExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExpression);
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(arrayTypeExpression);
             foreach(var expression in node.Initializer.Expressions) {
@@ -243,6 +243,9 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
+            IMethodSymbol ctorSymbol = semanticModel_.GetDeclaredSymbol(node);
+            methodInfos_.Push(new MethodInfo(ctorSymbol));
+
             LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
             PushFunction(function);
             bool isStatic = node.Modifiers.IsStatic();
@@ -298,6 +301,8 @@ namespace CSharpLua {
             else {
                 CurType.AddCtor(function);
             }
+
+            methodInfos_.Pop();
             return function;
         }
 
@@ -306,6 +311,9 @@ namespace CSharpLua {
         }
 
         private LuaExpressionSyntax VisitLambdaExpression(IEnumerable<ParameterSyntax> parameters, CSharpSyntaxNode body) {
+            IMethodSymbol symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(body.Parent).Symbol;
+            methodInfos_.Push(new MethodInfo(symbol));
+
             LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
             PushFunction(function);
 
@@ -338,6 +346,8 @@ namespace CSharpLua {
             }
 
             PopFunction();
+            methodInfos_.Pop();
+
             return resultExpression;
         }
 

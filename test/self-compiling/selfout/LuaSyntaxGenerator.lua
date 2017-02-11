@@ -259,7 +259,7 @@ System.namespace("CSharpLua", function (namespace)
 
                     local table = CSharpLuaLuaAst.LuaTableInitializerExpression()
                     for _, type in System.each(types) do
-                        local typeName = this.XmlMetaProvider:GetTypeShortName(type, nil, nil)
+                        local typeName = this.XmlMetaProvider:GetTypeShortName(type, nil)
                         table.Items:Add1(CSharpLuaLuaAst.LuaSingleTableItemSyntax(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax:new(1, typeName)))
                     end
                     functionExpression:AddStatement1(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kInit), table))

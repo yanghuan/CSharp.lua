@@ -364,7 +364,7 @@ namespace CSharpLua {
             }
         }
 
-        public LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransfor transfor, SyntaxNode node) {
+        public LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransfor transfor) {
             Contract.Assert(symbol != null);
             if(symbol.Kind == SymbolKind.TypeParameter) {
                 return new LuaIdentifierNameSyntax(symbol.Name);
@@ -372,7 +372,7 @@ namespace CSharpLua {
 
             if(symbol.Kind == SymbolKind.ArrayType) {
                 var arrayType = (IArrayTypeSymbol)symbol;
-                LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor, node);
+                LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
                 return new LuaInvocationExpressionSyntax(arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray, elementTypeExpression);
             }
 
@@ -385,14 +385,14 @@ namespace CSharpLua {
                 return LuaIdentifierNameSyntax.Delegate;
             }
 
-            LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor, node);
+            LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor);
             if(namedTypeSymbol.TypeArguments.Length == 0) {
                 return baseTypeName;
             }
             else {
                 var invocationExpression = new LuaInvocationExpressionSyntax(baseTypeName);
                 foreach(var typeArgument in namedTypeSymbol.TypeArguments) {
-                    LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor, node);
+                    LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
                     invocationExpression.AddArgument(typeArgumentExpression);
                 }
                 return invocationExpression;
@@ -439,7 +439,7 @@ namespace CSharpLua {
             return fullName;
         }
 
-        internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransfor transfor = null, SyntaxNode node = null) {
+        internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransfor transfor = null) {
             string name = GetTypeShortString(symbol);
              if(MayHaveCodeMeta(symbol)) {
                 TypeMetaInfo info = typeMetas_.GetOrDefault(name);
@@ -451,7 +451,7 @@ namespace CSharpLua {
                 }
             }
             if(transfor != null) {
-                transfor.ImportTypeName(ref name, symbol, node);
+                transfor.ImportTypeName(ref name, symbol);
             }
             return new LuaIdentifierNameSyntax(name);
         }
