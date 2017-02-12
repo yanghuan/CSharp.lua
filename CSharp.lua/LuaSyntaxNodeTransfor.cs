@@ -1665,6 +1665,7 @@ namespace CSharpLua {
 
         private LuaExpressionSyntax FillInvocationArgument(List<LuaExpressionSyntax> arguments, ArgumentSyntax node, ImmutableArray<IParameterSymbol> parameters) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            Contract.Assert(expression != null);
             CheckValueTypeClone(node.Expression, ref expression);
             if(node.NameColon != null) {
                 string name = node.NameColon.Name.Identifier.ValueText;

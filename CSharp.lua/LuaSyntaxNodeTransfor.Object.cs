@@ -356,6 +356,10 @@ namespace CSharpLua {
             return VisitLambdaExpression(node.ParameterList.Parameters, node.Body);
         }
 
+        public override LuaSyntaxNode VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax node) {
+            return VisitLambdaExpression(node.ParameterList.Parameters, node.Body);
+        }
+
         public override LuaSyntaxNode VisitTypeParameter(TypeParameterSyntax node) {
             return new LuaIdentifierNameSyntax(node.Identifier.ValueText);
         }
