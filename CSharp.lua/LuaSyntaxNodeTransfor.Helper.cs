@@ -625,6 +625,7 @@ namespace CSharpLua {
 
                 foreach(var argumentNode in node.ArgumentList.Arguments) {
                     var argumentExpression = (LuaExpressionSyntax)argumentNode.Expression.Accept(this);
+                    CheckValueTypeClone(argumentNode.Expression, ref argumentExpression);
                     if(argumentNode.NameEquals == null) {
                         if(argumentNode.NameColon != null) {
                             string name = argumentNode.NameColon.Name.Identifier.ValueText;
@@ -772,6 +773,15 @@ namespace CSharpLua {
             LuaExpressionSyntax typeName = AddStructDefaultMethod(symbol, declaration);
             var fileds = AddStructCloneMethod(symbol, declaration, typeName);
             AddStructEqualsObjMethod(symbol, declaration, typeName, fileds);
+        }
+
+        private void CheckValueTypeClone(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
+            ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(node).Type;
+            if(typeSymbol != null) {
+                if(typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.IsFromCode()) {
+                    expression = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Default, true));
+                }
+            }
         }
     }
 }

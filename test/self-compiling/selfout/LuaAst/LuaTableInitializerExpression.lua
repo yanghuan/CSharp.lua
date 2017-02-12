@@ -6,7 +6,7 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaTableInitializerExpression", function (namespace) 
-        local getOpenBraceToken, getCloseBraceToken, Render, __ctor__
+        local getOpenBraceToken, getCloseBraceToken, Render, Empty, __staticCtor__, __ctor__
         getOpenBraceToken = function (this) 
             return "{" --[[Tokens.OpenBrace]]
         end
@@ -15,6 +15,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end
         Render = function (this, renderer) 
             renderer:Render27(this)
+        end
+        __staticCtor__ = function (this) 
+            Empty = CSharpLuaLuaAst.LuaTableInitializerExpression()
+            this.Empty = Empty
         end
         __ctor__ = function (this) 
             this.Items = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaTableItemSyntax)()
@@ -28,6 +32,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             getOpenBraceToken = getOpenBraceToken, 
             getCloseBraceToken = getCloseBraceToken, 
             Render = Render, 
+            __staticCtor__ = __staticCtor__, 
             __ctor__ = __ctor__
         }
     end)

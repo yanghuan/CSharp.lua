@@ -13,8 +13,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         TypeOf, Continue, StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, 
         IntegerDiv, IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, 
         Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, 
-        Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, Render, 
-        __staticCtor__, __ctor1__, __ctor2__
+        Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, setmetatable, 
+        getmetatable, Clone, EqualsObj, Obj, EqualsStatic, SystemObjectEqualsStatic, DateTime, TimeSpan, 
+        Render, __staticCtor__, __ctor1__, __ctor2__
         Render = function (this, renderer) 
             renderer:Render5(this)
         end
@@ -82,7 +83,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             Global = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "global")
             Attributes = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "__attributes__")
             Trunc = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.trunc")
-            this.Empty, this.Placeholder, this.One, this.System, this.Namespace, this.Class, this.Struct, this.Interface, this.Enum, this.Value, this.This, this.True, this.False, this.Throw, this.Each, this.YieldReturn, this.Object, this.Array, this.ArrayEmpty, this.MultiArray, this.Create, this.Add, this.StaticCtor, this.Init, this.Ctor, this.Inherits, this.InheritRecursion, this.Default, this.SystemDefault, this.Property, this.Event, this.Nil, this.TypeOf, this.Continue, this.StringChar, this.ToStr, this.ToEnumString, this.DelegateCombine, this.DelegateRemove, this.DelegateBind, this.IntegerDiv, this.IntegerMod, this.BitAnd, this.BitOr, this.BitXor, this.ShiftRight, this.ShiftLeft, this.Try, this.Is, this.As, this.Cast, this.Using, this.UsingX, this.Linq, this.SystemLinqEnumerable, this.New, this.Format, this.Delegate, this.Int, this.UsingDeclare, this.Global, this.Attributes, this.Trunc = Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, Enum, Value, This, True, False, Throw, Each, YieldReturn, Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, Inherits, InheritRecursion, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc
+            setmetatable = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "setmetatable")
+            getmetatable = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "getmetatable")
+            Clone = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "__clone__")
+            EqualsObj = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "EqualsObj")
+            Obj = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "obj")
+            EqualsStatic = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "equalsStatic")
+            SystemObjectEqualsStatic = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.Object.EqualsStatic")
+            DateTime = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.DateTime")
+            TimeSpan = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.TimeSpan")
+            this.Empty, this.Placeholder, this.One, this.System, this.Namespace, this.Class, this.Struct, this.Interface, this.Enum, this.Value, this.This, this.True, this.False, this.Throw, this.Each, this.YieldReturn, this.Object, this.Array, this.ArrayEmpty, this.MultiArray, this.Create, this.Add, this.StaticCtor, this.Init, this.Ctor, this.Inherits, this.InheritRecursion, this.Default, this.SystemDefault, this.Property, this.Event, this.Nil, this.TypeOf, this.Continue, this.StringChar, this.ToStr, this.ToEnumString, this.DelegateCombine, this.DelegateRemove, this.DelegateBind, this.IntegerDiv, this.IntegerMod, this.BitAnd, this.BitOr, this.BitXor, this.ShiftRight, this.ShiftLeft, this.Try, this.Is, this.As, this.Cast, this.Using, this.UsingX, this.Linq, this.SystemLinqEnumerable, this.New, this.Format, this.Delegate, this.Int, this.UsingDeclare, this.Global, this.Attributes, this.Trunc, this.setmetatable, this.getmetatable, this.Clone, this.EqualsObj, this.Obj, this.EqualsStatic, this.SystemObjectEqualsStatic, this.DateTime, this.TimeSpan = Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, Enum, Value, This, True, False, Throw, Each, YieldReturn, Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, Inherits, InheritRecursion, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, setmetatable, getmetatable, Clone, EqualsObj, Obj, EqualsStatic, SystemObjectEqualsStatic, DateTime, TimeSpan
         end
         __ctor1__ = function (this, valueText) 
             CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)

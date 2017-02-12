@@ -97,6 +97,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 default:Add("__default__")
                 default:Add("__recursion__")
                 default:Add("__attributes__")
+                default:Add("__clone__")
             end)
             this.ReservedWords, this.SpecialReservedWords = ReservedWords, SpecialReservedWords
         end

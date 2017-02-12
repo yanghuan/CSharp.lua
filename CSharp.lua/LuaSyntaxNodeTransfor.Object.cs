@@ -65,6 +65,7 @@ namespace CSharpLua {
                     AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
                     var left = assignment.Left.Accept(this);
                     var right = (LuaExpressionSyntax)assignment.Right.Accept(this);
+                    CheckValueTypeClone(assignment.Right, ref right);
 
                     if(assignment.Left.IsKind(SyntaxKind.ImplicitElementAccess)) {
                         var argumentList = (LuaArgumentListSyntax)left;

@@ -965,6 +965,7 @@ namespace CSharpLua {
                 case SyntaxKind.SimpleAssignmentExpression: {
                         var left = (LuaExpressionSyntax)leftNode.Accept(this);
                         var right = (LuaExpressionSyntax)rightNode.Accept(this);
+                        CheckValueTypeClone(rightNode, ref right);
                         return BuildLuaSimpleAssignmentExpression(left, right);
                     }
                 case SyntaxKind.AddAssignmentExpression: {
@@ -1672,6 +1673,7 @@ namespace CSharpLua {
 
         private LuaExpressionSyntax FillInvocationArgument(List<LuaExpressionSyntax> arguments, ArgumentSyntax node, ImmutableArray<IParameterSymbol> parameters) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            CheckValueTypeClone(node.Expression, ref expression);
             if(node.NameColon != null) {
                 string name = node.NameColon.Name.Identifier.ValueText;
                 int index = parameters.IndexOf(i => i.Name == name);
