@@ -240,3 +240,12 @@ System.define("System.RankException", {
         System.Exception.__ctor__(this, message or "Attempted to operate on an array with the incorrect number of dimensions.", innerException)
     end
 })
+
+System.define("System.TypeLoadException", {
+    __tostring = toString,
+    __inherits__ = { System.Exception },
+
+    __ctor__ = function(this, message, innerException) 
+        System.Exception.__ctor__(this, message or "Failed when load type.", innerException)
+    end
+})

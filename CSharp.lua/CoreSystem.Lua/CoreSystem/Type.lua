@@ -20,6 +20,7 @@ local throw = System.throw
 local Double = System.Double
 local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
+local TypeLoadException = System.TypeLoadException
 
 local type = type
 local getmetatable = getmetatable
@@ -221,8 +222,23 @@ end
 System.getclass = getclass
 
 function Type.GetTypeStatic(typeName, throwOnError, ignoreCase)
+    if typeName == nil then
+        throw(ArgumentNullException("typeName"))
+    end
+    if #typeName == 0 then
+        if throwOnError then
+            throw(TypeLoadException("Arg_TypeLoadNullStr"))
+        end
+        return nil
+    end
     local cls = getclass(typeName)
-    return cls and typeof(cls)
+    if cls ~= nil then
+        return typeof(cls)
+    end 
+    if throwOnError then
+        throw(TypeLoadException(typeName .. ": failed to load."))
+    end
+    return nil    
 end
 
 System.define("System.Type", Type)
