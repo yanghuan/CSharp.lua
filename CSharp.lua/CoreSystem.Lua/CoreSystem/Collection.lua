@@ -28,6 +28,7 @@ local Comparer_1 = System.Comparer_1
 local tinsert = table.insert
 local tremove = table.remove
 local tsort = table.sort
+local unpack = table.unpack
 local setmetatable = setmetatable
 local select = select
 local type = type

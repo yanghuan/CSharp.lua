@@ -23,7 +23,7 @@ local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local FormatException = System.FormatException
 local IndexOutOfRangeException = System.IndexOutOfRangeException
 
-local unpack = unpack
+local unpack = table.unpack
 local string = string
 local schar = string.char
 local table = table

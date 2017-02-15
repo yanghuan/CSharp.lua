@@ -19,7 +19,7 @@ local System = System
 local throw = System.throw
 local div = System.div
 local sr = System.sr
-local time = System.time
+
 local TimeSpan = System.TimeSpan
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local ArgumentException = System.ArgumentException
@@ -27,6 +27,10 @@ local ArgumentException = System.ArgumentException
 local getmetatable = getmetatable
 local select = select
 local format = string.format
+local os = os
+local ostime = os.time
+local osdifftime = os.difftime
+local osdate = os.date
 
 --http://referencesource.microsoft.com/#mscorlib/system/datetime.cs
 local DateTime = {}
@@ -285,8 +289,15 @@ function DateTime.getTicks(this)
     return this.ticks
 end
 
-local timeZoneTicks = System.getTimeZone() * 1e7
+local function getTimeZone()
+    local now = ostime()
+    return osdifftime(now, ostime(osdate("!*t", now)))
+end
+
+local timeZoneTicks = getTimeZone() * 1e7
 DateTime.BaseUtcOffset = TimeSpan(timeZoneTicks)
+
+local time = System.time or ostime
 
 function DateTime.getUtcNow()
     local seconds = time()

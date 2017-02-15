@@ -15,12 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --]]
 
-return function(dir)
+return function(dir, conf)
     dir = (dir and #dir > 0) and (dir .. ".CoreSystem.") or "CoreSystem."
     local require = require
     local load = function(module) return require(dir .. module) end
     
-    load("Core");
+    load("Core")(conf)
     load("Interfaces")
     load("Exception")
     load("Double")
