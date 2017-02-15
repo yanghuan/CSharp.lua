@@ -5,7 +5,7 @@ local assert = assert
 local Assembly = {}
 
 function Assembly.getEntryPoint(this)
-   return System.entryPoint
+    return System.entryPoint
 end
 
 function Assembly.getIsDynamic(this)
@@ -42,18 +42,18 @@ function Assembly.GetExecutingAssembly()
     return entryAssembly
 end
 
-function Assembly.CreateInstance(typeName, ignoreCase)
+function Assembly.CreateInstance(this, typeName, ignoreCase)
+    if typeName == nil then
+        
+    end
     assert(not ignoreCase)
-
 end
 
 function Assembly.GetName(this)
     return this.FullName;
 end
 
-
-Assembly.FullName = "CSharp.lua, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
-System.define("System.Assembly")
+System.define("System.Reflection.Assembly")
 
 entryAssembly = Assembly()
-
+entryAssembly.FullName = "CSharp.lua, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

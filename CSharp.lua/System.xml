@@ -278,4 +278,9 @@
     <namespace name="System.IO">
         <class name="File" Name="System.File" />
     </namespace>
+    <namespace name="System.Reflection">
+        <class name="Assembly">
+            <method name="GetType" Name="GetTypeFrom" />
+         </class>   
+    </namespace>   
 </assembly>

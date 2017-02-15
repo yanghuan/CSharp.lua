@@ -17,7 +17,12 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
+local Char = System.Char
+local Int = System.Int
 local Double = System.Double
+local String = System.String
+local Boolean = System.Boolean
+local Delegate = System.Delegate
 local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
 local TypeLoadException = System.TypeLoadException
@@ -32,8 +37,8 @@ local unpack = unpack
 local Type = {}
 local numberType = setmetatable({ c = Double, name = "Number", fullName = "System.Number" }, Type)
 local types = {
-    [System.Char] = numberType,
-    [System.Int] = numberType,
+    [Char] = numberType,
+    [Int] = numberType,
     [Double] = numberType,
 }
 
@@ -122,6 +127,7 @@ local function isSubclassOf(this, c)
         end
         p = getBaseType(p)
     end
+    return false
 end
 
 Type.IsSubclassOf = isSubclassOf
@@ -153,7 +159,14 @@ local function getInterfaces(this)
     return interfaces
 end
 
-Type.getInterfaces = getInterfaces
+function Type.getInterfaces(this)
+    local interfaces = getInterfaces(this)
+    local array = {}
+    for _, i in ipairs(interfaces) do
+        tinsert(array, i)
+    end    
+    return System.arrayFromTable(array, Type)
+end
 
 local function implementInterface(this, ifaceType)
     local t = this
@@ -178,13 +191,11 @@ local function isAssignableFrom(this, c)
     if this == c then 
         return true 
     end
-    if isSubclassOf(c, this) then
-        return true
-    end
     if getIsInterface(this) then
         return implementInterface(c, this)
+    else 
+        return isSubclassOf(c, this)
     end
-    return false
 end 
 
 Type.IsAssignableFrom = isAssignableFrom
@@ -243,28 +254,66 @@ end
 
 System.define("System.Type", Type)
 
-function is(obj, cls)
-    if obj ~= nil then 
-        return isAssignableFrom(typeof(cls), obj:GetType())
+function isInterfaceOf(t, ifaceType)
+    local interfaces = t.__interfaces__
+    if interfaces then
+       for _, i in ipairs(interfaces) do
+           if i == ifaceType or  isInterfaceOf(i, ifaceType) then
+               return true
+           end
+       end 
     end
     return false
 end
 
-System.is = is
+function isTypeOf(obj, cls)    
+    local typename = type(obj)
+    if typename == "number" then
+        return cls == Int or cls == Double or cls == Char
+    elseif typename == "string" then
+        return cls == String
+    elseif typename == "table" then   
+        if getmetatable(obj) == cls then
+            return true
+        end
+        if cls.__kind__ == "I" then
+            return isInterfaceOf(obj, cls)
+        else
+            local base = obj.__base__
+            while base ~= nil do
+                if base == cls then
+                    return true
+                end
+                base = base.__base__
+            end
+        end
+    elseif typename == "boolean" then
+        return cls == Boolean
+    else 
+        return cls == Delegate
+    end
+end
+
+function System.is(obj, cls)
+    return obj ~= nil and isTypeOf(obj, cls)
+end 
 
 function System.as(obj, cls)
-    if is(obj, cls) then
-        return obj
+    if obj ~= nil and isTypeOf(obj, cls) then
+       return obj
     end
     return nil
 end
 
 function System.cast(cls, obj)
-    if is(obj, cls) then
-        return obj
-    end
-    if obj == nil and cls.__kind__ ~= "S" then
-        return nil
+    if obj == nil then
+        if cls.__kind__ ~= "S" then
+            return nil
+        end
+    else 
+        if isTypeOf(obj, cls) then
+            return obj
+        end
     end
     throw(InvalidCastException(), 1)
 end

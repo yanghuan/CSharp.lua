@@ -2247,13 +2247,19 @@ namespace CSharpLua {
 
             var originalType = semanticModel_.GetTypeInfo(node.Expression).Type;
             var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
-            if(originalType.TypeKind == TypeKind.Enum || targetType.TypeKind == TypeKind.Enum) {
-                return expression;
+
+            if(targetType.TypeKind == TypeKind.Enum) {
+                if(originalType.TypeKind == TypeKind.Enum || originalType.IsIntegerType()) {
+                    return expression;
+                }
             }
 
             if(targetType.IsIntegerType()) {
-                if(originalType.SpecialType == SpecialType.System_Double
-                    || originalType.SpecialType == SpecialType.System_Single) {
+                if(originalType.TypeKind == TypeKind.Enum) {
+                    return expression;
+                }
+
+                if(originalType.SpecialType == SpecialType.System_Double || originalType.SpecialType == SpecialType.System_Single) {
                     return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Trunc, expression);
                 }
             }
