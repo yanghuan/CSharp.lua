@@ -32,7 +32,7 @@ local getmetatable = getmetatable
 local tinsert = table.insert
 local ipairs = ipairs
 local select = select
-local unpack = unpack
+local unpack = table.unpack
 
 local Type = {}
 local numberType = setmetatable({ c = Double, name = "Number", fullName = "System.Number" }, Type)

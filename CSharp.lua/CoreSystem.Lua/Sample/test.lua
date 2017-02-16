@@ -1,4 +1,6 @@
-require("All")()
+--require("socket")
+--local conf = { time = socket.gettime }
+require("All")(nil, conf)
 collectgarbage("collect")
 print(collectgarbage("count"))
 

@@ -15,11 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --]]
 
-local bit = require("bit")
---local ok, socket = pcall(require, "socket") 
---local time = ok and socket.gettime or os.time
-local time = os.time
-
 local setmetatable = setmetatable
 local getmetatable = getmetatable
 local type = type
@@ -275,17 +270,10 @@ System = {
     define = defCls,
     defInf = defInf,
     defStc = defStc,
+    global = global,
 }
 
 local System = System
-
-System.bnot = bit.bnot
-System.band = bit.band
-System.bor = bit.bor
-System.xor = bit.bxor
-System.sl = bit.lshift
-System.sr = bit.rshift
-System.srr = bit.arshift
 
 local function trunc(num) 
     return num > 0 and floor(num) or ceil(num)
@@ -293,25 +281,46 @@ end
 
 System.trunc = trunc
 
-function System.div(x, y) 
-    if y == 0 then
-        throw(System.DivideByZeroException())
-    end
-    return trunc(x / y);
-end
+local _, _, version = _VERSION:find("^Lua (.*)$")
+version = tonumber(version)
+System.luaVersion = version
 
-function System.mod(x, y) 
-    if y == 0 then
-        throw(System.DivideByZeroException())
-    end
-    return x % y;
-end
+if version < 5.3 then
+    local bit = require("bit")
+    System.bnot = bit.bnot
+    System.band = bit.band
+    System.bor = bit.bor
+    System.xor = bit.bxor
+    System.sl = bit.lshift
+    System.sr = bit.rshift
 
-System.time = time
+    System.div = function (x, y) 
+        if y == 0 then
+            throw(System.DivideByZeroException())
+        end
+        return trunc(x / y)
+    end    
     
-function System.getTimeZone()
-    local now = os.time()
-    return os.difftime(now, os.time(os.date("!*t", now)))
+    System.mod = function (x, y) 
+        if y == 0 then
+            throw(System.DivideByZeroException())
+        end
+        return x % y;
+    end
+    if version == 5.1 then
+        table.unpack = unpack
+    end
+else  
+    load[[
+    System.bnot = function (x) return ~v end 
+    System.band = function (x, y) return x & y end
+    System.bor = function (x, y) return x | y end
+    System.xor = function (x, y) return x ~ y end
+    System.sl  = function (x, y) return x << y end
+    System.sr  = function (x, y) return x >> y end
+    System.div = function (x, y) return x // y end
+    System.mod = function (x, y) return x % y end
+    ]] ()
 end
 
 function System.using(t, f)
@@ -351,7 +360,6 @@ function System.create(t, f)
 end
 
 function System.default(T)
-    assert(T)
     return T.__default__()
 end
 
@@ -483,3 +491,10 @@ function System.namespace(name, f)
     f(namespace)
     curName = nil
 end
+
+local function config(conf) 
+    if conf == nil then return end
+    System.time = conf.time
+end
+
+return config
