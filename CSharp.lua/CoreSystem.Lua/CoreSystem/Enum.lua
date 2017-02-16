@@ -85,7 +85,4 @@ function Enum.TryParse(TEnum, value, ignoreCase)
     return true, result
 end
 
-System.define("System.Enum", Enum);
-
-
-
+System.define("System.Enum", Enum)

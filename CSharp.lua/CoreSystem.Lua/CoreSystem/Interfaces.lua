@@ -83,4 +83,3 @@ end)
 System.defInf("System.IComparer_1", emptyFn)
 System.defInf("System.IEqualityComparer")
 System.defInf("System.IEqualityComparer_1", emptyFn)
-

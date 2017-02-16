@@ -186,8 +186,9 @@ end
 local function testIO()
     local path = "iotest.txt"
     local s = "hero, brige.lua\nIO"
-    System.File.WriteAllText(path, s)
-    local text = System.File.ReadAllText(path)
+    local File = System.IO.File
+    File.WriteAllText(path, s)
+    local text = File.ReadAllText(path)
     assert(text == s)
     os.remove(path)
 end

@@ -47,4 +47,5 @@ return function(dir)
     load("Text.StringBuilder")
     load("Console")
     load("IO.File")
+    load("Reflection.Assembly")
 end

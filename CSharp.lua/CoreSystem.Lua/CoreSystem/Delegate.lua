@@ -229,4 +229,4 @@ function Delegate.GetType(this)
     return System.typeof(Delegate)
 end
 
-System.define("System.Delegate", Delegate);
+System.define("System.Delegate", Delegate)

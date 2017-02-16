@@ -53,7 +53,7 @@ function Assembly.GetName(this)
     return this.FullName;
 end
 
-System.define("System.Reflection.Assembly")
+System.define("System.Reflection.Assembly", Assembly)
 
 entryAssembly = Assembly()
 entryAssembly.FullName = "CSharp.lua, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"

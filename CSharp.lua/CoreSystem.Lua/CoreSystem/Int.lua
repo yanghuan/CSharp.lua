@@ -164,9 +164,3 @@ function Int.__inherits__()
 end
 
 System.defStc("System.Int", Int)
-
-
-
-
-
-

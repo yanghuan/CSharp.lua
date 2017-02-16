@@ -96,4 +96,4 @@ function File.WriteAllLines(path, contents)
     f:close()
 end
 
-System.define("System.File", File)
+System.define("System.IO.File", File)

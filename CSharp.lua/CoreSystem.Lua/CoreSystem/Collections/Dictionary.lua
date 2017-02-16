@@ -207,4 +207,3 @@ System.define("System.Dictionary", function(TKey, TValue)
     }
     return cls
 end, Dictionary)
-

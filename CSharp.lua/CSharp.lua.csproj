@@ -114,7 +114,7 @@
     <None Include="CoreSystem.Lua\CoreSystem\Interfaces.lua" />
     <None Include="CoreSystem.Lua\CoreSystem\IO\File.lua" />
     <None Include="CoreSystem.Lua\CoreSystem\Math.lua" />
-    <None Include="CoreSystem.Lua\CoreSystem\Reflection.lua" />
+    <None Include="CoreSystem.Lua\CoreSystem\Reflection\Assembly.lua" />
     <None Include="CoreSystem.Lua\CoreSystem\String.lua" />
     <None Include="CoreSystem.Lua\CoreSystem\Text\StringBuilder.lua" />
     <None Include="CoreSystem.Lua\CoreSystem\TimeSpan.lua" />

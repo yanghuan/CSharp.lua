@@ -949,7 +949,3 @@ function Enumerable.Max(source, ...)
     end
     return minOrMax(maxFn, source, ...)
 end
-
-
-
-

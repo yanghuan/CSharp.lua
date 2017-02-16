@@ -105,5 +105,4 @@ StringBuilder.ToString = tconcat
 StringBuilder.__tostring = StringBuilder.ToString
 StringBuilder.__len = StringBuilder.GetLength
 
-System.define("System.StringBuilder", StringBuilder)
- 
+System.define("System.Text.StringBuilder", StringBuilder)

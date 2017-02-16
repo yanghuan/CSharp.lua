@@ -100,5 +100,3 @@ function Boolean.__inherits__()
 end
 
 System.defStc("System.Boolean", Boolean)
-
-

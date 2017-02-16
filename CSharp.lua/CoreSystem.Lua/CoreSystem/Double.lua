@@ -156,5 +156,3 @@ function Double.__inherits__()
 end
 
 System.defStc("System.Double", Double)
-
-

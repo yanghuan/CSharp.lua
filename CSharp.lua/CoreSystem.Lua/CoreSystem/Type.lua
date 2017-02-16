@@ -242,6 +242,7 @@ function Type.GetTypeStatic(typeName, throwOnError, ignoreCase)
         end
         return nil
     end
+    assert(not ignoreCase, "NoSupport")
     local cls = getclass(typeName)
     if cls ~= nil then
         return typeof(cls)

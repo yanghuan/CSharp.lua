@@ -72,11 +72,3 @@ end
 
 Math.Truncate = System.trunc
 System.define("System.Math", Math)
-
-
-
-
-
-
-
-

@@ -439,5 +439,3 @@ end
 
 System.define("System.String", String)
 setmetatable(String, { __index = System.Object, __call = ctor })
-
-

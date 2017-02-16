@@ -124,5 +124,3 @@ System.define("System.Comparer_1", function(T)
     end
     return cls
 end, Comparer)
-
-
