@@ -299,7 +299,7 @@ namespace CSharpLua {
         }
 
         private bool IsPropertyField(IPropertySymbol symbol) {
-            return symbol.IsPropertyField() || XmlMetaProvider.IsPropertyField(symbol);
+            return generator_.IsPropertyField(symbol);
         }
 
         private INamedTypeSymbol GetTypeDeclarationSymbol(SyntaxNode node) {
@@ -713,7 +713,7 @@ namespace CSharpLua {
                             }
                         case SymbolKind.Property: {
                                 IPropertySymbol memberSymbol = (IPropertySymbol)member;
-                                if(memberSymbol.IsPropertyField()) {
+                                if(IsPropertyField(memberSymbol)) {
                                     LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
                                     AddStructCloneMethodItem(cloneTable, name, memberSymbol.Type);
                                     filelds.Add(name);

@@ -5,6 +5,7 @@ local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local MicrosoftCodeAnalysisCSharpSyntax = Microsoft.CodeAnalysis.CSharp.Syntax
 local SystemCollectionsImmutable = System.Collections.Immutable
+local SystemText = System.Text
 local SystemTextRegularExpressions = System.Text.RegularExpressions
 local CSharpLua
 local CSharpLuaLuaAst
@@ -217,11 +218,11 @@ System.namespace("CSharpLua", function (namespace)
         VisitNameColon, VisitAttributeArgumentList, VisitNameEquals, BuildObjectCreationInvocation, VisitAttribute, BuildAttributes, AddStructCloneMethodItem, AddStructDefaultMethod, 
         AddStructCloneMethod, AddStructEqualsObjMethod, BuildStructMethods, CheckValueTypeClone, CheckValueTypeClone1, VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitInitializerExpression, 
         VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, 
-        VisitImplicitArrayCreationExpression, BuildCallBaseConstructor, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitTypeParameter, 
-        VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, 
-        VisitTryStatement, VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, 
-        VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, __staticCtor__, __init__, 
-        __ctor__
+        VisitImplicitArrayCreationExpression, BuildCallBaseConstructor, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitAnonymousMethodExpression, 
+        VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, 
+        VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, 
+        VisitElementBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, __staticCtor__, 
+        __init__, __ctor__
         getXmlMetaProvider = function (this) 
             return this.generator_.XmlMetaProvider
         end
@@ -780,7 +781,7 @@ System.namespace("CSharpLua", function (namespace)
                         end
                         AddField(this, type, typeSymbol, node:getIdentifier(), default, isImmutable, isStatic, isPrivate, isReadOnly, node:getAttributeLists())
                     else
-                        local isAuto = CSharpLua.Utility.IsPropertyField(MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node, nil))
+                        local isAuto = IsPropertyField(this, MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node, nil))
                         if isAuto then
                             local isReadOnly = node:getAccessorList():getAccessors():getCount() == 1 and node:getAccessorList():getAccessors():get(0):getBody() == nil
                             local extern = node:getInitializer()
@@ -1729,6 +1730,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         FillInvocationArgument = function (this, arguments, node, parameters) 
             local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            assert(expression ~= nil)
             expression = CheckValueTypeClone(this, node:getExpression(), expression)
             if node:getNameColon() ~= nil then
                 local name = node:getNameColon():getName():getIdentifier():getValueText()
@@ -2283,11 +2285,18 @@ System.namespace("CSharpLua", function (namespace)
 
             local originalType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node:getExpression(), nil):getType()
             local targetType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node:getType(), nil):getType()
-            if originalType:getTypeKind() == 5 --[[TypeKind.Enum]] or targetType:getTypeKind() == 5 --[[TypeKind.Enum]] then
-                return expression
+
+            if targetType:getTypeKind() == 5 --[[TypeKind.Enum]] then
+                if originalType:getTypeKind() == 5 --[[TypeKind.Enum]] or CSharpLua.Utility.IsIntegerType(originalType) then
+                    return expression
+                end
             end
 
             if CSharpLua.Utility.IsIntegerType(targetType) then
+                if originalType:getTypeKind() == 5 --[[TypeKind.Enum]] then
+                    return expression
+                end
+
                 if originalType:getSpecialType() == 19 --[[SpecialType.System_Double]] or originalType:getSpecialType() == 18 --[[SpecialType.System_Single]] then
                     return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Trunc, expression)
                 end
@@ -2521,7 +2530,7 @@ System.namespace("CSharpLua", function (namespace)
             return codeTemplateExpression
         end
         IsPropertyField = function (this, symbol) 
-            return CSharpLua.Utility.IsPropertyField(symbol) or getXmlMetaProvider(this):IsPropertyField(symbol)
+            return this.generator_:IsPropertyField(symbol)
         end
         GetTypeDeclarationSymbol = function (this, node) 
             local typeDeclaration = System.cast(MicrosoftCodeAnalysisCSharpSyntax.TypeDeclarationSyntax, FindParent(this, node, function (i) 
@@ -2911,7 +2920,7 @@ System.namespace("CSharpLua", function (namespace)
                         elseif default == 15 --[[SymbolKind.Property]] then
                             do
                                 local memberSymbol = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, member)
-                                if CSharpLua.Utility.IsPropertyField(memberSymbol) then
+                                if IsPropertyField(this, memberSymbol) then
                                     local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, member:getName())
                                     AddStructCloneMethodItem(this, cloneTable, name, memberSymbol:getType())
                                     filelds:Add(name)
@@ -3284,6 +3293,9 @@ System.namespace("CSharpLua", function (namespace)
             return VisitLambdaExpression(this, System.Array(MicrosoftCodeAnalysisCSharpSyntax.ParameterSyntax)(node:getParameter()), node:getBody())
         end
         VisitParenthesizedLambdaExpression = function (this, node) 
+            return VisitLambdaExpression(this, node:getParameterList():getParameters(), node:getBody())
+        end
+        VisitAnonymousMethodExpression = function (this, node) 
             return VisitLambdaExpression(this, node:getParameterList():getParameters(), node:getBody())
         end
         VisitTypeParameter = function (this, node) 
@@ -3671,7 +3683,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         VisitInterpolatedStringExpression = function (this, node) 
             local index = 0
-            local sb = System.StringBuilder()
+            local sb = SystemText.StringBuilder()
             local expressions = System.List(CSharpLuaLuaAst.LuaExpressionSyntax)()
             for _, content in System.each(node:getContents()) do
                 if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(content, 8919 --[[SyntaxKind.InterpolatedStringText]]) then
@@ -3817,6 +3829,7 @@ System.namespace("CSharpLua", function (namespace)
             VisitSimpleBaseType = VisitSimpleBaseType, 
             VisitSimpleLambdaExpression = VisitSimpleLambdaExpression, 
             VisitParenthesizedLambdaExpression = VisitParenthesizedLambdaExpression, 
+            VisitAnonymousMethodExpression = VisitAnonymousMethodExpression, 
             VisitTypeParameter = VisitTypeParameter, 
             VisitTypeOfExpression = VisitTypeOfExpression, 
             VisitThrowStatement = VisitThrowStatement, 

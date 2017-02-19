@@ -34,9 +34,9 @@ System.namespace("CSharpLua", function (namespace)
                     default = (lib or "") .. ".dll" --[[Worker.kDllSuffix]]
                 end
                 local path = default
-                if not System.File.Exists(path) then
+                if not SystemIO.File.Exists(path) then
                     local file = SystemIO.Path.Combine(runtimeDir, SystemIO.Path.GetFileName(path))
-                    if not System.File.Exists(file) then
+                    if not SystemIO.File.Exists(file) then
                         System.throw(CSharpLua.CmdArgumentException(("lib '{0}' is not found"):Format(path)))
                     end
                     path = file
@@ -52,7 +52,7 @@ System.namespace("CSharpLua", function (namespace)
             local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(6, 1, 0, this.defines_)
             local files = SystemIO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]])
             local syntaxTrees = Linq.Select(files, function (file) 
-                return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(System.File.ReadAllText(file), parseOptions, file, nil, nil)
+                return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(SystemIO.File.ReadAllText(file), parseOptions, file, nil, nil)
             end, MicrosoftCodeAnalysis.SyntaxTree)
             local references = Linq.Select(getLibs(this), function (i) 
                 return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, nil, nil)

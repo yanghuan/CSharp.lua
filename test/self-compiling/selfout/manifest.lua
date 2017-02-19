@@ -126,6 +126,7 @@ return function (dir)
         "CSharpLua.LuaAst.LuaWhileStatementSyntax", 
         "CSharpLua.LuaRenderer", 
         "CSharpLua.LuaSyntaxGenerator", 
+        "CSharpLua.LuaSyntaxGenerator.InterfacePeopertysChecker", 
         "CSharpLua.LuaSyntaxGenerator.SettingInfo", 
         "CSharpLua.LuaSyntaxNodeTransfor", 
         "CSharpLua.LuaSyntaxNodeTransfor.BlockCommonNode", 
@@ -148,6 +149,7 @@ return function (dir)
         "CSharpLua.XmlMetaProvider.XmlMetaModel.MethodModel", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel.NamespaceModel", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel.PropertyModel", 
+        "CSharpLua.XmlMetaProvider.XmlMetaModel.PropertyModel.FieldPropery", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel.TemplateModel"
     })
 end

@@ -28,7 +28,7 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     public sealed class XmlMetaProvider {
-        [XmlRoot("assembly")]
+        [XmlRoot("meta")]
         public sealed class XmlMetaModel {
             public sealed class TemplateModel {
                 [XmlAttribute]
@@ -36,16 +36,21 @@ namespace CSharpLua {
             }
 
             public sealed class PropertyModel {
+                public sealed class FieldPropery {
+                    [XmlAttribute]
+                    public bool IsField;
+                }
+
                 [XmlAttribute]
                 public string name;
                 [XmlAttribute]
                 public string Name;
-                [XmlAttribute]
-                public bool IsAutoField;
                 [XmlElement]
                 public TemplateModel set;
                 [XmlElement]
                 public TemplateModel get;
+                [XmlElement]
+                public FieldPropery field;
             }
 
             public sealed class FieldModel {
@@ -101,8 +106,13 @@ namespace CSharpLua {
                 public ClassModel[] Classes;
             }
 
-            [XmlElement("namespace")]
-            public NamespaceModel[] Namespaces;
+            public sealed class AssemblyModel {
+                [XmlElement("namespace")]
+                public NamespaceModel[] Namespaces;
+            }
+
+            [XmlElement("assembly")]
+            public AssemblyModel Assembly;
         }
 
         private enum MethodMetaType {
@@ -305,8 +315,9 @@ namespace CSharpLua {
                 try {
                     using(Stream stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                         XmlMetaModel model = (XmlMetaModel)xmlSeliz.Deserialize(stream);
-                        if(model.Namespaces != null) {
-                            foreach(var namespaceModel in model.Namespaces) {
+                        var assembly = model.Assembly;
+                        if(assembly != null && assembly.Namespaces != null) {
+                            foreach(var namespaceModel in assembly.Namespaces) {
                                 LoadNamespace(namespaceModel);
                             }
                         }
@@ -461,12 +472,14 @@ namespace CSharpLua {
             return typeMetas_.GetOrDefault(typeName);
         }
 
-        public bool IsPropertyField(IPropertySymbol symbol) {
+        public bool? IsPropertyField(IPropertySymbol symbol) {
             if(MayHaveCodeMeta(symbol)) {
                 var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
-                return info != null && info.IsAutoField;
+                if(info != null && info.field != null) {
+                    return info.field.IsField;
+                }
             }
-            return false;
+            return null;
         }
 
         public string GetFieldCodeTemplate(IFieldSymbol symbol) {

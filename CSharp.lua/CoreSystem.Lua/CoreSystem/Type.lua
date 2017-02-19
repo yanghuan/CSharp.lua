@@ -259,7 +259,7 @@ function isInterfaceOf(t, ifaceType)
     local interfaces = t.__interfaces__
     if interfaces then
        for _, i in ipairs(interfaces) do
-           if i == ifaceType or  isInterfaceOf(i, ifaceType) then
+           if i == ifaceType or isInterfaceOf(i, ifaceType) then
                return true
            end
        end 

@@ -299,7 +299,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end
         IsPropertyField = function (symbol) 
-            if IsOverridable(symbol) then
+            if not IsFromCode(symbol) or IsOverridable(symbol) then
                 return false
             end
 
@@ -335,7 +335,7 @@ System.namespace("CSharpLua", function (namespace)
             return false
         end
         IsEventFiled = function (symbol) 
-            if IsOverridable(symbol) then
+            if not IsFromCode(symbol) or IsOverridable(symbol) then
                 return false
             end
 
