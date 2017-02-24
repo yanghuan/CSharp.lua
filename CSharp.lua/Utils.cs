@@ -277,7 +277,7 @@ namespace CSharpLua {
         }
 
         public static bool IsPropertyField(this IPropertySymbol symbol) {
-            if(symbol.IsOverridable()) {
+            if(!symbol.IsFromCode() || symbol.IsOverridable()) {
                 return false;
             }
 
@@ -316,7 +316,7 @@ namespace CSharpLua {
         }
 
         public static bool IsEventFiled(this IEventSymbol symbol) {
-            if(symbol.IsOverridable()) {
+            if(!symbol.IsFromCode() || symbol.IsOverridable()) {
                 return false;
             }
 

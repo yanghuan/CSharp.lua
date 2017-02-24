@@ -35,7 +35,18 @@ namespace CSharpLua {
         public LuaCompilationUnitSyntax CompilationUnit;
 
         public int CompareTo(PartialTypeDeclaration other) {
-            return CompilationUnit.FilePath.Length.CompareTo(other.CompilationUnit.FilePath.Length);
+            string filePath = CompilationUnit.FilePath;
+            string otherFilePath = other.CompilationUnit.FilePath;
+
+            if(filePath.Contains(otherFilePath)) {
+                return 1;
+            }
+            else if(otherFilePath.Contains(filePath)) {
+                return -1;
+            }
+            else {
+                return other.Node.Members.Count.CompareTo(Node.Members.Count);
+            }
         }
     }
 
@@ -92,6 +103,7 @@ namespace CSharpLua {
             if(attributes != null) {
                 exportAttributes_ = new HashSet<string>(attributes);
             }
+            CheckIndirecInterfacePropertyFields();
         }
 
         private IEnumerable<LuaCompilationUnitSyntax> Create() {
@@ -776,5 +788,68 @@ namespace CSharpLua {
         }
 
         #endregion
+        private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
+
+        private sealed class InterfacePeopertysChecker : CSharpSyntaxWalker {
+            private SemanticModel semanticModel_;
+            private HashSet<INamedTypeSymbol> classTypes_ = new HashSet<INamedTypeSymbol>();
+            private HashSet<IPropertySymbol> mustBePropertys_ = new HashSet<IPropertySymbol>();
+
+            public InterfacePeopertysChecker(CSharpCompilation compilation) {
+                foreach(SyntaxTree syntaxTree in compilation.SyntaxTrees) {
+                    semanticModel_ = compilation.GetSemanticModel(syntaxTree);
+                    Visit(syntaxTree.GetRoot());
+                }
+                CheckPropertyFields();
+            }
+
+            public override void VisitClassDeclaration(ClassDeclarationSyntax node) {
+                var typeSymbol = semanticModel_.GetDeclaredSymbol(node);
+                if(!typeSymbol.IsStatic) {
+                    classTypes_.Add(typeSymbol);
+                }
+            }
+
+            public void CheckPropertyFields() {
+                foreach(var type in classTypes_) {
+                    foreach(var baseInterface in type.AllInterfaces) {
+                        foreach(IPropertySymbol property in baseInterface.GetMembers().OfType<IPropertySymbol>()) {
+                            var implementationProperty = (IPropertySymbol)type.FindImplementationForInterfaceMember(property);
+                            if(implementationProperty.ContainingType != type) {
+                                mustBePropertys_.Add(implementationProperty);
+                            }
+                        }
+                    }
+                }
+            }
+
+            public IEnumerable<IPropertySymbol> Property {
+                get {
+                    return mustBePropertys_;
+                }
+            }
+        }
+
+        private void CheckIndirecInterfacePropertyFields() {
+            var checker = new InterfacePeopertysChecker(compilation_);
+            foreach(var property in checker.Property) {
+                isFieldPropertys_.Add(property, false);
+            }
+        }
+
+        public bool IsPropertyField(IPropertySymbol symbol) {
+            bool isAutoField;
+            if(!isFieldPropertys_.TryGetValue(symbol, out isAutoField)) {
+                bool? isMateField = XmlMetaProvider.IsPropertyField(symbol);
+                if(isMateField.HasValue) {
+                    isAutoField = isMateField.Value;
+                }
+                else {
+                    isAutoField = symbol.IsPropertyField();
+                }
+                isFieldPropertys_.Add(symbol, isAutoField);
+            }
+            return isAutoField;
+        }
     }
 }

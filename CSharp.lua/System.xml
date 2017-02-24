@@ -1,280 +1,303 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<assembly>
+<!--
+Copyright 2016 YANG Huan (sy.yanghuan@gmail.com).
+Copyright 2016 Redmoon Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+!-->
+<meta>
+  <assembly>
     <namespace name="System">
-        <class name="Byte" Name="System.Int">
-            <method name="Parse" Name="ParseByte" />
-            <method name="TryParse" Name="TryParseByte" />
-        </class>
-        <class name="Int16" Name="System.Int" >
-            <method name="Parse" Name="ParseInt16" />
-            <method name="TryParse" Name="TryParseInt16" />
-        </class>
-        <class name="Int32" Name="System.Int" />
-        <class name="Int64" Name="System.Int" >
-            <method name="Parse" Name="ParseInt64" />
-            <method name="TryParse" Name="TryParseInt64" />
-        </class>
-        <class name="SByte" Name="System.Int" >
-            <method name="Parse" Name="ParseSByte" />
-            <method name="TryParse" Name="TryParseSByte" />
-        </class>
-        <class name="UInt16" Name="System.Int" >
-            <method name="Parse" Name="ParseUInt16" />
-            <method name="TryParse" Name="TryParseUInt16" />
-        </class>
-        <class name="UInt32" Name="System.Int" >
-            <method name="Parse" Name="ParseUInt32" />
-            <method name="TryParse" Name="TryParseUInt32" />
-        </class>
-        <class name="UInt64" Name="System.Int" >
-            <method name="Parse" Name="ParseUInt64" />
-            <method name="TryParse" Name="TryParseUInt64" />
-        </class>
-        <class name="Single" Name="System.Double" >
-            <field name="NaN" Template="System.Double.NaN" />
-            <field name="NegativeInfinity" Template="System.Double.NegInf" />
-            <field name="PositiveInfinity" Template="System.Double.PosInf" />
-            <method name="Parse" Name="ParseSingle" />
-            <method name="TryParse" Name="TryParseSingle" />
-        </class>
-        <class name="Double">
-            <field name="NaN" Template="System.Double.NaN" />
-            <field name="NegativeInfinity" Template="System.Double.NegInf" />
-            <field name="PositiveInfinity" Template="System.Double.PosInf" />
-        </class>
-        <class name="String">
-            <field name="Empty" Template="&quot;&quot;" />
-            <property name="Length">
-                <get Template="#{this}" />
-            </property>
-        </class>
-        <class name="Enum">
-            <method name="TryParse" ArgCount="2" Template="System.Enum.TryParse({^0}, {0})" />
-            <method name="TryParse" ArgCount="3" Template="System.Enum.TryParse({^0}, {0}, {1})" />
-            <method name="ToString" Template="{this}:ToEnumString({class})" />
-        </class>
-        <class name="Object">
-            <method name="Equals" Name="EqualsObj" >
-                <arg type="System.Object" />
-            </method>
-            <method name="Equals" Name="EqualsStatic" >
-                <arg type="System.Object" />
-                <arg type="System.Object" />
-            </method>
-        </class>
-        <class name="Type">
-            <method name="GetType" ArgCount ="1" Name="GetTypeStatic" />
-            <method name="GetType" ArgCount ="2" Name="GetTypeStatic" />
-            <method name="GetType" ArgCount ="3" Name="GetTypeStatic" />
-        </class>
-        <class name="Array">
-            <property name="Length">
-                <get Template="#{this}" />
-            </property>
-        </class>
-        <class name="IComparable">
-            <method name="CompareTo" Name="CompareToObj" />
-        </class>
-        <class name="Console">
-            <method name="Write" Name="WriteChar" >
-                <arg type="System.Char" />
-            </method>
-            <method name="WriteLine" Name="WriteLineChar" >
-                <arg type="System.Char" />
-            </method>
-        </class>
-        <class name="Math" Name="math" />
-        <class name="Activator" >
-            <method name="CreateInstance" ArgCount="0" Template="{^0}()" />
-            <method name="CreateInstance" ArgCount="1" Template="{0}.c()" />
-            <method name="CreateInstance" ArgCount="2" Template="System.CreateInstance({0}, {*1})" />
-        </class>
-        <class name="Environment">
-            <method name="Exit" Template="os.exit({0})" />
-            <property name="TickCount">
-                <get Template="(os.clock() * 1000)" />
-            </property>
-            <property name="StackTrace">
-                <get Template="debug.traceback()" />
-            </property>
-        </class>
-        <class name="TimeZoneInfo">
-            <property name="BaseUtcOffset" >
-                <get Template="System.DateTime.BaseUtcOffset" />
-            </property>    
-        </class>
+      <class name="Byte" Name="System.Int">
+        <method name="Parse" Name="ParseByte" />
+        <method name="TryParse" Name="TryParseByte" />
+      </class>
+      <class name="Int16" Name="System.Int" >
+        <method name="Parse" Name="ParseInt16" />
+        <method name="TryParse" Name="TryParseInt16" />
+      </class>
+      <class name="Int32" Name="System.Int" />
+      <class name="Int64" Name="System.Int" >
+        <method name="Parse" Name="ParseInt64" />
+        <method name="TryParse" Name="TryParseInt64" />
+      </class>
+      <class name="SByte" Name="System.Int" >
+        <method name="Parse" Name="ParseSByte" />
+        <method name="TryParse" Name="TryParseSByte" />
+      </class>
+      <class name="UInt16" Name="System.Int" >
+        <method name="Parse" Name="ParseUInt16" />
+        <method name="TryParse" Name="TryParseUInt16" />
+      </class>
+      <class name="UInt32" Name="System.Int" >
+        <method name="Parse" Name="ParseUInt32" />
+        <method name="TryParse" Name="TryParseUInt32" />
+      </class>
+      <class name="UInt64" Name="System.Int" >
+        <method name="Parse" Name="ParseUInt64" />
+        <method name="TryParse" Name="TryParseUInt64" />
+      </class>
+      <class name="Single" Name="System.Double" >
+        <field name="NaN" Template="System.Double.NaN" />
+        <field name="NegativeInfinity" Template="System.Double.NegInf" />
+        <field name="PositiveInfinity" Template="System.Double.PosInf" />
+        <method name="Parse" Name="ParseSingle" />
+        <method name="TryParse" Name="TryParseSingle" />
+      </class>
+      <class name="Double">
+        <field name="NaN" Template="System.Double.NaN" />
+        <field name="NegativeInfinity" Template="System.Double.NegInf" />
+        <field name="PositiveInfinity" Template="System.Double.PosInf" />
+      </class>
+      <class name="String">
+        <field name="Empty" Template="&quot;&quot;" />
+        <property name="Length">
+          <get Template="#{this}" />
+        </property>
+      </class>
+      <class name="Enum">
+        <method name="TryParse" ArgCount="2" Template="System.Enum.TryParse({^0}, {0})" />
+        <method name="TryParse" ArgCount="3" Template="System.Enum.TryParse({^0}, {0}, {1})" />
+        <method name="ToString" Template="{this}:ToEnumString({class})" />
+      </class>
+      <class name="Object">
+        <method name="Equals" Name="EqualsObj" >
+          <arg type="System.Object" />
+        </method>
+        <method name="Equals" Name="EqualsStatic" >
+          <arg type="System.Object" />
+          <arg type="System.Object" />
+        </method>
+      </class>
+      <class name="Type">
+        <method name="GetType" ArgCount ="1" Name="GetTypeStatic" />
+        <method name="GetType" ArgCount ="2" Name="GetTypeStatic" />
+        <method name="GetType" ArgCount ="3" Name="GetTypeStatic" />
+      </class>
+      <class name="Array">
+        <property name="Length">
+          <get Template="#{this}" />
+        </property>
+      </class>
+      <class name="IComparable">
+        <method name="CompareTo" Name="CompareToObj" />
+      </class>
+      <class name="Console">
+        <method name="Write" Name="WriteChar" >
+          <arg type="System.Char" />
+        </method>
+        <method name="WriteLine" Name="WriteLineChar" >
+          <arg type="System.Char" />
+        </method>
+      </class>
+      <class name="Math" Name="math" />
+      <class name="Activator" >
+        <method name="CreateInstance" ArgCount="0" Template="{^0}()" />
+        <method name="CreateInstance" ArgCount="1" Template="{0}.c()" />
+        <method name="CreateInstance" ArgCount="2" Template="System.CreateInstance({0}, {*1})" />
+      </class>
+      <class name="Environment">
+        <method name="Exit" Template="os.exit({0})" />
+        <property name="TickCount">
+          <get Template="(os.clock() * 1000)" />
+        </property>
+        <property name="StackTrace">
+          <get Template="debug.traceback()" />
+        </property>
+      </class>
+      <class name="TimeZoneInfo">
+        <property name="BaseUtcOffset" >
+          <get Template="System.DateTime.BaseUtcOffset" />
+        </property>
+      </class>
     </namespace>
     <namespace name="System.Collections" Name="System" />
     <namespace name="System.Collections.Generic" Name="System">
-        <class name="List^1" Name="System.List">
-            <property name="Count">
-                <get Template="#{this}" />
-            </property>
-        </class>
-        <class name="Dictionary^2" Name="System.Dictionary"/>
-        <class name="Queue^1" Name="System.Queue">
-            <property name="Count">
-                <get Template="#{this}" />
-            </property>
-        </class>
-        <class name="Stack^1" Name="System.Stack">
-            <property name="Count">
-                <get Template="#{this}" />
-            </property>
-        </class>
-        <class name="LinkedList^1" Name="System.LinkedList" />
-        <class name="LinkedListNode^1" Name="System.LinkedListNode">
-            <property name="Value" IsAutoField="true" />
-            <property name="List" IsFAutoield="true" />
-        </class>
-        <class name="HashSet^1" Name="System.HashSet" />
-        <class name="EqualityComparer^1">
-            <method name="Equals" Template="{this}.Equals({0}, {1})" />
-            <method name="GetHashCode" Template="{this}.GetHashCode({0})" />
-        </class>
-        <class name="Comparer^1">
-            <method name="Compare" Template="{this}.Compare({0}, {1})" />
-        </class>
+      <class name="List^1" Name="System.List">
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+      </class>
+      <class name="Dictionary^2" Name="System.Dictionary"/>
+      <class name="Queue^1" Name="System.Queue">
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+      </class>
+      <class name="Stack^1" Name="System.Stack">
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+      </class>
+      <class name="LinkedList^1" Name="System.LinkedList" />
+      <class name="LinkedListNode^1" Name="System.LinkedListNode">
+        <property name="Value">
+          <field IsField="true" />
+        </property>
+        <property name="List">
+          <field IsField="true" />
+        </property>
+      </class>
+      <class name="HashSet^1" Name="System.HashSet" />
+      <class name="EqualityComparer^1">
+        <method name="Equals" Template="{this}.Equals({0}, {1})" />
+        <method name="GetHashCode" Template="{this}.GetHashCode({0})" />
+      </class>
+      <class name="Comparer^1">
+        <method name="Compare" Template="{this}.Compare({0}, {1})" />
+      </class>
     </namespace>
     <namespace name="System.Linq">
-        <class name="Enumerable">
-            <method name="Where" Template="Linq.Where({0}, {1})" />
-            <method name="Select" Template="Linq.Select({0}, {1}, {^1})" />
-            <method name="SelectMany" Template="Linq.SelectMany({0}, {1}, {^1})" />
-            <method name="Take" Template="Linq.Take({0}, {1})" />
-            <method name="TakeWhile" Template="Linq.TakeWhile({0}, {1})" />
-            <method name="Skip" Template="Linq.Skip({0}, {1})" />
-            <method name="SkipWhile" Template="Linq.SkipWhile({0}, {1})" />
-            <method name="GroupBy" ArgCount="2" Template="Linq.GroupBy({0}, {1}, {^1})" />
-            <method name="GroupBy" Template="Linq.GroupBy({0}, {1}, {2}, {^1})" >
-                  <arg type="System.Collections.Generic.IEnumerable^1" />
-                  <arg type="System.Func^2" />
-                  <arg type="System.Collections.Generic.IEqualityComparer^1" />
-             </method>
-            <method name="GroupBy" Template="Linq.GroupBy({0}, {1}, {2}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-            </method>
-            <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^3" />
-            </method>
-            <method name="GroupBy" Template="Linq.GroupBy({0}, {1}, {2}, {3}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-                <arg type="System.Collections.Generic.IEqualityComparer^1" />
-            </method>
-            <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {3}, {^1}, {^2}, {^3})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^3" />
-            </method>
-            <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {3}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^3" />
-                <arg type="System.Collections.Generic.IEqualityComparer^1" />
-            </method>
-            <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {3}, {4}, {^1}, {^2}, {^3})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^3" />
-                <arg type="System.Collections.Generic.IEqualityComparer^1" />
-            </method>
-            <method name="Concat" Template="Linq.Concat({0}, {1})" />
-            <method name="Zip" Template="Linq.Zip({0, {1}, {2}}, {^2})" />
-            <method name="Distinct" Template="Linq.Distinct({0}, {1})" />
-            <method name="Union" Template="Linq.Union({0}, {1}, {2})" />
-            <method name="Intersect" Template="Linq.Intersect({0}, {1}, {2})" />
-            <method name="Except" Template="Linq.Except({0}, {1}, {2})" />
-            <method name="Reverse" Template="Linq.Reverse({0})" />
-            <method name="SequenceEqual" Template="Linq.SequenceEqual({0}, {1})" />
-            <method name="ToArray" Template="Linq.ToArray({0})" />
-            <method name="ToList" Template="Linq.ToList({0})" />
-            <method name="ToDictionary" ArgCount="2" Template="Linq.ToDictionary({0}, {1}, {^1})" />
-            <method name="ToDictionary" Template="Linq.ToDictionary({0}, {1}, {2}, {^1})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Collections.Generic.IEqualityComparer^1" />
-            </method>
-            <method name="ToDictionary" Template="Linq.ToDictionary({0}, {1}, {2}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-            </method>
-            <method name="ToDictionary" Template="Linq.ToDictionary({0}, {1}, {2}, {3}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-                <arg type="System.Collections.Generic.IEqualityComparer^1" />
-            </method>
-            <method name="ToLookup" ArgCount="2" Template="Linq.ToLookup({0}, {1}, {^1})" />
-            <method name="ToLookup" Template="Linq.ToLookup({0}, {1}, {2}, {^1})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Collections.Generic.IEqualityComparer^1" />
-            </method>
-            <method name="ToLookup" Template="Linq.ToLookup({0}, {1}, {2}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-            </method>
-            <method name="ToLookup" Template="Linq.ToLookup({0}, {1}, {2}, {3}, {^1}, {^2})" >
-                <arg type="System.Collections.Generic.IEnumerable^1" />
-                <arg type="System.Func^2" />
-                <arg type="System.Func^2" />
-                <arg type="System.Collections.Generic.IEqualityComparer^1" />
-            </method>
-            <method name="First" Template="Linq.First({0}, {1})" />
-            <method name="FirstOrDefault" Template="Linq.FirstOrDefault({0}, {1})" />
-            <method name="Last" Template="Linq.Last({0}, {1})" />
-            <method name="LastOrDefault" Template="Linq.LastOrDefault({0}, {1})" />
-            <method name="Single" Template="Linq.Single({0, {1}})" />
-            <method name="SingleOrDefault" Template="Linq.SingleOrDefault({0}, {1})" />
-            <method name="ElementAt" Template="Linq.ElementAt({0}, {1})" />
-            <method name="ElementAtOrDefault" Template="Linq.ElementAtOrDefault({0}, {1})" />
-            <method name="Any" Template="Linq.Any({0}, {1})" />
-            <method name="All" Template="Linq.All({0}, {1})" />
-            <method name="Count" Template="Linq.Count({0}, {1})" />
-            <method name="Contains" Template="Linq.Contains({0}, {1}, {2})" />
-            <method name="Aggregate" Template="Linq.Aggregate({0}, {1}, {2})" />
-            <method name="Sum" Template="Linq.Sum({0}, {1})" />
-            <method name="Min" ArgCount="1"  Template="Linq.Min({0})" />
-            <method name="Min" ArgCount="2" RetType="System.Int32" Template="Linq.Min({0}, {1}, System.Int)" />
-            <method name="Min" ArgCount="2" RetType="System.Int64" Template="Linq.Min({0}, {1}, System.Int)" />
-            <method name="Min" ArgCount="2" RetType="System.Single" Template="Linq.Min({0}, {1}, System.Double)" />
-            <method name="Min" ArgCount="2" RetType="System.Double" Template="Linq.Min({0}, {1}, System.Double)" />
-            <method name="Min" ArgCount="2" RetType="System.Decimal" Template="Linq.Min({0}, {1}, System.Decimal)" />
-            <method name="Min" ArgCount="2" GenericArgCount="2" Template="Linq.Min({0}, {1}, {^1})" />
-            <method name="Max" ArgCount="1" Template="Linq.Max({0})" />
-            <method name="Max" ArgCount="2" RetType="System.Int32" Template="Linq.Max({0}, {1}, System.Int)" />
-            <method name="Max" ArgCount="2" RetType="System.Int64" Template="Linq.Max({0}, {1}, System.Int)" />
-            <method name="Max" ArgCount="2" RetType="System.Single" Template="Linq.Max({0}, {1}, System.Double)" />
-            <method name="Max" ArgCount="2" RetType="System.Double" Template="Linq.Max({0}, {1}, System.Double)" />
-            <method name="Max" ArgCount="2" RetType="System.Decimal" Template="Linq.Max({0}, {1}, System.Decimal)" />
-            <method name="Max" ArgCount="2" GenericArgCount="2" Template="Linq.Max({0}, {1}, {^1})" />
-        </class>
+      <class name="Enumerable">
+        <method name="Where" Template="Linq.Where({0}, {1})" />
+        <method name="Select" Template="Linq.Select({0}, {1}, {^1})" />
+        <method name="SelectMany" Template="Linq.SelectMany({0}, {1}, {^1})" />
+        <method name="Take" Template="Linq.Take({0}, {1})" />
+        <method name="TakeWhile" Template="Linq.TakeWhile({0}, {1})" />
+        <method name="Skip" Template="Linq.Skip({0}, {1})" />
+        <method name="SkipWhile" Template="Linq.SkipWhile({0}, {1})" />
+        <method name="GroupBy" ArgCount="2" Template="Linq.GroupBy({0}, {1}, {^1})" />
+        <method name="GroupBy" Template="Linq.GroupBy({0}, {1}, {2}, {^1})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="GroupBy" Template="Linq.GroupBy({0}, {1}, {2}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+        </method>
+        <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^3" />
+        </method>
+        <method name="GroupBy" Template="Linq.GroupBy({0}, {1}, {2}, {3}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {3}, {^1}, {^2}, {^3})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^3" />
+        </method>
+        <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {3}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^3" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="GroupBy" Template="Linq.GroupBySelect({0}, {1}, {2}, {3}, {4}, {^1}, {^2}, {^3})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^3" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="Concat" Template="Linq.Concat({0}, {1})" />
+        <method name="Zip" Template="Linq.Zip({0, {1}, {2}}, {^2})" />
+        <method name="Distinct" Template="Linq.Distinct({0}, {1})" />
+        <method name="Union" Template="Linq.Union({0}, {1}, {2})" />
+        <method name="Intersect" Template="Linq.Intersect({0}, {1}, {2})" />
+        <method name="Except" Template="Linq.Except({0}, {1}, {2})" />
+        <method name="Reverse" Template="Linq.Reverse({0})" />
+        <method name="SequenceEqual" Template="Linq.SequenceEqual({0}, {1})" />
+        <method name="ToArray" Template="Linq.ToArray({0})" />
+        <method name="ToList" Template="Linq.ToList({0})" />
+        <method name="ToDictionary" ArgCount="2" Template="Linq.ToDictionary({0}, {1}, {^1})" />
+        <method name="ToDictionary" Template="Linq.ToDictionary({0}, {1}, {2}, {^1})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="ToDictionary" Template="Linq.ToDictionary({0}, {1}, {2}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+        </method>
+        <method name="ToDictionary" Template="Linq.ToDictionary({0}, {1}, {2}, {3}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="ToLookup" ArgCount="2" Template="Linq.ToLookup({0}, {1}, {^1})" />
+        <method name="ToLookup" Template="Linq.ToLookup({0}, {1}, {2}, {^1})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="ToLookup" Template="Linq.ToLookup({0}, {1}, {2}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+        </method>
+        <method name="ToLookup" Template="Linq.ToLookup({0}, {1}, {2}, {3}, {^1}, {^2})" >
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+          <arg type="System.Func^2" />
+          <arg type="System.Func^2" />
+          <arg type="System.Collections.Generic.IEqualityComparer^1" />
+        </method>
+        <method name="First" Template="Linq.First({0}, {1})" />
+        <method name="FirstOrDefault" Template="Linq.FirstOrDefault({0}, {1})" />
+        <method name="Last" Template="Linq.Last({0}, {1})" />
+        <method name="LastOrDefault" Template="Linq.LastOrDefault({0}, {1})" />
+        <method name="Single" Template="Linq.Single({0, {1}})" />
+        <method name="SingleOrDefault" Template="Linq.SingleOrDefault({0}, {1})" />
+        <method name="ElementAt" Template="Linq.ElementAt({0}, {1})" />
+        <method name="ElementAtOrDefault" Template="Linq.ElementAtOrDefault({0}, {1})" />
+        <method name="Any" Template="Linq.Any({0}, {1})" />
+        <method name="All" Template="Linq.All({0}, {1})" />
+        <method name="Count" Template="Linq.Count({0}, {1})" />
+        <method name="Contains" Template="Linq.Contains({0}, {1}, {2})" />
+        <method name="Aggregate" Template="Linq.Aggregate({0}, {1}, {2})" />
+        <method name="Sum" Template="Linq.Sum({0}, {1})" />
+        <method name="Min" ArgCount="1"  Template="Linq.Min({0})" />
+        <method name="Min" ArgCount="2" RetType="System.Int32" Template="Linq.Min({0}, {1}, System.Int)" />
+        <method name="Min" ArgCount="2" RetType="System.Int64" Template="Linq.Min({0}, {1}, System.Int)" />
+        <method name="Min" ArgCount="2" RetType="System.Single" Template="Linq.Min({0}, {1}, System.Double)" />
+        <method name="Min" ArgCount="2" RetType="System.Double" Template="Linq.Min({0}, {1}, System.Double)" />
+        <method name="Min" ArgCount="2" RetType="System.Decimal" Template="Linq.Min({0}, {1}, System.Decimal)" />
+        <method name="Min" ArgCount="2" GenericArgCount="2" Template="Linq.Min({0}, {1}, {^1})" />
+        <method name="Max" ArgCount="1" Template="Linq.Max({0})" />
+        <method name="Max" ArgCount="2" RetType="System.Int32" Template="Linq.Max({0}, {1}, System.Int)" />
+        <method name="Max" ArgCount="2" RetType="System.Int64" Template="Linq.Max({0}, {1}, System.Int)" />
+        <method name="Max" ArgCount="2" RetType="System.Single" Template="Linq.Max({0}, {1}, System.Double)" />
+        <method name="Max" ArgCount="2" RetType="System.Double" Template="Linq.Max({0}, {1}, System.Double)" />
+        <method name="Max" ArgCount="2" RetType="System.Decimal" Template="Linq.Max({0}, {1}, System.Decimal)" />
+        <method name="Max" ArgCount="2" GenericArgCount="2" Template="Linq.Max({0}, {1}, {^1})" />
+      </class>
     </namespace>
     <namespace name="System.Diagnostics">
-        <class name="Debug">
-            <method name="Assert" Template="assert({0}, {1})" />
-        </class>
+      <class name="Debug">
+        <method name="Assert" Template="assert({0}, {1})" />
+      </class>
     </namespace>
     <namespace name="System.Diagnostics.Contracts">
-        <class name="Contract">
-            <method name="Assert" Template="assert({0}, {1})" />
-            <method name="Assume" Template="assert({0}, {1})" />
-            <method name="Ensures" Template="assert({0}, {1})" />
-        </class>
+      <class name="Contract">
+        <method name="Assert" Template="assert({0}, {1})" />
+        <method name="Assume" Template="assert({0}, {1})" />
+        <method name="Ensures" Template="assert({0}, {1})" />
+      </class>
     </namespace>
     <namespace name="System.Reflection">
-        <class name="Assembly">
-            <method name="GetType" Name="GetTypeFrom" />
-         </class>   
-    </namespace>   
-</assembly>
+      <class name="Assembly">
+        <method name="GetType" Name="GetTypeFrom" />
+      </class>
+    </namespace>
+  </assembly>
+</meta>

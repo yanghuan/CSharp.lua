@@ -9,9 +9,11 @@ local SystemLinq = System.Linq
 local SystemText = System.Text
 local CSharpLua
 local CSharpLuaLuaAst
+local CSharpLuaLuaSyntaxGenerator
 System.usingDeclare(function (global) 
     CSharpLua = global.CSharpLua
     CSharpLuaLuaAst = CSharpLua.LuaAst
+    CSharpLuaLuaSyntaxGenerator = CSharpLua.LuaSyntaxGenerator
 end)
 System.namespace("CSharpLua", function (namespace) 
     namespace.class("PartialTypeDeclaration", function (namespace) 
@@ -54,13 +56,61 @@ System.namespace("CSharpLua", function (namespace)
                 __ctor__ = __ctor__
             }
         end)
+        namespace.class("InterfacePeopertysChecker", function (namespace) 
+            local VisitClassDeclaration, CheckPropertyFields, getProperty, __init__, __ctor__
+            VisitClassDeclaration = function (this, node) 
+                local typeSymbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node, nil)
+                if not typeSymbol:getIsStatic() then
+                    this.classTypes_:Add(typeSymbol)
+                end
+            end
+            CheckPropertyFields = function (this) 
+                for _, type in System.each(this.classTypes_) do
+                    for _, baseInterface in System.each(type:getAllInterfaces()) do
+                        for _, property in System.each(baseInterface:GetMembers():OfType(MicrosoftCodeAnalysis.IPropertySymbol)) do
+                            local implementationProperty = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, type:FindImplementationForInterfaceMember(property))
+                            if implementationProperty:getContainingType() ~= type then
+                                this.mustBePropertys_:Add(implementationProperty)
+                            end
+                        end
+                    end
+                end
+            end
+            getProperty = function (this) 
+                return this.mustBePropertys_
+            end
+            __init__ = function (this) 
+                this.classTypes_ = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)()
+                this.mustBePropertys_ = System.HashSet(MicrosoftCodeAnalysis.IPropertySymbol)()
+            end
+            __ctor__ = function (this, compilation) 
+                __init__(this)
+                MicrosoftCodeAnalysisCSharp.CSharpSyntaxWalker.__ctor__(this)
+                for _, syntaxTree in System.each(compilation:getSyntaxTrees()) do
+                    this.semanticModel_ = compilation:GetSemanticModel(syntaxTree, false)
+                    this:Visit(syntaxTree:GetRoot(nil))
+                end
+                CheckPropertyFields(this)
+            end
+            return {
+                __inherits__ = function () 
+                    return {
+                        MicrosoftCodeAnalysisCSharp.CSharpSyntaxWalker
+                    }
+                end, 
+                VisitClassDeclaration = VisitClassDeclaration, 
+                CheckPropertyFields = CheckPropertyFields, 
+                getProperty = getProperty, 
+                __ctor__ = __ctor__
+            }
+        end)
         local Encoding, Create, Write, Generate, GetOutFilePath, IsEnumExport, AddExportEnum, AddEnumDeclaration, 
         IsExportAttribute, CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, GetMethodName, IsTypeEnable, 
         AddBaseTypeTo, GetExportTypes, ExportManifestFile, AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberMethodName, InternalGetMemberMethodName, 
         GetSymbolName, GetExtensionMethodName, GetStaticClassMethodName, GetMethodNameFromIndex, TryAddNewUsedName, GetSameNameMembers, MethodSymbolToString, MemberSymbolToString, 
         GetSymbolWright, MemberSymbolCommonComparison, MemberSymbolBoolComparison, MemberSymbolComparison, FillSameNameMembers, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, 
-        RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorName, IsTypeNameUsed, CheckNewNameEnable, __staticCtor__, __init__, 
-        __ctor__
+        RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorName, IsTypeNameUsed, CheckNewNameEnable, CheckIndirecInterfacePropertyFields, IsPropertyField, 
+        __staticCtor__, __init__, __ctor__
         Create = function (this) 
             local luaCompilationUnits = System.List(CSharpLuaLuaAst.LuaCompilationUnitSyntax)()
             for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
@@ -446,7 +496,7 @@ System.namespace("CSharpLua", function (namespace)
             return members
         end
         MethodSymbolToString = function (this, symbol) 
-            local sb = System.StringBuilder()
+            local sb = SystemText.StringBuilder()
             sb:Append(symbol:getName())
             sb:Append(40 --[['(']])
             local isFirst = true
@@ -710,6 +760,27 @@ System.namespace("CSharpLua", function (namespace)
 
             return true
         end
+        CheckIndirecInterfacePropertyFields = function (this) 
+            local checker = CSharpLuaLuaSyntaxGenerator.InterfacePeopertysChecker(this.compilation_)
+            for _, property in System.each(checker:getProperty()) do
+                this.isFieldPropertys_:Add(property, false)
+            end
+        end
+        IsPropertyField = function (this, symbol) 
+            local isAutoField
+            local default
+            default, isAutoField = this.isFieldPropertys_:TryGetValue(symbol, isAutoField)
+            if not default then
+                local isMateField = this.XmlMetaProvider:IsPropertyField(symbol)
+                if isMateField:getHasValue() then
+                    isAutoField = isMateField:getValue()
+                else
+                    isAutoField = CSharpLua.Utility.IsPropertyField(symbol)
+                end
+                this.isFieldPropertys_:Add(symbol, isAutoField)
+            end
+            return isAutoField
+        end
         __staticCtor__ = function (this) 
             Encoding = SystemText.UTF8Encoding(false)
         end
@@ -722,6 +793,7 @@ System.namespace("CSharpLua", function (namespace)
             this.refactorNames_ = System.HashSet(MicrosoftCodeAnalysis.ISymbol)()
             this.extends_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))()
             this.types_ = System.List(MicrosoftCodeAnalysis.INamedTypeSymbol)()
+            this.isFieldPropertys_ = System.Dictionary(MicrosoftCodeAnalysis.IPropertySymbol, System.Boolean)()
         end
         __ctor__ = function (this, syntaxTrees, references, metas, setting, attributes) 
             __init__(this)
@@ -742,6 +814,7 @@ System.namespace("CSharpLua", function (namespace)
             if attributes ~= nil then
                 this.exportAttributes_ = System.HashSet(System.String)(attributes)
             end
+            CheckIndirecInterfacePropertyFields(this)
         end
         return {
             Generate = Generate, 
@@ -755,6 +828,7 @@ System.namespace("CSharpLua", function (namespace)
             GetMethodName = GetMethodName, 
             AddTypeSymbol = AddTypeSymbol, 
             GetMemberMethodName = GetMemberMethodName, 
+            IsPropertyField = IsPropertyField, 
             __staticCtor__ = __staticCtor__, 
             __ctor__ = __ctor__
         }

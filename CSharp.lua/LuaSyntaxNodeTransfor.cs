@@ -637,7 +637,7 @@ namespace CSharpLua {
                         AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
                     }
                     else {
-                        bool isAuto = semanticModel_.GetDeclaredSymbol(node).IsPropertyField();
+                        bool isAuto = IsPropertyField(semanticModel_.GetDeclaredSymbol(node));
                         if(isAuto) {
                             bool isReadOnly = node.AccessorList.Accessors.Count == 1 && node.AccessorList.Accessors[0].Body == null;
                             AddField(type, typeSymbol, node.Identifier, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);

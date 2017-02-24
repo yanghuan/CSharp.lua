@@ -20,9 +20,12 @@ System.namespace("CSharpLua", function (namespace)
                 return {}
             end)
             namespace.class("PropertyModel", function (namespace) 
-                return {
-                    IsAutoField = false
-                }
+                namespace.class("FieldPropery", function (namespace) 
+                    return {
+                        IsField = false
+                    }
+                end)
+                return {}
             end)
             namespace.class("FieldModel", function (namespace) 
                 return {}
@@ -401,9 +404,11 @@ System.namespace("CSharpLua", function (namespace)
                     default = default:GetPropertyModel(symbol:getName())
                 end
                 local info = default
-                return info ~= nil and info.IsAutoField
+                if info ~= nil and info.field ~= nil then
+                    return info.field.IsField
+                end
             end
-            return false
+            return nil
         end
         GetFieldCodeTemplate = function (this, symbol) 
             if MayHaveCodeMeta(this, symbol) then
