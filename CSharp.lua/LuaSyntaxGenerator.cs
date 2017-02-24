@@ -17,15 +17,15 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.IO;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
-using CSharpLua.LuaAst;
-using System.Diagnostics.Contracts;
 using Microsoft.CodeAnalysis.Emit;
+using CSharpLua.LuaAst;
 
 namespace CSharpLua {
     internal sealed class PartialTypeDeclaration : IComparable<PartialTypeDeclaration> {

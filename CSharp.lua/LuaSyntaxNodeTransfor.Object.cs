@@ -799,5 +799,13 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitAliasQualifiedName(AliasQualifiedNameSyntax node) {
             return node.Name.Accept(this);
         }
+
+        public override LuaSyntaxNode VisitDocumentationCommentTrivia(DocumentationCommentTriviaSyntax node) {
+            return base.VisitDocumentationCommentTrivia(node);
+        }
+
+        public override LuaSyntaxNode VisitXmlComment(XmlCommentSyntax node) {
+            return base.VisitXmlComment(node);
+        }
     }
 }

@@ -1,2 +1,0 @@
-hero, brige.lua
-IO

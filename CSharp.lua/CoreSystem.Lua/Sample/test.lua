@@ -187,7 +187,7 @@ end
 
 local function testIO()
     local path = "iotest.txt"
-    local s = "hero, brige.lua\nIO"
+    local s = "hero, CSharp.lua\nIO"
     local File = System.IO.File
     File.WriteAllText(path, s)
     local text = File.ReadAllText(path)
