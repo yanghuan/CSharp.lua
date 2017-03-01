@@ -37,6 +37,7 @@ namespace CSharpLua.LuaAst {
         private List<LuaConstructorAdapterExpressionSyntax> ctors_ = new List<LuaConstructorAdapterExpressionSyntax>();
         private List<LuaIdentifierNameSyntax> typeIdentifiers_ = new List<LuaIdentifierNameSyntax>();
         private LuaTableInitializerExpression attributes_ = new LuaTableInitializerExpression();
+        private List<LuaStatementSyntax> documentComments_ = new List<LuaStatementSyntax>();
 
         public LuaTypeDeclarationSyntax() {
         }
@@ -45,6 +46,10 @@ namespace CSharpLua.LuaAst {
             if(!staticAssignmentNames_.Contains(name)) {
                 staticAssignmentNames_.Add(name);
             }
+        }
+
+        internal void AddDocumentComments(List<LuaStatementSyntax> commets) {
+            documentComments_.AddRange(commets);
         }
 
         internal void AddClassAttributes(List<LuaExpressionSyntax> attributes) {
@@ -96,9 +101,14 @@ namespace CSharpLua.LuaAst {
             resultTable_.Items.Add(item);
         }
 
-        public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate) {
+        public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, List<LuaStatementSyntax> documentationComments = null) {
             local_.Variables.Add(name);
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, method);
+            if(documentationComments != null && documentationComments.Count > 0) {
+                LuaStatementListSyntax statementList = new LuaStatementListSyntax();
+                statementList.Statements.AddRange(documentationComments);
+                methodList_.Statements.Add(statementList);
+            }
             methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
             if(!isPrivate) {
                 AddResultTable(name);
@@ -351,6 +361,9 @@ namespace CSharpLua.LuaAst {
                 wrapFunction.AddStatements(statements_);
                 statements_.Clear();
                 statements_.Add(new LuaReturnStatementSyntax(wrapFunction));
+            }
+            foreach(var comment in documentComments_) {
+                comment.Render(renderer);
             }
             base.Render(renderer);
         }

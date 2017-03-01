@@ -19,7 +19,16 @@ System.namespace("CSharpLua", function (namespace)
     namespace.class("PartialTypeDeclaration", function (namespace) 
         local CompareTo
         CompareTo = function (this, other) 
-            return #this.CompilationUnit.FilePath:CompareTo(#other.CompilationUnit.FilePath)
+            local filePath = this.CompilationUnit.FilePath
+            local otherFilePath = other.CompilationUnit.FilePath
+
+            if filePath:Contains(otherFilePath) then
+                return 1
+            elseif otherFilePath:Contains(filePath) then
+                return - 1
+            else
+                return other.Node:getMembers():getCount():CompareTo(this.Node:getMembers():getCount())
+            end
         end
         return {
             __inherits__ = function () 

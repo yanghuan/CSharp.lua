@@ -40,33 +40,6 @@ namespace CSharpLua {
     }
 
     public static class Utility {
-        public static Dictionary<string, string[]> GetCommondLines(string[] args) {
-            Dictionary<string, string[]> cmds = new Dictionary<string, string[]>();
-
-            string key = "";
-            List<string> values = new List<string>();
-
-            foreach(string arg in args) {
-                string i = arg.Trim();
-                if(i.StartsWith("-")) {
-                    if(!string.IsNullOrEmpty(key)) {
-                        cmds.Add(key, values.ToArray());
-                        key = "";
-                        values.Clear();
-                    }
-                    key = i;
-                }
-                else {
-                    values.Add(i);
-                }
-            }
-
-            if(!string.IsNullOrEmpty(key)) {
-                cmds.Add(key, values.ToArray());
-            }
-            return cmds;
-        }
-
         public static T First<T>(this IList<T> list) {
             return list[0];
         }
@@ -109,6 +82,40 @@ namespace CSharpLua {
                 ++index;
             }
             return -1;
+        }
+
+        public static string TrimEnd(this string s, string end) {
+            if(s.EndsWith(end)) {
+                return s.Remove(s.Length - end.Length, end.Length);
+            }
+            return s;
+        }
+
+        public static Dictionary<string, string[]> GetCommondLines(string[] args) {
+            Dictionary<string, string[]> cmds = new Dictionary<string, string[]>();
+
+            string key = "";
+            List<string> values = new List<string>();
+
+            foreach(string arg in args) {
+                string i = arg.Trim();
+                if(i.StartsWith("-")) {
+                    if(!string.IsNullOrEmpty(key)) {
+                        cmds.Add(key, values.ToArray());
+                        key = "";
+                        values.Clear();
+                    }
+                    key = i;
+                }
+                else {
+                    values.Add(i);
+                }
+            }
+
+            if(!string.IsNullOrEmpty(key)) {
+                cmds.Add(key, values.ToArray());
+            }
+            return cmds;
         }
 
         public static string GetArgument(this Dictionary<string, string[]> args, string name, bool isOption = false) {

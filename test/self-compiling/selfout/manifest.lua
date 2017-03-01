@@ -144,6 +144,7 @@ return function (dir)
         "CSharpLua.XmlMetaProvider.TypeMetaInfo", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel.ArgumentModel", 
+        "CSharpLua.XmlMetaProvider.XmlMetaModel.AssemblyModel", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel.ClassModel", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel.FieldModel", 
         "CSharpLua.XmlMetaProvider.XmlMetaModel.MethodModel", 

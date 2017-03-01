@@ -49,6 +49,9 @@ System.namespace("CSharpLua", function (namespace)
             namespace.class("NamespaceModel", function (namespace) 
                 return {}
             end)
+            namespace.class("AssemblyModel", function (namespace) 
+                return {}
+            end)
             return {}
         end)
         namespace.class("MethodMetaInfo", function (namespace) 
@@ -510,8 +513,9 @@ System.namespace("CSharpLua", function (namespace)
                 System.try(function () 
                     System.using(SystemIO.FileStream(file, 3 --[[FileMode.Open]], 1 --[[FileAccess.Read]], 1 --[[FileShare.Read]]), function (stream) 
                         local model = System.cast(CSharpLuaXmlMetaProvider.XmlMetaModel, xmlSeliz:Deserialize(stream))
-                        if model.Namespaces ~= nil then
-                            for _, namespaceModel in System.each(model.Namespaces) do
+                        local assembly = model.Assembly
+                        if assembly ~= nil and assembly.Namespaces ~= nil then
+                            for _, namespaceModel in System.each(assembly.Namespaces) do
                                 LoadNamespace(this, namespaceModel)
                             end
                         end

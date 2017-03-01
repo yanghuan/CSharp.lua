@@ -197,6 +197,10 @@ namespace CSharpLua {
 
         private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
             typeDeclarations_.Push(typeDeclaration);
+
+            var comments = BuildDocumentationComment(node);
+            typeDeclaration.AddDocumentComments(comments);
+
             var attributes = BuildAttributes(node.AttributeLists);
             typeDeclaration.AddClassAttributes(attributes);
 
@@ -206,6 +210,7 @@ namespace CSharpLua {
                     typeDeclaration.AddTypeIdentifier(typeIdentifier);
                 }
             }
+
             if(node.BaseList != null) {
                 bool hasExtendSelf = false;
                 List<LuaExpressionSyntax> baseTypes = new List<LuaExpressionSyntax>();
@@ -216,6 +221,7 @@ namespace CSharpLua {
                 }
                 typeDeclaration.AddBaseTypes(baseTypes, hasExtendSelf);
             }
+
             BuildTypeMembers(typeDeclaration, node);
             typeDeclarations_.Pop();
             CurCompilationUnit.AddTypeDeclarationCount();
@@ -248,15 +254,12 @@ namespace CSharpLua {
 
             List<LuaExpressionSyntax> attributes = new List<LuaExpressionSyntax>();
             foreach(var typeDeclaration in typeDeclarations) {
-                foreach(var attributeList in typeDeclaration.Node.AttributeLists) {
-                    foreach(var attribute in attributeList.Attributes) {
-                        semanticModel_ = generator_.GetSemanticModel(attribute.SyntaxTree);
-                        var attributeExpression = (LuaExpressionSyntax)attribute.Accept(this);
-                        if(attributeExpression != null) {
-                            attributes.Add(attributeExpression);
-                        }
-                    }
-                }
+                semanticModel_ = generator_.GetSemanticModel(typeDeclaration.Node.SyntaxTree);
+                var comments = BuildDocumentationComment(typeDeclaration.Node);
+                major.TypeDeclaration.AddDocumentComments(comments);
+
+                var expressions = BuildAttributes(typeDeclaration.Node.AttributeLists);
+                attributes.AddRange(expressions);
             }
             major.TypeDeclaration.AddClassAttributes(attributes);
 
@@ -395,7 +398,8 @@ namespace CSharpLua {
                 LuaIdentifierNameSyntax methodName = generator_.GetMethodName(symbol);
                 LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
                 PushFunction(function);
-             
+
+                var comments = BuildDocumentationComment(node);
                 bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
                 if(!node.Modifiers.IsStatic()) {
                     function.AddParameter(LuaIdentifierNameSyntax.This);
@@ -436,7 +440,7 @@ namespace CSharpLua {
                 }
 
                 PopFunction();
-                CurType.AddMethod(methodName, function, isPrivate);
+                CurType.AddMethod(methodName, function, isPrivate, comments);
                 methodInfos_.Pop();
                 return function;
             }

@@ -670,8 +670,8 @@ namespace CSharpLua {
             }
         }
 
-        private LuaSyntaxList<LuaExpressionSyntax> BuildAttributes(SyntaxList<AttributeListSyntax> attributeLists) {
-            LuaSyntaxList<LuaExpressionSyntax> expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+        private List<LuaExpressionSyntax> BuildAttributes(SyntaxList<AttributeListSyntax> attributeLists) {
+            List<LuaExpressionSyntax> expressions = new List<LuaExpressionSyntax>();
             var attributes = attributeLists.SelectMany(i => i.Attributes);
             foreach(var node in attributes) {
                 var expression = (LuaExpressionSyntax)node.Accept(this);
@@ -788,6 +788,22 @@ namespace CSharpLua {
                     expression = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Default, true));
                 }
             }
+        }
+
+        private List<LuaStatementSyntax> BuildDocumentationComment(CSharpSyntaxNode node) {
+            List<LuaStatementSyntax> comments = new List<LuaStatementSyntax>();
+            foreach(var trivia in node.GetLeadingTrivia()) {
+                if(trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)) {
+                    string triviaText = trivia.ToString();
+                    if(!string.IsNullOrWhiteSpace(triviaText)) {
+                        string shortComment = LuaSyntaxNode.Tokens.ShortComment;
+                        string comment = shortComment + triviaText.TrimEnd(Environment.NewLine).Replace(Environment.NewLine, "\n").Replace("///", shortComment);
+                        var statement = new LuaExpressionStatementSyntax(new LuaIdentifierNameSyntax(comment));
+                        comments.Add(statement);
+                    }
+                }
+            }
+            return comments;
         }
     }
 }
