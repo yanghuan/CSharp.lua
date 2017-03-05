@@ -178,6 +178,38 @@ local function setExtends(cls, extends)
     cls.__inherits__ = nil
 end
 
+local function defClass(kind, cls)
+    cls.__index = cls 
+    cls.__call = new
+    local extends = cls.__inherits__
+    if extends then
+        if type(extends) == "function" then
+            extends = extends()
+        end           
+        local base = extends[1]
+        if base.__kind__ == "C" then
+            cls.__base__ = base
+            tremove(extends, 1)
+            if #extends > 0 then
+                cls.__interfaces__ = extends
+            end 
+            if cls.__ctor__  == nil then
+                local baseCtor = base.__ctor__
+                if type(baseCtor) == "table" then
+                    cls.__ctor__ = baseCtor[1]
+                end
+            end 
+            setmetatable(cls, base)
+        else
+            cls.__interfaces__ = extends
+            setmetatable(cls, Object)
+        end
+        cls.__inherits__ = ni
+    elseif cls ~= Object then
+        setmetatable(cls, Object)
+    end   
+end
+
 local function def(name, kind, cls, generic)
     if type(cls) == "function" then
         if generic then

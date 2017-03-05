@@ -340,6 +340,15 @@ namespace CSharpLua {
             return false;
         }
 
+        public static bool IsStaticLazy(this ISymbol symbol) {
+            bool success = symbol.IsStatic && !symbol.IsPrivate();
+            if(success) {
+                var typeSymbol = (INamedTypeSymbol)symbol.ContainingType;
+                return typeSymbol.Constructors.Any(i => i.IsStatic);
+            }
+            return success;
+        }
+
         public static bool IsAssignment(this SyntaxKind kind) {
             return kind >= SyntaxKind.SimpleAssignmentExpression && kind <= SyntaxKind.RightShiftAssignmentExpression;
         }

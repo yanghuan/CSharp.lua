@@ -271,7 +271,7 @@ namespace CSharpLua {
                 otherCtorInvoke.AddArguments(arguments);
                 function.AddStatement(otherCtorInvoke);
             }
-            else {
+            else if(!isStatic) {
                 var symbol = semanticModel_.GetDeclaredSymbol(node);
                 var baseType = symbol.ContainingType.BaseType;
                 if(baseType.SpecialType != SpecialType.System_Object

@@ -438,9 +438,8 @@ namespace CSharpLua {
                         function.AddStatement(returnStatement);
                     }
                 }
-
                 PopFunction();
-                CurType.AddMethod(methodName, function, isPrivate, comments);
+                CurType.AddMethod(methodName, function, isPrivate, symbol.IsStaticLazy(), comments);
                 methodInfos_.Pop();
                 return function;
             }
