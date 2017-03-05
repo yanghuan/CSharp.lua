@@ -333,7 +333,6 @@ namespace CSharpLua {
             return new LuaInvocationExpressionSyntax(arrayType, elements);
         }
 
-
         private LuaLiteralExpressionSyntax GetConstLiteralExpression(object constantValue) {
             if(constantValue != null) {
                 var code = Type.GetTypeCode(constantValue.GetType());

@@ -83,6 +83,7 @@ namespace CSharpLua {
         public XmlMetaProvider XmlMetaProvider { get; }
         public SettingInfo Setting { get; set; }
         private HashSet<string> exportEnums_ = new HashSet<string>();
+        private bool isExportAttributesAll_;
         private HashSet<string> exportAttributes_;
         private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
         private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
@@ -101,7 +102,12 @@ namespace CSharpLua {
             XmlMetaProvider = new XmlMetaProvider(metas);
             Setting = setting;
             if(attributes != null) {
-                exportAttributes_ = new HashSet<string>(attributes);
+                if(attributes.Length == 0) {
+                    isExportAttributesAll_ = true;
+                }
+                else {
+                    exportAttributes_ = new HashSet<string>(attributes);
+                }
             }
             CheckIndirecInterfacePropertyFields();
         }
@@ -166,11 +172,18 @@ namespace CSharpLua {
         }
 
         internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
-            if(exportAttributes_ != null) {
-                if(exportAttributes_.Count > 0) {
-                    return exportAttributes_.Contains(attributeTypeSymbol.ToString());
-                }
+            if(isExportAttributesAll_) {
                 return true;
+            }
+            else {
+                if(exportAttributes_ != null && exportAttributes_.Count > 0) {
+                    if(exportAttributes_.Contains(attributeTypeSymbol.ToString())) {
+                        return true;
+                    }
+                }
+                if(XmlMetaProvider.IsExportAttribute(attributeTypeSymbol)) {
+                    return true;
+                }
             }
             return false;
         }

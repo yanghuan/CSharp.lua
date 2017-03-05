@@ -111,8 +111,20 @@ namespace CSharpLua {
                 public NamespaceModel[] Namespaces;
             }
 
+            public sealed class ExportModel {
+                public sealed class AttributeModel {
+                    [XmlAttribute("name")]
+                    public string Name;
+                }
+                [XmlElement("attribute")]
+                public AttributeModel[] Attributes;
+            }
+
             [XmlElement("assembly")]
             public AssemblyModel Assembly;
+
+            [XmlElement("export")]
+            public ExportModel Export;
         }
 
         private enum MethodMetaType {
@@ -308,6 +320,7 @@ namespace CSharpLua {
 
         private Dictionary<string, string> namespaceNameMaps_ = new Dictionary<string, string>();
         private Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
+        private HashSet<string> exportAttributes_ = new HashSet<string>();
 
         public XmlMetaProvider(IEnumerable<string> files) {
             foreach(string file in files) {
@@ -319,6 +332,17 @@ namespace CSharpLua {
                         if(assembly != null && assembly.Namespaces != null) {
                             foreach(var namespaceModel in assembly.Namespaces) {
                                 LoadNamespace(namespaceModel);
+                            }
+                        }
+                        var export = model.Export;
+                        if(export != null) {
+                            if(export.Attributes != null) {
+                                foreach(var attribute in export.Attributes) {
+                                    if(string.IsNullOrEmpty(attribute.Name)) {
+                                        throw new ArgumentException("attribute's name is empty");
+                                    }
+                                    exportAttributes_.Add(attribute.Name);
+                                }
                             }
                         }
                     }
@@ -542,6 +566,18 @@ namespace CSharpLua {
 
         public string GetMethodCodeTemplate(IMethodSymbol symbol) {
             return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate);
+        }
+
+        public bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
+            return exportAttributes_.Count > 0 && exportAttributes_.Contains(attributeTypeSymbol.ToString());
+        }
+
+        public void CheckFieldNameOfProtobufnet(ref string fieldName, ITypeSymbol containingType) {
+            if(!containingType.Interfaces.IsEmpty) {
+                if(containingType.Interfaces.First().ToString() == "ProtoBuf.IExtensible") {
+                    fieldName = fieldName.TrimStart('_');
+                }
+            }
         }
     }
 }
