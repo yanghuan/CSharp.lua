@@ -278,10 +278,8 @@ namespace CSharpLua {
                     && baseType.SpecialType != SpecialType.System_ValueType) {
                     int ctroCounter = 0;
                     if(baseType.IsFromCode()) {
-                        if(baseType.Constructors.Length > 1) {
-                            int index = baseType.Constructors.IndexOf(i => i.Parameters.IsEmpty);
-                            Contract.Assert(index != -1);
-                            ctroCounter = index + 1;
+                        if(baseType.Constructors.Count(i => !i.IsStatic) > 1) {
+                            ctroCounter = 1;
                         }
                     }
                     var otherCtorInvoke = BuildCallBaseConstructor(baseType, ctroCounter);
