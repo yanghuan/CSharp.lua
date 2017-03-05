@@ -249,8 +249,6 @@ namespace CSharpLua {
             LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
             PushFunction(function);
             bool isStatic = node.Modifiers.IsStatic();
-            function.IsStaticCtor = isStatic;
-
             function.AddParameter(LuaIdentifierNameSyntax.This);
             var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
             function.ParameterList.Parameters.AddRange(parameterList.Parameters);
@@ -299,7 +297,7 @@ namespace CSharpLua {
                 CurType.SetStaticCtor(function);
             }
             else {
-                CurType.AddCtor(function);
+                CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0);
             }
 
             methodInfos_.Pop();

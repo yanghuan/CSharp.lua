@@ -171,8 +171,15 @@ namespace CSharpLua {
         private int GetConstructorIndex(IMethodSymbol constructorSymbol) {
             if(constructorSymbol.IsFromCode()) {
                 var typeSymbol = (INamedTypeSymbol)constructorSymbol.ReceiverType;
-                if(typeSymbol.Constructors.Length > 1) {
-                    int index = typeSymbol.Constructors.IndexOf(constructorSymbol);
+                var ctors = typeSymbol.Constructors.Where(i => !i.IsStatic).ToList();
+                if(ctors.Count > 1) {
+                    int firstCtorIndex = ctors.IndexOf(i => i.Parameters.IsEmpty);
+                    if(firstCtorIndex != 0) {
+                        var firstCtor = ctors[firstCtorIndex];
+                        ctors.Remove(firstCtor);
+                        ctors.Insert(0, firstCtor);
+                    }
+                    int index = ctors.IndexOf(constructorSymbol);
                     Contract.Assert(index != -1);
                     int ctroCounter = index + 1;
                     return ctroCounter;

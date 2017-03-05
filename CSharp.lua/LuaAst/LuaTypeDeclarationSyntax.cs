@@ -247,8 +247,13 @@ namespace CSharpLua.LuaAst {
             staticCtorFunction_ = function;
         }
 
-        public void AddCtor(LuaConstructorAdapterExpressionSyntax function) {
-            ctors_.Add(function);
+        public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool isZeroParameters) {
+            if(isZeroParameters) {
+                ctors_.Insert(0, function);
+            }
+            else {
+                ctors_.Add(function);
+            }
         }
 
         private void AddInitFunction(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax initFunction, bool isAddItem = true) {
