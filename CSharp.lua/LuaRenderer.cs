@@ -552,5 +552,14 @@ namespace CSharpLua {
                 code.Render(this);
             }
         }
+
+        internal void Render(LuaPropertyAdapterExpressionSyntax node) {
+            if(node.Expression != null) {
+                node.Expression.Render(this);
+                Write(node.OperatorToken);
+            }
+            node.Name.Render(this);
+            node.ArgumentList.Render(this);
+        }
     }
 }

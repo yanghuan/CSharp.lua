@@ -565,15 +565,14 @@ namespace CSharpLua {
         private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
             var propertyMethod = name as LuaPropertyAdapterExpressionSyntax;
             if(propertyMethod != null) {
-                var arguments = propertyMethod.InvocationExpression.ArgumentList.Arguments;
+                var arguments = propertyMethod.ArgumentList.Arguments;
                 if(arguments.Count == 1) {
                     if(arguments[0].Expression == LuaIdentifierNameSyntax.This) {
-                        propertyMethod.InvocationExpression.ArgumentList.Arguments[0] = new LuaArgumentSyntax(expression);
+                        propertyMethod.ArgumentList.Arguments[0] = new LuaArgumentSyntax(expression);
                     }
                 }
                 else {
-                    var memberAccessExpression = new LuaMemberAccessExpressionSyntax(expression, propertyMethod.InvocationExpression.Expression, !isStatic);
-                    propertyMethod.Update(memberAccessExpression);
+                    propertyMethod.Update(expression, !isStatic);
                 }
                 return propertyMethod;
             }

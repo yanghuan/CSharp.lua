@@ -53,5 +53,11 @@ namespace CSharpLua.LuaAst {
         public void AddArgument(LuaExpressionSyntax argument) {
             AddArgument(new LuaArgumentSyntax(argument));
         }
+
+        public void AddArguments(IEnumerable<LuaExpressionSyntax> arguments) {
+            foreach(var argument in arguments) {
+                AddArgument(argument);
+            }
+        }
     }
 }

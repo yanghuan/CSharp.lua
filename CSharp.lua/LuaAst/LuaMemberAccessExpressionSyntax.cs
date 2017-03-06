@@ -17,6 +17,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -51,53 +52,64 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaPropertyAdapterExpressionSyntax : LuaExpressionSyntax {
-        private LuaPropertyOrEventIdentifierNameSyntax identifier_;
-        public LuaInvocationExpressionSyntax InvocationExpression { get; private set; }
+        public LuaExpressionSyntax Expression { get; private set; }
+        public string OperatorToken { get; private set; }
+        public LuaPropertyOrEventIdentifierNameSyntax Name { get; }
+        public readonly LuaArgumentListSyntax ArgumentList = new LuaArgumentListSyntax();
 
-        public LuaPropertyAdapterExpressionSyntax(LuaPropertyOrEventIdentifierNameSyntax identifier) {
-            identifier_ = identifier;
-            InvocationExpression = new LuaInvocationExpressionSyntax(identifier);
+        public LuaPropertyAdapterExpressionSyntax(LuaPropertyOrEventIdentifierNameSyntax name) {
+            Name = name;
         }
 
-        public LuaPropertyAdapterExpressionSyntax(LuaMemberAccessExpressionSyntax memberAccess, LuaPropertyOrEventIdentifierNameSyntax identifier) {
-            identifier_ = identifier;
-            InvocationExpression = new LuaInvocationExpressionSyntax(memberAccess);
+        public LuaPropertyAdapterExpressionSyntax(LuaExpressionSyntax expression, LuaPropertyOrEventIdentifierNameSyntax name, bool isObjectColon) {
+            Update(expression, isObjectColon);
+            Name = name;
         }
 
-        public void Update(LuaMemberAccessExpressionSyntax memberAccessExpression) {
-            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(memberAccessExpression);
-            invocationExpression.ArgumentList.Arguments.AddRange(InvocationExpression.ArgumentList.Arguments);
-            InvocationExpression = invocationExpression;
+        public void Update(LuaExpressionSyntax expression, bool isObjectColon) {
+            Contract.Assert(Expression == null);
+            Expression = expression;
+            OperatorToken = isObjectColon ? Tokens.ObjectColon : Tokens.Dot;
         }
 
         public bool IsGetOrAdd {
             set {
-                 identifier_.IsGetOrAdd = value;
+                 Name.IsGetOrAdd = value;
+            }
+            get {
+                return Name.IsGetOrAdd;
             }
         }
 
         public bool IsProperty {
             get {
-                return identifier_.IsProperty;
+                return Name.IsProperty;
             }
         }
 
-        private bool isAutoGet_;
+        public bool IsObjectColon {
+            get {
+                return OperatorToken == Tokens.ObjectColon;
+            }
+        }
 
-        public LuaExpressionSyntax GetCloneOfGet() {
+        public LuaPropertyAdapterExpressionSyntax GetClone() {
+            LuaPropertyAdapterExpressionSyntax clone = new LuaPropertyAdapterExpressionSyntax(Name.GetClone());
+            clone.Expression = Expression;
+            clone.OperatorToken = OperatorToken;
+            clone.ArgumentList.Arguments.AddRange(ArgumentList.Arguments);
+            return clone;
+        }
+
+        public LuaPropertyAdapterExpressionSyntax GetCloneOfGet() {
+            LuaPropertyAdapterExpressionSyntax clone = GetClone();
+            clone.IsGetOrAdd = true;
             IsGetOrAdd = false;
-            isAutoGet_ = true;
-            LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(InvocationExpression.Expression);
-            invocationExpression.ArgumentList.Arguments.AddRange(InvocationExpression.ArgumentList.Arguments);
-            return invocationExpression;
+            return clone;
         }
 
         internal override void Render(LuaRenderer renderer) {
-            InvocationExpression.Expression.Render(renderer);
-            if(isAutoGet_) {
-                IsGetOrAdd = true;
-            }
-            InvocationExpression.ArgumentList.Render(renderer);
+            renderer.Render(this);
         }
     }
 }

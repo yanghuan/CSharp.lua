@@ -739,17 +739,16 @@ namespace CSharpLua {
         public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, string.Empty);
-            LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(expression, identifierName, true);
-            LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(memberAccess, identifierName);
+            LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(expression, identifierName, true);
 
             var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
             if(symbol != null) {
                 List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
-                propertyAdapter.InvocationExpression.AddArguments(arguments);
+                propertyAdapter.ArgumentList.AddArguments(arguments);
             }
             else {
                 var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
-                propertyAdapter.InvocationExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+                propertyAdapter.ArgumentList.Arguments.AddRange(argumentList.Arguments);
             }
             return propertyAdapter;
         }

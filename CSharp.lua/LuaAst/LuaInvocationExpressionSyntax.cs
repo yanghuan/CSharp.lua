@@ -57,11 +57,11 @@ namespace CSharpLua.LuaAst {
         }
 
         public void AddArgument(LuaExpressionSyntax argument) {
-            ArgumentList.Arguments.Add(new LuaArgumentSyntax(argument));
+            ArgumentList.AddArgument(argument);
         }
 
         public void AddArguments(IEnumerable<LuaExpressionSyntax> arguments) {
-            ArgumentList.Arguments.AddRange(arguments.Select(i => new LuaArgumentSyntax(i)));
+            ArgumentList.AddArguments(arguments);
         }
 
         internal override void Render(LuaRenderer renderer) {
