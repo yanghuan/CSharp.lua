@@ -1590,6 +1590,11 @@ namespace CSharpLua {
                 }
                 else {
                     if(IsInternalNode(node)) {
+                        if(!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)
+                            && !node.Parent.IsKind(SyntaxKind.InvocationExpression)) {
+                            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, LuaIdentifierNameSyntax.This, methodName);
+                        }
+
                         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, methodName, true);
                         return memberAccess;
                     }
@@ -2052,24 +2057,37 @@ namespace CSharpLua {
             return BuildBinaryExpression(node, operatorToken);
         }
 
-        private LuaAssignmentExpressionSyntax GetLuaAssignmentExpressionSyntax(ExpressionSyntax operand, bool isPlus) {
-            var expression = (LuaExpressionSyntax)operand.Accept(this);
+        private LuaExpressionSyntax GetLuaAssignmentExpressionSyntax(ExpressionSyntax operand, bool isPlus) {
             string operatorToken = isPlus ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
-            LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(expression, operatorToken, LuaIdentifierNameSyntax.One);
-            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(expression, binary);
-            return assignment;
+            var expression = (LuaExpressionSyntax)operand.Accept(this);
+            var propertyAdapter = expression as LuaPropertyAdapterExpressionSyntax;
+            if(propertyAdapter != null) {
+                propertyAdapter.InvocationExpression.AddArgument(new LuaBinaryExpressionSyntax(propertyAdapter.GetCloneOfGet(), operatorToken, LuaIdentifierNameSyntax.One));
+                return propertyAdapter;
+            }
+            else {
+                LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(expression, operatorToken, LuaIdentifierNameSyntax.One);
+                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(expression, binary);
+                return assignment;
+            }
         }
 
         public override LuaSyntaxNode VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
             SyntaxKind kind = node.Kind();
             if(kind == SyntaxKind.PreIncrementExpression || kind == SyntaxKind.PreDecrementExpression) {
-                LuaAssignmentExpressionSyntax assignment = GetLuaAssignmentExpressionSyntax(node.Operand, kind == SyntaxKind.PreIncrementExpression);
+                var expression = GetLuaAssignmentExpressionSyntax(node.Operand, kind == SyntaxKind.PreIncrementExpression);
                 if(node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement)) {
-                    return assignment;
+                    return expression;
                 }
                 else {
-                    CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-                    return assignment.Left;
+                    var assignment = expression as LuaAssignmentExpressionSyntax;
+                    if(assignment != null) {
+                        CurBlock.Statements.Add(new LuaExpressionStatementSyntax(expression));
+                        return assignment.Left;
+                    }
+                    else {
+                        return expression;
+                    }
                 }
             }
             else {
@@ -2085,15 +2103,21 @@ namespace CSharpLua {
             if(kind != SyntaxKind.PostIncrementExpression && kind != SyntaxKind.PostDecrementExpression) {
                 throw new NotSupportedException();
             }
-            LuaAssignmentExpressionSyntax assignment = GetLuaAssignmentExpressionSyntax(node.Operand, kind == SyntaxKind.PostIncrementExpression);
+            var expression = GetLuaAssignmentExpressionSyntax(node.Operand, kind == SyntaxKind.PostIncrementExpression);
             if(node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement)) {
-                return assignment;
+                return expression;
             }
             else {
-                var temp = GetTempIdentifier(node);
-                CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, assignment.Left));
-                CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-                return temp;
+                var assignment = expression as LuaAssignmentExpressionSyntax;
+                if(assignment != null) {
+                    var temp = GetTempIdentifier(node);
+                    CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, assignment.Left));
+                    CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+                    return temp;
+                }
+                else {
+                    return expression;
+                }
             }
         }
 
