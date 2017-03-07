@@ -892,13 +892,16 @@ namespace CSharpLua {
             }
         }
 
-        private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken) {
+        private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken, bool isRightParenthesized) {
             var propertyAdapter = left as LuaPropertyAdapterExpressionSyntax;
             if(propertyAdapter != null) {
                 propertyAdapter.ArgumentList.AddArgument(new LuaBinaryExpressionSyntax(propertyAdapter.GetCloneOfGet(), operatorToken, right));
                 return propertyAdapter;
             }
             else {
+                if(isRightParenthesized) {
+                    right = new LuaParenthesizedExpressionSyntax(right);
+                }
                 return new LuaAssignmentExpressionSyntax(left, new LuaBinaryExpressionSyntax(left, operatorToken, right));
             }
         }
@@ -906,7 +909,7 @@ namespace CSharpLua {
         private LuaExpressionSyntax BuildCommonAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string operatorToken) {
             var left = (LuaExpressionSyntax)leftNode.Accept(this);
             var right = (LuaExpressionSyntax)rightNode.Accept(this);
-            return BuildCommonAssignmentExpression(left, right, operatorToken);
+            return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode is BinaryExpressionSyntax);
         }
 
         private LuaExpressionSyntax BuildDelegateAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, bool isPlus) {
@@ -981,7 +984,7 @@ namespace CSharpLua {
                         if(leftType.IsStringType()) {
                             var left = (LuaExpressionSyntax)leftNode.Accept(this);
                             var right = WrapStringConcatExpression(rightNode);
-                            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation);
+                            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation, rightNode is BinaryExpressionSyntax);
                         }
                         else {
                             var left = (LuaExpressionSyntax)leftNode.Accept(this);
@@ -991,7 +994,7 @@ namespace CSharpLua {
                                 return BuildDelegateAssignmentExpression(left, right, true);
                             }
                             else {
-                                return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus);
+                                return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus, rightNode is BinaryExpressionSyntax);
                             }
                         }
                     }
@@ -1004,7 +1007,7 @@ namespace CSharpLua {
                             return BuildDelegateAssignmentExpression(left, right, false);
                         }
                         else {
-                            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Sub);
+                            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Sub, rightNode is BinaryExpressionSyntax);
                         }
                     }
                 case SyntaxKind.MultiplyAssignmentExpression: {
@@ -1254,7 +1257,12 @@ namespace CSharpLua {
             Contract.Assert(parameter.HasExplicitDefaultValue);
             LuaExpressionSyntax defaultValue = isCheckCallerAttribute ? CheckCallerAttribute(parameter, node) : null;
             if(defaultValue == null) {
-                defaultValue = GetConstLiteralExpression(parameter.ExplicitDefaultValue);
+                if(parameter.ExplicitDefaultValue == null && parameter.Type.IsValueType) {
+                    defaultValue = GetPredefinedValueTypeDefaultValue(parameter.Type);
+                }
+                else {
+                    defaultValue = GetConstLiteralExpression(parameter.ExplicitDefaultValue);
+                }
             }
             return defaultValue;
         }
@@ -2058,35 +2066,26 @@ namespace CSharpLua {
             return BuildBinaryExpression(node, operatorToken);
         }
 
-        private LuaExpressionSyntax GetLuaAssignmentExpressionSyntax(ExpressionSyntax operand, bool isPlus) {
-            string operatorToken = isPlus ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
-            var expression = (LuaExpressionSyntax)operand.Accept(this);
-            var propertyAdapter = expression as LuaPropertyAdapterExpressionSyntax;
-            if(propertyAdapter != null) {
-                propertyAdapter.ArgumentList.AddArgument(new LuaBinaryExpressionSyntax(propertyAdapter.GetCloneOfGet(), operatorToken, LuaIdentifierNameSyntax.One));
-                return propertyAdapter;
-            }
-            else {
-                LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(expression, operatorToken, LuaIdentifierNameSyntax.One);
-                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(expression, binary);
-                return assignment;
-            }
-        }
-
         private bool IsSingleLineUnary(ExpressionSyntax node) {
             return node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement);
         }
 
-        private LuaSyntaxNode BuildPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, SyntaxNode node) {
+        private LuaSyntaxNode BuildPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, SyntaxNode node, bool isLocalVar = false) {
             LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(operand, operatorToken, LuaIdentifierNameSyntax.One);
             if(isSingleLine) {
                 return new LuaAssignmentExpressionSyntax(operand, binary);
             }
             else {
-                var temp = GetTempIdentifier(node);
-                CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, binary));
-                CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(operand, temp)));
-                return temp;
+                if(isLocalVar) {
+                    CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(operand, binary)));
+                    return operand;
+                }
+                else {
+                    var temp = GetTempIdentifier(node);
+                    CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, binary));
+                    CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(operand, temp)));
+                    return temp;
+                }
             }
         }
 
@@ -2145,7 +2144,14 @@ namespace CSharpLua {
                     }
                 }
                 else {
-                    return BuildPrefixUnaryExpression(isSingleLine, operatorToken, operand, node);
+                    bool isLocalVar = false;
+                    if(!isSingleLine) {
+                        SymbolKind symbolKind = semanticModel_.GetSymbolInfo(node.Operand).Symbol.Kind;
+                        if(symbolKind == SymbolKind.Parameter || symbolKind == SymbolKind.Local) {
+                            isLocalVar = true;
+                        }
+                    } 
+                    return BuildPrefixUnaryExpression(isSingleLine, operatorToken, operand, node, isLocalVar);
                 }
             }
             else {
