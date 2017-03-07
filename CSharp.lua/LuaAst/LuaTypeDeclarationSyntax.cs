@@ -35,8 +35,9 @@ namespace CSharpLua.LuaAst {
         private List<LuaStatementSyntax> staticcCtorStatements_ = new List<LuaStatementSyntax>();
         private List<string> staticAssignmentNames_ = new List<string>();
 
-        private LuaFunctionExpressionSyntax initFunction_;
+        private List<LuaStatementSyntax> initStatements_ = new List<LuaStatementSyntax>();
         private List<LuaConstructorAdapterExpressionSyntax> ctors_ = new List<LuaConstructorAdapterExpressionSyntax>();
+
         private List<LuaIdentifierNameSyntax> typeIdentifiers_ = new List<LuaIdentifierNameSyntax>();
         private LuaTableInitializerExpression attributes_ = new LuaTableInitializerExpression();
         private List<LuaStatementSyntax> documentComments_ = new List<LuaStatementSyntax>();
@@ -128,18 +129,10 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        private void AddInitFiled(ref LuaFunctionExpressionSyntax initFunction, LuaAssignmentExpressionSyntax assignment) {
-            if(initFunction == null) {
-                initFunction = new LuaFunctionExpressionSyntax();
-                initFunction.AddParameter(LuaIdentifierNameSyntax.This);
-            }
-            initFunction.AddStatement(assignment);
-        }
-
-        private void AddInitFiled(ref LuaFunctionExpressionSyntax initFunction, LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
+        private void AddInitFiled(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name);
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(memberAccess, value);
-            AddInitFiled(ref initFunction, assignment);
+            initStatements_.Add(new LuaExpressionStatementSyntax(assignment));
         }
 
         public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly) {
@@ -179,7 +172,7 @@ namespace CSharpLua.LuaAst {
                         AddResultTable(name, value);
                     }
                     else {
-                        AddInitFiled(ref initFunction_, name, value);
+                        AddInitFiled(name, value);
                     }
                 }
             }
@@ -227,7 +220,7 @@ namespace CSharpLua.LuaAst {
                         AddResultTable(identifierName, value);
                     }
                     else {
-                        AddInitFiled(ref initFunction_, identifierName, value);
+                        AddInitFiled(identifierName, value);
                     }
                 }
             }
@@ -261,9 +254,8 @@ namespace CSharpLua.LuaAst {
         }
 
         private void AddInitFunction(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax initFunction, bool isAddItem = true) {
-            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, initFunction);
-            methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
             local_.Variables.Add(name);
+            statements_.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(name, initFunction)));
             if(isAddItem) {
                 AddResultTable(name);
             }
@@ -296,14 +288,21 @@ namespace CSharpLua.LuaAst {
             }
         }
 
+        private LuaFunctionExpressionSyntax GetInitFunction() {
+            LuaFunctionExpressionSyntax initFuntion = new LuaFunctionExpressionSyntax();
+            initFuntion.AddParameter(LuaIdentifierNameSyntax.This);
+            initFuntion.Body.Statements.AddRange(initStatements_);
+            return initFuntion;
+        }
+
         private void CheckCtorsFunction() {
-            bool hasInit = initFunction_ != null;
+            bool hasInit = initStatements_.Count > 0;
             bool hasCtors = ctors_.Count > 0;
 
             if(hasCtors) {
                 if(hasInit) {
                     var initIdentifier = LuaIdentifierNameSyntax.Init;
-                    AddInitFunction(initIdentifier, initFunction_, false);
+                    AddInitFunction(initIdentifier, GetInitFunction(), false);
                     foreach(var ctor in ctors_) {
                         if(!ctor.IsInvokeThisCtor) {
                             LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier, LuaIdentifierNameSyntax.This);
@@ -330,7 +329,7 @@ namespace CSharpLua.LuaAst {
             }
             else {
                 if(hasInit) {
-                    AddInitFunction(LuaIdentifierNameSyntax.Ctor, initFunction_);
+                    AddInitFunction(LuaIdentifierNameSyntax.Ctor, GetInitFunction());
                 }
             }
         }

@@ -1743,14 +1743,17 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node) {
             switch(node.Kind()) {
+                case SyntaxKind.NumericLiteralExpression: {
+                        return new LuaIdentifierLiteralExpressionSyntax(node.Token.Text);
+                    }
+                case SyntaxKind.StringLiteralExpression: {
+                        return BuildStringLiteralTokenExpression(node.Token);
+                    }
                 case SyntaxKind.CharacterLiteralExpression: {
                         return new LuaCharacterLiteralExpression((char)node.Token.Value);
                     }
                 case SyntaxKind.NullLiteralExpression: {
                         return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
-                    }
-                case SyntaxKind.StringLiteralExpression: {
-                        return BuildStringLiteralTokenExpression(node.Token);
                     }
                 default: {
                         return new LuaIdentifierLiteralExpressionSyntax(node.Token.ValueText);
