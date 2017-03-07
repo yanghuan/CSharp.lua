@@ -248,9 +248,9 @@ local function def(name, kind, cls, generic)
         if extends then
             if type(extends) == "function" then
                 if not cls.__recursion__ then
-                    setExtends(cls, extends())
+                    setExtends(cls, extends(global))
                 else 
-                    cls.__recursion__ = function() setExtends(cls, extends()) end
+                    cls.__recursion__ = function() setExtends(cls, extends(global)) end
                     recursion = true
                 end
             else            

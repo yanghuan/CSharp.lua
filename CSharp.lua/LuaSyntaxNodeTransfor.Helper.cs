@@ -535,21 +535,23 @@ namespace CSharpLua {
         }
 
         internal void ImportTypeName(ref string name, ISymbol symbol) {
-            int pos = name.LastIndexOf('.');
-            if(pos != -1) {
-                string prefix = name.Substring(0, pos);
-                if(prefix != LuaIdentifierNameSyntax.System.ValueText) {
-                    string newPrefix = prefix.Replace(".", "");
-                    var methodInfo = CurMethodInfoOrNull;
-                    if(methodInfo != null) {
-                        var syntaxReference = methodInfo.Symbol.DeclaringSyntaxReferences.First();
-                        var root = syntaxReference.GetSyntax();
-                        if(IsLocalVarExists(newPrefix, root)) {
-                            return;
+            if(baseNameNodeCounter_ == 0) {
+                int pos = name.LastIndexOf('.');
+                if(pos != -1) {
+                    string prefix = name.Substring(0, pos);
+                    if(prefix != LuaIdentifierNameSyntax.System.ValueText) {
+                        string newPrefix = prefix.Replace(".", "");
+                        var methodInfo = CurMethodInfoOrNull;
+                        if(methodInfo != null) {
+                            var syntaxReference = methodInfo.Symbol.DeclaringSyntaxReferences.First();
+                            var root = syntaxReference.GetSyntax();
+                            if(IsLocalVarExists(newPrefix, root)) {
+                                return;
+                            }
                         }
+                        name = newPrefix + name.Substring(pos);
+                        CurCompilationUnit.AddImport(prefix, newPrefix, symbol.IsFromCode());
                     }
-                    name = newPrefix + name.Substring(pos);
-                    CurCompilationUnit.AddImport(prefix, newPrefix, symbol.IsFromCode());
                 }
             }
         }
@@ -809,6 +811,13 @@ namespace CSharpLua {
                 }
             }
             return comments;
+        }
+
+        private LuaExpressionSyntax BuildBaseTypeName(BaseTypeSyntax baseType) {
+            ++baseNameNodeCounter_;
+            var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
+            --baseNameNodeCounter_;
+            return baseTypeName;
         }
     }
 }

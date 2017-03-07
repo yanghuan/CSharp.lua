@@ -83,9 +83,14 @@ namespace CSharpLua.LuaAst {
         }
 
         internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, bool hasExtendSelf) {
+            var global = LuaIdentifierNameSyntax.Global;
             LuaTableInitializerExpression table = new LuaTableInitializerExpression();
-            table.Items.AddRange(baseTypes.Select(i => new LuaSingleTableItemSyntax(i)));
+            foreach(var baseType in baseTypes) {
+                LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(global, baseType);
+                table.Items.Add(new LuaSingleTableItemSyntax(memberAccess));
+            }
             LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+            functionExpression.AddParameter(global);
             functionExpression.AddStatement(new LuaReturnStatementSyntax(table));
             AddResultTable(LuaIdentifierNameSyntax.Inherits, functionExpression);
             if(hasExtendSelf) {
@@ -282,11 +287,11 @@ namespace CSharpLua.LuaAst {
             statements.AddRange(staticLazyStatements_);
             statements.AddRange(staticInitStatements_);
             statements.AddRange(staticcCtorStatements_);
-
             if(statements.Count > 0) {
                 LuaFunctionExpressionSyntax staticCtor = new LuaFunctionExpressionSyntax();
                 staticCtor.AddParameter(LuaIdentifierNameSyntax.This);
                 staticCtor.Body.Statements.AddRange(statements);
+                AddStaticAssignmentNames(staticCtor.Body);
                 AddInitFunction(LuaIdentifierNameSyntax.StaticCtor, staticCtor);
             }
         }

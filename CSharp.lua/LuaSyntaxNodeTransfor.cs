@@ -54,6 +54,7 @@ namespace CSharpLua {
         private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
         private Stack<LuaIfStatementSyntax> ifStatements_ = new Stack<LuaIfStatementSyntax>();
         private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
+        private int baseNameNodeCounter_;
   
         private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
             ["!="] = LuaSyntaxNode.Tokens.NotEquals,
@@ -215,7 +216,7 @@ namespace CSharpLua {
                 bool hasExtendSelf = false;
                 List<LuaExpressionSyntax> baseTypes = new List<LuaExpressionSyntax>();
                 foreach(var baseType in node.BaseList.Types) {
-                    var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
+                    var baseTypeName = BuildBaseTypeName(baseType);
                     baseTypes.Add(baseTypeName);
                     CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
                 }
@@ -298,7 +299,7 @@ namespace CSharpLua {
                 List<LuaExpressionSyntax> baseTypeExpressions = new List<LuaExpressionSyntax>();
                 foreach(var baseType in baseTypes) {
                     semanticModel_ = generator_.GetSemanticModel(baseType.SyntaxTree);
-                    var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
+                    var baseTypeName = BuildBaseTypeName(baseType);
                     baseTypeExpressions.Add(baseTypeName);
                     CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
                 }
@@ -1426,6 +1427,9 @@ namespace CSharpLua {
                         if(!node.Parent.IsKind(SyntaxKind.InvocationExpression)) {
                             var target = (LuaExpressionSyntax)node.Expression.Accept(this);
                             var methodName = (LuaExpressionSyntax)node.Name.Accept(this);
+                            if(!IsInternalMember(node.Name, symbol)) {
+                                methodName = new LuaMemberAccessExpressionSyntax(target, methodName);
+                            }
                             return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, target, methodName);
                         }
                     }
@@ -2073,6 +2077,47 @@ namespace CSharpLua {
             return node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement);
         }
 
+        private LuaSyntaxNode BuildPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, SyntaxNode node) {
+            LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(operand, operatorToken, LuaIdentifierNameSyntax.One);
+            if(isSingleLine) {
+                return new LuaAssignmentExpressionSyntax(operand, binary);
+            }
+            else {
+                var temp = GetTempIdentifier(node);
+                CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, binary));
+                CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(operand, temp)));
+                return temp;
+            }
+        }
+
+        private LuaSyntaxNode BuildPropertyPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaPropertyAdapterExpressionSyntax get, LuaPropertyAdapterExpressionSyntax set, SyntaxNode node) {
+            set.IsGetOrAdd = false;
+            var binary = new LuaBinaryExpressionSyntax(get, operatorToken, LuaIdentifierNameSyntax.One);
+            if(isSingleLine) {
+                set.ArgumentList.AddArgument(binary);
+                return set;
+            }
+            else {
+                var temp = GetTempIdentifier(node);
+                CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, binary));
+                set.ArgumentList.AddArgument(temp);
+                CurBlock.Statements.Add(new LuaExpressionStatementSyntax(set));
+                return temp;
+            }
+        }
+
+        private LuaMemberAccessExpressionSyntax GetTempUnaryExpression(LuaMemberAccessExpressionSyntax memberAccess, out LuaLocalVariableDeclaratorSyntax localTemp, SyntaxNode node) {
+            var temp = GetTempIdentifier(node);
+            localTemp = new LuaLocalVariableDeclaratorSyntax(temp, memberAccess.Expression);
+            return new LuaMemberAccessExpressionSyntax(temp, memberAccess.Name, memberAccess.IsObjectColon);
+        }
+
+        private LuaPropertyAdapterExpressionSyntax GetTempPropertyUnaryExpression(LuaPropertyAdapterExpressionSyntax propertyAdapter, out LuaLocalVariableDeclaratorSyntax localTemp, SyntaxNode node) {
+            var temp = GetTempIdentifier(node);
+            localTemp = new LuaLocalVariableDeclaratorSyntax(temp, propertyAdapter.Expression);
+            return new LuaPropertyAdapterExpressionSyntax(temp, propertyAdapter.Name, propertyAdapter.IsObjectColon);
+        }
+
         public override LuaSyntaxNode VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
             SyntaxKind kind = node.Kind();
             if(kind == SyntaxKind.PreIncrementExpression || kind == SyntaxKind.PreDecrementExpression) {
@@ -2082,68 +2127,25 @@ namespace CSharpLua {
 
                 if(operand is LuaMemberAccessExpressionSyntax) {
                     var memberAccess = (LuaMemberAccessExpressionSyntax)operand;
-                    var temp = GetTempIdentifier(node);
-                    CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, memberAccess.Expression));
-                    memberAccess = new LuaMemberAccessExpressionSyntax(temp, memberAccess.Name, memberAccess.IsObjectColon);
-                    var binary = new LuaBinaryExpressionSyntax(memberAccess, operatorToken, LuaIdentifierNameSyntax.One);
-                    if(isSingleLine) {
-                        return new LuaAssignmentExpressionSyntax(memberAccess, binary);
-                    }
-                    else {
-                        var temp1 = GetTempIdentifier(node);
-                        CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp1, binary));
-                        CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(memberAccess, temp1)));
-                        return temp1;
-                    }
+                    LuaLocalVariableDeclaratorSyntax localTemp;
+                    var tempMemberAccess = GetTempUnaryExpression(memberAccess, out localTemp, node);
+                    CurBlock.Statements.Add(localTemp);
+                    return BuildPrefixUnaryExpression(isSingleLine, operatorToken, tempMemberAccess, node);
                 }
                 else if(operand is LuaPropertyAdapterExpressionSyntax) {
                     var propertyAdapter = (LuaPropertyAdapterExpressionSyntax)operand;
                     if(propertyAdapter.Expression != null) {
-                        var temp = GetTempIdentifier(node);
-                        CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, propertyAdapter.Expression));
-                        var getAdapter = new LuaPropertyAdapterExpressionSyntax(temp, propertyAdapter.Name, propertyAdapter.IsObjectColon);
-                        LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(getAdapter, operatorToken, LuaIdentifierNameSyntax.One);
-                        var setAdapter = new LuaPropertyAdapterExpressionSyntax(temp, propertyAdapter.Name.GetClone(), propertyAdapter.IsObjectColon);
-                        setAdapter.IsGetOrAdd = false;
-                        if(isSingleLine) {
-                            setAdapter.ArgumentList.AddArgument(binary);
-                            return setAdapter;
-                        }
-                        else {
-                            var temp1 = GetTempIdentifier(node);
-                            CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp1, binary));
-                            setAdapter.ArgumentList.AddArgument(temp1);
-                            CurBlock.Statements.Add(new LuaExpressionStatementSyntax(setAdapter));
-                            return temp1;
-                        }
+                        LuaLocalVariableDeclaratorSyntax localTemp;
+                        var getAdapter = GetTempPropertyUnaryExpression(propertyAdapter, out localTemp, node);
+                        CurBlock.Statements.Add(localTemp);
+                        return BuildPropertyPrefixUnaryExpression(isSingleLine, operatorToken, getAdapter, getAdapter.GetClone(), node);
                     }
                     else {
-                        var setAdapter = propertyAdapter.GetClone();
-                        setAdapter.IsGetOrAdd = false;
-                        var binary = new LuaBinaryExpressionSyntax(propertyAdapter, operatorToken, LuaIdentifierNameSyntax.One);
-                        if(isSingleLine) {
-                            setAdapter.ArgumentList.AddArgument(binary);
-                            return setAdapter;
-                        }
-                        else {
-                            var temp = GetTempIdentifier(node);
-                            CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, binary));
-                            setAdapter.ArgumentList.AddArgument(temp);
-                            CurBlock.Statements.Add(new LuaExpressionStatementSyntax(setAdapter));
-                            return temp;
-                        }
+                        return BuildPropertyPrefixUnaryExpression(isSingleLine, operatorToken, propertyAdapter, propertyAdapter.GetClone(), node);
                     }
                 }
                 else {
-                    LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(operand, operatorToken, LuaIdentifierNameSyntax.One);
-                    LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(operand, binary);
-                    if(isSingleLine) {
-                        return assignment;
-                    }
-                    else {
-                        CurBlock.Statements.Add(new LuaExpressionStatementSyntax(operand));
-                        return assignment.Left;
-                    }
+                    return BuildPrefixUnaryExpression(isSingleLine, operatorToken, operand, node);
                 }
             }
             else {
@@ -2154,26 +2156,67 @@ namespace CSharpLua {
             }
         }
 
+        private LuaSyntaxNode BuildPostfixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, SyntaxNode node) {
+            if(isSingleLine) {
+                LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(operand, operatorToken, LuaIdentifierNameSyntax.One);
+                return new LuaAssignmentExpressionSyntax(operand, binary);
+            }
+            else {
+                var temp = GetTempIdentifier(node);
+                CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, operand));
+                LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(temp, operatorToken, LuaIdentifierNameSyntax.One);
+                CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(operand, binary)));
+                return temp;
+            }
+        }
+
+        private LuaSyntaxNode BuildPropertyPostfixUnaryExpression(bool isSingleLine, string operatorToken, LuaPropertyAdapterExpressionSyntax get, LuaPropertyAdapterExpressionSyntax set, SyntaxNode node) {
+            set.IsGetOrAdd = false;
+            if(isSingleLine) {
+                LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(get, operatorToken, LuaIdentifierNameSyntax.One);
+                return new LuaAssignmentExpressionSyntax(set, binary);
+            }
+            else {
+                var temp = GetTempIdentifier(node);
+                CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, get));
+                LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(temp, operatorToken, LuaIdentifierNameSyntax.One);
+                set.ArgumentList.AddArgument(binary);
+                CurBlock.Statements.Add(new LuaExpressionStatementSyntax(set));
+                return temp;
+            }
+        }
+
         public override LuaSyntaxNode VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node) {
             SyntaxKind kind = node.Kind();
             if(kind != SyntaxKind.PostIncrementExpression && kind != SyntaxKind.PostDecrementExpression) {
                 throw new NotSupportedException();
             }
-            var expression = GetLuaAssignmentExpressionSyntax(node.Operand, kind == SyntaxKind.PostIncrementExpression);
-            if(node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement)) {
-                return expression;
+
+            bool isSingleLine = IsSingleLineUnary(node);
+            string operatorToken = kind == SyntaxKind.PostIncrementExpression ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
+            var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
+
+            if(operand is LuaMemberAccessExpressionSyntax) {
+                var memberAccess = (LuaMemberAccessExpressionSyntax)operand;
+                LuaLocalVariableDeclaratorSyntax localTemp;
+                var tempMemberAccess = GetTempUnaryExpression(memberAccess, out localTemp, node);
+                CurBlock.Statements.Add(localTemp);
+                return BuildPostfixUnaryExpression(isSingleLine, operatorToken, tempMemberAccess, node);
             }
-            else {
-                var assignment = expression as LuaAssignmentExpressionSyntax;
-                if(assignment != null) {
-                    var temp = GetTempIdentifier(node);
-                    CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, assignment.Left));
-                    CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-                    return temp;
+            else if(operand is LuaPropertyAdapterExpressionSyntax) {
+                var propertyAdapter = (LuaPropertyAdapterExpressionSyntax)operand;
+                if(propertyAdapter.Expression != null) {
+                    LuaLocalVariableDeclaratorSyntax localTemp;
+                    var getAdapter = GetTempPropertyUnaryExpression(propertyAdapter, out localTemp, node);
+                    CurBlock.Statements.Add(localTemp);
+                    return BuildPropertyPostfixUnaryExpression(isSingleLine, operatorToken, getAdapter, getAdapter.GetClone(), node);
                 }
                 else {
-                    return expression;
+                    return BuildPropertyPostfixUnaryExpression(isSingleLine, operatorToken, propertyAdapter, propertyAdapter.GetClone(), node);
                 }
+            }
+            else {
+                return BuildPostfixUnaryExpression(isSingleLine, operatorToken, operand, node);
             }
         }
 
