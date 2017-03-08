@@ -1593,7 +1593,7 @@ namespace CSharpLua {
                     if(IsInternalNode(node)) {
                         if(!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)
                             && !node.Parent.IsKind(SyntaxKind.InvocationExpression)) {
-                            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, LuaIdentifierNameSyntax.This, methodName);
+                            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, LuaIdentifierNameSyntax.This, new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, methodName));
                         }
 
                         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, methodName, true);
