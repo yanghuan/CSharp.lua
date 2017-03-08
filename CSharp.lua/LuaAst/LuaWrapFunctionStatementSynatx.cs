@@ -25,7 +25,6 @@ namespace CSharpLua.LuaAst {
     public abstract class LuaWrapFunctionStatementSynatx : LuaStatementSyntax {
         public LuaExpressionStatementSyntax Statement { get; private set; }
         private LuaFunctionExpressionSyntax function_ = new LuaFunctionExpressionSyntax();
-        protected List<LuaStatementSyntax> statements_ = new List<LuaStatementSyntax>();
 
         protected void UpdateIdentifiers(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax target, LuaIdentifierNameSyntax memberName, LuaIdentifierNameSyntax parameter = null) {
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(target, memberName);
@@ -38,15 +37,20 @@ namespace CSharpLua.LuaAst {
             Statement = new LuaExpressionStatementSyntax(invoke);
         }
 
+        public LuaBlockSyntax Body {
+            get {
+                return function_.Body;
+            }
+        }
+
         public void AddMemberDeclaration(LuaWrapFunctionStatementSynatx statement) {
             if(statement == null) {
                 throw new ArgumentNullException(nameof(statement));
             }
-            statements_.Add(statement);
+            Body.Statements.Add(statement);
         }
 
         internal override void Render(LuaRenderer renderer) {
-            function_.AddStatements(statements_);
             renderer.Render(this);
         }
     }

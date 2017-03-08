@@ -421,16 +421,29 @@ namespace CSharpLua {
             }
 
             LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor);
-            if(namedTypeSymbol.TypeArguments.Length == 0) {
+            if(namedTypeSymbol.TypeArguments.IsEmpty) {
                 return baseTypeName;
             }
             else {
                 var invocationExpression = new LuaInvocationExpressionSyntax(baseTypeName);
-                foreach(var typeArgument in namedTypeSymbol.TypeArguments) {
-                    LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
-                    invocationExpression.AddArgument(typeArgumentExpression);
-                }
+                FillExternalTypeArgument(invocationExpression, namedTypeSymbol, transfor);
+                FillTypeArguments(invocationExpression, namedTypeSymbol, transfor);
                 return invocationExpression;
+            }
+        }
+
+        private void FillTypeArguments(LuaInvocationExpressionSyntax invocationExpression, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
+            foreach(var typeArgument in typeSymbol.TypeArguments) {
+                LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
+                invocationExpression.AddArgument(typeArgumentExpression);
+            }
+        }
+
+        private void FillExternalTypeArgument(LuaInvocationExpressionSyntax invocation, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
+            var externalType = typeSymbol.ContainingType;
+            if(externalType != null) {
+                FillExternalTypeArgument(invocation, externalType, transfor);
+                FillTypeArguments(invocation, externalType, transfor);
             }
         }
 
@@ -438,40 +451,36 @@ namespace CSharpLua {
             return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
         }
 
+        private void FillExternalTypeName(StringBuilder sb, INamedTypeSymbol typeSymbol) {
+            var externalType = typeSymbol.ContainingType;
+            if(externalType != null) {
+                FillExternalTypeName(sb, externalType);
+                sb.Append(externalType.Name);
+                int typeParametersCount = externalType.TypeParameters.Length;
+                if(typeParametersCount > 0) {
+                    sb.Append('_');
+                    sb.Append(typeParametersCount);
+                }
+                sb.Append('.');
+            }
+        }
+
         private string GetTypeShortString(ISymbol symbol) {
             INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
             string namespaceName = GetNamespaceMapName(typeSymbol.ContainingNamespace);
-            string name;
-            if(typeSymbol.ContainingType != null) {
-                name = "";
-                INamedTypeSymbol containingType = typeSymbol.ContainingType;
-                do {
-                    name = containingType.Name + '.' + name;
-                    containingType = containingType.ContainingType;
-                } while(containingType != null);
-                name += typeSymbol.Name;
+            StringBuilder sb = new StringBuilder();
+            if(namespaceName.Length > 0) {
+                sb.Append(namespaceName);
+                sb.Append('.');
             }
-            else {
-                name = typeSymbol.Name;
+            FillExternalTypeName(sb, typeSymbol);
+            sb.Append(typeSymbol.Name);
+            int typeParametersCount = typeSymbol.TypeParameters.Length;
+            if(typeParametersCount > 0) {
+                sb.Append('_');
+                sb.Append(typeParametersCount);
             }
-            string fullName;
-            if(typeSymbol.TypeArguments.Length == 0) {
-                if(namespaceName.Length > 0) {
-                    fullName = $"{namespaceName}.{name}";
-                }
-                else {
-                    fullName = name;
-                }
-            }
-            else {
-                if(namespaceName.Length > 0) {
-                    fullName = $"{namespaceName}.{name}_{typeSymbol.TypeArguments.Length}";
-                }
-                else {
-                    fullName = $"{name}_{typeSymbol.TypeArguments.Length}";
-                }
-            }
-            return fullName;
+            return sb.ToString();
         }
 
         internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransfor transfor = null) {

@@ -819,5 +819,35 @@ namespace CSharpLua {
             --baseNameNodeCounter_;
             return baseTypeName;
         }
+
+        public override LuaSyntaxNode VisitTypeParameterList(TypeParameterListSyntax node) {
+            LuaParameterListSyntax parameterList = new LuaParameterListSyntax();
+            foreach(var typeParameter in node.Parameters) {
+                var typeIdentifier = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
+                parameterList.Parameters.Add(new LuaParameterSyntax(typeIdentifier));
+            }
+            return parameterList;
+        }
+
+        private void FillExternalTypeParameters(List<LuaParameterSyntax> typeParameters, INamedTypeSymbol typeSymbol) {
+            var externalType = typeSymbol.ContainingType;
+            if(externalType != null) {
+                FillExternalTypeParameters(typeParameters, externalType);
+                foreach(var typeParameterSymbol in externalType.TypeParameters) {
+                    var identifierName = new LuaIdentifierNameSyntax(typeParameterSymbol.Name);
+                    typeParameters.Add(new LuaParameterSyntax(identifierName));
+                }
+            }
+        }
+
+        private List<LuaParameterSyntax> BuildTypeParameters(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node) {
+            List<LuaParameterSyntax> typeParameters = new List<LuaParameterSyntax>();
+            FillExternalTypeParameters(typeParameters, typeSymbol);
+            if(node.TypeParameterList != null) {
+                var parameterList = (LuaParameterListSyntax)node.TypeParameterList.Accept(this);
+                typeParameters.AddRange(parameterList.Parameters);
+            }
+            return typeParameters;
+        }
     }
 }

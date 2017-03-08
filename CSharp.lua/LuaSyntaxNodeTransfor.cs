@@ -205,12 +205,8 @@ namespace CSharpLua {
             var attributes = BuildAttributes(node.AttributeLists);
             typeDeclaration.AddClassAttributes(attributes);
 
-            if(node.TypeParameterList != null) {
-                foreach(var typeParameter in node.TypeParameterList.Parameters) {
-                    var typeIdentifier = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
-                    typeDeclaration.AddTypeIdentifier(typeIdentifier);
-                }
-            }
+            var typeParameters = BuildTypeParameters(typeSymbol, node);
+            typeDeclaration.AddTypeParameters(typeParameters);
 
             if(node.BaseList != null) {
                 bool hasExtendSelf = false;
@@ -264,12 +260,8 @@ namespace CSharpLua {
             }
             major.TypeDeclaration.AddClassAttributes(attributes);
 
-            if(major.Node.TypeParameterList != null) {
-                foreach(var typeParameter in major.Node.TypeParameterList.Parameters) {
-                    var typeIdentifier = (LuaIdentifierNameSyntax)typeParameter.Accept(this);
-                    major.TypeDeclaration.AddTypeIdentifier(typeIdentifier);
-                }
-            }
+            var typeParameters = BuildTypeParameters(major.Symbol, major.Node);
+            major.TypeDeclaration.AddTypeParameters(typeParameters);
 
             List<BaseTypeSyntax> baseTypes = new List<BaseTypeSyntax>();
             HashSet<ITypeSymbol> baseSymbols = new HashSet<ITypeSymbol>();
