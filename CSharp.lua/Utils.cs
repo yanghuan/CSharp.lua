@@ -340,11 +340,15 @@ namespace CSharpLua {
             return false;
         }
 
+        public static bool HasStaticCtor(this INamedTypeSymbol typeSymbol) {
+            return typeSymbol.Constructors.Any(i => i.IsStatic);
+        }
+
         public static bool IsStaticLazy(this ISymbol symbol) {
             bool success = symbol.IsStatic && !symbol.IsPrivate();
             if(success) {
-                var typeSymbol = (INamedTypeSymbol)symbol.ContainingType;
-                return typeSymbol.Constructors.Any(i => i.IsStatic);
+                var typeSymbol = symbol.ContainingType;
+                return typeSymbol.HasStaticCtor();
             }
             return success;
         }

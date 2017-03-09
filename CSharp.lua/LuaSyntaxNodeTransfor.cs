@@ -1340,9 +1340,12 @@ namespace CSharpLua {
         private LuaExpressionSyntax BuildMemberAccessExpression(ISymbol symbol, ExpressionSyntax node) {
             var expression = BuildMemberAccessTargetExpression(node);
             if (symbol.IsStatic) {
-                var typeSymbol = semanticModel_.GetTypeInfo(node).Type;
-                if (symbol.ContainingSymbol != typeSymbol) {
-                    expression = GetTypeName(symbol.ContainingSymbol);
+                var typeSymbol = (INamedTypeSymbol)semanticModel_.GetTypeInfo(node).Type;
+                if (symbol.ContainingType != typeSymbol) {
+                    bool isAssignment = node.Parent.Parent.Kind().IsAssignment();
+                    if(isAssignment || typeSymbol.HasStaticCtor() || symbol.ContainingType.HasStaticCtor()) {
+                        expression = GetTypeName(symbol.ContainingSymbol);
+                    }
                 }
             }
             return expression;
