@@ -243,6 +243,12 @@ namespace CSharpLua.LuaAst {
             staticcCtorStatements_.AddRange(function.Body.Statements);
         }
 
+        public bool IsNoneCtros {
+            get {
+                return ctors_.Count == 0;
+            }
+        }
+
         public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool isZeroParameters) {
             if(isZeroParameters) {
                 ctors_.Insert(0, function);

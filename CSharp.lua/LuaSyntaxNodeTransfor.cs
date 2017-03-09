@@ -220,6 +220,16 @@ namespace CSharpLua {
             }
 
             BuildTypeMembers(typeDeclaration, node);
+            if(typeDeclaration.IsNoneCtros) {
+                var baseCtorInvoke = BuildCallBaseConstructor(typeSymbol);
+                if(baseCtorInvoke != null) {
+                    LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
+                    function.AddParameter(LuaIdentifierNameSyntax.This);
+                    function.AddStatement(baseCtorInvoke);
+                    typeDeclaration.AddCtor(function, false);
+                }
+            }
+
             typeDeclarations_.Pop();
             CurCompilationUnit.AddTypeDeclarationCount();
         }
@@ -1327,6 +1337,17 @@ namespace CSharpLua {
             return expression;
         }
 
+        private LuaExpressionSyntax BuildMemberAccessExpression(ISymbol symbol, ExpressionSyntax node) {
+            var expression = BuildMemberAccessTargetExpression(node);
+            if (symbol.IsStatic) {
+                var typeSymbol = semanticModel_.GetTypeInfo(node).Type;
+                if (symbol.ContainingSymbol != typeSymbol) {
+                    expression = GetTypeName(symbol.ContainingSymbol);
+                }
+            }
+            return expression;
+        }
+
         private LuaExpressionSyntax CheckMemberAccessCodeTemplate(ISymbol symbol, MemberAccessExpressionSyntax node) {
             if(symbol.Kind == SymbolKind.Field) {
                 IFieldSymbol fieldSymbol = (IFieldSymbol)symbol;
@@ -1393,7 +1414,7 @@ namespace CSharpLua {
                         }
                     }
 
-                    var expression = BuildMemberAccessTargetExpression(node.Expression);
+                    var expression = BuildMemberAccessExpression(symbol, node.Expression);
                     var nameExpression = (LuaExpressionSyntax)node.Name.Accept(this);
                     return BuildFieldOrPropertyMemberAccessExpression(expression, nameExpression, symbol.IsStatic);
                 }
@@ -1434,12 +1455,14 @@ namespace CSharpLua {
                         }
                     }
 
-                    var expression = BuildMemberAccessTargetExpression(node.Expression);
+                    var expression = BuildMemberAccessExpression(symbol, node.Expression);
                     var identifier = (LuaExpressionSyntax)node.Name.Accept(this);
                     return new LuaMemberAccessExpressionSyntax(expression, identifier, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
                 }
             }
         }
+
+
 
         private LuaExpressionSyntax BuildStaticFieldName(ISymbol symbol, bool isReadOnly, IdentifierNameSyntax node) {
             Contract.Assert(symbol.IsStatic);

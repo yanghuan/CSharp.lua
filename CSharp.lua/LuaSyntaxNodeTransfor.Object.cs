@@ -242,6 +242,22 @@ namespace CSharpLua {
             return otherCtorInvoke;
         }
 
+        private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol typeSymbol) {
+            var baseType = typeSymbol.BaseType;
+            if (baseType != null && baseType.SpecialType != SpecialType.System_Object && baseType.SpecialType != SpecialType.System_ValueType) {
+                int ctroCounter = 0;
+                if (baseType.IsFromCode()) {
+                    if (baseType.Constructors.Count(i => !i.IsStatic) > 1) {
+                        ctroCounter = 1;
+                    }
+                }
+                var otherCtorInvoke = BuildCallBaseConstructor(baseType, ctroCounter);
+                otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
+                return otherCtorInvoke;
+            }
+            return null;
+        }
+
         public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
             IMethodSymbol ctorSymbol = semanticModel_.GetDeclaredSymbol(node);
             methodInfos_.Push(new MethodInfo(ctorSymbol));
@@ -272,19 +288,9 @@ namespace CSharpLua {
                 function.AddStatement(otherCtorInvoke);
             }
             else if(!isStatic) {
-                var symbol = semanticModel_.GetDeclaredSymbol(node);
-                var baseType = symbol.ContainingType.BaseType;
-                if(baseType.SpecialType != SpecialType.System_Object
-                    && baseType.SpecialType != SpecialType.System_ValueType) {
-                    int ctroCounter = 0;
-                    if(baseType.IsFromCode()) {
-                        if(baseType.Constructors.Count(i => !i.IsStatic) > 1) {
-                            ctroCounter = 1;
-                        }
-                    }
-                    var otherCtorInvoke = BuildCallBaseConstructor(baseType, ctroCounter);
-                    otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
-                    function.AddStatement(otherCtorInvoke);
+                var baseCtorInvoke = BuildCallBaseConstructor(ctorSymbol.ContainingType);
+                if(baseCtorInvoke != null) {
+                    function.AddStatement(baseCtorInvoke);
                 }
             }
 

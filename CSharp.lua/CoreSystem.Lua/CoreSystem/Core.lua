@@ -36,7 +36,6 @@ local emptyFn = function() end
 local identityFn = function(x) return x end
 local equals = function(x, y) return x == y end
 local genericCache = {}
-local class = {}
 local modules = {}
 local usings = {}
 local id = 0
@@ -156,35 +155,13 @@ enumMetatable.__index = enumMetatable
 local interfaceMetatable = { __kind__ = "I", __default__ = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
-local function setExtends(cls, extends)
-    local base = extends[1]
-    if base.__kind__ == "C" then
-        cls.__base__ = base
-        setmetatable(cls, base)
-        tremove(extends, 1)
-        if #extends > 0 then
-            cls.__interfaces__ = extends
-        end
-        if cls.__ctor__ == emptyFn then
-            local baseCtor = base.__ctor__
-            if type(baseCtor) == "table" then
-                cls.__ctor__ = baseCtor[1]
-            end
-        end 
-    else
-        setmetatable(cls, Object)
-        cls.__interfaces__ = extends
-    end
-    cls.__inherits__ = nil
-end
-
-local function defClass(kind, cls)
+local function setBase(cls)
     cls.__index = cls 
     cls.__call = new
     local extends = cls.__inherits__
     if extends then
         if type(extends) == "function" then
-            extends = extends()
+            extends = extends(global)
         end           
         local base = extends[1]
         if base.__kind__ == "C" then
@@ -193,22 +170,38 @@ local function defClass(kind, cls)
             if #extends > 0 then
                 cls.__interfaces__ = extends
             end 
-            if cls.__ctor__  == nil then
-                local baseCtor = base.__ctor__
-                if type(baseCtor) == "table" then
-                    cls.__ctor__ = baseCtor[1]
-                end
-            end 
             setmetatable(cls, base)
         else
             cls.__interfaces__ = extends
             setmetatable(cls, Object)
         end
-        cls.__inherits__ = ni
+        cls.__inherits__ = nil
     elseif cls ~= Object then
         setmetatable(cls, Object)
     end   
 end
+
+local function staticCtorSetBase(cls)
+    setmetatable(cls, nil)
+    setBase(cls)
+    cls:__staticCtor__()
+    cls.__staticCtor__ = nil
+end
+
+local staticCtorMetatable = {
+    __index = function(cls, key)
+          staticCtorSetBase(cls)
+          return cls[key]
+      end,
+    __newindex = function(cls, key, value)
+          staticCtorSetBase(cls)
+          cls[key] = value
+      end,
+    __call = function(cls, ...)
+          staticCtorSetBase(cls)
+          return new(cls, ...)
+      end,
+}
 
 local function def(name, kind, cls, generic)
     if type(cls) == "function" then
@@ -241,29 +234,11 @@ local function def(name, kind, cls, generic)
     end
     cls.__id__ = getId()
     if kind == "C" or kind == "S" then
-        cls.__index = cls 
-        cls.__call = new
-        local recursion   
-        local extends = cls.__inherits__
-        if extends then
-            if type(extends) == "function" then
-                if not cls.__recursion__ then
-                    setExtends(cls, extends(global))
-                else 
-                    cls.__recursion__ = function() setExtends(cls, extends(global)) end
-                    recursion = true
-                end
-            else            
-                setExtends(cls, extends)
-            end
-        elseif cls ~= Object then
-             setmetatable(cls, Object)
-        end   
-        if kind == "S" then
-            cls.__kind__ = kind
-        end 
-        if recursion or cls.__staticCtor__ then         
-            tinsert(class, cls)
+		cls.__kind__ = kind
+        if cls.__staticCtor__ == nil then
+            setBase(cls)
+        else
+            setmetatable(cls, staticCtorMetatable)
         end
     elseif kind == "I" then
         local extends = cls.__inherits__
@@ -430,19 +405,7 @@ function System.init(namelist)
     for _, f in ipairs(usings) do
         f(global)
     end
-    for _, cls in ipairs(class) do
-        local recursion, staticCtor = cls.__recursion__, cls.__staticCtor__
-        if recursion then
-            recursion()
-            cls.__recursion__ = nil
-        end
-        if staticCtor then
-            staticCtor(cls)
-            cls.__staticCtor__ = nil
-        end
-    end
     modules = {}
-    class = {}
     usings = {}
 end
 
