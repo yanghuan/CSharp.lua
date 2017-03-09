@@ -421,29 +421,36 @@ namespace CSharpLua {
             }
 
             LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor);
-            if(namedTypeSymbol.TypeArguments.IsEmpty) {
+            var typeArguments = GetTypeArguments(namedTypeSymbol, transfor);
+            if(typeArguments.Count == 0) {
                 return baseTypeName;
             }
             else {
                 var invocationExpression = new LuaInvocationExpressionSyntax(baseTypeName);
-                FillExternalTypeArgument(invocationExpression, namedTypeSymbol, transfor);
-                FillTypeArguments(invocationExpression, namedTypeSymbol, transfor);
+                invocationExpression.AddArguments(typeArguments);
                 return invocationExpression;
             }
         }
 
-        private void FillTypeArguments(LuaInvocationExpressionSyntax invocationExpression, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
-            foreach(var typeArgument in typeSymbol.TypeArguments) {
-                LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
-                invocationExpression.AddArgument(typeArgumentExpression);
+        private List<LuaExpressionSyntax> GetTypeArguments(INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
+            List<LuaExpressionSyntax> typeArguments = new List<LuaExpressionSyntax>();
+            FillExternalTypeArgument(typeArguments, typeSymbol, transfor);
+            FillTypeArguments(typeArguments, typeSymbol, transfor);
+            return typeArguments;
+        }
+
+        private void FillExternalTypeArgument(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
+            var externalType = typeSymbol.ContainingType;
+            if(externalType != null) {
+                FillExternalTypeArgument(typeArguments, externalType, transfor);
+                FillTypeArguments(typeArguments, externalType, transfor);
             }
         }
 
-        private void FillExternalTypeArgument(LuaInvocationExpressionSyntax invocation, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
-            var externalType = typeSymbol.ContainingType;
-            if(externalType != null) {
-                FillExternalTypeArgument(invocation, externalType, transfor);
-                FillTypeArguments(invocation, externalType, transfor);
+        private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
+            foreach(var typeArgument in typeSymbol.TypeArguments) {
+                LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
+                typeArguments.Add(typeArgumentExpression);
             }
         }
 
