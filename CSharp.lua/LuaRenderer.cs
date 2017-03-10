@@ -112,7 +112,7 @@ namespace CSharpLua {
 
         internal void Render(LuaPropertyOrEventIdentifierNameSyntax node) {
             Write(node.PrefixToken);
-            Write(node.ValueText);
+            node.Name.Render(this);
         }
 
         private void WriteSeparatedSyntaxList(IEnumerable<LuaSyntaxNode> list) {

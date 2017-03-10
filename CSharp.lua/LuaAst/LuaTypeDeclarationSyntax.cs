@@ -177,49 +177,47 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        private void AddPropertyOrEvent(bool isProperty, string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
-            string getToken, setToken;
+        private void AddPropertyOrEvent(bool isProperty, LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
             LuaIdentifierNameSyntax initMethodIdentifier;
+            LuaPropertyOrEventIdentifierNameSyntax get, set;
             if(isProperty) {
-                getToken = Tokens.Get;
-                setToken = Tokens.Set;
                 initMethodIdentifier = LuaIdentifierNameSyntax.Property;
+                get = new LuaPropertyOrEventIdentifierNameSyntax(true, true, name);
+                set = new LuaPropertyOrEventIdentifierNameSyntax(true, false, name);
+              
             }
             else {
-                getToken = Tokens.Add;
-                setToken = Tokens.Remove;
                 initMethodIdentifier = LuaIdentifierNameSyntax.Event;
+                get = new LuaPropertyOrEventIdentifierNameSyntax(false, true, name);
+                set = new LuaPropertyOrEventIdentifierNameSyntax(false, false, name);
             }
 
-            LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(name);
-            LuaIdentifierNameSyntax get = new LuaIdentifierNameSyntax(getToken + name);
-            LuaIdentifierNameSyntax set = new LuaIdentifierNameSyntax(setToken + name);
             local_.Variables.Add(get);
             local_.Variables.Add(set);
             LuaMultipleAssignmentExpressionSyntax assignment = new LuaMultipleAssignmentExpressionSyntax();
             assignment.Lefts.Add(get);
             assignment.Lefts.Add(set);
             LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(initMethodIdentifier);
-            invocation.AddArgument(new LuaStringLiteralExpressionSyntax(identifierName));
+            invocation.AddArgument(new LuaStringLiteralExpressionSyntax(name));
             assignment.Rights.Add(invocation);
             methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
 
             if(value != null) {
                 if(isStatic) {
                     if(isImmutable) {
-                        AddResultTable(identifierName, value);
+                        AddResultTable(name, value);
                     }
                     else {
-                        LuaAssignmentExpressionSyntax thisAssignment = new LuaAssignmentExpressionSyntax(identifierName, value);
+                        LuaAssignmentExpressionSyntax thisAssignment = new LuaAssignmentExpressionSyntax(name, value);
                         staticLazyStatements_.Add(new LuaExpressionStatementSyntax(thisAssignment));
                     }
                 }
                 else {
                     if(isImmutable) {
-                        AddResultTable(identifierName, value);
+                        AddResultTable(name, value);
                     }
                     else {
-                        AddInitFiled(identifierName, value);
+                        AddInitFiled(name, value);
                     }
                 }
             }
@@ -230,11 +228,11 @@ namespace CSharpLua.LuaAst {
             }
         }
 
-        public void AddProperty(string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+        public void AddProperty(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
             AddPropertyOrEvent(true, name, value, isImmutable, isStatic, isPrivate);
         }
 
-        public void AddEvent(string name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+        public void AddEvent(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
             AddPropertyOrEvent(false, name, value, isImmutable, isStatic, isPrivate);
         }
 

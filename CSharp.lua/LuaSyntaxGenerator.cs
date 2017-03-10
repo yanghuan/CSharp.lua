@@ -50,6 +50,16 @@ namespace CSharpLua {
         }
     }
 
+    internal enum PrefixMemebrNameKind {
+        None,
+        Get,
+        Set,
+        Property,
+        Add,
+        Remove,
+        Event,
+    }
+
     public sealed class LuaSyntaxGenerator {
         public sealed class SettingInfo {
             public bool HasSemicolon { get; set; }
@@ -243,6 +253,10 @@ namespace CSharpLua {
             return GetMemberFieldName(symbol);
         }
 
+        internal LuaIdentifierNameSyntax GetPrefixMemebrName(ISymbol symbol, PrefixMemebrNameKind kind) {
+            return GetMemberGetPrefixMemebrName(symbol, kind);
+        }
+
         private bool IsTypeEnable(INamedTypeSymbol type) {
             if(type.TypeKind == TypeKind.Enum) {
                 return IsEnumExport(type.ToString());
@@ -391,6 +405,102 @@ namespace CSharpLua {
             }
         }
 
+        private LuaIdentifierNameSyntax GetMemberGetPrefixMemebrName(ISymbol symbol, PrefixMemebrNameKind kind) {
+            Utility.CheckOriginalDefinition(ref symbol);
+            return GetMemberName(symbol, i => InternalGetPrefixMemebrName(i, kind));
+        }
+
+        private List<string> GettPrefixMemebrName(string name, PrefixMemebrNameKind kind) {
+            List<string> names = new List<string>();
+            switch(kind) {
+                case PrefixMemebrNameKind.Get: {
+                        names.Add(LuaSyntaxNode.Tokens.Get + name);
+                        break;
+                    }
+                case PrefixMemebrNameKind.Set: {
+                        names.Add(LuaSyntaxNode.Tokens.Set + name);
+                        break;
+                    }
+                case PrefixMemebrNameKind.Property: {
+                        names.Add(LuaSyntaxNode.Tokens.Get + name);
+                        names.Add(LuaSyntaxNode.Tokens.Set + name);
+                        break;
+                    }
+                case PrefixMemebrNameKind.Add: {
+                        names.Add(LuaSyntaxNode.Tokens.Add + name);
+                        break;
+                    }
+                case PrefixMemebrNameKind.Remove: {
+                        names.Add(LuaSyntaxNode.Tokens.Remove + name);
+                        break;
+                    }
+                case PrefixMemebrNameKind.Event: {
+                        names.Add(LuaSyntaxNode.Tokens.Add + name);
+                        names.Add(LuaSyntaxNode.Tokens.Remove + name);
+                        break;
+                    }
+            }
+            return names;
+        }
+
+        private LuaIdentifierNameSyntax InternalGetPrefixMemebrName(ISymbol symbol, PrefixMemebrNameKind kind) {
+            Contract.Assert(kind != PrefixMemebrNameKind.None);
+            if(!symbol.IsFromCode() || symbol.ContainingType.TypeKind == TypeKind.Interface) {
+                return new LuaIdentifierNameSyntax(symbol.Name);
+            }
+
+            var names = GettPrefixMemebrName(symbol.Name, kind);
+            if(symbol.IsStatic) {
+                if(symbol.ContainingType.IsStatic) {
+                    bool isExists = symbol.ContainingType.GetMembers().Any(i => names.Contains(i.Name));
+                    return GetMethodNameFromIndex(symbol, isExists ? 1 : 0);
+                }
+            }
+
+            while(true) {
+                var overriddenSymbol = symbol.OverriddenSymbol();
+                if(overriddenSymbol == null) {
+                    break;
+                }
+                symbol = overriddenSymbol;
+            }
+
+            if(symbol.ContainingType.IsFromCode()) {
+                List<ISymbol> members = new List<ISymbol>();
+                FillAllMembers(symbol.ContainingType, members);
+                if(members.Exists(i => names.Contains(i.Name))) {
+                    ISymbol refactorSymbol = symbol;
+                    Utility.CheckOriginalDefinition(ref refactorSymbol);
+                    refactorNames_.Add(refactorSymbol);
+                }
+            }
+
+            return new LuaIdentifierNameSyntax(GetSymbolName(symbol));
+        }
+
+        private void FillAllMembers(INamedTypeSymbol typeSymbol, List<ISymbol> outList) {
+            if(typeSymbol.BaseType != null) {
+                FillAllMembers(typeSymbol.BaseType, outList);
+            }
+
+            bool isFromCode = typeSymbol.IsFromCode();
+            var members = typeSymbol.GetMembers();
+            foreach(ISymbol member in members) {
+                if(!isFromCode) {
+                    if(member.DeclaredAccessibility == Accessibility.Private || member.DeclaredAccessibility == Accessibility.Internal) {
+                        continue;
+                    }
+                }
+
+                if(member.IsOverride) {
+                    continue;
+                }
+
+                outList.Add(member);
+            }
+        }
+
+
         private LuaIdentifierNameSyntax GetMemberFieldName(ISymbol symbol) {
             return GetMemberName(symbol, InternalGetMemberFieldName);
         }
@@ -400,7 +510,6 @@ namespace CSharpLua {
             if(identifierName != null) {
                 return identifierName;
             }
-
             return GetAllTypeSameName(symbol);
         }
 

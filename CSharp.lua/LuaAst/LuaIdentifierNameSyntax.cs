@@ -114,11 +114,17 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class LuaPropertyOrEventIdentifierNameSyntax : LuaIdentifierNameSyntax {
-        public bool IsGetOrAdd { get; set; } = true;
+        public bool IsGetOrAdd { get; set; }
         public bool IsProperty { get; }
+        public LuaIdentifierNameSyntax Name { get; }
 
-        public LuaPropertyOrEventIdentifierNameSyntax(bool isProperty, string valueText) : base(valueText) {
+        public LuaPropertyOrEventIdentifierNameSyntax(bool isProperty, LuaIdentifierNameSyntax name) : this(isProperty, true, name) {
+        }
+
+        public LuaPropertyOrEventIdentifierNameSyntax(bool isProperty, bool isGetOrAdd, LuaIdentifierNameSyntax name) : base(string.Empty) {
             IsProperty = isProperty;
+            IsGetOrAdd = isGetOrAdd;
+            Name = name;
         }
 
         public string PrefixToken {
@@ -133,7 +139,7 @@ namespace CSharpLua.LuaAst {
         }
 
         public LuaPropertyOrEventIdentifierNameSyntax GetClone() {
-            LuaPropertyOrEventIdentifierNameSyntax clone = new LuaPropertyOrEventIdentifierNameSyntax(IsProperty, ValueText);
+            LuaPropertyOrEventIdentifierNameSyntax clone = new LuaPropertyOrEventIdentifierNameSyntax(IsProperty, Name);
             clone.IsGetOrAdd = IsGetOrAdd;
             return clone;
         }

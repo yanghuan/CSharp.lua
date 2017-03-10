@@ -744,7 +744,8 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, string.Empty);
+            //TODO ÐèÒª¼ì²âÃüÃû³åÍ»
+            LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, new LuaIdentifierNameSyntax(string.Empty));
             LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(expression, identifierName, true);
 
             var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;

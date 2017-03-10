@@ -867,5 +867,9 @@ namespace CSharpLua {
         private LuaIdentifierNameSyntax GetFieldName(ISymbol symbol) {
             return generator_.GetFieldName(symbol);
         }
+
+        private LuaIdentifierNameSyntax GetPrefixMemebrName(ISymbol symbol, PrefixMemebrNameKind kind) {
+            return generator_.GetPrefixMemebrName(symbol, kind);
+        }
     }
 }
