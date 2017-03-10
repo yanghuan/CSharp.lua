@@ -32,7 +32,7 @@ namespace CSharpLua.LuaAst {
         private List<LuaStatementSyntax> staticLazyStatements_ = new List<LuaStatementSyntax>();
         private List<LuaStatementSyntax> staticInitStatements_ = new List<LuaStatementSyntax>();
         private List<LuaStatementSyntax> staticcCtorStatements_ = new List<LuaStatementSyntax>();
-        private List<string> staticAssignmentNames_ = new List<string>();
+        private List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new List<LuaIdentifierNameSyntax>();
 
         private List<LuaStatementSyntax> initStatements_ = new List<LuaStatementSyntax>();
         private List<LuaConstructorAdapterExpressionSyntax> ctors_ = new List<LuaConstructorAdapterExpressionSyntax>();
@@ -44,7 +44,7 @@ namespace CSharpLua.LuaAst {
         public LuaTypeDeclarationSyntax() {
         }
 
-        internal void AddStaticReadOnlyAssignmentName(string name) {
+        internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name) {
             if(!staticAssignmentNames_.Contains(name)) {
                 staticAssignmentNames_.Add(name);
             }
@@ -154,7 +154,7 @@ namespace CSharpLua.LuaAst {
                         if(value != null) {
                             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
                             staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
-                            staticAssignmentNames_.Add(name.ValueText);
+                            staticAssignmentNames_.Add(name);
                         }
                     }
                     else {
@@ -269,8 +269,7 @@ namespace CSharpLua.LuaAst {
         private void AddStaticAssignmentNames(LuaBlockSyntax body) {
             if(staticAssignmentNames_.Count > 0) {
                 LuaMultipleAssignmentExpressionSyntax assignment = new LuaMultipleAssignmentExpressionSyntax();
-                foreach(string name in staticAssignmentNames_) {
-                    LuaIdentifierNameSyntax identifierName = new LuaIdentifierNameSyntax(name);
+                foreach(var identifierName in staticAssignmentNames_) {
                     LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, identifierName);
                     assignment.Lefts.Add(memberAccess);
                     assignment.Rights.Add(identifierName);

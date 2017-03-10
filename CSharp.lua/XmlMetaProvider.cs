@@ -572,7 +572,7 @@ namespace CSharpLua {
         }
 
         private string GetMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {
-            Utility.CheckOriginalDefinition(ref symbol);
+            Utility.CheckMethodDefinition(ref symbol);
             return GetInternalMethodMetaInfo(symbol, metaType);
         }
 

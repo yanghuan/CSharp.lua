@@ -849,5 +849,23 @@ namespace CSharpLua {
             }
             return typeParameters;
         }
+
+        public bool CheckFieldNameOfProtobufnet(ref string fieldName, ITypeSymbol containingType) {
+            if(!containingType.Interfaces.IsEmpty) {
+                if(containingType.Interfaces.First().ToString() == "ProtoBuf.IExtensible") {
+                    fieldName = fieldName.TrimStart('_');
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private LuaIdentifierNameSyntax GetMethodName(IMethodSymbol methodSymbol) {
+            return generator_.GetMethodName(methodSymbol);
+        }
+
+        private LuaIdentifierNameSyntax GetFieldName(ISymbol symbol) {
+            return generator_.GetFieldName(symbol);
+        }
     }
 }

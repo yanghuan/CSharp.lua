@@ -467,22 +467,34 @@ namespace CSharpLua {
             return false;
         }
 
-        public static void CheckOriginalDefinition(ref IMethodSymbol symbol) {
+        private static void CheckSymbolDefinition<T>(ref T symbol) where T : class, ISymbol {
+            var originalDefinition = (T)symbol.OriginalDefinition;
+            if(originalDefinition != symbol) {
+                symbol = originalDefinition;
+            }
+        }
+
+        public static void CheckMethodDefinition(ref IMethodSymbol symbol) {
             if(symbol.IsExtensionMethod) {
-                if(symbol.ReducedFrom != null) {
+                if(symbol.ReducedFrom != null && symbol.ReducedFrom != symbol) {
                     symbol = symbol.ReducedFrom;
                 }
             }
             else {
-                if(symbol.OriginalDefinition != symbol) {
-                    symbol = symbol.OriginalDefinition;
-                }
+                CheckSymbolDefinition(ref symbol);
             }
         }
 
         public static void CheckOriginalDefinition(ref ISymbol symbol) {
-            if(symbol.OriginalDefinition != symbol) {
-                symbol = symbol.OriginalDefinition;
+            if(symbol.Kind == SymbolKind.Method) {
+                IMethodSymbol methodSymbol = (IMethodSymbol)symbol;
+                CheckMethodDefinition(ref methodSymbol);
+                if(methodSymbol != symbol) {
+                    symbol = methodSymbol;
+                }
+            }
+            else {
+                CheckSymbolDefinition(ref symbol);
             }
         }
     }

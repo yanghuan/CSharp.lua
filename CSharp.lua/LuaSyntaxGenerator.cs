@@ -239,6 +239,10 @@ namespace CSharpLua {
             return GetMemberMethodName(symbol);
         }
 
+        internal LuaIdentifierNameSyntax GetFieldName(ISymbol symbol) {
+            return GetMemberFieldName(symbol);
+        }
+
         private bool IsTypeEnable(INamedTypeSymbol type) {
             if(type.TypeKind == TypeKind.Enum) {
                 return IsEnumExport(type.ToString());
@@ -387,16 +391,47 @@ namespace CSharpLua {
             }
         }
 
-        internal LuaIdentifierNameSyntax GetMemberMethodName(IMethodSymbol symbol) {
-            Utility.CheckOriginalDefinition(ref symbol);
+        private LuaIdentifierNameSyntax GetMemberFieldName(ISymbol symbol) {
+            return GetMemberName(symbol, InternalGetMemberFieldName);
+        }
+
+        private LuaIdentifierNameSyntax InternalGetMemberFieldName(ISymbol symbol) {
+            var identifierName = GetMemberNameOfCommon(symbol);
+            if(identifierName != null) {
+                return identifierName;
+            }
+
+            return GetAllTypeSameName(symbol);
+        }
+
+        private LuaIdentifierNameSyntax GetMemberName<T>(T symbol, Func<T, LuaIdentifierNameSyntax> getFunc) where T : ISymbol {
             var name = memberNames_.GetOrDefault(symbol);
             if(name == null) {
-                var identifierName = InternalGetMemberMethodName(symbol);
+                var identifierName = getFunc(symbol);
                 LuaSymbolNameSyntax symbolName = new LuaSymbolNameSyntax(identifierName);
                 memberNames_.Add(symbol, symbolName);
                 name = symbolName;
             }
             return name;
+        }
+
+        private LuaIdentifierNameSyntax GetMemberMethodName(IMethodSymbol symbol) {
+            Utility.CheckMethodDefinition(ref symbol);
+            return GetMemberName(symbol, InternalGetMemberMethodName);
+        }
+
+        private LuaIdentifierNameSyntax GetMemberNameOfCommon(ISymbol symbol) {
+            if(!symbol.IsFromCode() || symbol.ContainingType.TypeKind == TypeKind.Interface) {
+                return new LuaIdentifierNameSyntax(symbol.Name);
+            }
+
+            if(symbol.IsStatic) {
+                if(symbol.ContainingType.IsStatic) {
+                    return GetStaticClassMemberName(symbol);
+                }
+            }
+
+            return null;
         }
 
         private LuaIdentifierNameSyntax InternalGetMemberMethodName(IMethodSymbol symbol) {
@@ -405,28 +440,19 @@ namespace CSharpLua {
                 return new LuaIdentifierNameSyntax(name);
             }
 
-            if(!symbol.IsFromCode()) {
-                return new LuaIdentifierNameSyntax(symbol.Name);
-            }
-
-            if(symbol.IsExtensionMethod) {
-                return GetExtensionMethodName(symbol);
-            }
-
-            if(symbol.IsStatic) {
-                if(symbol.ContainingType.IsStatic) {
-                    return GetStaticClassMethodName(symbol);
-                }
-            }
-
-            if(symbol.ContainingType.TypeKind == TypeKind.Interface) {
-                return new LuaIdentifierNameSyntax(symbol.Name);
+            var identifierName = GetMemberNameOfCommon(symbol);
+            if(identifierName != null) {
+                return identifierName;
             }
 
             while(symbol.OverriddenMethod != null) {
                 symbol = symbol.OverriddenMethod;
             }
 
+            return GetAllTypeSameName(symbol);
+        }
+
+        private LuaIdentifierNameSyntax GetAllTypeSameName(ISymbol symbol) {
             List<ISymbol> sameNameMembers = GetSameNameMembers(symbol);
             LuaIdentifierNameSyntax symbolExpression = null;
             int index = 0;
@@ -449,7 +475,6 @@ namespace CSharpLua {
                 }
                 ++index;
             }
-
             if(symbolExpression == null) {
                 throw new InvalidOperationException();
             }
@@ -468,15 +493,21 @@ namespace CSharpLua {
                     return method.ExplicitInterfaceImplementations[0].Name;
                 }
             }
+            else if(symbol.Kind == SymbolKind.Property) {
+                IPropertySymbol property = (IPropertySymbol)symbol;
+                if(!property.ExplicitInterfaceImplementations.IsEmpty) {
+                    return property.ExplicitInterfaceImplementations[0].Name;
+                }
+            }
             return symbol.Name;
         }
 
         private LuaIdentifierNameSyntax GetExtensionMethodName(IMethodSymbol symbol) {
             Contract.Assert(symbol.IsExtensionMethod);
-            return GetStaticClassMethodName(symbol);
+            return GetStaticClassMemberName(symbol);
         }
 
-        private LuaIdentifierNameSyntax GetStaticClassMethodName(IMethodSymbol symbol) {
+        private LuaIdentifierNameSyntax GetStaticClassMemberName(ISymbol symbol) {
             Contract.Assert(symbol.ContainingType.IsStatic);
             var sameNameMembers = symbol.ContainingType.GetMembers(symbol.Name);
             LuaIdentifierNameSyntax symbolExpression = null;
