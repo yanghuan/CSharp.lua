@@ -267,6 +267,24 @@ namespace CSharpLua {
             return null;
         }
 
+        public static IEnumerable<ISymbol> ExplicitInterfaceImplementations(this ISymbol symbol) {
+            switch(symbol.Kind) {
+                case SymbolKind.Method: {
+                        IMethodSymbol methodSymbol = (IMethodSymbol)symbol;
+                        return methodSymbol.ExplicitInterfaceImplementations;
+                    }
+                case SymbolKind.Property: {
+                        IPropertySymbol propertySymbol = (IPropertySymbol)symbol;
+                        return propertySymbol.ExplicitInterfaceImplementations;
+                    }
+                case SymbolKind.Event: {
+                        IEventSymbol eventSymbol = (IEventSymbol)symbol;
+                        return eventSymbol.ExplicitInterfaceImplementations;
+                    }
+            }
+            return Array.Empty<ISymbol>();
+        }
+
         public static bool IsOverridden(this ISymbol symbol, ISymbol superSymbol) {
             while(true) {
                 ISymbol overriddenSymbol = symbol.OverriddenSymbol();

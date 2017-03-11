@@ -406,13 +406,25 @@ namespace CSharpLua {
                 name2 = LuaSyntaxNode.Tokens.Set + name;
             }
             else {
+                Contract.Assert(symbol.Kind == SymbolKind.Event);
                 name1 = LuaSyntaxNode.Tokens.Add + name;
                 name2 = LuaSyntaxNode.Tokens.Remove + name;
             }
         }
 
         private bool IsPrefixNameConflict(ISymbol member, ISymbol symbol, string name1, string name2) {
-            return member != symbol && (member.Name == symbol.Name || member.Name == name1 || member.Name == name2);
+            if(member != symbol) {
+                string memberName = GetSymbolName(member);
+                string memberName1, memberName2;
+                GetRefactorCheckName(member, memberName, out memberName1, out memberName2);
+                if(memberName2 != null) {
+                    return memberName1 == name1 || memberName2 == name2;
+                }
+                else {
+                    return memberName1 == name1 || memberName1 == name2;
+                }
+            }
+            return false;
         }
 
         private LuaIdentifierNameSyntax InternalGetPrefixMemebrName(ISymbol symbol) {
@@ -591,18 +603,11 @@ namespace CSharpLua {
                 if(name != null) {
                     return name;
                 }
+            }
 
-                if(!method.ExplicitInterfaceImplementations.IsEmpty) {
-                    return method.ExplicitInterfaceImplementations[0].Name;
-                }
-            }
-            else if(symbol.Kind == SymbolKind.Property) {
-                IPropertySymbol property = (IPropertySymbol)symbol;
-                if(!property.ExplicitInterfaceImplementations.IsEmpty) {
-                    return property.ExplicitInterfaceImplementations[0].Name;
-                }
-            }
-            return symbol.Name;
+            var implementations = symbol.ExplicitInterfaceImplementations();
+            var first = implementations.FirstOrDefault();
+            return first != null ? first.Name : symbol.Name;
         }
 
         private LuaIdentifierNameSyntax GetStaticClassMemberName(ISymbol symbol) {
@@ -631,12 +636,7 @@ namespace CSharpLua {
         }
 
         private bool IsNewNameEnable(ISymbol symbol, string newName) {
-            if(symbol.ContainingType.GetMembers(newName).IsEmpty) {
-                if(IsTypeNameUsed(symbol.ContainingType, newName)) {
-                    return true;
-                }
-            }
-            return false;
+            return IsCurNameEnable(symbol.ContainingType, newName);
         }
 
         private LuaIdentifierNameSyntax GetMethodNameFromIndex(ISymbol symbol, int index) {
@@ -928,13 +928,11 @@ namespace CSharpLua {
                 if(typeSymbol != null) {
                     isEnable = CheckNewNameEnable(typeSymbol, checkName1, checkName2);
                 }
-
-                if(isEnable) {
+                else {
                     if(childrens != null) {
                         isEnable = childrens.All(i => CheckNewNameEnable(i, checkName1, checkName2));
                     }
                 }
-
                 if(isEnable) {
                     return newName;
                 }
@@ -957,17 +955,23 @@ namespace CSharpLua {
             return isEnable;
         }
 
+        private bool IsCurNameEnable(INamedTypeSymbol typeSymbol, string newName) {
+            return !IsTypeNameUsed(typeSymbol, newName) && typeSymbol.GetMembers(newName).IsEmpty;
+        }
+
         private bool CheckNewNameEnable(INamedTypeSymbol typeSymbol, string newName) {
-            if(typeSymbol.GetMembers(newName).IsEmpty) {
-                if(IsTypeNameUsed(typeSymbol, newName)) {
+            var p = typeSymbol;
+            while(p != null) {
+                if(!IsCurNameEnable(p, newName)) {
                     return false;
                 }
+                p = p.BaseType;       
             }
 
             var childrens = extends_.GetOrDefault(typeSymbol);
             if(childrens != null) {
                 foreach(INamedTypeSymbol children in childrens) {
-                    if(!CheckNewNameEnable(children, newName)) {
+                    if(!IsCurNameEnable(children, newName)) {
                         return false;
                     }
                 }
