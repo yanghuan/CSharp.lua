@@ -517,9 +517,10 @@ namespace CSharpLua {
                     if(node.IsKind(SyntaxKind.EventFieldDeclaration)) {
                         var eventSymbol = (IEventSymbol)variableSymbol;
                         if(eventSymbol.IsOverridable() || eventSymbol.IsInterfaceImplementation()) {
+                            var eventName = GetPrefixMemebrName(eventSymbol);
                             bool valueIsLiteral;
                             LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, variable.Initializer?.Value, out valueIsLiteral);
-                            CurType.AddEvent(new LuaIdentifierNameSyntax(variable.Identifier.ValueText), valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
+                            CurType.AddEvent(eventName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
                             continue;
                         }
                     }
@@ -593,11 +594,13 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
             if(!node.Modifiers.IsAbstract()) {
-                bool isStatic = node.Modifiers.IsStatic();
-                bool isPrivate = node.Modifiers.IsPrivate();
+                var symbol = semanticModel_.GetDeclaredSymbol(node);
+                bool isStatic = symbol.IsStatic;
+                bool isPrivate = symbol.IsPrivate();
                 bool hasGet = false;
                 bool hasSet = false;
                 if(node.AccessorList != null) {
+                    LuaIdentifierNameSyntax propertyName = null;
                     foreach(var accessor in node.AccessorList.Accessors) {
                         if(accessor.Body != null) {
                             LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
@@ -609,7 +612,10 @@ namespace CSharpLua {
                             PopFunction();
                             functionExpression.AddStatements(block.Statements);
 
-                            LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(true, new LuaIdentifierNameSyntax(node.Identifier.ValueText));
+                            if(propertyName == null) {
+                                propertyName = GetPrefixMemebrName(symbol);
+                            }
+                            LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(true, propertyName);
                             CurType.AddMethod(name, functionExpression, isPrivate);
                             if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
                                 Contract.Assert(!hasGet);
@@ -631,7 +637,8 @@ namespace CSharpLua {
                 }
                 else {
                     Contract.Assert(!hasGet);
-                    LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(true, new LuaIdentifierNameSyntax(node.Identifier.ValueText));
+                    LuaIdentifierNameSyntax propertyName = GetPrefixMemebrName(symbol);
+                    LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(true, propertyName);
 
                     LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
                     PushFunction(functionExpression);
@@ -650,7 +657,6 @@ namespace CSharpLua {
                 }
 
                 if(!hasGet && !hasSet) {
-                    var symbol = semanticModel_.GetDeclaredSymbol(node);
                     ITypeSymbol typeSymbol = symbol.Type;
                     bool isImmutable = typeSymbol.IsImmutable();
                     if(isStatic) {
@@ -666,9 +672,10 @@ namespace CSharpLua {
                             AddField(fieldName, typeSymbol, node.Type, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
                         }
                         else {
+                            LuaIdentifierNameSyntax propertyName = GetPrefixMemebrName(symbol);
                             bool valueIsLiteral;
                             LuaExpressionSyntax valueExpression = GetFieldValueExpression(node.Type, typeSymbol, node.Initializer?.Value, out valueIsLiteral);
-                            CurType.AddProperty(new LuaIdentifierNameSyntax(node.Identifier.ValueText), valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
+                            CurType.AddProperty(propertyName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
                         }
                     }
                 }
@@ -1564,7 +1571,8 @@ namespace CSharpLua {
                     return BuildStaticFieldName(symbol, isReadOnly, node);
                 }
                 else {
-                    var identifierExpression = new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, new LuaIdentifierNameSyntax(symbol.Name)));
+                    var name = GetPrefixMemebrName(symbol);
+                    var identifierExpression = new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, name));
                     var usingStaticType = CheckUsingStaticNameSyntax(symbol, node);
                     if(usingStaticType != null) {
                         return new LuaMemberAccessExpressionSyntax(usingStaticType, identifierExpression);
@@ -1583,18 +1591,19 @@ namespace CSharpLua {
                     }
                 }
                 else {
+                    var name = GetPrefixMemebrName(symbol);
                     if(IsInternalMember(node, symbol)) {
-                        var propertyAdapter = new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, new LuaIdentifierNameSyntax(symbol.Name)));
+                        var propertyAdapter = new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, name));
                         propertyAdapter.ArgumentList.AddArgument(LuaIdentifierNameSyntax.This);
                         return propertyAdapter;
                     }
                     else {
                         if(IsInternalNode(node)) {
-                            LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(isProperty, new LuaIdentifierNameSyntax(symbol.Name));
+                            LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(isProperty, name);
                             return new LuaPropertyAdapterExpressionSyntax(LuaIdentifierNameSyntax.This, identifierName, true);
                         }
                         else {
-                            return new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, new LuaIdentifierNameSyntax(symbol.Name)));
+                            return new LuaPropertyAdapterExpressionSyntax(new LuaPropertyOrEventIdentifierNameSyntax(isProperty, name));
                         }
                     }
                 }
