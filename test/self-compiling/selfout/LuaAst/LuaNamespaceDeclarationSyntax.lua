@@ -18,9 +18,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this:UpdateIdentifiers(name, default, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace)
         end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx
+                    global.CSharpLua.LuaAst.LuaWrapFunctionStatementSynatx
                 }
             end, 
             __ctor__ = __ctor__

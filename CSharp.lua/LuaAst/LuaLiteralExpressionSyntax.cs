@@ -46,6 +46,8 @@ namespace CSharpLua.LuaAst {
         internal override void Render(LuaRenderer renderer) {
             renderer.Render(this);
         }
+
+        public static readonly LuaIdentifierLiteralExpressionSyntax Nil = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
     }
 
     public sealed class LuaStringLiteralExpressionSyntax : LuaLiteralExpressionSyntax {

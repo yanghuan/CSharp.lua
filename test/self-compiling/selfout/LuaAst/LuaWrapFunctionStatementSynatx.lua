@@ -6,38 +6,44 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaWrapFunctionStatementSynatx", function (namespace) 
-        local UpdateIdentifiers, AddMemberDeclaration, Render, __ctor__
+        local UpdateIdentifiers, getBody, AddMemberDeclaration, Render, __init__, __ctor__
+        __init__ = function (this) 
+            this.function_ = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
+        end
+        __ctor__ = function (this) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+        end
         UpdateIdentifiers = function (this, name, target, memberName, parameter) 
             local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(target, memberName, false)
             local invoke = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess)
-            invoke:AddArgument(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax:new(1, name))
+            invoke:AddArgument(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(name))
             invoke:AddArgument(this.function_)
             if parameter ~= nil then
                 this.function_:AddParameter1(parameter)
             end
             this.Statement = CSharpLuaLuaAst.LuaExpressionStatementSyntax(invoke)
         end
+        getBody = function (this) 
+            return this.function_.Body
+        end
         AddMemberDeclaration = function (this, statement) 
             if statement == nil then
                 System.throw(System.ArgumentNullException("statement"))
             end
-            this.statements_:Add(statement)
+            getBody(this).Statements:Add(statement)
         end
         Render = function (this, renderer) 
-            this.function_:AddStatements(this.statements_)
             renderer:Render1(this)
         end
-        __ctor__ = function (this) 
-            this.function_ = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
-            this.statements_ = System.List(CSharpLuaLuaAst.LuaStatementSyntax)()
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaStatementSyntax
+                    global.CSharpLua.LuaAst.LuaStatementSyntax
                 }
             end, 
             UpdateIdentifiers = UpdateIdentifiers, 
+            getBody = getBody, 
             AddMemberDeclaration = AddMemberDeclaration, 
             Render = Render, 
             __ctor__ = __ctor__

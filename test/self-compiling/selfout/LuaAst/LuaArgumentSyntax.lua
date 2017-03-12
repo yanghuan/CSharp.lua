@@ -7,20 +7,20 @@ end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaArgumentSyntax", function (namespace) 
         local Render, __ctor__
-        Render = function (this, renderer) 
-            renderer:Render8(this)
-        end
         __ctor__ = function (this, expression) 
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__[1](this)
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"))
             end
             this.Expression = expression
         end
+        Render = function (this, renderer) 
+            renderer:Render8(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaSyntaxNode
+                    global.CSharpLua.LuaAst.LuaSyntaxNode
                 }
             end, 
             Render = Render, 
@@ -28,7 +28,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         }
     end)
     namespace.class("LuaArgumentListSyntax", function (namespace) 
-        local getOpenParenToken, getCloseParenToken, Render, AddArgument, AddArgument1, __ctor__
+        local getOpenParenToken, getCloseParenToken, Render, AddArgument, AddArgument1, AddArguments, __init__, __ctor__
+        __init__ = function (this) 
+            this.Arguments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaArgumentSyntax)()
+        end
+        __ctor__ = function (this) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+        end
         getOpenParenToken = function (this) 
             return "(" --[[Tokens.OpenParentheses]]
         end
@@ -39,18 +46,20 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             renderer:Render7(this)
         end
         AddArgument = function (this, argument) 
-            this.Arguments:Add1(argument)
+            this.Arguments:Add(argument)
         end
         AddArgument1 = function (this, argument) 
             AddArgument(this, CSharpLuaLuaAst.LuaArgumentSyntax(argument))
         end
-        __ctor__ = function (this) 
-            this.Arguments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaArgumentSyntax)()
+        AddArguments = function (this, arguments) 
+            for _, argument in System.each(arguments) do
+                AddArgument1(this, argument)
+            end
         end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaSyntaxNode
+                    global.CSharpLua.LuaAst.LuaSyntaxNode
                 }
             end, 
             getOpenParenToken = getOpenParenToken, 
@@ -58,6 +67,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             Render = Render, 
             AddArgument = AddArgument, 
             AddArgument1 = AddArgument1, 
+            AddArguments = AddArguments, 
             __ctor__ = __ctor__
         }
     end)

@@ -739,16 +739,27 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitDefaultExpression(DefaultExpressionSyntax node) {
-            return BuildDefaultValueExpression(node.Type);
+            var type = semanticModel_.GetTypeInfo(node.Type).Type;
+            if(type.Kind != SymbolKind.TypeParameter) {
+                if(type.IsValueType) {
+                    var expression = GetPredefinedDefaultValue(type);
+                    return expression ?? BuildDefaultValueExpression(node.Type);
+                }
+                else {
+                    return LuaIdentifierLiteralExpressionSyntax.Nil;
+                }
+            }
+            else {
+                return BuildDefaultValueExpression(node.Type);
+            }
         }
 
         public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            //TODO ÐèÒª¼ì²âÃüÃû³åÍ»
-            LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, new LuaIdentifierNameSyntax(string.Empty));
-            LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(expression, identifierName, true);
-
             var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+            LuaIdentifierNameSyntax baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
+            LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);
+            LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(expression, identifierName, true);
             if(symbol != null) {
                 List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
                 propertyAdapter.ArgumentList.AddArguments(arguments);

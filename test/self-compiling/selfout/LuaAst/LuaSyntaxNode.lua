@@ -17,17 +17,17 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end)
         namespace.class("Tokens", function (namespace) 
             local getEmpty, Semicolon, __staticCtor__
-            getEmpty = function () 
-                return ""
-            end
             __staticCtor__ = function (this) 
                 Semicolon = CSharpLuaLuaAstLuaSyntaxNode.Semicolon()
                 this.Semicolon = Semicolon
             end
+            getEmpty = function () 
+                return ""
+            end
             return {
-                __inherits__ = function () 
+                __inherits__ = function (global) 
                     return {
-                        CSharpLuaLuaAstLuaSyntaxNode.Keyword
+                        global.CSharpLua.LuaAst.LuaSyntaxNode.Keyword
                     }
                 end, 
                 getEmpty = getEmpty, 
@@ -38,16 +38,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             return {}
         end)
         local Render, SpecailWord, ReservedWords, SpecialReservedWords, IsReservedWord, __staticCtor__
-        Render = function (this, renderer) 
-            System.throw(System.NotSupportedException(("{0} is not override"):Format(this:GetType():getName())))
-        end
-        SpecailWord = function (s) 
-            return "__" .. (s or "") .. "__"
-        end
-        IsReservedWord = function (identifier) 
-            return ReservedWords:Contains(identifier)
-        end
         __staticCtor__ = function (this) 
+            this.SpecailWord = SpecailWord
+            this.IsReservedWord = IsReservedWord
             this.TempIdentifiers = System.Array(System.String)("default", "extern", "ref", "out", "internal", "void", "case", "new", "object", "using", "fixed", "override", "abstract", "checked", "virtual")
             ReservedWords = System.create(System.HashSet(System.String)(), function (default) 
                 default:Add("and")
@@ -101,23 +94,33 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end)
             this.ReservedWords, this.SpecialReservedWords = ReservedWords, SpecialReservedWords
         end
+        Render = function (this, renderer) 
+            System.throw(System.NotSupportedException(("{0} is not override"):Format(this:GetType():getName())))
+        end
+        SpecailWord = function (s) 
+            return "__" .. (s or "") .. "__"
+        end
+        IsReservedWord = function (identifier) 
+            return ReservedWords:Contains(identifier)
+        end
         return {
             Render = Render, 
-            SpecailWord = SpecailWord, 
-            IsReservedWord = IsReservedWord, 
             __staticCtor__ = __staticCtor__
         }
     end)
     namespace.class("LuaSyntaxList_1", function (namespace) 
         return function (T) 
-            local Add1, AddRange1
-            Add1 = function (this, node) 
+            local Add, AddRange, __ctor__
+            __ctor__ = function (this) 
+                System.List(T).__ctor__(this)
+            end
+            Add = function (this, node) 
                 if node == nil then
                     System.throw(System.ArgumentNullException("node"))
                 end
                 this:Add(node)
             end
-            AddRange1 = function (this, collection) 
+            AddRange = function (this, collection) 
                 for _, item in System.each(collection) do
                     if item == nil then
                         System.throw(System.ArgumentNullException("item"))
@@ -126,13 +129,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 end
             end
             return {
-                __inherits__ = function () 
+                __inherits__ = function (global) 
                     return {
-                        System.List(T)
+                        global.System.List(T)
                     }
                 end, 
-                Add1 = Add1, 
-                AddRange1 = AddRange1
+                Add = Add, 
+                AddRange = AddRange, 
+                __ctor__ = __ctor__
             }
         end
     end)

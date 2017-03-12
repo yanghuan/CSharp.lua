@@ -46,7 +46,7 @@ Options
                     if atts == nil and cmds:ContainsKey("-a") then
                         atts = ""
                     end
-                    local w = CSharpLua.Worker:new(1, folder, output, lib, meta, defines, isClassic, indent, hasSemicolon, atts)
+                    local w = CSharpLua.Worker(folder, output, lib, meta, defines, isClassic, indent, hasSemicolon, atts)
                     w:Do()
                     System.Console.WriteLine("all operator success")
                     System.Console.WriteLine(("end {0}"):Format(System.DateTime.getNow()))

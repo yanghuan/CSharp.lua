@@ -6,7 +6,14 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaParameterListSyntax", function (namespace) 
-        local getOpenParenToken, getCloseParenToken, Render, __ctor__
+        local getOpenParenToken, getCloseParenToken, Render, __init__, __ctor__
+        __init__ = function (this) 
+            this.Parameters = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaParameterSyntax)()
+        end
+        __ctor__ = function (this) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+        end
         getOpenParenToken = function (this) 
             return "(" --[[Tokens.OpenParentheses]]
         end
@@ -16,13 +23,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Render = function (this, renderer) 
             renderer:Render10(this)
         end
-        __ctor__ = function (this) 
-            this.Parameters = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaParameterSyntax)()
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaSyntaxNode
+                    global.CSharpLua.LuaAst.LuaSyntaxNode
                 }
             end, 
             getOpenParenToken = getOpenParenToken, 
@@ -33,17 +37,17 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end)
     namespace.class("LuaParameterSyntax", function (namespace) 
         local Render, __ctor__
+        __ctor__ = function (this, identifier) 
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+            this.Identifier = identifier
+        end
         Render = function (this, renderer) 
             renderer:Render11(this)
         end
-        __ctor__ = function (this, identifier) 
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__[1](this)
-            this.Identifier = identifier
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaSyntaxNode
+                    global.CSharpLua.LuaAst.LuaSyntaxNode
                 }
             end, 
             Render = Render, 

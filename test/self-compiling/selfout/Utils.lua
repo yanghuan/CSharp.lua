@@ -6,6 +6,7 @@ local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local MicrosoftCodeAnalysisCSharpSyntax = Microsoft.CodeAnalysis.CSharp.Syntax
 local SystemIO = System.IO
 local SystemLinq = System.Linq
+local SystemThreading = System.Threading
 local CSharpLua
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
@@ -19,9 +20,9 @@ System.namespace("CSharpLua", function (namespace)
             System.Exception.__ctor__(this, message)
         end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    System.Exception
+                    global.System.Exception
                 }
             end, 
             __ctor__ = __ctor__
@@ -33,21 +34,76 @@ System.namespace("CSharpLua", function (namespace)
             System.Exception.__ctor__(this, message)
         end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    System.Exception
+                    global.System.Exception
                 }
             end, 
             __ctor__ = __ctor__
         }
     end)
     namespace.class("Utility", function (namespace) 
-        local GetCommondLines, First, Last, GetOrDefault, GetOrDefault1, AddAt, IndexOf, GetArgument, 
-        GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, IsConst, 
-        IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, IsImmutable, IsInterfaceImplementation, 
-        InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, IsEventFiled, IsAssignment, 
-        systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, 
-        CheckOriginalDefinition, CheckOriginalDefinition1
+        local First, Last, GetOrDefault, GetOrDefault1, AddAt, IndexOf, TrimEnd, GetCommondLines, 
+        GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, 
+        IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, IsNullableType, 
+        IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, 
+        IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, 
+        IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition
+        First = function (list, T) 
+            return list:getthis[](0)
+        end
+        Last = function (list, T) 
+            return list:getthis[](list:getCount() - 1)
+        end
+        GetOrDefault = function (list, index, v, T) 
+            local default
+            if index >= 0 and index < list:getCount() then
+                default = list:getthis[](index)
+            else
+                default = v
+            end
+            return default
+        end
+        GetOrDefault1 = function (dict, key, t, K, T) 
+            local v
+            local default
+            default, v = dict:TryGetValue(key, v)
+            if default then
+                return v
+            end
+            return t
+        end
+        AddAt = function (list, index, v, T) 
+            if index < list:getCount() then
+                list:setthis[](index, v)
+            else
+                local count = index - list:getCount()
+                do
+                    local i = 0
+                    while i < count do
+                        list:Add(System.default(T))
+                        i = i + 1
+                    end
+                end
+                list:Add(v)
+            end
+        end
+        IndexOf = function (source, match, T) 
+            local index = 0
+            for _, item in System.each(source) do
+                if match(item) then
+                    return index
+                end
+                index = index + 1
+            end
+            return - 1
+        end
+        TrimEnd = function (s, end_) 
+            if s:EndsWith(end_) then
+                return s:Remove(#s - #end_, #end_)
+            end
+            return s
+        end
         GetCommondLines = function (args) 
             local cmds = System.Dictionary(System.String, System.Array(System.String))()
 
@@ -72,55 +128,6 @@ System.namespace("CSharpLua", function (namespace)
                 cmds:Add(key, values:ToArray())
             end
             return cmds
-        end
-        First = function (list, T) 
-            return list:get(0)
-        end
-        Last = function (list, T) 
-            return list:get(list:getCount() - 1)
-        end
-        GetOrDefault = function (list, index, v, T) 
-            local default
-            if index >= 0 and index < list:getCount() then
-                default = list:get(index)
-            else
-                default = v
-            end
-            return default
-        end
-        GetOrDefault1 = function (dict, key, t, K, T) 
-            local v
-            local default
-            default, v = dict:TryGetValue(key, v)
-            if default then
-                return v
-            end
-            return t
-        end
-        AddAt = function (list, index, v, T) 
-            if index < list:getCount() then
-                list:set(index, v)
-            else
-                local count = index - list:getCount()
-                do
-                    local i = 0
-                    while i < count do
-                        list:Add(System.default(T))
-                        i = i + 1
-                    end
-                end
-                list:Add(v)
-            end
-        end
-        IndexOf = function (source, match, T) 
-            local index = 0
-            for _, item in System.each(source) do
-                if match(item) then
-                    return index
-                end
-                index = index + 1
-            end
-            return - 1
         end
         GetArgument = function (args, name, isOption) 
             local values = GetOrDefault1(args, name, nil, System.String, System.Array(System.String))
@@ -224,6 +231,13 @@ System.namespace("CSharpLua", function (namespace)
         IsIntegerType = function (type) 
             return type:getSpecialType() >= 9 --[[SpecialType.System_SByte]] and type:getSpecialType() <= 16 --[[SpecialType.System_UInt64]]
         end
+        IsNullableType = function (type) 
+            if type:getSpecialType() == 32 --[[SpecialType.System_Nullable_T]] then
+                return true
+            end
+            local namedType = System.as(type, MicrosoftCodeAnalysis.INamedTypeSymbol)
+            return namedType ~= nil and namedType:getConstructedFrom() ~= nil and namedType:getConstructedFrom():getSpecialType() == 32 --[[SpecialType.System_Nullable_T]]
+        end
         IsImmutable = function (type) 
             local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or IsStringType(type) or IsDelegateType(type)
             return isImmutable
@@ -288,7 +302,7 @@ System.namespace("CSharpLua", function (namespace)
             while true do
                 local overriddenSymbol = OverriddenSymbol(symbol)
                 if overriddenSymbol ~= nil then
-                    overriddenSymbol = CheckOriginalDefinition1(overriddenSymbol)
+                    overriddenSymbol = CheckOriginalDefinition(overriddenSymbol)
                     if overriddenSymbol:Equals(superSymbol) then
                         return true
                     end
@@ -305,32 +319,34 @@ System.namespace("CSharpLua", function (namespace)
 
             local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
             if syntaxReference ~= nil then
-                local node = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax, syntaxReference:GetSyntax(nil))
-                local hasGet = false
-                local hasSet = false
-                if node:getAccessorList() ~= nil then
-                    for _, accessor in System.each(node:getAccessorList():getAccessors()) do
-                        if accessor:getBody() ~= nil then
-                            if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
-                                assert(not hasGet)
-                                hasGet = true
-                            else
-                                assert(not hasSet)
-                                hasSet = true
+                local node = System.as(syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken)), MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax)
+                if node ~= nil then
+                    local hasGet = false
+                    local hasSet = false
+                    if node:getAccessorList() ~= nil then
+                        for _, accessor in System.each(node:getAccessorList():getAccessors()) do
+                            if accessor:getBody() ~= nil then
+                                if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
+                                    assert(not hasGet)
+                                    hasGet = true
+                                else
+                                    assert(not hasSet)
+                                    hasSet = true
+                                end
                             end
                         end
+                    else
+                        assert(not hasGet)
+                        hasGet = true
                     end
-                else
-                    assert(not hasGet)
-                    hasGet = true
-                end
-                local isAuto = not hasGet and not hasSet
-                if isAuto then
-                    if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IPropertySymbol) then
-                        isAuto = false
+                    local isField = not hasGet and not hasSet
+                    if isField then
+                        if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IPropertySymbol) then
+                            isField = false
+                        end
                     end
+                    return isField
                 end
-                return isAuto
             end
             return false
         end
@@ -341,7 +357,7 @@ System.namespace("CSharpLua", function (namespace)
 
             local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
             if syntaxReference ~= nil then
-                local isField = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(nil), 8795 --[[SyntaxKind.VariableDeclarator]])
+                local isField = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken)), 8795 --[[SyntaxKind.VariableDeclarator]])
                 if isField then
                     if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IEventSymbol) then
                         isField = false
@@ -350,6 +366,19 @@ System.namespace("CSharpLua", function (namespace)
                 return isField
             end
             return false
+        end
+        HasStaticCtor = function (typeSymbol) 
+            return SystemLinq.ImmutableArrayExtensions.Any(typeSymbol:getConstructors(), function (i) 
+                return i:getIsStatic()
+            end, MicrosoftCodeAnalysis.IMethodSymbol)
+        end
+        IsStaticLazy = function (symbol) 
+            local success = symbol:getIsStatic() and not IsPrivate(symbol)
+            if success then
+                local typeSymbol = symbol:getContainingType()
+                return HasStaticCtor(typeSymbol)
+            end
+            return success
         end
         IsAssignment = function (kind) 
             return kind >= 8714 --[[SyntaxKind.SimpleAssignmentExpression]] and kind <= 8724 --[[SyntaxKind.RightShiftAssignmentExpression]]
@@ -456,32 +485,44 @@ System.namespace("CSharpLua", function (namespace)
 
             return false
         end
-        CheckOriginalDefinition = function (symbol) 
-            if symbol:getIsExtensionMethod() then
-                if symbol:getReducedFrom() ~= nil then
-                    symbol = symbol:getReducedFrom()
-                end
-            else
-                if symbol:getOriginalDefinition() ~= symbol then
-                    symbol = symbol:getOriginalDefinition()
-                end
+        CheckSymbolDefinition = function (symbol, T) 
+            local originalDefinition = System.cast(T, symbol:getOriginalDefinition())
+            if originalDefinition ~= symbol then
+                symbol = originalDefinition
             end
             return symbol
         end
-        CheckOriginalDefinition1 = function (symbol) 
-            if symbol:getOriginalDefinition() ~= symbol then
-                symbol = symbol:getOriginalDefinition()
+        CheckMethodDefinition = function (symbol) 
+            if symbol:getIsExtensionMethod() then
+                if symbol:getReducedFrom() ~= nil and symbol:getReducedFrom() ~= symbol then
+                    symbol = symbol:getReducedFrom()
+                end
+            else
+                symbol = CheckSymbolDefinition(symbol, MicrosoftCodeAnalysis.IMethodSymbol)
+            end
+            return symbol
+        end
+        CheckOriginalDefinition = function (symbol) 
+            if symbol:getKind() == 9 --[[SymbolKind.Method]] then
+                local methodSymbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol)
+                methodSymbol = CheckMethodDefinition(methodSymbol)
+                if methodSymbol ~= symbol then
+                    symbol = methodSymbol
+                end
+            else
+                symbol = CheckSymbolDefinition(symbol, MicrosoftCodeAnalysis.ISymbol)
             end
             return symbol
         end
         return {
-            GetCommondLines = GetCommondLines, 
             First = First, 
             Last = Last, 
             GetOrDefault = GetOrDefault, 
             GetOrDefault1 = GetOrDefault1, 
             AddAt = AddAt, 
             IndexOf = IndexOf, 
+            TrimEnd = TrimEnd, 
+            GetCommondLines = GetCommondLines, 
             GetArgument = GetArgument, 
             GetCurrentDirectory = GetCurrentDirectory, 
             Split = Split, 
@@ -497,6 +538,7 @@ System.namespace("CSharpLua", function (namespace)
             IsStringType = IsStringType, 
             IsDelegateType = IsDelegateType, 
             IsIntegerType = IsIntegerType, 
+            IsNullableType = IsNullableType, 
             IsImmutable = IsImmutable, 
             IsInterfaceImplementation = IsInterfaceImplementation, 
             InterfaceImplementations = InterfaceImplementations, 
@@ -506,13 +548,15 @@ System.namespace("CSharpLua", function (namespace)
             IsOverridden = IsOverridden, 
             IsPropertyField = IsPropertyField, 
             IsEventFiled = IsEventFiled, 
+            HasStaticCtor = HasStaticCtor, 
+            IsStaticLazy = IsStaticLazy, 
             IsAssignment = IsAssignment, 
             IsSystemLinqEnumerable = IsSystemLinqEnumerable, 
             GetLocationString = GetLocationString, 
             IsSubclassOf = IsSubclassOf, 
             IsAssignableFrom = IsAssignableFrom, 
-            CheckOriginalDefinition = CheckOriginalDefinition, 
-            CheckOriginalDefinition1 = CheckOriginalDefinition1
+            CheckMethodDefinition = CheckMethodDefinition, 
+            CheckOriginalDefinition = CheckOriginalDefinition
         }
     end)
 end)

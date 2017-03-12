@@ -247,6 +247,12 @@ namespace CSharpLua.LuaAst {
             }
         }
 
+        public bool IsInitStatementExists {
+            get {
+                return initStatements_.Count > 0;
+            }
+        }
+
         public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool isZeroParameters) {
             if(isZeroParameters) {
                 ctors_.Insert(0, function);

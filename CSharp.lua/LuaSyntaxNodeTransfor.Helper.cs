@@ -174,7 +174,7 @@ namespace CSharpLua {
                 var ctors = typeSymbol.Constructors.Where(i => !i.IsStatic).ToList();
                 if(ctors.Count > 1) {
                     int firstCtorIndex = ctors.IndexOf(i => i.Parameters.IsEmpty);
-                    if(firstCtorIndex != 0) {
+                    if(firstCtorIndex != -1) {
                         var firstCtor = ctors[firstCtorIndex];
                         ctors.Remove(firstCtor);
                         ctors.Insert(0, firstCtor);
@@ -309,6 +309,10 @@ namespace CSharpLua {
             return generator_.IsPropertyField(symbol);
         }
 
+        private bool IsEventFiled(IEventSymbol symbol) {
+            return generator_.IsEventFiled(symbol);
+        }
+
         private INamedTypeSymbol GetTypeDeclarationSymbol(SyntaxNode node) {
             var typeDeclaration = (TypeDeclarationSyntax)FindParent(node, i => i.IsKind(SyntaxKind.ClassDeclaration) || i.IsKind(SyntaxKind.StructDeclaration));
             return semanticModel_.GetDeclaredSymbol(typeDeclaration);
@@ -360,7 +364,7 @@ namespace CSharpLua {
                 }
             }
             else {
-                return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
+                return LuaIdentifierLiteralExpressionSyntax.Nil;
             }
         }
 
@@ -729,7 +733,7 @@ namespace CSharpLua {
                             }
                         case SymbolKind.Event: {
                                 IEventSymbol memberSymbol = (IEventSymbol)member;
-                                if(memberSymbol.IsEventFiled()) {
+                                if(IsEventFiled(memberSymbol)) {
                                     LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
                                     AddStructCloneMethodItem(cloneTable, name, null);
                                     filelds.Add(name);
@@ -860,16 +864,8 @@ namespace CSharpLua {
             return false;
         }
 
-        private LuaIdentifierNameSyntax GetMethodName(IMethodSymbol methodSymbol) {
-            return generator_.GetMethodName(methodSymbol);
-        }
-
-        private LuaIdentifierNameSyntax GetFieldName(ISymbol symbol) {
-            return generator_.GetFieldName(symbol);
-        }
-
-        private LuaIdentifierNameSyntax GetPrefixMemebrName(ISymbol symbol) {
-            return generator_.GetPrefixMemebrName(symbol);
+        private LuaIdentifierNameSyntax GetMemberName(ISymbol symbol) {
+            return generator_.GetMemberName(symbol);
         }
     }
 }

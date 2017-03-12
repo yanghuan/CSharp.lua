@@ -173,28 +173,4 @@ namespace CSharpLua.LuaAst {
             renderer.Render(this);
         }
     }
-
-    public sealed class LuaMethodParameterDefaultValueStatementSyntax : LuaStatementSyntax {
-        public string IfKeyword => Tokens.If;
-        public LuaExpressionSyntax Condition { get; }
-        public string OpenParenToken => Tokens.Then;
-        public LuaAssignmentExpressionSyntax Assignment { get; }
-        public string CloseParenToken => Tokens.End;
-
-        public LuaMethodParameterDefaultValueStatementSyntax(LuaIdentifierNameSyntax parameter, LuaExpressionSyntax defaultValue) {
-            if(parameter == null) {
-                throw new ArgumentNullException(nameof(parameter));
-            }
-            if(defaultValue == null) {
-                throw new ArgumentNullException(nameof(defaultValue));
-            }
-            Condition = new LuaBinaryExpressionSyntax(parameter, LuaSyntaxNode.Tokens.EqualsEquals, LuaIdentifierNameSyntax.Nil);
-            Assignment = new LuaAssignmentExpressionSyntax(parameter, defaultValue);
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-    }
-
 }

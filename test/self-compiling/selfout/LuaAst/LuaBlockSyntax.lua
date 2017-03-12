@@ -6,17 +6,21 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaBlockSyntax", function (namespace) 
-        local Render, __ctor__
+        local Render, __init__, __ctor__
+        __init__ = function (this) 
+            this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)()
+        end
+        __ctor__ = function (this) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+        end
         Render = function (this, renderer) 
             renderer:Render12(this)
         end
-        __ctor__ = function (this) 
-            this.Statements = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaStatementSyntax)()
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaStatementSyntax
+                    global.CSharpLua.LuaAst.LuaStatementSyntax
                 }
             end, 
             Render = Render, 
@@ -25,18 +29,18 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end)
     namespace.class("LuaBlockStatementSyntax", function (namespace) 
         local Render, __ctor__
-        Render = function (this, renderer) 
-            renderer:Render13(this)
-        end
         __ctor__ = function (this) 
             CSharpLuaLuaAst.LuaBlockSyntax.__ctor__(this)
             this.OpenBraceToken = "do" --[[Keyword.Do]]
             this.CloseBraceToken = "end" --[[Keyword.End]]
         end
+        Render = function (this, renderer) 
+            renderer:Render13(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaBlockSyntax
+                    global.CSharpLua.LuaAst.LuaBlockSyntax
                 }
             end, 
             Render = Render, 

@@ -214,6 +214,14 @@ namespace CSharpLua {
             return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_UInt64;
         }
 
+        public static bool IsNullableType(this ITypeSymbol type) {
+            if(type.SpecialType == SpecialType.System_Nullable_T) {
+                return true;
+            }
+            INamedTypeSymbol namedType = type as INamedTypeSymbol;
+            return namedType != null && namedType.ConstructedFrom != null && namedType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T;
+        }
+
         public static bool IsImmutable(this ITypeSymbol type) {
             bool isImmutable = (type.IsValueType && type.IsDefinition) || type.IsStringType() || type.IsDelegateType();
             return isImmutable;
@@ -267,24 +275,6 @@ namespace CSharpLua {
             return null;
         }
 
-        public static IEnumerable<ISymbol> ExplicitInterfaceImplementations(this ISymbol symbol) {
-            switch(symbol.Kind) {
-                case SymbolKind.Method: {
-                        IMethodSymbol methodSymbol = (IMethodSymbol)symbol;
-                        return methodSymbol.ExplicitInterfaceImplementations;
-                    }
-                case SymbolKind.Property: {
-                        IPropertySymbol propertySymbol = (IPropertySymbol)symbol;
-                        return propertySymbol.ExplicitInterfaceImplementations;
-                    }
-                case SymbolKind.Event: {
-                        IEventSymbol eventSymbol = (IEventSymbol)symbol;
-                        return eventSymbol.ExplicitInterfaceImplementations;
-                    }
-            }
-            return Array.Empty<ISymbol>();
-        }
-
         public static bool IsOverridden(this ISymbol symbol, ISymbol superSymbol) {
             while(true) {
                 ISymbol overriddenSymbol = symbol.OverriddenSymbol();
@@ -308,34 +298,36 @@ namespace CSharpLua {
 
             var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if(syntaxReference != null) {
-                var node = (PropertyDeclarationSyntax)syntaxReference.GetSyntax();
-                bool hasGet = false;
-                bool hasSet = false;
-                if(node.AccessorList != null) {
-                    foreach(var accessor in node.AccessorList.Accessors) {
-                        if(accessor.Body != null) {
-                            if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
-                                Contract.Assert(!hasGet);
-                                hasGet = true;
-                            }
-                            else {
-                                Contract.Assert(!hasSet);
-                                hasSet = true;
+                var node = syntaxReference.GetSyntax() as PropertyDeclarationSyntax;
+                if(node != null) {
+                    bool hasGet = false;
+                    bool hasSet = false;
+                    if(node.AccessorList != null) {
+                        foreach(var accessor in node.AccessorList.Accessors) {
+                            if(accessor.Body != null) {
+                                if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
+                                    Contract.Assert(!hasGet);
+                                    hasGet = true;
+                                }
+                                else {
+                                    Contract.Assert(!hasSet);
+                                    hasSet = true;
+                                }
                             }
                         }
                     }
-                }
-                else {
-                    Contract.Assert(!hasGet);
-                    hasGet = true;
-                }
-                bool isAuto = !hasGet && !hasSet;
-                if(isAuto) {
-                    if(symbol.IsInterfaceImplementation()) {
-                        isAuto = false;
+                    else {
+                        Contract.Assert(!hasGet);
+                        hasGet = true;
                     }
+                    bool isField = !hasGet && !hasSet;
+                    if(isField) {
+                        if(symbol.IsInterfaceImplementation()) {
+                            isField = false;
+                        }
+                    }
+                    return isField;
                 }
-                return isAuto;
             }
             return false;
         }

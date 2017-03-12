@@ -7,14 +7,8 @@ end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaMemberAccessExpressionSyntax", function (namespace) 
         local getIsObjectColon, Render, __ctor__
-        getIsObjectColon = function (this) 
-            return this.OperatorToken == ":" --[[Tokens.ObjectColon]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render3(this)
-        end
         __ctor__ = function (this, expression, name, isObjectColon) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"))
             end
@@ -25,10 +19,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Name = name
             this.OperatorToken = isObjectColon and ":" --[[Tokens.ObjectColon]] or "." --[[Tokens.Dot]]
         end
+        getIsObjectColon = function (this) 
+            return this.OperatorToken == ":" --[[Tokens.ObjectColon]]
+        end
+        Render = function (this, renderer) 
+            renderer:Render3(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaExpressionSyntax
                 }
             end, 
             getIsObjectColon = getIsObjectColon, 
@@ -37,52 +37,67 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         }
     end)
     namespace.class("LuaPropertyAdapterExpressionSyntax", function (namespace) 
-        local Update, setIsGetOrAdd, getIsProperty, GetCloneOfGet, Render, __ctor1__, __ctor2__
-        Update = function (this, memberAccessExpression) 
-            local invocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, memberAccessExpression)
-            invocationExpression.ArgumentList.Arguments:AddRange1(this.InvocationExpression.ArgumentList.Arguments)
-            this.InvocationExpression = invocationExpression
+        local Update, setIsGetOrAdd, getIsGetOrAdd, getIsProperty, getIsObjectColon, GetClone, GetCloneOfGet, Render, 
+        __init__, __ctor1__, __ctor2__
+        __init__ = function (this) 
+            this.ArgumentList = CSharpLuaLuaAst.LuaArgumentListSyntax()
+        end
+        __ctor1__ = function (this, name) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+            this.Name = name
+        end
+        __ctor2__ = function (this, expression, name, isObjectColon) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+            Update(this, expression, isObjectColon)
+            this.Name = name
+        end
+        Update = function (this, expression, isObjectColon) 
+            assert(this.Expression == nil)
+            this.Expression = expression
+            this.OperatorToken = isObjectColon and ":" --[[Tokens.ObjectColon]] or "." --[[Tokens.Dot]]
         end
         setIsGetOrAdd = function (this, value) 
-            this.identifier_.IsGetOrAdd = value
+            this.Name.IsGetOrAdd = value
+        end
+        getIsGetOrAdd = function (this) 
+            return this.Name.IsGetOrAdd
         end
         getIsProperty = function (this) 
-            return this.identifier_.IsProperty
+            return this.Name.IsProperty
+        end
+        getIsObjectColon = function (this) 
+            return this.OperatorToken == ":" --[[Tokens.ObjectColon]]
+        end
+        GetClone = function (this) 
+            local clone = CSharpLuaLuaAst.LuaPropertyAdapterExpressionSyntax:new(1, this.Name:GetClone())
+            clone.Expression = this.Expression
+            clone.OperatorToken = this.OperatorToken
+            clone.ArgumentList.Arguments:AddRange(this.ArgumentList.Arguments)
+            return clone
         end
         GetCloneOfGet = function (this) 
+            local clone = GetClone(this)
+            setIsGetOrAdd(clone, true)
             setIsGetOrAdd(this, false)
-            this.isAutoGet_ = true
-            local invocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, this.InvocationExpression.Expression)
-            invocationExpression.ArgumentList.Arguments:AddRange1(this.InvocationExpression.ArgumentList.Arguments)
-            return invocationExpression
+            return clone
         end
         Render = function (this, renderer) 
-            this.InvocationExpression.Expression:Render(renderer)
-            if this.isAutoGet_ then
-                setIsGetOrAdd(this, true)
-            end
-            this.InvocationExpression.ArgumentList:Render(renderer)
-        end
-        __ctor1__ = function (this, identifier) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)
-            this.identifier_ = identifier
-            this.InvocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, identifier)
-        end
-        __ctor2__ = function (this, memberAccess, identifier) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)
-            this.identifier_ = identifier
-            this.InvocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess)
+            renderer:Render57(this)
         end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaExpressionSyntax
                 }
             end, 
             Update = Update, 
             setIsGetOrAdd = setIsGetOrAdd, 
+            getIsGetOrAdd = getIsGetOrAdd, 
             getIsProperty = getIsProperty, 
-            isAutoGet_ = false, 
+            getIsObjectColon = getIsObjectColon, 
+            GetClone = GetClone, 
             GetCloneOfGet = GetCloneOfGet, 
             Render = Render, 
             __ctor__ = {

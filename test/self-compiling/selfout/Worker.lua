@@ -5,6 +5,7 @@ local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local SystemIO = System.IO
 local SystemRuntimeInteropServices = System.Runtime.InteropServices
+local SystemThreading = System.Threading
 local CSharpLua
 local CSharpLuaLuaSyntaxGenerator
 System.usingDeclare(function (global) 
@@ -14,6 +15,23 @@ end)
 System.namespace("CSharpLua", function (namespace) 
     namespace.class("Worker", function (namespace) 
         local SystemDlls, getMetas, getLibs, Do, Compiler, __staticCtor__, __ctor__
+        __staticCtor__ = function (this) 
+            SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll", "Microsoft.CSharp.dll")
+        end
+        __ctor__ = function (this, folder, output, lib, meta, defines, isClassic, indent, hasSemicolon, atts) 
+            this.folder_ = folder
+            this.output_ = output
+            this.libs_ = CSharpLua.Utility.Split(lib, true)
+            this.metas_ = CSharpLua.Utility.Split(meta, true)
+            this.defines_ = CSharpLua.Utility.Split(defines, false)
+            this.isNewest_ = not isClassic
+            this.hasSemicolon_ = hasSemicolon
+            local default
+            default, this.indent_ = System.Int.TryParse(indent, this.indent_)
+            if atts ~= nil then
+                this.attributes_ = CSharpLua.Utility.Split(atts, false)
+            end
+        end
         getMetas = function (this) 
             local metas = System.List(System.String)()
             metas:Add(CSharpLua.Utility.GetCurrentDirectory("~/System.xml" --[[Worker.kSystemMeta]]))
@@ -52,35 +70,18 @@ System.namespace("CSharpLua", function (namespace)
             local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(6, 1, 0, this.defines_)
             local files = SystemIO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]])
             local syntaxTrees = Linq.Select(files, function (file) 
-                return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(SystemIO.File.ReadAllText(file), parseOptions, file, nil, nil)
+                return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(SystemIO.File.ReadAllText(file), parseOptions, file, nil, System.default(SystemThreading.CancellationToken))
             end, MicrosoftCodeAnalysis.SyntaxTree)
             local references = Linq.Select(getLibs(this), function (i) 
-                return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, nil, nil)
+                return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, System.default(MicrosoftCodeAnalysis.MetadataReferenceProperties), nil)
             end, MicrosoftCodeAnalysis.PortableExecutableReference)
             local setting = System.create(CSharpLuaLuaSyntaxGenerator.SettingInfo(), function (default) 
                 default.IsNewest = this.isNewest_
                 default.HasSemicolon = this.hasSemicolon_
                 default:setIndent(this.indent_)
             end)
-            local generator = CSharpLua.LuaSyntaxGenerator:new(1, syntaxTrees, references, getMetas(this), setting, this.attributes_)
+            local generator = CSharpLua.LuaSyntaxGenerator(syntaxTrees, references, getMetas(this), setting, this.attributes_)
             generator:Generate(this.folder_, this.output_)
-        end
-        __staticCtor__ = function (this) 
-            SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll", "Microsoft.CSharp.dll")
-        end
-        __ctor__ = function (this, folder, output, lib, meta, defines, isClassic, indent, hasSemicolon, atts) 
-            this.folder_ = folder
-            this.output_ = output
-            this.libs_ = CSharpLua.Utility.Split(lib, true)
-            this.metas_ = CSharpLua.Utility.Split(meta, true)
-            this.defines_ = CSharpLua.Utility.Split(defines, false)
-            this.isNewest_ = not isClassic
-            this.hasSemicolon_ = hasSemicolon
-            local default
-            default, this.indent_ = System.Int.TryParse(indent, this.indent_)
-            if atts ~= nil then
-                this.attributes_ = CSharpLua.Utility.Split(atts, false)
-            end
         end
         return {
             isNewest_ = false, 

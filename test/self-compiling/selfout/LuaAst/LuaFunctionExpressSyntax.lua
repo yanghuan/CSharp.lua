@@ -8,39 +8,44 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaFunctionExpressionSyntax", function (namespace) 
-        local getFunctionKeyword, AddParameter, AddParameter1, AddStatement, AddStatement1, AddStatements, Render, __ctor__
-        getFunctionKeyword = function (this) 
-            return "function" --[[Keyword.Function]]
-        end
-        AddParameter = function (this, parameter) 
-            this.ParameterList.Parameters:Add1(parameter)
-        end
-        AddParameter1 = function (this, identifier) 
-            AddParameter(this, CSharpLuaLuaAst.LuaParameterSyntax(identifier))
-        end
-        AddStatement = function (this, statement) 
-            this.Body.Statements:Add1(statement)
-        end
-        AddStatement1 = function (this, expression) 
-            AddStatement(this, CSharpLuaLuaAst.LuaExpressionStatementSyntax(expression))
-        end
-        AddStatements = function (this, statements) 
-            this.Body.Statements:AddRange1(statements)
-        end
-        Render = function (this, renderer) 
-            renderer:Render9(this)
-        end
-        __ctor__ = function (this) 
+        local getFunctionKeyword, AddParameter, AddParameter1, AddStatement, AddStatement1, AddStatements, Render, __init__, 
+        __ctor__
+        __init__ = function (this) 
             this.ParameterList = CSharpLuaLuaAst.LuaParameterListSyntax()
             this.Body = System.create(CSharpLuaLuaAst.LuaBlockSyntax(), function (default) 
                 default.OpenBraceToken = CSharpLuaLuaAstLuaSyntaxNode.Tokens.getEmpty()
                 default.CloseBraceToken = "end" --[[Keyword.End]]
             end)
         end
+        __ctor__ = function (this) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+        end
+        getFunctionKeyword = function (this) 
+            return "function" --[[Keyword.Function]]
+        end
+        AddParameter = function (this, parameter) 
+            this.ParameterList.Parameters:Add(parameter)
+        end
+        AddParameter1 = function (this, identifier) 
+            AddParameter(this, CSharpLuaLuaAst.LuaParameterSyntax(identifier))
+        end
+        AddStatement = function (this, statement) 
+            this.Body.Statements:Add(statement)
+        end
+        AddStatement1 = function (this, expression) 
+            AddStatement(this, CSharpLuaLuaAst.LuaExpressionStatementSyntax(expression))
+        end
+        AddStatements = function (this, statements) 
+            this.Body.Statements:AddRange(statements)
+        end
+        Render = function (this, renderer) 
+            renderer:Render9(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaExpressionSyntax
                 }
             end, 
             getFunctionKeyword = getFunctionKeyword, 
@@ -57,38 +62,37 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end)
     namespace.class("LuaConstructorAdapterExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaFunctionExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaFunctionExpressionSyntax
                 }
             end, 
-            IsStaticCtor = false, 
             IsInvokeThisCtor = false
         }
     end)
     namespace.class("LuaCheckReturnFunctionExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaFunctionExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaFunctionExpressionSyntax
                 }
             end
         }
     end)
     namespace.class("LuaTryAdapterExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaCheckReturnFunctionExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaCheckReturnFunctionExpressionSyntax
                 }
             end
         }
     end)
     namespace.class("LuaUsingAdapterExpressionSyntax", function (namespace) 
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaCheckReturnFunctionExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaCheckReturnFunctionExpressionSyntax
                 }
             end
         }

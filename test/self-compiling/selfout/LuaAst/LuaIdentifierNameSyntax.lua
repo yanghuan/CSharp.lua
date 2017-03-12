@@ -16,9 +16,6 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, setmetatable, 
         getmetatable, Clone, EqualsObj, Obj, EqualsStatic, SystemObjectEqualsStatic, DateTime, TimeSpan, 
         Render, __staticCtor__, __ctor1__, __ctor2__
-        Render = function (this, renderer) 
-            renderer:Render5(this)
-        end
         __staticCtor__ = function (this) 
             Empty = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "")
             Placeholder = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "_")
@@ -95,16 +92,19 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Empty, this.Placeholder, this.One, this.System, this.Namespace, this.Class, this.Struct, this.Interface, this.Enum, this.Value, this.This, this.True, this.False, this.Throw, this.Each, this.YieldReturn, this.Object, this.Array, this.ArrayEmpty, this.MultiArray, this.Create, this.Add, this.StaticCtor, this.Init, this.Ctor, this.Inherits, this.InheritRecursion, this.Default, this.SystemDefault, this.Property, this.Event, this.Nil, this.TypeOf, this.Continue, this.StringChar, this.ToStr, this.ToEnumString, this.DelegateCombine, this.DelegateRemove, this.DelegateBind, this.IntegerDiv, this.IntegerMod, this.BitAnd, this.BitOr, this.BitXor, this.ShiftRight, this.ShiftLeft, this.Try, this.Is, this.As, this.Cast, this.Using, this.UsingX, this.Linq, this.SystemLinqEnumerable, this.New, this.Format, this.Delegate, this.Int, this.UsingDeclare, this.Global, this.Attributes, this.Trunc, this.setmetatable, this.getmetatable, this.Clone, this.EqualsObj, this.Obj, this.EqualsStatic, this.SystemObjectEqualsStatic, this.DateTime, this.TimeSpan = Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, Enum, Value, This, True, False, Throw, Each, YieldReturn, Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, Inherits, InheritRecursion, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, StringChar, ToStr, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerMod, BitAnd, BitOr, BitXor, ShiftRight, ShiftLeft, Try, Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, setmetatable, getmetatable, Clone, EqualsObj, Obj, EqualsStatic, SystemObjectEqualsStatic, DateTime, TimeSpan
         end
         __ctor1__ = function (this, valueText) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
             this.ValueText = valueText
         end
         __ctor2__ = function (this, v) 
             __ctor1__(this, v:ToString())
         end
+        Render = function (this, renderer) 
+            renderer:Render5(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaExpressionSyntax
                 }
             end, 
             Render = Render, 
@@ -116,7 +116,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         }
     end)
     namespace.class("LuaPropertyOrEventIdentifierNameSyntax", function (namespace) 
-        local getPrefixToken, Render, __ctor__
+        local getPrefixToken, GetClone, Render, __ctor1__, __ctor2__
+        __ctor1__ = function (this, isProperty, name) 
+            __ctor2__(this, isProperty, true, name)
+        end
+        __ctor2__ = function (this, isProperty, isGetOrAdd, name) 
+            CSharpLuaLuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, "")
+            this.IsProperty = isProperty
+            this.IsGetOrAdd = isGetOrAdd
+            this.Name = name
+        end
         getPrefixToken = function (this) 
             if this.IsProperty then
                 return this.IsGetOrAdd and "get" --[[Tokens.Get]] or "set" --[[Tokens.Set]]
@@ -124,28 +133,37 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                 return this.IsGetOrAdd and "add" --[[Tokens.Add]] or "remove" --[[Tokens.Remove]]
             end
         end
+        GetClone = function (this) 
+            local clone = CSharpLuaLuaAst.LuaPropertyOrEventIdentifierNameSyntax:new(1, this.IsProperty, this.Name)
+            clone.IsGetOrAdd = this.IsGetOrAdd
+            return clone
+        end
         Render = function (this, renderer) 
             renderer:Render6(this)
         end
-        __ctor__ = function (this, isProperty, valueText) 
-            CSharpLuaLuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, valueText)
-            this.IsProperty = isProperty
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaIdentifierNameSyntax
+                    global.CSharpLua.LuaAst.LuaIdentifierNameSyntax
                 }
             end, 
-            IsGetOrAdd = true, 
+            IsGetOrAdd = false, 
             IsProperty = false, 
             getPrefixToken = getPrefixToken, 
+            GetClone = GetClone, 
             Render = Render, 
-            __ctor__ = __ctor__
+            __ctor__ = {
+                __ctor1__, 
+                __ctor2__
+            }
         }
     end)
     namespace.class("LuaSymbolNameSyntax", function (namespace) 
         local Update, Render, __ctor__
+        __ctor__ = function (this, identifierName) 
+            CSharpLuaLuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, "")
+            this.IdentifierName = identifierName
+        end
         Update = function (this, newName) 
             if this.IdentifierName.ValueText ~= newName then
                 this.IdentifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, newName)
@@ -154,14 +172,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Render = function (this, renderer) 
             this.IdentifierName:Render(renderer)
         end
-        __ctor__ = function (this, identifierName) 
-            CSharpLuaLuaAst.LuaIdentifierNameSyntax.__ctor__[1](this, "")
-            this.IdentifierName = identifierName
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaIdentifierNameSyntax
+                    global.CSharpLua.LuaAst.LuaIdentifierNameSyntax
                 }
             end, 
             Update = Update, 

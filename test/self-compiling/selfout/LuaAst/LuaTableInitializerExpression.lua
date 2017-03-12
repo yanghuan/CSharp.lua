@@ -6,7 +6,18 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
     namespace.class("LuaTableInitializerExpression", function (namespace) 
-        local getOpenBraceToken, getCloseBraceToken, Render, Empty, __staticCtor__, __ctor__
+        local getOpenBraceToken, getCloseBraceToken, Render, Empty, __staticCtor__, __init__, __ctor__
+        __staticCtor__ = function (this) 
+            Empty = CSharpLuaLuaAst.LuaTableInitializerExpression()
+            this.Empty = Empty
+        end
+        __init__ = function (this) 
+            this.Items = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaTableItemSyntax)()
+        end
+        __ctor__ = function (this) 
+            __init__(this)
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+        end
         getOpenBraceToken = function (this) 
             return "{" --[[Tokens.OpenBrace]]
         end
@@ -16,17 +27,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Render = function (this, renderer) 
             renderer:Render26(this)
         end
-        __staticCtor__ = function (this) 
-            Empty = CSharpLuaLuaAst.LuaTableInitializerExpression()
-            this.Empty = Empty
-        end
-        __ctor__ = function (this) 
-            this.Items = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaTableItemSyntax)()
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaExpressionSyntax
                 }
             end, 
             getOpenBraceToken = getOpenBraceToken, 
@@ -37,19 +41,21 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         }
     end)
     namespace.class("LuaTableItemSyntax", function (namespace) 
+        local __ctor__
+        __ctor__ = function (this) 
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaSyntaxNode
+                    global.CSharpLua.LuaAst.LuaSyntaxNode
                 }
-            end
+            end, 
+            __ctor__ = __ctor__
         }
     end)
     namespace.class("LuaSingleTableItemSyntax", function (namespace) 
         local Render, __ctor__
-        Render = function (this, renderer) 
-            renderer:Render27(this)
-        end
         __ctor__ = function (this, expression) 
             CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
             if expression == nil then
@@ -57,10 +63,13 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             end
             this.Expression = expression
         end
+        Render = function (this, renderer) 
+            renderer:Render27(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaTableItemSyntax
+                    global.CSharpLua.LuaAst.LuaTableItemSyntax
                 }
             end, 
             Render = Render, 
@@ -68,16 +77,25 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         }
     end)
     namespace.class("LuaTableKeySyntax", function (namespace) 
+        local __ctor__
+        __ctor__ = function (this) 
+            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaSyntaxNode
+                    global.CSharpLua.LuaAst.LuaSyntaxNode
                 }
-            end
+            end, 
+            __ctor__ = __ctor__
         }
     end)
     namespace.class("LuaTableExpressionKeySyntax", function (namespace) 
         local getOpenBracketToken, getCloseBracketToken, Render, __ctor__
+        __ctor__ = function (this, expression) 
+            CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this)
+            this.Expression = expression
+        end
         getOpenBracketToken = function (this) 
             return "[" --[[Tokens.OpenBracket]]
         end
@@ -87,14 +105,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         Render = function (this, renderer) 
             renderer:Render29(this)
         end
-        __ctor__ = function (this, expression) 
-            CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this)
-            this.Expression = expression
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaTableKeySyntax
+                    global.CSharpLua.LuaAst.LuaTableKeySyntax
                 }
             end, 
             getOpenBracketToken = getOpenBracketToken, 
@@ -105,17 +119,17 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end)
     namespace.class("LuaTableLiteralKeySyntax", function (namespace) 
         local Render, __ctor__
-        Render = function (this, renderer) 
-            renderer:Render30(this)
-        end
         __ctor__ = function (this, identifier) 
             CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this)
             this.Identifier = identifier
         end
+        Render = function (this, renderer) 
+            renderer:Render30(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaTableKeySyntax
+                    global.CSharpLua.LuaAst.LuaTableKeySyntax
                 }
             end, 
             Render = Render, 
@@ -124,21 +138,21 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end)
     namespace.class("LuaKeyValueTableItemSyntax", function (namespace) 
         local getOperatorToken, Render, __ctor__
+        __ctor__ = function (this, key, value) 
+            CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
+            this.Key = key
+            this.Value = value
+        end
         getOperatorToken = function (this) 
             return "=" --[[Tokens.Equals]]
         end
         Render = function (this, renderer) 
             renderer:Render28(this)
         end
-        __ctor__ = function (this, key, value) 
-            CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
-            this.Key = key
-            this.Value = value
-        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaTableItemSyntax
+                    global.CSharpLua.LuaAst.LuaTableItemSyntax
                 }
             end, 
             getOperatorToken = getOperatorToken, 
@@ -148,17 +162,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end)
     namespace.class("LuaTableIndexAccessExpressionSyntax", function (namespace) 
         local getOpenBracketToken, getCloseBracketToken, Render, __ctor__
-        getOpenBracketToken = function (this) 
-            return "[" --[[Tokens.OpenBracket]]
-        end
-        getCloseBracketToken = function (this) 
-            return "]" --[[Tokens.CloseBracket]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render31(this)
-        end
         __ctor__ = function (this, expression, index) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__[1](this)
+            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
             if expression == nil then
                 System.throw(System.ArgumentNullException("expression"))
             end
@@ -168,10 +173,19 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.Expression = expression
             this.Index = index
         end
+        getOpenBracketToken = function (this) 
+            return "[" --[[Tokens.OpenBracket]]
+        end
+        getCloseBracketToken = function (this) 
+            return "]" --[[Tokens.CloseBracket]]
+        end
+        Render = function (this, renderer) 
+            renderer:Render31(this)
+        end
         return {
-            __inherits__ = function () 
+            __inherits__ = function (global) 
                 return {
-                    CSharpLuaLuaAst.LuaExpressionSyntax
+                    global.CSharpLua.LuaAst.LuaExpressionSyntax
                 }
             end, 
             getOpenBracketToken = getOpenBracketToken, 

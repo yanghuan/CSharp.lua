@@ -2,6 +2,7 @@
 local System = System
 local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local SystemIO = System.IO
+local SystemText = System.Text
 local SystemXmlSerialization = System.Xml.Serialization
 local CSharpLua
 local CSharpLuaLuaAst
@@ -52,10 +53,19 @@ System.namespace("CSharpLua", function (namespace)
             namespace.class("AssemblyModel", function (namespace) 
                 return {}
             end)
+            namespace.class("ExportModel", function (namespace) 
+                namespace.class("AttributeModel", function (namespace) 
+                    return {}
+                end)
+                return {}
+            end)
             return {}
         end)
         namespace.class("MethodMetaInfo", function (namespace) 
             local Add, CheckIsSingleModel, IsTypeMatch, IsMethodMatch, GetName, GetCodeTemplate, GetMetaInfo, __ctor__
+            __ctor__ = function (this) 
+                this.models_ = System.List(CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel)()
+            end
             Add = function (this, model) 
                 this.models_:Add(model)
                 CheckIsSingleModel(this)
@@ -167,9 +177,6 @@ System.namespace("CSharpLua", function (namespace)
                     end
                 until 1
             end
-            __ctor__ = function (this) 
-                this.models_ = System.List(CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel)()
-            end
             return {
                 isSingleModel_ = false, 
                 Add = Add, 
@@ -180,6 +187,18 @@ System.namespace("CSharpLua", function (namespace)
         namespace.class("TypeMetaInfo", function (namespace) 
             local getModel, Field, Property, Method, GetFieldModel, GetPropertyModel, GetMethodMetaInfo, __init__, 
             __ctor__
+            __init__ = function (this) 
+                this.fields_ = System.Dictionary(System.String, CSharpLuaXmlMetaProviderXmlMetaModel.FieldModel)()
+                this.propertys_ = System.Dictionary(System.String, CSharpLuaXmlMetaProviderXmlMetaModel.PropertyModel)()
+                this.methods_ = System.Dictionary(System.String, CSharpLuaXmlMetaProvider.MethodMetaInfo)()
+            end
+            __ctor__ = function (this, model) 
+                __init__(this)
+                this.model_ = model
+                Field(this)
+                Property(this)
+                Method(this)
+            end
             getModel = function (this) 
                 return this.model_
             end
@@ -236,18 +255,6 @@ System.namespace("CSharpLua", function (namespace)
             GetMethodMetaInfo = function (this, name) 
                 return CSharpLua.Utility.GetOrDefault1(this.methods_, name, nil, System.String, CSharpLuaXmlMetaProvider.MethodMetaInfo)
             end
-            __init__ = function (this) 
-                this.fields_ = System.Dictionary(System.String, CSharpLuaXmlMetaProviderXmlMetaModel.FieldModel)()
-                this.propertys_ = System.Dictionary(System.String, CSharpLuaXmlMetaProviderXmlMetaModel.PropertyModel)()
-                this.methods_ = System.Dictionary(System.String, CSharpLuaXmlMetaProvider.MethodMetaInfo)()
-            end
-            __ctor__ = function (this, model) 
-                __init__(this)
-                this.model_ = model
-                Field(this)
-                Property(this)
-                Method(this)
-            end
             return {
                 getModel = getModel, 
                 GetFieldModel = GetFieldModel, 
@@ -256,9 +263,45 @@ System.namespace("CSharpLua", function (namespace)
                 __ctor__ = __ctor__
             }
         end)
-        local LoadNamespace, LoadType, GetNamespaceMapName, GetTypeName, MayHaveCodeMeta, GetTypeShortString, GetTypeShortName, GetTypeMetaInfo, 
-        IsPropertyField, GetFieldCodeTemplate, GetProertyCodeTemplate, GetInternalMethodMetaInfo, GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, __init__, 
-        __ctor__
+        local LoadNamespace, LoadType, GetNamespaceMapName, GetTypeName, GetTypeArguments, FillExternalTypeArgument, FillTypeArguments, MayHaveCodeMeta, 
+        FillExternalTypeName, GetTypeShortString, GetTypeShortName, GetTypeMetaInfo, IsPropertyField, GetFieldCodeTemplate, GetProertyCodeTemplate, GetInternalMethodMetaInfo, 
+        GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, IsExportAttribute, CheckFieldNameOfProtobufnet, __init__, __ctor__
+        __init__ = function (this) 
+            this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)()
+            this.typeMetas_ = System.Dictionary(System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo)()
+            this.exportAttributes_ = System.HashSet(System.String)()
+        end
+        __ctor__ = function (this, files) 
+            __init__(this)
+            for _, file in System.each(files) do
+                local xmlSeliz = SystemXmlSerialization.XmlSerializer(System.typeof(CSharpLuaXmlMetaProvider.XmlMetaModel))
+                System.try(function () 
+                    System.using(SystemIO.FileStream(file, 3 --[[FileMode.Open]], 1 --[[FileAccess.Read]], 1 --[[FileShare.Read]]), function (stream) 
+                        local model = System.cast(CSharpLuaXmlMetaProvider.XmlMetaModel, xmlSeliz:Deserialize(stream))
+                        local assembly = model.Assembly
+                        if assembly ~= nil and assembly.Namespaces ~= nil then
+                            for _, namespaceModel in System.each(assembly.Namespaces) do
+                                LoadNamespace(this, namespaceModel)
+                            end
+                        end
+                        local export = model.Export
+                        if export ~= nil then
+                            if export.Attributes ~= nil then
+                                for _, attribute in System.each(export.Attributes) do
+                                    if System.String.IsNullOrEmpty(attribute.Name) then
+                                        System.throw(System.ArgumentException("attribute's name is empty"))
+                                    end
+                                    this.exportAttributes_:Add(attribute.Name)
+                                end
+                            end
+                        end
+                    end)
+                end, function (default) 
+                    local e = default
+                    System.throw(System.Exception(("load xml file wrong at {0}"):Format(file), e))
+                end)
+            end
+        end
         LoadNamespace = function (this, model) 
             local namespaceName = model.name
             if System.String.IsNullOrEmpty(namespaceName) then
@@ -335,50 +378,66 @@ System.namespace("CSharpLua", function (namespace)
             end
 
             local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor)
-            if namedTypeSymbol:getTypeArguments():getLength() == 0 then
+            local typeArguments = GetTypeArguments(this, namedTypeSymbol, transfor)
+            if #typeArguments == 0 then
                 return baseTypeName
             else
                 local invocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, baseTypeName)
-                for _, typeArgument in System.each(namedTypeSymbol:getTypeArguments()) do
-                    local typeArgumentExpression = GetTypeName(this, typeArgument, transfor)
-                    invocationExpression:AddArgument(typeArgumentExpression)
-                end
+                invocationExpression:AddArguments(typeArguments)
                 return invocationExpression
+            end
+        end
+        GetTypeArguments = function (this, typeSymbol, transfor) 
+            local typeArguments = System.List(CSharpLuaLuaAst.LuaExpressionSyntax)()
+            FillExternalTypeArgument(this, typeArguments, typeSymbol, transfor)
+            FillTypeArguments(this, typeArguments, typeSymbol, transfor)
+            return typeArguments
+        end
+        FillExternalTypeArgument = function (this, typeArguments, typeSymbol, transfor) 
+            local externalType = typeSymbol:getContainingType()
+            if externalType ~= nil then
+                FillExternalTypeArgument(this, typeArguments, externalType, transfor)
+                FillTypeArguments(this, typeArguments, externalType, transfor)
+            end
+        end
+        FillTypeArguments = function (this, typeArguments, typeSymbol, transfor) 
+            for _, typeArgument in System.each(typeSymbol:getTypeArguments()) do
+                local typeArgumentExpression = GetTypeName(this, typeArgument, transfor)
+                typeArguments:Add(typeArgumentExpression)
             end
         end
         MayHaveCodeMeta = function (this, symbol) 
             return symbol:getDeclaredAccessibility() == 6 --[[Accessibility.Public]] and not CSharpLua.Utility.IsFromCode(symbol)
         end
+        FillExternalTypeName = function (this, sb, typeSymbol) 
+            local externalType = typeSymbol:getContainingType()
+            if externalType ~= nil then
+                FillExternalTypeName(this, sb, externalType)
+                sb:Append(externalType:getName())
+                local typeParametersCount = externalType:getTypeParameters():getLength()
+                if typeParametersCount > 0 then
+                    sb:Append(95 --[['_']])
+                    sb:Append(typeParametersCount)
+                end
+                sb:Append(46 --[['.']])
+            end
+        end
         GetTypeShortString = function (this, symbol) 
             local typeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition())
             local namespaceName = GetNamespaceMapName(this, typeSymbol:getContainingNamespace())
-            local name
-            if typeSymbol:getContainingType() ~= nil then
-                name = ""
-                local containingType = typeSymbol:getContainingType()
-                repeat
-                    name = (containingType:getName() or "") .. '.' .. (name or "")
-                    containingType = containingType:getContainingType()
-                until not (containingType ~= nil)
-                name = name .. (typeSymbol:getName() or "")
-            else
-                name = typeSymbol:getName()
+            local sb = SystemText.StringBuilder()
+            if #namespaceName > 0 then
+                sb:Append(namespaceName)
+                sb:Append(46 --[['.']])
             end
-            local fullName
-            if typeSymbol:getTypeArguments():getLength() == 0 then
-                if #namespaceName > 0 then
-                    fullName = ("{0}.{1}"):Format(namespaceName, name)
-                else
-                    fullName = name
-                end
-            else
-                if #namespaceName > 0 then
-                    fullName = ("{0}.{1}_{2}"):Format(namespaceName, name, typeSymbol:getTypeArguments():getLength())
-                else
-                    fullName = ("{0}_{1}"):Format(name, typeSymbol:getTypeArguments():getLength())
-                end
+            FillExternalTypeName(this, sb, typeSymbol)
+            sb:Append(typeSymbol:getName())
+            local typeParametersCount = typeSymbol:getTypeParameters():getLength()
+            if typeParametersCount > 0 then
+                sb:Append(95 --[['_']])
+                sb:Append(typeParametersCount)
             end
-            return fullName
+            return sb:ToString()
         end
         GetTypeShortName = function (this, symbol, transfor) 
             local name = GetTypeShortString(this, symbol)
@@ -493,7 +552,7 @@ System.namespace("CSharpLua", function (namespace)
             return codeTemplate
         end
         GetMethodMetaInfo = function (this, symbol, metaType) 
-            symbol = CSharpLua.Utility.CheckOriginalDefinition(symbol)
+            symbol = CSharpLua.Utility.CheckMethodDefinition(symbol)
             return GetInternalMethodMetaInfo(this, symbol, metaType)
         end
         GetMethodMapName = function (this, symbol) 
@@ -502,29 +561,16 @@ System.namespace("CSharpLua", function (namespace)
         GetMethodCodeTemplate = function (this, symbol) 
             return GetMethodMetaInfo(this, symbol, 1 --[[MethodMetaType.CodeTemplate]])
         end
-        __init__ = function (this) 
-            this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)()
-            this.typeMetas_ = System.Dictionary(System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo)()
+        IsExportAttribute = function (this, attributeTypeSymbol) 
+            return this.exportAttributes_:getCount() > 0 and this.exportAttributes_:Contains(attributeTypeSymbol:ToString())
         end
-        __ctor__ = function (this, files) 
-            __init__(this)
-            for _, file in System.each(files) do
-                local xmlSeliz = SystemXmlSerialization.XmlSerializer(System.typeof(CSharpLuaXmlMetaProvider.XmlMetaModel))
-                System.try(function () 
-                    System.using(SystemIO.FileStream(file, 3 --[[FileMode.Open]], 1 --[[FileAccess.Read]], 1 --[[FileShare.Read]]), function (stream) 
-                        local model = System.cast(CSharpLuaXmlMetaProvider.XmlMetaModel, xmlSeliz:Deserialize(stream))
-                        local assembly = model.Assembly
-                        if assembly ~= nil and assembly.Namespaces ~= nil then
-                            for _, namespaceModel in System.each(assembly.Namespaces) do
-                                LoadNamespace(this, namespaceModel)
-                            end
-                        end
-                    end)
-                end, function (default) 
-                    local e = default
-                    System.throw(System.Exception(("load xml file wrong at {0}"):Format(file), e))
-                end)
+        CheckFieldNameOfProtobufnet = function (this, fieldName, containingType) 
+            if not containingType:getInterfaces():getIsEmpty() then
+                if CSharpLua.Utility.First(containingType:getInterfaces(), MicrosoftCodeAnalysis.INamedTypeSymbol):ToString() == "ProtoBuf.IExtensible" then
+                    fieldName = fieldName:TrimStart(95 --[['_']])
+                end
             end
+            return fieldName
         end
         return {
             GetTypeName = GetTypeName, 
@@ -534,6 +580,8 @@ System.namespace("CSharpLua", function (namespace)
             GetProertyCodeTemplate = GetProertyCodeTemplate, 
             GetMethodMapName = GetMethodMapName, 
             GetMethodCodeTemplate = GetMethodCodeTemplate, 
+            IsExportAttribute = IsExportAttribute, 
+            CheckFieldNameOfProtobufnet = CheckFieldNameOfProtobufnet, 
             __ctor__ = __ctor__
         }
     end)
