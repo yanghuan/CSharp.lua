@@ -174,7 +174,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             if index == 0 then
                 return this.headIfStatement_.Body
             else
-                return this.headIfStatement_.ElseIfStatements:getthis[](index - 1).Body
+                return this.headIfStatement_.ElseIfStatements:get(index - 1).Body
             end
         end
         CheckHasCaseLabel = function (this) 

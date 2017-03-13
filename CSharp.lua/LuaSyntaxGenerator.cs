@@ -403,12 +403,8 @@ namespace CSharpLua {
                 }
             }
 
-            if(!symbol.IsFromCode()) {
-                return new LuaIdentifierNameSyntax(symbol.Name);
-            }
-
-            if(symbol.ContainingType.TypeKind == TypeKind.Interface) {
-                return new LuaIdentifierNameSyntax(symbol.Name);
+            if(!symbol.IsFromCode() || symbol.ContainingType.TypeKind == TypeKind.Interface) {
+                return new LuaIdentifierNameSyntax(GetSymbolBaseName(symbol));
             }
 
             if(symbol.IsStatic) {
@@ -473,9 +469,14 @@ namespace CSharpLua {
                     }
                 case SymbolKind.Property: {
                         IPropertySymbol property = (IPropertySymbol)symbol;
-                        var implementation = property.ExplicitInterfaceImplementations.FirstOrDefault();
-                        if(implementation != null) {
-                            return implementation.Name;
+                        if(property.IsIndexer) {
+                            return string.Empty;
+                        }
+                        else {
+                            var implementation = property.ExplicitInterfaceImplementations.FirstOrDefault();
+                            if(implementation != null) {
+                                return implementation.Name;
+                            }
                         }
                         break;
                     }
@@ -590,7 +591,7 @@ namespace CSharpLua {
                     names.Add(symbol.Name);
                 }
                 else {
-                    string baseName = propertySymbol.IsIndexer ? string.Empty : GetSymbolBaseName(symbol);
+                    string baseName = GetSymbolBaseName(symbol);
                     if(propertySymbol.IsReadOnly) {
                         names.Add(LuaSyntaxNode.Tokens.Get + baseName);
                     }
@@ -794,13 +795,7 @@ namespace CSharpLua {
         }
 
         private string GetRefactorName(INamedTypeSymbol typeSymbol, IEnumerable<INamedTypeSymbol> childrens, ISymbol symbol) {
-            string originalName = symbol.Name;
-            if(symbol.Kind == SymbolKind.Property) {
-                var property = (IPropertySymbol)symbol;
-                if(property.IsIndexer) {
-                    originalName = string.Empty;
-                }
-            }
+            string originalName = GetSymbolBaseName(symbol);
 
             int index = 1;
             while(true) {

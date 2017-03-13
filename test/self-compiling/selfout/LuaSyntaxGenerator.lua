@@ -429,12 +429,8 @@ System.namespace("CSharpLua", function (namespace)
                 end
             end
 
-            if not CSharpLua.Utility.IsFromCode(symbol) then
-                return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName())
-            end
-
-            if symbol:getContainingType():getTypeKind() == 7 --[[TypeKind.Interface]] then
-                return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName())
+            if not CSharpLua.Utility.IsFromCode(symbol) or symbol:getContainingType():getTypeKind() == 7 --[[TypeKind.Interface]] then
+                return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, GetSymbolBaseName(this, symbol))
             end
 
             if symbol:getIsStatic() then
@@ -499,9 +495,13 @@ System.namespace("CSharpLua", function (namespace)
                 elseif default == 15 --[[SymbolKind.Property]] then
                     do
                         local property = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
-                        local implementation = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(property:getExplicitInterfaceImplementations(), MicrosoftCodeAnalysis.IPropertySymbol)
-                        if implementation ~= nil then
-                            return implementation:getName()
+                        if property:getIsIndexer() then
+                            return ""
+                        else
+                            local implementation = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(property:getExplicitInterfaceImplementations(), MicrosoftCodeAnalysis.IPropertySymbol)
+                            if implementation ~= nil then
+                                return implementation:getName()
+                            end
                         end
                         break
                     end
@@ -617,7 +617,7 @@ System.namespace("CSharpLua", function (namespace)
                 if IsPropertyField(this, propertySymbol) then
                     names:Add(symbol:getName())
                 else
-                    local baseName = propertySymbol:getIsIndexer() and "" or GetSymbolBaseName(this, symbol)
+                    local baseName = GetSymbolBaseName(this, symbol)
                     if propertySymbol:getIsReadOnly() then
                         names:Add("get" --[[Tokens.Get]] .. (baseName or ""))
                     elseif propertySymbol:getIsWriteOnly() then
@@ -753,7 +753,7 @@ System.namespace("CSharpLua", function (namespace)
             if CSharpLua.Utility.IsFromCode(symbol) then
                 local typeSymbol = symbol:getContainingType()
                 assert(typeSymbol:getTypeKind() == 7 --[[TypeKind.Interface]])
-                local childrens = this.extends_:getthis[](typeSymbol)
+                local childrens = this.extends_:get(typeSymbol)
                 local newName = GetRefactorName(this, nil, childrens, symbol)
                 for _, children in System.each(childrens) do
                     local childrenSymbol = children:FindImplementationForInterfaceMember(symbol)
@@ -785,7 +785,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end
         UpdateName = function (this, symbol, newName, alreadyRefactorSymbols) 
-            this.memberNames_:getthis[](symbol):Update(newName)
+            this.memberNames_:get(symbol):Update(newName)
             local checkName1, checkName2
             checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName, checkName1, checkName2)
             TryAddNewUsedName(this, symbol:getContainingType(), checkName1)
@@ -815,13 +815,7 @@ System.namespace("CSharpLua", function (namespace)
             return checkName1, checkName2
         end
         GetRefactorName = function (this, typeSymbol, childrens, symbol) 
-            local originalName = symbol:getName()
-            if symbol:getKind() == 15 --[[SymbolKind.Property]] then
-                local property = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
-                if property:getIsIndexer() then
-                    originalName = ""
-                end
-            end
+            local originalName = GetSymbolBaseName(this, symbol)
 
             local index = 1
             while true do

@@ -477,7 +477,7 @@ System.namespace("CSharpLua", function (namespace)
                 if #baseTypes > 1 then
                     local baseTypeIndex = baseTypes:FindIndex(System.bind(this.generator_, this.generator_.IsBaseType))
                     if baseTypeIndex > 0 then
-                        local baseType = baseTypes:getthis[](baseTypeIndex)
+                        local baseType = baseTypes:get(baseTypeIndex)
                         baseTypes:RemoveAt(baseTypeIndex)
                         baseTypes:Insert(0, baseType)
                     end
@@ -903,7 +903,7 @@ System.namespace("CSharpLua", function (namespace)
             return MicrosoftCodeAnalysisCSharp.CSharpSyntaxVisitor_1(CSharpLuaLuaAst.LuaSyntaxNode).VisitPropertyDeclaration(this, node)
         end
         IsReadOnlyProperty = function (this, node) 
-            return node:getAccessorList():getAccessors():getCount() == 1 and node:getAccessorList():getAccessors():getthis[](0):getBody() == nil
+            return node:getAccessorList():getAccessors():getCount() == 1 and node:getAccessorList():getAccessors():get(0):getBody() == nil
         end
         VisitEventDeclaration = function (this, node) 
             if not CSharpLua.Utility.IsAbstract(node:getModifiers()) then
@@ -1464,7 +1464,7 @@ System.namespace("CSharpLua", function (namespace)
                         if paramsType:getTypeKind() ~= 1 --[[TypeKind.Array]] then
                             local arrayTypeSymbol = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, last:getType())
                             local array = BuildArray(this, arrayTypeSymbol:getElementType(), System.Array(CSharpLuaLuaAst.LuaExpressionSyntax)(CSharpLua.Utility.Last(arguments, CSharpLuaLuaAst.LuaExpressionSyntax)))
-                            arguments:setthis[](#arguments - 1, array)
+                            arguments:set(#arguments - 1, array)
                         end
                     else
                         local otherParameterCount = parameters:getLength() - 1
@@ -1480,9 +1480,9 @@ System.namespace("CSharpLua", function (namespace)
             do
                 local i = 0
                 while i < #arguments do
-                    if arguments:getthis[](i) == nil then
-                        local defaultValue = GetDeafultParameterValue(this, parameters:getthis[](i), node, isCheckCallerAttribute)
-                        arguments:setthis[](i, defaultValue)
+                    if arguments:get(i) == nil then
+                        local defaultValue = GetDeafultParameterValue(this, parameters:get(i), node, isCheckCallerAttribute)
+                        arguments:set(i, defaultValue)
                     end
                     i = i + 1
                 end
@@ -2659,7 +2659,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         CheckReservedWord1 = function (this, name, symbol) 
             if CSharpLuaLuaAst.LuaSyntaxNode.IsReservedWord(name) then
-                name = this.localReservedNames_:getthis[](symbol)
+                name = this.localReservedNames_:get(symbol)
             end
             return name
         end
@@ -2674,7 +2674,7 @@ System.namespace("CSharpLua", function (namespace)
                         return i:getParameters():getIsEmpty()
                     end, MicrosoftCodeAnalysis.IMethodSymbol)
                     if firstCtorIndex ~= - 1 then
-                        local firstCtor = ctors:getthis[](firstCtorIndex)
+                        local firstCtor = ctors:get(firstCtorIndex)
                         ctors:Remove(firstCtor)
                         ctors:Insert(0, firstCtor)
                     end
@@ -2732,15 +2732,15 @@ System.namespace("CSharpLua", function (namespace)
                     local prevToken = codeTemplate:Substring(prevIndex, match:getIndex() - prevIndex)
                     codeTemplateExpression.Expressions:Add(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, prevToken))
                 end
-                local comma = match:getGroups():getthis[](1):getValue()
-                local key = match:getGroups():getthis[](2):getValue()
+                local comma = match:getGroups():get(1):getValue()
+                local key = match:getGroups():get(2):getValue()
                 if key == "this" then
                     AddCodeTemplateExpression(this, BuildMemberAccessTargetExpression(this, targetExpression), comma, codeTemplateExpression)
                 elseif key == "class" then
                     local type = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, targetExpression, System.default(SystemThreading.CancellationToken)):getType()
                     local typeName = GetTypeName(this, type)
                     AddCodeTemplateExpression(this, typeName, comma, codeTemplateExpression)
-                elseif key:getthis[](0) == 94 --[['^']] then
+                elseif key:get(0) == 94 --[['^']] then
                     local typeIndex
                     local default
                     default, typeIndex = System.Int.TryParse(key:Substring(1), typeIndex)
@@ -2751,7 +2751,7 @@ System.namespace("CSharpLua", function (namespace)
                             AddCodeTemplateExpression(this, typeName, comma, codeTemplateExpression)
                         end
                     end
-                elseif key:getthis[](0) == 42 --[['*']] then
+                elseif key:get(0) == 42 --[['*']] then
                     local paramsIndex
                     local extern
                     extern, paramsIndex = System.Int.TryParse(key:Substring(1), paramsIndex)
@@ -2866,7 +2866,7 @@ System.namespace("CSharpLua", function (namespace)
             end
         end
         BuildStringLiteralTokenExpression = function (this, token) 
-            if token:getText():getthis[](0) == 64 --[['@']] then
+            if token:getText():get(0) == 64 --[['@']] then
                 return BuildVerbatimStringExpression(this, token:getValueText())
             else
                 return CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, token:getText())
@@ -2878,7 +2878,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         BuildVerbatimStringExpression = function (this, value) 
             local kCloseBracket = "]" --[[Tokens.CloseBracket]]
-            local equals = "=" --[[Tokens.Equals]]:getthis[](0)
+            local equals = "=" --[[Tokens.Equals]]:get(0)
             local count = 0
             while true do
                 local closeToken = kCloseBracket .. (System.String(equals, count) or "") .. kCloseBracket
@@ -2887,7 +2887,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
                 count = count + 1
             end
-            if value:getthis[](0) == 10 --[['\n']] then
+            if value:get(0) == 10 --[['\n']] then
                 value = '\n' .. (value or "")
             end
             return CSharpLuaLuaAst.LuaVerbatimStringLiteralExpressionSyntax(value, count)
@@ -3041,8 +3041,8 @@ System.namespace("CSharpLua", function (namespace)
             if propertyMethod ~= nil then
                 local arguments = propertyMethod.ArgumentList.Arguments
                 if #arguments == 1 then
-                    if arguments:getthis[](0).Expression == CSharpLuaLuaAst.LuaIdentifierNameSyntax.This then
-                        propertyMethod.ArgumentList.Arguments:setthis[](0, CSharpLuaLuaAst.LuaArgumentSyntax(expression))
+                    if arguments:get(0).Expression == CSharpLuaLuaAst.LuaIdentifierNameSyntax.This then
+                        propertyMethod.ArgumentList.Arguments:set(0, CSharpLuaLuaAst.LuaArgumentSyntax(expression))
                     end
                 else
                     propertyMethod:Update(expression, not isStatic)
@@ -3430,7 +3430,7 @@ System.namespace("CSharpLua", function (namespace)
                 typeExpress = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, arrayTypeName, typeExpress or elementType)
             end
 
-            local arrayRankSpecifier = System.cast(CSharpLuaLuaAst.LuaArrayRankSpecifierSyntax, node:getRankSpecifiers():getthis[](0):Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            local arrayRankSpecifier = System.cast(CSharpLuaLuaAst.LuaArrayRankSpecifierSyntax, node:getRankSpecifiers():get(0):Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
             local arrayTypeAdapter = CSharpLuaLuaAst.LuaArrayTypeAdapterExpressionSyntax(typeExpress, arrayRankSpecifier)
             return arrayTypeAdapter
         end
@@ -3465,7 +3465,7 @@ System.namespace("CSharpLua", function (namespace)
                 end
             else
                 if arrayType:getIsSimapleArray() then
-                    local size = arrayType.RankSpecifier.Sizes:getthis[](0)
+                    local size = arrayType.RankSpecifier.Sizes:get(0)
                     if size == nil then
                         return BuildEmptyArray(this, arrayType:getBaseType())
                     end

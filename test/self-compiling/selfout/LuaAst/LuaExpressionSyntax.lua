@@ -252,7 +252,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             this.RankSpecifier = rankSpecifier
         end
         getBaseType = function (this) 
-            return this.InvocationExpression.ArgumentList.Arguments:getthis[](0).Expression
+            return this.InvocationExpression.ArgumentList.Arguments:get(0).Expression
         end
         getIsSimapleArray = function (this) 
             return this.RankSpecifier.Rank == 1

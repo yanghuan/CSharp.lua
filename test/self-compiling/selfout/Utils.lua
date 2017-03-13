@@ -50,15 +50,15 @@ System.namespace("CSharpLua", function (namespace)
         IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, 
         IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition
         First = function (list, T) 
-            return list:getthis[](0)
+            return list:get(0)
         end
         Last = function (list, T) 
-            return list:getthis[](list:getCount() - 1)
+            return list:get(list:getCount() - 1)
         end
         GetOrDefault = function (list, index, v, T) 
             local default
             if index >= 0 and index < list:getCount() then
-                default = list:getthis[](index)
+                default = list:get(index)
             else
                 default = v
             end
@@ -75,7 +75,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         AddAt = function (list, index, v, T) 
             if index < list:getCount() then
-                list:setthis[](index, v)
+                list:set(index, v)
             else
                 local count = index - list:getCount()
                 do
