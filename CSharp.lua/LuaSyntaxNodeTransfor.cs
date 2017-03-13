@@ -1356,6 +1356,24 @@ namespace CSharpLua {
                     arguments[i] = defaultValue;
                 }
             }
+
+            if(symbol.IsFromCode()) {
+                int i;
+                for(i = arguments.Count - 1; i >= 0; --i) {
+                    if(!IsNilLuaExpression(arguments[i])) {
+                        break;
+                    }
+                }
+                int nilStartIndex = i + 1;
+                int nilArgumentCount = arguments.Count - nilStartIndex;
+                if(nilArgumentCount > 0) {
+                    arguments.RemoveRange(nilStartIndex, nilArgumentCount);
+                }
+            }
+        }
+
+        private bool IsNilLuaExpression(LuaExpressionSyntax expression) {
+            return expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
         }
 
         private void CheckInvocationDeafultArguments(ISymbol symbol, ImmutableArray<IParameterSymbol> parameters, List<LuaExpressionSyntax> arguments, BaseArgumentListSyntax node) {
@@ -1807,7 +1825,7 @@ namespace CSharpLua {
                         return new LuaCharacterLiteralExpression((char)node.Token.Value);
                     }
                 case SyntaxKind.NullLiteralExpression: {
-                        return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
+                        return LuaIdentifierLiteralExpressionSyntax.Nil;
                     }
                 default: {
                         return new LuaIdentifierLiteralExpressionSyntax(node.Token.ValueText);
