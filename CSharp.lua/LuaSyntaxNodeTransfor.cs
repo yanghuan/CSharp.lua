@@ -1223,11 +1223,7 @@ namespace CSharpLua {
                     if(argument.NameColon != null) {
                         throw new CompilationErrorException($"{argument.GetLocationString()} : named argument is not support.");
                     }
-                    var argumentExpression = (LuaExpressionSyntax)argument.Expression.Accept(this);
-                    arguments.Add(argumentExpression);
-                    if(argument.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || argument.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
-                        refOrOutArguments.Add(argumentExpression);
-                    }
+                    FillInvocationArgument(arguments, argument, symbol.Parameters, refOrOutArguments);
                 }
             }
 
@@ -1764,10 +1760,19 @@ namespace CSharpLua {
             return node.Right.Accept(this);
         }
 
-        private LuaExpressionSyntax FillInvocationArgument(List<LuaExpressionSyntax> arguments, ArgumentSyntax node, ImmutableArray<IParameterSymbol> parameters) {
+        private void FillInvocationArgument(List<LuaExpressionSyntax> arguments, ArgumentSyntax node, ImmutableArray<IParameterSymbol> parameters, List<LuaExpressionSyntax> refOrOutArguments) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
             Contract.Assert(expression != null);
-            CheckValueTypeClone(node.Expression, ref expression);
+            if(node.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword)) {
+                refOrOutArguments.Add(expression);
+            }
+            else if(node.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
+                refOrOutArguments.Add(expression);
+                expression = LuaIdentifierNameSyntax.Nil;
+            }
+            else {
+                CheckValueTypeClone(node.Expression, ref expression);
+            }
             if(node.NameColon != null) {
                 string name = node.NameColon.Name.Identifier.ValueText;
                 int index = parameters.IndexOf(i => i.Name == name);
@@ -1777,18 +1782,12 @@ namespace CSharpLua {
             else {
                 arguments.Add(expression);
             }
-            return expression;
         }
 
         private List<LuaExpressionSyntax> BuildArgumentList(ISymbol symbol, ImmutableArray<IParameterSymbol> parameters, BaseArgumentListSyntax node, List<LuaExpressionSyntax> refOrOutArguments = null) {
             List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();
             foreach(var argument in node.Arguments) {
-                var argumentExpression = FillInvocationArgument(arguments, argument, parameters);
-                if(refOrOutArguments != null) {
-                    if(argument.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || argument.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
-                        refOrOutArguments.Add(argumentExpression);
-                    }
-                }
+                FillInvocationArgument(arguments, argument, parameters, refOrOutArguments);
             }
             CheckInvocationDeafultArguments(symbol, parameters, arguments, node);
             return arguments;
