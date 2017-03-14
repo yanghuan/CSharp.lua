@@ -1216,6 +1216,9 @@ namespace CSharpLua {
                     LuaExpressionSyntax typeName = GetTypeName(typeArgument);
                     arguments.Add(typeName);
                 }
+                if(symbol.IsFromCode() || symbol.ContainingType.GetMembers(symbol.Name).Length == 1) {
+                    RemoveNilArgumentsAtTail(arguments);
+                }
             }
             else {
                 arguments = new List<LuaExpressionSyntax>();
@@ -1352,19 +1355,19 @@ namespace CSharpLua {
                     arguments[i] = defaultValue;
                 }
             }
+        }
 
-            if(symbol.IsFromCode()) {
-                int i;
-                for(i = arguments.Count - 1; i >= 0; --i) {
-                    if(!IsNilLuaExpression(arguments[i])) {
-                        break;
-                    }
+        private void RemoveNilArgumentsAtTail(List<LuaExpressionSyntax> arguments) {
+            int i;
+            for(i = arguments.Count - 1; i >= 0; --i) {
+                if(!IsNilLuaExpression(arguments[i])) {
+                    break;
                 }
-                int nilStartIndex = i + 1;
-                int nilArgumentCount = arguments.Count - nilStartIndex;
-                if(nilArgumentCount > 0) {
-                    arguments.RemoveRange(nilStartIndex, nilArgumentCount);
-                }
+            }
+            int nilStartIndex = i + 1;
+            int nilArgumentCount = arguments.Count - nilStartIndex;
+            if(nilArgumentCount > 0) {
+                arguments.RemoveRange(nilStartIndex, nilArgumentCount);
             }
         }
 

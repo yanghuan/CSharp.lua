@@ -188,7 +188,7 @@ System.namespace("CSharpLua", function (namespace)
             for _, luaCompilationUnit in System.each(Create(this)) do
                 local module
                 local default
-                default, module = GetOutFilePath(this, luaCompilationUnit.FilePath, baseFolder, outFolder, module)
+                default, module = GetOutFilePath(this, luaCompilationUnit.FilePath, baseFolder, outFolder)
                 local outFile = default
                 Write(this, luaCompilationUnit, outFile)
                 modules:Add(module)
@@ -368,7 +368,7 @@ System.namespace("CSharpLua", function (namespace)
 
                     local table = CSharpLuaLuaAst.LuaTableInitializerExpression()
                     for _, type in System.each(types) do
-                        local typeName = this.XmlMetaProvider:GetTypeShortName(type, nil)
+                        local typeName = this.XmlMetaProvider:GetTypeShortName(type)
                         table.Items:Add(CSharpLuaLuaAst.LuaSingleTableItemSyntax(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(typeName)))
                     end
                     functionExpression:AddStatement1(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kInit), table))
@@ -692,21 +692,21 @@ System.namespace("CSharpLua", function (namespace)
             local default
             default, v = MemberSymbolBoolComparison(this, a, b, function (i) 
                 return i:getIsAbstract()
-            end, v)
+            end)
             if default then
                 return v
             end
             local extern
             extern, v = MemberSymbolBoolComparison(this, a, b, function (i) 
                 return i:getIsVirtual()
-            end, v)
+            end)
             if extern then
                 return v
             end
             local ref
             ref, v = MemberSymbolBoolComparison(this, a, b, function (i) 
                 return i:getIsOverride()
-            end, v)
+            end)
             if ref then
                 return v
             end
@@ -787,7 +787,7 @@ System.namespace("CSharpLua", function (namespace)
         UpdateName = function (this, symbol, newName, alreadyRefactorSymbols) 
             this.memberNames_:get(symbol):Update(newName)
             local checkName1, checkName2
-            checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName, checkName1, checkName2)
+            checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName)
             TryAddNewUsedName(this, symbol:getContainingType(), checkName1)
             if checkName2 ~= nil then
                 TryAddNewUsedName(this, symbol:getContainingType(), checkName2)
@@ -821,7 +821,7 @@ System.namespace("CSharpLua", function (namespace)
             while true do
                 local newName = (originalName or "") .. index
                 local checkName1, checkName2
-                checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName, checkName1, checkName2)
+                checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName)
 
                 local isEnable = true
                 if typeSymbol ~= nil then
@@ -902,7 +902,7 @@ System.namespace("CSharpLua", function (namespace)
         IsPropertyField = function (this, symbol) 
             local isAutoField
             local default
-            default, isAutoField = this.isFieldPropertys_:TryGetValue(symbol, isAutoField)
+            default, isAutoField = this.isFieldPropertys_:TryGetValue(symbol)
             if not default then
                 local isMateField = this.XmlMetaProvider:IsPropertyField(symbol)
                 if isMateField:getHasValue() then

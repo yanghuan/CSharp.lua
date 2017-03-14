@@ -90,7 +90,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
                     return x.Prefix:CompareTo(y.Prefix)
                 end)
                 for _, usingDeclare in System.each(usingDeclares) do
-                    AddImport(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.NewPrefix), nil)
+                    AddImport(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, usingDeclare.NewPrefix))
                 end
 
                 local global = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Global

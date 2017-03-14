@@ -388,7 +388,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         local __ctor__
         __ctor__ = function (this, name) 
             CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this)
-            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Interface, nil)
+            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Interface)
         end
         return {
             __inherits__ = function (global) 
@@ -405,7 +405,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this)
             this.FullName = fullName
             this.CompilationUnit = compilationUnit
-            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Enum, nil)
+            this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Enum)
         end
         Add = function (this, statement) 
             this.resultTable_.Items:Add(statement)

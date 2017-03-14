@@ -27,7 +27,7 @@ System.namespace("CSharpLua", function (namespace)
             this.isNewest_ = not isClassic
             this.hasSemicolon_ = hasSemicolon
             local default
-            default, this.indent_ = System.Int.TryParse(indent, this.indent_)
+            default, this.indent_ = System.Int.TryParse(indent, nil)
             if atts ~= nil then
                 this.attributes_ = CSharpLua.Utility.Split(atts, false)
             end
@@ -73,7 +73,7 @@ System.namespace("CSharpLua", function (namespace)
                 return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(SystemIO.File.ReadAllText(file), parseOptions, file, nil, System.default(SystemThreading.CancellationToken))
             end, MicrosoftCodeAnalysis.SyntaxTree)
             local references = Linq.Select(getLibs(this), function (i) 
-                return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, System.default(MicrosoftCodeAnalysis.MetadataReferenceProperties), nil)
+                return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, System.default(MicrosoftCodeAnalysis.MetadataReferenceProperties))
             end, MicrosoftCodeAnalysis.PortableExecutableReference)
             local setting = System.create(CSharpLuaLuaSyntaxGenerator.SettingInfo(), function (default) 
                 default.IsNewest = this.isNewest_

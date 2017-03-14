@@ -67,7 +67,7 @@ System.namespace("CSharpLua", function (namespace)
         GetOrDefault1 = function (dict, key, t, K, T) 
             local v
             local default
-            default, v = dict:TryGetValue(key, v)
+            default, v = dict:TryGetValue(key)
             if default then
                 return v
             end
