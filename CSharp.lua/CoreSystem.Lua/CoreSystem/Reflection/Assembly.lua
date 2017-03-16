@@ -1,4 +1,4 @@
-﻿local System = System
+local System = System
 
 local assert = assert
 
