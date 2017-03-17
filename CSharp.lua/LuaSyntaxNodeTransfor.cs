@@ -1716,7 +1716,8 @@ namespace CSharpLua {
             string name;
             switch(symbol.Kind) {
                 case SymbolKind.Local:
-                case SymbolKind.Parameter: {
+                case SymbolKind.Parameter:
+                case SymbolKind.RangeVariable: {
                         name = symbol.Name;
                         CheckReservedWord(ref name, symbol);
                         break;

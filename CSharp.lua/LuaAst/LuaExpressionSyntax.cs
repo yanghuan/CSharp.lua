@@ -76,6 +76,12 @@ namespace CSharpLua.LuaAst {
         public LuaExpressionSyntax Right { get; }
 
         public LuaBinaryExpressionSyntax(LuaExpressionSyntax left, string operatorToken, LuaExpressionSyntax right) {
+            if(left == null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+            if(right == null) {
+                throw new ArgumentNullException(nameof(right));
+            }
             Left = left;
             OperatorToken = operatorToken;
             Right = right;

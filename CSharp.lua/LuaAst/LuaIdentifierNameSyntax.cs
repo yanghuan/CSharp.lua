@@ -100,6 +100,12 @@ namespace CSharpLua.LuaAst {
         public readonly static LuaIdentifierNameSyntax SystemObjectEqualsStatic = new LuaIdentifierNameSyntax("System.Object.EqualsStatic");
         public readonly static LuaIdentifierNameSyntax DateTime = new LuaIdentifierNameSyntax("System.DateTime");
         public readonly static LuaIdentifierNameSyntax TimeSpan = new LuaIdentifierNameSyntax("System.TimeSpan");
+        public readonly static LuaIdentifierNameSyntax AnonymousType = new LuaIdentifierNameSyntax("System.anonymousType");
+
+        #region QueryExpression
+        public readonly static LuaIdentifierNameSyntax LinqWhere = new LuaIdentifierNameSyntax("Linq.Where");
+        public readonly static LuaIdentifierNameSyntax LinqSelect = new LuaIdentifierNameSyntax("Linq.Select");
+        #endregion
 
         public LuaIdentifierNameSyntax(string valueText) {
             ValueText = valueText;

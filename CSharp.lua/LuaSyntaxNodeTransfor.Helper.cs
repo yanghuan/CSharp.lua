@@ -154,7 +154,7 @@ namespace CSharpLua {
             }
         }
 
-        private void CheckVariableDeclaratorName(ref LuaIdentifierNameSyntax identifierName, VariableDeclaratorSyntax node) {
+        private void CheckVariableDeclaratorName(ref LuaIdentifierNameSyntax identifierName, SyntaxNode node) {
             string name = identifierName.ValueText;
             bool isReserved = CheckReservedWord(ref name, node);
             if(isReserved) {

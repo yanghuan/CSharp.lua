@@ -440,6 +440,13 @@ end
 
 defCls("System.Object", Object)
 
+local anonymousType = {}
+defCls("System.AnonymousType", anonymousType)
+
+function System.anonymousType(t)
+    return setmetatable(t, anonymousType)
+end
+
 local namespace = {}
 local curName
 

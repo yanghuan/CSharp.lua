@@ -298,40 +298,51 @@ namespace CSharpLua {
 
             var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if(syntaxReference != null) {
-                var node = syntaxReference.GetSyntax() as PropertyDeclarationSyntax;
-                if(node != null) {
-                    bool hasGet = false;
-                    bool hasSet = false;
-                    if(node.AccessorList != null) {
-                        foreach(var accessor in node.AccessorList.Accessors) {
-                            if(accessor.Body != null) {
-                                if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
-                                    Contract.Assert(!hasGet);
-                                    hasGet = true;
-                                }
-                                else {
-                                    Contract.Assert(!hasSet);
-                                    hasSet = true;
+                var node = syntaxReference.GetSyntax();
+                switch(node.Kind()) {
+                    case SyntaxKind.PropertyDeclaration: {
+                            var property = (PropertyDeclarationSyntax)node;
+                            bool hasGet = false;
+                            bool hasSet = false;
+                            if(property.AccessorList != null) {
+                                foreach(var accessor in property.AccessorList.Accessors) {
+                                    if(accessor.Body != null) {
+                                        if(accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
+                                            Contract.Assert(!hasGet);
+                                            hasGet = true;
+                                        }
+                                        else {
+                                            Contract.Assert(!hasSet);
+                                            hasSet = true;
+                                        }
+                                    }
                                 }
                             }
+                            else {
+                                Contract.Assert(!hasGet);
+                                hasGet = true;
+                            }
+                            bool isField = !hasGet && !hasSet;
+                            if(isField) {
+                                if(symbol.IsInterfaceImplementation()) {
+                                    isField = false;
+                                }
+                            }
+                            return isField;
                         }
-                    }
-                    else {
-                        Contract.Assert(!hasGet);
-                        hasGet = true;
-                    }
-                    bool isField = !hasGet && !hasSet;
-                    if(isField) {
-                        if(symbol.IsInterfaceImplementation()) {
-                            isField = false;
+                    case SyntaxKind.IndexerDeclaration: {
+                            return false;
                         }
-                    }
-                    return isField;
+                    case SyntaxKind.AnonymousObjectMemberDeclarator: {
+                            return true;
+                        }
+                    default: {
+                            throw new InvalidOperationException();
+                        }
                 }
             }
             return false;
         }
-
         public static bool IsEventFiled(this IEventSymbol symbol) {
             if(!symbol.IsFromCode() || symbol.IsOverridable()) {
                 return false;
