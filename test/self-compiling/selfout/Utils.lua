@@ -319,34 +319,52 @@ System.namespace("CSharpLua", function (namespace)
 
             local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
             if syntaxReference ~= nil then
-                local node = System.as(syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken)), MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax)
-                if node ~= nil then
-                    local hasGet = false
-                    local hasSet = false
-                    if node:getAccessorList() ~= nil then
-                        for _, accessor in System.each(node:getAccessorList():getAccessors()) do
-                            if accessor:getBody() ~= nil then
-                                if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
-                                    assert(not hasGet)
-                                    hasGet = true
-                                else
-                                    assert(not hasSet)
-                                    hasSet = true
+                local node = syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken))
+                repeat
+                    local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(node)
+                    if default == 8892 --[[SyntaxKind.PropertyDeclaration]] then
+                        do
+                            local property = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax, node)
+                            local hasGet = false
+                            local hasSet = false
+                            if property:getAccessorList() ~= nil then
+                                for _, accessor in System.each(property:getAccessorList():getAccessors()) do
+                                    if accessor:getBody() ~= nil then
+                                        if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
+                                            assert(not hasGet)
+                                            hasGet = true
+                                        else
+                                            assert(not hasSet)
+                                            hasSet = true
+                                        end
+                                    end
+                                end
+                            else
+                                assert(not hasGet)
+                                hasGet = true
+                            end
+                            local isField = not hasGet and not hasSet
+                            if isField then
+                                if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IPropertySymbol) then
+                                    isField = false
                                 end
                             end
+                            return isField
+                        end
+                    elseif default == 8894 --[[SyntaxKind.IndexerDeclaration]] then
+                        do
+                            return false
+                        end
+                    elseif default == 8647 --[[SyntaxKind.AnonymousObjectMemberDeclarator]] then
+                        do
+                            return true
                         end
                     else
-                        assert(not hasGet)
-                        hasGet = true
-                    end
-                    local isField = not hasGet and not hasSet
-                    if isField then
-                        if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IPropertySymbol) then
-                            isField = false
+                        do
+                            System.throw(System.InvalidOperationException())
                         end
                     end
-                    return isField
-                end
+                until 1
             end
             return false
         end

@@ -126,6 +126,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         local Render, __ctor__
         __ctor__ = function (this, left, operatorToken, right) 
             CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+            if left == nil then
+                System.throw(System.ArgumentNullException("left"))
+            end
+            if right == nil then
+                System.throw(System.ArgumentNullException("right"))
+            end
             this.Left = left
             this.OperatorToken = operatorToken
             this.Right = right

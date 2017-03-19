@@ -241,7 +241,7 @@ namespace CSharpLua {
             codeTemplateExpression.Expressions.Add(expression);
         }
 
-        private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IList<ExpressionSyntax> arguments, ImmutableArray<ITypeSymbol> typeArguments) {
+        private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<ExpressionSyntax> arguments, ImmutableArray<ITypeSymbol> typeArguments) {
             LuaCodeTemplateExpressionSyntax codeTemplateExpression = new LuaCodeTemplateExpressionSyntax();
 
             var matchs = codeTemplateRegex_.Matches(codeTemplate);
@@ -287,7 +287,7 @@ namespace CSharpLua {
                 else {
                     int argumentIndex;
                     if(int.TryParse(key, out argumentIndex)) {
-                        var argument = arguments.GetOrDefault(argumentIndex);
+                        var argument = arguments.ElementAtOrDefault(argumentIndex);
                         if(argument != null) {
                             var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
                             AddCodeTemplateExpression(argumentExpression, comma, codeTemplateExpression);

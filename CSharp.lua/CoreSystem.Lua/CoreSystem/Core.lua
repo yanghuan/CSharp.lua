@@ -447,6 +447,13 @@ function System.anonymousType(t)
     return setmetatable(t, anonymousType)
 end
 
+local tuple = {}
+defCls("System.Tuple", tuple)
+
+function System.anonymousType(...)
+    return setmetatable({...}, tuple)
+end
+
 local namespace = {}
 local curName
 

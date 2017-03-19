@@ -231,7 +231,9 @@ System.namespace("CSharpLua", function (namespace)
         VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitAnonymousMethodExpression, VisitTypeParameter, VisitTypeOfExpression, 
         VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, 
         VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, 
-        VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, __staticCtor__, __init__, __ctor__
+        VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, VisitAnonymousObjectMemberDeclarator, VisitAnonymousObjectCreationExpression, VisitQueryExpression, 
+        VisitFromClause, VisitWhereClause, VisitQueryBody, VisitSelectClause, BuildQueryWhere, BuildQueryOrderBy, BuildQuerySelect, BuildQueryBody, 
+        __staticCtor__, __init__, __ctor__
         __staticCtor__ = function (this) 
             operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
                 default:set("!=", "~=" --[[Tokens.NotEquals]])
@@ -1451,15 +1453,15 @@ System.namespace("CSharpLua", function (namespace)
                 if last:getIsParams() and CSharpLua.Utility.IsFromCode(symbol) then
                     if parameters:getLength() == #arguments then
                         local paramsArgument = CSharpLua.Utility.Last(argumentNodeInfos, System.Tuple_2(MicrosoftCodeAnalysisCSharpSyntax.NameColonSyntax, MicrosoftCodeAnalysisCSharpSyntax.ExpressionSyntax))
-                        if paramsArgument:getItem1() ~= nil then
-                            local name = paramsArgument:getItem1():getName():getIdentifier():getValueText()
+                        if paramsArgument[1] ~= nil then
+                            local name = paramsArgument[1]:getName():getIdentifier():getValueText()
                             if name ~= last:getName() then
                                 paramsArgument = Linq.First(argumentNodeInfos, function (i) 
-                                    return i:getItem1() ~= nil and i:getItem1():getName():getIdentifier():getValueText() == last:getName()
+                                    return i[1] ~= nil and i[1]:getName():getIdentifier():getValueText() == last:getName()
                                 end)
                             end
                         end
-                        local paramsType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, paramsArgument:getItem2(), System.default(SystemThreading.CancellationToken)):getType()
+                        local paramsType = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, paramsArgument[2], System.default(SystemThreading.CancellationToken)):getType()
                         if paramsType:getTypeKind() ~= 1 --[[TypeKind.Array]] then
                             local arrayTypeSymbol = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, last:getType())
                             local array = BuildArray(this, arrayTypeSymbol:getElementType(), System.Array(CSharpLuaLuaAst.LuaExpressionSyntax)(CSharpLua.Utility.Last(arguments, CSharpLuaLuaAst.LuaExpressionSyntax)))
@@ -1509,7 +1511,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         CheckInvocationDeafultArguments1 = function (this, symbol, parameters, arguments, node) 
             local argumentNodeInfos = Linq.ToList(Linq.Select(node:getArguments(), function (i) 
-                return System.Tuple.Create(i:getNameColon(), i:getExpression(), MicrosoftCodeAnalysisCSharpSyntax.NameColonSyntax, MicrosoftCodeAnalysisCSharpSyntax.ExpressionSyntax)
+                return System.tuple(i:getNameColon(), i:getExpression())
             end, System.Tuple_2(MicrosoftCodeAnalysisCSharpSyntax.NameColonSyntax, MicrosoftCodeAnalysisCSharpSyntax.ExpressionSyntax)))
             CheckInvocationDeafultArguments(this, symbol, parameters, arguments, argumentNodeInfos, node:getParent(), true)
         end
@@ -1821,7 +1823,7 @@ System.namespace("CSharpLua", function (namespace)
             local name
             repeat
                 local default = symbol:getKind()
-                if default == 8 --[[SymbolKind.Local]] or default == 13 --[[SymbolKind.Parameter]] then
+                if default == 8 --[[SymbolKind.Local]] or default == 13 --[[SymbolKind.Parameter]] or default == 16 --[[SymbolKind.RangeVariable]] then
                     do
                         name = symbol:getName()
                         name = CheckReservedWord1(this, name, symbol)
@@ -2790,7 +2792,7 @@ System.namespace("CSharpLua", function (namespace)
                     local ref
                     ref, argumentIndex = System.Int.TryParse(key, nil)
                     if ref then
-                        local argument = CSharpLua.Utility.GetOrDefault(arguments, argumentIndex, nil, MicrosoftCodeAnalysisCSharpSyntax.ExpressionSyntax)
+                        local argument = Linq.ElementAtOrDefault(arguments, argumentIndex)
                         if argument ~= nil then
                             local argumentExpression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, argument:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
                             AddCodeTemplateExpression(this, argumentExpression, comma, codeTemplateExpression)
@@ -3129,7 +3131,7 @@ System.namespace("CSharpLua", function (namespace)
                         end
                     else
                         local name = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, argumentNode:getNameEquals():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-                        initializers:Add(System.Tuple.Create(name, argumentExpression, CSharpLuaLuaAst.LuaExpressionSyntax, CSharpLuaLuaAst.LuaExpressionSyntax))
+                        initializers:Add(System.tuple(name, argumentExpression))
                     end
                 end
 
@@ -3145,8 +3147,8 @@ System.namespace("CSharpLua", function (namespace)
                     function_:AddParameter1(temp)
 
                     for _, initializer in System.each(initializers) do
-                        local memberAccess = BuildFieldOrPropertyMemberAccessExpression(this, temp, initializer:getItem1(), false)
-                        local assignmentExpression = BuildLuaSimpleAssignmentExpression(this, memberAccess, initializer:getItem2())
+                        local memberAccess = BuildFieldOrPropertyMemberAccessExpression(this, temp, initializer[1], false)
+                        local assignmentExpression = BuildLuaSimpleAssignmentExpression(this, memberAccess, initializer[2])
                         function_:AddStatement1(assignmentExpression)
                     end
 
@@ -3339,24 +3341,33 @@ System.namespace("CSharpLua", function (namespace)
         end
         VisitObjectCreationExpression = function (this, node) 
             local symbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, node, System.default(SystemThreading.CancellationToken)):getSymbol())
-            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getType():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-
-            local invocation
+            local creationExpression
             if symbol ~= nil then
-                invocation = BuildObjectCreationInvocation(this, symbol, expression)
-                local arguments = BuildArgumentList(this, symbol, symbol:getParameters(), node:getArgumentList())
-                invocation:AddArguments(arguments)
+                local codeTemplate = getXmlMetaProvider(this):GetMethodCodeTemplate(symbol)
+                if codeTemplate ~= nil then
+                    creationExpression = BuildCodeTemplateExpression1(this, codeTemplate, nil, Linq.Select(node:getArgumentList():getArguments(), function (i) 
+                        return i:getExpression()
+                    end, MicrosoftCodeAnalysisCSharpSyntax.ExpressionSyntax), symbol:getTypeArguments())
+                else
+                    local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getType():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+                    local invokeExpression = BuildObjectCreationInvocation(this, symbol, expression)
+                    local arguments = BuildArgumentList(this, symbol, symbol:getParameters(), node:getArgumentList())
+                    invokeExpression:AddArguments(arguments)
+                    creationExpression = invokeExpression
+                end
             else
-                invocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, expression)
+                local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getType():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+                local invokeExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, expression)
                 local argumentList = System.cast(CSharpLuaLuaAst.LuaArgumentListSyntax, node:getArgumentList():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-                invocation.ArgumentList.Arguments:AddRange(argumentList.Arguments)
+                invokeExpression.ArgumentList.Arguments:AddRange(argumentList.Arguments)
+                creationExpression = invokeExpression
             end
 
             if node:getInitializer() == nil then
-                return invocation
+                return creationExpression
             else
                 local functionExpression = BuildObjectInitializerExpression(this, node:getInitializer())
-                return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Create, invocation, functionExpression)
+                return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Create, creationExpression, functionExpression)
             end
         end
         BuildObjectInitializerExpression = function (this, node) 
@@ -4076,6 +4087,88 @@ System.namespace("CSharpLua", function (namespace)
         VisitAliasQualifiedName = function (this, node) 
             return node:getName():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode)
         end
+        VisitAnonymousObjectMemberDeclarator = function (this, node) 
+            local name = System.cast(CSharpLuaLuaAst.LuaIdentifierNameSyntax, node:getNameEquals():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            return CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(CSharpLuaLuaAst.LuaTableLiteralKeySyntax(name), expression)
+        end
+        VisitAnonymousObjectCreationExpression = function (this, node) 
+            local table = CSharpLuaLuaAst.LuaTableInitializerExpression()
+            for _, initializer in System.each(node:getInitializers()) do
+                local item = System.cast(CSharpLuaLuaAst.LuaKeyValueTableItemSyntax, initializer:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+                table.Items:Add(item)
+            end
+            return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.AnonymousType, table)
+        end
+        VisitQueryExpression = function (this, node) 
+            getCurCompilationUnit(this):ImportLinq()
+            local localVariable = System.cast(CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax, node:getFromClause():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            getCurBlock(this).Statements:Add(localVariable)
+            return BuildQueryBody(this, node:getBody(), localVariable.Declarator.Identifier)
+        end
+        VisitFromClause = function (this, node) 
+            local identifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, node:getIdentifier():getValueText())
+            identifier = CheckVariableDeclaratorName(this, identifier, node)
+            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            return CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax:new(2, identifier, expression)
+        end
+        VisitWhereClause = function (this, node) 
+            System.throw(System.InvalidOperationException())
+        end
+        VisitQueryBody = function (this, node) 
+            System.throw(System.InvalidOperationException())
+        end
+        VisitSelectClause = function (this, node) 
+            System.throw(System.InvalidOperationException())
+        end
+        BuildQueryWhere = function (this, collection, node, rangeVariable) 
+            local condition = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getCondition():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            local whereFunction = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
+            whereFunction:AddParameter1(rangeVariable)
+            whereFunction:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(condition))
+            return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqWhere, collection, whereFunction)
+        end
+        BuildQueryOrderBy = function (this, collection, node, rangeVariable) 
+            return nil
+        end
+        BuildQuerySelect = function (this, collection, select, rangeVariable) 
+            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, select:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(select:getExpression(), 8616 --[[SyntaxKind.IdentifierName]]) then
+                local identifierName = System.as(expression, CSharpLuaLuaAst.LuaIdentifierNameSyntax)
+                if identifierName ~= nil and identifierName.ValueText == rangeVariable.ValueText then
+                    return collection
+                end
+            end
+            local type = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, select:getExpression(), System.default(SystemThreading.CancellationToken)):getType()
+            local typeExpression = GetTypeName(this, type)
+            return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(4, CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqSelect, collection, expression, typeExpression)
+        end
+        BuildQueryBody = function (this, node, rangeVariable) 
+            local collection = rangeVariable
+            for _, clause in System.each(node:getClauses()) do
+                repeat
+                    local default = clause:Kind()
+                    if default == 8780 --[[SyntaxKind.WhereClause]] then
+                        do
+                            collection = BuildQueryWhere(this, collection, System.cast(MicrosoftCodeAnalysisCSharpSyntax.WhereClauseSyntax, clause), rangeVariable)
+                            break
+                        end
+                    elseif default == 8781 --[[SyntaxKind.OrderByClause]] then
+                        do
+                            collection = BuildQueryOrderBy(this, collection, System.cast(MicrosoftCodeAnalysisCSharpSyntax.OrderByClauseSyntax, clause), rangeVariable)
+                            break
+                        end
+                    end
+                until 1
+            end
+            if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(node:getSelectOrGroup(), 8784 --[[SyntaxKind.SelectClause]]) then
+                local selectClause = System.cast(MicrosoftCodeAnalysisCSharpSyntax.SelectClauseSyntax, node:getSelectOrGroup())
+                collection = BuildQuerySelect(this, collection, selectClause, rangeVariable)
+            else
+                System.throw(System.NotSupportedException())
+            end
+            return collection
+        end
         return {
             __inherits__ = function (global) 
                 return {
@@ -4184,6 +4277,14 @@ System.namespace("CSharpLua", function (namespace)
             VisitInterpolation = VisitInterpolation, 
             VisitInterpolatedStringText = VisitInterpolatedStringText, 
             VisitAliasQualifiedName = VisitAliasQualifiedName, 
+            VisitAnonymousObjectMemberDeclarator = VisitAnonymousObjectMemberDeclarator, 
+            VisitAnonymousObjectCreationExpression = VisitAnonymousObjectCreationExpression, 
+            VisitQueryExpression = VisitQueryExpression, 
+            VisitFromClause = VisitFromClause, 
+            VisitWhereClause = VisitWhereClause, 
+            VisitQueryBody = VisitQueryBody, 
+            VisitSelectClause = VisitSelectClause, 
+            BuildQueryBody = BuildQueryBody, 
             __staticCtor__ = __staticCtor__, 
             __ctor__ = __ctor__
         }

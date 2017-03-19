@@ -32,26 +32,34 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-            var expression = (LuaExpressionSyntax)node.Type.Accept(this);
-
-            LuaInvocationExpressionSyntax invocation;
+            LuaExpressionSyntax creationExpression;
             if(symbol != null) {
-                invocation = BuildObjectCreationInvocation(symbol, expression);
-                var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
-                invocation.AddArguments(arguments);
+                string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
+                if(codeTemplate != null) {
+                    creationExpression = BuildCodeTemplateExpression(codeTemplate, null, node.ArgumentList.Arguments.Select(i => i.Expression), symbol.TypeArguments);
+                }
+                else {
+                    var expression = (LuaExpressionSyntax)node.Type.Accept(this);
+                    var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
+                    var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+                    invokeExpression.AddArguments(arguments);
+                    creationExpression = invokeExpression;
+                }
             }
             else {
-                invocation = new LuaInvocationExpressionSyntax(expression);
+                var expression = (LuaExpressionSyntax)node.Type.Accept(this);
+                var invokeExpression = new LuaInvocationExpressionSyntax(expression);
                 var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
-                invocation.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+                invokeExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+                creationExpression = invokeExpression;
             }
 
             if(node.Initializer == null) {
-                return invocation;
+                return creationExpression;
             }
             else {
                 var functionExpression = BuildObjectInitializerExpression(node.Initializer);
-                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocation, functionExpression);
+                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, creationExpression, functionExpression);
             }
         }
 
