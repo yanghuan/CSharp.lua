@@ -422,6 +422,10 @@ limitations under the License.
         <method name="Max" ArgCount="2" RetType="System.Double" Template="Linq.Max({0}, {1}, System.Double)" />
         <method name="Max" ArgCount="2" RetType="System.Decimal" Template="Linq.Max({0}, {1}, System.Decimal)" />
         <method name="Max" ArgCount="2" GenericArgCount="2" Template="Linq.Max({0}, {1}, {^1})" />
+        <method name="OrderBy" ArgCount="2" Template="Linq.OrderBy({0}, {1}, nil, {^1})" />
+        <method name="OrderBy" ArgCount="3" Template="Linq.OrderBy({0}, {1}, {2}, {^1})" />
+        <method name="OrderByDescending" ArgCount="2" Template="Linq.OrderByDescending({0}, {1}, {^1})" />
+        <method name="OrderByDescending" ArgCount="3" Template="Linq.OrderByDescending({0}, {1}, {2}, {^1})" />
       </class>
     </namespace>
     <namespace name="System.Diagnostics">

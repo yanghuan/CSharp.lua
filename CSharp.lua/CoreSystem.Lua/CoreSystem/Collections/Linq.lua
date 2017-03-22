@@ -348,7 +348,7 @@ local function groupBySelect(source, keySelector, elementSelector, resultSelecto
                 return resultSelector(current.key, current)
             end
             return false
-        end, TResult)
+        end)
     end)
 end
 
@@ -948,4 +948,11 @@ function Enumerable.Max(source, ...)
         return compare(x, y) > 0
     end
     return minOrMax(maxFn, source, ...)
+end
+
+function Enumerable.OrderBy(source, keySelector, comparer, TKey)
+    if source == nil then throw(ArgumentNullException("source")) end
+    if selector == nil then throw(ArgumentNullException("selector")) end
+
+
 end
