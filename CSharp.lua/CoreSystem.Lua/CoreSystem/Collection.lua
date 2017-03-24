@@ -434,23 +434,36 @@ function Collection.reverseArray(t, index, count)
     changeVersion(t)
 end
 
+local function getComp(t, comparer)
+    local compare
+    if comparer == nil then
+        compare = Comparer_1(t.__genericT__).getDefault().Compare 
+    elseif comparer.Compare then    
+        compare = comparer.Compare
+    else
+        compare = comparer
+    end
+    return function(x, y) 
+        return compare(unWrap(x), unWrap(y)) < 0
+    end
+end
+
+local function sort(t, comparer)
+    if #t > 1 then
+        tsort(t, getComp(t, comparer))
+        changeVersion(t)
+    end
+end
+
+Collection.sort = sort
+
 local function sortArray(t, index, count, comparer)
     if count > 1 then
-        checkIndexAndCount(t, index, count)
-        local compare
-        if comparer == nil then
-            compare = Comparer_1(t.__genericT__).getDefault().Compare 
-        elseif comparer.Compare then    
-            compare = comparer.Compare
-        else
-            compare = comparer
-        end
-        local comp = function(x, y) 
-            return compare(unWrap(x), unWrap(y)) < 0
-        end
+        local comp = getComp(t, comparer)
         if index == 0 and count == #t then
             tsort(t, comp)
         else
+            checkIndexAndCount(t, index, count)
             local arr = {}
             for i = index + 1, index + count do
                 tinsert(arr, t[i])
@@ -465,21 +478,16 @@ local function sortArray(t, index, count, comparer)
 end
 
 function Collection.sortArray(t, ...)
-    local index, count, comparer
     local len = select("#", ...)
     if len == 0 then
-        index = 0
-        count = #t
+        sort(t)
     elseif len == 1 then
-        comparer = ...
-        index = 0
-        count = #t
-    elseif len == 2 then
-        index, count = ...
+        local comparer = ...
+        sort(t, comparer)
     else
         index, count, comparer = ...
+        sortArray(t, index, count, comparer)
     end
-    sortArray(t, index, count, comparer)
 end
 
 function Collection.trueForAllOfArray(t, match)

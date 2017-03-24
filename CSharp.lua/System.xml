@@ -424,8 +424,12 @@ limitations under the License.
         <method name="Max" ArgCount="2" GenericArgCount="2" Template="Linq.Max({0}, {1}, {^1})" />
         <method name="OrderBy" ArgCount="2" Template="Linq.OrderBy({0}, {1}, nil, {^1})" />
         <method name="OrderBy" ArgCount="3" Template="Linq.OrderBy({0}, {1}, {2}, {^1})" />
-        <method name="OrderByDescending" ArgCount="2" Template="Linq.OrderByDescending({0}, {1}, {^1})" />
+        <method name="OrderByDescending" ArgCount="2" Template="Linq.OrderByDescending({0}, {1}, nil, {^1})" />
         <method name="OrderByDescending" ArgCount="3" Template="Linq.OrderByDescending({0}, {1}, {2}, {^1})" />
+        <method name="ThenBy" ArgCount="2" Template="Linq.ThenBy({0}, {1}, nil, {^1})" />
+        <method name="ThenBy" ArgCount="3" Template="Linq.ThenBy({0}, {1}, {2}, {^1})" />
+        <method name="ThenByDescending" ArgCount="2" Template="Linq.ThenByDescending({0}, {1}, nil, {^1})" />
+        <method name="ThenByDescending" ArgCount="3" Template="Linq.ThenByDescending({0}, {1}, {2}, {^1})" />
       </class>
     </namespace>
     <namespace name="System.Diagnostics">

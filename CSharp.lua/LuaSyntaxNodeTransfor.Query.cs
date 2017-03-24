@@ -27,16 +27,14 @@ namespace CSharpLua {
 
         public override LuaSyntaxNode VisitQueryExpression(QueryExpressionSyntax node) {
             CurCompilationUnit.ImportLinq();
-            var localVariable = (LuaLocalVariableDeclaratorSyntax)node.FromClause.Accept(this);
-            CurBlock.Statements.Add(localVariable);
-            return BuildQueryBody(node.Body, localVariable.Declarator.Identifier);
+            LuaIdentifierNameSyntax rangeVariable = new LuaIdentifierNameSyntax(node.FromClause.Identifier.ValueText);
+            CheckVariableDeclaratorName(ref rangeVariable, node);
+            var fromClauseExpression = (LuaExpressionSyntax)node.FromClause.Expression.Accept(this);
+            return BuildQueryBody(node.Body, fromClauseExpression, rangeVariable);
         }
 
         public override LuaSyntaxNode VisitFromClause(FromClauseSyntax node) {
-            LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-            CheckVariableDeclaratorName(ref identifier, node);
-            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            return new LuaLocalVariableDeclaratorSyntax(identifier, expression);
+            throw new InvalidOperationException();
         }
 
         public override LuaSyntaxNode VisitWhereClause(WhereClauseSyntax node) {
@@ -59,25 +57,56 @@ namespace CSharpLua {
             return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.LinqWhere, collection, whereFunction);
         }
 
-        private LuaExpressionSyntax BuildQueryOrderBy(LuaExpressionSyntax collection, OrderByClauseSyntax node, LuaIdentifierNameSyntax rangeVariable) {
-            return null;
+        private LuaExpressionSyntax BuildOrdering(LuaIdentifierNameSyntax methodName, LuaExpressionSyntax collection, OrderingSyntax node, LuaIdentifierNameSyntax rangeVariable) {
+            var type = semanticModel_.GetTypeInfo(node.Expression).Type;
+            var typeName = GetTypeName(type);
+            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            var keySelector = new LuaFunctionExpressionSyntax();
+            keySelector.AddParameter(rangeVariable);
+            keySelector.AddStatement(new LuaReturnStatementSyntax(expression));
+            return new LuaInvocationExpressionSyntax(methodName, collection, keySelector, LuaIdentifierNameSyntax.Nil, typeName);
         }
 
-        private LuaExpressionSyntax BuildQuerySelect(LuaExpressionSyntax collection, SelectClauseSyntax select, LuaIdentifierNameSyntax rangeVariable) {
-            var expression = (LuaExpressionSyntax)select.Expression.Accept(this);
-            if(select.Expression.IsKind(SyntaxKind.IdentifierName)) {
+        private LuaExpressionSyntax BuildQueryOrderBy(LuaExpressionSyntax collection, OrderByClauseSyntax node, LuaIdentifierNameSyntax rangeVariable) {
+            foreach(var ordering in node.Orderings) {
+                bool isDescending = ordering.AscendingOrDescendingKeyword.IsKind(SyntaxKind.DescendingKeyword);
+                if(ordering == node.Orderings.First()) {
+                    var methodName = isDescending ? LuaIdentifierNameSyntax.LinqOrderByDescending : LuaIdentifierNameSyntax.LinqOrderBy;
+                    collection = BuildOrdering(methodName, collection, ordering, rangeVariable);
+                }
+                else {
+                    var methodName = isDescending ? LuaIdentifierNameSyntax.LinqThenByDescending : LuaIdentifierNameSyntax.LinqThenBy;
+                    collection = BuildOrdering(methodName, collection, ordering, rangeVariable);
+                }
+            }
+            return collection;
+        }
+
+        private LuaExpressionSyntax BuildQuerySelect(LuaExpressionSyntax collection, SelectClauseSyntax node, LuaIdentifierNameSyntax rangeVariable) {
+            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            if(node.Expression.IsKind(SyntaxKind.IdentifierName)) {
                 var identifierName = expression as LuaIdentifierNameSyntax;
                 if(identifierName != null && identifierName.ValueText == rangeVariable.ValueText) {
                     return collection;
                 }
             }
-            var type = semanticModel_.GetTypeInfo(select.Expression).Type;
+            var type = semanticModel_.GetTypeInfo(node.Expression).Type;
             var typeExpression = GetTypeName(type);
             return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.LinqSelect, collection, expression, typeExpression);
         }
 
-        public LuaSyntaxNode BuildQueryBody(QueryBodySyntax node, LuaIdentifierNameSyntax rangeVariable) {
-            LuaExpressionSyntax collection = rangeVariable;
+        private LuaExpressionSyntax BuildGroupClause(LuaExpressionSyntax collection, GroupClauseSyntax node, LuaIdentifierNameSyntax rangeVariable) {
+            var type = semanticModel_.GetTypeInfo(node.ByExpression).Type;
+            var typeName = GetTypeName(type);
+            var byExpression = (LuaExpressionSyntax)node.ByExpression.Accept(this);
+            var keySelector = new LuaFunctionExpressionSyntax();
+            keySelector.AddParameter(rangeVariable);
+            keySelector.AddStatement(new LuaReturnStatementSyntax(byExpression));
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.LinqGroupBy, collection, keySelector, typeName);
+        }
+
+        public LuaSyntaxNode BuildQueryBody(QueryBodySyntax node, LuaExpressionSyntax fromClauseExpression, LuaIdentifierNameSyntax rangeVariable) {
+            LuaExpressionSyntax collection = fromClauseExpression;
             foreach(var clause in node.Clauses) {
                 switch(clause.Kind()) {
                     case SyntaxKind.WhereClause: {
@@ -88,6 +117,9 @@ namespace CSharpLua {
                             collection = BuildQueryOrderBy(collection, (OrderByClauseSyntax)clause, rangeVariable);
                             break;
                         }
+                    default: {
+                            throw new NotSupportedException();
+                        }
                 }
             }
             if(node.SelectOrGroup.IsKind(SyntaxKind.SelectClause)) {
@@ -95,7 +127,8 @@ namespace CSharpLua {
                 collection = BuildQuerySelect(collection, selectClause, rangeVariable);
             }
             else {
-                throw new NotSupportedException();
+                var groupClause = (GroupClauseSyntax)node.SelectOrGroup;
+                collection = BuildGroupClause(collection, groupClause, rangeVariable);
             }
             return collection;
         }

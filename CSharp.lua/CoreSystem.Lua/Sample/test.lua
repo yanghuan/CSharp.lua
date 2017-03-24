@@ -154,7 +154,7 @@ end
 local function testLinq()
     local Linq = System.Linq.Enumerable
     local list = System.List(System.Int)()
-    list:Add(1) list:Add(2) list:Add(3) list:Add(4) list:Add(5) list:Add(6) list:Add(7) list:Add(8)
+    list:Add(10) list:Add(2) list:Add(30) list:Add(4) list:Add(5) list:Add(6) list:Add(7) list:Add(8)
     printList(Linq.Where(list, function(i) return i >= 4 end))
     printList(Linq.Take(list, 4))
     printList(Linq.Select(list, function(i) return i + 2 end, System.Int))
@@ -165,7 +165,27 @@ local function testLinq()
     Linq.Any(ll)
     print(Linq.Count(ll))
     
-end
+    printList(Linq.OrderByDescending(list, function(i) return i end, nil, System.Int))  
+    list = System.List(System.Object)()
+    local super = { 
+      ToString = function(t)
+        return t[1] .. ',' .. t[2] .. ',' .. t[3] .. '|'
+      end
+    }
+    super.__index = super 
+    
+    list:Add(setmetatable({ 4, 2, 3 }, super))
+    list:Add(setmetatable({ 3, 1, 3 }, super))
+    list:Add(setmetatable({ 1, 2, 3 }, super))
+    list:Add(setmetatable({ 3, 2, 4 }, super))
+    list:Add(setmetatable({ 3, 2, 3 }, super))
+    
+    local t1 = Linq.OrderBy(list, function(i) return i[1] end, nil, System.Int)  
+    printList(t1)
+    t1 = Linq.ThenBy(t1, function(i) return i[2] end, nil, System.Int)
+    t1 = Linq.ThenBy(t1, function(i) return i[3] end, nil, System.Int)
+    printList(t1)
+end 
 
 local function testType()
     local ins = 2

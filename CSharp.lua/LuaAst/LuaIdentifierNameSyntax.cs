@@ -105,6 +105,11 @@ namespace CSharpLua.LuaAst {
         #region QueryExpression
         public readonly static LuaIdentifierNameSyntax LinqWhere = new LuaIdentifierNameSyntax("Linq.Where");
         public readonly static LuaIdentifierNameSyntax LinqSelect = new LuaIdentifierNameSyntax("Linq.Select");
+        public readonly static LuaIdentifierNameSyntax LinqOrderBy = new LuaIdentifierNameSyntax("Linq.OrderBy");
+        public readonly static LuaIdentifierNameSyntax LinqOrderByDescending = new LuaIdentifierNameSyntax("Linq.OrderByDescending");
+        public readonly static LuaIdentifierNameSyntax LinqThenBy = new LuaIdentifierNameSyntax("Linq.ThenBy");
+        public readonly static LuaIdentifierNameSyntax LinqThenByDescending = new LuaIdentifierNameSyntax("Linq.ThenByDescending");
+        public readonly static LuaIdentifierNameSyntax LinqGroupBy = new LuaIdentifierNameSyntax("Linq.GroupBy");
         #endregion
 
         public LuaIdentifierNameSyntax(string valueText) {

@@ -22,6 +22,7 @@ local identityFn = System.identityFn
 local Collection = System.Collection
 local wrap = Collection.wrap
 local unWrap = Collection.unWrap
+local sort = Collection.sort
 local NullReferenceException = System.NullReferenceException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -656,7 +657,7 @@ local function last(source, ...)
             local result
             repeat
                 result = en:getCurrent()
-            until not each.MoveNext()
+            until not en:MoveNext()
             return true, result
         end
         return false, 0
@@ -950,9 +951,91 @@ function Enumerable.Max(source, ...)
     return minOrMax(maxFn, source, ...)
 end
 
-function Enumerable.OrderBy(source, keySelector, comparer, TKey)
+local function ordered(source, compare)
+    local orderedEnumerable = create(source, function()
+        local t = {}
+        local index = 0
+        return IEnumerator(source, function() 
+            index = index + 1
+            local v = t[index]
+            if v ~= nil then
+                return true, unWrap(v)
+            end
+            return false
+        end, 
+        function() 
+            for _, v in each(source) do
+                tinser(t, wrap(v))
+            end  
+            sort(t, compare)
+        end)
+    end)
+    orderedEnumerable.source = source
+    orderedEnumerable.compare = compare
+    return orderedEnumerable
+end
+
+local function orderBy(source, keySelector, comparer, TKey, descending)
     if source == nil then throw(ArgumentNullException("source")) end
-    if selector == nil then throw(ArgumentNullException("selector")) end
+    if keySelector == nil then throw(ArgumentNullException("keySelector")) end
+    if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
+    local compare
+    if descending then
+        local c = comparer.Compare
+        compare = function(x, y)
+            return -c(keySelector(x), keySelector(y))
+        end
+    else
+        local c = comparer.Compare
+        compare = function(x, y)
+            return c(keySelector(x), keySelector(y))
+        end
+    end
+    return ordered(source, compare)
+end
 
+function Enumerable.OrderBy(source, keySelector, comparer, TKey)
+    return orderBy(source, keySelector, comparer, TKey, false)
+end
 
+function Enumerable.OrderByDescending(source, keySelector, comparer, TKey)
+    return orderBy(source, keySelector, comparer, TKey, true)
+end
+
+local function thenBy(source, keySelector, comparer, TKey, descending)
+    if source == nil then throw(ArgumentNullException("source")) end
+    if keySelector == nil then throw(ArgumentNullException("keySelector")) end
+    if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
+    local compare
+    local parentSource, parentCompare = source.source, source.compare
+    if descending then
+        local c = comparer.Compare
+        compare = function(x, y)
+            local v = parentCompare(x, y)
+            if v ~= 0 then
+                return v
+            else
+                return -c(keySelector(x), keySelector(y))
+            end
+        end
+    else
+        local c = comparer.Compare
+        compare = function(x, y)
+            local v = parentCompare(x, y)
+            if v ~= 0 then
+                return v
+            else
+                return c(keySelector(x), keySelector(y))
+            end
+        end
+    end
+    return ordered(parentSource, compare)
+end
+
+function Enumerable.ThenBy(source, keySelector, comparer, TKey)
+    return thenBy(source, keySelector, comparer, TKey, false)
+end
+
+function Enumerable.ThenByDescending(source, keySelector, comparer, TKey)
+    return thenBy(source, keySelector, comparer, TKey, true)
 end
