@@ -1,7 +1,6 @@
---require("strict")
+require("strict")
 --require("socket")
 --local conf = { time = socket.gettime }
-
 require("All")()
 collectgarbage("collect")
 print(collectgarbage("count"))

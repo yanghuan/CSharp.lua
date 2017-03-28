@@ -30,6 +30,8 @@ local ceil = math.ceil
 local error = error
 local select = select
 local pcall = pcall
+local rawget = rawget
+local rawset = rawset
 local global = _G
 
 local emptyFn = function() end
@@ -88,15 +90,15 @@ local function set(className, cls)
         local pos = className:find("%.", starInx) or 0
         local name = className:sub(starInx, pos -1)
         if pos ~= 0 then
-            local t = scope[name]
+            local t = rawget(scope, name)
             if t == nil then
                 t = {}
-                scope[name] = t
+                rawset(scope, name, t)
             end
             scope = t
         else
-            assert(scope[name] == nil, className)
-            scope[name] = cls
+            assert(rawget(scope, name) == nil, className)
+            rawset(scope, name, cls)
             break
         end
         starInx = pos + 1
