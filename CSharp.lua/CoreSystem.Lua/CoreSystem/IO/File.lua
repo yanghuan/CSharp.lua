@@ -73,7 +73,6 @@ local function writeAll(path, contents, mode)
     local f = openFile(path, mode)
     f:write(contents)
     f:close()
-    return bytes
 end
 
 function File.WriteWriteAllBytes(path, contents)

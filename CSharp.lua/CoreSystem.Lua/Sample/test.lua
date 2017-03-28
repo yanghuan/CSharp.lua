@@ -1,6 +1,8 @@
+--require("strict")
 --require("socket")
 --local conf = { time = socket.gettime }
-require("All")(nil, conf)
+
+require("All")()
 collectgarbage("collect")
 print(collectgarbage("count"))
 
@@ -141,8 +143,8 @@ local function testDelegate()
     assertExt("d1d2d3")
     print("--")
     
-    fn0 = System.combine(System.combine(d1, d2), System.combine(System.combine(d3, d1), d2))
-    fn1 = System.combine(d1, d2)
+    local fn0 = System.combine(System.combine(d1, d2), System.combine(System.combine(d3, d1), d2))
+    local fn1 = System.combine(d1, d2)
     System.remove(fn0, fn1)()
     assertExt("d1d2d3")
     

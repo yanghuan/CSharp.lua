@@ -268,7 +268,6 @@ local function defStc(name, cls, genericSuper)
 end
 
 System = {
-    null = null,
     emptyFn = emptyFn,
     identityFn = identityFn,
     equals = equals,
