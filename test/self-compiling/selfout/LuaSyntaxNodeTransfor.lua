@@ -232,8 +232,8 @@ System.namespace("CSharpLua", function (namespace)
         VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, 
         VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, 
         VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, VisitAnonymousObjectMemberDeclarator, VisitAnonymousObjectCreationExpression, VisitQueryExpression, 
-        VisitFromClause, VisitWhereClause, VisitQueryBody, VisitSelectClause, BuildQueryWhere, BuildQueryOrderBy, BuildQuerySelect, BuildQueryBody, 
-        __staticCtor__, __init__, __ctor__
+        VisitFromClause, VisitWhereClause, VisitQueryBody, VisitSelectClause, BuildQueryWhere, BuildOrdering, BuildQueryOrderBy, BuildQuerySelect, 
+        BuildGroupClause, BuildQueryBody, __staticCtor__, __init__, __ctor__
         __staticCtor__ = function (this) 
             operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
                 default:set("!=", "~=" --[[Tokens.NotEquals]])
@@ -4102,15 +4102,13 @@ System.namespace("CSharpLua", function (namespace)
         end
         VisitQueryExpression = function (this, node) 
             getCurCompilationUnit(this):ImportLinq()
-            local localVariable = System.cast(CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax, node:getFromClause():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-            getCurBlock(this).Statements:Add(localVariable)
-            return BuildQueryBody(this, node:getBody(), localVariable.Declarator.Identifier)
+            local rangeVariable = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, node:getFromClause():getIdentifier():getValueText())
+            rangeVariable = CheckVariableDeclaratorName(this, rangeVariable, node)
+            local fromClauseExpression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getFromClause():getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            return BuildQueryBody(this, node:getBody(), fromClauseExpression, rangeVariable)
         end
         VisitFromClause = function (this, node) 
-            local identifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, node:getIdentifier():getValueText())
-            identifier = CheckVariableDeclaratorName(this, identifier, node)
-            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-            return CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax:new(2, identifier, expression)
+            System.throw(System.InvalidOperationException())
         end
         VisitWhereClause = function (this, node) 
             System.throw(System.InvalidOperationException())
@@ -4128,23 +4126,63 @@ System.namespace("CSharpLua", function (namespace)
             whereFunction:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(condition))
             return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqWhere, collection, whereFunction)
         end
-        BuildQueryOrderBy = function (this, collection, node, rangeVariable) 
-            return nil
+        BuildOrdering = function (this, methodName, collection, node, rangeVariable) 
+            local type = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node:getExpression(), System.default(SystemThreading.CancellationToken)):getType()
+            local typeName = GetTypeName(this, type)
+            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            local keySelector = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
+            keySelector:AddParameter1(rangeVariable)
+            keySelector:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(expression))
+            return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(6, methodName, System.Array(CSharpLuaLuaAst.LuaExpressionSyntax)(collection, keySelector, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Nil, typeName))
         end
-        BuildQuerySelect = function (this, collection, select, rangeVariable) 
-            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, select:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-            if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(select:getExpression(), 8616 --[[SyntaxKind.IdentifierName]]) then
+        BuildQueryOrderBy = function (this, collection, node, rangeVariable) 
+            for _, ordering in System.each(node:getOrderings()) do
+                local isDescending = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(ordering:getAscendingOrDescendingKeyword(), 8433 --[[SyntaxKind.DescendingKeyword]])
+                if ordering == node:getOrderings():First() then
+                    local default
+                    if isDescending then
+                        default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqOrderByDescending
+                    else
+                        default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqOrderBy
+                    end
+                    local methodName = default
+                    collection = BuildOrdering(this, methodName, collection, ordering, rangeVariable)
+                else
+                    local extern
+                    if isDescending then
+                        extern = CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqThenByDescending
+                    else
+                        extern = CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqThenBy
+                    end
+                    local methodName = extern
+                    collection = BuildOrdering(this, methodName, collection, ordering, rangeVariable)
+                end
+            end
+            return collection
+        end
+        BuildQuerySelect = function (this, collection, node, rangeVariable) 
+            local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(node:getExpression(), 8616 --[[SyntaxKind.IdentifierName]]) then
                 local identifierName = System.as(expression, CSharpLuaLuaAst.LuaIdentifierNameSyntax)
                 if identifierName ~= nil and identifierName.ValueText == rangeVariable.ValueText then
                     return collection
                 end
             end
-            local type = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, select:getExpression(), System.default(SystemThreading.CancellationToken)):getType()
+            local type = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node:getExpression(), System.default(SystemThreading.CancellationToken)):getType()
             local typeExpression = GetTypeName(this, type)
             return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(4, CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqSelect, collection, expression, typeExpression)
         end
-        BuildQueryBody = function (this, node, rangeVariable) 
-            local collection = rangeVariable
+        BuildGroupClause = function (this, collection, node, rangeVariable) 
+            local type = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node:getByExpression(), System.default(SystemThreading.CancellationToken)):getType()
+            local typeName = GetTypeName(this, type)
+            local byExpression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getByExpression():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            local keySelector = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
+            keySelector:AddParameter1(rangeVariable)
+            keySelector:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(byExpression))
+            return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(4, CSharpLuaLuaAst.LuaIdentifierNameSyntax.LinqGroupBy, collection, keySelector, typeName)
+        end
+        BuildQueryBody = function (this, node, fromClauseExpression, rangeVariable) 
+            local collection = fromClauseExpression
             for _, clause in System.each(node:getClauses()) do
                 repeat
                     local default = clause:Kind()
@@ -4158,6 +4196,10 @@ System.namespace("CSharpLua", function (namespace)
                             collection = BuildQueryOrderBy(this, collection, System.cast(MicrosoftCodeAnalysisCSharpSyntax.OrderByClauseSyntax, clause), rangeVariable)
                             break
                         end
+                    else
+                        do
+                            System.throw(System.NotSupportedException())
+                        end
                     end
                 until 1
             end
@@ -4165,7 +4207,8 @@ System.namespace("CSharpLua", function (namespace)
                 local selectClause = System.cast(MicrosoftCodeAnalysisCSharpSyntax.SelectClauseSyntax, node:getSelectOrGroup())
                 collection = BuildQuerySelect(this, collection, selectClause, rangeVariable)
             else
-                System.throw(System.NotSupportedException())
+                local groupClause = System.cast(MicrosoftCodeAnalysisCSharpSyntax.GroupClauseSyntax, node:getSelectOrGroup())
+                collection = BuildGroupClause(this, collection, groupClause, rangeVariable)
             end
             return collection
         end

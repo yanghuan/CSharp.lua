@@ -450,7 +450,7 @@ end
 local tuple = {}
 defCls("System.Tuple", tuple)
 
-function System.anonymousType(...)
+function System.tuple(...)
     return setmetatable({...}, tuple)
 end
 
