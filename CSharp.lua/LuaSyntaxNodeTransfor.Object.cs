@@ -748,6 +748,11 @@ namespace CSharpLua {
         }
 
         public override LuaSyntaxNode VisitDefaultExpression(DefaultExpressionSyntax node) {
+            var constValue = semanticModel_.GetConstantValue(node);
+            if(constValue.HasValue) {
+                return GetConstLiteralExpression(constValue.Value);
+            }
+
             var type = semanticModel_.GetTypeInfo(node.Type).Type;
             if(type.Kind != SymbolKind.TypeParameter) {
                 if(type.IsValueType) {

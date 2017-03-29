@@ -470,7 +470,7 @@ namespace CSharpLua {
             switch(typeSymbol.SpecialType) {
                 case SpecialType.None: {
                         if(typeSymbol.TypeKind == TypeKind.Enum) {
-                            return LuaIdentifierNameSyntax.Zero;
+                            return LuaIdentifierLiteralExpressionSyntax.Zero;
                         }
                         if(typeSymbol.ContainingNamespace.Name == "System") {
                             if(typeSymbol.Name == "TimeSpan") {
@@ -480,7 +480,7 @@ namespace CSharpLua {
                         return null;
                     }
                 case SpecialType.System_Boolean: {
-                        return LuaIdentifierNameSyntax.False;
+                        return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.False);
                     }
                 case SpecialType.System_Char: {
                         return new LuaCharacterLiteralExpression(default(char));
@@ -493,11 +493,11 @@ namespace CSharpLua {
                 case SpecialType.System_UInt32:
                 case SpecialType.System_Int64:
                 case SpecialType.System_UInt64: {
-                        return LuaIdentifierNameSyntax.Zero;
+                        return LuaIdentifierLiteralExpressionSyntax.Zero;
                     }
                 case SpecialType.System_Single:
                 case SpecialType.System_Double: {
-                        return LuaIdentifierNameSyntax.ZeroFloat;
+                        return LuaIdentifierLiteralExpressionSyntax.ZeroFloat;
                     }
                 case SpecialType.System_DateTime: {
                         return BuildDefaultValue(LuaIdentifierNameSyntax.DateTime);
