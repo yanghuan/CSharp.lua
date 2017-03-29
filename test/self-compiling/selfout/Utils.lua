@@ -135,7 +135,7 @@ System.namespace("CSharpLua", function (namespace)
                 if isOption then
                     return nil
                 end
-                System.throw(CSharpLua.CmdArgumentException((name or "") .. " is not found"))
+                System.throw(CSharpLua.CmdArgumentException(name .. " is not found"))
             end
             return values:get(0)
         end

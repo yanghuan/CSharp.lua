@@ -333,7 +333,7 @@ System.namespace("CSharpLua", function (namespace)
                     System.throw(System.ArgumentException(("namespace [{0}] has a class's name is empty"):Format(namespaceName)))
                 end
 
-                local classesfullName = (namespaceName or "") .. '.' .. (className or "")
+                local classesfullName = (namespaceName .. '.') .. className
                 classesfullName = classesfullName:Replace(94 --[['^']], 95 --[['_']])
                 if this.typeMetas_:ContainsKey(classesfullName) then
                     System.throw(System.ArgumentException(("type [{0}] is already has"):Format(classesfullName)))

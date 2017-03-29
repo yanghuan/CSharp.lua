@@ -455,6 +455,25 @@ function System.tuple(...)
     return setmetatable({...}, tuple)
 end
 
+debug.setmetatable(nil, {
+    __concat = function(a, b)
+        if a == nil then
+            if b == nil the
+                return ""
+            else
+                return b
+            end
+        else
+            return a
+        end
+    end
+})
+
+function System.toString(t)
+    if t == nil then return "" end
+    return t:ToString()
+end
+
 local namespace = {}
 local curName
 

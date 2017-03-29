@@ -49,7 +49,7 @@ System.namespace("CSharpLua", function (namespace)
                 if lib:EndsWith(".dll" --[[Worker.kDllSuffix]]) then
                     default = lib
                 else
-                    default = (lib or "") .. ".dll" --[[Worker.kDllSuffix]]
+                    default = lib .. ".dll" --[[Worker.kDllSuffix]]
                 end
                 local path = default
                 if not SystemIO.File.Exists(path) then

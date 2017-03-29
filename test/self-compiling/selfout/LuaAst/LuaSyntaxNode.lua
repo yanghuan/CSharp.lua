@@ -98,7 +98,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
             System.throw(System.NotSupportedException(("{0} is not override"):Format(this:GetType():getName())))
         end
         SpecailWord = function (s) 
-            return "__" .. (s or "") .. "__"
+            return ("__" .. s) .. "__"
         end
         IsReservedWord = function (identifier) 
             return ReservedWords:Contains(identifier)

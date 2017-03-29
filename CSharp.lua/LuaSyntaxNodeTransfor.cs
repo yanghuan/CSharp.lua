@@ -1216,9 +1216,7 @@ namespace CSharpLua {
                     LuaExpressionSyntax typeName = GetTypeName(typeArgument);
                     arguments.Add(typeName);
                 }
-                if(symbol.IsFromCode() || symbol.ContainingType.GetMembers(symbol.Name).Length == 1) {
-                    RemoveNilArgumentsAtTail(arguments);
-                }
+                TryRemoveNilArgumentsAtTail(symbol, arguments);
             }
             else {
                 arguments = new List<LuaExpressionSyntax>();
@@ -1355,24 +1353,6 @@ namespace CSharpLua {
                     arguments[i] = defaultValue;
                 }
             }
-        }
-
-        private void RemoveNilArgumentsAtTail(List<LuaExpressionSyntax> arguments) {
-            int i;
-            for(i = arguments.Count - 1; i >= 0; --i) {
-                if(!IsNilLuaExpression(arguments[i])) {
-                    break;
-                }
-            }
-            int nilStartIndex = i + 1;
-            int nilArgumentCount = arguments.Count - nilStartIndex;
-            if(nilArgumentCount > 0) {
-                arguments.RemoveRange(nilStartIndex, nilArgumentCount);
-            }
-        }
-
-        private bool IsNilLuaExpression(LuaExpressionSyntax expression) {
-            return expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
         }
 
         private void CheckInvocationDeafultArguments(ISymbol symbol, ImmutableArray<IParameterSymbol> parameters, List<LuaExpressionSyntax> arguments, BaseArgumentListSyntax node) {
@@ -1972,24 +1952,7 @@ namespace CSharpLua {
             ITypeSymbol typeInfo = semanticModel_.GetTypeInfo(expression).Type;
             var original = (LuaExpressionSyntax)expression.Accept(this);
             if(typeInfo.IsStringType()) {
-                if(expression is BinaryExpressionSyntax) {
-                    return original;
-                }
-
-                var constValue = semanticModel_.GetConstantValue(expression);
-                if(constValue.HasValue) {
-                    return original;
-                }
-                else {
-                    bool mayBeNull = MayBeNull(expression, typeInfo);
-                    if(mayBeNull) {
-                        LuaBinaryExpressionSyntax binaryExpression = new LuaBinaryExpressionSyntax(original, LuaSyntaxNode.Tokens.Or, LuaStringLiteralExpressionSyntax.Empty);
-                        return new LuaParenthesizedExpressionSyntax(binaryExpression);
-                    }
-                    else {
-                        return original;
-                    }
-                }
+                return original;
             }
             else if(typeInfo.SpecialType == SpecialType.System_Char) {
                 var constValue = semanticModel_.GetConstantValue(expression);
@@ -2021,18 +1984,19 @@ namespace CSharpLua {
                 return new LuaInvocationExpressionSyntax(memberAccess);
             }
             else {
-                LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);
-                var andExpression = new LuaBinaryExpressionSyntax(original, LuaSyntaxNode.Tokens.And, new LuaInvocationExpressionSyntax(memberAccess));
-                var orExpression = new LuaBinaryExpressionSyntax(andExpression, LuaSyntaxNode.Tokens.Or, LuaStringLiteralExpressionSyntax.Empty);
-                return new LuaParenthesizedExpressionSyntax(orExpression);
+                return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
             }
         }
 
-        private LuaBinaryExpressionSyntax BuildStringConcatExpression(BinaryExpressionSyntax node) {
-            return BuildStringConcatExpression(node.Left, node.Right);
+        private LuaExpressionSyntax BuildStringConcatExpression(BinaryExpressionSyntax node) {
+            var expression = BuildStringConcatExpression(node.Left, node.Right);
+            if(node.Parent.IsKind(SyntaxKind.AddExpression)) {
+                expression = new LuaParenthesizedExpressionSyntax(expression);
+            }
+            return expression;
         }
 
-        private LuaBinaryExpressionSyntax BuildStringConcatExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode) {
+        private LuaExpressionSyntax BuildStringConcatExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode) {
             var left = WrapStringConcatExpression(leftNode);
             var right = WrapStringConcatExpression(rightNode);
             return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.Concatenation, right);

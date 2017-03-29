@@ -200,7 +200,7 @@ System.namespace("CSharpLua", function (namespace)
             local extend = SystemIO.Path.GetExtension(path)
             path = path:Remove(#path - #extend, #extend)
             path = path:Replace(46 --[['.']], 95 --[['_']])
-            local outPath = SystemIO.Path.Combine(output_, (path or "") .. ".lua" --[[LuaSyntaxGenerator.kLuaSuffix]])
+            local outPath = SystemIO.Path.Combine(output_, path .. ".lua" --[[LuaSyntaxGenerator.kLuaSuffix]])
             local dir = SystemIO.Path.GetDirectoryName(outPath)
             if not SystemIO.Directory.Exists(dir) then
                 SystemIO.Directory.CreateDirectory(dir)
@@ -259,7 +259,7 @@ System.namespace("CSharpLua", function (namespace)
                 this.partialTypes_:Clear()
                 for _, typeDeclarations in System.each(types) do
                     local major = Linq.Min(typeDeclarations)
-                    local transfor = CSharpLua.LuaSyntaxNodeTransfor(this, nil)
+                    local transfor = CSharpLua.LuaSyntaxNodeTransfor(this)
                     transfor:AcceptPartialType(major, typeDeclarations)
                 end
             end
@@ -546,7 +546,7 @@ System.namespace("CSharpLua", function (namespace)
                 return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName())
             else
                 while true do
-                    local newName = (symbol:getName() or "") .. index
+                    local newName = symbol:getName() .. index
                     if IsCurTypeNameEnable(this, symbol:getContainingType(), newName) then
                         TryAddNewUsedName(this, symbol:getContainingType(), newName)
                         return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, newName)
@@ -619,12 +619,12 @@ System.namespace("CSharpLua", function (namespace)
                 else
                     local baseName = GetSymbolBaseName(this, symbol)
                     if propertySymbol:getIsReadOnly() then
-                        names:Add("get" --[[Tokens.Get]] .. (baseName or ""))
+                        names:Add("get" --[[Tokens.Get]] .. baseName)
                     elseif propertySymbol:getIsWriteOnly() then
-                        names:Add("set" --[[Tokens.Set]] .. (baseName or ""))
+                        names:Add("set" --[[Tokens.Set]] .. baseName)
                     else
-                        names:Add("get" --[[Tokens.Get]] .. (baseName or ""))
-                        names:Add("set" --[[Tokens.Set]] .. (baseName or ""))
+                        names:Add("get" --[[Tokens.Get]] .. baseName)
+                        names:Add("set" --[[Tokens.Set]] .. baseName)
                     end
                 end
             elseif symbol:getKind() == 5 --[[SymbolKind.Event]] then
@@ -633,8 +633,8 @@ System.namespace("CSharpLua", function (namespace)
                     names:Add(symbol:getName())
                 else
                     local baseName = GetSymbolBaseName(this, symbol)
-                    names:Add("add" --[[Tokens.Add]] .. (baseName or ""))
-                    names:Add("remove" --[[Tokens.Remove]] .. (baseName or ""))
+                    names:Add("add" --[[Tokens.Add]] .. baseName)
+                    names:Add("remove" --[[Tokens.Remove]] .. baseName)
                 end
             else
                 names:Add(GetSymbolBaseName(this, symbol))
@@ -801,15 +801,15 @@ System.namespace("CSharpLua", function (namespace)
                 local property = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
                 local isField = IsPropertyField(this, property)
                 if not isField then
-                    checkName1 = "get" --[[Tokens.Get]] .. (newName or "")
-                    checkName2 = "set" --[[Tokens.Set]] .. (newName or "")
+                    checkName1 = "get" --[[Tokens.Get]] .. newName
+                    checkName2 = "set" --[[Tokens.Set]] .. newName
                 end
             elseif symbol:getKind() == 5 --[[SymbolKind.Event]] then
                 local evnetSymbol = System.cast(MicrosoftCodeAnalysis.IEventSymbol, symbol)
                 local isField = IsEventFiled(this, evnetSymbol)
                 if not isField then
-                    checkName1 = "add" --[[Tokens.Add]] .. (newName or "")
-                    checkName2 = "remove" --[[Tokens.Remove]] .. (newName or "")
+                    checkName1 = "add" --[[Tokens.Add]] .. newName
+                    checkName2 = "remove" --[[Tokens.Remove]] .. newName
                 end
             end
             return checkName1, checkName2
@@ -819,7 +819,7 @@ System.namespace("CSharpLua", function (namespace)
 
             local index = 1
             while true do
-                local newName = (originalName or "") .. index
+                local newName = originalName .. index
                 local checkName1, checkName2
                 checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName)
 

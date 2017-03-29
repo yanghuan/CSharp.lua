@@ -42,6 +42,7 @@ namespace CSharpLua {
                     var expression = (LuaExpressionSyntax)node.Type.Accept(this);
                     var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
                     var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+                    TryRemoveNilArgumentsAtTail(symbol, arguments);
                     invokeExpression.AddArguments(arguments);
                     creationExpression = invokeExpression;
                 }

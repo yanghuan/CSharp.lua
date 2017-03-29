@@ -867,5 +867,29 @@ namespace CSharpLua {
         private LuaIdentifierNameSyntax GetMemberName(ISymbol symbol) {
             return generator_.GetMemberName(symbol);
         }
+
+        private void RemoveNilArgumentsAtTail(List<LuaExpressionSyntax> arguments) {
+            int i;
+            for(i = arguments.Count - 1; i >= 0; --i) {
+                if(!IsNilLuaExpression(arguments[i])) {
+                    break;
+                }
+            }
+            int nilStartIndex = i + 1;
+            int nilArgumentCount = arguments.Count - nilStartIndex;
+            if(nilArgumentCount > 0) {
+                arguments.RemoveRange(nilStartIndex, nilArgumentCount);
+            }
+        }
+
+        private bool IsNilLuaExpression(LuaExpressionSyntax expression) {
+            return expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
+        }
+
+        private void TryRemoveNilArgumentsAtTail(ISymbol symbol, List<LuaExpressionSyntax> arguments) {
+            if(symbol.IsFromCode() || symbol.ContainingType.GetMembers(symbol.Name).Length == 1) {
+                RemoveNilArgumentsAtTail(arguments);
+            }
+        }
     }
 }
