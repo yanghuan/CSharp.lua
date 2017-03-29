@@ -458,7 +458,7 @@ end
 debug.setmetatable(nil, {
     __concat = function(a, b)
         if a == nil then
-            if b == nil the
+            if b == nil then
                 return ""
             else
                 return b
