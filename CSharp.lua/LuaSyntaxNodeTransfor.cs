@@ -469,6 +469,9 @@ namespace CSharpLua {
         private static LuaExpressionSyntax GetPredefinedValueTypeDefaultValue(ITypeSymbol typeSymbol) {
             switch(typeSymbol.SpecialType) {
                 case SpecialType.None: {
+                        if(typeSymbol.TypeKind == TypeKind.Enum) {
+                            return LuaIdentifierNameSyntax.Zero;
+                        }
                         if(typeSymbol.ContainingNamespace.Name == "System") {
                             if(typeSymbol.Name == "TimeSpan") {
                                 return BuildDefaultValue(LuaIdentifierNameSyntax.TimeSpan);
@@ -490,11 +493,11 @@ namespace CSharpLua {
                 case SpecialType.System_UInt32:
                 case SpecialType.System_Int64:
                 case SpecialType.System_UInt64: {
-                        return new LuaIdentifierNameSyntax(0);
+                        return LuaIdentifierNameSyntax.Zero;
                     }
                 case SpecialType.System_Single:
                 case SpecialType.System_Double: {
-                        return new LuaIdentifierNameSyntax(0.0.ToString());
+                        return LuaIdentifierNameSyntax.ZeroFloat;
                     }
                 case SpecialType.System_DateTime: {
                         return BuildDefaultValue(LuaIdentifierNameSyntax.DateTime);
