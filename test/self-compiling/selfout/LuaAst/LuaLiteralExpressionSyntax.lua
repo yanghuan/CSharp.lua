@@ -21,10 +21,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         }
     end)
     namespace.class("LuaIdentifierLiteralExpressionSyntax", function (namespace) 
-        local getText, Render, Nil, __staticCtor__, __ctor1__, __ctor2__
+        local getText, Render, Nil, Zero, ZeroFloat, __staticCtor__, __ctor1__, __ctor2__
         __staticCtor__ = function (this) 
             Nil = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Nil)
-            this.Nil = Nil
+            Zero = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0")
+            ZeroFloat = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0.0")
+            this.Nil, this.Zero, this.ZeroFloat = Nil, Zero, ZeroFloat
         end
         __ctor1__ = function (this, text) 
             __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, text))

@@ -586,11 +586,17 @@ System.namespace("CSharpLua", function (namespace)
 
                 local comments = BuildDocumentationComment(this, node)
                 local isPrivate = CSharpLua.Utility.IsPrivate(symbol) and symbol:getExplicitInterfaceImplementations():getIsEmpty()
-                if not CSharpLua.Utility.IsStatic(node:getModifiers()) then
+                if not symbol:getIsStatic() then
                     function_:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This)
+                elseif CSharpLua.Utility.IsMainEntryPoint(symbol) then
+                    isPrivate = false
+                    local success = this.generator_:SetMainEntryPoint(symbol)
+                    if not success then
+                        System.throw(CSharpLua.CompilationErrorException(("{0} : has more than one entry point"):Format(CSharpLua.Utility.GetLocationString(node))))
+                    end
                 end
 
-                if not isPrivate then
+                if not CSharpLua.Utility.IsPrivate(symbol) then
                     local attributes = BuildAttributes(this, node:getAttributeLists())
                     getCurType(this):AddMethodAttributes(methodName, attributes)
                 end
@@ -644,6 +650,9 @@ System.namespace("CSharpLua", function (namespace)
                 local default = typeSymbol:getSpecialType()
                 if default == 0 --[[SpecialType.None]] then
                     do
+                        if typeSymbol:getTypeKind() == 5 --[[TypeKind.Enum]] then
+                            return CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax.Zero
+                        end
                         if typeSymbol:getContainingNamespace():getName() == "System" then
                             if typeSymbol:getName() == "TimeSpan" then
                                 return BuildDefaultValue(CSharpLuaLuaAst.LuaIdentifierNameSyntax.TimeSpan)
@@ -653,7 +662,7 @@ System.namespace("CSharpLua", function (namespace)
                     end
                 elseif default == 7 --[[SpecialType.System_Boolean]] then
                     do
-                        return CSharpLuaLuaAst.LuaIdentifierNameSyntax.False
+                        return CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.False)
                     end
                 elseif default == 8 --[[SpecialType.System_Char]] then
                     do
@@ -661,11 +670,11 @@ System.namespace("CSharpLua", function (namespace)
                     end
                 elseif default == 9 --[[SpecialType.System_SByte]] or default == 10 --[[SpecialType.System_Byte]] or default == 11 --[[SpecialType.System_Int16]] or default == 12 --[[SpecialType.System_UInt16]] or default == 13 --[[SpecialType.System_Int32]] or default == 14 --[[SpecialType.System_UInt32]] or default == 15 --[[SpecialType.System_Int64]] or default == 16 --[[SpecialType.System_UInt64]] then
                     do
-                        return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(2, 0)
+                        return CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax.Zero
                     end
                 elseif default == 18 --[[SpecialType.System_Single]] or default == 19 --[[SpecialType.System_Double]] then
                     do
-                        return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, (0.0):ToString())
+                        return CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax.ZeroFloat
                     end
                 elseif default == 33 --[[SpecialType.System_DateTime]] then
                     do
@@ -4008,6 +4017,11 @@ System.namespace("CSharpLua", function (namespace)
             return invocation
         end
         VisitDefaultExpression = function (this, node) 
+            local constValue = this.semanticModel_:GetConstantValue(node, System.default(SystemThreading.CancellationToken))
+            if constValue:getHasValue() then
+                return GetConstLiteralExpression(this, constValue:getValue())
+            end
+
             local type = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node:getType(), System.default(SystemThreading.CancellationToken)):getType()
             if type:getKind() ~= 17 --[[SymbolKind.TypeParameter]] then
                 if type:getIsValueType() then

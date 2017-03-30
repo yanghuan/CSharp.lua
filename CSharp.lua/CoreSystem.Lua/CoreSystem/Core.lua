@@ -84,7 +84,7 @@ local function try(try, catch, finally)
 end
 
 local function set(className, cls)
-    local scope = _G
+    local scope = global
     local starInx = 1
     while true do
         local pos = className:find("%.", starInx) or 0
@@ -371,10 +371,6 @@ function System.default(T)
     return T.__default__()
 end
 
-function System.CreateInstance(type, ...)
-    return type.c(...)
-end
-
 function System.property(name)
     local function get(this)
         return this[name]
@@ -395,19 +391,46 @@ function System.event(name)
     return add, remove
 end
 
+function System.CreateInstance(type, ...)
+    return type.c(...)
+end
+
+function System.getClass(className)
+    local scope = global
+    local starInx = 1
+    while true do
+        local pos = className:find("%.", starInx) or 0
+        local name = className:sub(starInx, pos -1)
+        if pos ~= 0 then
+            local t = rawget(scope, name)
+            if t == nil then
+                return nil
+            end
+            scope = t
+        else
+            return rawget(scope, name)
+        end
+        starInx = pos + 1
+    end
+end
+
 function System.usingDeclare(f)
     tinsert(usings, f)
 end
 
-function System.init(namelist)
+function System.init(namelist, conf)
     for _, name in ipairs(namelist) do
         assert(modules[name], name)()
     end
     for _, f in ipairs(usings) do
         f(global)
     end
-    modules = {}
-    usings = {}
+    modules = nil
+    usings = nil
+
+    if conf ~= nil then
+        System.entryPoint = conf.Main
+    end
 end
 
 local function multiNew(cls, inx, ...) 
@@ -522,8 +545,9 @@ function System.namespace(name, f)
 end
 
 local function config(conf) 
-    if conf == nil then return end
-    System.time = conf.time
+    if conf ~= nil then
+        System.time = conf.time
+    end
 end
 
 return config

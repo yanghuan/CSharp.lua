@@ -81,9 +81,9 @@ limitations under the License.
         </method>
       </class>
       <class name="Type">
-        <method name="GetType" ArgCount ="1" Name="GetTypeStatic" />
-        <method name="GetType" ArgCount ="2" Name="GetTypeStatic" />
-        <method name="GetType" ArgCount ="3" Name="GetTypeStatic" />
+        <method name="GetType" ArgCount ="1" Name="GetTypeFrom" />
+        <method name="GetType" ArgCount ="2" Name="GetTypeFrom" />
+        <method name="GetType" ArgCount ="3" Name="GetTypeFrom" />
       </class>
       <class name="Array">
         <property name="Length">

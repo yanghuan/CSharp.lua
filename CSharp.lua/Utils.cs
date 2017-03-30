@@ -518,5 +518,25 @@ namespace CSharpLua {
                 CheckSymbolDefinition(ref symbol);
             }
         }
+
+        public static bool IsMainEntryPoint(this IMethodSymbol symbol) {
+            if(symbol.IsStatic && symbol.TypeArguments.IsEmpty && symbol.ContainingType.TypeArguments.IsEmpty && symbol.Name == "Main") {
+                if(symbol.ReturnsVoid || symbol.ReturnType.SpecialType == SpecialType.System_Int32) {
+                    if(symbol.Parameters.IsEmpty) {
+                        return true;
+                    }
+                    else if(symbol.Parameters.Length == 1) {
+                        var parameterType = symbol.Parameters[0].Type;
+                        if(parameterType.TypeKind == TypeKind.Array) {
+                            var arrayType = (IArrayTypeSymbol)parameterType;
+                            if(arrayType.ElementType.SpecialType == SpecialType.System_String) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
     }
 }

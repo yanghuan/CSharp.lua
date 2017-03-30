@@ -87,6 +87,7 @@ namespace CSharpLua {
         private HashSet<string> exportAttributes_;
         private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
         private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
+        private IMethodSymbol mainEntryPoint_;
 
         public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, IEnumerable<string> metas, SettingInfo setting, string[] attributes) {
             CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
@@ -296,6 +297,14 @@ namespace CSharpLua {
             return allTypes;
         }
 
+        public bool SetMainEntryPoint(IMethodSymbol sybmol) {
+            if(mainEntryPoint_ == null) {
+                mainEntryPoint_ = sybmol;
+                return true;
+            }
+            return false;
+        }
+
         private void ExportManifestFile(List<string> modules, string outFolder) {
             const string kDir = "dir";
             const string kDirInitCode = "dir = (dir and #dir > 0) and (dir .. '.') or \"\"";
@@ -327,12 +336,15 @@ namespace CSharpLua {
                     }
                     functionExpression.AddStatement(LuaBlankLinesStatement.One);
 
-                    LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+                    LuaTableInitializerExpression typeTable = new LuaTableInitializerExpression();
                     foreach(var type in types) {
                         LuaIdentifierNameSyntax typeName = XmlMetaProvider.GetTypeShortName(type);
-                        table.Items.Add(new LuaSingleTableItemSyntax(new LuaStringLiteralExpressionSyntax(typeName)));
+                        typeTable.Items.Add(new LuaSingleTableItemSyntax(new LuaStringLiteralExpressionSyntax(typeName)));
                     }
-                    functionExpression.AddStatement(new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(kInit), table));
+
+                    LuaInvocationExpressionSyntax initInvocation = new LuaInvocationExpressionSyntax(new LuaIdentifierNameSyntax(kInit), typeTable);
+                    FillManifestInitConf(initInvocation);
+                    functionExpression.AddStatement(initInvocation);
 
                     LuaCompilationUnitSyntax luaCompilationUnit = new LuaCompilationUnitSyntax();
                     luaCompilationUnit.Statements.Add(new LuaReturnStatementSyntax(functionExpression));
@@ -340,6 +352,25 @@ namespace CSharpLua {
                     string outFile = Path.Combine(outFolder, kManifestFile);
                     Write(luaCompilationUnit, outFile);
                 }
+            }
+        }
+
+        private void FillManifestInitConf(LuaInvocationExpressionSyntax invocation) {
+            LuaTableInitializerExpression confTable = new LuaTableInitializerExpression();
+            if(mainEntryPoint_ != null) {
+                LuaIdentifierNameSyntax methodName = new LuaIdentifierNameSyntax(mainEntryPoint_.Name);
+                var methodTypeName = XmlMetaProvider.GetTypeName(mainEntryPoint_.ContainingType, null);
+                var quote = new LuaIdentifierNameSyntax(LuaSyntaxNode.Tokens.Quote);
+
+                LuaCodeTemplateExpressionSyntax codeTemplate = new LuaCodeTemplateExpressionSyntax();
+                codeTemplate.Expressions.Add(quote);
+                codeTemplate.Expressions.Add(new LuaMemberAccessExpressionSyntax(methodTypeName, methodName));
+                codeTemplate.Expressions.Add(quote);
+
+                confTable.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(methodName), codeTemplate));
+            }
+            if(confTable.Items.Count > 0) {
+                invocation.AddArgument(confTable);
             }
         }
 

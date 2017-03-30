@@ -48,7 +48,7 @@ System.namespace("CSharpLua", function (namespace)
         IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, IsNullableType, 
         IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, 
         IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, 
-        IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition
+        IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, IsMainEntryPoint
         First = function (list, T) 
             return list:get(0)
         end
@@ -532,6 +532,24 @@ System.namespace("CSharpLua", function (namespace)
             end
             return symbol
         end
+        IsMainEntryPoint = function (symbol) 
+            if symbol:getIsStatic() and symbol:getTypeArguments():getIsEmpty() and symbol:getContainingType():getTypeArguments():getIsEmpty() and symbol:getName() == "Main" then
+                if symbol:getReturnsVoid() or symbol:getReturnType():getSpecialType() == 13 --[[SpecialType.System_Int32]] then
+                    if symbol:getParameters():getIsEmpty() then
+                        return true
+                    elseif symbol:getParameters():getLength() == 1 then
+                        local parameterType = symbol:getParameters():get(0):getType()
+                        if parameterType:getTypeKind() == 1 --[[TypeKind.Array]] then
+                            local arrayType = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, parameterType)
+                            if arrayType:getElementType():getSpecialType() == 20 --[[SpecialType.System_String]] then
+                                return true
+                            end
+                        end
+                    end
+                end
+            end
+            return false
+        end
         return {
             First = First, 
             Last = Last, 
@@ -574,7 +592,8 @@ System.namespace("CSharpLua", function (namespace)
             IsSubclassOf = IsSubclassOf, 
             IsAssignableFrom = IsAssignableFrom, 
             CheckMethodDefinition = CheckMethodDefinition, 
-            CheckOriginalDefinition = CheckOriginalDefinition
+            CheckOriginalDefinition = CheckOriginalDefinition, 
+            IsMainEntryPoint = IsMainEntryPoint
         }
     end)
 end)

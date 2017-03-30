@@ -23,6 +23,7 @@ local Double = System.Double
 local String = System.String
 local Boolean = System.Boolean
 local Delegate = System.Delegate
+local getClass = System.getClass
 local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
 local TypeLoadException = System.TypeLoadException
@@ -211,28 +212,7 @@ function Type.ToString(this)
     return this.c.__name__
 end
 
-local function getclass(className)
-    local scope = _G
-    local starInx = 1
-    while true do
-        local pos = className:find("%.", starInx) or 0
-        local name = className:sub(starInx, pos -1)
-        if pos ~= 0 then
-            local t = scope[name]
-            if t == nil then
-                return nil
-            end
-            scope = t
-        else
-            return scope[name]
-        end
-        starInx = pos + 1
-    end
-end
-
-System.getclass = getclass
-
-function Type.GetTypeStatic(typeName, throwOnError, ignoreCase)
+function Type.GetTypeFrom(typeName, throwOnError, ignoreCase)
     if typeName == nil then
         throw(ArgumentNullException("typeName"))
     end
@@ -242,8 +222,8 @@ function Type.GetTypeStatic(typeName, throwOnError, ignoreCase)
         end
         return nil
     end
-    assert(not ignoreCase, "NoSupport")
-    local cls = getclass(typeName)
+    assert(not ignoreCase, "ignoreCase is not support")
+    local cls = getClass(typeName)
     if cls ~= nil then
         return typeof(cls)
     end 

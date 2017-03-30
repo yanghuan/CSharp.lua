@@ -416,11 +416,18 @@ namespace CSharpLua {
 
                 var comments = BuildDocumentationComment(node);
                 bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
-                if(!node.Modifiers.IsStatic()) {
+                if(!symbol.IsStatic) {
                     function.AddParameter(LuaIdentifierNameSyntax.This);
                 }
+                else if(symbol.IsMainEntryPoint())  {
+                    isPrivate = false;
+                    bool success = generator_.SetMainEntryPoint(symbol);
+                    if(!success) {
+                        throw new CompilationErrorException($"{node.GetLocationString()} : has more than one entry point");
+                    }
+                }
 
-                if(!isPrivate) {
+                if(!symbol.IsPrivate()) {
                     var attributes = BuildAttributes(node.AttributeLists);
                     CurType.AddMethodAttributes(methodName, attributes);
                 }

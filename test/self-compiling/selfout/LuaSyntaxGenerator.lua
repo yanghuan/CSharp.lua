@@ -115,12 +115,12 @@ System.namespace("CSharpLua", function (namespace)
         end)
         local Encoding, Create, Write, Generate, GetOutFilePath, IsEnumExport, AddExportEnum, AddEnumDeclaration, 
         IsExportAttribute, CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, IsTypeEnable, AddBaseTypeTo, 
-        GetExportTypes, ExportManifestFile, AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberName, InternalGetMemberName, GetAllTypeSameName, 
-        GetSymbolBaseName, GetStaticClassMemberName, GetMethodNameFromIndex, TryAddNewUsedName, GetStaticClassSameNameMembers, GetSameNameMembers, AddSimilarNameMembers, GetSymbolNames, 
-        MemberSymbolBoolComparison, MemberSymbolComparison, MemberSymbolCommonComparison, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, 
-        UpdateName, GetRefactorCheckName, GetRefactorName, IsTypeNameUsed, IsNewNameEnable, IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, 
-        CheckImplicitInterface, AddImplicitInterfaceImplementation, IsImplicitInterfaceImplementation, IsPropertyField, IsEventFiled, AllInterfaceImplementations, AllInterfaceImplementationsCount, __staticCtor__, 
-        __init__, __ctor__
+        GetExportTypes, SetMainEntryPoint, ExportManifestFile, FillManifestInitConf, AddTypeSymbol, CheckExtends, TryAddExtend, GetMemberName, 
+        InternalGetMemberName, GetAllTypeSameName, GetSymbolBaseName, GetStaticClassMemberName, GetMethodNameFromIndex, TryAddNewUsedName, GetStaticClassSameNameMembers, GetSameNameMembers, 
+        AddSimilarNameMembers, GetSymbolNames, MemberSymbolBoolComparison, MemberSymbolComparison, MemberSymbolCommonComparison, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, 
+        RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorCheckName, GetRefactorName, IsTypeNameUsed, IsNewNameEnable, IsNewNameEnable1, 
+        IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, CheckImplicitInterface, AddImplicitInterfaceImplementation, IsImplicitInterfaceImplementation, IsPropertyField, IsEventFiled, AllInterfaceImplementations, 
+        AllInterfaceImplementationsCount, __staticCtor__, __init__, __ctor__
         __staticCtor__ = function (this) 
             Encoding = SystemText.UTF8Encoding(false)
         end
@@ -335,6 +335,13 @@ System.namespace("CSharpLua", function (namespace)
             end
             return allTypes
         end
+        SetMainEntryPoint = function (this, sybmol) 
+            if this.mainEntryPoint_ == nil then
+                this.mainEntryPoint_ = sybmol
+                return true
+            end
+            return false
+        end
         ExportManifestFile = function (this, modules, outFolder) 
             local kDir = "dir"
             local kDirInitCode = "dir = (dir and #dir > 0) and (dir .. '.') or \"\""
@@ -366,12 +373,15 @@ System.namespace("CSharpLua", function (namespace)
                     end
                     functionExpression:AddStatement(CSharpLuaLuaAst.LuaBlankLinesStatement.One)
 
-                    local table = CSharpLuaLuaAst.LuaTableInitializerExpression()
+                    local typeTable = CSharpLuaLuaAst.LuaTableInitializerExpression()
                     for _, type in System.each(types) do
                         local typeName = this.XmlMetaProvider:GetTypeShortName(type)
-                        table.Items:Add(CSharpLuaLuaAst.LuaSingleTableItemSyntax(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(typeName)))
+                        typeTable.Items:Add(CSharpLuaLuaAst.LuaSingleTableItemSyntax(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(typeName)))
                     end
-                    functionExpression:AddStatement1(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kInit), table))
+
+                    local initInvocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kInit), typeTable)
+                    FillManifestInitConf(this, initInvocation)
+                    functionExpression:AddStatement1(initInvocation)
 
                     local luaCompilationUnit = CSharpLuaLuaAst.LuaCompilationUnitSyntax()
                     luaCompilationUnit.Statements:Add(CSharpLuaLuaAst.LuaReturnStatementSyntax(functionExpression))
@@ -379,6 +389,24 @@ System.namespace("CSharpLua", function (namespace)
                     local outFile = SystemIO.Path.Combine(outFolder, kManifestFile)
                     Write(this, luaCompilationUnit, outFile)
                 end
+            end
+        end
+        FillManifestInitConf = function (this, invocation) 
+            local confTable = CSharpLuaLuaAst.LuaTableInitializerExpression()
+            if this.mainEntryPoint_ ~= nil then
+                local methodName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, this.mainEntryPoint_:getName())
+                local methodTypeName = this.XmlMetaProvider:GetTypeName(this.mainEntryPoint_:getContainingType())
+                local quote = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "\"" --[[Tokens.Quote]])
+
+                local codeTemplate = CSharpLuaLuaAst.LuaCodeTemplateExpressionSyntax()
+                codeTemplate.Expressions:Add(quote)
+                codeTemplate.Expressions:Add(CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(methodTypeName, methodName, false))
+                codeTemplate.Expressions:Add(quote)
+
+                confTable.Items:Add(CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(CSharpLuaLuaAst.LuaTableLiteralKeySyntax(methodName), codeTemplate))
+            end
+            if #confTable.Items > 0 then
+                invocation:AddArgument(confTable)
             end
         end
         AddTypeSymbol = function (this, typeSymbol) 
@@ -948,6 +976,7 @@ System.namespace("CSharpLua", function (namespace)
             AddPartialTypeDeclaration = AddPartialTypeDeclaration, 
             GetSemanticModel = GetSemanticModel, 
             IsBaseType = IsBaseType, 
+            SetMainEntryPoint = SetMainEntryPoint, 
             AddTypeSymbol = AddTypeSymbol, 
             GetMemberName = GetMemberName, 
             IsPropertyField = IsPropertyField, 
