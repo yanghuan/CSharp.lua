@@ -48,10 +48,9 @@ namespace CSharpLua {
                 }
             }
             else {
+                Contract.Assert(!node.ArgumentList.Arguments.Any());
                 var expression = (LuaExpressionSyntax)node.Type.Accept(this);
-                var invokeExpression = new LuaInvocationExpressionSyntax(expression);
-                var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
-                invokeExpression.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+                var invokeExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemNew, expression);
                 creationExpression = invokeExpression;
             }
 
