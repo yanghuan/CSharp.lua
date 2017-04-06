@@ -149,13 +149,17 @@ local function getInterfaces(this)
     local interfaces = this.interfaces
     if interfaces == nil then
         interfaces = {}
-        local interfacesCls = this.c.__interfaces__
-        if interfacesCls ~= nil then
-            for _, i in ipairs(interfacesCls) do
-                tinsert(interfaces, typeof(i))
+        local p = this.c
+        repeat
+            local interfacesCls = p.__interfaces__
+            if interfacesCls ~= nil then
+                for _, i in ipairs(interfacesCls) do
+                    tinsert(interfaces, typeof(i))
+                end
             end
-        end
-        this.interfaces = System.arrayFromTable(interfaces, Type)
+            p = p.__base__
+        until p == nil
+        this.interfaces = interfaces
     end
     return interfaces
 end
@@ -236,14 +240,17 @@ end
 System.define("System.Type", Type)
 
 function isInterfaceOf(t, ifaceType)
-    local interfaces = t.__interfaces__
-    if interfaces then
-       for _, i in ipairs(interfaces) do
-           if i == ifaceType or isInterfaceOf(i, ifaceType) then
-               return true
-           end
-       end 
-    end
+    repeat
+        local interfaces = t.__interfaces__
+        if interfaces then
+            for _, i in ipairs(interfaces) do
+                if i == ifaceType or isInterfaceOf(i, ifaceType) then
+                    return true
+                end
+            end 
+        end
+        t = t.__base__
+    until t == nil
     return false
 end
 
@@ -254,19 +261,21 @@ function isTypeOf(obj, cls)
     elseif typename == "string" then
         return cls == String
     elseif typename == "table" then   
-        if getmetatable(obj) == cls then
+        local t = getmetatable(obj)
+        if t == cls then
             return true
         end
         if cls.__kind__ == "I" then
-            return isInterfaceOf(obj, cls)
+            return isInterfaceOf(t, cls)
         else
-            local base = obj.__base__
+            local base = t.__base__
             while base ~= nil do
                 if base == cls then
                     return true
                 end
                 base = base.__base__
             end
+            return false
         end
     elseif typename == "boolean" then
         return cls == Boolean
