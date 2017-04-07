@@ -18,6 +18,8 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local Int = System.Int
+local Double = System.Double
+local band = System.band
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentException = System.ArgumentException
 
@@ -40,7 +42,14 @@ local function toString(this, cls)
 end
 
 Enum.ToString = toString
-System.Double.ToEnumString = toString
+Double.ToEnumString = toString
+
+local function hasFlag(this, flag)
+    return band(this, flag) ~= 0
+end
+
+Enum.HasFlag = hasFlag
+Double.HasFlag = hasFlag
 
 local function tryParseEnum(enumType, value, ignoreCase)
     if enumType == nil then 
