@@ -345,6 +345,7 @@ namespace CSharpLua.LuaAst {
         private void CheckAttributes() {
             if(attributes_.Items.Count > 0) {
                 LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+                functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
                 functionExpression.AddStatement(new LuaReturnStatementSyntax(attributes_));
                 AddResultTable(LuaIdentifierNameSyntax.Attributes, functionExpression);
             }

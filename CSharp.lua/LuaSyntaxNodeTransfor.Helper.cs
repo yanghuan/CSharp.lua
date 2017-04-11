@@ -626,8 +626,13 @@ namespace CSharpLua {
                 return null;
             }
 
+            INamedTypeSymbol typeDeclarationSymbol = GetTypeDeclarationSymbol(node);
+            generator_.AddTypeDeclarationAttribute(typeDeclarationSymbol, typeSymbol);
+
+            ++baseNameNodeCounter_;
             var expression = GetTypeName(typeSymbol);
-            LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, expression);
+            --baseNameNodeCounter_;
+            LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.Global, expression));
 
             if(node.ArgumentList != null) {
                 List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();

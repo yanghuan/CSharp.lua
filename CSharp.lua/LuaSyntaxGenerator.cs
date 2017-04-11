@@ -243,21 +243,21 @@ namespace CSharpLua {
             return true;
         }
 
-        private void AddBaseTypeTo(HashSet<INamedTypeSymbol> parentTypes, INamedTypeSymbol rootType, INamedTypeSymbol baseType) {
-            if(baseType.IsFromCode()) {
-                if(baseType.IsGenericType) {
-                    parentTypes.Add(baseType.OriginalDefinition);
-                    foreach(var typeArgument in baseType.TypeArguments) {
+        private void AddSuperTypeTo(HashSet<INamedTypeSymbol> parentTypes, INamedTypeSymbol rootType, INamedTypeSymbol superType) {
+            if(superType.IsFromCode()) {
+                if(superType.IsGenericType) {
+                    parentTypes.Add(superType.OriginalDefinition);
+                    foreach(var typeArgument in superType.TypeArguments) {
                         if(typeArgument.Kind != SymbolKind.TypeParameter) {
                             if(!rootType.IsAssignableFrom(typeArgument)) {
                                 INamedTypeSymbol typeArgumentType = (INamedTypeSymbol)typeArgument;
-                                AddBaseTypeTo(parentTypes, rootType, typeArgumentType);
+                                AddSuperTypeTo(parentTypes, rootType, typeArgumentType);
                             }
                         }
                     }
                 }
                 else {
-                    parentTypes.Add(baseType);
+                    parentTypes.Add(superType);
                 }
             }
         }
@@ -275,11 +275,18 @@ namespace CSharpLua {
                     var lastTypes = typesList.Last();
                     foreach(var type in lastTypes) {
                         if(type.BaseType != null) {
-                            AddBaseTypeTo(parentTypes, type, type.BaseType);
+                            AddSuperTypeTo(parentTypes, type, type.BaseType);
                         }
 
                         foreach(var interfaceType in type.Interfaces) {
-                            AddBaseTypeTo(parentTypes, type, interfaceType);
+                            AddSuperTypeTo(parentTypes, type, interfaceType);
+                        }
+
+                        var attributes = typeDeclarationAttributes_.GetOrDefault(type);
+                        if(attributes != null) {
+                            foreach(var attribute in attributes) {
+                                AddSuperTypeTo(parentTypes, type, attribute);
+                            }
                         }
                     }
 
@@ -381,6 +388,7 @@ namespace CSharpLua {
         private HashSet<ISymbol> refactorNames_ = new HashSet<ISymbol>();
         private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
         private List<INamedTypeSymbol> types_ = new List<INamedTypeSymbol>();
+        private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> typeDeclarationAttributes_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
 
         internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
             types_.Add(typeSymbol);
@@ -405,13 +413,12 @@ namespace CSharpLua {
                 if(super.IsGenericType) {
                     super = super.OriginalDefinition;
                 }
-                var set = extends_.GetOrDefault(super);
-                if(set == null) {
-                    set = new HashSet<INamedTypeSymbol>();
-                    extends_.Add(super, set);
-                }
-                set.Add(children);
+                extends_.TryAdd(super, children);
             }
+        }
+
+        internal void AddTypeDeclarationAttribute(INamedTypeSymbol typeDeclarationSymbol, INamedTypeSymbol attributeSymbol) {
+            typeDeclarationAttributes_.TryAdd(typeDeclarationSymbol, attributeSymbol);
         }
 
         internal LuaIdentifierNameSyntax GetMemberName(ISymbol symbol) {
@@ -565,12 +572,7 @@ namespace CSharpLua {
         }
 
         private bool TryAddNewUsedName(INamedTypeSymbol type, string newName) {
-            var set = typeNameUseds_.GetOrDefault(type);
-            if(set == null) {
-                set = new HashSet<string>();
-                typeNameUseds_.Add(type, set);
-            }
-            return set.Add(newName);
+            return typeNameUseds_.TryAdd(type, newName);
         }
 
         private List<ISymbol> GetStaticClassSameNameMembers(ISymbol symbol) {
@@ -902,7 +904,7 @@ namespace CSharpLua {
         }
 
         #endregion
-        private Dictionary<ISymbol, List<ISymbol>> implicitInterfaceImplementations_ = new Dictionary<ISymbol, List<ISymbol>>();
+        private Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new Dictionary<ISymbol, HashSet<ISymbol>>();
         private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
 
         private sealed class InterfaceImplicitChecker : CSharpSyntaxWalker {
@@ -947,12 +949,7 @@ namespace CSharpLua {
         }
 
         private void AddImplicitInterfaceImplementation(ISymbol implementationMember, ISymbol interfaceMember) {
-            var interfaceMembers = implicitInterfaceImplementations_.GetOrDefault(implementationMember);
-            if(interfaceMembers == null) {
-                interfaceMembers = new List<ISymbol>();
-                implicitInterfaceImplementations_.Add(implementationMember, interfaceMembers);
-            }
-            interfaceMembers.Add(interfaceMember);
+            implicitInterfaceImplementations_.TryAdd(implementationMember, interfaceMember);
         }
 
         private bool IsImplicitInterfaceImplementation(ISymbol symbol) {

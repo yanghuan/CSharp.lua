@@ -30,7 +30,7 @@ local tconcat = table.concat
 local StringBuilder = {}
 
 local function build(this, value, startIndex, length)
-    value = System.String.substring(value, startIndex, length)
+    value = value:Substring(startIndex, length)
     local len = #value
     if len > 0 then
         tinser(this, value)

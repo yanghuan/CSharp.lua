@@ -294,6 +294,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         CheckAttributes = function (this) 
             if #this.attributes_.Items > 0 then
                 local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
+                functionExpression:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Global)
                 functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(this.attributes_))
                 AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Attributes, functionExpression)
             end

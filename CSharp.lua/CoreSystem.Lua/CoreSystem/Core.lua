@@ -161,7 +161,7 @@ local function setBase(cls)
     cls.__index = cls 
     cls.__call = new
     local extends = cls.__inherits__
-    if extends then
+    if extends ~= nil then
         if type(extends) == "function" then
             extends = extends(global)
         end           
@@ -180,7 +180,11 @@ local function setBase(cls)
         cls.__inherits__ = nil
     elseif cls ~= Object then
         setmetatable(cls, Object)
-    end   
+    end  
+    local attributes = cls.__attributes__
+    if attributes ~= nil then
+        cls.__attributes__ = attributes(global)
+    end
 end
 
 local function staticCtorSetBase(cls)
@@ -248,8 +252,16 @@ local function def(name, kind, cls, generic)
             cls.__interfaces__ = extends
             cls.__inherits__ = nil
         end
+        local attributes = cls.__attributes__
+        if attributes ~= nil then
+            cls.__attributes__ = attributes(global)
+        end
         setmetatable(cls, interfaceMetatable)
     elseif kind == "E" then
+        local attributes = cls.__attributes__
+        if attributes ~= nil then
+            cls.__attributes__ = attributes(global)
+        end
         setmetatable(cls, enumMetatable)
     else
         assert(false, kind)
@@ -315,8 +327,21 @@ if version < 5.3 then
         end
         return x % y;
     end
-    if version == 5.1 then
+
+    if table.unpack == nil then
         table.unpack = unpack
+    end
+
+    if table.move == nil then
+        table.move = function(a1, f, e, t, a2)
+            if a2 == nil then a2 = a1 end
+            t = e - f + t
+            while e >= f do
+                a2[t] = a1[e]
+                t = t - 1
+                e = e - 1
+            end
+        end
     end
 else  
     load[[
@@ -377,7 +402,7 @@ function System.property(name)
     end
     local function set(this, v)
         this[name] = v
-    end;
+    end
     return get, set
 end
 

@@ -3080,8 +3080,13 @@ System.namespace("CSharpLua", function (namespace)
                 return nil
             end
 
+            local typeDeclarationSymbol = GetTypeDeclarationSymbol(this, node)
+            this.generator_:AddTypeDeclarationAttribute(typeDeclarationSymbol, typeSymbol)
+
+            this.baseNameNodeCounter_ = this.baseNameNodeCounter_ + 1
             local expression = GetTypeName(this, typeSymbol)
-            local invocation = BuildObjectCreationInvocation(this, symbol, expression)
+            this.baseNameNodeCounter_ = this.baseNameNodeCounter_ - 1
+            local invocation = BuildObjectCreationInvocation(this, symbol, CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Global, expression, false))
 
             if node:getArgumentList() ~= nil then
                 local arguments = System.List(CSharpLuaLuaAst.LuaExpressionSyntax)()
@@ -3355,10 +3360,9 @@ System.namespace("CSharpLua", function (namespace)
                     creationExpression = invokeExpression
                 end
             else
+                assert(not node:getArgumentList():getArguments():Any())
                 local expression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, node:getType():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-                local invokeExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, expression)
-                local argumentList = System.cast(CSharpLuaLuaAst.LuaArgumentListSyntax, node:getArgumentList():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-                invokeExpression.ArgumentList.Arguments:AddRange(argumentList.Arguments)
+                local invokeExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.SystemNew, expression)
                 creationExpression = invokeExpression
             end
 

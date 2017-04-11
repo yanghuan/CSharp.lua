@@ -28,6 +28,7 @@ local Comparer_1 = System.Comparer_1
 local tinsert = table.insert
 local tremove = table.remove
 local tsort = table.sort
+local tmove = table.move
 local unpack = table.unpack
 local setmetatable = setmetatable
 local select = select
@@ -37,6 +38,7 @@ local coroutine = coroutine
 local ccreate = coroutine.create
 local cstatus = coroutine.status
 local cresume = coroutine.resume
+local ipairs = ipairs
 
 local Collection = {}
 local null = {}
@@ -179,9 +181,7 @@ local function copyArray(sourceArray, sourceIndex, destinationArray, destination
         checkIndexAndCount(sourceArray, sourceIndex, length)
         checkIndexAndCount(destinationArray, destinationIndex, length)
     end
-    for i = 1, length do
-        destinationArray[destinationIndex + i] = sourceArray[sourceIndex + i]
-    end
+    tmove(sourceArray, sourceIndex + 1, sourceIndex + length, destinationIndex + 1, destinationArray)
 end 
 
 function Collection.copyArray(t, ...)
@@ -631,6 +631,14 @@ function Collection.toArray(t)
      return System.arrayFromTable(array, t.__genericT__)
 end
 
+local function toLuaTable(array)
+    local t = {}
+    for i, v in ipairs(array) do
+        t[i] = unWrap(v)
+    end   
+    return t
+end
+
 local DictionaryEnumerator = {}
 DictionaryEnumerator.__index = DictionaryEnumerator
 
@@ -768,3 +776,4 @@ System.isEnumerableLike = Collection.isEnumerableLike
 System.yieldIEnumerable = Collection.yieldIEnumerable
 System.yieldIEnumerator = Collection.yieldIEnumerator
 System.yieldReturn = Collection.yieldReturn 
+System.toLuaTable = toLuaTable

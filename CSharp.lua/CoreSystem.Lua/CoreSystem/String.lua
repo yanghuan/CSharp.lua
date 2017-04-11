@@ -157,33 +157,22 @@ end
 
 function String.Join(separator, value, startIndex, count)
     local t = {}
-    local has
     if startIndex then  
         check(value, startIndex, count)
         for i = startIndex + 1, startIndex + count do
             local v = value:get(i)
             if v ~= nil then
-                if has then
-                    tinsert(t, separator)
-                else 
-                    has = true
-                end
                 tinsert(t, v)
             end
         end
     else
         for _, v in System.each(value) do
             if v ~= nil then
-                if has then
-                    tinsert(t, separator)
-                else 
-                    has = true
-                end
                 tinsert(t, v)
             end      
         end
     end
-    return tconcat(t)
+    return tconcat(t, separator)
 end
 
 local function checkIndexOf(str, value, startIndex, count, comparisonType)

@@ -5,3 +5,7 @@ require("out.manifest")("out")
 
 Test.Program.Main()    -- run main method
 
+--local methodInfo = System.Reflection.Assembly.GetEntryAssembly().getEntryPoint()
+--methodInfo:Invoke()
+
+

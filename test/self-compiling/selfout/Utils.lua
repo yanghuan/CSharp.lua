@@ -43,12 +43,13 @@ System.namespace("CSharpLua", function (namespace)
         }
     end)
     namespace.class("Utility", function (namespace) 
-        local First, Last, GetOrDefault, GetOrDefault1, AddAt, IndexOf, TrimEnd, GetCommondLines, 
-        GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, IsReadOnly, 
-        IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, IsNullableType, 
-        IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, 
-        IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, 
-        IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, IsMainEntryPoint
+        local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, TrimEnd, 
+        GetCommondLines, GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
+        IsReadOnly, IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, 
+        IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
+        IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
+        IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
+        IsMainEntryPoint
         First = function (list, T) 
             return list:get(0)
         end
@@ -72,6 +73,14 @@ System.namespace("CSharpLua", function (namespace)
                 return v
             end
             return t
+        end
+        TryAdd = function (dict, key, value, K, V) 
+            local set = GetOrDefault1(dict, key, nil, K, System.HashSet(V))
+            if set == nil then
+                set = System.HashSet(V)()
+                dict:Add(key, set)
+            end
+            return set:Add(value)
         end
         AddAt = function (list, index, v, T) 
             if index < list:getCount() then
@@ -555,6 +564,7 @@ System.namespace("CSharpLua", function (namespace)
             Last = Last, 
             GetOrDefault = GetOrDefault, 
             GetOrDefault1 = GetOrDefault1, 
+            TryAdd = TryAdd, 
             AddAt = AddAt, 
             IndexOf = IndexOf, 
             TrimEnd = TrimEnd, 

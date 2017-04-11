@@ -60,6 +60,15 @@ namespace CSharpLua {
             return t;
         }
 
+        public static bool TryAdd<K, V>(this Dictionary<K, HashSet<V>> dict, K key, V value) {
+            var set = dict.GetOrDefault(key);
+            if(set == null) {
+                set = new HashSet<V>();
+                dict.Add(key, set);
+            }
+            return set.Add(value);
+        }
+
         public static void AddAt<T>(this IList<T> list, int index, T v) {
             if(index < list.Count) {
                 list[index] = v;
