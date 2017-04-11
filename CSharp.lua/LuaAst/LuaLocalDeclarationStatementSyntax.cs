@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,109 +22,109 @@ using System.Linq;
 using System.Text;
 
 namespace CSharpLua.LuaAst {
-    public sealed class LuaLocalVariablesStatementSyntax : LuaVariableDeclarationSyntax {
-        public string LocalKeyword => Tokens.Local;
-        public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
-        public LuaEqualsValueClauseListSyntax Initializer { get; set; }
+  public sealed class LuaLocalVariablesStatementSyntax : LuaVariableDeclarationSyntax {
+    public string LocalKeyword => Tokens.Local;
+    public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
+    public LuaEqualsValueClauseListSyntax Initializer { get; set; }
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaEqualsValueClauseListSyntax : LuaSyntaxNode {
+    public string EqualsToken => Tokens.Equals;
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Values = new LuaSyntaxList<LuaExpressionSyntax>();
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaLocalDeclarationStatementSyntax : LuaStatementSyntax {
+    public LuaVariableDeclarationSyntax Declaration { get; }
+
+    public LuaLocalDeclarationStatementSyntax(LuaVariableDeclarationSyntax declaration) {
+      Declaration = declaration;
     }
 
-    public sealed class LuaEqualsValueClauseListSyntax : LuaSyntaxNode {
-        public string EqualsToken => Tokens.Equals;
-        public readonly LuaSyntaxList<LuaExpressionSyntax> Values = new LuaSyntaxList<LuaExpressionSyntax>();
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+  public abstract class LuaVariableDeclarationSyntax : LuaStatementSyntax {
+  }
+
+  public sealed class LuaVariableListDeclarationSyntax : LuaVariableDeclarationSyntax {
+    public readonly LuaSyntaxList<LuaVariableDeclaratorSyntax> Variables = new LuaSyntaxList<LuaVariableDeclaratorSyntax>();
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaLocalVariableDeclaratorSyntax : LuaStatementSyntax {
+    public LuaVariableDeclaratorSyntax Declarator { get; }
+
+    public LuaLocalVariableDeclaratorSyntax(LuaVariableDeclaratorSyntax declarator) {
+      if (declarator == null) {
+        throw new ArgumentNullException(nameof(declarator));
+      }
+      Declarator = declarator;
     }
 
-    public sealed class LuaLocalDeclarationStatementSyntax : LuaStatementSyntax {
-        public LuaVariableDeclarationSyntax Declaration { get; }
-
-        public LuaLocalDeclarationStatementSyntax(LuaVariableDeclarationSyntax declaration) {
-            Declaration = declaration;
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    public LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
+      Declarator = new LuaVariableDeclaratorSyntax(identifier, expression);
     }
 
-    public abstract class LuaVariableDeclarationSyntax : LuaStatementSyntax {
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaVariableDeclaratorSyntax : LuaStatementSyntax {
+    public string LocalKeyword => Tokens.Local;
+    public LuaIdentifierNameSyntax Identifier { get; }
+    public LuaEqualsValueClauseSyntax Initializer { get; set; }
+
+    public LuaVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
+      if (identifier == null) {
+        throw new ArgumentNullException(nameof(identifier));
+      }
+      Identifier = identifier;
+      if (expression != null) {
+        Initializer = new LuaEqualsValueClauseSyntax(expression);
+      }
     }
 
-    public sealed class LuaVariableListDeclarationSyntax : LuaVariableDeclarationSyntax {
-        public readonly LuaSyntaxList<LuaVariableDeclaratorSyntax> Variables = new LuaSyntaxList<LuaVariableDeclaratorSyntax>();
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+  public sealed class LuaEqualsValueClauseSyntax : LuaSyntaxNode {
+    public string EqualsToken => Tokens.Equals;
+    public LuaExpressionSyntax Value { get; }
+
+    public LuaEqualsValueClauseSyntax(LuaExpressionSyntax value) {
+      if (value == null) {
+        throw new ArgumentNullException(nameof(value));
+      }
+      Value = value;
     }
 
-    public sealed class LuaLocalVariableDeclaratorSyntax : LuaStatementSyntax {
-        public LuaVariableDeclaratorSyntax Declarator { get; }
-
-        public LuaLocalVariableDeclaratorSyntax(LuaVariableDeclaratorSyntax declarator) {
-            if(declarator == null) {
-                throw new ArgumentNullException(nameof(declarator));
-            }
-            Declarator = declarator;
-        }
-
-        public LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
-            Declarator = new LuaVariableDeclaratorSyntax(identifier, expression);
-        }
-        
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
+  }
 
-    public sealed class LuaVariableDeclaratorSyntax : LuaStatementSyntax {
-        public string LocalKeyword => Tokens.Local;
-        public LuaIdentifierNameSyntax Identifier { get; }
-        public LuaEqualsValueClauseSyntax Initializer { get; set; }
+  public sealed class LuaTypeLocalAreaSyntax : LuaStatementSyntax {
+    public string LocalKeyword => Tokens.Local;
+    public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
 
-        public LuaVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
-            if(identifier == null) {
-                throw new ArgumentNullException(nameof(identifier));
-            }
-            Identifier = identifier;
-            if(expression != null) {
-                Initializer = new LuaEqualsValueClauseSyntax(expression);
-            }
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
-
-    public sealed class LuaEqualsValueClauseSyntax : LuaSyntaxNode {
-        public string EqualsToken => Tokens.Equals;
-        public LuaExpressionSyntax Value { get; }
-
-        public LuaEqualsValueClauseSyntax(LuaExpressionSyntax value) {
-            if(value == null) {
-                throw new ArgumentNullException(nameof(value));
-            }
-            Value = value;
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-    }
-
-    public sealed class LuaTypeLocalAreaSyntax : LuaStatementSyntax {
-        public string LocalKeyword => Tokens.Local;
-        public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-    }
+  }
 }

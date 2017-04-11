@@ -2,119 +2,119 @@
 local System = System
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
-    CSharpLuaLuaAst = CSharpLua.LuaAst
+  CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
-    namespace.class("LuaForInStatementSyntax", function (namespace) 
-        local getForKeyword, getInKeyword, getPlaceholder, Render, __init__, __ctor__
-        __init__ = function (this) 
-            this.Body = System.create(CSharpLuaLuaAst.LuaBlockSyntax(), function (default) 
-                default.OpenBraceToken = "do" --[[Keyword.Do]]
-                default.CloseBraceToken = "end" --[[Keyword.End]]
-            end)
-        end
-        __ctor__ = function (this, identifier, expression) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
-            if identifier == nil then
-                System.throw(System.ArgumentNullException("identifier"))
-            end
-            if expression == nil then
-                System.throw(System.ArgumentNullException("expression"))
-            end
-            this.Identifier = identifier
-            this.Expression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Each, expression)
-        end
-        getForKeyword = function (this) 
-            return "for" --[[Keyword.For]]
-        end
-        getInKeyword = function (this) 
-            return "in" --[[Keyword.In]]
-        end
-        getPlaceholder = function (this) 
-            return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Placeholder
-        end
-        Render = function (this, renderer) 
-            renderer:Render43(this)
-        end
+  namespace.class("LuaForInStatementSyntax", function (namespace) 
+    local getForKeyword, getInKeyword, getPlaceholder, Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Body = System.create(CSharpLuaLuaAst.LuaBlockSyntax(), function (default) 
+        default.OpenBraceToken = "do" --[[Keyword.Do]]
+        default.CloseBraceToken = "end" --[[Keyword.End]]
+      end)
+    end
+    __ctor__ = function (this, identifier, expression) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      if identifier == nil then
+        System.throw(System.ArgumentNullException("identifier"))
+      end
+      if expression == nil then
+        System.throw(System.ArgumentNullException("expression"))
+      end
+      this.Identifier = identifier
+      this.Expression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Each, expression)
+    end
+    getForKeyword = function (this) 
+      return "for" --[[Keyword.For]]
+    end
+    getInKeyword = function (this) 
+      return "in" --[[Keyword.In]]
+    end
+    getPlaceholder = function (this) 
+      return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Placeholder
+    end
+    Render = function (this, renderer) 
+      renderer:Render43(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaStatementSyntax
-                }
-            end, 
-            getForKeyword = getForKeyword, 
-            getInKeyword = getInKeyword, 
-            getPlaceholder = getPlaceholder, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaStatementSyntax
         }
-    end)
-    namespace.class("LuaWhileStatementSyntax", function (namespace) 
-        local getWhileKeyword, Render, __init__, __ctor__
-        __init__ = function (this) 
-            this.Body = System.create(CSharpLuaLuaAst.LuaBlockSyntax(), function (default) 
-                default.OpenBraceToken = "do" --[[Keyword.Do]]
-                default.CloseBraceToken = "end" --[[Keyword.End]]
-            end)
-        end
-        __ctor__ = function (this, condition) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
-            if condition == nil then
-                System.throw(System.ArgumentNullException("condition"))
-            end
-            this.Condition = condition
-        end
-        getWhileKeyword = function (this) 
-            return "while" --[[Keyword.While]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render44(this)
-        end
+      end, 
+      getForKeyword = getForKeyword, 
+      getInKeyword = getInKeyword, 
+      getPlaceholder = getPlaceholder, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaWhileStatementSyntax", function (namespace) 
+    local getWhileKeyword, Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Body = System.create(CSharpLuaLuaAst.LuaBlockSyntax(), function (default) 
+        default.OpenBraceToken = "do" --[[Keyword.Do]]
+        default.CloseBraceToken = "end" --[[Keyword.End]]
+      end)
+    end
+    __ctor__ = function (this, condition) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      if condition == nil then
+        System.throw(System.ArgumentNullException("condition"))
+      end
+      this.Condition = condition
+    end
+    getWhileKeyword = function (this) 
+      return "while" --[[Keyword.While]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render44(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaStatementSyntax
-                }
-            end, 
-            getWhileKeyword = getWhileKeyword, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaStatementSyntax
         }
-    end)
-    namespace.class("LuaRepeatStatementSyntax", function (namespace) 
-        local getRepeatKeyword, getUntilKeyword, Render, __init__, __ctor__
-        __init__ = function (this) 
-            this.Body = CSharpLuaLuaAst.LuaBlockSyntax()
-        end
-        __ctor__ = function (this, condition) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
-            if condition == nil then
-                System.throw(System.ArgumentNullException("condition"))
-            end
-            this.Condition = condition
-        end
-        getRepeatKeyword = function (this) 
-            return "repeat" --[[Keyword.Repeat]]
-        end
-        getUntilKeyword = function (this) 
-            return "until" --[[Keyword.Until]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render45(this)
-        end
+      end, 
+      getWhileKeyword = getWhileKeyword, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaRepeatStatementSyntax", function (namespace) 
+    local getRepeatKeyword, getUntilKeyword, Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Body = CSharpLuaLuaAst.LuaBlockSyntax()
+    end
+    __ctor__ = function (this, condition) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      if condition == nil then
+        System.throw(System.ArgumentNullException("condition"))
+      end
+      this.Condition = condition
+    end
+    getRepeatKeyword = function (this) 
+      return "repeat" --[[Keyword.Repeat]]
+    end
+    getUntilKeyword = function (this) 
+      return "until" --[[Keyword.Until]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render45(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaStatementSyntax
-                }
-            end, 
-            getRepeatKeyword = getRepeatKeyword, 
-            getUntilKeyword = getUntilKeyword, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaStatementSyntax
         }
-    end)
+      end, 
+      getRepeatKeyword = getRepeatKeyword, 
+      getUntilKeyword = getUntilKeyword, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
 end)

@@ -3,180 +3,180 @@ local System = System
 local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
-    CSharpLuaLuaAst = CSharpLua.LuaAst
+  CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
-    namespace.class("LuaLiteralExpressionSyntax", function (namespace) 
-        local __ctor__
-        __ctor__ = function (this) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-        end
+  namespace.class("LuaLiteralExpressionSyntax", function (namespace) 
+    local __ctor__
+    __ctor__ = function (this) 
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaIdentifierLiteralExpressionSyntax", function (namespace) 
-        local getText, Render, Nil, Zero, ZeroFloat, __staticCtor__, __ctor1__, __ctor2__
-        __staticCtor__ = function (this) 
-            Nil = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Nil)
-            Zero = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0")
-            ZeroFloat = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0.0")
-            this.Nil, this.Zero, this.ZeroFloat = Nil, Zero, ZeroFloat
-        end
-        __ctor1__ = function (this, text) 
-            __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, text))
-        end
-        __ctor2__ = function (this, identifier) 
-            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
-            this.Identifier = identifier
-        end
-        getText = function (this) 
-            return this.Identifier.ValueText
-        end
-        Render = function (this, renderer) 
-            renderer:Render14(this)
-        end
+      end, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaIdentifierLiteralExpressionSyntax", function (namespace) 
+    local getText, Render, Nil, Zero, ZeroFloat, __staticCtor__, __ctor1__, __ctor2__
+    __staticCtor__ = function (this) 
+      Nil = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Nil)
+      Zero = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0")
+      ZeroFloat = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0.0")
+      this.Nil, this.Zero, this.ZeroFloat = Nil, Zero, ZeroFloat
+    end
+    __ctor1__ = function (this, text) 
+      __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, text))
+    end
+    __ctor2__ = function (this, identifier) 
+      CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
+      this.Identifier = identifier
+    end
+    getText = function (this) 
+      return this.Identifier.ValueText
+    end
+    Render = function (this, renderer) 
+      renderer:Render14(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
-                }
-            end, 
-            getText = getText, 
-            Render = Render, 
-            __staticCtor__ = __staticCtor__, 
-            __ctor__ = {
-                __ctor1__, 
-                __ctor2__
-            }
+          global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
         }
-    end)
-    namespace.class("LuaStringLiteralExpressionSyntax", function (namespace) 
-        local getOpenParenToken, getCloseParenToken, getText, Render, Empty, __staticCtor__, __ctor__
-        __staticCtor__ = function (this) 
-            Empty = CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Empty)
-            this.Empty = Empty
-        end
-        __ctor__ = function (this, identifier) 
-            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
-            this.Identifier = identifier
-        end
-        getOpenParenToken = function (this) 
-            return "\"" --[[Tokens.Quote]]
-        end
-        getCloseParenToken = function (this) 
-            return "\"" --[[Tokens.Quote]]
-        end
-        getText = function (this) 
-            return this.Identifier.ValueText
-        end
-        Render = function (this, renderer) 
-            renderer:Render15(this)
-        end
+      end, 
+      getText = getText, 
+      Render = Render, 
+      __staticCtor__ = __staticCtor__, 
+      __ctor__ = {
+        __ctor1__, 
+        __ctor2__
+      }
+    }
+  end)
+  namespace.class("LuaStringLiteralExpressionSyntax", function (namespace) 
+    local getOpenParenToken, getCloseParenToken, getText, Render, Empty, __staticCtor__, __ctor__
+    __staticCtor__ = function (this) 
+      Empty = CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Empty)
+      this.Empty = Empty
+    end
+    __ctor__ = function (this, identifier) 
+      CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
+      this.Identifier = identifier
+    end
+    getOpenParenToken = function (this) 
+      return "\"" --[[Tokens.Quote]]
+    end
+    getCloseParenToken = function (this) 
+      return "\"" --[[Tokens.Quote]]
+    end
+    getText = function (this) 
+      return this.Identifier.ValueText
+    end
+    Render = function (this, renderer) 
+      renderer:Render15(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
-                }
-            end, 
-            getOpenParenToken = getOpenParenToken, 
-            getCloseParenToken = getCloseParenToken, 
-            getText = getText, 
-            Render = Render, 
-            __staticCtor__ = __staticCtor__, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
         }
-    end)
-    namespace.class("LuaVerbatimStringLiteralExpressionSyntax", function (namespace) 
-        local getText, setText, getOpenBracket, getCloseBracket, Render, __ctor__
-        __ctor__ = function (this, text, equalsCount) 
-            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
-            setText(this, text)
-            this.EqualsCount = equalsCount
-        end
-        getText, setText = System.property("Text")
-        getOpenBracket = function (this) 
-            return "[" --[[Tokens.OpenBracket]]
-        end
-        getCloseBracket = function (this) 
-            return "]" --[[Tokens.CloseBracket]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render16(this)
-        end
+      end, 
+      getOpenParenToken = getOpenParenToken, 
+      getCloseParenToken = getCloseParenToken, 
+      getText = getText, 
+      Render = Render, 
+      __staticCtor__ = __staticCtor__, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaVerbatimStringLiteralExpressionSyntax", function (namespace) 
+    local getText, setText, getOpenBracket, getCloseBracket, Render, __ctor__
+    __ctor__ = function (this, text, equalsCount) 
+      CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
+      setText(this, text)
+      this.EqualsCount = equalsCount
+    end
+    getText, setText = System.property("Text")
+    getOpenBracket = function (this) 
+      return "[" --[[Tokens.OpenBracket]]
+    end
+    getCloseBracket = function (this) 
+      return "]" --[[Tokens.CloseBracket]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render16(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
-                }
-            end, 
-            getText = getText, 
-            setText = setText, 
-            EqualsCount = 0, 
-            getOpenBracket = getOpenBracket, 
-            getCloseBracket = getCloseBracket, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
         }
-    end)
-    namespace.class("LuaConstLiteralExpression", function (namespace) 
-        local getOpenComment, getCloseComment, getText, Render, __ctor1__, __ctor2__
-        __ctor1__ = function (this, value, identifierToken) 
-            __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, value), identifierToken)
-        end
-        __ctor2__ = function (this, value, identifierToken) 
-            CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
-            this.Value = value
-            this.IdentifierToken = identifierToken
-        end
-        getOpenComment = function (this) 
-            return "--[[" --[[Tokens.OpenLongComment]]
-        end
-        getCloseComment = function (this) 
-            return "]]" --[[Tokens.CloseDoubleBrace]]
-        end
-        getText = function (this) 
-            return this.Value:getText()
-        end
-        Render = function (this, renderer) 
-            renderer:Render17(this)
-        end
+      end, 
+      getText = getText, 
+      setText = setText, 
+      EqualsCount = 0, 
+      getOpenBracket = getOpenBracket, 
+      getCloseBracket = getCloseBracket, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaConstLiteralExpression", function (namespace) 
+    local getOpenComment, getCloseComment, getText, Render, __ctor1__, __ctor2__
+    __ctor1__ = function (this, value, identifierToken) 
+      __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, value), identifierToken)
+    end
+    __ctor2__ = function (this, value, identifierToken) 
+      CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
+      this.Value = value
+      this.IdentifierToken = identifierToken
+    end
+    getOpenComment = function (this) 
+      return "--[[" --[[Tokens.OpenLongComment]]
+    end
+    getCloseComment = function (this) 
+      return "]]" --[[Tokens.CloseDoubleBrace]]
+    end
+    getText = function (this) 
+      return this.Value:getText()
+    end
+    Render = function (this, renderer) 
+      renderer:Render17(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
-                }
-            end, 
-            getOpenComment = getOpenComment, 
-            getCloseComment = getCloseComment, 
-            getText = getText, 
-            Render = Render, 
-            __ctor__ = {
-                __ctor1__, 
-                __ctor2__
-            }
+          global.CSharpLua.LuaAst.LuaLiteralExpressionSyntax
         }
-    end)
-    namespace.class("LuaCharacterLiteralExpression", function (namespace) 
-        local GetIdentifierToken, __ctor__
-        __ctor__ = function (this, character) 
-            CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(character))
-        end
-        GetIdentifierToken = function (character) 
-            return MicrosoftCodeAnalysisCSharp.SyntaxFactory.Literal(character):getText()
-        end
+      end, 
+      getOpenComment = getOpenComment, 
+      getCloseComment = getCloseComment, 
+      getText = getText, 
+      Render = Render, 
+      __ctor__ = {
+        __ctor1__, 
+        __ctor2__
+      }
+    }
+  end)
+  namespace.class("LuaCharacterLiteralExpression", function (namespace) 
+    local GetIdentifierToken, __ctor__
+    __ctor__ = function (this, character) 
+      CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(character))
+    end
+    GetIdentifierToken = function (character) 
+      return MicrosoftCodeAnalysisCSharp.SyntaxFactory.Literal(character):getText()
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaConstLiteralExpression
-                }
-            end, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaConstLiteralExpression
         }
-    end)
+      end, 
+      __ctor__ = __ctor__
+    }
+  end)
 end)

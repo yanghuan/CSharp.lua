@@ -10,600 +10,600 @@ local SystemThreading = System.Threading
 local CSharpLua
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
-    CSharpLua = global.CSharpLua
-    CSharpLuaLuaAst = CSharpLua.LuaAst
+  CSharpLua = global.CSharpLua
+  CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua", function (namespace) 
-    namespace.class("CmdArgumentException", function (namespace) 
-        local __ctor__
-        __ctor__ = function (this, message) 
-            System.Exception.__ctor__(this, message)
-        end
+  namespace.class("CmdArgumentException", function (namespace) 
+    local __ctor__
+    __ctor__ = function (this, message) 
+      System.Exception.__ctor__(this, message)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.System.Exception
-                }
-            end, 
-            __ctor__ = __ctor__
+          global.System.Exception
         }
-    end)
-    namespace.class("CompilationErrorException", function (namespace) 
-        local __ctor__
-        __ctor__ = function (this, message) 
-            System.Exception.__ctor__(this, message)
-        end
+      end, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("CompilationErrorException", function (namespace) 
+    local __ctor__
+    __ctor__ = function (this, message) 
+      System.Exception.__ctor__(this, message)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.System.Exception
-                }
-            end, 
-            __ctor__ = __ctor__
+          global.System.Exception
         }
-    end)
-    namespace.class("Utility", function (namespace) 
-        local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, TrimEnd, 
-        GetCommondLines, GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
-        IsReadOnly, IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, 
-        IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
-        IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
-        IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-        IsMainEntryPoint
-        First = function (list, T) 
-            return list:get(0)
+      end, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("Utility", function (namespace) 
+    local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, TrimEnd, 
+    GetCommondLines, GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
+    IsReadOnly, IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, 
+    IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
+    IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
+    IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
+    IsMainEntryPoint
+    First = function (list, T) 
+      return list:get(0)
+    end
+    Last = function (list, T) 
+      return list:get(list:getCount() - 1)
+    end
+    GetOrDefault = function (list, index, v, T) 
+      local default
+      if index >= 0 and index < list:getCount() then
+        default = list:get(index)
+      else
+        default = v
+      end
+      return default
+    end
+    GetOrDefault1 = function (dict, key, t, K, T) 
+      local v
+      local default
+      default, v = dict:TryGetValue(key)
+      if default then
+        return v
+      end
+      return t
+    end
+    TryAdd = function (dict, key, value, K, V) 
+      local set = GetOrDefault1(dict, key, nil, K, System.HashSet(V))
+      if set == nil then
+        set = System.HashSet(V)()
+        dict:Add(key, set)
+      end
+      return set:Add(value)
+    end
+    AddAt = function (list, index, v, T) 
+      if index < list:getCount() then
+        list:set(index, v)
+      else
+        local count = index - list:getCount()
+        do
+          local i = 0
+          while i < count do
+            list:Add(System.default(T))
+            i = i + 1
+          end
         end
-        Last = function (list, T) 
-            return list:get(list:getCount() - 1)
+        list:Add(v)
+      end
+    end
+    IndexOf = function (source, match, T) 
+      local index = 0
+      for _, item in System.each(source) do
+        if match(item) then
+          return index
         end
-        GetOrDefault = function (list, index, v, T) 
-            local default
-            if index >= 0 and index < list:getCount() then
-                default = list:get(index)
-            else
-                default = v
-            end
-            return default
-        end
-        GetOrDefault1 = function (dict, key, t, K, T) 
-            local v
-            local default
-            default, v = dict:TryGetValue(key)
-            if default then
-                return v
-            end
-            return t
-        end
-        TryAdd = function (dict, key, value, K, V) 
-            local set = GetOrDefault1(dict, key, nil, K, System.HashSet(V))
-            if set == nil then
-                set = System.HashSet(V)()
-                dict:Add(key, set)
-            end
-            return set:Add(value)
-        end
-        AddAt = function (list, index, v, T) 
-            if index < list:getCount() then
-                list:set(index, v)
-            else
-                local count = index - list:getCount()
-                do
-                    local i = 0
-                    while i < count do
-                        list:Add(System.default(T))
-                        i = i + 1
-                    end
-                end
-                list:Add(v)
-            end
-        end
-        IndexOf = function (source, match, T) 
-            local index = 0
-            for _, item in System.each(source) do
-                if match(item) then
-                    return index
-                end
-                index = index + 1
-            end
-            return - 1
-        end
-        TrimEnd = function (s, end_) 
-            if s:EndsWith(end_) then
-                return s:Remove(#s - #end_, #end_)
-            end
-            return s
-        end
-        GetCommondLines = function (args) 
-            local cmds = System.Dictionary(System.String, System.Array(System.String))()
+        index = index + 1
+      end
+      return - 1
+    end
+    TrimEnd = function (s, end_) 
+      if s:EndsWith(end_) then
+        return s:Remove(#s - #end_, #end_)
+      end
+      return s
+    end
+    GetCommondLines = function (args) 
+      local cmds = System.Dictionary(System.String, System.Array(System.String))()
 
-            local key = ""
-            local values = System.List(System.String)()
+      local key = ""
+      local values = System.List(System.String)()
 
-            for _, arg in System.each(args) do
-                local i = arg:Trim()
-                if i:StartsWith("-") then
-                    if not System.String.IsNullOrEmpty(key) then
-                        cmds:Add(key, values:ToArray())
-                        key = ""
-                        values:Clear()
-                    end
-                    key = i
-                else
-                    values:Add(i)
-                end
-            end
+      for _, arg in System.each(args) do
+        local i = arg:Trim()
+        if i:StartsWith("-") then
+          if not System.String.IsNullOrEmpty(key) then
+            cmds:Add(key, values:ToArray())
+            key = ""
+            values:Clear()
+          end
+          key = i
+        else
+          values:Add(i)
+        end
+      end
 
-            if not System.String.IsNullOrEmpty(key) then
-                cmds:Add(key, values:ToArray())
-            end
-            return cmds
+      if not System.String.IsNullOrEmpty(key) then
+        cmds:Add(key, values:ToArray())
+      end
+      return cmds
+    end
+    GetArgument = function (args, name, isOption) 
+      local values = GetOrDefault1(args, name, nil, System.String, System.Array(System.String))
+      if values == nil or #values == 0 then
+        if isOption then
+          return nil
         end
-        GetArgument = function (args, name, isOption) 
-            local values = GetOrDefault1(args, name, nil, System.String, System.Array(System.String))
-            if values == nil or #values == 0 then
-                if isOption then
-                    return nil
-                end
-                System.throw(CSharpLua.CmdArgumentException(name .. " is not found"))
-            end
-            return values:get(0)
-        end
-        GetCurrentDirectory = function (path) 
-            local CurrentDirectorySign1 = "~/"
-            local CurrentDirectorySign2 = "~\\"
+        System.throw(CSharpLua.CmdArgumentException(name .. " is not found"))
+      end
+      return values:get(0)
+    end
+    GetCurrentDirectory = function (path) 
+      local CurrentDirectorySign1 = "~/"
+      local CurrentDirectorySign2 = "~\\"
 
-            if path:StartsWith(CurrentDirectorySign1) then
-                return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#CurrentDirectorySign1))
-            elseif path:StartsWith(CurrentDirectorySign2) then
-                return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#CurrentDirectorySign2))
-            end
+      if path:StartsWith(CurrentDirectorySign1) then
+        return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#CurrentDirectorySign1))
+      elseif path:StartsWith(CurrentDirectorySign2) then
+        return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#CurrentDirectorySign2))
+      end
 
-            return SystemIO.Path.Combine(System.Environment.getCurrentDirectory(), path)
+      return SystemIO.Path.Combine(System.Environment.getCurrentDirectory(), path)
+    end
+    Split = function (s, isPath) 
+      local list = System.HashSet(System.String)()
+      if not System.String.IsNullOrEmpty(s) then
+        local array = s:Split(59 --[[';']])
+        for _, i in System.each(array) do
+          local default
+          if isPath then
+            default = GetCurrentDirectory(i)
+          else
+            default = i
+          end
+          list:Add(default)
         end
-        Split = function (s, isPath) 
-            local list = System.HashSet(System.String)()
-            if not System.String.IsNullOrEmpty(s) then
-                local array = s:Split(59 --[[';']])
-                for _, i in System.each(array) do
-                    local default
-                    if isPath then
-                        default = GetCurrentDirectory(i)
-                    else
-                        default = i
-                    end
-                    list:Add(default)
-                end
+      end
+      return Linq.ToArray(list)
+    end
+    IsPrivate = function (symbol) 
+      return symbol:getDeclaredAccessibility() == 1 --[[Accessibility.Private]]
+    end
+    IsPrivate1 = function (modifiers) 
+      for _, modifier in System.each(modifiers) do
+        repeat
+          local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(modifier)
+          if default == 8344 --[[SyntaxKind.PrivateKeyword]] then
+            do
+              return true
             end
-            return Linq.ToArray(list)
-        end
-        IsPrivate = function (symbol) 
-            return symbol:getDeclaredAccessibility() == 1 --[[Accessibility.Private]]
-        end
-        IsPrivate1 = function (modifiers) 
-            for _, modifier in System.each(modifiers) do
-                repeat
-                    local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(modifier)
-                    if default == 8344 --[[SyntaxKind.PrivateKeyword]] then
-                        do
-                            return true
-                        end
-                    elseif default == 8343 --[[SyntaxKind.PublicKeyword]] or default == 8345 --[[SyntaxKind.InternalKeyword]] or default == 8346 --[[SyntaxKind.ProtectedKeyword]] then
-                        do
-                            return false
-                        end
-                    end
-                until 1
+          elseif default == 8343 --[[SyntaxKind.PublicKeyword]] or default == 8345 --[[SyntaxKind.InternalKeyword]] or default == 8346 --[[SyntaxKind.ProtectedKeyword]] then
+            do
+              return false
             end
+          end
+        until 1
+      end
+      return true
+    end
+    IsStatic = function (modifiers) 
+      return Linq.Any(modifiers, function (i) 
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]])
+      end)
+    end
+    IsAbstract = function (modifiers) 
+      return Linq.Any(modifiers, function (i) 
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8356 --[[SyntaxKind.AbstractKeyword]])
+      end)
+    end
+    IsReadOnly = function (modifiers) 
+      return Linq.Any(modifiers, function (i) 
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8348 --[[SyntaxKind.ReadOnlyKeyword]])
+      end)
+    end
+    IsConst = function (modifiers) 
+      return Linq.Any(modifiers, function (i) 
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8350 --[[SyntaxKind.ConstKeyword]])
+      end)
+    end
+    IsParams = function (modifiers) 
+      return Linq.Any(modifiers, function (i) 
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8365 --[[SyntaxKind.ParamsKeyword]])
+      end)
+    end
+    IsPartial = function (modifiers) 
+      return Linq.Any(modifiers, function (i) 
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8406 --[[SyntaxKind.PartialKeyword]])
+      end)
+    end
+    IsOutOrRef = function (modifiers) 
+      return Linq.Any(modifiers, function (i) 
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8361 --[[SyntaxKind.OutKeyword]]) or MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8360 --[[SyntaxKind.RefKeyword]])
+      end)
+    end
+    IsStringType = function (type) 
+      return type:getSpecialType() == 20 --[[SpecialType.System_String]]
+    end
+    IsDelegateType = function (type) 
+      return type:getTypeKind() == 3 --[[TypeKind.Delegate]]
+    end
+    IsIntegerType = function (type) 
+      return type:getSpecialType() >= 9 --[[SpecialType.System_SByte]] and type:getSpecialType() <= 16 --[[SpecialType.System_UInt64]]
+    end
+    IsNullableType = function (type) 
+      if type:getSpecialType() == 32 --[[SpecialType.System_Nullable_T]] then
+        return true
+      end
+      local namedType = System.as(type, MicrosoftCodeAnalysis.INamedTypeSymbol)
+      return namedType ~= nil and namedType:getConstructedFrom() ~= nil and namedType:getConstructedFrom():getSpecialType() == 32 --[[SpecialType.System_Nullable_T]]
+    end
+    IsImmutable = function (type) 
+      local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or IsStringType(type) or IsDelegateType(type)
+      return isImmutable
+    end
+    IsInterfaceImplementation = function (symbol, T) 
+      if not symbol:getIsStatic() then
+        local type = symbol:getContainingType()
+        if type ~= nil then
+          local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) 
+            return i:GetMembers():OfType(T)
+          end, T)
+          return Linq.Any(interfaceSymbols, function (i) 
+            return symbol:Equals(type:FindImplementationForInterfaceMember(i))
+          end)
+        end
+      end
+      return false
+    end
+    InterfaceImplementations = function (symbol, T) 
+      if not symbol:getIsStatic() then
+        local type = symbol:getContainingType()
+        if type ~= nil then
+          local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) 
+            return i:GetMembers():OfType(T)
+          end, T)
+          return Linq.Where(interfaceSymbols, function (i) 
+            return symbol:Equals(type:FindImplementationForInterfaceMember(i))
+          end)
+        end
+      end
+      return System.Array.Empty(T)
+    end
+    IsFromCode = function (symbol) 
+      return not symbol:getDeclaringSyntaxReferences():getIsEmpty()
+    end
+    IsOverridable = function (symbol) 
+      return not symbol:getIsStatic() and (symbol:getIsAbstract() or symbol:getIsVirtual() or symbol:getIsOverride())
+    end
+    OverriddenSymbol = function (symbol) 
+      repeat
+        local default = symbol:getKind()
+        if default == 9 --[[SymbolKind.Method]] then
+          do
+            local methodSymbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol)
+            return methodSymbol:getOverriddenMethod()
+          end
+        elseif default == 15 --[[SymbolKind.Property]] then
+          do
+            local propertySymbol = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
+            return propertySymbol:getOverriddenProperty()
+          end
+        elseif default == 5 --[[SymbolKind.Event]] then
+          do
+            local eventSymbol = System.cast(MicrosoftCodeAnalysis.IEventSymbol, symbol)
+            return eventSymbol:getOverriddenEvent()
+          end
+        end
+      until 1
+      return nil
+    end
+    IsOverridden = function (symbol, superSymbol) 
+      while true do
+        local overriddenSymbol = OverriddenSymbol(symbol)
+        if overriddenSymbol ~= nil then
+          overriddenSymbol = CheckOriginalDefinition(overriddenSymbol)
+          if overriddenSymbol:Equals(superSymbol) then
             return true
+          end
+          symbol = overriddenSymbol
+        else
+          return false
         end
-        IsStatic = function (modifiers) 
-            return Linq.Any(modifiers, function (i) 
-                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8347 --[[SyntaxKind.StaticKeyword]])
-            end)
-        end
-        IsAbstract = function (modifiers) 
-            return Linq.Any(modifiers, function (i) 
-                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8356 --[[SyntaxKind.AbstractKeyword]])
-            end)
-        end
-        IsReadOnly = function (modifiers) 
-            return Linq.Any(modifiers, function (i) 
-                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8348 --[[SyntaxKind.ReadOnlyKeyword]])
-            end)
-        end
-        IsConst = function (modifiers) 
-            return Linq.Any(modifiers, function (i) 
-                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8350 --[[SyntaxKind.ConstKeyword]])
-            end)
-        end
-        IsParams = function (modifiers) 
-            return Linq.Any(modifiers, function (i) 
-                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8365 --[[SyntaxKind.ParamsKeyword]])
-            end)
-        end
-        IsPartial = function (modifiers) 
-            return Linq.Any(modifiers, function (i) 
-                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8406 --[[SyntaxKind.PartialKeyword]])
-            end)
-        end
-        IsOutOrRef = function (modifiers) 
-            return Linq.Any(modifiers, function (i) 
-                return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8361 --[[SyntaxKind.OutKeyword]]) or MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8360 --[[SyntaxKind.RefKeyword]])
-            end)
-        end
-        IsStringType = function (type) 
-            return type:getSpecialType() == 20 --[[SpecialType.System_String]]
-        end
-        IsDelegateType = function (type) 
-            return type:getTypeKind() == 3 --[[TypeKind.Delegate]]
-        end
-        IsIntegerType = function (type) 
-            return type:getSpecialType() >= 9 --[[SpecialType.System_SByte]] and type:getSpecialType() <= 16 --[[SpecialType.System_UInt64]]
-        end
-        IsNullableType = function (type) 
-            if type:getSpecialType() == 32 --[[SpecialType.System_Nullable_T]] then
-                return true
-            end
-            local namedType = System.as(type, MicrosoftCodeAnalysis.INamedTypeSymbol)
-            return namedType ~= nil and namedType:getConstructedFrom() ~= nil and namedType:getConstructedFrom():getSpecialType() == 32 --[[SpecialType.System_Nullable_T]]
-        end
-        IsImmutable = function (type) 
-            local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or IsStringType(type) or IsDelegateType(type)
-            return isImmutable
-        end
-        IsInterfaceImplementation = function (symbol, T) 
-            if not symbol:getIsStatic() then
-                local type = symbol:getContainingType()
-                if type ~= nil then
-                    local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) 
-                        return i:GetMembers():OfType(T)
-                    end, T)
-                    return Linq.Any(interfaceSymbols, function (i) 
-                        return symbol:Equals(type:FindImplementationForInterfaceMember(i))
-                    end)
-                end
-            end
-            return false
-        end
-        InterfaceImplementations = function (symbol, T) 
-            if not symbol:getIsStatic() then
-                local type = symbol:getContainingType()
-                if type ~= nil then
-                    local interfaceSymbols = Linq.SelectMany(type:getAllInterfaces(), function (i) 
-                        return i:GetMembers():OfType(T)
-                    end, T)
-                    return Linq.Where(interfaceSymbols, function (i) 
-                        return symbol:Equals(type:FindImplementationForInterfaceMember(i))
-                    end)
-                end
-            end
-            return System.Array.Empty(T)
-        end
-        IsFromCode = function (symbol) 
-            return not symbol:getDeclaringSyntaxReferences():getIsEmpty()
-        end
-        IsOverridable = function (symbol) 
-            return not symbol:getIsStatic() and (symbol:getIsAbstract() or symbol:getIsVirtual() or symbol:getIsOverride())
-        end
-        OverriddenSymbol = function (symbol) 
-            repeat
-                local default = symbol:getKind()
-                if default == 9 --[[SymbolKind.Method]] then
-                    do
-                        local methodSymbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol)
-                        return methodSymbol:getOverriddenMethod()
-                    end
-                elseif default == 15 --[[SymbolKind.Property]] then
-                    do
-                        local propertySymbol = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
-                        return propertySymbol:getOverriddenProperty()
-                    end
-                elseif default == 5 --[[SymbolKind.Event]] then
-                    do
-                        local eventSymbol = System.cast(MicrosoftCodeAnalysis.IEventSymbol, symbol)
-                        return eventSymbol:getOverriddenEvent()
-                    end
-                end
-            until 1
-            return nil
-        end
-        IsOverridden = function (symbol, superSymbol) 
-            while true do
-                local overriddenSymbol = OverriddenSymbol(symbol)
-                if overriddenSymbol ~= nil then
-                    overriddenSymbol = CheckOriginalDefinition(overriddenSymbol)
-                    if overriddenSymbol:Equals(superSymbol) then
-                        return true
-                    end
-                    symbol = overriddenSymbol
-                else
-                    return false
-                end
-            end
-        end
-        IsPropertyField = function (symbol) 
-            if not IsFromCode(symbol) or IsOverridable(symbol) then
-                return false
-            end
+      end
+    end
+    IsPropertyField = function (symbol) 
+      if not IsFromCode(symbol) or IsOverridable(symbol) then
+        return false
+      end
 
-            local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
-            if syntaxReference ~= nil then
-                local node = syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken))
-                repeat
-                    local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(node)
-                    if default == 8892 --[[SyntaxKind.PropertyDeclaration]] then
-                        do
-                            local property = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax, node)
-                            local hasGet = false
-                            local hasSet = false
-                            if property:getAccessorList() ~= nil then
-                                for _, accessor in System.each(property:getAccessorList():getAccessors()) do
-                                    if accessor:getBody() ~= nil then
-                                        if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
-                                            assert(not hasGet)
-                                            hasGet = true
-                                        else
-                                            assert(not hasSet)
-                                            hasSet = true
-                                        end
-                                    end
-                                end
-                            else
-                                assert(not hasGet)
-                                hasGet = true
-                            end
-                            local isField = not hasGet and not hasSet
-                            if isField then
-                                if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IPropertySymbol) then
-                                    isField = false
-                                end
-                            end
-                            return isField
-                        end
-                    elseif default == 8894 --[[SyntaxKind.IndexerDeclaration]] then
-                        do
-                            return false
-                        end
-                    elseif default == 8647 --[[SyntaxKind.AnonymousObjectMemberDeclarator]] then
-                        do
-                            return true
-                        end
+      local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
+      if syntaxReference ~= nil then
+        local node = syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken))
+        repeat
+          local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(node)
+          if default == 8892 --[[SyntaxKind.PropertyDeclaration]] then
+            do
+              local property = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PropertyDeclarationSyntax, node)
+              local hasGet = false
+              local hasSet = false
+              if property:getAccessorList() ~= nil then
+                for _, accessor in System.each(property:getAccessorList():getAccessors()) do
+                  if accessor:getBody() ~= nil then
+                    if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(accessor, 8896 --[[SyntaxKind.GetAccessorDeclaration]]) then
+                      assert(not hasGet)
+                      hasGet = true
                     else
-                        do
-                            System.throw(System.InvalidOperationException())
-                        end
+                      assert(not hasSet)
+                      hasSet = true
                     end
-                until 1
+                  end
+                end
+              else
+                assert(not hasGet)
+                hasGet = true
+              end
+              local isField = not hasGet and not hasSet
+              if isField then
+                if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IPropertySymbol) then
+                  isField = false
+                end
+              end
+              return isField
             end
-            return false
-        end
-        IsEventFiled = function (symbol) 
-            if not IsFromCode(symbol) or IsOverridable(symbol) then
-                return false
+          elseif default == 8894 --[[SyntaxKind.IndexerDeclaration]] then
+            do
+              return false
             end
+          elseif default == 8647 --[[SyntaxKind.AnonymousObjectMemberDeclarator]] then
+            do
+              return true
+            end
+          else
+            do
+              System.throw(System.InvalidOperationException())
+            end
+          end
+        until 1
+      end
+      return false
+    end
+    IsEventFiled = function (symbol) 
+      if not IsFromCode(symbol) or IsOverridable(symbol) then
+        return false
+      end
 
-            local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
-            if syntaxReference ~= nil then
-                local isField = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken)), 8795 --[[SyntaxKind.VariableDeclarator]])
-                if isField then
-                    if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IEventSymbol) then
-                        isField = false
-                    end
-                end
-                return isField
-            end
-            return false
+      local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
+      if syntaxReference ~= nil then
+        local isField = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(syntaxReference:GetSyntax(System.default(SystemThreading.CancellationToken)), 8795 --[[SyntaxKind.VariableDeclarator]])
+        if isField then
+          if IsInterfaceImplementation(symbol, MicrosoftCodeAnalysis.IEventSymbol) then
+            isField = false
+          end
         end
-        HasStaticCtor = function (typeSymbol) 
-            return SystemLinq.ImmutableArrayExtensions.Any(typeSymbol:getConstructors(), function (i) 
-                return i:getIsStatic()
-            end, MicrosoftCodeAnalysis.IMethodSymbol)
+        return isField
+      end
+      return false
+    end
+    HasStaticCtor = function (typeSymbol) 
+      return SystemLinq.ImmutableArrayExtensions.Any(typeSymbol:getConstructors(), function (i) 
+        return i:getIsStatic()
+      end, MicrosoftCodeAnalysis.IMethodSymbol)
+    end
+    IsStaticLazy = function (symbol) 
+      local success = symbol:getIsStatic() and not IsPrivate(symbol)
+      if success then
+        local typeSymbol = symbol:getContainingType()
+        return HasStaticCtor(typeSymbol)
+      end
+      return success
+    end
+    IsAssignment = function (kind) 
+      return kind >= 8714 --[[SyntaxKind.SimpleAssignmentExpression]] and kind <= 8724 --[[SyntaxKind.RightShiftAssignmentExpression]]
+    end
+    IsSystemLinqEnumerable = function (symbol) 
+      if systemLinqEnumerableType_ ~= nil then
+        return symbol == systemLinqEnumerableType_
+      else
+        local success = symbol:ToString() == CSharpLuaLuaAst.LuaIdentifierNameSyntax.SystemLinqEnumerable.ValueText
+        if success then
+          systemLinqEnumerableType_ = symbol
         end
-        IsStaticLazy = function (symbol) 
-            local success = symbol:getIsStatic() and not IsPrivate(symbol)
-            if success then
-                local typeSymbol = symbol:getContainingType()
-                return HasStaticCtor(typeSymbol)
-            end
-            return success
-        end
-        IsAssignment = function (kind) 
-            return kind >= 8714 --[[SyntaxKind.SimpleAssignmentExpression]] and kind <= 8724 --[[SyntaxKind.RightShiftAssignmentExpression]]
-        end
-        IsSystemLinqEnumerable = function (symbol) 
-            if systemLinqEnumerableType_ ~= nil then
-                return symbol == systemLinqEnumerableType_
-            else
-                local success = symbol:ToString() == CSharpLuaLuaAst.LuaIdentifierNameSyntax.SystemLinqEnumerable.ValueText
-                if success then
-                    systemLinqEnumerableType_ = symbol
-                end
-                return success
-            end
-        end
-        GetLocationString = function (node) 
-            local location = node:getSyntaxTree():GetLocation(node:getSpan())
-            local methodInfo = location:GetType():GetMethod("GetDebuggerDisplay", 4 --[[BindingFlags.Instance]] | 32 --[[BindingFlags.NonPublic]])
-            return System.cast(System.String, methodInfo:Invoke(location, nil))
-        end
-        IsSubclassOf = function (child, parent) 
-            local p = child
-            if p == parent then
-                return false
-            end
+        return success
+      end
+    end
+    GetLocationString = function (node) 
+      local location = node:getSyntaxTree():GetLocation(node:getSpan())
+      local methodInfo = location:GetType():GetMethod("GetDebuggerDisplay", 4 --[[BindingFlags.Instance]] | 32 --[[BindingFlags.NonPublic]])
+      return System.cast(System.String, methodInfo:Invoke(location, nil))
+    end
+    IsSubclassOf = function (child, parent) 
+      local p = child
+      if p == parent then
+        return false
+      end
 
-            while p ~= nil do
-                if p == parent then
-                    return true
-                end
-                p = p:getBaseType()
+      while p ~= nil do
+        if p == parent then
+          return true
+        end
+        p = p:getBaseType()
+      end
+      return false
+    end
+    IsImplementInterface = function (implementType, interfaceType) 
+      local t = implementType
+      while t ~= nil do
+        local interfaces = implementType:getAllInterfaces()
+        for _, i in System.each(interfaces) do
+          if i == interfaceType or IsImplementInterface(i, interfaceType) then
+            return true
+          end
+        end
+        t = t:getBaseType()
+      end
+      return false
+    end
+    IsBaseNumberType = function (specialType) 
+      return specialType >= 8 --[[SpecialType.System_Char]] and specialType <= 19 --[[SpecialType.System_Double]]
+    end
+    IsNumberTypeAssignableFrom = function (left, right) 
+      if IsBaseNumberType(left:getSpecialType()) and IsBaseNumberType(right:getSpecialType()) then
+        local begin
+        repeat
+          local default = left:getSpecialType()
+          if default == 8 --[[SpecialType.System_Char]] or default == 9 --[[SpecialType.System_SByte]] or default == 10 --[[SpecialType.System_Byte]] then
+            do
+              begin = 11 --[[SpecialType.System_Int16]]
+              break
             end
-            return false
-        end
-        IsImplementInterface = function (implementType, interfaceType) 
-            local t = implementType
-            while t ~= nil do
-                local interfaces = implementType:getAllInterfaces()
-                for _, i in System.each(interfaces) do
-                    if i == interfaceType or IsImplementInterface(i, interfaceType) then
-                        return true
-                    end
-                end
-                t = t:getBaseType()
+          elseif default == 11 --[[SpecialType.System_Int16]] or default == 12 --[[SpecialType.System_UInt16]] then
+            do
+              begin = 13 --[[SpecialType.System_Int32]]
+              break
             end
-            return false
-        end
-        IsBaseNumberType = function (specialType) 
-            return specialType >= 8 --[[SpecialType.System_Char]] and specialType <= 19 --[[SpecialType.System_Double]]
-        end
-        IsNumberTypeAssignableFrom = function (left, right) 
-            if IsBaseNumberType(left:getSpecialType()) and IsBaseNumberType(right:getSpecialType()) then
-                local begin
-                repeat
-                    local default = left:getSpecialType()
-                    if default == 8 --[[SpecialType.System_Char]] or default == 9 --[[SpecialType.System_SByte]] or default == 10 --[[SpecialType.System_Byte]] then
-                        do
-                            begin = 11 --[[SpecialType.System_Int16]]
-                            break
-                        end
-                    elseif default == 11 --[[SpecialType.System_Int16]] or default == 12 --[[SpecialType.System_UInt16]] then
-                        do
-                            begin = 13 --[[SpecialType.System_Int32]]
-                            break
-                        end
-                    elseif default == 13 --[[SpecialType.System_Int32]] or default == 14 --[[SpecialType.System_UInt32]] then
-                        do
-                            begin = 15 --[[SpecialType.System_Int64]]
-                            break
-                        end
-                    elseif default == 15 --[[SpecialType.System_Int64]] or default == 16 --[[SpecialType.System_UInt64]] then
-                        do
-                            begin = 17 --[[SpecialType.System_Decimal]]
-                            break
-                        end
-                    else
-                        do
-                            begin = 19 --[[SpecialType.System_Double]]
-                            break
-                        end
-                    end
-                until 1
-                local end_ = 19 --[[SpecialType.System_Double]]
-                return left:getSpecialType() >= begin and left:getSpecialType() <= end_
+          elseif default == 13 --[[SpecialType.System_Int32]] or default == 14 --[[SpecialType.System_UInt32]] then
+            do
+              begin = 15 --[[SpecialType.System_Int64]]
+              break
             end
-            return false
+          elseif default == 15 --[[SpecialType.System_Int64]] or default == 16 --[[SpecialType.System_UInt64]] then
+            do
+              begin = 17 --[[SpecialType.System_Decimal]]
+              break
+            end
+          else
+            do
+              begin = 19 --[[SpecialType.System_Double]]
+              break
+            end
+          end
+        until 1
+        local end_ = 19 --[[SpecialType.System_Double]]
+        return left:getSpecialType() >= begin and left:getSpecialType() <= end_
+      end
+      return false
+    end
+    IsAssignableFrom = function (left, right) 
+      if left == right then
+        return true
+      end
+
+      if IsNumberTypeAssignableFrom(left, right) then
+        return true
+      end
+
+      if IsSubclassOf(right, left) then
+        return true
+      end
+
+      if left:getTypeKind() == 7 --[[TypeKind.Interface]] then
+        return IsImplementInterface(right, left)
+      end
+
+      return false
+    end
+    CheckSymbolDefinition = function (symbol, T) 
+      local originalDefinition = System.cast(T, symbol:getOriginalDefinition())
+      if originalDefinition ~= symbol then
+        symbol = originalDefinition
+      end
+      return symbol
+    end
+    CheckMethodDefinition = function (symbol) 
+      if symbol:getIsExtensionMethod() then
+        if symbol:getReducedFrom() ~= nil and symbol:getReducedFrom() ~= symbol then
+          symbol = symbol:getReducedFrom()
         end
-        IsAssignableFrom = function (left, right) 
-            if left == right then
+      else
+        symbol = CheckSymbolDefinition(symbol, MicrosoftCodeAnalysis.IMethodSymbol)
+      end
+      return symbol
+    end
+    CheckOriginalDefinition = function (symbol) 
+      if symbol:getKind() == 9 --[[SymbolKind.Method]] then
+        local methodSymbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol)
+        methodSymbol = CheckMethodDefinition(methodSymbol)
+        if methodSymbol ~= symbol then
+          symbol = methodSymbol
+        end
+      else
+        symbol = CheckSymbolDefinition(symbol, MicrosoftCodeAnalysis.ISymbol)
+      end
+      return symbol
+    end
+    IsMainEntryPoint = function (symbol) 
+      if symbol:getIsStatic() and symbol:getTypeArguments():getIsEmpty() and symbol:getContainingType():getTypeArguments():getIsEmpty() and symbol:getName() == "Main" then
+        if symbol:getReturnsVoid() or symbol:getReturnType():getSpecialType() == 13 --[[SpecialType.System_Int32]] then
+          if symbol:getParameters():getIsEmpty() then
+            return true
+          elseif symbol:getParameters():getLength() == 1 then
+            local parameterType = symbol:getParameters():get(0):getType()
+            if parameterType:getTypeKind() == 1 --[[TypeKind.Array]] then
+              local arrayType = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, parameterType)
+              if arrayType:getElementType():getSpecialType() == 20 --[[SpecialType.System_String]] then
                 return true
+              end
             end
-
-            if IsNumberTypeAssignableFrom(left, right) then
-                return true
-            end
-
-            if IsSubclassOf(right, left) then
-                return true
-            end
-
-            if left:getTypeKind() == 7 --[[TypeKind.Interface]] then
-                return IsImplementInterface(right, left)
-            end
-
-            return false
+          end
         end
-        CheckSymbolDefinition = function (symbol, T) 
-            local originalDefinition = System.cast(T, symbol:getOriginalDefinition())
-            if originalDefinition ~= symbol then
-                symbol = originalDefinition
-            end
-            return symbol
-        end
-        CheckMethodDefinition = function (symbol) 
-            if symbol:getIsExtensionMethod() then
-                if symbol:getReducedFrom() ~= nil and symbol:getReducedFrom() ~= symbol then
-                    symbol = symbol:getReducedFrom()
-                end
-            else
-                symbol = CheckSymbolDefinition(symbol, MicrosoftCodeAnalysis.IMethodSymbol)
-            end
-            return symbol
-        end
-        CheckOriginalDefinition = function (symbol) 
-            if symbol:getKind() == 9 --[[SymbolKind.Method]] then
-                local methodSymbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol)
-                methodSymbol = CheckMethodDefinition(methodSymbol)
-                if methodSymbol ~= symbol then
-                    symbol = methodSymbol
-                end
-            else
-                symbol = CheckSymbolDefinition(symbol, MicrosoftCodeAnalysis.ISymbol)
-            end
-            return symbol
-        end
-        IsMainEntryPoint = function (symbol) 
-            if symbol:getIsStatic() and symbol:getTypeArguments():getIsEmpty() and symbol:getContainingType():getTypeArguments():getIsEmpty() and symbol:getName() == "Main" then
-                if symbol:getReturnsVoid() or symbol:getReturnType():getSpecialType() == 13 --[[SpecialType.System_Int32]] then
-                    if symbol:getParameters():getIsEmpty() then
-                        return true
-                    elseif symbol:getParameters():getLength() == 1 then
-                        local parameterType = symbol:getParameters():get(0):getType()
-                        if parameterType:getTypeKind() == 1 --[[TypeKind.Array]] then
-                            local arrayType = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, parameterType)
-                            if arrayType:getElementType():getSpecialType() == 20 --[[SpecialType.System_String]] then
-                                return true
-                            end
-                        end
-                    end
-                end
-            end
-            return false
-        end
-        return {
-            First = First, 
-            Last = Last, 
-            GetOrDefault = GetOrDefault, 
-            GetOrDefault1 = GetOrDefault1, 
-            TryAdd = TryAdd, 
-            AddAt = AddAt, 
-            IndexOf = IndexOf, 
-            TrimEnd = TrimEnd, 
-            GetCommondLines = GetCommondLines, 
-            GetArgument = GetArgument, 
-            GetCurrentDirectory = GetCurrentDirectory, 
-            Split = Split, 
-            IsPrivate = IsPrivate, 
-            IsPrivate1 = IsPrivate1, 
-            IsStatic = IsStatic, 
-            IsAbstract = IsAbstract, 
-            IsReadOnly = IsReadOnly, 
-            IsConst = IsConst, 
-            IsParams = IsParams, 
-            IsPartial = IsPartial, 
-            IsOutOrRef = IsOutOrRef, 
-            IsStringType = IsStringType, 
-            IsDelegateType = IsDelegateType, 
-            IsIntegerType = IsIntegerType, 
-            IsNullableType = IsNullableType, 
-            IsImmutable = IsImmutable, 
-            IsInterfaceImplementation = IsInterfaceImplementation, 
-            InterfaceImplementations = InterfaceImplementations, 
-            IsFromCode = IsFromCode, 
-            IsOverridable = IsOverridable, 
-            OverriddenSymbol = OverriddenSymbol, 
-            IsOverridden = IsOverridden, 
-            IsPropertyField = IsPropertyField, 
-            IsEventFiled = IsEventFiled, 
-            HasStaticCtor = HasStaticCtor, 
-            IsStaticLazy = IsStaticLazy, 
-            IsAssignment = IsAssignment, 
-            IsSystemLinqEnumerable = IsSystemLinqEnumerable, 
-            GetLocationString = GetLocationString, 
-            IsSubclassOf = IsSubclassOf, 
-            IsAssignableFrom = IsAssignableFrom, 
-            CheckMethodDefinition = CheckMethodDefinition, 
-            CheckOriginalDefinition = CheckOriginalDefinition, 
-            IsMainEntryPoint = IsMainEntryPoint
-        }
-    end)
+      end
+      return false
+    end
+    return {
+      First = First, 
+      Last = Last, 
+      GetOrDefault = GetOrDefault, 
+      GetOrDefault1 = GetOrDefault1, 
+      TryAdd = TryAdd, 
+      AddAt = AddAt, 
+      IndexOf = IndexOf, 
+      TrimEnd = TrimEnd, 
+      GetCommondLines = GetCommondLines, 
+      GetArgument = GetArgument, 
+      GetCurrentDirectory = GetCurrentDirectory, 
+      Split = Split, 
+      IsPrivate = IsPrivate, 
+      IsPrivate1 = IsPrivate1, 
+      IsStatic = IsStatic, 
+      IsAbstract = IsAbstract, 
+      IsReadOnly = IsReadOnly, 
+      IsConst = IsConst, 
+      IsParams = IsParams, 
+      IsPartial = IsPartial, 
+      IsOutOrRef = IsOutOrRef, 
+      IsStringType = IsStringType, 
+      IsDelegateType = IsDelegateType, 
+      IsIntegerType = IsIntegerType, 
+      IsNullableType = IsNullableType, 
+      IsImmutable = IsImmutable, 
+      IsInterfaceImplementation = IsInterfaceImplementation, 
+      InterfaceImplementations = InterfaceImplementations, 
+      IsFromCode = IsFromCode, 
+      IsOverridable = IsOverridable, 
+      OverriddenSymbol = OverriddenSymbol, 
+      IsOverridden = IsOverridden, 
+      IsPropertyField = IsPropertyField, 
+      IsEventFiled = IsEventFiled, 
+      HasStaticCtor = HasStaticCtor, 
+      IsStaticLazy = IsStaticLazy, 
+      IsAssignment = IsAssignment, 
+      IsSystemLinqEnumerable = IsSystemLinqEnumerable, 
+      GetLocationString = GetLocationString, 
+      IsSubclassOf = IsSubclassOf, 
+      IsAssignableFrom = IsAssignableFrom, 
+      CheckMethodDefinition = CheckMethodDefinition, 
+      CheckOriginalDefinition = CheckOriginalDefinition, 
+      IsMainEntryPoint = IsMainEntryPoint
+    }
+  end)
 end)

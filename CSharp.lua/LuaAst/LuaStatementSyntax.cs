@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,180 +22,180 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
-    public abstract class LuaStatementSyntax : LuaSyntaxNode {
-        public Semicolon SemicolonToken => Tokens.Semicolon;
+  public abstract class LuaStatementSyntax : LuaSyntaxNode {
+    public Semicolon SemicolonToken => Tokens.Semicolon;
 
-        private sealed class EmptyLuaStatementSyntax : LuaStatementSyntax {
-            internal override void Render(LuaRenderer renderer) {
-            }
-        }
-        public readonly static LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
+    private sealed class EmptyLuaStatementSyntax : LuaStatementSyntax {
+      internal override void Render(LuaRenderer renderer) {
+      }
+    }
+    public readonly static LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
+  }
+
+  public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {
+    public LuaExpressionSyntax Expression { get; }
+
+    public LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
+      if (expression == null) {
+        throw new ArgumentNullException(nameof(expression));
+      }
+      Expression = expression;
     }
 
-    public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {
-        public LuaExpressionSyntax Expression { get; }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        public LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
-            if(expression == null) {
-                throw new ArgumentNullException(nameof(expression));
-            }
-            Expression = expression;
-        }
+  public sealed class LuaStatementListSyntax : LuaStatementSyntax {
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaReturnStatementSyntax : LuaStatementSyntax {
+    public LuaExpressionSyntax Expression { get; }
+    public string ReturnKeyword => Tokens.Return;
+
+    public LuaReturnStatementSyntax(LuaExpressionSyntax expression = null) {
+      Expression = expression;
     }
 
-    public sealed class LuaStatementListSyntax : LuaStatementSyntax {
-        public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+  public sealed class LuaMultipleReturnStatementSyntax : LuaStatementSyntax {
+    public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+    public string ReturnKeyword => Tokens.Return;
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaBreakStatementSyntax : LuaStatementSyntax {
+    public string BreakKeyword => Tokens.Break;
+
+    private LuaBreakStatementSyntax() { }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
 
-    public sealed class LuaReturnStatementSyntax : LuaStatementSyntax {
-        public LuaExpressionSyntax Expression { get; }
-        public string ReturnKeyword => Tokens.Return;
+    public static readonly LuaBreakStatementSyntax Statement = new LuaBreakStatementSyntax();
+  }
 
-        public LuaReturnStatementSyntax(LuaExpressionSyntax expression = null) {
-            Expression = expression;
-        }
+  public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
+    public LuaExpressionStatementSyntax Assignment { get; }
+    public LuaBreakStatementSyntax Break => LuaBreakStatementSyntax.Statement;
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    private LuaContinueAdapterStatementSyntax() {
+      Assignment = new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Continue, LuaIdentifierNameSyntax.True));
     }
 
-    public sealed class LuaMultipleReturnStatementSyntax : LuaStatementSyntax {
-        public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
-        public string ReturnKeyword => Tokens.Return;
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
 
-    public sealed class LuaBreakStatementSyntax : LuaStatementSyntax {
-        public string BreakKeyword => Tokens.Break;
+    public static readonly LuaContinueAdapterStatementSyntax Statement = new LuaContinueAdapterStatementSyntax();
+  }
 
-        private LuaBreakStatementSyntax() {}
+  public sealed class LuaBlankLinesStatement : LuaStatementSyntax {
+    public int Count { get; }
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-
-        public static readonly LuaBreakStatementSyntax Statement = new LuaBreakStatementSyntax();
+    public LuaBlankLinesStatement(int count) {
+      Count = count;
     }
 
-    public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
-        public LuaExpressionStatementSyntax Assignment { get; }
-        public LuaBreakStatementSyntax Break => LuaBreakStatementSyntax.Statement;
-
-        private LuaContinueAdapterStatementSyntax() {
-            Assignment = new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Continue, LuaIdentifierNameSyntax.True));
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-
-        public static readonly LuaContinueAdapterStatementSyntax Statement = new LuaContinueAdapterStatementSyntax();
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
 
-    public sealed class LuaBlankLinesStatement : LuaStatementSyntax {
-        public int Count { get; }
+    public static readonly LuaBlankLinesStatement One = new LuaBlankLinesStatement(1);
+  }
 
-        public LuaBlankLinesStatement(int count) {
-            Count = count;
-        }
+  public sealed class LuaShortCommentStatement : LuaStatementSyntax {
+    public string SingleCommentToken => Tokens.ShortComment;
+    public string Comment { get; }
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
-
-        public static readonly LuaBlankLinesStatement One = new LuaBlankLinesStatement(1);
+    public LuaShortCommentStatement(string comment) {
+      Comment = comment;
     }
 
-    public sealed class LuaShortCommentStatement : LuaStatementSyntax {
-        public string SingleCommentToken => Tokens.ShortComment;
-        public string Comment { get; }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        public LuaShortCommentStatement(string comment) {
-            Comment = comment;
-        }
+  public sealed class LuaLongCommentStatement : LuaStatementSyntax {
+    public string OpenCommentToken => Tokens.OpenLongComment;
+    public string Comment { get; }
+    public string CloseCommentToken => Tokens.CloseLongComment;
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    public LuaLongCommentStatement(string comment) {
+      Comment = comment;
     }
 
-    public sealed class LuaLongCommentStatement : LuaStatementSyntax {
-        public string OpenCommentToken => Tokens.OpenLongComment;
-        public string Comment { get; }
-        public string CloseCommentToken => Tokens.CloseLongComment;
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        public LuaLongCommentStatement(string comment) {
-            Comment = comment;
-        }
+  public sealed class LuaGotoStatement : LuaStatementSyntax {
+    public LuaIdentifierNameSyntax Identifier { get; }
+    public string GotoKeyword => Tokens.Goto;
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    public LuaGotoStatement(LuaIdentifierNameSyntax identifier) {
+      if (identifier == null) {
+        throw new ArgumentNullException(nameof(identifier));
+      }
+      Identifier = identifier;
     }
 
-    public sealed class LuaGotoStatement : LuaStatementSyntax {
-        public LuaIdentifierNameSyntax Identifier { get; }
-        public string GotoKeyword => Tokens.Goto;
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        public LuaGotoStatement(LuaIdentifierNameSyntax identifier) {
-            if(identifier == null) {
-                throw new ArgumentNullException(nameof(identifier));
-            }
-            Identifier = identifier;
-        }
+  public sealed class LuaGotoCaseAdapterStatement : LuaStatementSyntax {
+    public LuaStatementSyntax Assignment { get; }
+    public LuaGotoStatement GotoStatement { get; }
 
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    public LuaGotoCaseAdapterStatement(LuaIdentifierNameSyntax identifier) {
+      if (identifier == null) {
+        throw new ArgumentNullException(nameof(identifier));
+      }
+
+      LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(identifier, LuaIdentifierNameSyntax.True);
+      Assignment = new LuaExpressionStatementSyntax(assignment);
+      GotoStatement = new LuaGotoStatement(identifier);
     }
 
-    public sealed class LuaGotoCaseAdapterStatement : LuaStatementSyntax {
-        public LuaStatementSyntax Assignment { get; }
-        public LuaGotoStatement GotoStatement { get; }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 
-        public LuaGotoCaseAdapterStatement(LuaIdentifierNameSyntax identifier) {
-            if(identifier == null) {
-                throw new ArgumentNullException(nameof(identifier));
-            }
+  public sealed class LuaLabeledStatement : LuaStatementSyntax {
+    public string PrefixToken => Tokens.Label;
+    public string SuffixToken => Tokens.Label;
+    public LuaIdentifierNameSyntax Identifier { get; }
+    public LuaStatementSyntax Statement { get; }
 
-            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(identifier, LuaIdentifierNameSyntax.True);
-            Assignment = new LuaExpressionStatementSyntax(assignment);
-            GotoStatement = new LuaGotoStatement(identifier);
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    public LuaLabeledStatement(LuaIdentifierNameSyntax identifier, LuaStatementSyntax statement = null) {
+      if (identifier == null) {
+        throw new ArgumentNullException(nameof(identifier));
+      }
+      Identifier = identifier;
+      Statement = statement;
     }
 
-    public sealed class LuaLabeledStatement : LuaStatementSyntax {
-        public string PrefixToken => Tokens.Label;
-        public string SuffixToken => Tokens.Label;
-        public LuaIdentifierNameSyntax Identifier { get; }
-        public LuaStatementSyntax Statement { get; }
-
-        public LuaLabeledStatement(LuaIdentifierNameSyntax identifier, LuaStatementSyntax statement = null) {
-            if(identifier == null) {
-                throw new ArgumentNullException(nameof(identifier));
-            }
-            Identifier = identifier;
-            Statement = statement;
-        }
-
-        internal override void Render(LuaRenderer renderer) {
-            renderer.Render(this);
-        }
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
+  }
 }

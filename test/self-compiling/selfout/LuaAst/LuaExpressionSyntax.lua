@@ -3,301 +3,301 @@ local System = System
 local CSharpLuaLuaAst
 local CSharpLuaLuaAstLuaExpressionSyntax
 System.usingDeclare(function (global) 
-    CSharpLuaLuaAst = CSharpLua.LuaAst
-    CSharpLuaLuaAstLuaExpressionSyntax = CSharpLua.LuaAst.LuaExpressionSyntax
+  CSharpLuaLuaAst = CSharpLua.LuaAst
+  CSharpLuaLuaAstLuaExpressionSyntax = CSharpLua.LuaAst.LuaExpressionSyntax
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
-    namespace.class("LuaExpressionSyntax", function (namespace) 
-        namespace.class("EmptyLuaExpressionSyntax", function (namespace) 
-            local Render, __ctor__
-            __ctor__ = function (this) 
-                CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            end
-            Render = function (this, renderer) 
-            end
-            return {
-                __inherits__ = function (global) 
-                    return {
-                        global.CSharpLua.LuaAst.LuaExpressionSyntax
-                    }
-                end, 
-                Render = Render, 
-                __ctor__ = __ctor__
-            }
-        end)
-        local EmptyExpression, __staticCtor__, __ctor__
-        __staticCtor__ = function (this) 
-            EmptyExpression = CSharpLuaLuaAstLuaExpressionSyntax.EmptyLuaExpressionSyntax()
-            this.EmptyExpression = EmptyExpression
-        end
-        __ctor__ = function (this) 
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
-        end
-        return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaSyntaxNode
-                }
-            end, 
-            __staticCtor__ = __staticCtor__, 
-            __ctor__ = __ctor__
-        }
+  namespace.class("LuaExpressionSyntax", function (namespace) 
+    namespace.class("EmptyLuaExpressionSyntax", function (namespace) 
+      local Render, __ctor__
+      __ctor__ = function (this) 
+        CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      end
+      Render = function (this, renderer) 
+      end
+      return {
+        __inherits__ = function (global) 
+          return {
+            global.CSharpLua.LuaAst.LuaExpressionSyntax
+          }
+        end, 
+        Render = Render, 
+        __ctor__ = __ctor__
+      }
     end)
-    namespace.class("LuaAssignmentExpressionSyntax", function (namespace) 
-        local getOperatorToken, Render, __ctor__
-        __ctor__ = function (this, left, right) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            if left == nil then
-                System.throw(System.ArgumentNullException("left"))
-            end
-            if right == nil then
-                System.throw(System.ArgumentNullException("right"))
-            end
-            this.Left = left
-            this.Right = right
-        end
-        getOperatorToken = function (this) 
-            return "=" --[[Tokens.Equals]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render21(this)
-        end
+    local EmptyExpression, __staticCtor__, __ctor__
+    __staticCtor__ = function (this) 
+      EmptyExpression = CSharpLuaLuaAstLuaExpressionSyntax.EmptyLuaExpressionSyntax()
+      this.EmptyExpression = EmptyExpression
+    end
+    __ctor__ = function (this) 
+      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            getOperatorToken = getOperatorToken, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaSyntaxNode
         }
-    end)
-    namespace.class("LuaMultipleAssignmentExpressionSyntax", function (namespace) 
-        local getOperatorToken, Render, __init__, __ctor__
-        __init__ = function (this) 
-            this.Lefts = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
-            this.Rights = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
-        end
-        __ctor__ = function (this) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-        end
-        getOperatorToken = function (this) 
-            return "=" --[[Tokens.Equals]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render22(this)
-        end
+      end, 
+      __staticCtor__ = __staticCtor__, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaAssignmentExpressionSyntax", function (namespace) 
+    local getOperatorToken, Render, __ctor__
+    __ctor__ = function (this, left, right) 
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      if left == nil then
+        System.throw(System.ArgumentNullException("left"))
+      end
+      if right == nil then
+        System.throw(System.ArgumentNullException("right"))
+      end
+      this.Left = left
+      this.Right = right
+    end
+    getOperatorToken = function (this) 
+      return "=" --[[Tokens.Equals]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render21(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            getOperatorToken = getOperatorToken, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaLineMultipleExpressionSyntax", function (namespace) 
-        local Render, __init__, __ctor__
-        __init__ = function (this) 
-            this.Assignments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
-        end
-        __ctor__ = function (this) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-        end
-        Render = function (this, renderer) 
-            renderer:Render23(this)
-        end
+      end, 
+      getOperatorToken = getOperatorToken, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaMultipleAssignmentExpressionSyntax", function (namespace) 
+    local getOperatorToken, Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Lefts = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
+      this.Rights = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
+    end
+    __ctor__ = function (this) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+    end
+    getOperatorToken = function (this) 
+      return "=" --[[Tokens.Equals]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render22(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaBinaryExpressionSyntax", function (namespace) 
-        local Render, __ctor__
-        __ctor__ = function (this, left, operatorToken, right) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            if left == nil then
-                System.throw(System.ArgumentNullException("left"))
-            end
-            if right == nil then
-                System.throw(System.ArgumentNullException("right"))
-            end
-            this.Left = left
-            this.OperatorToken = operatorToken
-            this.Right = right
-        end
-        Render = function (this, renderer) 
-            renderer:Render38(this)
-        end
+      end, 
+      getOperatorToken = getOperatorToken, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaLineMultipleExpressionSyntax", function (namespace) 
+    local Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Assignments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
+    end
+    __ctor__ = function (this) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+    end
+    Render = function (this, renderer) 
+      renderer:Render23(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaPrefixUnaryExpressionSyntax", function (namespace) 
-        local Render, __ctor__
-        __ctor__ = function (this, operand, operatorToken) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            if operand == nil then
-                System.throw(System.ArgumentNullException("operand"))
-            end
-            this.Operand = operand
-            this.OperatorToken = operatorToken
-        end
-        Render = function (this, renderer) 
-            renderer:Render42(this)
-        end
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaBinaryExpressionSyntax", function (namespace) 
+    local Render, __ctor__
+    __ctor__ = function (this, left, operatorToken, right) 
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      if left == nil then
+        System.throw(System.ArgumentNullException("left"))
+      end
+      if right == nil then
+        System.throw(System.ArgumentNullException("right"))
+      end
+      this.Left = left
+      this.OperatorToken = operatorToken
+      this.Right = right
+    end
+    Render = function (this, renderer) 
+      renderer:Render38(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaParenthesizedExpressionSyntax", function (namespace) 
-        local getOpenParenToken, getCloseParenToken, Render, __ctor__
-        __ctor__ = function (this, expression) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            if expression == nil then
-                System.throw(System.ArgumentNullException("expression"))
-            end
-            this.Expression = expression
-        end
-        getOpenParenToken = function (this) 
-            return "(" --[[Tokens.OpenParentheses]]
-        end
-        getCloseParenToken = function (this) 
-            return ")" --[[Tokens.CloseParentheses]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render52(this)
-        end
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaPrefixUnaryExpressionSyntax", function (namespace) 
+    local Render, __ctor__
+    __ctor__ = function (this, operand, operatorToken) 
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      if operand == nil then
+        System.throw(System.ArgumentNullException("operand"))
+      end
+      this.Operand = operand
+      this.OperatorToken = operatorToken
+    end
+    Render = function (this, renderer) 
+      renderer:Render42(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            getOpenParenToken = getOpenParenToken, 
-            getCloseParenToken = getCloseParenToken, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaCodeTemplateExpressionSyntax", function (namespace) 
-        local Render, __init__, __ctor__
-        __init__ = function (this) 
-            this.Expressions = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
-        end
-        __ctor__ = function (this) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-        end
-        Render = function (this, renderer) 
-            renderer:Render56(this)
-        end
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaParenthesizedExpressionSyntax", function (namespace) 
+    local getOpenParenToken, getCloseParenToken, Render, __ctor__
+    __ctor__ = function (this, expression) 
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      if expression == nil then
+        System.throw(System.ArgumentNullException("expression"))
+      end
+      this.Expression = expression
+    end
+    getOpenParenToken = function (this) 
+      return "(" --[[Tokens.OpenParentheses]]
+    end
+    getCloseParenToken = function (this) 
+      return ")" --[[Tokens.CloseParentheses]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render52(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaArrayRankSpecifierSyntax", function (namespace) 
-        local __init__, __ctor__
-        __init__ = function (this) 
-            this.Sizes = System.List(CSharpLuaLuaAst.LuaExpressionSyntax)()
-        end
-        __ctor__ = function (this, rank) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
-            this.Rank = rank
-        end
+      end, 
+      getOpenParenToken = getOpenParenToken, 
+      getCloseParenToken = getCloseParenToken, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaCodeTemplateExpressionSyntax", function (namespace) 
+    local Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Expressions = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
+    end
+    __ctor__ = function (this) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+    end
+    Render = function (this, renderer) 
+      renderer:Render56(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaSyntaxNode
-                }
-            end, 
-            Rank = 0, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
-    namespace.class("LuaArrayTypeAdapterExpressionSyntax", function (namespace) 
-        local getBaseType, getIsSimapleArray, Render, __ctor__
-        __ctor__ = function (this, invocationExpression, rankSpecifier) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            if invocationExpression == nil then
-                System.throw(System.ArgumentNullException("invocationExpression"))
-            end
-            if rankSpecifier == nil then
-                System.throw(System.ArgumentNullException("rankSpecifier"))
-            end
-            this.InvocationExpression = invocationExpression
-            this.RankSpecifier = rankSpecifier
-        end
-        getBaseType = function (this) 
-            return this.InvocationExpression.ArgumentList.Arguments:get(0).Expression
-        end
-        getIsSimapleArray = function (this) 
-            return this.RankSpecifier.Rank == 1
-        end
-        Render = function (this, renderer) 
-            this.InvocationExpression:Render(renderer)
-        end
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaArrayRankSpecifierSyntax", function (namespace) 
+    local __init__, __ctor__
+    __init__ = function (this) 
+      this.Sizes = System.List(CSharpLuaLuaAst.LuaExpressionSyntax)()
+    end
+    __ctor__ = function (this, rank) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.Rank = rank
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            getBaseType = getBaseType, 
-            getIsSimapleArray = getIsSimapleArray, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaSyntaxNode
         }
-    end)
-    namespace.class("LuaInternalMethodExpressionSyntax", function (namespace) 
-        local Render, __ctor__
-        __ctor__ = function (this, expression) 
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            if expression == nil then
-                System.throw(System.ArgumentNullException("expression"))
-            end
-            this.Expression = expression
-        end
-        Render = function (this, renderer) 
-            this.Expression:Render(renderer)
-        end
+      end, 
+      Rank = 0, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaArrayTypeAdapterExpressionSyntax", function (namespace) 
+    local getBaseType, getIsSimapleArray, Render, __ctor__
+    __ctor__ = function (this, invocationExpression, rankSpecifier) 
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      if invocationExpression == nil then
+        System.throw(System.ArgumentNullException("invocationExpression"))
+      end
+      if rankSpecifier == nil then
+        System.throw(System.ArgumentNullException("rankSpecifier"))
+      end
+      this.InvocationExpression = invocationExpression
+      this.RankSpecifier = rankSpecifier
+    end
+    getBaseType = function (this) 
+      return this.InvocationExpression.ArgumentList.Arguments:get(0).Expression
+    end
+    getIsSimapleArray = function (this) 
+      return this.RankSpecifier.Rank == 1
+    end
+    Render = function (this, renderer) 
+      this.InvocationExpression:Render(renderer)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
+      end, 
+      getBaseType = getBaseType, 
+      getIsSimapleArray = getIsSimapleArray, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaInternalMethodExpressionSyntax", function (namespace) 
+    local Render, __ctor__
+    __ctor__ = function (this, expression) 
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      if expression == nil then
+        System.throw(System.ArgumentNullException("expression"))
+      end
+      this.Expression = expression
+    end
+    Render = function (this, renderer) 
+      this.Expression:Render(renderer)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
+        }
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
 end)

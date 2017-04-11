@@ -2,72 +2,72 @@
 local System = System
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
-    CSharpLuaLuaAst = CSharpLua.LuaAst
+  CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
-    namespace.class("LuaInvocationExpressionSyntax", function (namespace) 
-        local AddArgument, AddArguments, Render, __init__, __ctor1__, __ctor2__, __ctor3__, __ctor4__, 
-        __ctor5__, __ctor6__
-        __init__ = function (this) 
-            this.ArgumentList = CSharpLuaLuaAst.LuaArgumentListSyntax()
-        end
-        __ctor1__ = function (this, expression) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
-            if expression == nil then
-                System.throw(System.ArgumentNullException("expression"))
-            end
-            this.Expression = expression
-        end
-        __ctor2__ = function (this, expression, argument) 
-            __ctor1__(this, expression)
-            AddArgument(this, argument)
-        end
-        __ctor3__ = function (this, expression, argument1, argument2) 
-            __ctor1__(this, expression)
-            AddArgument(this, argument1)
-            AddArgument(this, argument2)
-        end
-        __ctor4__ = function (this, expression, argument1, argument2, argument3) 
-            __ctor1__(this, expression)
-            AddArgument(this, argument1)
-            AddArgument(this, argument2)
-            AddArgument(this, argument3)
-        end
-        __ctor5__ = function (this, expression, arguments) 
-            __ctor1__(this, expression)
-            AddArguments(this, arguments)
-        end
-        __ctor6__ = function (this, expression, arguments) 
-            __ctor1__(this, expression)
-            AddArguments(this, arguments)
-        end
-        AddArgument = function (this, argument) 
-            this.ArgumentList:AddArgument1(argument)
-        end
-        AddArguments = function (this, arguments) 
-            this.ArgumentList:AddArguments(arguments)
-        end
-        Render = function (this, renderer) 
-            renderer:Render4(this)
-        end
+  namespace.class("LuaInvocationExpressionSyntax", function (namespace) 
+    local AddArgument, AddArguments, Render, __init__, __ctor1__, __ctor2__, __ctor3__, __ctor4__, 
+    __ctor5__, __ctor6__
+    __init__ = function (this) 
+      this.ArgumentList = CSharpLuaLuaAst.LuaArgumentListSyntax()
+    end
+    __ctor1__ = function (this, expression) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      if expression == nil then
+        System.throw(System.ArgumentNullException("expression"))
+      end
+      this.Expression = expression
+    end
+    __ctor2__ = function (this, expression, argument) 
+      __ctor1__(this, expression)
+      AddArgument(this, argument)
+    end
+    __ctor3__ = function (this, expression, argument1, argument2) 
+      __ctor1__(this, expression)
+      AddArgument(this, argument1)
+      AddArgument(this, argument2)
+    end
+    __ctor4__ = function (this, expression, argument1, argument2, argument3) 
+      __ctor1__(this, expression)
+      AddArgument(this, argument1)
+      AddArgument(this, argument2)
+      AddArgument(this, argument3)
+    end
+    __ctor5__ = function (this, expression, arguments) 
+      __ctor1__(this, expression)
+      AddArguments(this, arguments)
+    end
+    __ctor6__ = function (this, expression, arguments) 
+      __ctor1__(this, expression)
+      AddArguments(this, arguments)
+    end
+    AddArgument = function (this, argument) 
+      this.ArgumentList:AddArgument1(argument)
+    end
+    AddArguments = function (this, arguments) 
+      this.ArgumentList:AddArguments(arguments)
+    end
+    Render = function (this, renderer) 
+      renderer:Render4(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaExpressionSyntax
-                }
-            end, 
-            AddArgument = AddArgument, 
-            AddArguments = AddArguments, 
-            Render = Render, 
-            __ctor__ = {
-                __ctor1__, 
-                __ctor2__, 
-                __ctor3__, 
-                __ctor4__, 
-                __ctor5__, 
-                __ctor6__
-            }
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
         }
-    end)
+      end, 
+      AddArgument = AddArgument, 
+      AddArguments = AddArguments, 
+      Render = Render, 
+      __ctor__ = {
+        __ctor1__, 
+        __ctor2__, 
+        __ctor3__, 
+        __ctor4__, 
+        __ctor5__, 
+        __ctor6__
+      }
+    }
+  end)
 end)

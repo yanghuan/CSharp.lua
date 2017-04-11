@@ -62,7 +62,7 @@ Options
 -def            : defines name as a conditional symbol, use ';' to separate
 
 -c              : support classic lua version(5.1), default support 5.3 
--i              : indent number, default is 4
+-i              : indent number, default is 2
 -sem            : append semicolon when statement over
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 ```

@@ -2,56 +2,56 @@
 local System = System
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
-    CSharpLuaLuaAst = CSharpLua.LuaAst
+  CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
-    namespace.class("LuaParameterListSyntax", function (namespace) 
-        local getOpenParenToken, getCloseParenToken, Render, __init__, __ctor__
-        __init__ = function (this) 
-            this.Parameters = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaParameterSyntax)()
-        end
-        __ctor__ = function (this) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
-        end
-        getOpenParenToken = function (this) 
-            return "(" --[[Tokens.OpenParentheses]]
-        end
-        getCloseParenToken = function (this) 
-            return ")" --[[Tokens.CloseParentheses]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render10(this)
-        end
+  namespace.class("LuaParameterListSyntax", function (namespace) 
+    local getOpenParenToken, getCloseParenToken, Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Parameters = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaParameterSyntax)()
+    end
+    __ctor__ = function (this) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+    end
+    getOpenParenToken = function (this) 
+      return "(" --[[Tokens.OpenParentheses]]
+    end
+    getCloseParenToken = function (this) 
+      return ")" --[[Tokens.CloseParentheses]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render10(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaSyntaxNode
-                }
-            end, 
-            getOpenParenToken = getOpenParenToken, 
-            getCloseParenToken = getCloseParenToken, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaSyntaxNode
         }
-    end)
-    namespace.class("LuaParameterSyntax", function (namespace) 
-        local Render, __ctor__
-        __ctor__ = function (this, identifier) 
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
-            this.Identifier = identifier
-        end
-        Render = function (this, renderer) 
-            renderer:Render11(this)
-        end
+      end, 
+      getOpenParenToken = getOpenParenToken, 
+      getCloseParenToken = getCloseParenToken, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaParameterSyntax", function (namespace) 
+    local Render, __ctor__
+    __ctor__ = function (this, identifier) 
+      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.Identifier = identifier
+    end
+    Render = function (this, renderer) 
+      renderer:Render11(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaSyntaxNode
-                }
-            end, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaSyntaxNode
         }
-    end)
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
 end)

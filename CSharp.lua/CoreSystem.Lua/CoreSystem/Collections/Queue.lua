@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,15 +26,15 @@ local InvalidOperationException = System.InvalidOperationException
 local Queue = {}
 
 function Queue.__ctor__(this, ...)
-    local len = select("#", ...)
-    if len == 0 then return end
-    local collection = ...
-    if type(collection) == "number" then return end
-    insertRangeArray(this, 0, collection)
+  local len = select("#", ...)
+  if len == 0 then return end
+  local collection = ...
+  if type(collection) == "number" then return end
+  insertRangeArray(this, 0, collection)
 end
 
 function Queue.getCount(this)
-    return #this
+  return #this
 end
 
 Queue.Clear = Collection.removeArrayAll
@@ -45,24 +45,24 @@ Queue.ToArray = Collection.toArray
 Queue.TrimExcess = System.emptyFn
 
 local function peek(t)
-    if #t == 0 then
-        throw(InvalidOperationException())
-    end
-    return getArray(t, 0)
+  if #t == 0 then
+    throw(InvalidOperationException())
+  end
+  return getArray(t, 0)
 end
 
 Queue.Peek = peek
 
 function Queue.Dequeue(t)
-    local v = peek(t)
-    removeAtArray(t, 0)
-    return v
+  local v = peek(t)
+  removeAtArray(t, 0)
+  return v
 end
 
 System.define("System.Queue", function(T) 
-    local cls = {
-        __inherits__ = { System.IEnumerable_1(T), System.ICollection },
-        __genericT__ = T,
-    }
-    return cls
+  local cls = {
+    __inherits__ = { System.IEnumerable_1(T), System.ICollection },
+    __genericT__ = T,
+  }
+  return cls
 end, Queue)

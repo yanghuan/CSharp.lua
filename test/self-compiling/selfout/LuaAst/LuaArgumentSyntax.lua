@@ -2,73 +2,73 @@
 local System = System
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
-    CSharpLuaLuaAst = CSharpLua.LuaAst
+  CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
-    namespace.class("LuaArgumentSyntax", function (namespace) 
-        local Render, __ctor__
-        __ctor__ = function (this, expression) 
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
-            if expression == nil then
-                System.throw(System.ArgumentNullException("expression"))
-            end
-            this.Expression = expression
-        end
-        Render = function (this, renderer) 
-            renderer:Render8(this)
-        end
+  namespace.class("LuaArgumentSyntax", function (namespace) 
+    local Render, __ctor__
+    __ctor__ = function (this, expression) 
+      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      if expression == nil then
+        System.throw(System.ArgumentNullException("expression"))
+      end
+      this.Expression = expression
+    end
+    Render = function (this, renderer) 
+      renderer:Render8(this)
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaSyntaxNode
-                }
-            end, 
-            Render = Render, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaSyntaxNode
         }
-    end)
-    namespace.class("LuaArgumentListSyntax", function (namespace) 
-        local getOpenParenToken, getCloseParenToken, Render, AddArgument, AddArgument1, AddArguments, __init__, __ctor__
-        __init__ = function (this) 
-            this.Arguments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaArgumentSyntax)()
-        end
-        __ctor__ = function (this) 
-            __init__(this)
-            CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
-        end
-        getOpenParenToken = function (this) 
-            return "(" --[[Tokens.OpenParentheses]]
-        end
-        getCloseParenToken = function (this) 
-            return ")" --[[Tokens.CloseParentheses]]
-        end
-        Render = function (this, renderer) 
-            renderer:Render7(this)
-        end
-        AddArgument = function (this, argument) 
-            this.Arguments:Add(argument)
-        end
-        AddArgument1 = function (this, argument) 
-            AddArgument(this, CSharpLuaLuaAst.LuaArgumentSyntax(argument))
-        end
-        AddArguments = function (this, arguments) 
-            for _, argument in System.each(arguments) do
-                AddArgument1(this, argument)
-            end
-        end
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaArgumentListSyntax", function (namespace) 
+    local getOpenParenToken, getCloseParenToken, Render, AddArgument, AddArgument1, AddArguments, __init__, __ctor__
+    __init__ = function (this) 
+      this.Arguments = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaArgumentSyntax)()
+    end
+    __ctor__ = function (this) 
+      __init__(this)
+      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+    end
+    getOpenParenToken = function (this) 
+      return "(" --[[Tokens.OpenParentheses]]
+    end
+    getCloseParenToken = function (this) 
+      return ")" --[[Tokens.CloseParentheses]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render7(this)
+    end
+    AddArgument = function (this, argument) 
+      this.Arguments:Add(argument)
+    end
+    AddArgument1 = function (this, argument) 
+      AddArgument(this, CSharpLuaLuaAst.LuaArgumentSyntax(argument))
+    end
+    AddArguments = function (this, arguments) 
+      for _, argument in System.each(arguments) do
+        AddArgument1(this, argument)
+      end
+    end
+    return {
+      __inherits__ = function (global) 
         return {
-            __inherits__ = function (global) 
-                return {
-                    global.CSharpLua.LuaAst.LuaSyntaxNode
-                }
-            end, 
-            getOpenParenToken = getOpenParenToken, 
-            getCloseParenToken = getCloseParenToken, 
-            Render = Render, 
-            AddArgument = AddArgument, 
-            AddArgument1 = AddArgument1, 
-            AddArguments = AddArguments, 
-            __ctor__ = __ctor__
+          global.CSharpLua.LuaAst.LuaSyntaxNode
         }
-    end)
+      end, 
+      getOpenParenToken = getOpenParenToken, 
+      getCloseParenToken = getCloseParenToken, 
+      Render = Render, 
+      AddArgument = AddArgument, 
+      AddArgument1 = AddArgument1, 
+      AddArguments = AddArguments, 
+      __ctor__ = __ctor__
+    }
+  end)
 end)
