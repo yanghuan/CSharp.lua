@@ -99,7 +99,7 @@ end
 local function tryParse(s)
   local v = parse(s)
   if v then
-      return true, v
+    return true, v
   end
   return false, 0
 end

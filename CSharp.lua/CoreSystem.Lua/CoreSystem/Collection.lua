@@ -528,7 +528,7 @@ end
 
 function Collection.forEachArray(t, action)
   if action == null then
-      throw(ArgumentNullException("action"))
+    throw(ArgumentNullException("action"))
   end
   local verson = getVersion(t)
   for _, i in ipairs(t) do

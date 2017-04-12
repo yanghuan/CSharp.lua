@@ -26,7 +26,7 @@ local IOException = System.define("System.IOException", {
   __tostring = System.Exception.ToString,
   __inherits__ = { System.Exception },
   __ctor__ = function(this, message, innerException) 
-      System.Exception.__ctor__(this, message, innerException)
+    System.Exception.__ctor__(this, message, innerException)
   end,
 })
 
@@ -35,7 +35,7 @@ local File = {}
 local function openFile(path, mode)
   local f, err = open(path, mode)
   if f == nil then
-      throw(IOException(err))
+    throw(IOException(err))
   end
   return f
 end
@@ -59,11 +59,11 @@ function File.ReadAllLines(path)
   local f = openFile(path, mode)
   local t = {}
   while true do
-      local line = f:read()
-      if line == nil then
-          break
-      end
-      tinsert(t, line)
+    local line = f:read()
+    if line == nil then
+      break
+    end
+    tinsert(t, line)
   end
   f:close()
   return System.arrayFromTable(t, System.String)

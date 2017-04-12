@@ -112,7 +112,7 @@ end
 
 function List.RemoveAll(this, match)
   if match == nil then
-      throw(ArgumentNullException("match"))
+    throw(ArgumentNullException("match"))
   end
   local size = #this
   local freeIndex = 1

@@ -34,7 +34,7 @@ end
 function Array.new(cls, len)
   local this = setmetatable({}, cls)
   buildArray(this, len)
-  return this;
+  return this
 end
 
 Array.set = Collection.setArray
@@ -89,7 +89,7 @@ System.define("System.Array", function(T)
 end, Array)
 
 function System.arrayFromTable(t, T)
-  return setmetatable(t, System.Array(T))
+  return setmetatable(t, Array(T))
 end
 
 local MultiArray = {}

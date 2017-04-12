@@ -38,7 +38,7 @@ end
 function LinkedListNode.getNex(this)
   local next = this.next
   if next == nil or next == this.List.head then
-      return nil
+    return nil
   end
   return next
 end
@@ -269,21 +269,21 @@ end
 
 function LinkedList.Remove(this, node)
   if getmetatable(node) == LinkedListNode then
-      vaildateNode(this, node)
-      remvoeNode(this, node)
+    vaildateNode(this, node)
+    remvoeNode(this, node)
   else
-      node = this:Find(node)
-      if node ~= nil then
-          remvoeNode(this, node)
-      end
-      return false
+    node = this:Find(node)
+    if node ~= nil then
+      remvoeNode(this, node)
+    end
+    return false
   end
 end
 
 function LinkedList.RemoveFirst(this)
   local head = this.head
   if head == nil then
-      throw(InvalidOperationException("LinkedListEmpty"))
+    throw(InvalidOperationException("LinkedListEmpty"))
   end
   remvoeNode(this, head)
 end
@@ -291,7 +291,7 @@ end
 function LinkedList.RemoveLast(this)
   local head = this.head
   if head == nil then
-      throw(InvalidOperationException("LinkedListEmpty"))
+    throw(InvalidOperationException("LinkedListEmpty"))
   end
   remvoeNode(this, head.prev)
 end

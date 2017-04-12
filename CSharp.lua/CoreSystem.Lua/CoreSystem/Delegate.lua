@@ -49,7 +49,7 @@ end
 local function appendFn(t, f)
   if getmetatable(f) == multicast then
     for _, i in ipairs(f) do
-        insert(t, i)
+      insert(t, i)
     end
   else
     insert(t, f)

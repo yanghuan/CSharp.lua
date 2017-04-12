@@ -41,7 +41,7 @@ TimeSpan.CompareTo = compare
 function TimeSpan.CompareToObj(this, t)
   if t == null then return 1 end
   if getmetatable(t) ~= TimeSpan then
-      throw(ArgumentException("Arg_MustBeTimeSpan"))
+    throw(ArgumentException("Arg_MustBeTimeSpan"))
   end
   compare(this, t)
 end

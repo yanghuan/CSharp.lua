@@ -67,23 +67,23 @@ local function IEnumerator(source, tryGetNext, init)
           init(en) 
         end
       end
-        if state == 2 then
-          local ok, v = tryGetNext(en)
-          if ok then
-            current = v
-            return true
-          elseif en then
-            local dispose = en.Dispose
-            if dispose then
-              dispose(en)
-            end    
-          end
+      if state == 2 then
+        local ok, v = tryGetNext(en)
+        if ok then
+          current = v
+          return true
+        elseif en then
+          local dispose = en.Dispose
+          if dispose then
+            dispose(en)
+          end    
         end
-        return false
-      end,
-      getCurrent = function()
+       end
+       return false
+    end,
+    getCurrent = function()
         return current
-      end
+    end
   }, InternalEnumerator)
 end
 
@@ -269,7 +269,7 @@ end
 
 local LookupFn = System.define("System.Linq.Lookup", function(TKey, TElement)
   local cls = {
-     __genericTKey__ = TKey,
+    __genericTKey__ = TKey,
     __genericTElement__ = TElement,
   }
   return cls
@@ -981,15 +981,15 @@ local function orderBy(source, keySelector, comparer, TKey, descending)
   if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
   local compare
   if descending then
-      local c = comparer.Compare
-      compare = function(x, y)
-          return -c(keySelector(x), keySelector(y))
-      end
+    local c = comparer.Compare
+    compare = function(x, y)
+      return -c(keySelector(x), keySelector(y))
+    end
   else
-      local c = comparer.Compare
-      compare = function(x, y)
-          return c(keySelector(x), keySelector(y))
-      end
+    local c = comparer.Compare
+    compare = function(x, y)
+      return c(keySelector(x), keySelector(y))
+    end
   end
   return ordered(source, compare)
 end

@@ -69,9 +69,9 @@ function Dictionary.__ctor__(this, ...)
   else 
       local dictionary, comparer = ...
       if type(dictionary) == "number" then 
-          buildFromCapacity(this, dictionary, comparer)
+        buildFromCapacity(this, dictionary, comparer)
       else
-          buildFromDictionary(this, dictionary, comparer)
+        buildFromDictionary(this, dictionary, comparer)
       end
   end
 end 

@@ -99,38 +99,38 @@ end
 
 local function checkTicks(ticks)
   if ticks < 0 or ticks > 3155378975999999999 then
-      throw(ArgumentOutOfRangeException("ticks", "ArgumentOutOfRange_DateTimeBadTicks"))
+    throw(ArgumentOutOfRangeException("ticks", "ArgumentOutOfRange_DateTimeBadTicks"))
   end
 end
 
 local function checkKind(kind) 
   if kind and (kind < 0 or kind > 2) then
-      throw(ArgumentOutOfRangeException("kind"))
+    throw(ArgumentOutOfRangeException("kind"))
   end
 end
 
 function DateTime.__ctor__(this, ...)
   local len = select("#", ...)
   if len == 1 or len == 2 then
-      local ticks, kind = ...
-      checkTicks(ticks)
-      checkKind(kind)
-      this.ticks = ticks
-      this.kind = kind
+    local ticks, kind = ...
+    checkTicks(ticks)
+    checkKind(kind)
+    this.ticks = ticks
+    this.kind = kind
   elseif len == 3 then
-      this.ticks = dateToTicks(...)
+    this.ticks = dateToTicks(...)
   elseif len == 6 or len == 7 then
-      local year, month, day, hour, minute, second, kind = ...
-      checkKind(kind)
-      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second)
-      this.kind = kind
+    local year, month, day, hour, minute, second, kind = ...
+    checkKind(kind)
+    this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second)
+    this.kind = kind
   elseif len == 8 then
-      local year, month, day, hour, minute, second, millisecond, kind = ...
-      checkKind(kind)
-      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
-      this.kind = kind
+    local year, month, day, hour, minute, second, millisecond, kind = ...
+    checkKind(kind)
+    this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
+    this.kind = kind
   else
-      assert(false)
+    assert(false)
   end
 end
 
@@ -139,8 +139,8 @@ local function addTicks(this, value)
 end
 
 local function add(this, value, scale)
-    local millis = value * scale + (value >= 0 and 0.5 or -0.5)
-    return addTicks(this, millis * 10000)
+  local millis = value * scale + (value >= 0 and 0.5 or -0.5)
+  return addTicks(this, millis * 10000)
 end
 
 DateTime.AddTicks = addTicks
@@ -181,7 +181,7 @@ local function getDataPart(ticks, part)
   local y1 = div(n, 365)
   if y1 == 4 then y1 = 3 end
   if part == 0 then
-      return y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1
+    return y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1
   end
   n = n - y1 * 365
   if part == 1 then return n + 1 end
@@ -213,14 +213,14 @@ local function addMonths(this, months)
   local d = getDataPart(ticks, 3)
   local i = m - 1 + months
   if i >= 0 then
-      m = i % 12 + 1
-      y = y + div(i, 12)
+    m = i % 12 + 1
+    y = y + div(i, 12)
   else
-      m = 12 + (i + 1) % 12;
-      y = y + div(i - 11, 12);
+    m = 12 + (i + 1) % 12;
+    y = y + div(i - 11, 12)
   end
   if y < 1 or y > 9999 then
-      throw(ArgumentOutOfRangeException("months")) 
+    throw(ArgumentOutOfRangeException("months")) 
   end
   local days = daysInMonth(y, m)
   if d > days then d = days end
@@ -231,7 +231,7 @@ DateTime.AddMonths = addMonths
 
 function DateTime.AddYears(this, years)
   if years < - 10000 or years > 10000 then
-      throw(ArgumentOutOfRangeException("years")) 
+    throw(ArgumentOutOfRangeException("years")) 
   end
   return addMonths(this, years * 12)
 end
@@ -242,7 +242,7 @@ end
 
 function DateTime.Subtract(this, v) 
   if getmetatable(v) == DateTime then
-      return TimeSpan(this.ticks - v.ticks)
+    return TimeSpan(this.ticks - v.ticks)
   end
   return DateTime(this.ticks - ts.ticks, this.kind) 
 end
@@ -317,7 +317,7 @@ end
 
 function DateTime.ToLocalTime(this)
   if this.kind == 2 then 
-      return this
+    return this
   end
   local ticks = this.ticks + timeZoneTicks
   return DateTime(ticks, 2)
@@ -325,7 +325,7 @@ end
 
 function DateTime.ToUniversalTime(this)
   if this.kind == 1 then
-      return this
+    return this
   end
   local ticks = this.ticks - timeZoneTicks
   return DateTime(ticks, 1)
