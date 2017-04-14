@@ -43,15 +43,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       AddFieldAttributes(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Class, attributes)
     end
     AddMethodAttributes = function (this, name, attributes) 
-      if #attributes > 0 then
-        local table = CSharpLuaLuaAst.LuaTableInitializerExpression()
-        table.Items:AddRange(Linq.Select(attributes, function (i) 
-          return CSharpLuaLuaAst.LuaSingleTableItemSyntax(i)
-        end, CSharpLuaLuaAst.LuaSingleTableItemSyntax))
-        local key = CSharpLuaLuaAst.LuaTableExpressionKeySyntax(name)
-        local item = CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(key, table)
-        this.attributes_.Items:Add(item)
-      end
+      AddFieldAttributes(this, name, attributes)
     end
     AddFieldAttributes = function (this, name, attributes) 
       if #attributes > 0 then

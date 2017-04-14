@@ -813,9 +813,13 @@ namespace CSharpLua {
           string triviaText = trivia.ToString();
           if (!string.IsNullOrWhiteSpace(triviaText)) {
             string shortComment = LuaSyntaxNode.Tokens.ShortComment;
-            string comment = shortComment + triviaText.TrimEnd(Environment.NewLine).Replace(Environment.NewLine, "\n").Replace("///", shortComment);
-            var statement = new LuaExpressionStatementSyntax(new LuaIdentifierNameSyntax(comment));
-            comments.Add(statement);
+            var array = triviaText.Replace("///", string.Empty).Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            LuaStatementListSyntax codes = new LuaStatementListSyntax();
+            foreach (string comment in array) {
+              var commentExpression = new LuaIdentifierNameSyntax(shortComment + ' ' + comment.Trim());
+              codes.Statements.Add(new LuaExpressionStatementSyntax(commentExpression));
+            }
+            comments.Add(codes);
           }
         }
       }

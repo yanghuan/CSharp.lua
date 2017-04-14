@@ -3264,9 +3264,13 @@ System.namespace("CSharpLua", function (namespace)
           local triviaText = trivia:ToString()
           if not System.String.IsNullOrWhiteSpace(triviaText) then
             local shortComment = "--" --[[Tokens.ShortComment]]
-            local comment = shortComment .. CSharpLua.Utility.TrimEnd(triviaText, System.Environment.getNewLine()):Replace(System.Environment.getNewLine(), "\n"):Replace("///", shortComment)
-            local statement = CSharpLuaLuaAst.LuaExpressionStatementSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, comment))
-            comments:Add(statement)
+            local array = triviaText:Replace("///", ""):Split(System.Array(System.String)(System.Environment.getNewLine()), 1 --[[StringSplitOptions.RemoveEmptyEntries]])
+            local codes = CSharpLuaLuaAst.LuaStatementListSyntax()
+            for _, comment in System.each(array) do
+              local commentExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, (shortComment .. ' ') .. comment:Trim())
+              codes.Statements:Add(CSharpLuaLuaAst.LuaExpressionStatementSyntax(commentExpression))
+            end
+            comments:Add(codes)
           end
         end
       end
