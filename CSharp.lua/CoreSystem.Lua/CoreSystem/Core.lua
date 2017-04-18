@@ -24,7 +24,6 @@ local table = table
 local tinsert = table.insert
 local tremove = table.remove
 local tconcat = table.concat
-local rawget = rawget
 local floor = math.floor
 local ceil = math.ceil
 local error = error
@@ -37,10 +36,8 @@ local global = _G
 local emptyFn = function() end
 local identityFn = function(x) return x end
 local equals = function(x, y) return x == y end
-local genericCache = {}
 local modules = {}
 local usings = {}
-local id = 0
 local Object = {}
 
 local function new(cls, ...)
@@ -106,49 +103,40 @@ local function set(className, cls)
   return cls
 end
 
-local function getId()
-  id = id + 1
-  return id
-end
-
 local function defaultValOfZero()
   return 0
 end
 
-local idCreator = {}
-
-local function genericId(id, ...) 
-  idCreator[1] = id
-  local len = select("#", ...)
-  for i = 1, len do
-    local cls = select(i, ...)
-    idCreator[i + 1] = cls.__id__
+local function genericKey(t, k, ...) 
+  for i = 1, select("#", ...) do
+    local tk = t[k]
+    if tk == nil then
+      tk = {}
+      t[k] = tk
+    end
+    t = tk
+    k = select(i, ...)
   end
-  return tconcat(idCreator, ".", 1, len + 1)
+  return t, k
 end
 
-local nameCreator = {}
-
 local function genericName(name, ...)
-  nameCreator[1] = name
-  nameCreator[2] = "["
-  local comma, offset
-  offset = 2
+  local t = {}
+  tinsert(t, name)
+  tinsert(t, "[")
+  
+  local hascomma
   for i = 1, select("#", ...) do
-    local cls = select(i, ...)
-    if comma then
-      nameCreator[offset + 1] = ","
-      nameCreator[offset + 2] = cls.__name__
-      offset = offset + 2
-    else
-      nameCreator[offset + 1] = cls.__name__
-      offset = offset + 1
-      comma = true
-    end
+      local cls = select(i, ...)
+      if hascomma then
+        tinsert(t, ",")
+      else
+        hascomma = true
+      end
+      tinsert(t, cls.__name__)
   end
-  offset = offset + 1
-  nameCreator[offset] = "]"
-  return tconcat(nameCreator, nil, 1, offset)
+  tinsert(t, "]")
+  return tconcat(t)
 end
 
 local enumMetatable = { __kind__ = "E", __default__ = defaultValOfZero, __index = false }
@@ -215,21 +203,20 @@ local function def(name, kind, cls, generic)
       generic.__index = generic
       generic.__call = new
     end
-    local id = getId()
-    local fn = function(...)
-      local trueId = genericId(id, ...)
-      local t = genericCache[trueId]
+    local mt = {}
+    local fn = function(_, ...)
+      local gt, gk = genericKey(mt, ...)
+      local t = gt[gk]
       if t == nil then
-        local obj = cls(...) or {}
-        t = def(nil, kind, obj, genericName(name, ...))
+        t = def(nil, kind, cls(...) or {}, genericName(name, ...))
         if generic then
           setmetatable(t, generic)
         end
-        genericCache[trueId] = t
+        gt[gk] = t
       end
       return t
     end
-    return set(name, setmetatable(generic or {}, { __call = function(_, ...) return fn(...) end, __index = Object }))
+    return set(name, setmetatable(generic or {}, { __call = fn, __index = Object }))
   end
   cls = cls or {}
   if name ~= nil then
@@ -238,7 +225,6 @@ local function def(name, kind, cls, generic)
   else
     cls.__name__ = generic
   end
-  cls.__id__ = getId()
   if kind == "C" or kind == "S" then
 	cls.__kind__ = kind
     if cls.__staticCtor__ == nil then

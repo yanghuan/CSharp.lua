@@ -110,29 +110,29 @@ namespace CSharpLua.LuaAst {
     }
 
     public static string[] TempIdentifiers = {
-            "default", "extern", "ref", "out", "internal",
-            "void",  "case", "new", "object", "using",
-            "fixed", "override", "abstract", "checked", "virtual",
-        };
+      "default", "extern", "ref", "out", "internal",
+      "void",  "case", "new", "object", "using",
+      "fixed", "override", "abstract", "checked", "virtual",
+    };
 
     public readonly static HashSet<string> ReservedWords = new HashSet<string>() {
-            //  lua reserved words
-            "and", "elseif", "end", "function", "local", "nil", "not", "or", "repeat", "then", "until",
+      //  lua reserved words
+      "and", "elseif", "end", "function", "local", "nil", "not", "or", "repeat", "then", "until",
             
-            // compiler reserved words
-            "System", "Linq",
-        };
+      // compiler reserved words
+      "System", "Linq",
+    };
 
     public readonly static HashSet<string> SpecialReservedWords = new HashSet<string>() {
-            // lua metatable methods
-            "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
-            "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",
-            "__eq", "__lt", "__le", "__index", "__newindex", "__call",
+      // lua metatable methods
+      "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
+      "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",
+      "__eq", "__lt", "__le", "__index", "__newindex", "__call",
 
-            // adapter special methods 
-            "__id__", "__name__", "__kind__", "__base__", "__ctor__", "__inherits__",
-            "__interfaces__", "__default__", "__recursion__", "__attributes__", "__clone__",
-        };
+      // adapter special methods 
+      "__name__", "__kind__", "__base__", "__ctor__", "__inherits__",
+      "__interfaces__", "__default__", "__attributes__", "__clone__",
+    };
 
     public static bool IsReservedWord(string identifier) {
       return ReservedWords.Contains(identifier);
