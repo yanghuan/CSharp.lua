@@ -84,7 +84,7 @@ local function dateToTicks(year, month, day)
     local days = isLeapYear(year) and daysToMonth366 or daysToMonth365
     if day >= 1 and day <= days[month + 1] - days[month] then
       local y = year - 1
-      local n = y * 365 + div(97 * y, 400) + days[month] + day - 1
+      local n = y * 365 + div(y, 4) - div(y, 100) + div(y, 400) + days[month] + day - 1
       return n * 864e9
     end
   end
