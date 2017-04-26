@@ -39,8 +39,8 @@ function Array.new(cls, len)
   return this
 end
 
-Array.set = Collection.setArray
-Array.get = Collection.getArray
+Array.set = setArray
+Array.get = getArray
 Array.GetEnumerator = arrayEnumerator
 
 function Array.getLength(this)
