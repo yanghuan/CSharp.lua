@@ -34,6 +34,7 @@ local rawset = rawset
 local global = _G
 
 local emptyFn = function() end
+local falseFn = function() return false end
 local identityFn = function(x) return x end
 local equals = function(x, y) return x == y end
 local modules = {}
@@ -269,6 +270,7 @@ end
 
 System = {
   emptyFn = emptyFn,
+  falseFn = falseFn,
   identityFn = identityFn,
   equals = equals,
   try = try,
@@ -446,12 +448,11 @@ function System.init(namelist, conf)
   for _, f in ipairs(usings) do
     f(global)
   end
-  modules = nil
-  usings = nil
-
   if conf ~= nil then
     System.entryPoint = conf.Main
   end
+  modules = nil
+  usings = nil
 end
 
 local function multiNew(cls, inx, ...) 
@@ -510,7 +511,15 @@ debug.setmetatable(nil, {
     else
       return a
     end
-  end
+  end,
+  __add = emptyFn,
+  __sub = emptyFn,
+  __mul = emptyFn,
+  __div = emptyFn,
+  __mod = emptyFn,
+  __unm = emptyFn,
+  __lt = falseFn,
+  __le = falseFn,
 })
 
 function System.toString(t)

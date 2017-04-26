@@ -444,7 +444,7 @@ namespace CSharpLua {
     private static bool IsNumberTypeAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
       if (left.SpecialType.IsBaseNumberType() && right.SpecialType.IsBaseNumberType()) {
         SpecialType begin;
-        switch (left.SpecialType) {
+        switch (right.SpecialType) {
           case SpecialType.System_Char:
           case SpecialType.System_SByte:
           case SpecialType.System_Byte: {
