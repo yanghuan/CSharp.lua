@@ -18,6 +18,8 @@ limitations under the License.
 local System = System
 local Collection = System.Collection
 local buildArray = Collection.buildArray
+local getArray = Collection.getArray
+local setArray = Collection.setArray
 local checkIndex = Collection.checkIndex 
 local arrayEnumerator = Collection.arrayEnumerator
 
