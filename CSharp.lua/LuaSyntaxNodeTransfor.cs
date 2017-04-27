@@ -2443,10 +2443,19 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitCastExpression(CastExpressionSyntax node) {
+      var constValue = semanticModel_.GetConstantValue(node);
+      if (constValue.HasValue) {
+        return GetConstLiteralExpression(constValue.Value);
+      }
+
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
 
       var originalType = semanticModel_.GetTypeInfo(node.Expression).Type;
       var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
+
+      if (targetType.IsAssignableFrom(originalType)) {
+        return expression;
+      }
 
       if (targetType.TypeKind == TypeKind.Enum) {
         if (originalType.TypeKind == TypeKind.Enum || originalType.IsIntegerType()) {
@@ -2462,10 +2471,6 @@ namespace CSharpLua {
         if (originalType.SpecialType == SpecialType.System_Double || originalType.SpecialType == SpecialType.System_Single) {
           return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Trunc, expression);
         }
-      }
-
-      if (targetType.IsAssignableFrom(originalType)) {
-        return expression;
       }
 
       var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);

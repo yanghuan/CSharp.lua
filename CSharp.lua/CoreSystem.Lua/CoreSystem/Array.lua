@@ -18,6 +18,8 @@ limitations under the License.
 local System = System
 local Collection = System.Collection
 local buildArray = Collection.buildArray
+local getArray = Collection.getArray
+local setArray = Collection.setArray
 local checkIndex = Collection.checkIndex 
 local arrayEnumerator = Collection.arrayEnumerator
 
@@ -37,8 +39,8 @@ function Array.new(cls, len)
   return this
 end
 
-Array.set = Collection.setArray
-Array.get = Collection.getArray
+Array.set = setArray
+Array.get = getArray
 Array.GetEnumerator = arrayEnumerator
 
 function Array.getLength(this)
