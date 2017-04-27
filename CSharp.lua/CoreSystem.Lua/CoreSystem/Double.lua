@@ -155,4 +155,26 @@ function Double.__inherits__()
   return { System.IComparable, System.IFormattable, System.IComparable_1(Double), System.IEquatable_1(Double) }
 end
 
+local toUInt = System.toUInt
+local toInt = System.toInt
+
+function Double.toByte(v, checked)
+  return toUInt(255, 0xff, checked)
+end
+
+function Double.toSByte(v, checked)
+  return toInt(-128, 127, 0xff, 0x7f, checked)
+end
+
+function Double.toInt16(v, checked)
+  return toInt(-32768, 32767, 0xffff, 0x7fff, checked)
+end
+
+function Double.toUInt16(v, checked)
+  return toUInt(65535, 0xffff, checked)
+end
+
+Double.toUInt32 = System.toUInt32
+Double.toInt32 = System.toInt32
+
 System.defStc("System.Double", Double)

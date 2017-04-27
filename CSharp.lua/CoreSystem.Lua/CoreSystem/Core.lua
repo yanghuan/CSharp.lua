@@ -295,25 +295,137 @@ System.luaVersion = version
 
 if version < 5.3 then
   local bit = require("bit")
+  local band = bit.band
+  local xor = bit.bxor
+
   System.bnot = bit.bnot
-  System.band = bit.band
+  System.band = band
   System.bor = bit.bor
-  System.xor = bit.bxor
+  System.xor = xor
   System.sl = bit.lshift
   System.sr = bit.rshift
 
-  System.div = function (x, y) 
+  function System.div(x, y) 
     if y == 0 then
-      throw(System.DivideByZeroException())
+      throw(System.DivideByZeroException(), 1)
     end
     return trunc(x / y)
   end    
     
-  System.mod = function (x, y) 
+  function System.mod(x, y) 
     if y == 0 then
-      throw(System.DivideByZeroException())
+      throw(System.DivideByZeroException(), 1)
     end
     return x % y;
+  end
+
+  function System.toUInt(v, max, mask, checked)
+    if v >= 0 and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    return band(v, mask)
+  end
+
+  function System.toUIntOfD(v, max, mask, checked)
+    v = trunc(v)
+    if v >= 0 and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v < -2147483648 or v > 2147483647 then
+      return 0
+    end
+    return band(v, mask)
+  end
+
+  local function toInt(v, mask, umask)
+    v = band(v, mask)
+    local uv = band(v, umask)
+    if uv ~= v then
+      return -xor(uv - 1, umask)
+    end
+    return v
+  end
+
+  function System.toInt(v, min, max, mask, umask, checked)
+    if v >= min and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    return toInt(v, mask, umask)
+  end
+
+  function System.toIntOfD(v, min, max, mask, umask, checked)
+    v = trunc(v)
+    if v >= min and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v < -2147483648 or v > 2147483647 then
+      return 0
+    end
+    return toInt(v, mask, umask)
+  end
+
+  local function toUInt32(v)
+    v = band(v, 0xffffffff)
+    local uv = band(v, 0x7fffffff)
+    if uv ~= v then
+      return uv + 0x80000000
+    end
+    return v
+  end
+
+  function System.toUInt32(v, checked)
+    if v >= 0 and v <= 4294967295 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
+      throw(System.InvalidCastException()) 
+    end
+    return toUInt32(v)
+  end
+
+  function System.toUInt32OfD(v, checked)
+    v = trunc(v)
+    if v >= 0 and v <= 4294967295 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v <= -4503599627370496 or v >= 4503599627370496 then -- 2 ^ 52
+      return 0
+    end
+    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
+      throw(System.InvalidCastException()) 
+    end
+    return toUInt32(v)
+  end
+
+  function System.toInt32(v, checked)
+    if v >= -2147483648 and v <= 2147483647 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
+      throw(System.InvalidCastException()) 
+    end
+    return band(v, 0xffffffff)
   end
 
   if table.unpack == nil then
@@ -333,15 +445,112 @@ if version < 5.3 then
   end
 else  
   load[[
-  System.bnot = function (x) return ~v end 
-  System.band = function (x, y) return x & y end
-  System.bor = function (x, y) return x | y end
-  System.xor = function (x, y) return x ~ y end
-  System.sl  = function (x, y) return x << y end
-  System.sr  = function (x, y) return x >> y end
-  System.div = function (x, y) return x // y end
-  System.mod = function (x, y) return x % y end
-  ]] ()
+  local System = System
+  local throw = System.throw
+  local trunc = System.trunc
+  
+  function System.bnot(x) return ~v end 
+  function System.band(x, y) return x & y end
+  function System.bor(x, y) return x | y end
+  function System.xor(x, y) return x ~ y end
+  function System.sl(x, y) return x << y end
+  function System.sr(x, y) return x >> y end
+  function System.div (x, y) return x // y end
+  function System.mod(x, y) return x % y end
+  
+  local function toUInt (v, max, mask, checked)  
+    if v >= 0 and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 2) 
+    end
+    return v & mask
+  end
+  System.toUInt = toUInt
+
+  function System.toUIntOfD(v, max, mask, checked)
+    v = trunc(v)
+    if v >= 0 and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 2) 
+    end
+    if v < -2147483648 or v > 2147483647 then
+      return 0
+    end
+    return v & mask
+  end
+  
+  local function toSingedInt(v, mask, umask)
+    v = v & mask
+    local uv = v & umask
+    if uv ~= v then
+      return -((uv - 1) ~ umask)
+    end
+    return v
+  end
+  
+  local function toInt(v, min, max, mask, umask, checked)
+    if v >= min and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 2) 
+    end
+    return toSingedInt(v, mask, umask)
+  end
+  System.toInt = toInt
+  
+  function System.toIntOfD(v, min, max, mask, umask, checked)
+    v = trunc(v)
+    if v >= min and v <= max then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v < -2147483648 or v > 2147483647 then
+      return 0
+    end
+    return toSingedInt(v, mask, umask)
+  end
+
+  function System.toUInt32(v, checked)
+    return toUInt(v, 4294967295, 0xffffffff, checked)
+  end
+  
+  function System.toUInt32OfD(v, checked)
+    v = trunc(v)
+    if v >= 0 and v <= 4294967295 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v <= -4503599627370496 or v >= 4503599627370496 then -- 2 ^ 52
+      return 0
+    end
+    return v & 0xffffffff
+  end
+  
+  function System.toInt32(v, checked)
+    return toInt(v, -2147483648, 2147483647, 0xffffffff, 0x7fffffff, checked)
+  end
+  
+  ]]()
+end
+
+function System.toInt32OfD(v, checked)
+  v = trunc(v)
+  if v >= -2147483648 and v <= 2147483647 then
+    return v
+  end
+  if checked then
+    throw(System.OverflowException(), 1) 
+  end
+  return -2147483648
 end
 
 function System.using(t, f)
