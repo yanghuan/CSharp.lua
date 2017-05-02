@@ -364,6 +364,8 @@ namespace CSharpLua {
       LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
       LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(symbol.ToString(), name, CurCompilationUnit);
       typeDeclarations_.Push(enumDeclaration);
+      var comments = BuildDocumentationComment(node);
+      enumDeclaration.AddDocumentComments(comments);
       foreach (var member in node.Members) {
         var statement = (LuaKeyValueTableItemSyntax)member.Accept(this);
         enumDeclaration.Add(statement);
