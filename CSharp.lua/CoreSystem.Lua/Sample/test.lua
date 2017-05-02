@@ -198,10 +198,6 @@ local function testType()
   print(System.cast(System.String, "ddd"))
 end
 
-local function TypeNumCast()
-  
-end
-
 local function testConsole()
   print("enter your name")
   local name = System.Console.ReadLine()
@@ -228,7 +224,6 @@ test(testYeild, "Yeild")
 test(testDelegate, "Delegate")
 test(testLinq, "Linq")
 test(testType, "Type")
-test(TypeNumCast, "TypeNumCast")
 --test(testConsole, "Console")
 --test(testIO, "IO")
 

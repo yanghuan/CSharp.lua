@@ -329,7 +329,7 @@ if version < 5.3 then
     return band(v, mask)
   end
 
-  function System.toUIntOfD(v, max, mask, checked)
+  function System.ToUInt(v, max, mask, checked)
     v = trunc(v)
     if v >= 0 and v <= max then
       return v
@@ -362,7 +362,7 @@ if version < 5.3 then
     return toInt(v, mask, umask)
   end
 
-  function System.toIntOfD(v, min, max, mask, umask, checked)
+  function System.ToInt(v, min, max, mask, umask, checked)
     v = trunc(v)
     if v >= min and v <= max then
       return v
@@ -398,16 +398,13 @@ if version < 5.3 then
     return toUInt32(v)
   end
 
-  function System.toUInt32OfD(v, checked)
+  function System.ToUInt32(v, checked)
     v = trunc(v)
     if v >= 0 and v <= 4294967295 then
       return v
     end
     if checked then
       throw(System.OverflowException(), 1) 
-    end
-    if v <= -4503599627370496 or v >= 4503599627370496 then -- 2 ^ 52
-      return 0
     end
     if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
       throw(System.InvalidCastException()) 
@@ -426,6 +423,25 @@ if version < 5.3 then
       throw(System.InvalidCastException()) 
     end
     return band(v, 0xffffffff)
+  end
+
+  function System.ToUInt64(v, checked)
+    v = trunc(v)
+    if v >= 0 and v <= 18446744073709551615 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
+      throw(System.InvalidCastException()) 
+    end
+    v = band(v, 0xffffffff)
+    local uv = band(v, 0x7fffffff)
+    if uv ~= v then
+      return uv + 0x8000000000000000
+    end
+    return v
   end
 
   if table.unpack == nil then
@@ -469,7 +485,7 @@ else
   end
   System.toUInt = toUInt
 
-  function System.toUIntOfD(v, max, mask, checked)
+  function System.ToUInt(v, max, mask, checked)
     v = trunc(v)
     if v >= 0 and v <= max then
       return v
@@ -503,7 +519,7 @@ else
   end
   System.toInt = toInt
   
-  function System.toIntOfD(v, min, max, mask, umask, checked)
+  function System.ToInt(v, min, max, mask, umask, checked)
     v = trunc(v)
     if v >= min and v <= max then
       return v
@@ -521,16 +537,13 @@ else
     return toUInt(v, 4294967295, 0xffffffff, checked)
   end
   
-  function System.toUInt32OfD(v, checked)
+  function System.ToUInt32(v, checked)
     v = trunc(v)
     if v >= 0 and v <= 4294967295 then
       return v
     end
     if checked then
       throw(System.OverflowException(), 2) 
-    end
-    if v <= -4503599627370496 or v >= 4503599627370496 then -- 2 ^ 52
-      return 0
     end
     return v & 0xffffffff
   end
@@ -539,10 +552,63 @@ else
     return toInt(v, -2147483648, 2147483647, 0xffffffff, 0x7fffffff, checked)
   end
   
+  function System.ToUInt64(v, checked)
+    v = trunc(v)
+    if v >= 0 and v <= 18446744073709551615 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    v = band(v, 0xffffffff)
+    local uv = band(v, 0x7fffffff)
+    if uv ~= v then
+      return uv + 0x8000000000000000
+    end
+    return v
+  end
+
   ]]()
 end
 
-function System.toInt32OfD(v, checked)
+local toUInt = System.toUInt
+local toInt = System.toInt
+local ToUInt = System.ToUInt
+local ToInt = System.ToInt
+
+function System.toByte(v, checked)
+  return toUInt(v, 255, 0xff, checked)
+end
+
+function System.toSByte(v, checked)
+  return toInt(v, -128, 127, 0xff, 0x7f, checked)
+end
+
+function System.toInt16(v, checked)
+  return toInt(v, -32768, 32767, 0xffff, 0x7fff, checked)
+end
+
+function System.toUInt16(v, checked)
+  return toUInt(v, 65535, 0xffff, checked)
+end
+
+function System.ToByte(v, checked)
+  return ToUInt(v, 255, 0xff, checked)
+end
+
+function System.ToSByte(v, checked)
+  return ToInt(v, -128, 127, 0xff, 0x7f, checked)
+end
+
+function System.ToInt16(v, checked)
+  return ToInt(v, -32768, 32767, 0xffff, 0x7fff, checked)
+end
+
+function System.ToUInt16(v, checked)
+  return ToUInt(v, 65535, 0xffff, checked)
+end
+
+function System.ToInt32(v, checked)
   v = trunc(v)
   if v >= -2147483648 and v <= 2147483647 then
     return v
@@ -551,6 +617,31 @@ function System.toInt32OfD(v, checked)
     throw(System.OverflowException(), 1) 
   end
   return -2147483648
+end
+
+function System.ToInt64(v, checked)
+  v = trunc(v)
+  if v >= -9223372036854775808 and v <= 9223372036854775807 then
+    return v
+  end
+  if checked then
+    throw(System.OverflowException(), 1) 
+  end
+  return -9223372036854775808
+end
+
+function System.ToSingle(v, checked)
+  if v >= -3.40282347E+38 and v <= 3.40282347E+38 then
+    return v
+  end
+  if checked then
+    throw(System.OverflowException(), 1) 
+  end
+  if v > 0 then
+    return 1 / 0 
+  else
+    return -1 / 0
+  end
 end
 
 function System.using(t, f)

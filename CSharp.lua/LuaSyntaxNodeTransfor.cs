@@ -2448,10 +2448,9 @@ namespace CSharpLua {
         return GetConstLiteralExpression(constValue.Value);
       }
 
-      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-
       var originalType = semanticModel_.GetTypeInfo(node.Expression).Type;
       var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
+      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
 
       if (targetType.IsAssignableFrom(originalType)) {
         return expression;
@@ -2469,34 +2468,25 @@ namespace CSharpLua {
         }
 
         if (originalType.IsIntegerType()) {
-          var target = BuildMemberAccessTargetExpression(node.Expression);
-          var memberAccess = new LuaMemberAccessExpressionSyntax(target, GetCastToIntMethodName(targetType, false), true);
-          if (IsCurChecked) {
-            return new LuaInvocationExpressionSyntax(memberAccess, LuaIdentifierNameSyntax.True);
-          } else {
-            return new LuaInvocationExpressionSyntax(memberAccess);
-          }
+          return GetCastToNumberExpression(expression, targetType, false);
         }
 
         if (originalType.SpecialType == SpecialType.System_Double || originalType.SpecialType == SpecialType.System_Single) {
-          var target = BuildMemberAccessTargetExpression(node.Expression);
-          var memberAccess = new LuaMemberAccessExpressionSyntax(target, GetCastToIntMethodName(targetType, true), true);
-          if (IsCurChecked) {
-            return new LuaInvocationExpressionSyntax(memberAccess, LuaIdentifierNameSyntax.True);
-          } else {
-            return new LuaInvocationExpressionSyntax(memberAccess);
-          }
+          return GetCastToNumberExpression(expression, targetType, true);
         }
+      }
+      else if (targetType.SpecialType == SpecialType.System_Single && originalType.SpecialType == SpecialType.System_Double) {
+        return GetCastToNumberExpression(expression, targetType, true);
       }
 
       var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, typeExpression, expression);
     }
 
-    private LuaIdentifierNameSyntax GetCastToIntMethodName(ITypeSymbol targetType, bool isFromFloat) {
-      const string kPrefixFromInt = "to";
-      const string kPrefixFromFloat = "To";
-      return new LuaIdentifierNameSyntax((isFromFloat ? kPrefixFromFloat : kPrefixFromInt) + targetType.Name);
+    private LuaExpressionSyntax GetCastToNumberExpression(LuaExpressionSyntax expression, ITypeSymbol targetType, bool isFromFloat) {
+      string name = (isFromFloat ?  "To" : "to") + targetType.Name;
+      var methodName = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
+      return new LuaInvocationExpressionSyntax(methodName, expression);
     }
 
     public override LuaSyntaxNode VisitCheckedStatement(CheckedStatementSyntax node) {
