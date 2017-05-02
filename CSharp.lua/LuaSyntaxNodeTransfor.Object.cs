@@ -374,6 +374,13 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitTypeOfExpression(TypeOfExpressionSyntax node) {
+      var type = semanticModel_.GetTypeInfo(node.Type).Type;
+      if (type != null && type.TypeKind == TypeKind.Enum) {
+        AddExportEnum(type);
+        var typeNameExpression = GetTypeShortName(type);
+        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf, typeNameExpression);
+      }
+
       var typeName = (LuaIdentifierNameSyntax)node.Type.Accept(this);
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf, typeName);
     }

@@ -259,7 +259,13 @@ namespace CSharpLua {
         }
         else if (key == "class") {
           var type = semanticModel_.GetTypeInfo(targetExpression).Type;
-          var typeName = GetTypeName(type);
+          LuaExpressionSyntax typeName;
+          if (type.TypeKind == TypeKind.Enum) {
+            typeName = GetTypeShortName(type);
+            AddExportEnum(type);
+          } else {
+            typeName = GetTypeName(type);
+          }
           AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
         }
         else if (key[0] == '^') {
@@ -267,7 +273,13 @@ namespace CSharpLua {
           if (int.TryParse(key.Substring(1), out typeIndex)) {
             var typeArgument = typeArguments.GetOrDefault(typeIndex);
             if (typeArgument != null) {
-              var typeName = GetTypeName(typeArgument);
+              LuaExpressionSyntax typeName;
+              if (typeArgument.TypeKind == TypeKind.Enum && codeTemplate.StartsWith("System.Enum.TryParse")) {
+                typeName = GetTypeShortName(typeArgument);
+                AddExportEnum(typeArgument);
+              } else {
+                typeName = GetTypeName(typeArgument);
+              }
               AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
             }
           }
@@ -304,6 +316,11 @@ namespace CSharpLua {
       }
 
       return codeTemplateExpression;
+    }
+
+    private void AddExportEnum(ITypeSymbol enumType) {
+      Contract.Assert(enumType.TypeKind == TypeKind.Enum);
+      generator_.AddExportEnum(enumType.ToString());
     }
 
     private bool IsPropertyField(IPropertySymbol symbol) {

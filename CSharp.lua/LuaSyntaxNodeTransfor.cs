@@ -1983,7 +1983,7 @@ namespace CSharpLua {
           return new LuaConstLiteralExpression(symbol.Name, typeInfo.ToString());
         }
         else {
-          generator_.AddExportEnum(typeInfo.ToString());
+          AddExportEnum(typeInfo);
           LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo);
           LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToEnumString, true);
           return new LuaInvocationExpressionSyntax(memberAccess, typeName);
