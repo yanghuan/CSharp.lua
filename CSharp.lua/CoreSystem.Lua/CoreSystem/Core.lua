@@ -377,6 +377,9 @@ if version < 5.3 then
   end
 
   local function toUInt32(v)
+    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
+      throw(System.InvalidCastException()) 
+    end
     v = band(v, 0xffffffff)
     local uv = band(v, 0x7fffffff)
     if uv ~= v then
@@ -392,9 +395,6 @@ if version < 5.3 then
     if checked then
       throw(System.OverflowException(), 1) 
     end
-    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
-      throw(System.InvalidCastException()) 
-    end
     return toUInt32(v)
   end
 
@@ -405,9 +405,6 @@ if version < 5.3 then
     end
     if checked then
       throw(System.OverflowException(), 1) 
-    end
-    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
-      throw(System.InvalidCastException()) 
     end
     return toUInt32(v)
   end
@@ -425,6 +422,19 @@ if version < 5.3 then
     return band(v, 0xffffffff)
   end
 
+  function System.toUInt64(v, checked)
+    if v >= 0 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    if v >= -2147483648 then
+      return band(v, 0x7fffffff) + 0xffffffff80000000
+    end
+    throw(System.InvalidCastException()) 
+  end
+
   function System.ToUInt64(v, checked)
     v = trunc(v)
     if v >= 0 and v <= 18446744073709551615 then
@@ -433,15 +443,15 @@ if version < 5.3 then
     if checked then
       throw(System.OverflowException(), 1) 
     end
-    if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
-      throw(System.InvalidCastException()) 
+    if v >= -2147483648 and v <= 2147483647 then
+      v = band(v, 0xffffffff)
+      local uv = band(v, 0x7fffffff)
+      if uv ~= v then
+        return uv + 0xffffffff80000000
+      end
+      return v
     end
-    v = band(v, 0xffffffff)
-    local uv = band(v, 0x7fffffff)
-    if uv ~= v then
-      return uv + 0x8000000000000000
-    end
-    return v
+    throw(System.InvalidCastException()) 
   end
 
   if table.unpack == nil then
@@ -543,7 +553,7 @@ else
       return v
     end
     if checked then
-      throw(System.OverflowException(), 2) 
+      throw(System.OverflowException(), 1) 
     end
     return v & 0xffffffff
   end
@@ -552,6 +562,16 @@ else
     return toInt(v, -2147483648, 2147483647, 0xffffffff, 0x7fffffff, checked)
   end
   
+  function System.toUInt64(v, checked)
+    if v >= 0 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    return (v & 0x7fffffffffffffff) + 0x8000000000000000
+  end
+
   function System.ToUInt64(v, checked)
     v = trunc(v)
     if v >= 0 and v <= 18446744073709551615 then
@@ -560,8 +580,8 @@ else
     if checked then
       throw(System.OverflowException(), 1) 
     end
-    v = band(v, 0xffffffff)
-    local uv = band(v, 0x7fffffff)
+    v = v & 0xffffffffffffffff
+    local uv = v & 0x7fffffffffffffff
     if uv ~= v then
       return uv + 0x8000000000000000
     end
