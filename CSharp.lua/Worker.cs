@@ -98,8 +98,9 @@ namespace CSharpLua {
 
     private void Compiler() {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse(cscArguments_, null, null);
+      var parseOptions = commandLineArguments.ParseOptions.WithDocumentationMode(DocumentationMode.Parse);
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
-      var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), commandLineArguments.ParseOptions, file));
+      var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), parseOptions, file));
       var references = Libs.Select(i => MetadataReference.CreateFromFile(i));
       LuaSyntaxGenerator.SettingInfo setting = new LuaSyntaxGenerator.SettingInfo() {
         IsNewest = isNewest_,
