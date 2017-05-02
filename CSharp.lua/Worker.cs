@@ -43,18 +43,18 @@ namespace CSharpLua {
     private string output_;
     private string[] libs_;
     private string[] metas_;
-    private string[] defines_;
+    private string[] cscArguments_;
     private bool isNewest_;
     private int indent_;
     private bool hasSemicolon_;
     private string[] attributes_;
 
-    public Worker(string folder, string output, string lib, string meta, string defines, bool isClassic, string indent, bool hasSemicolon, string atts) {
+    public Worker(string folder, string output, string lib, string meta, string csc, bool isClassic, string indent, bool hasSemicolon, string atts) {
       folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
-      defines_ = Utility.Split(defines, false);
+      cscArguments_ = string.IsNullOrEmpty(csc) ? Array.Empty<string>() : csc.Trim().Split(';', ',', ' ');
       isNewest_ = !isClassic;
       hasSemicolon_ = hasSemicolon;
       int.TryParse(indent, out indent_);
@@ -97,16 +97,16 @@ namespace CSharpLua {
     }
 
     private void Compiler() {
-      CSharpParseOptions parseOptions = new CSharpParseOptions(preprocessorSymbols: defines_);
+      var commandLineArguments = CSharpCommandLineParser.Default.Parse(cscArguments_, null, null);
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
-      var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), parseOptions, file));
+      var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), commandLineArguments.ParseOptions, file));
       var references = Libs.Select(i => MetadataReference.CreateFromFile(i));
       LuaSyntaxGenerator.SettingInfo setting = new LuaSyntaxGenerator.SettingInfo() {
         IsNewest = isNewest_,
         HasSemicolon = hasSemicolon_,
         Indent = indent_,
       };
-      LuaSyntaxGenerator generator = new LuaSyntaxGenerator(syntaxTrees, references, Metas, setting, attributes_);
+      LuaSyntaxGenerator generator = new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, Metas, setting, attributes_);
       generator.Generate(folder_, output_);
     }
   }

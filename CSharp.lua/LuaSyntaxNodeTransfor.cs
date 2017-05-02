@@ -2468,8 +2468,24 @@ namespace CSharpLua {
           return expression;
         }
 
+        if (originalType.IsIntegerType()) {
+          var target = BuildMemberAccessTargetExpression(node.Expression);
+          var memberAccess = new LuaMemberAccessExpressionSyntax(target, GetCastToIntMethodName(targetType, false), true);
+          if (IsCurChecked) {
+            return new LuaInvocationExpressionSyntax(memberAccess, LuaIdentifierNameSyntax.True);
+          } else {
+            return new LuaInvocationExpressionSyntax(memberAccess);
+          }
+        }
+
         if (originalType.SpecialType == SpecialType.System_Double || originalType.SpecialType == SpecialType.System_Single) {
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Trunc, expression);
+          var target = BuildMemberAccessTargetExpression(node.Expression);
+          var memberAccess = new LuaMemberAccessExpressionSyntax(target, GetCastToIntMethodName(targetType, true), true);
+          if (IsCurChecked) {
+            return new LuaInvocationExpressionSyntax(memberAccess, LuaIdentifierNameSyntax.True);
+          } else {
+            return new LuaInvocationExpressionSyntax(memberAccess);
+          }
         }
       }
 
@@ -2477,16 +2493,29 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, typeExpression, expression);
     }
 
+    private LuaIdentifierNameSyntax GetCastToIntMethodName(ITypeSymbol targetType, bool isFromFloat) {
+      const string kPrefixFromInt = "to";
+      const string kPrefixFromFloat = "To";
+      return new LuaIdentifierNameSyntax((isFromFloat ? kPrefixFromFloat : kPrefixFromInt) + targetType.Name);
+    }
+
     public override LuaSyntaxNode VisitCheckedStatement(CheckedStatementSyntax node) {
+      bool isChecked = node.Keyword.Kind() == SyntaxKind.CheckedKeyword;
+      PushChecked(isChecked);
       LuaStatementListSyntax statements = new LuaStatementListSyntax();
       statements.Statements.Add(new LuaShortCommentStatement(" " + node.Keyword.ValueText));
       var block = (LuaStatementSyntax)node.Block.Accept(this);
       statements.Statements.Add(block);
+      PopChecked();
       return statements;
     }
 
     public override LuaSyntaxNode VisitCheckedExpression(CheckedExpressionSyntax node) {
-      return node.Expression.Accept(this);
+      bool isChecked = node.Keyword.Kind() == SyntaxKind.CheckedKeyword;
+      PushChecked(isChecked);
+      var expression = node.Expression.Accept(this);
+      PopChecked();
+      return expression;
     }
   }
 }

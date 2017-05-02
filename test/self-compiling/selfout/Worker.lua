@@ -18,16 +18,22 @@ System.namespace("CSharpLua", function (namespace)
     __staticCtor__ = function (this) 
       SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll", "Microsoft.CSharp.dll")
     end
-    __ctor__ = function (this, folder, output, lib, meta, defines, isClassic, indent, hasSemicolon, atts) 
+    __ctor__ = function (this, folder, output, lib, meta, csc, isClassic, indent, hasSemicolon, atts) 
       this.folder_ = folder
       this.output_ = output
       this.libs_ = CSharpLua.Utility.Split(lib, true)
       this.metas_ = CSharpLua.Utility.Split(meta, true)
-      this.defines_ = CSharpLua.Utility.Split(defines, false)
+      local default
+      if System.String.IsNullOrEmpty(csc) then
+        default = System.Array.Empty(System.String)
+      else
+        default = csc:Trim():Split(59 --[[';']], 44 --[[',']], 32 --[[' ']])
+      end
+      this.cscArguments_ = default
       this.isNewest_ = not isClassic
       this.hasSemicolon_ = hasSemicolon
-      local default
-      default, this.indent_ = System.Int.TryParse(indent, nil)
+      local extern
+      extern, this.indent_ = System.Int.TryParse(indent, nil)
       if atts ~= nil then
         this.attributes_ = CSharpLua.Utility.Split(atts, false)
       end
@@ -67,10 +73,10 @@ System.namespace("CSharpLua", function (namespace)
       Compiler(this)
     end
     Compiler = function (this) 
-      local parseOptions = MicrosoftCodeAnalysisCSharp.CSharpParseOptions(6, 1, 0, this.defines_)
+      local commandLineArguments = MicrosoftCodeAnalysisCSharp.CSharpCommandLineParser.getDefault():Parse(this.cscArguments_)
       local files = SystemIO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]])
       local syntaxTrees = Linq.Select(files, function (file) 
-        return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(SystemIO.File.ReadAllText(file), parseOptions, file, nil, System.default(SystemThreading.CancellationToken))
+        return MicrosoftCodeAnalysisCSharp.CSharpSyntaxTree.ParseText(SystemIO.File.ReadAllText(file), commandLineArguments:getParseOptions(), file, nil, System.default(SystemThreading.CancellationToken))
       end, MicrosoftCodeAnalysis.SyntaxTree)
       local references = Linq.Select(getLibs(this), function (i) 
         return MicrosoftCodeAnalysis.MetadataReference.CreateFromFile(i, System.default(MicrosoftCodeAnalysis.MetadataReferenceProperties))
@@ -80,7 +86,7 @@ System.namespace("CSharpLua", function (namespace)
         default.HasSemicolon = this.hasSemicolon_
         default:setIndent(this.indent_)
       end)
-      local generator = CSharpLua.LuaSyntaxGenerator(syntaxTrees, references, getMetas(this), setting, this.attributes_)
+      local generator = CSharpLua.LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments:getCompilationOptions(), getMetas(this), setting, this.attributes_)
       generator:Generate(this.folder_, this.output_)
     end
     return {

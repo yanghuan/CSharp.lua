@@ -89,8 +89,8 @@ namespace CSharpLua {
     private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
     private IMethodSymbol mainEntryPoint_;
 
-    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, IEnumerable<string> metas, SettingInfo setting, string[] attributes) {
-      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting, string[] attributes) {
+      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
         if (!result.Success) {
@@ -158,6 +158,12 @@ namespace CSharpLua {
       }
       module = path.Replace(Path.DirectorySeparatorChar, '.');
       return outPath;
+    }
+
+    internal bool IsCheckedOverflow {
+      get {
+        return compilation_.Options.CheckOverflow;
+      }
     }
 
     internal bool IsEnumExport(string enumTypeSymbol) {

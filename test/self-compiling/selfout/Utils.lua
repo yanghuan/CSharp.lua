@@ -460,7 +460,7 @@ System.namespace("CSharpLua", function (namespace)
       if IsBaseNumberType(left:getSpecialType()) and IsBaseNumberType(right:getSpecialType()) then
         local begin
         repeat
-          local default = left:getSpecialType()
+          local default = right:getSpecialType()
           if default == 8 --[[SpecialType.System_Char]] or default == 9 --[[SpecialType.System_SByte]] or default == 10 --[[SpecialType.System_Byte]] then
             do
               begin = 11 --[[SpecialType.System_Int16]]

@@ -33,6 +33,7 @@ namespace CSharpLua {
     private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
     private Dictionary<ISymbol, string> localReservedNames_ = new Dictionary<ISymbol, string>();
     private int localMappingCounter_;
+    private Stack<bool> checkeds_ = new Stack<bool>();
 
     private abstract class LuaSyntaxSearcher : CSharpSyntaxWalker {
       private sealed class FoundException : Exception {
@@ -898,6 +899,23 @@ namespace CSharpLua {
     private void TryRemoveNilArgumentsAtTail(ISymbol symbol, List<LuaExpressionSyntax> arguments) {
       if (symbol.IsFromCode() || symbol.ContainingType.GetMembers(symbol.Name).Length == 1) {
         RemoveNilArgumentsAtTail(arguments);
+      }
+    }
+
+    private void PushChecked(bool isChecked) {
+      checkeds_.Push(isChecked);
+    }
+
+    private void PopChecked() {
+      checkeds_.Pop();
+    }
+
+    private bool IsCurChecked {
+      get {
+        if (checkeds_.Count > 0) {
+          return checkeds_.Peek();
+        }
+        return generator_.IsCheckedOverflow; 
       }
     }
   }

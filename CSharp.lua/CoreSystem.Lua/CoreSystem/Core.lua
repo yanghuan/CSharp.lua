@@ -509,7 +509,7 @@ else
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 2) 
     end
     if v < -2147483648 or v > 2147483647 then
       return 0
@@ -527,7 +527,7 @@ else
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 2) 
     end
     if v <= -4503599627370496 or v >= 4503599627370496 then -- 2 ^ 52
       return 0

@@ -33,7 +33,7 @@ Options
 -h              : show the help message    
 -l              : libraries referenced, use ';' to separate      
 -m              : meta files, like System.xml, use ';' to separate     
--def            : defines name as a conditional symbol, use ';' to separate
+-csc            : csc.exe command argumnets, use ';' to separate
 
 -c              : support classic lua version(5.1), default support 5.3 
 -i              : indent number, default is 2
@@ -55,7 +55,7 @@ Options
           string output = cmds.GetArgument("-d");
           string lib = cmds.GetArgument("-l", true);
           string meta = cmds.GetArgument("-m", true);
-          string defines = cmds.GetArgument("-def", true);
+          string csc = cmds.GetArgument("-csc", true);
           bool isClassic = cmds.ContainsKey("-c");
           string indent = cmds.GetArgument("-i", true);
           bool hasSemicolon = cmds.ContainsKey("-sem");
@@ -63,7 +63,7 @@ Options
           if (atts == null && cmds.ContainsKey("-a")) {
             atts = string.Empty;
           }
-          Worker w = new Worker(folder, output, lib, meta, defines, isClassic, indent, hasSemicolon, atts);
+          Worker w = new Worker(folder, output, lib, meta, csc, isClassic, indent, hasSemicolon, atts);
           w.Do();
           Console.WriteLine("all operator success");
           Console.WriteLine($"end {DateTime.Now}");
