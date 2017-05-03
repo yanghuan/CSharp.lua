@@ -68,7 +68,7 @@ Options
 ```
 
 ### Download
-[bridge.lua.1.0.0.0.zip](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/download/CSharp.lua.1.0.0.0.zip)
+[CSharp.lua.1.0.0.0.zip](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/download/CSharp.lua.1.0.0.0.zip)
 
 ## CoreSystem.lua
 [CoreSystem.lua library](https://github.com/yanghuan/CSharp.lua/tree/master/CSharp.lua/CoreSystem.Lua/CoreSystem) that implements most of the [.net framework core classes](http://referencesource.microsoft.com/), including support for basic type, delegate, generic collection classes & linq. The Converted lua code, need to reference it  
