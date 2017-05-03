@@ -912,6 +912,7 @@ namespace CSharpLua {
     #endregion
     private Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new Dictionary<ISymbol, HashSet<ISymbol>>();
     private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
+    private HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
 
     private sealed class InterfaceImplicitChecker : CSharpSyntaxWalker {
       private SemanticModel semanticModel_;
@@ -946,7 +947,27 @@ namespace CSharpLua {
               }
             }
           }
+
+          if (IsExtendSelf(type)) {
+            generator.typesOfExtendSelf_.Add(type);
+          }
         }
+      }
+
+      private bool IsExtendSelf(INamedTypeSymbol typeSymbol) {
+        if (typeSymbol.BaseType != null) {
+          if (Utility.IsExtendSelf(typeSymbol, typeSymbol.BaseType)) {
+            return true;
+          }
+        }
+
+        foreach (var baseType in typeSymbol.Interfaces) {
+          if (Utility.IsExtendSelf(typeSymbol, baseType)) {
+            return true;
+          }
+        }
+
+        return false;
       }
     }
 
@@ -1003,6 +1024,10 @@ namespace CSharpLua {
       }
       count += symbol.InterfaceImplementations().Count();
       return count;
+    }
+
+    internal bool HasStaticCtor(INamedTypeSymbol typeSymbol) {
+      return typeSymbol.HasStaticCtor() || typesOfExtendSelf_.Contains(typeSymbol);
     }
   }
 }
