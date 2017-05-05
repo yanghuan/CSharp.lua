@@ -4,7 +4,6 @@ local Linq = System.Linq.Enumerable
 local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local MicrosoftCodeAnalysisCSharpSyntax = Microsoft.CodeAnalysis.CSharp.Syntax
-local SystemCollectionsImmutable = System.Collections.Immutable
 local SystemIO = System.IO
 local SystemLinq = System.Linq
 local SystemText = System.Text
@@ -113,14 +112,14 @@ System.namespace("CSharpLua", function (namespace)
         __ctor__ = __ctor__
       }
     end)
-    local Encoding, Create, Write, Generate, GetOutFilePath, IsEnumExport, AddExportEnum, AddEnumDeclaration, 
-    IsExportAttribute, CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, IsTypeEnable, AddSuperTypeTo, 
-    GetExportTypes, SetMainEntryPoint, ExportManifestFile, FillManifestInitConf, AddTypeSymbol, CheckExtends, TryAddExtend, AddTypeDeclarationAttribute, 
-    GetMemberName, InternalGetMemberName, GetAllTypeSameName, GetSymbolBaseName, GetStaticClassMemberName, GetMethodNameFromIndex, TryAddNewUsedName, GetStaticClassSameNameMembers, 
-    GetSameNameMembers, AddSimilarNameMembers, GetSymbolNames, MemberSymbolBoolComparison, MemberSymbolComparison, MemberSymbolCommonComparison, CheckRefactorNames, RefactorCurTypeSymbol, 
-    RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorCheckName, GetRefactorName, IsTypeNameUsed, IsNewNameEnable, 
-    IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, CheckImplicitInterface, AddImplicitInterfaceImplementation, IsImplicitInterfaceImplementation, IsPropertyField, IsEventFiled, 
-    AllInterfaceImplementations, AllInterfaceImplementationsCount, __staticCtor__, __init__, __ctor__
+    local Encoding, Create, Write, Generate, GetOutFilePath, getIsCheckedOverflow, IsEnumExport, AddExportEnum, 
+    AddEnumDeclaration, IsExportAttribute, CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, IsTypeEnable, 
+    AddSuperTypeTo, GetExportTypes, SetMainEntryPoint, ExportManifestFile, FillManifestInitConf, AddTypeSymbol, CheckExtends, TryAddExtend, 
+    AddTypeDeclarationAttribute, GetMemberName, InternalGetMemberName, GetAllTypeSameName, GetSymbolBaseName, GetStaticClassMemberName, GetMethodNameFromIndex, TryAddNewUsedName, 
+    GetStaticClassSameNameMembers, GetSameNameMembers, AddSimilarNameMembers, GetSymbolNames, MemberSymbolBoolComparison, MemberSymbolComparison, MemberSymbolCommonComparison, CheckRefactorNames, 
+    RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorCheckName, GetRefactorName, IsTypeNameUsed, 
+    IsNewNameEnable, IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, CheckImplicitInterface, AddImplicitInterfaceImplementation, IsImplicitInterfaceImplementation, IsPropertyField, 
+    IsEventFiled, AllInterfaceImplementations, AllInterfaceImplementationsCount, __staticCtor__, __init__, __ctor__
     __staticCtor__ = function (this) 
       Encoding = SystemText.UTF8Encoding(false)
     end
@@ -137,9 +136,9 @@ System.namespace("CSharpLua", function (namespace)
       this.implicitInterfaceImplementations_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, System.HashSet(MicrosoftCodeAnalysis.ISymbol))()
       this.isFieldPropertys_ = System.Dictionary(MicrosoftCodeAnalysis.IPropertySymbol, System.Boolean)()
     end
-    __ctor__ = function (this, syntaxTrees, references, metas, setting, attributes) 
+    __ctor__ = function (this, syntaxTrees, references, options, metas, setting, attributes) 
       __init__(this)
-      local compilation = MicrosoftCodeAnalysisCSharp.CSharpCompilation.Create("_", syntaxTrees, references, MicrosoftCodeAnalysisCSharp.CSharpCompilationOptions(2 --[[OutputKind.DynamicallyLinkedLibrary]], false, nil, nil, nil, nil, 0, false, false, nil, nil, System.default(SystemCollectionsImmutable.ImmutableArray_1(System.Int)), nil, 0, 0, 4, nil, true, false, nil, nil, nil, nil, nil, false))
+      local compilation = MicrosoftCodeAnalysisCSharp.CSharpCompilation.Create("_", syntaxTrees, references, options:WithOutputKind(2 --[[OutputKind.DynamicallyLinkedLibrary]]))
       System.using(SystemIO.MemoryStream(), function (ms) 
         local result = compilation:Emit(ms, nil, nil, nil, nil, nil, nil, System.default(SystemThreading.CancellationToken))
         if not result:getSuccess() then
@@ -208,6 +207,9 @@ System.namespace("CSharpLua", function (namespace)
       end
       module = path:Replace(SystemIO.Path.DirectorySeparatorChar, 46 --[['.']])
       return outPath, module
+    end
+    getIsCheckedOverflow = function (this) 
+      return this.compilation_:getOptions():getCheckOverflow()
     end
     IsEnumExport = function (this, enumTypeSymbol) 
       return this.exportEnums_:Contains(enumTypeSymbol)
@@ -965,6 +967,7 @@ System.namespace("CSharpLua", function (namespace)
     return {
       isExportAttributesAll_ = false, 
       Generate = Generate, 
+      getIsCheckedOverflow = getIsCheckedOverflow, 
       IsEnumExport = IsEnumExport, 
       AddExportEnum = AddExportEnum, 
       AddEnumDeclaration = AddEnumDeclaration, 

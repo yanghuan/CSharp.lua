@@ -89,8 +89,8 @@ namespace CSharpLua {
     private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
     private IMethodSymbol mainEntryPoint_;
 
-    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, IEnumerable<string> metas, SettingInfo setting, string[] attributes) {
-      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting, string[] attributes) {
+      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
         if (!result.Success) {
@@ -158,6 +158,12 @@ namespace CSharpLua {
       }
       module = path.Replace(Path.DirectorySeparatorChar, '.');
       return outPath;
+    }
+
+    internal bool IsCheckedOverflow {
+      get {
+        return compilation_.Options.CheckOverflow;
+      }
     }
 
     internal bool IsEnumExport(string enumTypeSymbol) {
@@ -906,6 +912,7 @@ namespace CSharpLua {
     #endregion
     private Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new Dictionary<ISymbol, HashSet<ISymbol>>();
     private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
+    private HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
 
     private sealed class InterfaceImplicitChecker : CSharpSyntaxWalker {
       private SemanticModel semanticModel_;
@@ -940,7 +947,27 @@ namespace CSharpLua {
               }
             }
           }
+
+          if (IsExtendSelf(type)) {
+            generator.typesOfExtendSelf_.Add(type);
+          }
         }
+      }
+
+      private bool IsExtendSelf(INamedTypeSymbol typeSymbol) {
+        if (typeSymbol.BaseType != null) {
+          if (Utility.IsExtendSelf(typeSymbol, typeSymbol.BaseType)) {
+            return true;
+          }
+        }
+
+        foreach (var baseType in typeSymbol.Interfaces) {
+          if (Utility.IsExtendSelf(typeSymbol, baseType)) {
+            return true;
+          }
+        }
+
+        return false;
       }
     }
 
@@ -997,6 +1024,10 @@ namespace CSharpLua {
       }
       count += symbol.InterfaceImplementations().Count();
       return count;
+    }
+
+    internal bool HasStaticCtor(INamedTypeSymbol typeSymbol) {
+      return typeSymbol.HasStaticCtor() || typesOfExtendSelf_.Contains(typeSymbol);
     }
   }
 }

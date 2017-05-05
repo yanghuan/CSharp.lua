@@ -165,7 +165,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaCharacterLiteralExpression", function (namespace) 
     local GetIdentifierToken, __ctor__
     __ctor__ = function (this, character) 
-      CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (System.cast(System.Int, character)):ToString(), GetIdentifierToken(character))
+      CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (character):ToString(), GetIdentifierToken(character))
     end
     GetIdentifierToken = function (character) 
       return MicrosoftCodeAnalysisCSharp.SyntaxFactory.Literal(character):getText()

@@ -547,5 +547,21 @@ namespace CSharpLua {
       }
       return false;
     }
+
+    public static bool IsExtendSelf(INamedTypeSymbol typeSymbol, INamedTypeSymbol baseTypeSymbol) {
+      if (baseTypeSymbol.IsGenericType) {
+        foreach (var baseTypeArgument in baseTypeSymbol.TypeArguments) {
+          if (baseTypeSymbol.Kind != SymbolKind.TypeParameter) {
+            if (!baseTypeArgument.Equals(typeSymbol)) {
+              if (typeSymbol.IsAssignableFrom(baseTypeArgument)) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
   }
 }

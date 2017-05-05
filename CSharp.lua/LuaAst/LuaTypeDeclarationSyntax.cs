@@ -76,7 +76,7 @@ namespace CSharpLua.LuaAst {
       typeParameters_.AddRange(typeParameters);
     }
 
-    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, bool hasExtendSelf) {
+    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes) {
       var global = LuaIdentifierNameSyntax.Global;
       LuaTableInitializerExpression table = new LuaTableInitializerExpression();
       foreach (var baseType in baseTypes) {
@@ -87,9 +87,6 @@ namespace CSharpLua.LuaAst {
       functionExpression.AddParameter(global);
       functionExpression.AddStatement(new LuaReturnStatementSyntax(table));
       AddResultTable(LuaIdentifierNameSyntax.Inherits, functionExpression);
-      if (hasExtendSelf) {
-        AddResultTable(LuaIdentifierNameSyntax.InheritRecursion, LuaIdentifierNameSyntax.True);
-      }
     }
 
     private void AddResultTable(LuaIdentifierNameSyntax name) {
@@ -233,6 +230,11 @@ namespace CSharpLua.LuaAst {
     public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function) {
       Contract.Assert(staticcCtorStatements_.Count == 0);
       staticcCtorStatements_.AddRange(function.Body.Statements);
+    }
+
+    public void SetStaticCtorEmpty() {
+      Contract.Assert(staticcCtorStatements_.Count == 0);
+      staticcCtorStatements_.Add(LuaStatementSyntax.Empty);
     }
 
     public bool IsNoneCtros {

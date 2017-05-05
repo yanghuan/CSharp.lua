@@ -198,6 +198,12 @@ local function testType()
   print(System.cast(System.String, "ddd"))
 end
 
+local function testNumCast()
+  assert(System.toInt32(-2147483659) == 2147483637)
+  assert(System.toUInt32(-2147483659) == 2147483637)
+  assert(System.toUInt64(-1) == 18446744073709551615)
+end
+
 local function testConsole()
   print("enter your name")
   local name = System.Console.ReadLine()
@@ -224,8 +230,9 @@ test(testYeild, "Yeild")
 test(testDelegate, "Delegate")
 test(testLinq, "Linq")
 test(testType, "Type")
+test(testNumCast, "NumCast")
 --test(testConsole, "Console")
-test(testIO, "IO")
+--test(testIO, "IO")
 
 
 

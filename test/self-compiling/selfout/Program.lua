@@ -16,7 +16,7 @@ Options
 -h              : show the help message    
 -l              : libraries referenced, use ';' to separate      
 -m              : meta files, like System.xml, use ';' to separate     
--def            : defines name as a conditional symbol, use ';' to separate
+-csc            : csc.exe command argumnets, use ';' to separate
 
 -c              : support classic lua version(5.1), default support 5.3 
 -i              : indent number, default is 2
@@ -38,7 +38,7 @@ Options
           local output = CSharpLua.Utility.GetArgument(cmds, "-d", false)
           local lib = CSharpLua.Utility.GetArgument(cmds, "-l", true)
           local meta = CSharpLua.Utility.GetArgument(cmds, "-m", true)
-          local defines = CSharpLua.Utility.GetArgument(cmds, "-def", true)
+          local csc = CSharpLua.Utility.GetArgument(cmds, "-csc", true)
           local isClassic = cmds:ContainsKey("-c")
           local indent = CSharpLua.Utility.GetArgument(cmds, "-i", true)
           local hasSemicolon = cmds:ContainsKey("-sem")
@@ -46,7 +46,7 @@ Options
           if atts == nil and cmds:ContainsKey("-a") then
             atts = ""
           end
-          local w = CSharpLua.Worker(folder, output, lib, meta, defines, isClassic, indent, hasSemicolon, atts)
+          local w = CSharpLua.Worker(folder, output, lib, meta, csc, isClassic, indent, hasSemicolon, atts)
           w:Do()
           System.Console.WriteLine("all operator success")
           System.Console.WriteLine(("end {0}"):Format(System.DateTime.getNow()))

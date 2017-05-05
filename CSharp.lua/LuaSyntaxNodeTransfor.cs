@@ -182,15 +182,7 @@ namespace CSharpLua {
           if (baseNode.Type.IsKind(SyntaxKind.GenericName)) {
             var baseGenericNameNode = (GenericNameSyntax)baseNode.Type;
             var baseTypeSymbol = (INamedTypeSymbol)semanticModel_.GetTypeInfo(baseGenericNameNode).Type;
-            foreach (var baseTypeArgument in baseTypeSymbol.TypeArguments) {
-              if (baseTypeSymbol.Kind != SymbolKind.TypeParameter) {
-                if (!baseTypeArgument.Equals(typeSymbol)) {
-                  if (typeSymbol.IsAssignableFrom(baseTypeArgument)) {
-                    hasExtendSelf = true;
-                  }
-                }
-              }
-            }
+            hasExtendSelf = Utility.IsExtendSelf(typeSymbol, baseTypeSymbol);
           }
         }
       }
@@ -216,7 +208,10 @@ namespace CSharpLua {
           baseTypes.Add(baseTypeName);
           CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
         }
-        typeDeclaration.AddBaseTypes(baseTypes, hasExtendSelf);
+        typeDeclaration.AddBaseTypes(baseTypes);
+        if (hasExtendSelf && !typeSymbol.HasStaticCtor()) {
+          typeDeclaration.SetStaticCtorEmpty();
+        }
       }
 
       BuildTypeMembers(typeDeclaration, node);
@@ -228,7 +223,7 @@ namespace CSharpLua {
             isNeedCallBase = !bseTypeSymbol.Constructors.IsEmpty;
           }
           else {
-            isNeedCallBase = bseTypeSymbol.HasStaticCtor() || bseTypeSymbol.Constructors.Count() > 1;
+            isNeedCallBase = generator_.HasStaticCtor(bseTypeSymbol) || bseTypeSymbol.Constructors.Count() > 1;
           }
           if (isNeedCallBase) {
             var baseCtorInvoke = BuildCallBaseConstructor(typeSymbol);
@@ -317,7 +312,10 @@ namespace CSharpLua {
           baseTypeExpressions.Add(baseTypeName);
           CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
         }
-        major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, hasExtendSelf);
+        major.TypeDeclaration.AddBaseTypes(baseTypeExpressions);
+        if (hasExtendSelf && !major.Symbol.HasStaticCtor()) {
+          major.TypeDeclaration.SetStaticCtorEmpty();
+        }
       }
 
       foreach (var typeDeclaration in typeDeclarations) {
@@ -364,6 +362,8 @@ namespace CSharpLua {
       LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
       LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(symbol.ToString(), name, CurCompilationUnit);
       typeDeclarations_.Push(enumDeclaration);
+      var comments = BuildDocumentationComment(node);
+      enumDeclaration.AddDocumentComments(comments);
       foreach (var member in node.Members) {
         var statement = (LuaKeyValueTableItemSyntax)member.Accept(this);
         enumDeclaration.Add(statement);
@@ -1386,7 +1386,7 @@ namespace CSharpLua {
         var typeSymbol = (INamedTypeSymbol)semanticModel_.GetTypeInfo(node).Type;
         if (symbol.ContainingType != typeSymbol) {
           bool isAssignment = node.Parent.Parent.Kind().IsAssignment();
-          if (isAssignment || typeSymbol.HasStaticCtor() || symbol.ContainingType.HasStaticCtor()) {
+          if (isAssignment || generator_.HasStaticCtor(typeSymbol) || generator_.HasStaticCtor(symbol.ContainingType)) {
             expression = GetTypeName(symbol.ContainingSymbol);
           }
         }
@@ -1983,7 +1983,7 @@ namespace CSharpLua {
           return new LuaConstLiteralExpression(symbol.Name, typeInfo.ToString());
         }
         else {
-          generator_.AddExportEnum(typeInfo.ToString());
+          AddExportEnum(typeInfo);
           LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo);
           LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToEnumString, true);
           return new LuaInvocationExpressionSyntax(memberAccess, typeName);
@@ -2448,10 +2448,9 @@ namespace CSharpLua {
         return GetConstLiteralExpression(constValue.Value);
       }
 
-      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-
       var originalType = semanticModel_.GetTypeInfo(node.Expression).Type;
       var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
+      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
 
       if (targetType.IsAssignableFrom(originalType)) {
         return expression;
@@ -2468,25 +2467,45 @@ namespace CSharpLua {
           return expression;
         }
 
-        if (originalType.SpecialType == SpecialType.System_Double || originalType.SpecialType == SpecialType.System_Single) {
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Trunc, expression);
+        if (originalType.IsIntegerType()) {
+          return GetCastToNumberExpression(expression, targetType, false);
         }
+
+        if (originalType.SpecialType == SpecialType.System_Double || originalType.SpecialType == SpecialType.System_Single) {
+          return GetCastToNumberExpression(expression, targetType, true);
+        }
+      }
+      else if (targetType.SpecialType == SpecialType.System_Single && originalType.SpecialType == SpecialType.System_Double) {
+        return GetCastToNumberExpression(expression, targetType, true);
       }
 
       var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, typeExpression, expression);
     }
 
+    private LuaExpressionSyntax GetCastToNumberExpression(LuaExpressionSyntax expression, ITypeSymbol targetType, bool isFromFloat) {
+      string name = (isFromFloat ?  "To" : "to") + targetType.Name;
+      var methodName = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
+      return new LuaInvocationExpressionSyntax(methodName, expression);
+    }
+
     public override LuaSyntaxNode VisitCheckedStatement(CheckedStatementSyntax node) {
+      bool isChecked = node.Keyword.Kind() == SyntaxKind.CheckedKeyword;
+      PushChecked(isChecked);
       LuaStatementListSyntax statements = new LuaStatementListSyntax();
       statements.Statements.Add(new LuaShortCommentStatement(" " + node.Keyword.ValueText));
       var block = (LuaStatementSyntax)node.Block.Accept(this);
       statements.Statements.Add(block);
+      PopChecked();
       return statements;
     }
 
     public override LuaSyntaxNode VisitCheckedExpression(CheckedExpressionSyntax node) {
-      return node.Expression.Accept(this);
+      bool isChecked = node.Keyword.Kind() == SyntaxKind.CheckedKeyword;
+      PushChecked(isChecked);
+      var expression = node.Expression.Accept(this);
+      PopChecked();
+      return expression;
     }
   }
 }
