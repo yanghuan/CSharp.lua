@@ -930,6 +930,11 @@ namespace CSharpLua {
         var semanticModel_ = generator_.compilation_.GetSemanticModel(node.SyntaxTree);
         var typeSymbol = semanticModel_.GetDeclaredSymbol(node);
         classTypes_.Add(typeSymbol);
+
+        var types = node.Members.OfType<ClassDeclarationSyntax>();
+        foreach (var type in types) {
+          type.Accept(this);
+        }
       }
 
       private void Check(LuaSyntaxGenerator generator) {
