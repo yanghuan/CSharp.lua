@@ -255,14 +255,10 @@ namespace CSharpLua {
       else {
         BuildTypeDeclaration(typeSymbol, node, typeDeclaration);
       }
-      generator_.AddTypeSymbol(typeSymbol);
       return typeSymbol;
     }
 
     internal void AcceptPartialType(PartialTypeDeclaration major, List<PartialTypeDeclaration> typeDeclarations) {
-      major.TypeDeclaration.IsPartialMark = false;
-      major.CompilationUnit.AddTypeDeclarationCount();
-
       compilationUnits_.Push(major.CompilationUnit);
       typeDeclarations_.Push(major.TypeDeclaration);
 
@@ -325,6 +321,9 @@ namespace CSharpLua {
 
       typeDeclarations_.Pop();
       compilationUnits_.Pop();
+
+      major.TypeDeclaration.IsPartialMark = false;
+      major.CompilationUnit.AddTypeDeclarationCount();
     }
 
     private LuaIdentifierNameSyntax GetTypeDeclarationName(TypeDeclarationSyntax typeDeclaration) {
@@ -345,15 +344,17 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitStructDeclaration(StructDeclarationSyntax node) {
       LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
       LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
-      INamedTypeSymbol symbol = VisitTypeDeclaration(node, structDeclaration);
+      var symbol = VisitTypeDeclaration(node, structDeclaration);
       BuildStructMethods(symbol, structDeclaration);
+      generator_.AddTypeSymbol(symbol);
       return structDeclaration;
     }
 
     public override LuaSyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node) {
       LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
       LuaInterfaceDeclarationSyntax interfaceDeclaration = new LuaInterfaceDeclarationSyntax(name);
-      VisitTypeDeclaration(node, interfaceDeclaration);
+      var symbol = VisitTypeDeclaration(node, interfaceDeclaration);
+      generator_.AddTypeSymbol(symbol);
       return interfaceDeclaration;
     }
 

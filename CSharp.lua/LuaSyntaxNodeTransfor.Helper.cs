@@ -337,7 +337,7 @@ namespace CSharpLua {
     }
 
     private bool IsInternalMember(SyntaxNode node, ISymbol symbol) {
-      bool isVirtual = symbol.IsOverridable() && !symbol.ContainingType.IsSealed;
+      bool isVirtual = symbol.IsOverridable() && !generator_.IsSealed(symbol.ContainingType);
       if (!isVirtual) {
         var typeSymbol = GetTypeDeclarationSymbol(node);
         if (typeSymbol.Equals(symbol.ContainingType)) {

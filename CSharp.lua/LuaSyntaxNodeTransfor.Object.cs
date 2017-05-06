@@ -631,7 +631,7 @@ namespace CSharpLua {
     private bool IsBaseEnable<T>(MemberAccessExpressionSyntax parent, T symbol, Func<T, ISymbol> overriddenFunc) where T : ISymbol {
       if (symbol.IsOverridable()) {
         var curTypeSymbol = GetTypeDeclarationSymbol(parent);
-        if (curTypeSymbol.IsSealed) {
+        if (generator_.IsSealed(curTypeSymbol)) {
           bool exists = curTypeSymbol.GetMembers().OfType<T>().Any(i => {
             var overriddenSymbol = overriddenFunc(i);
             return overriddenSymbol != null && overriddenSymbol.Equals(symbol);

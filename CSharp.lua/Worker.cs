@@ -31,11 +31,11 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
   public sealed class Worker {
     private static readonly string[] SystemDlls = new string[] {
-            "mscorlib.dll",
-            "System.dll",
-            "System.Core.dll",
-            "Microsoft.CSharp.dll",
-        };
+      "mscorlib.dll",
+      "System.dll",
+      "System.Core.dll",
+      "Microsoft.CSharp.dll",
+    };
     private const string kDllSuffix = ".dll";
     private const string kSystemMeta = "~/System.xml";
 

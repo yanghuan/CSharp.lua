@@ -110,7 +110,7 @@ namespace CSharpLua {
           exportAttributes_ = new HashSet<string>(attributes);
         }
       }
-      CheckImplicitInterface();
+      DoPretreatment();
     }
 
     private IEnumerable<LuaCompilationUnitSyntax> Create() {
@@ -914,42 +914,44 @@ namespace CSharpLua {
     private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
     private HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
 
-    private sealed class InterfaceImplicitChecker : CSharpSyntaxWalker {
-      private SemanticModel semanticModel_;
+    private sealed class PretreatmentChecker : CSharpSyntaxWalker {
+      private LuaSyntaxGenerator generator_;
       private HashSet<INamedTypeSymbol> classTypes_ = new HashSet<INamedTypeSymbol>();
 
-      public InterfaceImplicitChecker(LuaSyntaxGenerator generator) {
+      public PretreatmentChecker(LuaSyntaxGenerator generator) {
+        generator_ = generator;
         foreach (SyntaxTree syntaxTree in generator.compilation_.SyntaxTrees) {
-          semanticModel_ = generator.compilation_.GetSemanticModel(syntaxTree);
           Visit(syntaxTree.GetRoot());
         }
         Check(generator);
       }
 
       public override void VisitClassDeclaration(ClassDeclarationSyntax node) {
+        var semanticModel_ = generator_.compilation_.GetSemanticModel(node.SyntaxTree);
         var typeSymbol = semanticModel_.GetDeclaredSymbol(node);
-        if (!typeSymbol.IsStatic) {
-          classTypes_.Add(typeSymbol);
-        }
+        classTypes_.Add(typeSymbol);
       }
 
       private void Check(LuaSyntaxGenerator generator) {
         foreach (var type in classTypes_) {
-          foreach (var baseInterface in type.AllInterfaces) {
-            foreach (var interfaceMember in baseInterface.GetMembers()) {
-              var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
-              var implementationType = implementationMember.ContainingType;
-              if (implementationType != type) {
-                if (!implementationType.AllInterfaces.Contains(baseInterface)) {
-                  generator.AddImplicitInterfaceImplementation(implementationMember, interfaceMember);
-                  generator.TryAddExtend(baseInterface, implementationType);
+          generator_.AddTypeSymbol(type);
+          if (!type.IsStatic) {
+            foreach (var baseInterface in type.AllInterfaces) {
+              foreach (var interfaceMember in baseInterface.GetMembers()) {
+                var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
+                var implementationType = implementationMember.ContainingType;
+                if (implementationType != type) {
+                  if (!implementationType.AllInterfaces.Contains(baseInterface)) {
+                    generator.AddImplicitInterfaceImplementation(implementationMember, interfaceMember);
+                    generator.TryAddExtend(baseInterface, implementationType);
+                  }
                 }
               }
             }
-          }
 
-          if (IsExtendSelf(type)) {
-            generator.typesOfExtendSelf_.Add(type);
+            if (IsExtendSelf(type)) {
+              generator.typesOfExtendSelf_.Add(type);
+            }
           }
         }
       }
@@ -971,8 +973,8 @@ namespace CSharpLua {
       }
     }
 
-    private void CheckImplicitInterface() {
-      new InterfaceImplicitChecker(this);
+    private void DoPretreatment() {
+      new PretreatmentChecker(this);
     }
 
     private void AddImplicitInterfaceImplementation(ISymbol implementationMember, ISymbol interfaceMember) {
@@ -1028,6 +1030,15 @@ namespace CSharpLua {
 
     internal bool HasStaticCtor(INamedTypeSymbol typeSymbol) {
       return typeSymbol.HasStaticCtor() || typesOfExtendSelf_.Contains(typeSymbol);
+    }
+
+    internal bool IsExtendExists(INamedTypeSymbol typeSymbol) {
+      var set = extends_.GetOrDefault(typeSymbol);
+      return set != null && set.Count > 0;
+    }
+
+    internal bool IsSealed(INamedTypeSymbol typeSymbol) {
+      return typeSymbol.IsSealed || !IsExtendExists(typeSymbol);
     }
   }
 }
