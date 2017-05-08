@@ -1022,6 +1022,7 @@ namespace CSharpLua {
             var left = (LuaExpressionSyntax)leftNode.Accept(this);
             var right = (LuaExpressionSyntax)rightNode.Accept(this);
             CheckValueTypeClone(rightNode, ref right);
+            CheckConversion(rightNode, ref right);
             return BuildLuaSimpleAssignmentExpression(left, right);
           }
         case SyntaxKind.AddAssignmentExpression: {
@@ -1861,8 +1862,20 @@ namespace CSharpLua {
       return variableDeclarator;
     }
 
+    private void CheckConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
+      var conversion = semanticModel_.GetConversion(node);
+      if (conversion.IsUserDefined && conversion.IsImplicit) {
+        var methodSymbol = conversion.MethodSymbol;
+        var typeName = GetTypeName(methodSymbol.ContainingType);
+        var methodName = GetMemberName(methodSymbol);
+        var memberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
+        expression = new LuaInvocationExpressionSyntax(memberAccess, expression);
+      }
+    }
+
     public override LuaSyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node) {
       var expression = (LuaExpressionSyntax)node.Value.Accept(this);
+      CheckConversion(node.Value, ref expression);
       return new LuaEqualsValueClauseSyntax(expression);
     }
 

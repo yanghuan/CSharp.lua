@@ -831,5 +831,28 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitAliasQualifiedName(AliasQualifiedNameSyntax node) {
       return node.Name.Accept(this);
     }
+
+    public override LuaSyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node) {
+      var symbol = semanticModel_.GetDeclaredSymbol(node);
+      methodInfos_.Push(new MethodInfo(symbol));
+
+      bool isStatic = symbol.IsStatic;
+      bool isPrivate = symbol.IsPrivate();
+
+      LuaIdentifierNameSyntax name = GetMemberName(symbol);
+      var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
+      LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
+      PushFunction(function);
+
+      var comments = BuildDocumentationComment(node);
+      LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
+      function.AddStatements(block.Statements);
+      CurType.AddMethod(name, function, isPrivate, symbol.IsStaticLazy(), comments);
+
+      PopFunction();
+      methodInfos_.Pop();
+
+      return base.VisitConversionOperatorDeclaration(node);
+    }
   }
 }
