@@ -935,5 +935,19 @@ namespace CSharpLua {
         return generator_.IsCheckedOverflow; 
       }
     }
+
+    private void CheckConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
+      var conversion = semanticModel_.GetConversion(node);
+      if (conversion.IsUserDefined && conversion.IsImplicit) {
+        expression = BuildConversionExpression(conversion.MethodSymbol, expression);
+      }
+    }
+
+    private LuaExpressionSyntax BuildConversionExpression(IMethodSymbol methodSymbol, LuaExpressionSyntax expression) {
+      var typeName = GetTypeName(methodSymbol.ContainingType);
+      var methodName = GetMemberName(methodSymbol);
+      var memberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
+      return new LuaInvocationExpressionSyntax(memberAccess, expression);
+    }
   }
 }

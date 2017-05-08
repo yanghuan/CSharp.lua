@@ -1862,17 +1862,6 @@ namespace CSharpLua {
       return variableDeclarator;
     }
 
-    private void CheckConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
-      var conversion = semanticModel_.GetConversion(node);
-      if (conversion.IsUserDefined && conversion.IsImplicit) {
-        var methodSymbol = conversion.MethodSymbol;
-        var typeName = GetTypeName(methodSymbol.ContainingType);
-        var methodName = GetMemberName(methodSymbol);
-        var memberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
-        expression = new LuaInvocationExpressionSyntax(memberAccess, expression);
-      }
-    }
-
     public override LuaSyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node) {
       var expression = (LuaExpressionSyntax)node.Value.Accept(this);
       CheckConversion(node.Value, ref expression);
@@ -2493,7 +2482,20 @@ namespace CSharpLua {
         return GetCastToNumberExpression(expression, targetType, true);
       }
 
-      var typeExpression = (LuaExpressionSyntax)node.Type.Accept(this);
+      if (originalType.IsAssignableFrom(targetType)) {
+        return BuildCastExpression(node.Type, expression);
+      }
+
+      var explicitSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+      if (explicitSymbol != null) {
+        return BuildConversionExpression(explicitSymbol, expression);
+      }
+
+      return BuildCastExpression(node.Type, expression);
+    }
+
+    private LuaExpressionSyntax BuildCastExpression(TypeSyntax type, LuaExpressionSyntax expression) {
+      var typeExpression = (LuaExpressionSyntax)type.Accept(this);
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, typeExpression, expression);
     }
 
