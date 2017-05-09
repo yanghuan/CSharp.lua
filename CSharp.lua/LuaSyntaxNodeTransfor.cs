@@ -1021,8 +1021,7 @@ namespace CSharpLua {
         case SyntaxKind.SimpleAssignmentExpression: {
             var left = (LuaExpressionSyntax)leftNode.Accept(this);
             var right = (LuaExpressionSyntax)rightNode.Accept(this);
-            CheckValueTypeClone(rightNode, ref right);
-            CheckConversion(rightNode, ref right);
+            CheckValueTypeAndConversion(rightNode, ref right);
             return BuildLuaSimpleAssignmentExpression(left, right);
           }
         case SyntaxKind.AddAssignmentExpression: {
@@ -1705,51 +1704,58 @@ namespace CSharpLua {
       SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
       ISymbol symbol = symbolInfo.Symbol;
       Contract.Assert(symbol != null);
-      string name;
+      LuaExpressionSyntax identifier;
       switch (symbol.Kind) {
         case SymbolKind.Local:
         case SymbolKind.Parameter:
         case SymbolKind.RangeVariable: {
-            name = symbol.Name;
+            string name = symbol.Name;
             CheckReservedWord(ref name, symbol);
+            identifier = new LuaIdentifierNameSyntax(name);
             break;
           }
         case SymbolKind.TypeParameter:
         case SymbolKind.Label: {
-            name = symbol.Name;
+            identifier = new LuaIdentifierNameSyntax(symbol.Name);
             break;
           }
         case SymbolKind.NamedType: {
             if (node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
               var parent = (MemberAccessExpressionSyntax)node.Parent;
               if (parent.Name == node) {
-                name = symbol.Name;
+                identifier = new LuaIdentifierNameSyntax(symbol.Name);
                 break;
               }
             }
-            return GetTypeName(symbol);
+            identifier = GetTypeName(symbol);
+            break;
           }
         case SymbolKind.Namespace: {
-            name = symbol.ToString();
+            identifier = new LuaIdentifierNameSyntax(symbol.ToString());
             break;
           }
         case SymbolKind.Field: {
-            return GetFieldNameExpression((IFieldSymbol)symbol, node);
+            identifier = GetFieldNameExpression((IFieldSymbol)symbol, node);
+            break;
           }
         case SymbolKind.Method: {
-            return GetMethodNameExpression((IMethodSymbol)symbol, node);
+            identifier = GetMethodNameExpression((IMethodSymbol)symbol, node);
+            break;
           }
         case SymbolKind.Property: {
-            return VisitFieldOrEventIdentifierName(node, symbol, true);
+            identifier = VisitFieldOrEventIdentifierName(node, symbol, true);
+            break;
           }
         case SymbolKind.Event: {
-            return VisitFieldOrEventIdentifierName(node, symbol, false);
+            identifier = VisitFieldOrEventIdentifierName(node, symbol, false);
+            break;
           }
         default: {
             throw new NotSupportedException();
           }
       }
-      return new LuaIdentifierNameSyntax(name);
+      CheckConversion(node, ref identifier);
+      return identifier;
     }
 
     public override LuaSyntaxNode VisitQualifiedName(QualifiedNameSyntax node) {
@@ -1767,7 +1773,7 @@ namespace CSharpLua {
         expression = LuaIdentifierNameSyntax.Nil;
       }
       else {
-        CheckValueTypeClone(node.Expression, ref expression);
+        CheckValueTypeAndConversion(node.Expression, ref expression);
       }
       if (node.NameColon != null) {
         string name = node.NameColon.Name.Identifier.ValueText;
@@ -1863,7 +1869,16 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node) {
-      var expression = (LuaExpressionSyntax)node.Value.Accept(this);
+      ExpressionSyntax value;
+      if (node.Value.Kind().IsAssignment()) {
+        var assignmentExpression = (AssignmentExpressionSyntax)node.Value;
+        var assignment = (LuaExpressionSyntax)VisitAssignmentExpression(assignmentExpression);
+        CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+        value = assignmentExpression.Left;
+      } else {
+        value = node.Value;
+      }
+      var expression = (LuaExpressionSyntax)value.Accept(this);
       CheckConversion(node.Value, ref expression);
       return new LuaEqualsValueClauseSyntax(expression);
     }

@@ -72,7 +72,7 @@ namespace CSharpLua {
           AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
           var left = assignment.Left.Accept(this);
           var right = (LuaExpressionSyntax)assignment.Right.Accept(this);
-          CheckValueTypeClone(assignment.Right, ref right);
+          CheckValueTypeAndConversion(assignment.Right, ref right);
 
           if (assignment.Left.IsKind(SyntaxKind.ImplicitElementAccess)) {
             var argumentList = (LuaArgumentListSyntax)left;
@@ -842,6 +842,7 @@ namespace CSharpLua {
       LuaIdentifierNameSyntax name = GetMemberName(symbol);
       var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
       LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
+      function.ParameterList.Parameters.AddRange(parameterList.Parameters);
       PushFunction(function);
 
       var comments = BuildDocumentationComment(node);
