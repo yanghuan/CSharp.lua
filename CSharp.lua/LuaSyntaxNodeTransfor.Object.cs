@@ -864,5 +864,11 @@ namespace CSharpLua {
       BuildOperatorMethodDeclaration(node);
       return base.VisitOperatorDeclaration(node);
     }
+
+    public override LuaSyntaxNode VisitSizeOfExpression(SizeOfExpressionSyntax node) {
+      var constExpression = GetConstExpression(node);
+      Contract.Assert(constExpression != null);
+      return constExpression;
+    }
   }
 }

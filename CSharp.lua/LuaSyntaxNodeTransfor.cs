@@ -1304,7 +1304,7 @@ namespace CSharpLua {
           }
         }
         else {
-          defaultValue = GetConstLiteralExpression(parameter.ExplicitDefaultValue);
+          defaultValue = GetLiteralExpression(parameter.ExplicitDefaultValue);
         }
       }
       Contract.Assert(defaultValue != null);

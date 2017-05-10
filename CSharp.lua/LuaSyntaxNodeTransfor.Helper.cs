@@ -362,7 +362,7 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(arrayType, elements);
     }
 
-    private LuaLiteralExpressionSyntax GetConstLiteralExpression(object constantValue) {
+    private LuaLiteralExpressionSyntax GetLiteralExpression(object constantValue) {
       if (constantValue != null) {
         var code = Type.GetTypeCode(constantValue.GetType());
         switch (code) {
@@ -392,16 +392,17 @@ namespace CSharpLua {
         return new LuaCharacterLiteralExpression((char)constField.ConstantValue);
       }
       else {
-        var constExpression = GetConstLiteralExpression(constField.ConstantValue);
+        var literalExpression = GetLiteralExpression(constField.ConstantValue);
         string identifierToken = constField.ContainingType.Name + '.' + constField.Name;
-        return new LuaConstLiteralExpression(constExpression, identifierToken);
+        return new LuaConstLiteralExpression(literalExpression, identifierToken);
       }
     }
 
     private LuaLiteralExpressionSyntax GetConstExpression(ExpressionSyntax node) {
       var constValue = semanticModel_.GetConstantValue(node);
       if (constValue.HasValue) {
-        return GetConstLiteralExpression(constValue.Value);
+        var literalExpression = GetLiteralExpression(constValue.Value);
+        return new LuaConstLiteralExpression(literalExpression, node.ToString());
       }
       return null;
     }
