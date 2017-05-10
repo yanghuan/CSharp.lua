@@ -398,6 +398,14 @@ namespace CSharpLua {
       }
     }
 
+    private LuaLiteralExpressionSyntax GetConstExpression(ExpressionSyntax node) {
+      var constValue = semanticModel_.GetConstantValue(node);
+      if (constValue.HasValue) {
+        return GetConstLiteralExpression(constValue.Value);
+      }
+      return null;
+    }
+
     private LuaLiteralExpressionSyntax BuildStringLiteralTokenExpression(SyntaxToken token) {
       if (token.Text[0] == '@') {
         return BuildVerbatimStringExpression(token.ValueText);
@@ -944,11 +952,27 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax BuildConversionExpression(IMethodSymbol methodSymbol, LuaExpressionSyntax expression) {
+    private LuaMemberAccessExpressionSyntax GetOperatorMemberAccessExpression(IMethodSymbol methodSymbol) {
       var typeName = GetTypeName(methodSymbol.ContainingType);
       var methodName = GetMemberName(methodSymbol);
-      var memberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
+      return new LuaMemberAccessExpressionSyntax(typeName, methodName);
+    }
+
+    private LuaExpressionSyntax BuildConversionExpression(IMethodSymbol methodSymbol, LuaExpressionSyntax expression) {
+      var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
       return new LuaInvocationExpressionSyntax(memberAccess, expression);
+    }
+
+    private LuaExpressionSyntax GerUserDefinedOperatorExpression(BinaryExpressionSyntax node) {
+      var methodSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+      var typeSymbol = methodSymbol.ContainingType;
+      if (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType()) {
+        var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
+        var left = (LuaExpressionSyntax)node.Left.Accept(this);
+        var right = (LuaExpressionSyntax)node.Right.Accept(this);
+        return new LuaInvocationExpressionSyntax(memberAccess, left, right);
+      }
+      return null;
     }
   }
 }

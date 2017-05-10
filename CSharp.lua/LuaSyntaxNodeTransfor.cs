@@ -480,10 +480,8 @@ namespace CSharpLua {
             if (typeSymbol.TypeKind == TypeKind.Enum) {
               return LuaIdentifierLiteralExpressionSyntax.Zero;
             }
-            if (typeSymbol.ContainingNamespace.Name == "System") {
-              if (typeSymbol.Name == "TimeSpan") {
-                return BuildDefaultValue(LuaIdentifierNameSyntax.TimeSpan);
-              }
+            else if(typeSymbol.IsTimeSpanType()) {
+              return BuildDefaultValue(LuaIdentifierNameSyntax.TimeSpan);
             }
             return null;
           }
@@ -1206,9 +1204,9 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node) {
-      var constValue = semanticModel_.GetConstantValue(node);
-      if (constValue.HasValue) {
-        return GetConstLiteralExpression(constValue.Value);
+      var constExpression = GetConstExpression(node);
+      if (constExpression != null) {
+        return constExpression;
       }
 
       var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
@@ -2066,6 +2064,11 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node) {
+      var constExpression = GetConstExpression(node);
+      if (constExpression != null) {
+        return constExpression;
+      }
+
       switch (node.Kind()) {
         case SyntaxKind.AddExpression: {
             var methodSymbol = semanticModel_.GetSymbolInfo(node).Symbol as IMethodSymbol;
@@ -2132,6 +2135,12 @@ namespace CSharpLua {
             return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.As);
           }
       }
+
+      var operatorExpression = GerUserDefinedOperatorExpression(node);
+      if (operatorExpression != null) {
+        return operatorExpression;
+      }
+
       string operatorToken = GetOperatorToken(node.OperatorToken);
       return BuildBinaryExpression(node, operatorToken);
     }
@@ -2461,9 +2470,9 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitCastExpression(CastExpressionSyntax node) {
-      var constValue = semanticModel_.GetConstantValue(node);
-      if (constValue.HasValue) {
-        return GetConstLiteralExpression(constValue.Value);
+      var constExpression = GetConstExpression(node);
+      if (constExpression != null) {
+        return constExpression;
       }
 
       var originalType = semanticModel_.GetTypeInfo(node.Expression).Type;

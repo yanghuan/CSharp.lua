@@ -753,9 +753,9 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitDefaultExpression(DefaultExpressionSyntax node) {
-      var constValue = semanticModel_.GetConstantValue(node);
-      if (constValue.HasValue) {
-        return GetConstLiteralExpression(constValue.Value);
+      var constExpression = GetConstExpression(node);
+      if (constExpression != null) {
+        return constExpression;
       }
 
       var type = semanticModel_.GetTypeInfo(node.Type).Type;
@@ -832,7 +832,7 @@ namespace CSharpLua {
       return node.Name.Accept(this);
     }
 
-    public override LuaSyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node) {
+    private void BuildOperatorMethodDeclaration(BaseMethodDeclarationSyntax node) {
       var symbol = semanticModel_.GetDeclaredSymbol(node);
       methodInfos_.Push(new MethodInfo(symbol));
 
@@ -853,7 +853,16 @@ namespace CSharpLua {
       PopFunction();
       methodInfos_.Pop();
 
+    }
+
+    public override LuaSyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node) {
+      BuildOperatorMethodDeclaration(node);
       return base.VisitConversionOperatorDeclaration(node);
+    }
+
+    public override LuaSyntaxNode VisitOperatorDeclaration(OperatorDeclarationSyntax node) {
+      BuildOperatorMethodDeclaration(node);
+      return base.VisitOperatorDeclaration(node);
     }
   }
 }

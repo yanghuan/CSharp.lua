@@ -563,5 +563,8 @@ namespace CSharpLua {
       return false;
     }
 
+    public static bool IsTimeSpanType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.ContainingNamespace.Name == "System" && typeSymbol.Name == "TimeSpan";
+    }
   }
 }
