@@ -966,12 +966,17 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax GerUserDefinedOperatorExpression(BinaryExpressionSyntax node) {
       var methodSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-      var typeSymbol = methodSymbol.ContainingType;
-      if (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType()) {
-        var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
-        var left = (LuaExpressionSyntax)node.Left.Accept(this);
-        var right = (LuaExpressionSyntax)node.Right.Accept(this);
-        return new LuaInvocationExpressionSyntax(memberAccess, left, right);
+      if (methodSymbol != null) {
+        var typeSymbol = methodSymbol.ContainingType;
+        if (typeSymbol.TypeKind != TypeKind.Enum 
+          && typeSymbol.TypeKind != TypeKind.Delegate
+          && typeSymbol.SpecialType == SpecialType.None
+          && !typeSymbol.IsTimeSpanType()) {
+          var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
+          var left = (LuaExpressionSyntax)node.Left.Accept(this);
+          var right = (LuaExpressionSyntax)node.Right.Accept(this);
+          return new LuaInvocationExpressionSyntax(memberAccess, left, right);
+        }
       }
       return null;
     }
