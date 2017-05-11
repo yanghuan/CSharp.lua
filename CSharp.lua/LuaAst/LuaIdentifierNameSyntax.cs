@@ -102,6 +102,7 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax TimeSpan = new LuaIdentifierNameSyntax("System.TimeSpan");
     public readonly static LuaIdentifierNameSyntax AnonymousType = new LuaIdentifierNameSyntax("System.anonymousType");
     public readonly static LuaIdentifierNameSyntax SystemNew = new LuaIdentifierNameSyntax("System.new");
+    public readonly static LuaIdentifierNameSyntax StackAlloc = new LuaIdentifierNameSyntax("System.stackalloc");
 
     #region QueryExpression
     public readonly static LuaIdentifierNameSyntax LinqWhere = new LuaIdentifierNameSyntax("Linq.Where");

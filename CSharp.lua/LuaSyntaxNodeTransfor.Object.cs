@@ -870,5 +870,11 @@ namespace CSharpLua {
       Contract.Assert(constExpression != null);
       return constExpression;
     }
+
+    public override LuaSyntaxNode VisitStackAllocArrayCreationExpression(StackAllocArrayCreationExpressionSyntax node) {
+      var arrayType = (LuaArrayTypeAdapterExpressionSyntax)node.Type.Accept(this);
+      Contract.Assert(arrayType.IsSimapleArray);
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StackAlloc, arrayType, arrayType.RankSpecifier.Sizes[0]);
+    }
   }
 }
