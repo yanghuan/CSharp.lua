@@ -855,7 +855,7 @@ local ptr = {
     return ptrAddress(t1) <= ptrAddress(t2)
   end
 }
-ptr.__index = pointer
+ptr.__index = ptr
 
 function System.stackalloc(arrayType, len)
   if len < 0 then
