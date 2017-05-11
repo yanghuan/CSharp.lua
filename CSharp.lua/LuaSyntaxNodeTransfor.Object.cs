@@ -876,5 +876,33 @@ namespace CSharpLua {
       Contract.Assert(arrayType.IsSimapleArray);
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StackAlloc, arrayType, arrayType.RankSpecifier.Sizes[0]);
     }
+
+    public override LuaSyntaxNode VisitUnsafeStatement(UnsafeStatementSyntax node) {
+      LuaStatementListSyntax statements = new LuaStatementListSyntax();
+      statements.Statements.Add(new LuaShortCommentStatement(" " + node.UnsafeKeyword));
+      var block = (LuaStatementSyntax)node.Block.Accept(this);
+      statements.Statements.Add(block);
+      return statements;
+    }
+
+    public override LuaSyntaxNode VisitFixedStatement(FixedStatementSyntax node) {
+      LuaStatementListSyntax statements = new LuaStatementListSyntax();
+      statements.Statements.Add(new LuaShortCommentStatement(" " + node.FixedKeyword));
+      LuaBlockStatementSyntax block = new LuaBlockStatementSyntax();
+      var declaration = (LuaStatementSyntax)node.Declaration.Accept(this);
+      block.Statements.Add(declaration);
+      WriteStatementOrBlock(node.Statement, block);
+      statements.Statements.Add(block);
+      return statements;
+    }
+
+    public override LuaSyntaxNode VisitLockStatement(LockStatementSyntax node) {
+      LuaStatementListSyntax statements = new LuaStatementListSyntax();
+      statements.Statements.Add(new LuaShortCommentStatement($" {node.LockKeyword}({node.Expression})"));
+      LuaBlockStatementSyntax block = new LuaBlockStatementSyntax();
+      WriteStatementOrBlock(node.Statement, block);
+      statements.Statements.Add(block);
+      return statements;
+    }
   }
 }
