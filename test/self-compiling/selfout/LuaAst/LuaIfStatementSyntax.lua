@@ -15,7 +15,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __init__(this)
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if condition == nil then
-        System.throw(System.ArgumentNullException("condition"))
+        System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end
       this.Condition = condition
     end
@@ -53,7 +53,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __init__(this)
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if condition == nil then
-        System.throw(System.ArgumentNullException("condition"))
+        System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end
       this.Condition = condition
     end
@@ -118,10 +118,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     Fill = function (this, expression, sections) 
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       if sections == nil then
-        System.throw(System.ArgumentNullException("sections"))
+        System.throw(System.ArgumentNullException("sections" --[[nameof(sections)]]))
       end
 
       local body = this.RepeatStatement.Body

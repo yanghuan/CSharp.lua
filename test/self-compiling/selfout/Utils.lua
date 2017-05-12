@@ -49,7 +49,7 @@ System.namespace("CSharpLua", function (namespace)
     IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
     IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-    IsMainEntryPoint
+    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType
     First = function (list, T) 
       return list:get(0)
     end
@@ -423,7 +423,7 @@ System.namespace("CSharpLua", function (namespace)
     end
     GetLocationString = function (node) 
       local location = node:getSyntaxTree():GetLocation(node:getSpan())
-      local methodInfo = location:GetType():GetMethod("GetDebuggerDisplay", 4 --[[BindingFlags.Instance]] | 32 --[[BindingFlags.NonPublic]])
+      local methodInfo = location:GetType():GetMethod("GetDebuggerDisplay", 36 --[[BindingFlags.Instance | BindingFlags.NonPublic]])
       return System.cast(System.String, methodInfo:Invoke(location, nil))
     end
     IsSubclassOf = function (child, parent) 
@@ -559,6 +559,23 @@ System.namespace("CSharpLua", function (namespace)
       end
       return false
     end
+    IsExtendSelf = function (typeSymbol, baseTypeSymbol) 
+      if baseTypeSymbol:getIsGenericType() then
+        for _, baseTypeArgument in System.each(baseTypeSymbol:getTypeArguments()) do
+          if baseTypeSymbol:getKind() ~= 17 --[[SymbolKind.TypeParameter]] then
+            if not baseTypeArgument:Equals(typeSymbol) then
+              if IsAssignableFrom(typeSymbol, baseTypeArgument) then
+                return true
+              end
+            end
+          end
+        end
+      end
+      return false
+    end
+    IsTimeSpanType = function (typeSymbol) 
+      return typeSymbol:getContainingNamespace():getName() == "System" and typeSymbol:getName() == "TimeSpan"
+    end
     return {
       First = First, 
       Last = Last, 
@@ -603,7 +620,9 @@ System.namespace("CSharpLua", function (namespace)
       IsAssignableFrom = IsAssignableFrom, 
       CheckMethodDefinition = CheckMethodDefinition, 
       CheckOriginalDefinition = CheckOriginalDefinition, 
-      IsMainEntryPoint = IsMainEntryPoint
+      IsMainEntryPoint = IsMainEntryPoint, 
+      IsExtendSelf = IsExtendSelf, 
+      IsTimeSpanType = IsTimeSpanType
     }
   end)
 end)

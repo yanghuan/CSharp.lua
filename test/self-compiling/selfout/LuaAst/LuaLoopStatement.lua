@@ -17,10 +17,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __init__(this)
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if identifier == nil then
-        System.throw(System.ArgumentNullException("identifier"))
+        System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       this.Identifier = identifier
       this.Expression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Each, expression)
@@ -62,7 +62,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __init__(this)
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if condition == nil then
-        System.throw(System.ArgumentNullException("condition"))
+        System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end
       this.Condition = condition
     end
@@ -92,7 +92,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __init__(this)
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if condition == nil then
-        System.throw(System.ArgumentNullException("condition"))
+        System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end
       this.Condition = condition
     end

@@ -124,7 +124,7 @@ return function (dir)
     "CSharpLua.LuaAst.LuaWhileStatementSyntax", 
     "CSharpLua.LuaRenderer", 
     "CSharpLua.LuaSyntaxGenerator", 
-    "CSharpLua.LuaSyntaxGenerator.InterfaceImplicitChecker", 
+    "CSharpLua.LuaSyntaxGenerator.PretreatmentChecker", 
     "CSharpLua.LuaSyntaxGenerator.SettingInfo", 
     "CSharpLua.LuaSyntaxNodeTransfor", 
     "CSharpLua.LuaSyntaxNodeTransfor.BlockCommonNode", 

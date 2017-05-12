@@ -117,7 +117,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor1__ = function (this, declarator) 
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if declarator == nil then
-        System.throw(System.ArgumentNullException("declarator"))
+        System.throw(System.ArgumentNullException("declarator" --[[nameof(declarator)]]))
       end
       this.Declarator = declarator
     end
@@ -146,7 +146,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, identifier, expression) 
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if identifier == nil then
-        System.throw(System.ArgumentNullException("identifier"))
+        System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
       this.Identifier = identifier
       if expression ~= nil then
@@ -175,7 +175,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, value) 
       CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
       if value == nil then
-        System.throw(System.ArgumentNullException("value"))
+        System.throw(System.ArgumentNullException("value" --[[nameof(value)]]))
       end
       this.Value = value
     end

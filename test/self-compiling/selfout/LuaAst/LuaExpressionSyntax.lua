@@ -48,10 +48,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, left, right) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if left == nil then
-        System.throw(System.ArgumentNullException("left"))
+        System.throw(System.ArgumentNullException("left" --[[nameof(left)]]))
       end
       if right == nil then
-        System.throw(System.ArgumentNullException("right"))
+        System.throw(System.ArgumentNullException("right" --[[nameof(right)]]))
       end
       this.Left = left
       this.Right = right
@@ -127,10 +127,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, left, operatorToken, right) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if left == nil then
-        System.throw(System.ArgumentNullException("left"))
+        System.throw(System.ArgumentNullException("left" --[[nameof(left)]]))
       end
       if right == nil then
-        System.throw(System.ArgumentNullException("right"))
+        System.throw(System.ArgumentNullException("right" --[[nameof(right)]]))
       end
       this.Left = left
       this.OperatorToken = operatorToken
@@ -154,7 +154,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, operand, operatorToken) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if operand == nil then
-        System.throw(System.ArgumentNullException("operand"))
+        System.throw(System.ArgumentNullException("operand" --[[nameof(operand)]]))
       end
       this.Operand = operand
       this.OperatorToken = operatorToken
@@ -177,7 +177,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, expression) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       this.Expression = expression
     end
@@ -249,10 +249,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, invocationExpression, rankSpecifier) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if invocationExpression == nil then
-        System.throw(System.ArgumentNullException("invocationExpression"))
+        System.throw(System.ArgumentNullException("invocationExpression" --[[nameof(invocationExpression)]]))
       end
       if rankSpecifier == nil then
-        System.throw(System.ArgumentNullException("rankSpecifier"))
+        System.throw(System.ArgumentNullException("rankSpecifier" --[[nameof(rankSpecifier)]]))
       end
       this.InvocationExpression = invocationExpression
       this.RankSpecifier = rankSpecifier
@@ -283,7 +283,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, expression) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       this.Expression = expression
     end

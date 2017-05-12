@@ -29,7 +29,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     AddMemberDeclaration = function (this, statement) 
       if statement == nil then
-        System.throw(System.ArgumentNullException("statement"))
+        System.throw(System.ArgumentNullException("statement" --[[nameof(statement)]]))
       end
       getBody(this).Statements:Add(statement)
     end

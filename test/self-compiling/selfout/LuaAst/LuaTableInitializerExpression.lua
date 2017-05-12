@@ -59,7 +59,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, expression) 
       CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       this.Expression = expression
     end
@@ -165,10 +165,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, expression, index) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       if index == nil then
-        System.throw(System.ArgumentNullException("index"))
+        System.throw(System.ArgumentNullException("index" --[[nameof(index)]]))
       end
       this.Expression = expression
       this.Index = index

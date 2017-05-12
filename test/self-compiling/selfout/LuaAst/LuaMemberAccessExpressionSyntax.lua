@@ -10,10 +10,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, expression, name, isObjectColon) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       if name == nil then
-        System.throw(System.ArgumentNullException("name"))
+        System.throw(System.ArgumentNullException("name" --[[nameof(name)]]))
       end
       this.Expression = expression
       this.Name = name

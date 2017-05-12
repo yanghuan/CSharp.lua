@@ -15,7 +15,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __init__(this)
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       this.Expression = expression
     end

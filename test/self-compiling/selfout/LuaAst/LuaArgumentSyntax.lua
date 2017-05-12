@@ -10,7 +10,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, expression) 
       CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       this.Expression = expression
     end

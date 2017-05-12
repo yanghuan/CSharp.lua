@@ -54,7 +54,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, expression) 
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if expression == nil then
-        System.throw(System.ArgumentNullException("expression"))
+        System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
       this.Expression = expression
     end
@@ -277,7 +277,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, identifier) 
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if identifier == nil then
-        System.throw(System.ArgumentNullException("identifier"))
+        System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
       this.Identifier = identifier
     end
@@ -303,7 +303,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, identifier) 
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if identifier == nil then
-        System.throw(System.ArgumentNullException("identifier"))
+        System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
 
       local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(identifier, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True)
@@ -328,7 +328,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     __ctor__ = function (this, identifier, statement) 
       CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
       if identifier == nil then
-        System.throw(System.ArgumentNullException("identifier"))
+        System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
       this.Identifier = identifier
       this.Statement = statement

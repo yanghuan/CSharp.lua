@@ -114,14 +114,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       end
       Add = function (this, node) 
         if node == nil then
-          System.throw(System.ArgumentNullException("node"))
+          System.throw(System.ArgumentNullException("node" --[[nameof(node)]]))
         end
         this:Add(node)
       end
       AddRange = function (this, collection) 
         for _, item in System.each(collection) do
           if item == nil then
-            System.throw(System.ArgumentNullException("item"))
+            System.throw(System.ArgumentNullException("item" --[[nameof(item)]]))
           end
           this:Add(item)
         end
