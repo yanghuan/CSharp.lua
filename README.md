@@ -77,5 +77,8 @@ Options
 ## Example
 - [fibonacci](https://github.com/yanghuan/CSharp.lua/tree/master/test/fibonacci), a console program code, print Fibonacci number. 
 
+## Documentation
+https://github.com/yanghuan/CSharp.lua/wiki
+
 ## *License*
 [Apache 2.0 license](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE).
