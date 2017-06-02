@@ -1183,9 +1183,12 @@ namespace CSharpLua {
       List<LuaExpressionSyntax> arguments;
       if (symbol != null) {
         arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
-        foreach (var typeArgument in symbol.TypeArguments) {
-          LuaExpressionSyntax typeName = GetTypeName(typeArgument);
-          arguments.Add(typeName);
+        bool ignoreGeneric = generator_.XmlMetaProvider.IsMethodIgnoreGeneric(symbol);
+        if (!ignoreGeneric) {
+          foreach (var typeArgument in symbol.TypeArguments) {
+            LuaExpressionSyntax typeName = GetTypeName(typeArgument);
+            arguments.Add(typeName);
+          }
         }
         TryRemoveNilArgumentsAtTail(symbol, arguments);
       } else {

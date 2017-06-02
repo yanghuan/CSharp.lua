@@ -80,6 +80,8 @@ namespace CSharpLua {
         public string RetType;
         [XmlAttribute]
         public int GenericArgCount = -1;
+        [XmlAttribute]
+        public bool IgnoreGeneric;
       }
 
       public sealed class ClassModel {
@@ -130,6 +132,7 @@ namespace CSharpLua {
     private enum MethodMetaType {
       Name,
       CodeTemplate,
+      IgnoreGeneric,
     }
 
     private sealed class MethodMetaInfo {
@@ -224,6 +227,19 @@ namespace CSharpLua {
         return methodModel?.Template;
       }
 
+      private string GetIgnoreGeneric(IMethodSymbol symbol) {
+        bool isIgnoreGeneric = false;
+        if (isSingleModel_) {
+          isIgnoreGeneric = models_.First().IgnoreGeneric;
+        } else {
+          var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+          if (methodModel != null) {
+            isIgnoreGeneric = methodModel.IgnoreGeneric;
+          }
+        }
+        return isIgnoreGeneric ? bool.TrueString : bool.FalseString;
+      }
+
       public string GetMetaInfo(IMethodSymbol symbol, MethodMetaType type) {
         switch (type) {
           case MethodMetaType.Name: {
@@ -231,6 +247,9 @@ namespace CSharpLua {
             }
           case MethodMetaType.CodeTemplate: {
               return GetCodeTemplate(symbol);
+            }
+          case MethodMetaType.IgnoreGeneric: {
+              return GetIgnoreGeneric(symbol);
             }
           default: {
               throw new InvalidOperationException();
@@ -582,6 +601,10 @@ namespace CSharpLua {
 
     public string GetMethodCodeTemplate(IMethodSymbol symbol) {
       return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate);
+    }
+
+    public bool IsMethodIgnoreGeneric(IMethodSymbol symbol) {
+      return GetMethodMetaInfo(symbol, MethodMetaType.IgnoreGeneric) == bool.TrueString;
     }
 
     public bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {

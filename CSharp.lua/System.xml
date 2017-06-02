@@ -89,6 +89,16 @@ limitations under the License.
         <property name="Length">
           <get Template="#{this}" />
         </property>
+        <method name="Exists" IgnoreGeneric="true" />
+        <method name="Find" IgnoreGeneric="true" />
+        <method name="FindAll" IgnoreGeneric="true" />
+        <method name="FindIndex" IgnoreGeneric="true" />
+        <method name="FindLast" IgnoreGeneric="true" />
+        <method name="FindLastIndex" IgnoreGeneric="true" />
+        <method name="ForEach" IgnoreGeneric="true" />
+        <method name="IndexOf" IgnoreGeneric="true" />
+        <method name="LastIndexOf" IgnoreGeneric="true" />
+        <method name="TrueForAll" IgnoreGeneric="true" />
       </class>
       <class name="IComparable">
         <method name="CompareTo" Name="CompareToObj" />
