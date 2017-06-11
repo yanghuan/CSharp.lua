@@ -434,7 +434,6 @@ namespace CSharpLua {
 
     internal void Render(LuaPrefixUnaryExpressionSyntax node) {
       Write(node.OperatorToken);
-      WriteSpace();
       node.Operand.Render(this);
     }
 
@@ -448,6 +447,25 @@ namespace CSharpLua {
       Write(node.InKeyword);
       WriteSpace();
       node.Expression.Render(this);
+      WriteSpace();
+      node.Body.Render(this);
+      WriteNewLine();
+    }
+
+    internal void Render(LuaNumericalForStatementSyntax node) {
+      Write(node.ForKeyword);
+      WriteSpace();
+      node.Identifier.Render(this);
+      WriteSpace();
+      Write(node.EqualsToken);
+      WriteSpace();
+      node.StartExpression.Render(this);
+      WriteComma();
+      node.LimitExpression.Render(this);
+      if (node.StepExpression != null) {
+        WriteComma();
+        node.StepExpression.Render(this);
+      }
       WriteSpace();
       node.Body.Render(this);
       WriteNewLine();

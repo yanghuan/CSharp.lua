@@ -982,5 +982,175 @@ namespace CSharpLua {
       }
       return null;
     }
+
+    private bool IsNumericalForVariableMatch(ExpressionSyntax node, SyntaxToken identifier) {
+      if (node.IsKind(SyntaxKind.IdentifierName)) {
+        var identifierName = (IdentifierNameSyntax)node;
+        return identifierName.Identifier.ValueText == identifier.ValueText;
+      }
+      return false;
+    }
+
+    private bool IsNumericalForLess(SyntaxKind kind, out bool isLess) {
+      switch (kind) {
+        case SyntaxKind.NotEqualsExpression:
+        case SyntaxKind.LessThanExpression:
+          isLess = true;
+          return true;
+        case SyntaxKind.LessThanOrEqualExpression:
+          isLess = false;
+          return true;
+        default:
+          isLess = false;
+          return false;
+      }
+    }
+
+    private bool IsNumericalForGreater(SyntaxKind kind, out bool isGreater) {
+      switch (kind) {
+        case SyntaxKind.NotEqualsExpression:
+        case SyntaxKind.GreaterThanExpression:
+          isGreater = true;
+          return true;
+        case SyntaxKind.GreaterThanOrEqualExpression:
+          isGreater = false;
+          return true;
+        default:
+          isGreater = false;
+          return false;
+      }
+    }
+
+    private LuaNumericalForStatementSyntax GetNumericalForStatement(ForStatementSyntax node) {
+      if (node.Declaration == null || node.Declaration.Variables.Count > 1) {
+        goto Fail;
+      }
+
+      if (node.Condition == null) {
+        goto Fail;
+      }
+
+      if (node.Incrementors.Count != 1) {
+        goto Fail;
+      }
+
+      var variable = node.Declaration.Variables.First();
+      if (variable.Initializer == null) {
+        goto Fail;
+      }
+
+      var conditionKind = node.Condition.Kind();
+      if (conditionKind < SyntaxKind.NotEqualsExpression || conditionKind > SyntaxKind.GreaterThanOrEqualExpression) {
+        goto Fail;
+      }
+
+      var condition = (BinaryExpressionSyntax)node.Condition;
+      if (!IsNumericalForVariableMatch(condition.Left, variable.Identifier)) {
+        goto Fail;
+      }
+
+      var limitConst = semanticModel_.GetConstantValue(condition.Right);
+      if (limitConst.HasValue) {
+        if (!(limitConst.Value is int)) {
+          goto Fail;
+        }
+      } else {
+        bool isReadOnly = false;
+        var symbol = semanticModel_.GetSymbolInfo(condition.Right).Symbol;
+        if (symbol != null) {
+          if (symbol.Kind == SymbolKind.Field) {
+            isReadOnly = ((IFieldSymbol)symbol).IsReadOnly;
+          } else if (symbol.Kind == SymbolKind.Property) {
+            isReadOnly = ((IPropertySymbol)symbol).IsReadOnly;
+          }
+        } 
+        if (!isReadOnly) {
+          goto Fail;
+        }
+      }
+
+      bool hasNoEqual;
+      bool isPlus;
+      var incrementor = node.Incrementors.First();
+      switch (incrementor.Kind()) {
+        case SyntaxKind.PreIncrementExpression:
+        case SyntaxKind.PreDecrementExpression:
+          var prefixUnaryExpression = (PrefixUnaryExpressionSyntax)incrementor;
+          if (!IsNumericalForVariableMatch(prefixUnaryExpression.Operand, variable.Identifier)) {
+            goto Fail;
+          }
+          if (incrementor.IsKind(SyntaxKind.PreIncrementExpression)) {
+            if (!IsNumericalForLess(conditionKind, out hasNoEqual)) {
+              goto Fail;
+            }
+            isPlus = true;
+          } else {
+            if (!IsNumericalForGreater(conditionKind, out hasNoEqual)) {
+              goto Fail;
+            }
+            isPlus = false;
+          }
+          break;
+        case SyntaxKind.PostIncrementExpression:
+        case SyntaxKind.PostDecrementExpression:
+          var postfixUnaryExpression = (PostfixUnaryExpressionSyntax)incrementor;
+          if (!IsNumericalForVariableMatch(postfixUnaryExpression.Operand, variable.Identifier)) {
+            goto Fail;
+          }
+          if (incrementor.IsKind(SyntaxKind.PostIncrementExpression)) {
+            if (!IsNumericalForLess(conditionKind, out hasNoEqual)) {
+              goto Fail;
+            }
+            isPlus = true;
+          } else {
+            if (!IsNumericalForGreater(conditionKind, out hasNoEqual)) {
+              goto Fail;
+            }
+            isPlus = false;
+          }
+          break;
+        default:
+          goto Fail;
+      }
+
+      LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(variable.Identifier.ValueText);
+      CheckVariableDeclaratorName(ref identifier, variable);
+
+      var startExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
+      LuaExpressionSyntax limitExpression;
+      LuaExpressionSyntax stepExpression = null;
+      if (hasNoEqual) {
+        if (limitConst.Value != null) {
+          int limit = (int)limitConst.Value;
+          if (isPlus) {
+            --limit;
+          } else {
+            ++limit;
+            stepExpression = new LuaPrefixUnaryExpressionSyntax(LuaIdentifierNameSyntax.One, LuaSyntaxNode.Tokens.Sub);
+          }
+          limitExpression = new LuaIdentifierLiteralExpressionSyntax(limit.ToString());
+        } else {
+          limitExpression = (LuaExpressionSyntax)condition.Right.Accept(this);
+          if (isPlus) {
+            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, LuaIdentifierNameSyntax.One);
+          } else {
+            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Plus, LuaIdentifierNameSyntax.One);
+            stepExpression = new LuaPrefixUnaryExpressionSyntax(LuaIdentifierNameSyntax.One, LuaSyntaxNode.Tokens.Sub);
+          }
+        }
+      } else {
+        limitExpression = (LuaExpressionSyntax)condition.Right.Accept(this);
+        if (!isPlus) {
+          stepExpression = new LuaPrefixUnaryExpressionSyntax(LuaIdentifierNameSyntax.One, LuaSyntaxNode.Tokens.Sub);
+        }
+      }
+    
+      var numericalForStatement = new LuaNumericalForStatementSyntax(identifier, startExpression, limitExpression, stepExpression);
+      VisitLoopBody(node.Statement, numericalForStatement.Body);
+      return numericalForStatement;
+
+    Fail:
+      return null;
+    }
   }
 }

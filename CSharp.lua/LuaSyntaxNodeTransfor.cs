@@ -2258,6 +2258,11 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitForStatement(ForStatementSyntax node) {
+      var numericalForStatement = GetNumericalForStatement(node);
+      if (numericalForStatement != null) {
+        return numericalForStatement;
+      }
+
       LuaBlockSyntax block = new LuaBlockStatementSyntax();
       blocks_.Push(block);
 
