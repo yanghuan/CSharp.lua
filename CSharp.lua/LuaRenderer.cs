@@ -434,6 +434,7 @@ namespace CSharpLua {
 
     internal void Render(LuaPrefixUnaryExpressionSyntax node) {
       Write(node.OperatorToken);
+      WriteSpace();
       node.Operand.Render(this);
     }
 

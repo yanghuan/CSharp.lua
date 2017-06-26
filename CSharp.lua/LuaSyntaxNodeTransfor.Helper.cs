@@ -1061,7 +1061,8 @@ namespace CSharpLua {
           if (symbol.Kind == SymbolKind.Field) {
             isReadOnly = ((IFieldSymbol)symbol).IsReadOnly;
           } else if (symbol.Kind == SymbolKind.Property) {
-            isReadOnly = ((IPropertySymbol)symbol).IsReadOnly;
+            var propertySymbol = (IPropertySymbol)symbol;
+            isReadOnly = propertySymbol.IsReadOnly && IsPropertyField(propertySymbol);
           }
         } 
         if (!isReadOnly) {
