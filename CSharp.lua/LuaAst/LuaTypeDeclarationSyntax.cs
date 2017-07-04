@@ -168,7 +168,7 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private void AddPropertyOrEvent(bool isProperty, LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+    private void AddPropertyOrEvent(bool isProperty, LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
       LuaIdentifierNameSyntax initMethodIdentifier;
       LuaPropertyOrEventIdentifierNameSyntax get, set;
       if (isProperty) {
@@ -189,7 +189,7 @@ namespace CSharpLua.LuaAst {
       assignment.Lefts.Add(get);
       assignment.Lefts.Add(set);
       LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(initMethodIdentifier);
-      invocation.AddArgument(new LuaStringLiteralExpressionSyntax(name));
+      invocation.AddArgument(new LuaStringLiteralExpressionSyntax(innerName));
       assignment.Rights.Add(invocation);
       methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
 
@@ -219,12 +219,12 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public void AddProperty(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
-      AddPropertyOrEvent(true, name, value, isImmutable, isStatic, isPrivate);
+    public void AddProperty(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+      AddPropertyOrEvent(true, name, innerName, value, isImmutable, isStatic, isPrivate);
     }
 
-    public void AddEvent(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
-      AddPropertyOrEvent(false, name, value, isImmutable, isStatic, isPrivate);
+    public void AddEvent(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate) {
+      AddPropertyOrEvent(false, name, innerName, value, isImmutable, isStatic, isPrivate);
     }
 
     public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function) {

@@ -540,9 +540,10 @@ namespace CSharpLua {
             var eventSymbol = (IEventSymbol)variableSymbol;
             if (!IsEventFiled(eventSymbol)) {
               var eventName = GetMemberName(eventSymbol);
+              var innerName = AddInnerName(eventSymbol);
               bool valueIsLiteral;
               LuaExpressionSyntax valueExpression = GetFieldValueExpression(type, typeSymbol, variable.Initializer?.Value, out valueIsLiteral);
-              CurType.AddEvent(eventName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
+              CurType.AddEvent(eventName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
               continue;
             }
           } else {
@@ -684,9 +685,10 @@ namespace CSharpLua {
               AddField(fieldName, typeSymbol, node.Type, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
             } else {
               LuaIdentifierNameSyntax propertyName = GetMemberName(symbol);
+              LuaIdentifierNameSyntax innerName = AddInnerName(symbol);
               bool valueIsLiteral;
               LuaExpressionSyntax valueExpression = GetFieldValueExpression(node.Type, typeSymbol, node.Initializer?.Value, out valueIsLiteral);
-              CurType.AddProperty(propertyName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
+              CurType.AddProperty(propertyName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate);
             }
           }
         } else {

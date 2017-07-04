@@ -395,6 +395,7 @@ namespace CSharpLua {
     private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
     private List<INamedTypeSymbol> types_ = new List<INamedTypeSymbol>();
     private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> typeDeclarationAttributes_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
+    private Dictionary<ISymbol, LuaSymbolNameSyntax> propertyOrEvnetInnerFieldNames_ = new Dictionary<ISymbol, LuaSymbolNameSyntax>();
 
     internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
       types_.Add(typeSymbol);
@@ -495,6 +496,13 @@ namespace CSharpLua {
         throw new InvalidOperationException();
       }
       return symbolExpression;
+    }
+
+    internal LuaIdentifierNameSyntax AddInnerName(ISymbol symbol) {
+      string name = GetSymbolBaseName(symbol);
+      LuaSymbolNameSyntax symbolName = new LuaSymbolNameSyntax(new LuaIdentifierNameSyntax(name));
+      propertyOrEvnetInnerFieldNames_.Add(symbol, symbolName);
+      return symbolName;
     }
 
     private string GetSymbolBaseName(ISymbol symbol) {
@@ -756,6 +764,8 @@ namespace CSharpLua {
           RefactorCurTypeSymbol(symbol, alreadyRefactorSymbols);
         }
       }
+
+      CheckRefactorInnerNames();
     }
 
     private void RefactorCurTypeSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
@@ -773,6 +783,9 @@ namespace CSharpLua {
         string newName = GetRefactorName(null, childrens, symbol);
         foreach (INamedTypeSymbol children in childrens) {
           ISymbol childrenSymbol = children.FindImplementationForInterfaceMember(symbol);
+          if (childrenSymbol == null) {
+            childrenSymbol = FindImplicitImplementationForInterfaceMember(children, symbol);
+          }
           Contract.Assert(childrenSymbol != null);
           RefactorName(childrenSymbol, newName, alreadyRefactorSymbols);
         }
@@ -909,8 +922,59 @@ namespace CSharpLua {
       return true;
     }
 
+    private void CheckRefactorInnerNames() {
+      foreach (var innerName in propertyOrEvnetInnerFieldNames_) {
+        var symbol = innerName.Key;
+        string newName = GetInnerGetRefactorName(symbol);
+        innerName.Value.Update(newName);
+        TryAddNewUsedName(symbol.ContainingType, newName);
+      }
+    }
+
+    private string GetInnerGetRefactorName(ISymbol symbol) {
+      string originalName = GetSymbolBaseName(symbol);
+
+      int index = 0;
+      while (true) {
+        string newName = index == 0 ? originalName : originalName + index;
+        bool isEnable = IsInnerNameEnable(symbol.ContainingType, newName);
+        if (isEnable) {
+          return newName;
+        }
+        ++index;
+      }
+    }
+
+    private bool IsInnerNameEnable(INamedTypeSymbol typeSymbol, string newName) {
+      bool isEnable = IsInnerNameEnableOfChildrens(typeSymbol, newName);
+      if (isEnable) {
+        var p = typeSymbol.BaseType;
+        while (p != null) {
+          if (!IsCurTypeNameEnable(p, newName)) {
+            return false;
+          }
+          p = p.BaseType;
+        }
+        return true;
+      }
+      return false;
+    }
+
+    private bool IsInnerNameEnableOfChildrens(INamedTypeSymbol typeSymbol, string newName) {
+      var childrens = extends_.GetOrDefault(typeSymbol);
+      if (childrens != null) {
+        foreach (INamedTypeSymbol children in childrens) {
+          if (!IsNameEnableOfCurAndChildrens(children, newName)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
     #endregion
     private Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new Dictionary<ISymbol, HashSet<ISymbol>>();
+    private Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>> implicitInterfaceTypes_ = new Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>>();
     private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
     private HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
 
@@ -944,6 +1008,13 @@ namespace CSharpLua {
             foreach (var baseInterface in type.AllInterfaces) {
               foreach (var interfaceMember in baseInterface.GetMembers()) {
                 var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
+                if (implementationMember.Kind == SymbolKind.Method) {
+                  var methodSymbol = (IMethodSymbol)implementationMember;
+                  if (methodSymbol.MethodKind != MethodKind.Ordinary) {
+                    continue;
+                  }
+                }
+
                 var implementationType = implementationMember.ContainingType;
                 if (implementationType != type) {
                   if (!implementationType.AllInterfaces.Contains(baseInterface)) {
@@ -984,6 +1055,18 @@ namespace CSharpLua {
 
     private void AddImplicitInterfaceImplementation(ISymbol implementationMember, ISymbol interfaceMember) {
       implicitInterfaceImplementations_.TryAdd(implementationMember, interfaceMember);
+      var containingType = implementationMember.ContainingType;
+      var mapps = implicitInterfaceTypes_.GetOrDefault(containingType);
+      if (mapps == null) {
+        mapps = new Dictionary<ISymbol, ISymbol>();
+        implicitInterfaceTypes_.Add(containingType, mapps);
+      }
+      mapps.Add(interfaceMember, implementationMember);
+    }
+
+    private ISymbol FindImplicitImplementationForInterfaceMember(INamedTypeSymbol typeSymbol, ISymbol interfaceMember) {
+      var mapps = implicitInterfaceTypes_.GetOrDefault(typeSymbol);
+      return mapps?.GetOrDefault(interfaceMember);
     }
 
     private bool IsImplicitInterfaceImplementation(ISymbol symbol) {

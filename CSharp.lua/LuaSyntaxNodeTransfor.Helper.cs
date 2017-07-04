@@ -905,6 +905,10 @@ namespace CSharpLua {
       return generator_.GetMemberName(symbol);
     }
 
+    private LuaIdentifierNameSyntax AddInnerName(ISymbol symbol) {
+      return generator_.AddInnerName(symbol);
+    }
+
     private void RemoveNilArgumentsAtTail(List<LuaExpressionSyntax> arguments) {
       int i;
       for (i = arguments.Count - 1; i >= 0; --i) {
