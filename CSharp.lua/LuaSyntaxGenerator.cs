@@ -1054,14 +1054,16 @@ namespace CSharpLua {
     }
 
     private void AddImplicitInterfaceImplementation(ISymbol implementationMember, ISymbol interfaceMember) {
-      implicitInterfaceImplementations_.TryAdd(implementationMember, interfaceMember);
-      var containingType = implementationMember.ContainingType;
-      var mapps = implicitInterfaceTypes_.GetOrDefault(containingType);
-      if (mapps == null) {
-        mapps = new Dictionary<ISymbol, ISymbol>();
-        implicitInterfaceTypes_.Add(containingType, mapps);
+      bool success = implicitInterfaceImplementations_.TryAdd(implementationMember, interfaceMember);
+      if (success) {
+        var containingType = implementationMember.ContainingType;
+        var mapps = implicitInterfaceTypes_.GetOrDefault(containingType);
+        if (mapps == null) {
+          mapps = new Dictionary<ISymbol, ISymbol>();
+          implicitInterfaceTypes_.Add(containingType, mapps);
+        }
+        mapps.Add(interfaceMember, implementationMember);
       }
-      mapps.Add(interfaceMember, implementationMember);
     }
 
     private ISymbol FindImplicitImplementationForInterfaceMember(INamedTypeSymbol typeSymbol, ISymbol interfaceMember) {
