@@ -41,6 +41,7 @@ System.namespace("CSharpLua", function (namespace)
           this.GenericArgCount = - 1
         end
         return {
+          IgnoreGeneric = false, 
           __ctor__ = __ctor__
         }
       end)
@@ -62,7 +63,8 @@ System.namespace("CSharpLua", function (namespace)
       return {}
     end)
     namespace.class("MethodMetaInfo", function (namespace) 
-      local Add, CheckIsSingleModel, IsTypeMatch, IsMethodMatch, GetName, GetCodeTemplate, GetMetaInfo, __ctor__
+      local Add, CheckIsSingleModel, IsTypeMatch, IsMethodMatch, GetName, GetCodeTemplate, GetIgnoreGeneric, GetMetaInfo, 
+      __ctor__
       __ctor__ = function (this) 
         this.models_ = System.List(CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel)()
       end
@@ -159,6 +161,20 @@ System.namespace("CSharpLua", function (namespace)
         end
         return default
       end
+      GetIgnoreGeneric = function (this, symbol) 
+        local isIgnoreGeneric = false
+        if this.isSingleModel_ then
+          isIgnoreGeneric = CSharpLua.Utility.First(this.models_, CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel).IgnoreGeneric
+        else
+          local methodModel = this.models_:Find(function (i) 
+            return IsMethodMatch(this, i, symbol)
+          end)
+          if methodModel ~= nil then
+            isIgnoreGeneric = methodModel.IgnoreGeneric
+          end
+        end
+        return isIgnoreGeneric and System.Boolean.TrueString or System.Boolean.FalseString
+      end
       GetMetaInfo = function (this, symbol, type) 
         repeat
           local default = type
@@ -169,6 +185,10 @@ System.namespace("CSharpLua", function (namespace)
           elseif default == 1 --[[MethodMetaType.CodeTemplate]] then
             do
               return GetCodeTemplate(this, symbol)
+            end
+          elseif default == 2 --[[MethodMetaType.IgnoreGeneric]] then
+            do
+              return GetIgnoreGeneric(this, symbol)
             end
           else
             do
@@ -265,7 +285,7 @@ System.namespace("CSharpLua", function (namespace)
     end)
     local LoadNamespace, LoadType, GetNamespaceMapName, GetTypeName, GetTypeArguments, FillExternalTypeArgument, FillTypeArguments, MayHaveCodeMeta, 
     FillExternalTypeName, GetTypeShortString, GetTypeShortName, GetTypeMetaInfo, IsPropertyField, GetFieldCodeTemplate, GetProertyCodeTemplate, GetInternalMethodMetaInfo, 
-    GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, IsExportAttribute, CheckFieldNameOfProtobufnet, __init__, __ctor__
+    GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, IsMethodIgnoreGeneric, IsExportAttribute, CheckFieldNameOfProtobufnet, __init__, __ctor__
     __init__ = function (this) 
       this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)()
       this.typeMetas_ = System.Dictionary(System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo)()
@@ -561,6 +581,9 @@ System.namespace("CSharpLua", function (namespace)
     GetMethodCodeTemplate = function (this, symbol) 
       return GetMethodMetaInfo(this, symbol, 1 --[[MethodMetaType.CodeTemplate]])
     end
+    IsMethodIgnoreGeneric = function (this, symbol) 
+      return GetMethodMetaInfo(this, symbol, 2 --[[MethodMetaType.IgnoreGeneric]]) == System.Boolean.TrueString
+    end
     IsExportAttribute = function (this, attributeTypeSymbol) 
       return this.exportAttributes_:getCount() > 0 and this.exportAttributes_:Contains(attributeTypeSymbol:ToString())
     end
@@ -580,6 +603,7 @@ System.namespace("CSharpLua", function (namespace)
       GetProertyCodeTemplate = GetProertyCodeTemplate, 
       GetMethodMapName = GetMethodMapName, 
       GetMethodCodeTemplate = GetMethodCodeTemplate, 
+      IsMethodIgnoreGeneric = IsMethodIgnoreGeneric, 
       IsExportAttribute = IsExportAttribute, 
       CheckFieldNameOfProtobufnet = CheckFieldNameOfProtobufnet, 
       __ctor__ = __ctor__

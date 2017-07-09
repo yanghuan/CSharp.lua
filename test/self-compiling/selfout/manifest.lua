@@ -92,6 +92,7 @@ return function (dir)
     "CSharpLua.LuaAst.LuaMultipleAssignmentExpressionSyntax", 
     "CSharpLua.LuaAst.LuaMultipleReturnStatementSyntax", 
     "CSharpLua.LuaAst.LuaNamespaceDeclarationSyntax", 
+    "CSharpLua.LuaAst.LuaNumericalForStatementSyntax", 
     "CSharpLua.LuaAst.LuaParameterListSyntax", 
     "CSharpLua.LuaAst.LuaParameterSyntax", 
     "CSharpLua.LuaAst.LuaParenthesizedExpressionSyntax", 

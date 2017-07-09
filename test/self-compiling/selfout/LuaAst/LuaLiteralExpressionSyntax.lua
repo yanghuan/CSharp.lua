@@ -99,7 +99,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       setText(this, text)
       this.EqualsCount = equalsCount
     end
-    getText, setText = System.property("Text")
+    getText, setText = System.property("Text1")
     getOpenBracket = function (this) 
       return "[" --[[Tokens.OpenBracket]]
     end
