@@ -86,3 +86,5 @@ https://github.com/yanghuan/CSharp.lua/wiki
 ## *Acknowledgements*
 - [Bridge.NET](http://bridge.net/)
 - [WootzJs](https://github.com/kswoll/WootzJs)
+- [.NET referencesource](http://referencesource.microsoft.com/)
+
