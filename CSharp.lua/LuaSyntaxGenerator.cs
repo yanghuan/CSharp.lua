@@ -714,9 +714,17 @@ namespace CSharpLua {
         if (countOfA != countOfB) {
           return countOfA > countOfB ? -1 : 1;
         }
-        else {
-          return MemberSymbolCommonComparison(a, b);
+
+        if (countOfA == 1) {
+          var implementationOfA = a.InterfaceImplementations().First();
+          var implementationOfB = b.InterfaceImplementations().First();
+          int result;
+          if (MemberSymbolBoolComparison(implementationOfA, implementationOfB, i => !i.IsExplicitInterfaceImplementation(), out result)) {
+            return result;
+          }
         }
+
+        return MemberSymbolCommonComparison(a, b);
       }
 
       int v;
@@ -735,9 +743,10 @@ namespace CSharpLua {
 
     private int MemberSymbolCommonComparison(ISymbol a, ISymbol b) {
       if (a.ContainingType.Equals(b.ContainingType)) {
-        string name = a.Name;
         var type = a.ContainingType;
-        var members = type.GetMembers(name);
+        var names = GetSymbolNames(a);
+        List<ISymbol> members = new List<ISymbol>();
+        AddSimilarNameMembers(type, names, members);
         int indexOfA = members.IndexOf(a);
         Contract.Assert(indexOfA != -1);
         int indexOfB = members.IndexOf(b);
@@ -756,8 +765,7 @@ namespace CSharpLua {
       foreach (ISymbol symbol in refactorNames_) {
         bool hasImplementation = false;
         foreach (ISymbol implementation in AllInterfaceImplementations(symbol)) {
-          RefactorInterfaceSymbol(implementation, alreadyRefactorSymbols);
-          hasImplementation = true;
+          hasImplementation = RefactorInterfaceSymbol(implementation, alreadyRefactorSymbols);
         }
 
         if (!hasImplementation) {
@@ -775,7 +783,7 @@ namespace CSharpLua {
       RefactorName(symbol, newName, alreadyRefactorSymbols);
     }
 
-    private void RefactorInterfaceSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
+    private bool RefactorInterfaceSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
       if (symbol.IsFromCode()) {
         INamedTypeSymbol typeSymbol = symbol.ContainingType;
         Contract.Assert(typeSymbol.TypeKind == TypeKind.Interface);
@@ -789,7 +797,9 @@ namespace CSharpLua {
           Contract.Assert(childrenSymbol != null);
           RefactorName(childrenSymbol, newName, alreadyRefactorSymbols);
         }
+        return true;
       }
+      return false;
     }
 
     private void RefactorName(ISymbol symbol, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {

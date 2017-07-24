@@ -566,5 +566,32 @@ namespace CSharpLua {
     public static bool IsTimeSpanType(this ITypeSymbol typeSymbol) {
       return typeSymbol.ContainingNamespace.Name == "System" && typeSymbol.Name == "TimeSpan";
     }
+
+    public static bool IsExplicitInterfaceImplementation(this ISymbol symbol) {
+      switch (symbol.Kind) {
+        case SymbolKind.Property: {
+            IPropertySymbol property = (IPropertySymbol)symbol;
+            if (property.GetMethod != null) {
+              if (property.GetMethod.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
+                return true;
+              }
+              if (property.SetMethod != null) {
+                if (property.SetMethod.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
+                  return true;
+                }
+              }
+            }
+            break;
+          }
+        case SymbolKind.Method: {
+            IMethodSymbol method = (IMethodSymbol)symbol;
+            if (method.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
+              return true;
+            }
+            break;
+          }
+      }
+      return false;
+    }
   }
 }
