@@ -227,17 +227,17 @@ System.namespace("CSharpLua", function (namespace)
     MayBeNull, MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, BuildFieldOrPropertyMemberAccessExpression, VisitAttributeList, VisitAttributeArgument, 
     VisitNameColon, VisitAttributeArgumentList, VisitNameEquals, BuildObjectCreationInvocation, VisitAttribute, BuildAttributes, AddStructCloneMethodItem, AddStructDefaultMethod, 
     AddStructCloneMethod, AddStructEqualsObjMethod, BuildStructMethods, CheckValueTypeAndConversion, CheckValueTypeClone, BuildDocumentationComment, BuildBaseTypeName, VisitTypeParameterList, 
-    FillExternalTypeParameters, BuildTypeParameters, CheckFieldNameOfProtobufnet, GetMemberName, RemoveNilArgumentsAtTail, IsNilLuaExpression, TryRemoveNilArgumentsAtTail, PushChecked, 
-    PopChecked, getIsCurChecked, CheckConversion, GetOperatorMemberAccessExpression, BuildConversionExpression, GerUserDefinedOperatorExpression, VisitObjectCreationExpression, BuildObjectInitializerExpression, 
-    VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, 
-    VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, BuildCallBaseConstructor, BuildCallBaseConstructor1, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, 
-    VisitParenthesizedLambdaExpression, VisitAnonymousMethodExpression, VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, 
-    VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, 
-    VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, 
-    VisitAliasQualifiedName, BuildOperatorMethodDeclaration, VisitConversionOperatorDeclaration, VisitOperatorDeclaration, VisitSizeOfExpression, VisitStackAllocArrayCreationExpression, VisitUnsafeStatement, VisitFixedStatement, 
-    VisitLockStatement, VisitAnonymousObjectMemberDeclarator, VisitAnonymousObjectCreationExpression, VisitQueryExpression, VisitFromClause, VisitWhereClause, VisitQueryBody, VisitSelectClause, 
-    BuildQueryWhere, BuildOrdering, BuildQueryOrderBy, BuildQuerySelect, BuildGroupClause, BuildQueryBody, __staticCtor__, __init__, 
-    __ctor__
+    FillExternalTypeParameters, BuildTypeParameters, CheckFieldNameOfProtobufnet, GetMemberName, AddInnerName, RemoveNilArgumentsAtTail, IsNilLuaExpression, TryRemoveNilArgumentsAtTail, 
+    PushChecked, PopChecked, getIsCurChecked, CheckConversion, GetOperatorMemberAccessExpression, BuildConversionExpression, GerUserDefinedOperatorExpression, IsNumericalForVariableMatch, 
+    IsNumericalForLess, IsNumericalForGreater, GetNumericalForStatement, VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, 
+    VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, BuildCallBaseConstructor, 
+    BuildCallBaseConstructor1, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitAnonymousMethodExpression, VisitTypeParameter, 
+    VisitTypeOfExpression, VisitThrowStatement, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, 
+    VisitTryStatement, VisitUsingStatement, VisitThisExpression, IsBaseEnable, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, 
+    VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, BuildOperatorMethodDeclaration, VisitConversionOperatorDeclaration, 
+    VisitOperatorDeclaration, VisitSizeOfExpression, VisitStackAllocArrayCreationExpression, VisitUnsafeStatement, VisitFixedStatement, VisitLockStatement, VisitAnonymousObjectMemberDeclarator, VisitAnonymousObjectCreationExpression, 
+    VisitQueryExpression, VisitFromClause, VisitWhereClause, VisitQueryBody, VisitSelectClause, BuildQueryWhere, BuildOrdering, BuildQueryOrderBy, 
+    BuildQuerySelect, BuildGroupClause, BuildQueryBody, __staticCtor__, __init__, __ctor__
     __staticCtor__ = function (this) 
       operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
         default:set("!=", "~=" --[[Tokens.NotEquals]])
@@ -723,6 +723,7 @@ System.namespace("CSharpLua", function (namespace)
               local eventSymbol = System.cast(MicrosoftCodeAnalysis.IEventSymbol, variableSymbol)
               if not IsEventFiled(this, eventSymbol) then
                 local eventName = GetMemberName(this, eventSymbol)
+                local innerName = AddInnerName(this, eventSymbol)
                 local valueIsLiteral
                 local default = variable:getInitializer()
                 if default ~= nil then
@@ -731,7 +732,7 @@ System.namespace("CSharpLua", function (namespace)
                 local extern
                 extern, valueIsLiteral = GetFieldValueExpression(this, type, typeSymbol, default)
                 local valueExpression = extern
-                getCurType(this):AddEvent(eventName, valueExpression, isImmutable and valueIsLiteral, isStatic, isPrivate)
+                getCurType(this):AddEvent(eventName, innerName, valueExpression, isImmutable and valueIsLiteral, isStatic, isPrivate)
                 continue = true
                 break
               end
@@ -896,6 +897,7 @@ System.namespace("CSharpLua", function (namespace)
               AddField(this, fieldName, typeSymbol, node:getType(), extern, isImmutable, isStatic, isPrivate, isReadOnly, node:getAttributeLists())
             else
               local propertyName = GetMemberName(this, symbol)
+              local innerName = AddInnerName(this, symbol)
               local valueIsLiteral
               local ref = node:getInitializer()
               if ref ~= nil then
@@ -904,7 +906,7 @@ System.namespace("CSharpLua", function (namespace)
               local out
               out, valueIsLiteral = GetFieldValueExpression(this, node:getType(), typeSymbol, ref)
               local valueExpression = out
-              getCurType(this):AddProperty(propertyName, valueExpression, isImmutable and valueIsLiteral, isStatic, isPrivate)
+              getCurType(this):AddProperty(propertyName, innerName, valueExpression, isImmutable and valueIsLiteral, isStatic, isPrivate)
             end
           end
         else
@@ -1359,9 +1361,12 @@ System.namespace("CSharpLua", function (namespace)
       local arguments
       if symbol ~= nil then
         arguments = BuildArgumentList(this, symbol, symbol:getParameters(), node:getArgumentList(), refOrOutArguments)
-        for _, typeArgument in System.each(symbol:getTypeArguments()) do
-          local typeName = GetTypeName(this, typeArgument)
-          arguments:Add(typeName)
+        local ignoreGeneric = this.generator_.XmlMetaProvider:IsMethodIgnoreGeneric(symbol)
+        if not ignoreGeneric then
+          for _, typeArgument in System.each(symbol:getTypeArguments()) do
+            local typeName = GetTypeName(this, typeArgument)
+            arguments:Add(typeName)
+          end
         end
         TryRemoveNilArgumentsAtTail(this, symbol, arguments)
       else
@@ -2448,6 +2453,11 @@ System.namespace("CSharpLua", function (namespace)
       return whileStatement
     end
     VisitForStatement = function (this, node) 
+      local numericalForStatement = GetNumericalForStatement(this, node)
+      if numericalForStatement ~= nil then
+        return numericalForStatement
+      end
+
       local block = CSharpLuaLuaAst.LuaBlockStatementSyntax()
       this.blocks_:Push(block)
 
@@ -3424,6 +3434,9 @@ System.namespace("CSharpLua", function (namespace)
     GetMemberName = function (this, symbol) 
       return this.generator_:GetMemberName(symbol)
     end
+    AddInnerName = function (this, symbol) 
+      return this.generator_:AddInnerName(symbol)
+    end
     RemoveNilArgumentsAtTail = function (this, arguments) 
       local i
       do
@@ -3490,6 +3503,183 @@ System.namespace("CSharpLua", function (namespace)
           end
         end
       end
+      return nil
+    end
+    IsNumericalForVariableMatch = function (this, node, identifier) 
+      if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(node, 8616 --[[SyntaxKind.IdentifierName]]) then
+        local identifierName = System.cast(MicrosoftCodeAnalysisCSharpSyntax.IdentifierNameSyntax, node)
+        return identifierName:getIdentifier():getValueText() == identifier:getValueText()
+      end
+      return false
+    end
+    IsNumericalForLess = function (this, kind, isLess) 
+      repeat
+        local default = kind
+        if default == 8681 --[[SyntaxKind.NotEqualsExpression]] or default == 8682 --[[SyntaxKind.LessThanExpression]] then
+          isLess = true
+          return true, isLess
+        elseif default == 8683 --[[SyntaxKind.LessThanOrEqualExpression]] then
+          isLess = false
+          return true, isLess
+        else
+          isLess = false
+          return false, isLess
+        end
+      until 1
+    end
+    IsNumericalForGreater = function (this, kind, isGreater) 
+      repeat
+        local default = kind
+        if default == 8681 --[[SyntaxKind.NotEqualsExpression]] or default == 8684 --[[SyntaxKind.GreaterThanExpression]] then
+          isGreater = true
+          return true, isGreater
+        elseif default == 8685 --[[SyntaxKind.GreaterThanOrEqualExpression]] then
+          isGreater = false
+          return true, isGreater
+        else
+          isGreater = false
+          return false, isGreater
+        end
+      until 1
+    end
+    GetNumericalForStatement = function (this, node) 
+      if node:getDeclaration() == nil or node:getDeclaration():getVariables():getCount() > 1 then
+        goto Fail
+      end
+
+      if node:getCondition() == nil then
+        goto Fail
+      end
+
+      if node:getIncrementors():getCount() ~= 1 then
+        goto Fail
+      end
+
+      local variable = node:getDeclaration():getVariables():First()
+      if variable:getInitializer() == nil then
+        goto Fail
+      end
+
+      local conditionKind = node:getCondition():Kind()
+      if conditionKind < 8681 --[[SyntaxKind.NotEqualsExpression]] or conditionKind > 8685 --[[SyntaxKind.GreaterThanOrEqualExpression]] then
+        goto Fail
+      end
+
+      local condition = System.cast(MicrosoftCodeAnalysisCSharpSyntax.BinaryExpressionSyntax, node:getCondition())
+      if not IsNumericalForVariableMatch(this, condition:getLeft(), variable:getIdentifier()) then
+        goto Fail
+      end
+
+      local limitConst = this.semanticModel_:GetConstantValue(condition:getRight(), System.default(SystemThreading.CancellationToken))
+      if limitConst:getHasValue() then
+        if not (System.is(limitConst:getValue(), System.Int)) then
+          goto Fail
+        end
+      else
+        local isReadOnly = false
+        local symbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetSymbolInfo(this.semanticModel_, condition:getRight(), System.default(SystemThreading.CancellationToken)):getSymbol()
+        if symbol ~= nil then
+          if symbol:getKind() == 6 --[[SymbolKind.Field]] then
+            isReadOnly = (System.cast(MicrosoftCodeAnalysis.IFieldSymbol, symbol)):getIsReadOnly()
+          elseif symbol:getKind() == 15 --[[SymbolKind.Property]] then
+            local propertySymbol = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
+            isReadOnly = propertySymbol:getIsReadOnly() and IsPropertyField(this, propertySymbol)
+          end
+        end
+        if not isReadOnly then
+          goto Fail
+        end
+      end
+
+      local hasNoEqual
+      local isPlus
+      local incrementor = node:getIncrementors():First()
+      repeat
+        local default = incrementor:Kind()
+        if default == 8734 --[[SyntaxKind.PreIncrementExpression]] or default == 8735 --[[SyntaxKind.PreDecrementExpression]] then
+          local prefixUnaryExpression = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PrefixUnaryExpressionSyntax, incrementor)
+          if not IsNumericalForVariableMatch(this, prefixUnaryExpression:getOperand(), variable:getIdentifier()) then
+            goto Fail
+          end
+          if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(incrementor, 8734 --[[SyntaxKind.PreIncrementExpression]]) then
+            local extern
+            extern, hasNoEqual = IsNumericalForLess(this, conditionKind)
+            if not extern then
+              goto Fail
+            end
+            isPlus = true
+          else
+            local ref
+            ref, hasNoEqual = IsNumericalForGreater(this, conditionKind)
+            if not ref then
+              goto Fail
+            end
+            isPlus = false
+          end
+          break
+        elseif default == 8738 --[[SyntaxKind.PostIncrementExpression]] or default == 8739 --[[SyntaxKind.PostDecrementExpression]] then
+          local postfixUnaryExpression = System.cast(MicrosoftCodeAnalysisCSharpSyntax.PostfixUnaryExpressionSyntax, incrementor)
+          if not IsNumericalForVariableMatch(this, postfixUnaryExpression:getOperand(), variable:getIdentifier()) then
+            goto Fail
+          end
+          if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(incrementor, 8738 --[[SyntaxKind.PostIncrementExpression]]) then
+            local out
+            out, hasNoEqual = IsNumericalForLess(this, conditionKind)
+            if not out then
+              goto Fail
+            end
+            isPlus = true
+          else
+            local internal
+            internal, hasNoEqual = IsNumericalForGreater(this, conditionKind)
+            if not internal then
+              goto Fail
+            end
+            isPlus = false
+          end
+          break
+        else
+          goto Fail
+        end
+      until 1
+
+      local identifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, variable:getIdentifier():getValueText())
+      identifier = CheckVariableDeclaratorName(this, identifier, variable)
+
+      local startExpression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, variable:getInitializer():getValue():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+      local limitExpression
+      local stepExpression = nil
+      if hasNoEqual then
+        if limitConst:getValue() ~= nil then
+          local limit = System.cast(System.Int, limitConst:getValue())
+          if isPlus then
+            limit = limit - 1
+          else
+            limit = limit + 1
+            stepExpression = CSharpLuaLuaAst.LuaPrefixUnaryExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.One, "-" --[[Tokens.Sub]])
+          end
+          limitExpression = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, limit:ToString())
+        else
+          limitExpression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, condition:getRight():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+          if isPlus then
+            limitExpression = CSharpLuaLuaAst.LuaBinaryExpressionSyntax(limitExpression, "-" --[[Tokens.Sub]], CSharpLuaLuaAst.LuaIdentifierNameSyntax.One)
+          else
+            limitExpression = CSharpLuaLuaAst.LuaBinaryExpressionSyntax(limitExpression, "+" --[[Tokens.Plus]], CSharpLuaLuaAst.LuaIdentifierNameSyntax.One)
+            stepExpression = CSharpLuaLuaAst.LuaPrefixUnaryExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.One, "-" --[[Tokens.Sub]])
+          end
+        end
+      else
+        limitExpression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, condition:getRight():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+        if not isPlus then
+          stepExpression = CSharpLuaLuaAst.LuaPrefixUnaryExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.One, "-" --[[Tokens.Sub]])
+        end
+      end
+
+      local numericalForStatement = CSharpLuaLuaAst.LuaNumericalForStatementSyntax(identifier, startExpression, limitExpression, stepExpression)
+      VisitLoopBody(this, node:getStatement(), numericalForStatement.Body)
+      return numericalForStatement
+
+      ::Fail::
       return nil
     end
     VisitObjectCreationExpression = function (this, node) 

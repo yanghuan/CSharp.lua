@@ -139,7 +139,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         end
       end
     end
-    AddPropertyOrEvent = function (this, isProperty, name, value, isImmutable, isStatic, isPrivate) 
+    AddPropertyOrEvent = function (this, isProperty, name, innerName, value, isImmutable, isStatic, isPrivate) 
       local initMethodIdentifier
       local get, set
       if isProperty then
@@ -158,7 +158,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       assignment.Lefts:Add(get)
       assignment.Lefts:Add(set)
       local invocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, initMethodIdentifier)
-      invocation:AddArgument(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(name))
+      invocation:AddArgument(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(innerName))
       assignment.Rights:Add(invocation)
       this.methodList_.Statements:Add(CSharpLuaLuaAst.LuaExpressionStatementSyntax(assignment))
 
@@ -184,11 +184,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         AddResultTable(this, set)
       end
     end
-    AddProperty = function (this, name, value, isImmutable, isStatic, isPrivate) 
-      AddPropertyOrEvent(this, true, name, value, isImmutable, isStatic, isPrivate)
+    AddProperty = function (this, name, innerName, value, isImmutable, isStatic, isPrivate) 
+      AddPropertyOrEvent(this, true, name, innerName, value, isImmutable, isStatic, isPrivate)
     end
-    AddEvent = function (this, name, value, isImmutable, isStatic, isPrivate) 
-      AddPropertyOrEvent(this, false, name, value, isImmutable, isStatic, isPrivate)
+    AddEvent = function (this, name, innerName, value, isImmutable, isStatic, isPrivate) 
+      AddPropertyOrEvent(this, false, name, innerName, value, isImmutable, isStatic, isPrivate)
     end
     SetStaticCtor = function (this, function_) 
       assert(#this.staticcCtorStatements_ == 0)

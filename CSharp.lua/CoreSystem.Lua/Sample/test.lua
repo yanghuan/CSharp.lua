@@ -204,6 +204,12 @@ local function testNumCast()
   assert(System.toUInt64(-1) == 18446744073709551615)
 end
 
+local function testSplit()
+  local a = "a, b"
+  local aa = a:Split(44 --[[',']])
+  printList(aa)
+end
+
 local function testConsole()
   print("enter your name")
   local name = System.Console.ReadLine()
@@ -231,6 +237,7 @@ test(testDelegate, "Delegate")
 test(testLinq, "Linq")
 test(testType, "Type")
 test(testNumCast, "NumCast")
+test(testSplit, "testSplit")
 --test(testConsole, "Console")
 --test(testIO, "IO")
 

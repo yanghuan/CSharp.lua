@@ -194,7 +194,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     Render = function (this, renderer) 
       CheckHasCaseLabel(this)
       CheckHasDefaultLabel(this)
-      renderer:Render46(this)
+      renderer:Render47(this)
     end
     return {
       __inherits__ = function (global) 

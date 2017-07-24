@@ -92,24 +92,53 @@ System.namespace("CSharpLua", function (namespace)
       end
       Check = function (this, generator) 
         for _, type in System.each(this.classTypes_) do
-          this.generator_:AddTypeSymbol(type)
-          if not type:getIsStatic() then
-            for _, baseInterface in System.each(type:getAllInterfaces()) do
-              for _, interfaceMember in System.each(baseInterface:GetMembers()) do
-                local implementationMember = type:FindImplementationForInterfaceMember(interfaceMember)
-                local implementationType = implementationMember:getContainingType()
-                if implementationType ~= type then
-                  if not implementationType:getAllInterfaces():Contains(baseInterface) then
-                    generator:AddImplicitInterfaceImplementation(implementationMember, interfaceMember)
-                    generator:TryAddExtend(baseInterface, implementationType)
+          local continue
+          repeat
+            this.generator_:AddTypeSymbol(type)
+            if not type:getIsStatic() then
+              for _, baseInterface in System.each(type:getAllInterfaces()) do
+                local continue
+                repeat
+                  for _, interfaceMember in System.each(baseInterface:GetMembers()) do
+                    local continue
+                    repeat
+                      local implementationMember = type:FindImplementationForInterfaceMember(interfaceMember)
+                      if implementationMember:getKind() == 9 --[[SymbolKind.Method]] then
+                        local methodSymbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, implementationMember)
+                        if methodSymbol:getMethodKind() ~= 10 --[[MethodKind.Ordinary]] then
+                          continue = true
+                          break
+                        end
+                      end
+
+                      local implementationType = implementationMember:getContainingType()
+                      if implementationType ~= type then
+                        if not implementationType:getAllInterfaces():Contains(baseInterface) then
+                          generator:AddImplicitInterfaceImplementation(implementationMember, interfaceMember)
+                          generator:TryAddExtend(baseInterface, implementationType)
+                        end
+                      end
+                      continue = true
+                    until 1
+                    if not continue then
+                      break
+                    end
                   end
+                  continue = true
+                until 1
+                if not continue then
+                  break
                 end
               end
-            end
 
-            if IsExtendSelf(this, type) then
-              generator.typesOfExtendSelf_:Add(type)
+              if IsExtendSelf(this, type) then
+                generator.typesOfExtendSelf_:Add(type)
+              end
             end
+            continue = true
+          until 1
+          if not continue then
+            break
           end
         end
       end
@@ -141,12 +170,12 @@ System.namespace("CSharpLua", function (namespace)
     local Encoding, Create, Write, Generate, GetOutFilePath, getIsCheckedOverflow, IsEnumExport, AddExportEnum, 
     AddEnumDeclaration, IsExportAttribute, CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, IsTypeEnable, 
     AddSuperTypeTo, GetExportTypes, SetMainEntryPoint, ExportManifestFile, FillManifestInitConf, AddTypeSymbol, CheckExtends, TryAddExtend, 
-    AddTypeDeclarationAttribute, GetMemberName, InternalGetMemberName, GetAllTypeSameName, GetSymbolBaseName, GetStaticClassMemberName, GetMethodNameFromIndex, TryAddNewUsedName, 
-    GetStaticClassSameNameMembers, GetSameNameMembers, AddSimilarNameMembers, GetSymbolNames, MemberSymbolBoolComparison, MemberSymbolComparison, MemberSymbolCommonComparison, CheckRefactorNames, 
-    RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorCheckName, GetRefactorName, IsTypeNameUsed, 
-    IsNewNameEnable, IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, DoPretreatment, AddImplicitInterfaceImplementation, IsImplicitInterfaceImplementation, IsPropertyField, 
-    IsEventFiled, AllInterfaceImplementations, AllInterfaceImplementationsCount, HasStaticCtor, IsExtendExists, IsSealed, __staticCtor__, __init__, 
-    __ctor__
+    AddTypeDeclarationAttribute, GetMemberName, InternalGetMemberName, GetAllTypeSameName, AddInnerName, GetSymbolBaseName, GetStaticClassMemberName, GetMethodNameFromIndex, 
+    TryAddNewUsedName, GetStaticClassSameNameMembers, GetSameNameMembers, AddSimilarNameMembers, GetSymbolNames, MemberSymbolBoolComparison, MemberSymbolComparison, MemberSymbolCommonComparison, 
+    CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorCheckName, GetRefactorName, 
+    IsTypeNameUsed, IsNewNameEnable, IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, CheckRefactorInnerNames, GetInnerGetRefactorName, IsInnerNameEnable, 
+    IsInnerNameEnableOfChildrens, DoPretreatment, AddImplicitInterfaceImplementation, FindImplicitImplementationForInterfaceMember, IsImplicitInterfaceImplementation, IsPropertyField, IsEventFiled, AllInterfaceImplementations, 
+    AllInterfaceImplementationsCount, HasStaticCtor, IsExtendExists, IsSealed, __staticCtor__, __init__, __ctor__
     __staticCtor__ = function (this) 
       Encoding = SystemText.UTF8Encoding(false)
     end
@@ -160,7 +189,9 @@ System.namespace("CSharpLua", function (namespace)
       this.extends_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))()
       this.types_ = System.List(MicrosoftCodeAnalysis.INamedTypeSymbol)()
       this.typeDeclarationAttributes_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))()
+      this.propertyOrEvnetInnerFieldNames_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, CSharpLuaLuaAst.LuaSymbolNameSyntax)()
       this.implicitInterfaceImplementations_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, System.HashSet(MicrosoftCodeAnalysis.ISymbol))()
+      this.implicitInterfaceTypes_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.Dictionary(MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol))()
       this.isFieldPropertys_ = System.Dictionary(MicrosoftCodeAnalysis.IPropertySymbol, System.Boolean)()
       this.typesOfExtendSelf_ = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)()
     end
@@ -540,6 +571,12 @@ System.namespace("CSharpLua", function (namespace)
       end
       return symbolExpression
     end
+    AddInnerName = function (this, symbol) 
+      local name = GetSymbolBaseName(this, symbol)
+      local symbolName = CSharpLuaLuaAst.LuaSymbolNameSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name))
+      this.propertyOrEvnetInnerFieldNames_:Add(symbol, symbolName)
+      return symbolName
+    end
     GetSymbolBaseName = function (this, symbol) 
       repeat
         local default = symbol:getKind()
@@ -801,6 +838,8 @@ System.namespace("CSharpLua", function (namespace)
           RefactorCurTypeSymbol(this, symbol, alreadyRefactorSymbols)
         end
       end
+
+      CheckRefactorInnerNames(this)
     end
     RefactorCurTypeSymbol = function (this, symbol, alreadyRefactorSymbols) 
       local typeSymbol = symbol:getContainingType()
@@ -816,6 +855,9 @@ System.namespace("CSharpLua", function (namespace)
         local newName = GetRefactorName(this, nil, childrens, symbol)
         for _, children in System.each(childrens) do
           local childrenSymbol = children:FindImplementationForInterfaceMember(symbol)
+          if childrenSymbol == nil then
+            childrenSymbol = FindImplicitImplementationForInterfaceMember(this, children, symbol)
+          end
           assert(childrenSymbol ~= nil)
           RefactorName(this, childrenSymbol, newName, alreadyRefactorSymbols)
         end
@@ -944,11 +986,80 @@ System.namespace("CSharpLua", function (namespace)
 
       return true
     end
+    CheckRefactorInnerNames = function (this) 
+      for _, innerName in System.each(this.propertyOrEvnetInnerFieldNames_) do
+        local symbol = innerName:getKey()
+        local newName = GetInnerGetRefactorName(this, symbol)
+        innerName:getValue():Update(newName)
+        TryAddNewUsedName(this, symbol:getContainingType(), newName)
+      end
+    end
+    GetInnerGetRefactorName = function (this, symbol) 
+      local originalName = GetSymbolBaseName(this, symbol)
+
+      local index = 0
+      while true do
+        local default
+        if index == 0 then
+          default = originalName
+        else
+          default = originalName .. index
+        end
+        local newName = default
+        local isEnable = IsInnerNameEnable(this, symbol:getContainingType(), newName)
+        if isEnable then
+          return newName
+        end
+        index = index + 1
+      end
+    end
+    IsInnerNameEnable = function (this, typeSymbol, newName) 
+      local isEnable = IsInnerNameEnableOfChildrens(this, typeSymbol, newName)
+      if isEnable then
+        local p = typeSymbol:getBaseType()
+        while p ~= nil do
+          if not IsCurTypeNameEnable(this, p, newName) then
+            return false
+          end
+          p = p:getBaseType()
+        end
+        return true
+      end
+      return false
+    end
+    IsInnerNameEnableOfChildrens = function (this, typeSymbol, newName) 
+      local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))
+      if childrens ~= nil then
+        for _, children in System.each(childrens) do
+          if not IsNameEnableOfCurAndChildrens(this, children, newName) then
+            return false
+          end
+        end
+      end
+      return true
+    end
     DoPretreatment = function (this) 
       CSharpLuaLuaSyntaxGenerator.PretreatmentChecker(this)
     end
     AddImplicitInterfaceImplementation = function (this, implementationMember, interfaceMember) 
-      CSharpLua.Utility.TryAdd(this.implicitInterfaceImplementations_, implementationMember, interfaceMember, MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol)
+      local success = CSharpLua.Utility.TryAdd(this.implicitInterfaceImplementations_, implementationMember, interfaceMember, MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol)
+      if success then
+        local containingType = implementationMember:getContainingType()
+        local mapps = CSharpLua.Utility.GetOrDefault1(this.implicitInterfaceTypes_, containingType, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.Dictionary(MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol))
+        if mapps == nil then
+          mapps = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol)()
+          this.implicitInterfaceTypes_:Add(containingType, mapps)
+        end
+        mapps:Add(interfaceMember, implementationMember)
+      end
+    end
+    FindImplicitImplementationForInterfaceMember = function (this, typeSymbol, interfaceMember) 
+      local mapps = CSharpLua.Utility.GetOrDefault1(this.implicitInterfaceTypes_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.Dictionary(MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol))
+      local default = mapps
+      if default ~= nil then
+        default = CSharpLua.Utility.GetOrDefault1(default, interfaceMember, nil, MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol)
+      end
+      return default
     end
     IsImplicitInterfaceImplementation = function (this, symbol) 
       return this.implicitInterfaceImplementations_:ContainsKey(symbol)
@@ -1017,6 +1128,7 @@ System.namespace("CSharpLua", function (namespace)
       AddTypeSymbol = AddTypeSymbol, 
       AddTypeDeclarationAttribute = AddTypeDeclarationAttribute, 
       GetMemberName = GetMemberName, 
+      AddInnerName = AddInnerName, 
       IsPropertyField = IsPropertyField, 
       IsEventFiled = IsEventFiled, 
       HasStaticCtor = HasStaticCtor, 

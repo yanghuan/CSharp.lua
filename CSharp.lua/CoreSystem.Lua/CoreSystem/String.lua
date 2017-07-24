@@ -360,7 +360,7 @@ function String.Split(this, strings, count, options)
   elseif type(strings) == "string" then       
     strings = escape(strings)         
   else
-    string = schar(strings)
+    strings = schar(strings)
     strings = escape(strings)
   end
 

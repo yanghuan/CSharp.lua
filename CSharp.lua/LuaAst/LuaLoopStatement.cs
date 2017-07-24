@@ -68,9 +68,18 @@ namespace CSharpLua.LuaAst {
       LuaExpressionSyntax startExpression,
       LuaExpressionSyntax limitExpression,
       LuaExpressionSyntax stepExpression) {
-      Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
-      StartExpression = startExpression ?? throw new ArgumentNullException(nameof(startExpression));
-      LimitExpression = limitExpression ?? throw new ArgumentNullException(nameof(limitExpression));
+      if (identifier == null) {
+        throw new ArgumentNullException(nameof(identifier));
+      }
+      if (startExpression == null) {
+        throw new ArgumentNullException(nameof(startExpression));
+      }
+      if (limitExpression == null) {
+        throw new ArgumentNullException(nameof(limitExpression));
+      }
+      Identifier = identifier;
+      StartExpression = startExpression;
+      LimitExpression = limitExpression;
       StepExpression = stepExpression;
     }
 
@@ -107,7 +116,10 @@ namespace CSharpLua.LuaAst {
     public LuaBlockSyntax Body { get; } = new LuaBlockSyntax();
 
     public LuaRepeatStatementSyntax(LuaExpressionSyntax condition) {
-      Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+      if (condition == null) {
+        throw new ArgumentNullException(nameof(condition));
+      }
+      Condition = condition;
     }
 
     internal override void Render(LuaRenderer renderer) {
