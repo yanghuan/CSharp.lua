@@ -18,27 +18,32 @@ limitations under the License.
 local System = System
 
 local math = math
-local Math = math
+local exp = math.exp
+local cosh = math.cosh or function(x) return (exp(x) + exp(-x)) / 2.0 end
+local pow = math.pow or function(x, y) return x ^ y end
+local sinh = math.sinh or function(x) return (exp(x) - exp(-x)) / 2.0 end
+local tanh = math.tanh or function(x) return sinh(x) / cosh(x) end
 
+local Math = math
 Math.Abs = math.abs
 Math.Acos = math.acos
 Math.Asin = math.asin
 Math.Atan = math.atan
-Math.Atan2 = math.atan2
+Math.Atan2 = math.atan2 or math.atan
 Math.Ceiling = math.ceil
 Math.Cos = math.cos
-Math.Cosh = math.cosh
-Math.Exp = math.exp
+Math.Cosh = cosh
+Math.Exp = exp
 Math.Floor = math.floor
 Math.Log = math.log
 Math.Max = math.max
 Math.Min = math.min
-Math.Pow = math.pow or function(x, y) return x ^ y end
+Math.Pow = pow
 Math.Sin = math.sin
-Math.Sinh = math.sinh
+Math.Sinh = sinh
 Math.Sqrt = math.sqrt
 Math.Tan = math.tan
-Math.Tanh = math.tanh
+Math.Tanh = tanh 
 
 function Math.BigMul(a, b) 
   return a * b 
