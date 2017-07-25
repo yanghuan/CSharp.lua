@@ -68,11 +68,10 @@ Options
 ```
 
 ### Download
-[CSharp.lua.1.0.0.0.zip](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/download/CSharp.lua.1.0.0.0.zip)
+https://github.com/yanghuan/CSharp.lua/releases
 
 ## CoreSystem.lua
 [CoreSystem.lua library](https://github.com/yanghuan/CSharp.lua/tree/master/CSharp.lua/CoreSystem.Lua/CoreSystem) that implements most of the [.NET Framework core classes](http://referencesource.microsoft.com/), including support for basic type, delegate, generic collection classes & linq. The Converted lua code, need to reference it  
-- Download [CoreSysrem.lua.zip](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/download/CoreSystem.lua.zip)
 
 ## Example
 - [fibonacci](https://github.com/yanghuan/CSharp.lua/tree/master/test/fibonacci), a console program code, print Fibonacci number. 
