@@ -103,6 +103,7 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax AnonymousType = new LuaIdentifierNameSyntax("System.anonymousType");
     public readonly static LuaIdentifierNameSyntax SystemNew = new LuaIdentifierNameSyntax("System.new");
     public readonly static LuaIdentifierNameSyntax StackAlloc = new LuaIdentifierNameSyntax("System.stackalloc");
+    public readonly static LuaIdentifierNameSyntax GenericT = new LuaIdentifierNameSyntax("__genericT__");
 
     #region QueryExpression
     public readonly static LuaIdentifierNameSyntax LinqWhere = new LuaIdentifierNameSyntax("Linq.Where");

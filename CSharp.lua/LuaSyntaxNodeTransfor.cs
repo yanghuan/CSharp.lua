@@ -188,6 +188,23 @@ namespace CSharpLua {
       }
     }
 
+    private LuaSpeaicalGenericType CheckSpeaicalGenericArgument(INamedTypeSymbol typeSymbol) {
+      var interfaceType = typeSymbol.Interfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
+      if (interfaceType != null) {
+        bool isBaseImplementation = typeSymbol.BaseType != null && typeSymbol.BaseType.AllInterfaces.Any(i => i.IsGenericIEnumerableType());
+        if (!isBaseImplementation) {
+          var argumentType = interfaceType.TypeArguments.First();
+          var typeName = GetTypeName(argumentType);
+          return new LuaSpeaicalGenericType() {
+            Name = LuaIdentifierNameSyntax.GenericT,
+            Value = typeName,
+            IsLazy = argumentType.Kind != SymbolKind.TypeParameter && argumentType.IsFromCode(),
+          };
+        }
+      }
+      return null;
+    }
+
     private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
       typeDeclarations_.Push(typeDeclaration);
 
@@ -197,9 +214,7 @@ namespace CSharpLua {
       var attributes = BuildAttributes(node.AttributeLists);
       typeDeclaration.AddClassAttributes(attributes);
 
-      var typeParameters = BuildTypeParameters(typeSymbol, node);
-      typeDeclaration.AddTypeParameters(typeParameters);
-
+      BuildTypeParameters(typeSymbol, node, typeDeclaration);
       if (node.BaseList != null) {
         bool hasExtendSelf = false;
         List<LuaExpressionSyntax> baseTypes = new List<LuaExpressionSyntax>();
@@ -208,7 +223,8 @@ namespace CSharpLua {
           baseTypes.Add(baseTypeName);
           CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
         }
-        typeDeclaration.AddBaseTypes(baseTypes);
+        var genericArgument = CheckSpeaicalGenericArgument(typeSymbol);
+        typeDeclaration.AddBaseTypes(baseTypes, genericArgument);
         if (hasExtendSelf && !typeSymbol.HasStaticCtor()) {
           typeDeclaration.SetStaticCtorEmpty();
         }
@@ -270,9 +286,7 @@ namespace CSharpLua {
       }
       major.TypeDeclaration.AddClassAttributes(attributes);
 
-      var typeParameters = BuildTypeParameters(major.Symbol, major.Node);
-      major.TypeDeclaration.AddTypeParameters(typeParameters);
-
+      BuildTypeParameters(major.Symbol, major.Node, major.TypeDeclaration);
       List<BaseTypeSyntax> baseTypes = new List<BaseTypeSyntax>();
       HashSet<ITypeSymbol> baseSymbols = new HashSet<ITypeSymbol>();
       foreach (var typeDeclaration in typeDeclarations) {
@@ -305,7 +319,8 @@ namespace CSharpLua {
           baseTypeExpressions.Add(baseTypeName);
           CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
         }
-        major.TypeDeclaration.AddBaseTypes(baseTypeExpressions);
+        var genericArgument = CheckSpeaicalGenericArgument(major.Symbol);
+        major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, genericArgument);
         if (hasExtendSelf && !major.Symbol.HasStaticCtor()) {
           major.TypeDeclaration.SetStaticCtorEmpty();
         }
@@ -1336,17 +1351,22 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildMemberAccessExpression(ISymbol symbol, ExpressionSyntax node) {
-      var expression = BuildMemberAccessTargetExpression(node);
-      if (symbol.IsStatic) {
-        var typeSymbol = (INamedTypeSymbol)semanticModel_.GetTypeInfo(node).Type;
-        if (symbol.ContainingType != typeSymbol) {
-          bool isAssignment = node.Parent.Parent.Kind().IsAssignment();
-          if (isAssignment || generator_.HasStaticCtor(typeSymbol) || generator_.HasStaticCtor(symbol.ContainingType)) {
-            expression = GetTypeName(symbol.ContainingSymbol);
+      bool isExtensionMethod = symbol.Kind == SymbolKind.Method && ((IMethodSymbol)symbol).IsExtensionMethod;
+      if (isExtensionMethod) {
+        return (LuaExpressionSyntax)node.Accept(this);
+      } else {
+        var expression = BuildMemberAccessTargetExpression(node);
+        if (symbol.IsStatic) {
+          var typeSymbol = (INamedTypeSymbol)semanticModel_.GetTypeInfo(node).Type;
+          if (symbol.ContainingType != typeSymbol) {
+            bool isAssignment = node.Parent.Parent.Kind().IsAssignment();
+            if (isAssignment || generator_.HasStaticCtor(typeSymbol) || generator_.HasStaticCtor(symbol.ContainingType)) {
+              expression = GetTypeName(symbol.ContainingSymbol);
+            }
           }
         }
+        return expression;
       }
-      return expression;
     }
 
     private LuaExpressionSyntax CheckMemberAccessCodeTemplate(ISymbol symbol, MemberAccessExpressionSyntax node) {

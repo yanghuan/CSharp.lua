@@ -567,6 +567,10 @@ namespace CSharpLua {
       return typeSymbol.ContainingNamespace.Name == "System" && typeSymbol.Name == "TimeSpan";
     }
 
+    public static bool IsGenericIEnumerableType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
+    }
+
     public static bool IsExplicitInterfaceImplementation(this ISymbol symbol) {
       switch (symbol.Kind) {
         case SymbolKind.Property: {
