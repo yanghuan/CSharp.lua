@@ -255,6 +255,7 @@ function isInterfaceOf(t, ifaceType)
 end
 
 function isTypeOf(obj, cls)    
+  if cls == System.Object then return true end
   local typename = type(obj)
   if typename == "number" then
     return cls == Int or cls == Double or cls == Char
