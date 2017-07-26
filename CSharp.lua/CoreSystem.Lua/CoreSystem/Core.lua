@@ -805,6 +805,12 @@ function Object.ToString(this)
   return this.__name__
 end
 
+function Object.__ToStringAuto(obj)
+    local r,e = pcall(function() return obj.ToString end)
+    if e then return tostring(obj) end
+    return r
+end
+
 defCls("System.Object", Object)
 
 local anonymousType = {}
