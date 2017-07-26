@@ -79,6 +79,7 @@ limitations under the License.
           <arg type="System.Object" />
           <arg type="System.Object" />
         </method>
+        <method name="ToString" Template="System.Object.__ToStringAuto({this})" />
       </class>
       <class name="Type">
         <method name="GetType" ArgCount ="1" Name="GetTypeFrom" />
