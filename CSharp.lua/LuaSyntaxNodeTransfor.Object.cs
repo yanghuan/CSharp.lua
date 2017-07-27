@@ -47,6 +47,16 @@ namespace CSharpLua {
         }
       }
       else {
+        var type = semanticModel_.GetSymbolInfo(node.Type).Symbol;
+        if (type != null && type.Kind == SymbolKind.NamedType) {
+          var nameType = (INamedTypeSymbol)type;
+          if (nameType.IsDelegateType()) {
+            Contract.Assert(node.ArgumentList.Arguments.Count == 1);
+            var argument = node.ArgumentList.Arguments.First();
+            return argument.Expression.Accept(this);
+          }
+        }
+
         Contract.Assert(!node.ArgumentList.Arguments.Any());
         var expression = (LuaExpressionSyntax)node.Type.Accept(this);
         var invokeExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemNew, expression);
