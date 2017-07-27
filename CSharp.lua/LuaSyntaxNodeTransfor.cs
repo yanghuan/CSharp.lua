@@ -1214,7 +1214,7 @@ namespace CSharpLua {
           if (argument.NameColon != null) {
             throw new CompilationErrorException($"{argument.GetLocationString()} : named argument is not support.");
           }
-          FillInvocationArgument(arguments, argument, symbol.Parameters, refOrOutArguments);
+          FillInvocationArgument(arguments, argument, ImmutableArray<IParameterSymbol>.Empty, refOrOutArguments);
         }
       }
 
@@ -1727,7 +1727,9 @@ namespace CSharpLua {
       if (node.NameColon != null) {
         string name = node.NameColon.Name.Identifier.ValueText;
         int index = parameters.IndexOf(i => i.Name == name);
-        Contract.Assert(index != -1);
+        if (index == -1) {
+          throw new InvalidOperationException();
+        }
         arguments.AddAt(index, expression);
       } else {
         arguments.Add(expression);
