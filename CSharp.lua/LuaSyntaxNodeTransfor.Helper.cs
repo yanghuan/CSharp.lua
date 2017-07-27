@@ -374,7 +374,7 @@ namespace CSharpLua {
             }
           case TypeCode.Boolean: {
               bool v = (bool)constantValue;
-              return new LuaIdentifierLiteralExpressionSyntax(v ? LuaIdentifierNameSyntax.True : LuaIdentifierNameSyntax.False);
+              return v ? LuaIdentifierLiteralExpressionSyntax.True : LuaIdentifierLiteralExpressionSyntax.False;
             }
           default: {
               return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
@@ -881,14 +881,14 @@ namespace CSharpLua {
       }
     }
 
-    private List<LuaParameterSyntax> BuildTypeParameters(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node) {
+    private void BuildTypeParameters(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
       List<LuaParameterSyntax> typeParameters = new List<LuaParameterSyntax>();
       FillExternalTypeParameters(typeParameters, typeSymbol);
       if (node.TypeParameterList != null) {
         var parameterList = (LuaParameterListSyntax)node.TypeParameterList.Accept(this);
         typeParameters.AddRange(parameterList.Parameters);
       }
-      return typeParameters;
+      typeDeclaration.AddTypeParameters(typeParameters);
     }
 
     public bool CheckFieldNameOfProtobufnet(ref string fieldName, ITypeSymbol containingType) {

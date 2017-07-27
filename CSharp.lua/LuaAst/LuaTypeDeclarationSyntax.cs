@@ -23,6 +23,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
+  public sealed class LuaSpeaicalGenericType {
+    public LuaIdentifierNameSyntax Name;
+    public LuaExpressionSyntax Value;
+    public bool IsLazy;
+  }
+
   public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
     public bool IsPartialMark { get; set; }
     private LuaTypeLocalAreaSyntax local_ = new LuaTypeLocalAreaSyntax();
@@ -76,7 +82,16 @@ namespace CSharpLua.LuaAst {
       typeParameters_.AddRange(typeParameters);
     }
 
-    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes) {
+    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument) {
+      bool hasLazyGenericArgument = false;
+      if (genericArgument != null) {
+        if (genericArgument.IsLazy) {
+          hasLazyGenericArgument = true;
+        } else {
+          AddResultTable(genericArgument.Name, genericArgument.Value);
+        }
+      }
+
       var global = LuaIdentifierNameSyntax.Global;
       LuaTableInitializerExpression table = new LuaTableInitializerExpression();
       foreach (var baseType in baseTypes) {
@@ -85,6 +100,11 @@ namespace CSharpLua.LuaAst {
       }
       LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
       functionExpression.AddParameter(global);
+      if (hasLazyGenericArgument) {
+        functionExpression.AddParameter(LuaIdentifierNameSyntax.This);
+        var assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, genericArgument.Name), genericArgument.Value);
+        functionExpression.AddStatement(assignment);
+      }
       functionExpression.AddStatement(new LuaReturnStatementSyntax(table));
       AddResultTable(LuaIdentifierNameSyntax.Inherits, functionExpression);
     }

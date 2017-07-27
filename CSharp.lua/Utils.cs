@@ -409,6 +409,10 @@ namespace CSharpLua {
     }
 
     public static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
+      if (parent.SpecialType == SpecialType.System_Object) {
+        return true;
+      }
+
       ITypeSymbol p = child;
       if (p == parent) {
         return false;
@@ -565,6 +569,10 @@ namespace CSharpLua {
 
     public static bool IsTimeSpanType(this ITypeSymbol typeSymbol) {
       return typeSymbol.ContainingNamespace.Name == "System" && typeSymbol.Name == "TimeSpan";
+    }
+
+    public static bool IsGenericIEnumerableType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
     }
 
     public static bool IsExplicitInterfaceImplementation(this ISymbol symbol) {

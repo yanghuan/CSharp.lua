@@ -153,7 +153,7 @@ local function setBase(cls)
   local extends = cls.__inherits__
   if extends ~= nil then
     if type(extends) == "function" then
-      extends = extends(global)
+      extends = extends(global, cls)
     end           
     local base = extends[1]
     if base.__kind__ == "C" then
