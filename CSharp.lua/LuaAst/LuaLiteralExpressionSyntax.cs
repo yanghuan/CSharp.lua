@@ -50,6 +50,8 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierLiteralExpressionSyntax Nil = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
     public static readonly LuaIdentifierLiteralExpressionSyntax Zero = new LuaIdentifierLiteralExpressionSyntax("0");
     public static readonly LuaIdentifierLiteralExpressionSyntax ZeroFloat = new LuaIdentifierLiteralExpressionSyntax("0.0");
+    public static readonly LuaIdentifierLiteralExpressionSyntax True = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.True);
+    public static readonly LuaIdentifierLiteralExpressionSyntax False = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.False);
   }
 
   public sealed class LuaStringLiteralExpressionSyntax : LuaLiteralExpressionSyntax {

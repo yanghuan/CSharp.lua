@@ -2066,9 +2066,21 @@ namespace CSharpLua {
             return BuildBitExpression(node, LuaSyntaxNode.Tokens.NotEquals, LuaIdentifierNameSyntax.BitXor);
           }
         case SyntaxKind.IsExpression: {
+            var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
+            var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+            if (leftType.IsSubclassOf(rightType)) {
+              return LuaIdentifierLiteralExpressionSyntax.True;
+            }
+
             return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.Is);
           }
         case SyntaxKind.AsExpression: {
+            var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
+            var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+            if (leftType.IsSubclassOf(rightType)) {
+              return node.Left.Accept(this);
+            }
+
             return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.As);
           }
       }

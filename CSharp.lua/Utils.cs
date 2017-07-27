@@ -409,6 +409,10 @@ namespace CSharpLua {
     }
 
     public static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
+      if (parent.SpecialType == SpecialType.System_Object) {
+        return true;
+      }
+
       ITypeSymbol p = child;
       if (p == parent) {
         return false;

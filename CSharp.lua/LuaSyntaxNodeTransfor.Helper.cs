@@ -374,7 +374,7 @@ namespace CSharpLua {
             }
           case TypeCode.Boolean: {
               bool v = (bool)constantValue;
-              return new LuaIdentifierLiteralExpressionSyntax(v ? LuaIdentifierNameSyntax.True : LuaIdentifierNameSyntax.False);
+              return v ? LuaIdentifierLiteralExpressionSyntax.True : LuaIdentifierLiteralExpressionSyntax.False;
             }
           default: {
               return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
