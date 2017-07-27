@@ -104,6 +104,7 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax SystemNew = new LuaIdentifierNameSyntax("System.new");
     public readonly static LuaIdentifierNameSyntax StackAlloc = new LuaIdentifierNameSyntax("System.stackalloc");
     public readonly static LuaIdentifierNameSyntax GenericT = new LuaIdentifierNameSyntax("__genericT__");
+    public readonly static LuaIdentifierNameSyntax Base = new LuaIdentifierNameSyntax("__base__");
 
     #region QueryExpression
     public readonly static LuaIdentifierNameSyntax LinqWhere = new LuaIdentifierNameSyntax("Linq.Where");

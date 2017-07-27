@@ -236,10 +236,10 @@ namespace CSharpLua {
       return invocation;
     }
 
-    private LuaInvocationExpressionSyntax BuildCallBaseConstructor(ITypeSymbol baseType, int ctroCounter) {
-      LuaInvocationExpressionSyntax otherCtorInvoke;
-      var typeName = GetTypeName(baseType);
+    private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol type, ITypeSymbol baseType, int ctroCounter) {
+      var typeName = !generator_.IsSealed(type) ? GetTypeName(baseType) : new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, LuaIdentifierNameSyntax.Base);
       LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
+      LuaInvocationExpressionSyntax otherCtorInvoke;
       if (ctroCounter > 0) {
         otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter)));
       }
@@ -258,7 +258,7 @@ namespace CSharpLua {
             ctroCounter = 1;
           }
         }
-        var otherCtorInvoke = BuildCallBaseConstructor(baseType, ctroCounter);
+        var otherCtorInvoke = BuildCallBaseConstructor(typeSymbol, baseType, ctroCounter);
         otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
         return otherCtorInvoke;
       }
@@ -287,7 +287,7 @@ namespace CSharpLua {
           function.IsInvokeThisCtor = true;
         }
         else {
-          otherCtorInvoke = BuildCallBaseConstructor(symbol.ReceiverType, ctroCounter);
+          otherCtorInvoke = BuildCallBaseConstructor(ctorSymbol.ContainingType, symbol.ReceiverType, ctroCounter);
         }
         otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
         var arguments = BuildArgumentList(symbol, symbol.Parameters, node.Initializer.ArgumentList);
@@ -628,7 +628,13 @@ namespace CSharpLua {
       return LuaIdentifierNameSyntax.This;
     }
 
-    private bool IsBaseEnable<T>(MemberAccessExpressionSyntax parent, T symbol, Func<T, ISymbol> overriddenFunc) where T : ISymbol {
+    private enum BaseVisitType {
+      UseThis,
+      UseName,
+      UseBase,
+    }
+
+    private BaseVisitType CheckBaseVisitType<T>(MemberAccessExpressionSyntax parent, T symbol, Func<T, ISymbol> overriddenFunc) where T : ISymbol {
       if (symbol.IsOverridable()) {
         var curTypeSymbol = GetTypeDeclarationSymbol(parent);
         if (generator_.IsSealed(curTypeSymbol)) {
@@ -636,53 +642,58 @@ namespace CSharpLua {
             var overriddenSymbol = overriddenFunc(i);
             return overriddenSymbol != null && overriddenSymbol.Equals(symbol);
           });
-          if (!exists) {
-            return false;
-          }
+          return exists ? BaseVisitType.UseBase : BaseVisitType.UseThis;
         }
-        return true;
+        else {
+          return BaseVisitType.UseName;
+        }
       }
-      return false;
+      else {
+        return BaseVisitType.UseThis;
+      }
     }
 
     public override LuaSyntaxNode VisitBaseExpression(BaseExpressionSyntax node) {
       var parent = (MemberAccessExpressionSyntax)node.Parent;
       var symbol = semanticModel_.GetSymbolInfo(parent).Symbol;
 
-      bool hasBase = false;
+      BaseVisitType useType = BaseVisitType.UseThis;
       switch (symbol.Kind) {
         case SymbolKind.Method: {
+            symbol.IsOverridable();
             var methodSymbol = (IMethodSymbol)symbol;
-            if (IsBaseEnable(parent, methodSymbol, i => i.OverriddenMethod)) {
-              hasBase = true;
-            }
+            useType = CheckBaseVisitType(parent, methodSymbol, i => i.OverriddenMethod);
             break;
           }
         case SymbolKind.Property: {
             var propertySymbol = (IPropertySymbol)symbol;
             if (!IsPropertyField(propertySymbol)) {
-              if (IsBaseEnable(parent, propertySymbol, i => i.OverriddenProperty)) {
-                hasBase = true;
-              }
+              useType = CheckBaseVisitType(parent, propertySymbol, i => i.OverriddenProperty);
             }
             break;
           }
         case SymbolKind.Event: {
             var eventSymbol = (IEventSymbol)symbol;
             if (!eventSymbol.IsEventFiled()) {
-              if (IsBaseEnable(parent, eventSymbol, i => i.OverriddenEvent)) {
-                hasBase = true;
-              }
+              useType = CheckBaseVisitType(parent, eventSymbol, i => i.OverriddenEvent);
             }
             break;
           }
       }
 
-      if (hasBase) {
-        return GetTypeName(symbol.ContainingType);
-      }
-      else {
-        return LuaIdentifierNameSyntax.This;
+      switch (useType) {
+        case BaseVisitType.UseThis:
+          return LuaIdentifierNameSyntax.This;
+
+        case BaseVisitType.UseName:
+          return GetTypeName(symbol.ContainingType);
+
+        case BaseVisitType.UseBase:
+          return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, LuaIdentifierNameSyntax.Base);
+
+        default:
+          Contract.Assert(false);
+          throw new InvalidOperationException();
       }
     }
 
