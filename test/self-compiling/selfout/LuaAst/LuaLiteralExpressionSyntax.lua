@@ -21,18 +21,21 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     }
   end)
   namespace.class("LuaIdentifierLiteralExpressionSyntax", function (namespace) 
-    local getText, Render, Nil, Zero, ZeroFloat, __staticCtor__, __ctor1__, __ctor2__
+    local getText, Render, Nil, Zero, ZeroFloat, True, False, __staticCtor__, 
+    __ctor1__, __ctor2__
     __staticCtor__ = function (this) 
       Nil = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Nil)
       Zero = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0")
       ZeroFloat = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, "0.0")
-      this.Nil, this.Zero, this.ZeroFloat = Nil, Zero, ZeroFloat
+      True = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True)
+      False = CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.False)
+      this.Nil, this.Zero, this.ZeroFloat, this.True, this.False = Nil, Zero, ZeroFloat, True, False
     end
     __ctor1__ = function (this, text) 
       __ctor2__(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, text))
     end
     __ctor2__ = function (this, identifier) 
-      CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Identifier = identifier
     end
     getText = function (this) 
@@ -63,7 +66,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.Empty = Empty
     end
     __ctor__ = function (this, identifier) 
-      CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Identifier = identifier
     end
     getOpenParenToken = function (this) 
@@ -95,7 +98,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaVerbatimStringLiteralExpressionSyntax", function (namespace) 
     local getText, setText, getOpenBracket, getCloseBracket, Render, __ctor__
     __ctor__ = function (this, text, equalsCount) 
-      CSharpLuaLuaAst.LuaLiteralExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       setText(this, text)
       this.EqualsCount = equalsCount
     end
@@ -165,7 +168,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaCharacterLiteralExpression", function (namespace) 
     local GetIdentifierToken, __ctor__
     __ctor__ = function (this, character) 
-      CSharpLuaLuaAst.LuaConstLiteralExpression.__ctor__[1](this, (character):ToString(), GetIdentifierToken(character))
+      this.__base__.__ctor__[1](this, (character):ToString(), GetIdentifierToken(character))
     end
     GetIdentifierToken = function (character) 
       return MicrosoftCodeAnalysisCSharp.SyntaxFactory.Literal(character):getText()

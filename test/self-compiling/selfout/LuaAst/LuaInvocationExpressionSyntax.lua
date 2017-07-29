@@ -13,7 +13,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor1__ = function (this, expression) 
       __init__(this)
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end

@@ -311,8 +311,17 @@ namespace CSharpLua {
         }
       }
 
-      LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
-      function.AddStatements(block.Statements);
+      if (node.Body != null) {
+        LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
+        function.AddStatements(block.Statements);
+      }
+      else {
+        blocks_.Push(function.Body);
+        var bodyExpression = (LuaExpressionSyntax)node.ExpressionBody.Accept(this);
+        function.AddStatement(bodyExpression);
+        blocks_.Pop();
+      }
+
       PopFunction();
       if (isStatic) {
         CurType.SetStaticCtor(function);
@@ -931,6 +940,10 @@ namespace CSharpLua {
       WriteStatementOrBlock(node.Statement, block);
       statements.Statements.Add(block);
       return statements;
+    }
+
+    public override LuaSyntaxNode VisitArrowExpressionClause(ArrowExpressionClauseSyntax node) {
+      return node.Expression.Accept(this);
     }
   }
 }

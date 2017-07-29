@@ -11,7 +11,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("EmptyLuaExpressionSyntax", function (namespace) 
       local Render, __ctor__
       __ctor__ = function (this) 
-        CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+        this.__base__.__ctor__(this)
       end
       Render = function (this, renderer) 
       end
@@ -46,7 +46,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaAssignmentExpressionSyntax", function (namespace) 
     local getOperatorToken, Render, __ctor__
     __ctor__ = function (this, left, right) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if left == nil then
         System.throw(System.ArgumentNullException("left" --[[nameof(left)]]))
       end
@@ -81,7 +81,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getOperatorToken = function (this) 
       return "=" --[[Tokens.Equals]]
@@ -107,7 +107,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     Render = function (this, renderer) 
       renderer:Render23(this)
@@ -125,7 +125,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaBinaryExpressionSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, left, operatorToken, right) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if left == nil then
         System.throw(System.ArgumentNullException("left" --[[nameof(left)]]))
       end
@@ -152,7 +152,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaPrefixUnaryExpressionSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, operand, operatorToken) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if operand == nil then
         System.throw(System.ArgumentNullException("operand" --[[nameof(operand)]]))
       end
@@ -175,7 +175,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaParenthesizedExpressionSyntax", function (namespace) 
     local getOpenParenToken, getCloseParenToken, Render, __ctor__
     __ctor__ = function (this, expression) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
@@ -209,7 +209,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     Render = function (this, renderer) 
       renderer:Render57(this)
@@ -231,7 +231,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, rank) 
       __init__(this)
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Rank = rank
     end
     return {
@@ -247,7 +247,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaArrayTypeAdapterExpressionSyntax", function (namespace) 
     local getBaseType, getIsSimapleArray, Render, __ctor__
     __ctor__ = function (this, invocationExpression, rankSpecifier) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if invocationExpression == nil then
         System.throw(System.ArgumentNullException("invocationExpression" --[[nameof(invocationExpression)]]))
       end
@@ -281,7 +281,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaInternalMethodExpressionSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, expression) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end

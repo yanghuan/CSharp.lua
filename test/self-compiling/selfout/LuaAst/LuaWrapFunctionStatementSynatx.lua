@@ -52,7 +52,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaNamespaceDeclarationSyntax", function (namespace) 
     local __ctor__
     __ctor__ = function (this, name, isContained) 
-      CSharpLuaLuaAst.LuaWrapFunctionStatementSynatx.__ctor__(this)
+      this.__base__.__ctor__(this)
       local default
       if isContained then
         default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace

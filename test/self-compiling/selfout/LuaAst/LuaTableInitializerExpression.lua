@@ -16,7 +16,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getOpenBraceToken = function (this) 
       return "{" --[[Tokens.OpenBrace]]
@@ -57,7 +57,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaSingleTableItemSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, expression) 
-      CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
@@ -93,7 +93,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaTableExpressionKeySyntax", function (namespace) 
     local getOpenBracketToken, getCloseBracketToken, Render, __ctor__
     __ctor__ = function (this, expression) 
-      CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Expression = expression
     end
     getOpenBracketToken = function (this) 
@@ -120,7 +120,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaTableLiteralKeySyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, identifier) 
-      CSharpLuaLuaAst.LuaTableKeySyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Identifier = identifier
     end
     Render = function (this, renderer) 
@@ -139,7 +139,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaKeyValueTableItemSyntax", function (namespace) 
     local getOperatorToken, Render, __ctor__
     __ctor__ = function (this, key, value) 
-      CSharpLuaLuaAst.LuaTableItemSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Key = key
       this.Value = value
     end
@@ -163,7 +163,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaTableIndexAccessExpressionSyntax", function (namespace) 
     local getOpenBracketToken, getCloseBracketToken, Render, __ctor__
     __ctor__ = function (this, expression, index) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end

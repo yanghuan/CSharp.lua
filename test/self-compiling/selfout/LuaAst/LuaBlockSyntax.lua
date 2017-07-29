@@ -30,7 +30,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaBlockStatementSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this) 
-      CSharpLuaLuaAst.LuaBlockSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.OpenBraceToken = "do" --[[Keyword.Do]]
       this.CloseBraceToken = "end" --[[Keyword.End]]
     end

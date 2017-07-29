@@ -15,7 +15,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, identifier, expression) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if identifier == nil then
         System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
@@ -60,7 +60,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, identifier, startExpression, limitExpression, stepExpression) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if identifier == nil then
         System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
@@ -106,7 +106,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, condition) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if condition == nil then
         System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end
@@ -136,7 +136,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, condition) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if condition == nil then
         System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end

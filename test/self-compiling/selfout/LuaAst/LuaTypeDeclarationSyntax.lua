@@ -8,6 +8,11 @@ System.usingDeclare(function (global)
   CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
+  namespace.class("LuaSpeaicalGenericType", function (namespace) 
+    return {
+      IsLazy = false
+    }
+  end)
   namespace.class("LuaTypeDeclarationSyntax", function (namespace) 
     local AddStaticReadOnlyAssignmentName, AddDocumentComments, AddClassAttributes, AddMethodAttributes, AddFieldAttributes, AddTypeParameters, AddBaseTypes, AddResultTable, 
     AddResultTable1, AddMethod, AddInitFiled, AddField, AddPropertyOrEvent, AddProperty, AddEvent, SetStaticCtor, 
@@ -59,7 +64,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     AddTypeParameters = function (this, typeParameters) 
       this.typeParameters_:AddRange(typeParameters)
     end
-    AddBaseTypes = function (this, baseTypes) 
+    AddBaseTypes = function (this, baseTypes, genericArgument) 
+      local hasLazyGenericArgument = false
+      if genericArgument ~= nil then
+        if genericArgument.IsLazy then
+          hasLazyGenericArgument = true
+        else
+          AddResultTable1(this, genericArgument.Name, genericArgument.Value)
+        end
+      end
+
       local global = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Global
       local table = CSharpLuaLuaAst.LuaTableInitializerExpression()
       for _, baseType in System.each(baseTypes) do
@@ -68,6 +82,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       end
       local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
       functionExpression:AddParameter1(global)
+      if hasLazyGenericArgument then
+        functionExpression:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This)
+        local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, genericArgument.Name, false), genericArgument.Value)
+        functionExpression:AddStatement1(assignment)
+      end
       functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(table))
       AddResultTable1(this, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Inherits, functionExpression)
     end
@@ -352,7 +371,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaClassDeclarationSyntax", function (namespace) 
     local __ctor__
     __ctor__ = function (this, name) 
-      CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Class, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace)
     end
     return {
@@ -367,7 +386,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaStructDeclarationSyntax", function (namespace) 
     local __ctor__
     __ctor__ = function (this, name) 
-      CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Struct, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace)
     end
     return {
@@ -382,7 +401,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaInterfaceDeclarationSyntax", function (namespace) 
     local __ctor__
     __ctor__ = function (this, name) 
-      CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Interface)
     end
     return {
@@ -397,7 +416,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaEnumDeclarationSyntax", function (namespace) 
     local Add, Render, __ctor__
     __ctor__ = function (this, fullName, name, compilationUnit) 
-      CSharpLuaLuaAst.LuaTypeDeclarationSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.FullName = fullName
       this.CompilationUnit = compilationUnit
       this:UpdateIdentifiers(name, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Enum)
@@ -407,7 +426,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     Render = function (this, renderer) 
       if this.IsExport then
-        CSharpLuaLuaAst.LuaTypeDeclarationSyntax.Render(this, renderer)
+        this.__base__.Render(this, renderer)
       end
     end
     return {

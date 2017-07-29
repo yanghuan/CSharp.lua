@@ -17,7 +17,7 @@ System.namespace("CSharpLua", function (namespace)
   namespace.class("CmdArgumentException", function (namespace) 
     local __ctor__
     __ctor__ = function (this, message) 
-      System.Exception.__ctor__(this, message)
+      this.__base__.__ctor__(this, message)
     end
     return {
       __inherits__ = function (global) 
@@ -31,7 +31,7 @@ System.namespace("CSharpLua", function (namespace)
   namespace.class("CompilationErrorException", function (namespace) 
     local __ctor__
     __ctor__ = function (this, message) 
-      System.Exception.__ctor__(this, message)
+      this.__base__.__ctor__(this, message)
     end
     return {
       __inherits__ = function (global) 
@@ -49,7 +49,7 @@ System.namespace("CSharpLua", function (namespace)
     IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
     IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType
+    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation
     First = function (list, T) 
       return list:get(0)
     end
@@ -427,6 +427,10 @@ System.namespace("CSharpLua", function (namespace)
       return System.cast(System.String, methodInfo:Invoke(location, nil))
     end
     IsSubclassOf = function (child, parent) 
+      if parent:getSpecialType() == 1 --[[SpecialType.System_Object]] then
+        return true
+      end
+
       local p = child
       if p == parent then
         return false
@@ -576,6 +580,39 @@ System.namespace("CSharpLua", function (namespace)
     IsTimeSpanType = function (typeSymbol) 
       return typeSymbol:getContainingNamespace():getName() == "System" and typeSymbol:getName() == "TimeSpan"
     end
+    IsGenericIEnumerableType = function (typeSymbol) 
+      return typeSymbol:getOriginalDefinition():getSpecialType() == 25 --[[SpecialType.System_Collections_Generic_IEnumerable_T]]
+    end
+    IsExplicitInterfaceImplementation = function (symbol) 
+      repeat
+        local default = symbol:getKind()
+        if default == 15 --[[SymbolKind.Property]] then
+          do
+            local property = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
+            if property:getGetMethod() ~= nil then
+              if property:getGetMethod():getMethodKind() == 8 --[[MethodKind.ExplicitInterfaceImplementation]] then
+                return true
+              end
+              if property:getSetMethod() ~= nil then
+                if property:getSetMethod():getMethodKind() == 8 --[[MethodKind.ExplicitInterfaceImplementation]] then
+                  return true
+                end
+              end
+            end
+            break
+          end
+        elseif default == 9 --[[SymbolKind.Method]] then
+          do
+            local method = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol)
+            if method:getMethodKind() == 8 --[[MethodKind.ExplicitInterfaceImplementation]] then
+              return true
+            end
+            break
+          end
+        end
+      until 1
+      return false
+    end
     return {
       First = First, 
       Last = Last, 
@@ -622,7 +659,9 @@ System.namespace("CSharpLua", function (namespace)
       CheckOriginalDefinition = CheckOriginalDefinition, 
       IsMainEntryPoint = IsMainEntryPoint, 
       IsExtendSelf = IsExtendSelf, 
-      IsTimeSpanType = IsTimeSpanType
+      IsTimeSpanType = IsTimeSpanType, 
+      IsGenericIEnumerableType = IsGenericIEnumerableType, 
+      IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation
     }
   end)
 end)

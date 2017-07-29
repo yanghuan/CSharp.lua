@@ -13,7 +13,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, condition) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if condition == nil then
         System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end
@@ -51,7 +51,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, condition) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if condition == nil then
         System.throw(System.ArgumentNullException("condition" --[[nameof(condition)]]))
       end
@@ -85,7 +85,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getElseKeyword = function (this) 
       return "else" --[[Keyword.Else]]
@@ -113,7 +113,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this, temp) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Temp = temp
     end
     Fill = function (this, expression, sections) 

@@ -8,7 +8,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaArgumentSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, expression) 
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
@@ -34,7 +34,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getOpenParenToken = function (this) 
       return "(" --[[Tokens.OpenParentheses]]

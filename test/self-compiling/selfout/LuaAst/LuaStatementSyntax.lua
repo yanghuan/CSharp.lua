@@ -13,7 +13,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("EmptyLuaStatementSyntax", function (namespace) 
       local Render, __ctor__
       __ctor__ = function (this) 
-        CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+        this.__base__.__ctor__(this)
       end
       Render = function (this, renderer) 
       end
@@ -52,7 +52,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaExpressionStatementSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, expression) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
@@ -78,7 +78,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     Render = function (this, renderer) 
       renderer:Render18(this)
@@ -96,7 +96,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaReturnStatementSyntax", function (namespace) 
     local getReturnKeyword, Render, __ctor__
     __ctor__ = function (this, expression) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Expression = expression
     end
     getReturnKeyword = function (this) 
@@ -123,7 +123,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getReturnKeyword = function (this) 
       return "return" --[[Keyword.Return]]
@@ -149,7 +149,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.Statement = Statement
     end
     __ctor__ = function (this) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getBreakKeyword = function (this) 
       return "break" --[[Keyword.Break]]
@@ -176,7 +176,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.Statement = Statement
     end
     __ctor__ = function (this) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Assignment = CSharpLuaLuaAst.LuaExpressionStatementSyntax(CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Continue, CSharpLuaLuaAst.LuaIdentifierNameSyntax.True))
     end
     getBreak = function (this) 
@@ -204,7 +204,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.One = One
     end
     __ctor__ = function (this, count) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Count = count
     end
     Render = function (this, renderer) 
@@ -225,7 +225,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaShortCommentStatement", function (namespace) 
     local getSingleCommentToken, Render, __ctor__
     __ctor__ = function (this, comment) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Comment = comment
     end
     getSingleCommentToken = function (this) 
@@ -248,7 +248,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaLongCommentStatement", function (namespace) 
     local getOpenCommentToken, getCloseCommentToken, Render, __ctor__
     __ctor__ = function (this, comment) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Comment = comment
     end
     getOpenCommentToken = function (this) 
@@ -275,7 +275,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaGotoStatement", function (namespace) 
     local getGotoKeyword, Render, __ctor__
     __ctor__ = function (this, identifier) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if identifier == nil then
         System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
@@ -301,7 +301,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaGotoCaseAdapterStatement", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, identifier) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if identifier == nil then
         System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
@@ -326,7 +326,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaLabeledStatement", function (namespace) 
     local getPrefixToken, getSuffixToken, Render, __ctor__
     __ctor__ = function (this, identifier, statement) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if identifier == nil then
         System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end

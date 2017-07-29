@@ -8,7 +8,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaMemberAccessExpressionSyntax", function (namespace) 
     local getIsObjectColon, Render, __ctor__
     __ctor__ = function (this, expression, name, isObjectColon) 
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if expression == nil then
         System.throw(System.ArgumentNullException("expression" --[[nameof(expression)]]))
       end
@@ -44,12 +44,12 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor1__ = function (this, name) 
       __init__(this)
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Name = name
     end
     __ctor2__ = function (this, expression, name, isObjectColon) 
       __init__(this)
-      CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       Update(this, expression, isObjectColon)
       this.Name = name
     end

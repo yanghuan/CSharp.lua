@@ -12,7 +12,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaVariableDeclarationSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getLocalKeyword = function (this) 
       return "local" --[[Keyword.Local]]
@@ -38,7 +38,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getEqualsToken = function (this) 
       return "=" --[[Tokens.Equals]]
@@ -60,7 +60,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaLocalDeclarationStatementSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, declaration) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Declaration = declaration
     end
     Render = function (this, renderer) 
@@ -97,7 +97,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaVariableDeclarationSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     Render = function (this, renderer) 
       renderer:Render34(this)
@@ -115,14 +115,14 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaLocalVariableDeclaratorSyntax", function (namespace) 
     local Render, __ctor1__, __ctor2__
     __ctor1__ = function (this, declarator) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if declarator == nil then
         System.throw(System.ArgumentNullException("declarator" --[[nameof(declarator)]]))
       end
       this.Declarator = declarator
     end
     __ctor2__ = function (this, identifier, expression) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Declarator = CSharpLuaLuaAst.LuaVariableDeclaratorSyntax(identifier, expression)
     end
     Render = function (this, renderer) 
@@ -144,7 +144,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaVariableDeclaratorSyntax", function (namespace) 
     local getLocalKeyword, Render, __ctor__
     __ctor__ = function (this, identifier, expression) 
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
       if identifier == nil then
         System.throw(System.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       end
@@ -173,7 +173,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaEqualsValueClauseSyntax", function (namespace) 
     local getEqualsToken, Render, __ctor__
     __ctor__ = function (this, value) 
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
       if value == nil then
         System.throw(System.ArgumentNullException("value" --[[nameof(value)]]))
       end
@@ -203,7 +203,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaStatementSyntax.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getLocalKeyword = function (this) 
       return "local" --[[Keyword.Local]]

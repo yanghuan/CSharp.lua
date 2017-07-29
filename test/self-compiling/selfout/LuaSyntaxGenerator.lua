@@ -73,7 +73,7 @@ System.namespace("CSharpLua", function (namespace)
       end
       __ctor__ = function (this, generator) 
         __init__(this)
-        MicrosoftCodeAnalysisCSharp.CSharpSyntaxWalker.__ctor__(this)
+        this.__base__.__ctor__(this)
         this.generator_ = generator
         for _, syntaxTree in System.each(generator.compilation_:getSyntaxTrees()) do
           this:Visit(syntaxTree:GetRoot(System.default(SystemThreading.CancellationToken)))
@@ -199,7 +199,7 @@ System.namespace("CSharpLua", function (namespace)
       __init__(this)
       local compilation = MicrosoftCodeAnalysisCSharp.CSharpCompilation.Create("_", syntaxTrees, references, options:WithOutputKind(2 --[[OutputKind.DynamicallyLinkedLibrary]]))
       System.using(SystemIO.MemoryStream(), function (ms) 
-        local result = compilation:Emit(ms, nil, nil, nil, nil, nil, nil, System.default(SystemThreading.CancellationToken))
+        local result = compilation:Emit(ms, nil, nil, nil, nil, nil, nil, nil, nil, nil, System.default(SystemThreading.CancellationToken))
         if not result:getSuccess() then
           local errors = SystemLinq.ImmutableArrayExtensions.Where(result:getDiagnostics(), function (i) 
             return i:getSeverity() == 3 --[[DiagnosticSeverity.Error]]
@@ -779,31 +779,44 @@ System.namespace("CSharpLua", function (namespace)
       if countOfA > 0 or countOfB > 0 then
         if countOfA ~= countOfB then
           return countOfA > countOfB and - 1 or 1
-        else
-          return MemberSymbolCommonComparison(this, a, b)
         end
+
+        if countOfA == 1 then
+          local implementationOfA = Linq.First(CSharpLua.Utility.InterfaceImplementations(a, MicrosoftCodeAnalysis.ISymbol))
+          local implementationOfB = Linq.First(CSharpLua.Utility.InterfaceImplementations(b, MicrosoftCodeAnalysis.ISymbol))
+          local result
+          local default
+          default, result = MemberSymbolBoolComparison(this, implementationOfA, implementationOfB, function (i) 
+            return not CSharpLua.Utility.IsExplicitInterfaceImplementation(i)
+          end)
+          if default then
+            return result
+          end
+        end
+
+        return MemberSymbolCommonComparison(this, a, b)
       end
 
       local v
-      local default
-      default, v = MemberSymbolBoolComparison(this, a, b, function (i) 
-        return i:getIsAbstract()
-      end)
-      if default then
-        return v
-      end
       local extern
       extern, v = MemberSymbolBoolComparison(this, a, b, function (i) 
-        return i:getIsVirtual()
+        return i:getIsAbstract()
       end)
       if extern then
         return v
       end
       local ref
       ref, v = MemberSymbolBoolComparison(this, a, b, function (i) 
-        return i:getIsOverride()
+        return i:getIsVirtual()
       end)
       if ref then
+        return v
+      end
+      local out
+      out, v = MemberSymbolBoolComparison(this, a, b, function (i) 
+        return i:getIsOverride()
+      end)
+      if out then
         return v
       end
 
@@ -811,9 +824,10 @@ System.namespace("CSharpLua", function (namespace)
     end
     MemberSymbolCommonComparison = function (this, a, b) 
       if a:getContainingType():Equals(b:getContainingType()) then
-        local name = a:getName()
         local type = a:getContainingType()
-        local members = type:GetMembers(name)
+        local names = GetSymbolNames(this, a)
+        local members = System.List(MicrosoftCodeAnalysis.ISymbol)()
+        AddSimilarNameMembers(this, type, names, members)
         local indexOfA = members:IndexOf(a)
         assert(indexOfA ~= - 1)
         local indexOfB = members:IndexOf(b)
@@ -830,8 +844,7 @@ System.namespace("CSharpLua", function (namespace)
       for _, symbol in System.each(this.refactorNames_) do
         local hasImplementation = false
         for _, implementation in System.each(AllInterfaceImplementations(this, symbol)) do
-          RefactorInterfaceSymbol(this, implementation, alreadyRefactorSymbols)
-          hasImplementation = true
+          hasImplementation = RefactorInterfaceSymbol(this, implementation, alreadyRefactorSymbols)
         end
 
         if not hasImplementation then
@@ -861,7 +874,9 @@ System.namespace("CSharpLua", function (namespace)
           assert(childrenSymbol ~= nil)
           RefactorName(this, childrenSymbol, newName, alreadyRefactorSymbols)
         end
+        return true
       end
+      return false
     end
     RefactorName = function (this, symbol, newName, alreadyRefactorSymbols) 
       if not alreadyRefactorSymbols:Contains(symbol) then

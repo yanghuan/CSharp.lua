@@ -110,7 +110,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     return function (T) 
       local Add, AddRange, __ctor__
       __ctor__ = function (this) 
-        System.List(T).__ctor__(this)
+        this.__base__.__ctor__(this)
       end
       Add = function (this, node) 
         if node == nil then
