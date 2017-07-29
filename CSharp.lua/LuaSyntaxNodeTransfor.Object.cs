@@ -409,6 +409,13 @@ namespace CSharpLua {
       return new LuaExpressionStatementSyntax(invocationExpression);
     }
 
+    public override LuaSyntaxNode VisitThrowExpression(ThrowExpressionSyntax node) {
+      LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Throw);
+      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      invocationExpression.AddArgument(expression);
+      return invocationExpression;
+    }
+
     public override LuaSyntaxNode VisitCatchFilterClause(CatchFilterClauseSyntax node) {
       return node.FilterExpression.Accept(this);
     }
