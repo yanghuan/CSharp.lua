@@ -458,8 +458,16 @@ namespace CSharpLua {
           }
         }
 
-        LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
-        function.AddStatements(block.Statements);
+        if (node.Body != null) {
+          LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
+          function.AddStatements(block.Statements);
+        }
+        else {
+          blocks_.Push(function.Body);
+          var expression = (LuaExpressionSyntax)node.ExpressionBody.Expression.Accept(this);
+          blocks_.Pop();
+          function.AddStatement(new LuaReturnStatementSyntax(expression));
+        }
 
         if (function.HasYield) {
           VisitYield(node, function);
