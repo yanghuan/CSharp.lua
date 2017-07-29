@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CSharpLua</RootNamespace>
     <AssemblyName>CSharp.lua</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
@@ -89,7 +89,9 @@
     <Compile Include="XmlMetaProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="CoreSystem.Lua\All.lua" />
     <None Include="CoreSystem.Lua\CoreSystem\Array.lua" />
     <None Include="CoreSystem.Lua\CoreSystem\Boolean.lua" />
