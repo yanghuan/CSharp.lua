@@ -1728,9 +1728,9 @@ namespace CSharpLua {
       Contract.Assert(symbol != null);
       LuaExpressionSyntax identifier;
       void FillLocalVar()  {
-        string name = symbol.Name;
-        CheckLocalVariableName(symbol, ref name);
-        identifier = new LuaIdentifierNameSyntax(name);
+        var nameIdentifier = new LuaIdentifierNameSyntax(symbol.Name);
+        CheckLocalSymbolName(symbol, ref nameIdentifier);
+        identifier = nameIdentifier;
       }
       switch (symbol.Kind) {
         case SymbolKind.Local:
@@ -1873,8 +1873,14 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitVariableDeclaration(VariableDeclarationSyntax node) {
       LuaVariableListDeclarationSyntax variableListDeclaration = new LuaVariableListDeclarationSyntax();
       foreach (VariableDeclaratorSyntax variable in node.Variables) {
-        var variableDeclarator = (LuaVariableDeclaratorSyntax)variable.Accept(this);
-        variableListDeclaration.Variables.Add(variableDeclarator);
+        if (variable.Initializer != null && variable.Initializer.Value.IsKind(SyntaxKind.RefExpression)) {
+          var refExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
+          AddLocalVariableMapping(new LuaRefNameSyntax(refExpression), variable);
+        }
+        else {
+          var variableDeclarator = (LuaVariableDeclaratorSyntax)variable.Accept(this);
+          variableListDeclaration.Variables.Add(variableDeclarator);
+        }
       }
       bool isMultiNil = variableListDeclaration.Variables.Count > 0 && variableListDeclaration.Variables.All(i => i.Initializer == null);
       if (isMultiNil) {
@@ -2000,7 +2006,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitCasePatternSwitchLabel(CasePatternSwitchLabelSyntax node) {
       var left = switchs_.Peek().Temp;
       var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
-      AddLocalVariableMapping(left.ValueText, declarationPattern.Designation);
+      AddLocalVariableMapping(left, declarationPattern.Designation);
       var switchStatement = FindParent<SwitchStatementSyntax>(node);
       var leftType = semanticModel_.GetTypeInfo(switchStatement.Expression).Type;
       var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;

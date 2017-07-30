@@ -181,4 +181,16 @@ namespace CSharpLua.LuaAst {
       IdentifierName.Render(renderer);
     }
   }
+
+  public sealed class LuaRefNameSyntax : LuaIdentifierNameSyntax {
+    public LuaExpressionSyntax NameExpression { get; }
+
+    public LuaRefNameSyntax(LuaExpressionSyntax nameExpression) : base("") {
+      NameExpression = nameExpression ?? throw new ArgumentNullException(nameof(nameExpression));
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      NameExpression.Render(renderer);
+    }
+  }
 }

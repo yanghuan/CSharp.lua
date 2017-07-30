@@ -31,7 +31,7 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransfor {
     private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
-    private Dictionary<ISymbol, string> localReservedNames_ = new Dictionary<ISymbol, string>();
+    private Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
     private int localMappingCounter_;
     private Stack<bool> checkeds_ = new Stack<bool>();
 
@@ -135,13 +135,13 @@ namespace CSharpLua {
     private bool CheckReservedWord(ref string name, SyntaxNode node) {
       if (LuaSyntaxNode.IsReservedWord(name)) {
         name = GetUniqueIdentifier(name, node, 1);
-        AddLocalVariableMapping(name, node);
+        AddLocalVariableMapping(new LuaIdentifierNameSyntax(name), node);
         return true;
       }
       return false;
     }
 
-    private void AddLocalVariableMapping(string name, SyntaxNode node) {
+    private void AddLocalVariableMapping(LuaIdentifierNameSyntax name, SyntaxNode node) {
       ISymbol symbol = semanticModel_.GetDeclaredSymbol(node);
       Contract.Assert(symbol != null);
       localReservedNames_.Add(symbol, name);
@@ -155,7 +155,7 @@ namespace CSharpLua {
       }
     }
 
-    private void CheckLocalVariableName(ISymbol symbol, ref string name) {
+    private void CheckLocalSymbolName(ISymbol symbol, ref LuaIdentifierNameSyntax name) {
       var newName = localReservedNames_.GetOrDefault(symbol);
       if (newName != null) {
         name = newName;

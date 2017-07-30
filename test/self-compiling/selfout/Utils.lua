@@ -42,6 +42,21 @@ System.namespace("CSharpLua", function (namespace)
       __ctor__ = __ctor__
     }
   end)
+  namespace.class("ArgumentNullException", function (namespace) 
+    local __ctor__
+    __ctor__ = function (this, paramName) 
+      this.__base__.__ctor__(this, paramName)
+      assert(false)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.System.ArgumentNullException
+        }
+      end, 
+      __ctor__ = __ctor__
+    }
+  end)
   namespace.class("Utility", function (namespace) 
     local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, TrimEnd, 
     GetCommondLines, GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 

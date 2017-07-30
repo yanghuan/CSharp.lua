@@ -39,6 +39,12 @@ namespace CSharpLua {
     }
   }
 
+  public sealed class ArgumentNullException : System.ArgumentNullException {
+    public ArgumentNullException(string paramName) : base(paramName) {
+      Contract.Assert(false);
+    }
+  }
+
   public static class Utility {
     public static T First<T>(this IList<T> list) {
       return list[0];

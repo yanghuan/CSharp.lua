@@ -1002,12 +1002,14 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitDeclarationPattern(DeclarationPatternSyntax node) {
-      LuaCodeTemplateExpressionSyntax codes = new LuaCodeTemplateExpressionSyntax();
-      var name = (LuaExpressionSyntax)node.Designation.Accept(this);
-      var type = (LuaExpressionSyntax)node.Type.Accept(this);
-      codes.Expressions.Add(name);
-      codes.Expressions.Add(type);
-      return codes;
+      throw new InvalidOperationException();
+    }
+
+    public override LuaSyntaxNode VisitRefExpression(RefExpressionSyntax node) {
+      if (node.Expression.IsKind(SyntaxKind.InvocationExpression)) {
+        throw new CompilationErrorException($"{node.GetLocationString()} : 'ref returns' is not support");
+      }
+      return node.Expression.Accept(this);
     }
   }
 }
