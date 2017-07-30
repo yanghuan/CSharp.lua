@@ -546,7 +546,7 @@ System.namespace("CSharpLua", function (namespace)
       return symbol
     end
     IsMainEntryPoint = function (symbol) 
-      if symbol:getIsStatic() and symbol:getTypeArguments():getIsEmpty() and symbol:getContainingType():getTypeArguments():getIsEmpty() and symbol:getName() == "Main" then
+      if symbol:getIsStatic() and symbol:getMethodKind() == 10 --[[MethodKind.Ordinary]] and symbol:getTypeArguments():getIsEmpty() and symbol:getContainingType():getTypeArguments():getIsEmpty() and symbol:getName() == "Main" then
         if symbol:getReturnsVoid() or symbol:getReturnType():getSpecialType() == 13 --[[SpecialType.System_Int32]] then
           if symbol:getParameters():getIsEmpty() then
             return true

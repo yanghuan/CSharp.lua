@@ -196,7 +196,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __ctor__ = __ctor__
     }
   end)
-  namespace.class("LuaTypeLocalAreaSyntax", function (namespace) 
+  namespace.class("LuaLocalAreaSyntax", function (namespace) 
     local getLocalKeyword, Render, __init__, __ctor__
     __init__ = function (this) 
       this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaIdentifierNameSyntax)()
@@ -210,6 +210,37 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     Render = function (this, renderer) 
       renderer:Render37(this)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.CSharpLua.LuaAst.LuaStatementSyntax
+        }
+      end, 
+      getLocalKeyword = getLocalKeyword, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("LuaLocalFunctionSyntx", function (namespace) 
+    local getLocalKeyword, Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Comments = CSharpLuaLuaAst.LuaStatementListSyntax()
+    end
+    __ctor__ = function (this, identifierName, functionExpression, documentationComments) 
+      __init__(this)
+      this.__base__.__ctor__(this)
+      this.IdentifierName = identifierName or System.throw(System.ArgumentNullException("identifierName" --[[nameof(identifierName)]]))
+      this.FunctionExpression = functionExpression or System.throw(System.ArgumentNullException("functionExpression" --[[nameof(functionExpression)]]))
+      if documentationComments ~= nil then
+        this.Comments.Statements:AddRange(documentationComments)
+      end
+    end
+    getLocalKeyword = function (this) 
+      return "local" --[[Keyword.Local]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render38(this)
     end
     return {
       __inherits__ = function (global) 

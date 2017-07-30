@@ -137,7 +137,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.Right = right
     end
     Render = function (this, renderer) 
-      renderer:Render38(this)
+      renderer:Render39(this)
     end
     return {
       __inherits__ = function (global) 
@@ -160,7 +160,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.OperatorToken = operatorToken
     end
     Render = function (this, renderer) 
-      renderer:Render42(this)
+      renderer:Render43(this)
     end
     return {
       __inherits__ = function (global) 
@@ -188,7 +188,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return ")" --[[Tokens.CloseParentheses]]
     end
     Render = function (this, renderer) 
-      renderer:Render53(this)
+      renderer:Render54(this)
     end
     return {
       __inherits__ = function (global) 
@@ -212,7 +212,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.__base__.__ctor__(this)
     end
     Render = function (this, renderer) 
-      renderer:Render57(this)
+      renderer:Render58(this)
     end
     return {
       __inherits__ = function (global) 

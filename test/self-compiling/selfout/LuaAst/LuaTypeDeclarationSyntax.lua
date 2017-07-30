@@ -19,7 +19,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     SetStaticCtorEmpty, getIsNoneCtros, getIsInitStatementExists, AddCtor, AddInitFunction, AddStaticAssignmentNames, CheckStaticCtorFunction, GetInitFunction, 
     CheckCtorsFunction, CheckAttributes, AddAllStatementsTo, Render, __init__, __ctor__
     __init__ = function (this) 
-      this.local_ = CSharpLuaLuaAst.LuaTypeLocalAreaSyntax()
+      this.local_ = CSharpLuaLuaAst.LuaLocalAreaSyntax()
       this.methodList_ = CSharpLuaLuaAst.LuaStatementListSyntax()
       this.resultTable_ = CSharpLuaLuaAst.LuaTableInitializerExpression()
       this.staticLazyStatements_ = System.List(CSharpLuaLuaAst.LuaStatementSyntax)()

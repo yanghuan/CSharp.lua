@@ -74,6 +74,7 @@ namespace CSharpLua.LuaAst {
       Declarator = declarator;
     }
 
+
     public LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
       Declarator = new LuaVariableDeclaratorSyntax(identifier, expression);
     }
@@ -119,9 +120,28 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaTypeLocalAreaSyntax : LuaStatementSyntax {
+  public sealed class LuaLocalAreaSyntax : LuaStatementSyntax {
     public string LocalKeyword => Tokens.Local;
     public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaLocalFunctionSyntx : LuaStatementSyntax {
+    public readonly LuaStatementListSyntax Comments = new LuaStatementListSyntax();
+    public string LocalKeyword => Tokens.Local;
+    public LuaIdentifierNameSyntax IdentifierName { get; }
+    public LuaFunctionExpressionSyntax FunctionExpression { get; }
+
+    public LuaLocalFunctionSyntx(LuaIdentifierNameSyntax identifierName, LuaFunctionExpressionSyntax functionExpression, List<LuaStatementSyntax> documentationComments = null) {
+      IdentifierName = identifierName ?? throw new ArgumentNullException(nameof(identifierName));
+      FunctionExpression = functionExpression ?? throw new ArgumentNullException(nameof(functionExpression));
+      if (documentationComments != null) {
+        Comments.Statements.AddRange(documentationComments);
+      }
+    }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);

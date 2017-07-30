@@ -147,15 +147,7 @@ namespace CSharpLua {
       localReservedNames_.Add(symbol, name);
     }
 
-    private void CheckParameterName(ref LuaParameterSyntax parameter, ParameterSyntax node) {
-      string name = parameter.Identifier.ValueText;
-      bool isReserved = CheckReservedWord(ref name, node);
-      if (isReserved) {
-        parameter = new LuaParameterSyntax(new LuaIdentifierNameSyntax(name));
-      }
-    }
-
-    private void CheckVariableDeclaratorName(ref LuaIdentifierNameSyntax identifierName, SyntaxNode node) {
+    private void CheckLocalVariableName(ref LuaIdentifierNameSyntax identifierName, SyntaxNode node) {
       string name = identifierName.ValueText;
       bool isReserved = CheckReservedWord(ref name, node);
       if (isReserved) {
@@ -1119,7 +1111,7 @@ namespace CSharpLua {
       }
 
       LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(variable.Identifier.ValueText);
-      CheckVariableDeclaratorName(ref identifier, variable);
+      CheckLocalVariableName(ref identifier, variable);
 
       var startExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
       LuaExpressionSyntax limitExpression;

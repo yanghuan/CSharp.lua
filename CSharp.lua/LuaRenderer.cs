@@ -374,7 +374,7 @@ namespace CSharpLua {
       WriteNewLine();
     }
 
-    internal void Render(LuaTypeLocalAreaSyntax node) {
+    internal void Render(LuaLocalAreaSyntax node) {
       const int kPerLineCount = 8;
       if (node.Variables.Count > 0) {
         Write(node.LocalKeyword);
@@ -393,6 +393,19 @@ namespace CSharpLua {
         Write(node.SemicolonToken);
         WriteNewLine();
       }
+    }
+
+    internal void Render(LuaLocalFunctionSyntx node) {
+      node.Comments.Render(this);
+      Write(node.LocalKeyword);
+      WriteSpace();
+      Write(node.FunctionExpression.FunctionKeyword);
+      WriteSpace();
+      node.IdentifierName.Render(this);
+      node.FunctionExpression.ParameterList.Render(this);
+      WriteSpace();
+      node.FunctionExpression.Body.Render(this);
+      WriteNewLine();
     }
 
     internal void Render(LuaBinaryExpressionSyntax node) {

@@ -31,7 +31,7 @@ namespace CSharpLua.LuaAst {
 
   public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
     public bool IsPartialMark { get; set; }
-    private LuaTypeLocalAreaSyntax local_ = new LuaTypeLocalAreaSyntax();
+    private LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
     private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
     protected LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
 

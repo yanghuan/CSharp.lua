@@ -533,7 +533,7 @@ namespace CSharpLua {
     }
 
     public static bool IsMainEntryPoint(this IMethodSymbol symbol) {
-      if (symbol.IsStatic && symbol.TypeArguments.IsEmpty && symbol.ContainingType.TypeArguments.IsEmpty && symbol.Name == "Main") {
+      if (symbol.IsStatic && symbol.MethodKind == MethodKind.Ordinary && symbol.TypeArguments.IsEmpty && symbol.ContainingType.TypeArguments.IsEmpty && symbol.Name == "Main") {
         if (symbol.ReturnsVoid || symbol.ReturnType.SpecialType == SpecialType.System_Int32) {
           if (symbol.Parameters.IsEmpty) {
             return true;

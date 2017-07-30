@@ -40,9 +40,11 @@ namespace CSharpLua {
         else {
           var expression = (LuaExpressionSyntax)node.Type.Accept(this);
           var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
-          var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
-          TryRemoveNilArgumentsAtTail(symbol, arguments);
-          invokeExpression.AddArguments(arguments);
+          if (node.ArgumentList != null) {
+            var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+            TryRemoveNilArgumentsAtTail(symbol, arguments);
+            invokeExpression.AddArguments(arguments);
+          }
           creationExpression = invokeExpression;
         }
       }
@@ -944,6 +946,24 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitArrowExpressionClause(ArrowExpressionClauseSyntax node) {
       return node.Expression.Accept(this);
+    }
+
+    public override LuaSyntaxNode VisitLocalFunctionStatement(LocalFunctionStatementSyntax node) {
+      var result = BuildMethodDeclaration(node, default(SyntaxList<AttributeListSyntax>), node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
+      var parentNode = FindParent(node, i => i.IsKind(SyntaxKind.MethodDeclaration) || i.IsKind(SyntaxKind.LocalFunctionStatement));
+      var body = parentNode.IsKind(SyntaxKind.MethodDeclaration) ? ((MethodDeclarationSyntax)parentNode).Body : ((LocalFunctionStatementSyntax)parentNode).Body;
+      bool isOnlyOne = body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
+      if (isOnlyOne) {
+        return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Comments);
+      }
+      else {
+        var block = blocks_.Peek();
+        block.AddLocalArea(result.Name);
+        LuaStatementListSyntax statementList = new LuaStatementListSyntax();
+        statementList.Statements.AddRange(result.Comments);
+        statementList.Statements.Add(new LuaLocalVariableDeclaratorSyntax(result.Name, result.Function));
+        return statementList;
+      }
     }
   }
 }
