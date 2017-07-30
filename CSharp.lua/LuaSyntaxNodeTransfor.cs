@@ -1729,7 +1729,7 @@ namespace CSharpLua {
       LuaExpressionSyntax identifier;
       void FillLocalVar()  {
         string name = symbol.Name;
-        CheckReservedWord(ref name, symbol);
+        CheckLocalVariableName(symbol, ref name);
         identifier = new LuaIdentifierNameSyntax(name);
       }
       switch (symbol.Kind) {
@@ -1995,6 +1995,33 @@ namespace CSharpLua {
       var right = (LuaExpressionSyntax)node.Value.Accept(this);
       LuaBinaryExpressionSyntax BinaryExpression = new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.EqualsEquals, right);
       return BinaryExpression;
+    }
+
+    public override LuaSyntaxNode VisitCasePatternSwitchLabel(CasePatternSwitchLabelSyntax node) {
+      var left = switchs_.Peek().Temp;
+      var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
+      AddLocalVariableMapping(left.ValueText, declarationPattern.Designation);
+      var switchStatement = FindParent<SwitchStatementSyntax>(node);
+      var leftType = semanticModel_.GetTypeInfo(switchStatement.Expression).Type;
+      var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;
+      if (leftType.IsSubclassOf(rightType)) {
+        return node.WhenClause != null ? node.WhenClause.Accept(this) : LuaIdentifierLiteralExpressionSyntax.True;
+      }
+      else {
+        var type = (LuaExpressionSyntax)declarationPattern.Type.Accept(this);
+        var isInvoke = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, left, type);
+        if (node.WhenClause != null) {
+          var whenExpression = (LuaExpressionSyntax)node.WhenClause.Accept(this);
+          return new LuaBinaryExpressionSyntax(isInvoke, LuaSyntaxNode.Tokens.And, whenExpression);
+        }
+        else {
+          return isInvoke;
+        }
+      }
+    }
+
+    public override LuaSyntaxNode VisitWhenClause(WhenClauseSyntax node) {
+      return node.Condition.Accept(this);
     }
 
     #endregion

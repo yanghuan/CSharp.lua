@@ -135,13 +135,13 @@ namespace CSharpLua {
     private bool CheckReservedWord(ref string name, SyntaxNode node) {
       if (LuaSyntaxNode.IsReservedWord(name)) {
         name = GetUniqueIdentifier(name, node, 1);
-        AddReservedMapping(name, node);
+        AddLocalVariableMapping(name, node);
         return true;
       }
       return false;
     }
 
-    private void AddReservedMapping(string name, SyntaxNode node) {
+    private void AddLocalVariableMapping(string name, SyntaxNode node) {
       ISymbol symbol = semanticModel_.GetDeclaredSymbol(node);
       Contract.Assert(symbol != null);
       localReservedNames_.Add(symbol, name);
@@ -155,9 +155,10 @@ namespace CSharpLua {
       }
     }
 
-    private void CheckReservedWord(ref string name, ISymbol symbol) {
-      if (LuaSyntaxNode.IsReservedWord(name)) {
-        name = localReservedNames_[symbol];
+    private void CheckLocalVariableName(ISymbol symbol, ref string name) {
+      var newName = localReservedNames_.GetOrDefault(symbol);
+      if (newName != null) {
+        name = newName;
       }
     }
 
