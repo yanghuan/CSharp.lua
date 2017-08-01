@@ -309,7 +309,7 @@ function Collection.findAllOfArray(t, match)
   for _, i in ipairs(t) do
     local item = unWrap(i)
     if match(item) then
-      list:add(item)
+      list:Add(item)
     end
   end
   return list
