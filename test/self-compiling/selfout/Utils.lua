@@ -17,7 +17,7 @@ System.namespace("CSharpLua", function (namespace)
   namespace.class("CmdArgumentException", function (namespace) 
     local __ctor__
     __ctor__ = function (this, message) 
-      System.Exception.__ctor__(this, message)
+      this.__base__.__ctor__(this, message)
     end
     return {
       __inherits__ = function (global) 
@@ -31,12 +31,27 @@ System.namespace("CSharpLua", function (namespace)
   namespace.class("CompilationErrorException", function (namespace) 
     local __ctor__
     __ctor__ = function (this, message) 
-      System.Exception.__ctor__(this, message)
+      this.__base__.__ctor__(this, message)
     end
     return {
       __inherits__ = function (global) 
         return {
           global.System.Exception
+        }
+      end, 
+      __ctor__ = __ctor__
+    }
+  end)
+  namespace.class("ArgumentNullException", function (namespace) 
+    local __ctor__
+    __ctor__ = function (this, paramName) 
+      this.__base__.__ctor__(this, paramName)
+      assert(false)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.System.ArgumentNullException
         }
       end, 
       __ctor__ = __ctor__
@@ -49,7 +64,7 @@ System.namespace("CSharpLua", function (namespace)
     IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
     IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-    IsMainEntryPoint
+    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation
     First = function (list, T) 
       return list:get(0)
     end
@@ -423,10 +438,14 @@ System.namespace("CSharpLua", function (namespace)
     end
     GetLocationString = function (node) 
       local location = node:getSyntaxTree():GetLocation(node:getSpan())
-      local methodInfo = location:GetType():GetMethod("GetDebuggerDisplay", 4 --[[BindingFlags.Instance]] | 32 --[[BindingFlags.NonPublic]])
+      local methodInfo = location:GetType():GetMethod("GetDebuggerDisplay", 36 --[[BindingFlags.Instance | BindingFlags.NonPublic]])
       return System.cast(System.String, methodInfo:Invoke(location, nil))
     end
     IsSubclassOf = function (child, parent) 
+      if parent:getSpecialType() == 1 --[[SpecialType.System_Object]] then
+        return true
+      end
+
       local p = child
       if p == parent then
         return false
@@ -542,7 +561,7 @@ System.namespace("CSharpLua", function (namespace)
       return symbol
     end
     IsMainEntryPoint = function (symbol) 
-      if symbol:getIsStatic() and symbol:getTypeArguments():getIsEmpty() and symbol:getContainingType():getTypeArguments():getIsEmpty() and symbol:getName() == "Main" then
+      if symbol:getIsStatic() and symbol:getMethodKind() == 10 --[[MethodKind.Ordinary]] and symbol:getTypeArguments():getIsEmpty() and symbol:getContainingType():getTypeArguments():getIsEmpty() and symbol:getName() == "Main" then
         if symbol:getReturnsVoid() or symbol:getReturnType():getSpecialType() == 13 --[[SpecialType.System_Int32]] then
           if symbol:getParameters():getIsEmpty() then
             return true
@@ -557,6 +576,56 @@ System.namespace("CSharpLua", function (namespace)
           end
         end
       end
+      return false
+    end
+    IsExtendSelf = function (typeSymbol, baseTypeSymbol) 
+      if baseTypeSymbol:getIsGenericType() then
+        for _, baseTypeArgument in System.each(baseTypeSymbol:getTypeArguments()) do
+          if baseTypeSymbol:getKind() ~= 17 --[[SymbolKind.TypeParameter]] then
+            if not baseTypeArgument:Equals(typeSymbol) then
+              if IsAssignableFrom(typeSymbol, baseTypeArgument) then
+                return true
+              end
+            end
+          end
+        end
+      end
+      return false
+    end
+    IsTimeSpanType = function (typeSymbol) 
+      return typeSymbol:getContainingNamespace():getName() == "System" and typeSymbol:getName() == "TimeSpan"
+    end
+    IsGenericIEnumerableType = function (typeSymbol) 
+      return typeSymbol:getOriginalDefinition():getSpecialType() == 25 --[[SpecialType.System_Collections_Generic_IEnumerable_T]]
+    end
+    IsExplicitInterfaceImplementation = function (symbol) 
+      repeat
+        local default = symbol:getKind()
+        if default == 15 --[[SymbolKind.Property]] then
+          do
+            local property = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
+            if property:getGetMethod() ~= nil then
+              if property:getGetMethod():getMethodKind() == 8 --[[MethodKind.ExplicitInterfaceImplementation]] then
+                return true
+              end
+              if property:getSetMethod() ~= nil then
+                if property:getSetMethod():getMethodKind() == 8 --[[MethodKind.ExplicitInterfaceImplementation]] then
+                  return true
+                end
+              end
+            end
+            break
+          end
+        elseif default == 9 --[[SymbolKind.Method]] then
+          do
+            local method = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, symbol)
+            if method:getMethodKind() == 8 --[[MethodKind.ExplicitInterfaceImplementation]] then
+              return true
+            end
+            break
+          end
+        end
+      until 1
       return false
     end
     return {
@@ -603,7 +672,11 @@ System.namespace("CSharpLua", function (namespace)
       IsAssignableFrom = IsAssignableFrom, 
       CheckMethodDefinition = CheckMethodDefinition, 
       CheckOriginalDefinition = CheckOriginalDefinition, 
-      IsMainEntryPoint = IsMainEntryPoint
+      IsMainEntryPoint = IsMainEntryPoint, 
+      IsExtendSelf = IsExtendSelf, 
+      IsTimeSpanType = IsTimeSpanType, 
+      IsGenericIEnumerableType = IsGenericIEnumerableType, 
+      IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation
     }
   end)
 end)

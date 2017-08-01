@@ -37,6 +37,10 @@ namespace CSharpLua.LuaAst {
       ParameterList.Parameters.Add(parameter);
     }
 
+    public void AddParameters(IEnumerable<LuaParameterSyntax> parameters) {
+      ParameterList.Parameters.AddRange(parameters);
+    }
+
     public void AddParameter(LuaIdentifierNameSyntax identifier) {
       AddParameter(new LuaParameterSyntax(identifier));
     }

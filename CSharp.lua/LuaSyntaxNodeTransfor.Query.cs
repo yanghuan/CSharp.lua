@@ -46,7 +46,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitQueryExpression(QueryExpressionSyntax node) {
       CurCompilationUnit.ImportLinq();
       LuaIdentifierNameSyntax rangeVariable = new LuaIdentifierNameSyntax(node.FromClause.Identifier.ValueText);
-      CheckVariableDeclaratorName(ref rangeVariable, node);
+      CheckLocalVariableName(ref rangeVariable, node);
       var fromClauseExpression = (LuaExpressionSyntax)node.FromClause.Expression.Accept(this);
       return BuildQueryBody(node.Body, fromClauseExpression, rangeVariable);
     }

@@ -50,6 +50,44 @@ namespace CSharpLua.LuaAst {
     }
   }
 
+  public sealed class LuaNumericalForStatementSyntax : LuaStatementSyntax {
+    public string ForKeyword => Tokens.For;
+    public LuaIdentifierNameSyntax Identifier { get; }
+    public string EqualsToken => Tokens.Equals;
+    public LuaExpressionSyntax StartExpression { get; }
+    public LuaExpressionSyntax LimitExpression { get; }
+    public LuaExpressionSyntax StepExpression { get; }
+
+    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
+      OpenBraceToken = Tokens.Do,
+      CloseBraceToken = Tokens.End,
+    };
+
+    public LuaNumericalForStatementSyntax(
+      LuaIdentifierNameSyntax identifier,
+      LuaExpressionSyntax startExpression,
+      LuaExpressionSyntax limitExpression,
+      LuaExpressionSyntax stepExpression) {
+      if (identifier == null) {
+        throw new ArgumentNullException(nameof(identifier));
+      }
+      if (startExpression == null) {
+        throw new ArgumentNullException(nameof(startExpression));
+      }
+      if (limitExpression == null) {
+        throw new ArgumentNullException(nameof(limitExpression));
+      }
+      Identifier = identifier;
+      StartExpression = startExpression;
+      LimitExpression = limitExpression;
+      StepExpression = stepExpression;
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
   public sealed class LuaWhileStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Condition { get; }
     public string WhileKeyword => LuaSyntaxNode.Tokens.While;

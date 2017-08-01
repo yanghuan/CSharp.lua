@@ -39,6 +39,12 @@ namespace CSharpLua {
     }
   }
 
+  public sealed class ArgumentNullException : System.ArgumentNullException {
+    public ArgumentNullException(string paramName) : base(paramName) {
+      Contract.Assert(false);
+    }
+  }
+
   public static class Utility {
     public static T First<T>(this IList<T> list) {
       return list[0];
@@ -409,6 +415,10 @@ namespace CSharpLua {
     }
 
     public static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
+      if (parent.SpecialType == SpecialType.System_Object) {
+        return true;
+      }
+
       ITypeSymbol p = child;
       if (p == parent) {
         return false;
@@ -529,7 +539,7 @@ namespace CSharpLua {
     }
 
     public static bool IsMainEntryPoint(this IMethodSymbol symbol) {
-      if (symbol.IsStatic && symbol.TypeArguments.IsEmpty && symbol.ContainingType.TypeArguments.IsEmpty && symbol.Name == "Main") {
+      if (symbol.IsStatic && symbol.MethodKind == MethodKind.Ordinary && symbol.TypeArguments.IsEmpty && symbol.ContainingType.TypeArguments.IsEmpty && symbol.Name == "Main") {
         if (symbol.ReturnsVoid || symbol.ReturnType.SpecialType == SpecialType.System_Int32) {
           if (symbol.Parameters.IsEmpty) {
             return true;
@@ -563,5 +573,39 @@ namespace CSharpLua {
       return false;
     }
 
+    public static bool IsTimeSpanType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.ContainingNamespace.Name == "System" && typeSymbol.Name == "TimeSpan";
+    }
+
+    public static bool IsGenericIEnumerableType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
+    }
+
+    public static bool IsExplicitInterfaceImplementation(this ISymbol symbol) {
+      switch (symbol.Kind) {
+        case SymbolKind.Property: {
+            IPropertySymbol property = (IPropertySymbol)symbol;
+            if (property.GetMethod != null) {
+              if (property.GetMethod.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
+                return true;
+              }
+              if (property.SetMethod != null) {
+                if (property.SetMethod.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
+                  return true;
+                }
+              }
+            }
+            break;
+          }
+        case SymbolKind.Method: {
+            IMethodSymbol method = (IMethodSymbol)symbol;
+            if (method.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
+              return true;
+            }
+            break;
+          }
+      }
+      return false;
+    }
   }
 }

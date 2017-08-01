@@ -8,8 +8,8 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
   namespace.class("LuaFunctionExpressionSyntax", function (namespace) 
-    local getFunctionKeyword, AddParameter, AddParameter1, AddStatement, AddStatement1, AddStatements, Render, __init__, 
-    __ctor__
+    local getFunctionKeyword, AddParameter, AddParameters, AddParameter1, AddStatement, AddStatement1, AddStatements, Render, 
+    __init__, __ctor__
     __init__ = function (this) 
       this.ParameterList = CSharpLuaLuaAst.LuaParameterListSyntax()
       this.Body = System.create(CSharpLuaLuaAst.LuaBlockSyntax(), function (default) 
@@ -26,6 +26,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     AddParameter = function (this, parameter) 
       this.ParameterList.Parameters:Add(parameter)
+    end
+    AddParameters = function (this, parameters) 
+      this.ParameterList.Parameters:AddRange(parameters)
     end
     AddParameter1 = function (this, identifier) 
       AddParameter(this, CSharpLuaLuaAst.LuaParameterSyntax(identifier))
@@ -52,6 +55,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       HasYield = false, 
       TempIndex = 0, 
       AddParameter = AddParameter, 
+      AddParameters = AddParameters, 
       AddParameter1 = AddParameter1, 
       AddStatement = AddStatement, 
       AddStatement1 = AddStatement1, 

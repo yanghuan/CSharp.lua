@@ -12,7 +12,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     __ctor__ = function (this) 
       __init__(this)
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
     end
     getOpenParenToken = function (this) 
       return "(" --[[Tokens.OpenParentheses]]
@@ -38,7 +38,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
   namespace.class("LuaParameterSyntax", function (namespace) 
     local Render, __ctor__
     __ctor__ = function (this, identifier) 
-      CSharpLuaLuaAst.LuaSyntaxNode.__ctor__(this)
+      this.__base__.__ctor__(this)
       this.Identifier = identifier
     end
     Render = function (this, renderer) 

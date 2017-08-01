@@ -110,7 +110,7 @@ namespace CSharpLua {
           exportAttributes_ = new HashSet<string>(attributes);
         }
       }
-      CheckImplicitInterface();
+      DoPretreatment();
     }
 
     private IEnumerable<LuaCompilationUnitSyntax> Create() {
@@ -395,6 +395,7 @@ namespace CSharpLua {
     private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
     private List<INamedTypeSymbol> types_ = new List<INamedTypeSymbol>();
     private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> typeDeclarationAttributes_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
+    private Dictionary<ISymbol, LuaSymbolNameSyntax> propertyOrEvnetInnerFieldNames_ = new Dictionary<ISymbol, LuaSymbolNameSyntax>();
 
     internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
       types_.Add(typeSymbol);
@@ -495,6 +496,13 @@ namespace CSharpLua {
         throw new InvalidOperationException();
       }
       return symbolExpression;
+    }
+
+    internal LuaIdentifierNameSyntax AddInnerName(ISymbol symbol) {
+      string name = GetSymbolBaseName(symbol);
+      LuaSymbolNameSyntax symbolName = new LuaSymbolNameSyntax(new LuaIdentifierNameSyntax(name));
+      propertyOrEvnetInnerFieldNames_.Add(symbol, symbolName);
+      return symbolName;
     }
 
     private string GetSymbolBaseName(ISymbol symbol) {
@@ -706,9 +714,17 @@ namespace CSharpLua {
         if (countOfA != countOfB) {
           return countOfA > countOfB ? -1 : 1;
         }
-        else {
-          return MemberSymbolCommonComparison(a, b);
+
+        if (countOfA == 1) {
+          var implementationOfA = a.InterfaceImplementations().First();
+          var implementationOfB = b.InterfaceImplementations().First();
+          int result;
+          if (MemberSymbolBoolComparison(implementationOfA, implementationOfB, i => !i.IsExplicitInterfaceImplementation(), out result)) {
+            return result;
+          }
         }
+
+        return MemberSymbolCommonComparison(a, b);
       }
 
       int v;
@@ -727,9 +743,10 @@ namespace CSharpLua {
 
     private int MemberSymbolCommonComparison(ISymbol a, ISymbol b) {
       if (a.ContainingType.Equals(b.ContainingType)) {
-        string name = a.Name;
         var type = a.ContainingType;
-        var members = type.GetMembers(name);
+        var names = GetSymbolNames(a);
+        List<ISymbol> members = new List<ISymbol>();
+        AddSimilarNameMembers(type, names, members);
         int indexOfA = members.IndexOf(a);
         Contract.Assert(indexOfA != -1);
         int indexOfB = members.IndexOf(b);
@@ -748,14 +765,15 @@ namespace CSharpLua {
       foreach (ISymbol symbol in refactorNames_) {
         bool hasImplementation = false;
         foreach (ISymbol implementation in AllInterfaceImplementations(symbol)) {
-          RefactorInterfaceSymbol(implementation, alreadyRefactorSymbols);
-          hasImplementation = true;
+          hasImplementation = RefactorInterfaceSymbol(implementation, alreadyRefactorSymbols);
         }
 
         if (!hasImplementation) {
           RefactorCurTypeSymbol(symbol, alreadyRefactorSymbols);
         }
       }
+
+      CheckRefactorInnerNames();
     }
 
     private void RefactorCurTypeSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
@@ -765,7 +783,7 @@ namespace CSharpLua {
       RefactorName(symbol, newName, alreadyRefactorSymbols);
     }
 
-    private void RefactorInterfaceSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
+    private bool RefactorInterfaceSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
       if (symbol.IsFromCode()) {
         INamedTypeSymbol typeSymbol = symbol.ContainingType;
         Contract.Assert(typeSymbol.TypeKind == TypeKind.Interface);
@@ -773,10 +791,15 @@ namespace CSharpLua {
         string newName = GetRefactorName(null, childrens, symbol);
         foreach (INamedTypeSymbol children in childrens) {
           ISymbol childrenSymbol = children.FindImplementationForInterfaceMember(symbol);
+          if (childrenSymbol == null) {
+            childrenSymbol = FindImplicitImplementationForInterfaceMember(children, symbol);
+          }
           Contract.Assert(childrenSymbol != null);
           RefactorName(childrenSymbol, newName, alreadyRefactorSymbols);
         }
+        return true;
       }
+      return false;
     }
 
     private void RefactorName(ISymbol symbol, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {
@@ -909,47 +932,112 @@ namespace CSharpLua {
       return true;
     }
 
+    private void CheckRefactorInnerNames() {
+      foreach (var innerName in propertyOrEvnetInnerFieldNames_) {
+        var symbol = innerName.Key;
+        string newName = GetInnerGetRefactorName(symbol);
+        innerName.Value.Update(newName);
+        TryAddNewUsedName(symbol.ContainingType, newName);
+      }
+    }
+
+    private string GetInnerGetRefactorName(ISymbol symbol) {
+      string originalName = GetSymbolBaseName(symbol);
+
+      int index = 0;
+      while (true) {
+        string newName = index == 0 ? originalName : originalName + index;
+        bool isEnable = IsInnerNameEnable(symbol.ContainingType, newName);
+        if (isEnable) {
+          return newName;
+        }
+        ++index;
+      }
+    }
+
+    private bool IsInnerNameEnable(INamedTypeSymbol typeSymbol, string newName) {
+      bool isEnable = IsInnerNameEnableOfChildrens(typeSymbol, newName);
+      if (isEnable) {
+        var p = typeSymbol.BaseType;
+        while (p != null) {
+          if (!IsCurTypeNameEnable(p, newName)) {
+            return false;
+          }
+          p = p.BaseType;
+        }
+        return true;
+      }
+      return false;
+    }
+
+    private bool IsInnerNameEnableOfChildrens(INamedTypeSymbol typeSymbol, string newName) {
+      var childrens = extends_.GetOrDefault(typeSymbol);
+      if (childrens != null) {
+        foreach (INamedTypeSymbol children in childrens) {
+          if (!IsNameEnableOfCurAndChildrens(children, newName)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
     #endregion
     private Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new Dictionary<ISymbol, HashSet<ISymbol>>();
+    private Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>> implicitInterfaceTypes_ = new Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>>();
     private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
     private HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
 
-    private sealed class InterfaceImplicitChecker : CSharpSyntaxWalker {
-      private SemanticModel semanticModel_;
+    private sealed class PretreatmentChecker : CSharpSyntaxWalker {
+      private LuaSyntaxGenerator generator_;
       private HashSet<INamedTypeSymbol> classTypes_ = new HashSet<INamedTypeSymbol>();
 
-      public InterfaceImplicitChecker(LuaSyntaxGenerator generator) {
+      public PretreatmentChecker(LuaSyntaxGenerator generator) {
+        generator_ = generator;
         foreach (SyntaxTree syntaxTree in generator.compilation_.SyntaxTrees) {
-          semanticModel_ = generator.compilation_.GetSemanticModel(syntaxTree);
           Visit(syntaxTree.GetRoot());
         }
         Check(generator);
       }
 
       public override void VisitClassDeclaration(ClassDeclarationSyntax node) {
+        var semanticModel_ = generator_.compilation_.GetSemanticModel(node.SyntaxTree);
         var typeSymbol = semanticModel_.GetDeclaredSymbol(node);
-        if (!typeSymbol.IsStatic) {
-          classTypes_.Add(typeSymbol);
+        classTypes_.Add(typeSymbol);
+
+        var types = node.Members.OfType<ClassDeclarationSyntax>();
+        foreach (var type in types) {
+          type.Accept(this);
         }
       }
 
       private void Check(LuaSyntaxGenerator generator) {
         foreach (var type in classTypes_) {
-          foreach (var baseInterface in type.AllInterfaces) {
-            foreach (var interfaceMember in baseInterface.GetMembers()) {
-              var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
-              var implementationType = implementationMember.ContainingType;
-              if (implementationType != type) {
-                if (!implementationType.AllInterfaces.Contains(baseInterface)) {
-                  generator.AddImplicitInterfaceImplementation(implementationMember, interfaceMember);
-                  generator.TryAddExtend(baseInterface, implementationType);
+          generator_.AddTypeSymbol(type);
+          if (!type.IsStatic) {
+            foreach (var baseInterface in type.AllInterfaces) {
+              foreach (var interfaceMember in baseInterface.GetMembers()) {
+                var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
+                if (implementationMember.Kind == SymbolKind.Method) {
+                  var methodSymbol = (IMethodSymbol)implementationMember;
+                  if (methodSymbol.MethodKind != MethodKind.Ordinary) {
+                    continue;
+                  }
+                }
+
+                var implementationType = implementationMember.ContainingType;
+                if (implementationType != type) {
+                  if (!implementationType.AllInterfaces.Contains(baseInterface)) {
+                    generator.AddImplicitInterfaceImplementation(implementationMember, interfaceMember);
+                    generator.TryAddExtend(baseInterface, implementationType);
+                  }
                 }
               }
             }
-          }
 
-          if (IsExtendSelf(type)) {
-            generator.typesOfExtendSelf_.Add(type);
+            if (IsExtendSelf(type)) {
+              generator.typesOfExtendSelf_.Add(type);
+            }
           }
         }
       }
@@ -971,12 +1059,26 @@ namespace CSharpLua {
       }
     }
 
-    private void CheckImplicitInterface() {
-      new InterfaceImplicitChecker(this);
+    private void DoPretreatment() {
+      new PretreatmentChecker(this);
     }
 
     private void AddImplicitInterfaceImplementation(ISymbol implementationMember, ISymbol interfaceMember) {
-      implicitInterfaceImplementations_.TryAdd(implementationMember, interfaceMember);
+      bool success = implicitInterfaceImplementations_.TryAdd(implementationMember, interfaceMember);
+      if (success) {
+        var containingType = implementationMember.ContainingType;
+        var mapps = implicitInterfaceTypes_.GetOrDefault(containingType);
+        if (mapps == null) {
+          mapps = new Dictionary<ISymbol, ISymbol>();
+          implicitInterfaceTypes_.Add(containingType, mapps);
+        }
+        mapps.Add(interfaceMember, implementationMember);
+      }
+    }
+
+    private ISymbol FindImplicitImplementationForInterfaceMember(INamedTypeSymbol typeSymbol, ISymbol interfaceMember) {
+      var mapps = implicitInterfaceTypes_.GetOrDefault(typeSymbol);
+      return mapps?.GetOrDefault(interfaceMember);
     }
 
     private bool IsImplicitInterfaceImplementation(ISymbol symbol) {
@@ -1028,6 +1130,15 @@ namespace CSharpLua {
 
     internal bool HasStaticCtor(INamedTypeSymbol typeSymbol) {
       return typeSymbol.HasStaticCtor() || typesOfExtendSelf_.Contains(typeSymbol);
+    }
+
+    internal bool IsExtendExists(INamedTypeSymbol typeSymbol) {
+      var set = extends_.GetOrDefault(typeSymbol);
+      return set != null && set.Count > 0;
+    }
+
+    internal bool IsSealed(INamedTypeSymbol typeSymbol) {
+      return typeSymbol.IsSealed || !IsExtendExists(typeSymbol);
     }
   }
 }

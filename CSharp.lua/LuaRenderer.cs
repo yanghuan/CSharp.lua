@@ -374,7 +374,7 @@ namespace CSharpLua {
       WriteNewLine();
     }
 
-    internal void Render(LuaTypeLocalAreaSyntax node) {
+    internal void Render(LuaLocalAreaSyntax node) {
       const int kPerLineCount = 8;
       if (node.Variables.Count > 0) {
         Write(node.LocalKeyword);
@@ -393,6 +393,19 @@ namespace CSharpLua {
         Write(node.SemicolonToken);
         WriteNewLine();
       }
+    }
+
+    internal void Render(LuaLocalFunctionSyntx node) {
+      node.Comments.Render(this);
+      Write(node.LocalKeyword);
+      WriteSpace();
+      Write(node.FunctionExpression.FunctionKeyword);
+      WriteSpace();
+      node.IdentifierName.Render(this);
+      node.FunctionExpression.ParameterList.Render(this);
+      WriteSpace();
+      node.FunctionExpression.Body.Render(this);
+      WriteNewLine();
     }
 
     internal void Render(LuaBinaryExpressionSyntax node) {
@@ -448,6 +461,25 @@ namespace CSharpLua {
       Write(node.InKeyword);
       WriteSpace();
       node.Expression.Render(this);
+      WriteSpace();
+      node.Body.Render(this);
+      WriteNewLine();
+    }
+
+    internal void Render(LuaNumericalForStatementSyntax node) {
+      Write(node.ForKeyword);
+      WriteSpace();
+      node.Identifier.Render(this);
+      WriteSpace();
+      Write(node.EqualsToken);
+      WriteSpace();
+      node.StartExpression.Render(this);
+      WriteComma();
+      node.LimitExpression.Render(this);
+      if (node.StepExpression != null) {
+        WriteComma();
+        node.StepExpression.Render(this);
+      }
       WriteSpace();
       node.Body.Render(this);
       WriteNewLine();

@@ -17,6 +17,7 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
+local Object = System.Object
 local Char = System.Char
 local Int = System.Int
 local Double = System.Double
@@ -255,6 +256,7 @@ function isInterfaceOf(t, ifaceType)
 end
 
 function isTypeOf(obj, cls)    
+  if cls == Object then return true end
   local typename = type(obj)
   if typename == "number" then
     return cls == Int or cls == Double or cls == Char

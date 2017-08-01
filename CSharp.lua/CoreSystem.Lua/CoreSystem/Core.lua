@@ -31,6 +31,7 @@ local select = select
 local pcall = pcall
 local rawget = rawget
 local rawset = rawset
+local tostring = tostring
 local global = _G
 
 local emptyFn = function() end
@@ -152,7 +153,7 @@ local function setBase(cls)
   local extends = cls.__inherits__
   if extends ~= nil then
     if type(extends) == "function" then
-      extends = extends(global)
+      extends = extends(global, cls)
     end           
     local base = extends[1]
     if base.__kind__ == "C" then
@@ -818,6 +819,52 @@ defCls("System.Tuple", tuple)
 
 function System.tuple(...)
   return setmetatable({...}, tuple)
+end
+
+local function ptrAccess(p)
+  local arr = p.arr
+  if arr == nil then
+    throw(System.NullReferenceException)
+  end
+  return arr 
+end
+
+local function ptrAddress(p)
+  return tostring(p):sub(7) + p.offset
+end
+
+local ptr = {
+  __index = false,
+  offset = 0,
+  get = function(this)
+    return ptrAccess(this):get(this.offset)
+  end,
+  set = function(this, value)
+    return ptrAccess(this):set(this.offset, value)
+  end,
+  __add = function(this, num)
+    return setmetatable({ arr = this.arr, offset = this.offset + num }, ptr)
+  end,
+  __sub = function(this, num)
+    return setmetatable({ arr = this.arr, offset = this.offset - num }, ptr)
+  end,
+  __lt = function(t1, t2)
+    return ptrAddress(t1) < ptrAddress(t2)
+  end,
+  __le = function(t1, t2)
+    return ptrAddress(t1) <= ptrAddress(t2)
+  end
+}
+ptr.__index = ptr
+
+function System.stackalloc(arrayType, len)
+  if len < 0 then
+    throw(System.OverflowException)
+  end
+  if len == 0 then
+    return setmetatable({}, ptr)
+  end
+  return setmetatable({ arr = arrayType:new(len) }, ptr)
 end
 
 debug.setmetatable(nil, {

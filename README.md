@@ -3,7 +3,7 @@ The C# to Lua compiler.
 
 ## Introduction
 CSharp.lua is a C# to Lua compiler. Write C# then run on lua VM.
-* Build on [Microsoft Roslyn](https://github.com/dotnet/roslyn). Support for C# 6.0.
+* Build on [Microsoft Roslyn](https://github.com/dotnet/roslyn). Support for C# 7.0.
 
 * Highly readable code generation. C# AST ---> Lua AST ---> Lua Code.
 
@@ -68,14 +68,22 @@ Options
 ```
 
 ### Download
-[CSharp.lua.1.0.0.0.zip](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/download/CSharp.lua.1.0.0.0.zip)
+https://github.com/yanghuan/CSharp.lua/releases
 
 ## CoreSystem.lua
-[CoreSystem.lua library](https://github.com/yanghuan/CSharp.lua/tree/master/CSharp.lua/CoreSystem.Lua/CoreSystem) that implements most of the [.net framework core classes](http://referencesource.microsoft.com/), including support for basic type, delegate, generic collection classes & linq. The Converted lua code, need to reference it  
-- Download [CoreSysrem.lua.zip](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/download/CoreSystem.lua.zip)
+[CoreSystem.lua library](https://github.com/yanghuan/CSharp.lua/tree/master/CSharp.lua/CoreSystem.Lua/CoreSystem) that implements most of the [.NET Framework core classes](http://referencesource.microsoft.com/), including support for basic type, delegate, generic collection classes & linq. The Converted lua code, need to reference it  
 
 ## Example
 - [fibonacci](https://github.com/yanghuan/CSharp.lua/tree/master/test/fibonacci), a console program code, print Fibonacci number. 
 
+## Documentation
+https://github.com/yanghuan/CSharp.lua/wiki
+
 ## *License*
 [Apache 2.0 license](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE).
+
+## *Acknowledgements*
+- [Bridge.NET](http://bridge.net/)
+- [WootzJs](https://github.com/kswoll/WootzJs)
+- [.NET referencesource](http://referencesource.microsoft.com/)
+

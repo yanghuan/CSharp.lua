@@ -30,6 +30,15 @@ namespace CSharpLua.LuaAst {
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
+
+    internal void AddLocalArea(LuaIdentifierNameSyntax name) {
+      var localArea = Statements.FirstOrDefault() as LuaLocalAreaSyntax;
+      if (localArea == null) {
+        localArea = new LuaLocalAreaSyntax();
+        Statements.Insert(0, localArea);
+      }
+      localArea.Variables.Add(name);
+    }
   }
 
   public sealed class LuaBlockStatementSyntax : LuaBlockSyntax {
