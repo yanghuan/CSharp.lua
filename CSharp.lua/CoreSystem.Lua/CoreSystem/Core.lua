@@ -893,6 +893,32 @@ function System.toString(t)
   return t:ToString()
 end
 
+function System.HasValueOfNull(this) 
+  return this ~= nil
+end
+
+function System.getValueOfNull(this)
+  if this == nil then
+    throw(System.InvalidOperationException())
+  end
+  return this
+end
+
+function System.GetHashCodeOfNull(this)
+  if this == nil then
+    return 0
+  end
+  return this:GetHashCode()
+end
+
+function System.GetValueOrDefaultT(this, T)
+  return this or T.__default__()
+end
+
+function System.GetValueOrDefault(this, defaultValue)
+  return this or defaultValue
+end
+
 local namespace = {}
 local curName
 

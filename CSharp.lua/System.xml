@@ -272,6 +272,19 @@ limitations under the License.
           <get Template="{this}[8]" />
         </property>
       </class>
+      <class name="Nullable^1">
+        <property name="HasValue">
+          <get Template="System.HasValueOfNull({this})" />
+        </property>
+        <property name="Value">
+          <get Template="System.getValueOfNull({this})" />
+        </property>
+        <method name="Equals" Template="Object.EqualsStatic({this}, {0})" />
+        <method name="GetHashCode" Template="System.GetHashCodeOfNull({this})" />
+        <method name="GetValueOrDefault" ArgCount="0" Template="System.GetValueOrDefaultT({this}, {^0})" />
+        <method name="GetValueOrDefault" ArgCount="1" Template="System.GetValueOrDefault({this}, {0})" />
+        <method name="ToString" Template="System.toString({this})" />
+      </class>
     </namespace>
     <namespace name="System.Collections" Name="System" />
     <namespace name="System.Collections.Generic" Name="System">
