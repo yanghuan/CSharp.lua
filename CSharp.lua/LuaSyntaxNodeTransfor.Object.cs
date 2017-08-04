@@ -29,12 +29,22 @@ namespace CSharpLua {
     private Stack<LuaIdentifierNameSyntax> conditionalTemps_ = new Stack<LuaIdentifierNameSyntax>();
 
     public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
+      var constExpression = GetConstExpression(node);
+      if (constExpression != null) {
+        return constExpression;
+      }
+
       var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       LuaExpressionSyntax creationExpression;
       if (symbol != null) {
         string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
         if (codeTemplate != null) {
           creationExpression = BuildCodeTemplateExpression(codeTemplate, null, node.ArgumentList.Arguments.Select(i => i.Expression), symbol.TypeArguments);
+        }
+        else if (node.Type.IsKind(SyntaxKind.NullableType)) {
+          Contract.Assert(node.ArgumentList.Arguments.Count == 1);
+          var argument = node.ArgumentList.Arguments.First();
+          return argument.Expression.Accept(this);
         }
         else {
           var expression = (LuaExpressionSyntax)node.Type.Accept(this);

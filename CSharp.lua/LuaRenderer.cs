@@ -530,6 +530,12 @@ namespace CSharpLua {
       WriteNewLine();
     }
 
+    internal void Render(LuaShortCommentExpressionStatement node) {
+      Write(node.SingleCommentToken);
+      node.Expression.Render(this);
+      WriteNewLine();
+    }
+
     internal void Render(LuaLongCommentStatement node) {
       Write(node.OpenCommentToken);
       Write(node.Comment);

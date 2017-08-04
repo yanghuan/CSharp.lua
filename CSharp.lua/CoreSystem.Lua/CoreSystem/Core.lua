@@ -912,11 +912,17 @@ function System.GetHashCodeOfNull(this)
 end
 
 function System.GetValueOrDefaultT(this, T)
-  return this or T.__default__()
+  if this == nil then
+    return T.__default__()
+  end
+  return this
 end
 
 function System.GetValueOrDefault(this, defaultValue)
-  return this or defaultValue
+  if this == nil then
+    return defaultValue
+  end
+  return this
 end
 
 local namespace = {}

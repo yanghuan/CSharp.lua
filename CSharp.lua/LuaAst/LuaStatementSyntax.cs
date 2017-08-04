@@ -130,6 +130,19 @@ namespace CSharpLua.LuaAst {
     }
   }
 
+  public sealed class LuaShortCommentExpressionStatement : LuaStatementSyntax {
+    public string SingleCommentToken => Tokens.ShortComment;
+    public LuaExpressionSyntax Expression { get; }
+
+    public LuaShortCommentExpressionStatement(LuaExpressionSyntax expression) {
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
   public sealed class LuaLongCommentStatement : LuaStatementSyntax {
     public string OpenCommentToken => Tokens.OpenLongComment;
     public string Comment { get; }

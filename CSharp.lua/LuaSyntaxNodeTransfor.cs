@@ -994,9 +994,12 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitExpressionStatement(ExpressionStatementSyntax node) {
-      LuaExpressionSyntax expressionNode = (LuaExpressionSyntax)node.Expression.Accept(this);
-      if (expressionNode != LuaExpressionSyntax.EmptyExpression) {
-        return new LuaExpressionStatementSyntax(expressionNode);
+      LuaExpressionSyntax expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      if (expression != LuaExpressionSyntax.EmptyExpression) {
+        if (expression is LuaLiteralExpressionSyntax) {
+          return new LuaShortCommentExpressionStatement(expression);
+        }
+        return new LuaExpressionStatementSyntax(expression);
       } else {
         return LuaStatementSyntax.Empty;
       }
