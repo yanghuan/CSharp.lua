@@ -295,15 +295,61 @@ System.luaVersion = version
 
 if version < 5.3 then
   local bit = require("bit")
+  local bnot = bit.bnot
   local band = bit.band
+  local bor = bit.bor
   local xor = bit.bxor
+  local sl = bit.lshift
+  local sr = bit.rshift
 
-  System.bnot = bit.bnot
+  System.bnot = bnot
   System.band = band
-  System.bor = bit.bor
+  System.bor = bor
   System.xor = xor
-  System.sl = bit.lshift
-  System.sr = bit.rshift
+  System.sl = sl
+  System.sr = sr
+
+  function System.bnotOfNull(x)
+    if x == nil then
+      return nil
+    end
+    return bnot(x)
+  end
+
+  function System.bandOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return band(x, y)
+  end
+
+  function System.borOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return bor(x, y)
+  end
+
+  function System.xorOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return xor(x, y)
+  end
+
+  function System.slOfnull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return sl(x, y)
+  end
+
+  function System.srOfnull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return sr(x, y)
+  end
 
   function System.div(x, y) 
     if y == 0 then
@@ -311,8 +357,28 @@ if version < 5.3 then
     end
     return trunc(x / y)
   end    
+
+  function System.divOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    if y == 0 then
+      throw(System.DivideByZeroException(), 1)
+    end
+    return trunc(x / y) 
+  end
     
   function System.mod(x, y) 
+    if y == 0 then
+      throw(System.DivideByZeroException(), 1)
+    end
+    return x % y;
+  end
+
+  function System.modOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
     if y == 0 then
       throw(System.DivideByZeroException(), 1)
     end
@@ -886,6 +952,15 @@ debug.setmetatable(nil, {
   __unm = emptyFn,
   __lt = falseFn,
   __le = falseFn,
+
+  -- lua 5.3
+  __idiv = emptyFn,
+  __band = emptyFn,
+  __bor = emptyFn,
+  __bxor = emptyFn,
+  __bnot = emptyFn,
+  __shl = emptyFn,
+  __shr = emptyFn,
 })
 
 function System.toString(t)

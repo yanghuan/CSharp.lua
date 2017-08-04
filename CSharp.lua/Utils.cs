@@ -225,15 +225,14 @@ namespace CSharpLua {
     }
 
     public static bool IsIntegerType(this ITypeSymbol type) {
+      if (type.IsNullableType()) {
+        type = ((INamedTypeSymbol)type).TypeArguments.First();
+      }
       return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_UInt64;
     }
 
     public static bool IsNullableType(this ITypeSymbol type) {
-      if (type.SpecialType == SpecialType.System_Nullable_T) {
-        return true;
-      }
-      INamedTypeSymbol namedType = type as INamedTypeSymbol;
-      return namedType != null && namedType.ConstructedFrom != null && namedType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T;
+      return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
     }
 
     public static bool IsImmutable(this ITypeSymbol type) {

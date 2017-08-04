@@ -1059,11 +1059,11 @@ namespace CSharpLua {
       return BuildBinaryInvokeAssignmentExpression(left, right, methodName);
     }
 
-    private LuaExpressionSyntax BuildIntegerDivAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode) {
+    private LuaExpressionSyntax BuildIntegerDivAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, LuaIdentifierNameSyntax methodName) {
       if (IsLuaNewest) {
         return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.IntegerDiv);
       } else {
-        return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, LuaIdentifierNameSyntax.IntegerDiv);
+        return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
       }
     }
 
@@ -1121,7 +1121,8 @@ namespace CSharpLua {
             var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
             var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
             if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-              return BuildIntegerDivAssignmentExpression(leftNode, rightNode);
+              var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerDivOfNull : LuaIdentifierNameSyntax.IntegerDiv;
+              return BuildIntegerDivAssignmentExpression(leftNode, rightNode, methodName);
             } else {
               return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Div);
             }
@@ -1131,32 +1132,39 @@ namespace CSharpLua {
               var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
               var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
               if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-                return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, LuaIdentifierNameSyntax.IntegerMod);
+                var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerModOfNull : LuaIdentifierNameSyntax.IntegerMod;
+                return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
               }
             }
             return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Mod);
           }
         case SyntaxKind.AndAssignmentExpression: {
-            return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.And, LuaSyntaxNode.Tokens.BitAnd, LuaIdentifierNameSyntax.BitAnd);
+            return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.And, LuaSyntaxNode.Tokens.BitAnd, LuaIdentifierNameSyntax.BitAnd, LuaIdentifierNameSyntax.BitAndOfNull);
           }
         case SyntaxKind.ExclusiveOrAssignmentExpression: {
-            return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.NotEquals, LuaSyntaxNode.Tokens.BitXor, LuaIdentifierNameSyntax.BitXor);
+            return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.NotEquals, LuaSyntaxNode.Tokens.BitXor, LuaIdentifierNameSyntax.BitXor, LuaIdentifierNameSyntax.BitXorOfNull);
           }
         case SyntaxKind.OrAssignmentExpression: {
-            return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Or, LuaSyntaxNode.Tokens.BitOr, LuaIdentifierNameSyntax.BitOr);
+            return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Or, LuaSyntaxNode.Tokens.BitOr, LuaIdentifierNameSyntax.BitOr, LuaIdentifierNameSyntax.BitOrOfNull);
           }
         case SyntaxKind.LeftShiftAssignmentExpression: {
             if (IsLuaNewest) {
               return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.LeftShift);
             } else {
-              return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, LuaIdentifierNameSyntax.ShiftLeft);
+              var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
+              var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
+              var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.ShiftLeftOfNull : LuaIdentifierNameSyntax.ShiftLeft;
+              return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
             }
           }
         case SyntaxKind.RightShiftAssignmentExpression: {
             if (IsLuaNewest) {
               return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.RightShift);
             } else {
-              return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, LuaIdentifierNameSyntax.ShiftRight);
+              var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
+              var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
+              var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.ShiftRightOfNull : LuaIdentifierNameSyntax.ShiftRight;
+              return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
             }
           }
         default:
@@ -1164,11 +1172,15 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax BuildBitAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string boolOperatorToken, string otherOperatorToken, LuaIdentifierNameSyntax methodName) {
+    private LuaExpressionSyntax BuildBitAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string boolOperatorToken, string otherOperatorToken, LuaIdentifierNameSyntax methodName, LuaIdentifierNameSyntax methodNameOfNull) {
       var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
       if (leftType.SpecialType == SpecialType.System_Boolean) {
         return BuildCommonAssignmentExpression(leftNode, rightNode, boolOperatorToken);
       } else if (!IsLuaNewest) {
+        var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
+        if (leftType.IsNullableType() || rightType.IsNullableType()) {
+          methodName = methodNameOfNull;
+        }
         return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
       } else {
         string operatorToken = GetOperatorToken(otherOperatorToken);
@@ -2091,11 +2103,12 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(name, left, right);
     }
 
-    private LuaExpressionSyntax BuildIntegerDivExpression(BinaryExpressionSyntax node) {
+    private LuaExpressionSyntax BuildIntegerDivExpression(ITypeSymbol leftType, ITypeSymbol rightType, BinaryExpressionSyntax node) {
       if (IsLuaNewest) {
         return BuildBinaryExpression(node, LuaSyntaxNode.Tokens.IntegerDiv);
       } else {
-        return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.IntegerDiv);
+        var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerDivOfNull : LuaIdentifierNameSyntax.IntegerDiv;
+        return BuildBinaryInvokeExpression(node, methodName);
       }
     }
 
@@ -2105,12 +2118,14 @@ namespace CSharpLua {
       return new LuaBinaryExpressionSyntax(left, operatorToken, right);
     }
 
-    private LuaExpressionSyntax BuildBitExpression(BinaryExpressionSyntax node, string boolOperatorToken, LuaIdentifierNameSyntax otherName) {
+    private LuaExpressionSyntax BuildBitExpression(BinaryExpressionSyntax node, string boolOperatorToken, LuaIdentifierNameSyntax otherName, LuaIdentifierNameSyntax nameOfNull) {
       var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
       if (leftType.SpecialType == SpecialType.System_Boolean) {
         return BuildBinaryExpression(node, boolOperatorToken);
       } else if (!IsLuaNewest) {
-        return BuildBinaryInvokeExpression(node, otherName);
+        var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+        var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? nameOfNull : otherName;
+        return BuildBinaryInvokeExpression(node, methodName);
       } else {
         string operatorToken = GetOperatorToken(node.OperatorToken);
         return BuildBinaryExpression(node, operatorToken);
@@ -2146,7 +2161,7 @@ namespace CSharpLua {
             var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
             var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
             if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-              return BuildIntegerDivExpression(node);
+              return BuildIntegerDivExpression(leftType, rightType, node);
             }
             break;
           }
@@ -2155,31 +2170,38 @@ namespace CSharpLua {
               var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
               var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
               if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-                return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.IntegerMod);
+                var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerModOfNull : LuaIdentifierNameSyntax.IntegerMod;
+                return BuildBinaryInvokeExpression(node, methodName);
               }
             }
             break;
           }
         case SyntaxKind.LeftShiftExpression: {
             if (!IsLuaNewest) {
-              return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.ShiftLeft);
+              var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
+              var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+              var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.ShiftLeftOfNull : LuaIdentifierNameSyntax.ShiftLeft;
+              return BuildBinaryInvokeExpression(node, methodName);
             }
             break;
           }
         case SyntaxKind.RightShiftExpression: {
             if (!IsLuaNewest) {
-              return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.ShiftRight);
+              var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
+              var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+              var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.ShiftRightOfNull : LuaIdentifierNameSyntax.ShiftRight;
+              return BuildBinaryInvokeExpression(node, methodName);
             }
             break;
           }
         case SyntaxKind.BitwiseOrExpression: {
-            return BuildBitExpression(node, LuaSyntaxNode.Tokens.Or, LuaIdentifierNameSyntax.BitOr);
+            return BuildBitExpression(node, LuaSyntaxNode.Tokens.Or, LuaIdentifierNameSyntax.BitOr, LuaIdentifierNameSyntax.BitOrOfNull);
           }
         case SyntaxKind.BitwiseAndExpression: {
-            return BuildBitExpression(node, LuaSyntaxNode.Tokens.And, LuaIdentifierNameSyntax.BitAnd);
+            return BuildBitExpression(node, LuaSyntaxNode.Tokens.And, LuaIdentifierNameSyntax.BitAnd, LuaIdentifierNameSyntax.BitAndOfNull);
           }
         case SyntaxKind.ExclusiveOrExpression: {
-            return BuildBitExpression(node, LuaSyntaxNode.Tokens.NotEquals, LuaIdentifierNameSyntax.BitXor);
+            return BuildBitExpression(node, LuaSyntaxNode.Tokens.NotEquals, LuaIdentifierNameSyntax.BitXor, LuaIdentifierNameSyntax.BitXorOfNull);
           }
         case SyntaxKind.IsExpression: {
             var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
@@ -2300,6 +2322,11 @@ namespace CSharpLua {
             var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
             var identifier = new LuaPropertyOrEventIdentifierNameSyntax(true, LuaIdentifierNameSyntax.Empty);
             return new LuaPropertyAdapterExpressionSyntax(operand, identifier, true);
+          }
+        case SyntaxKind.BitwiseNotExpression when !IsLuaNewest: {
+            var type = semanticModel_.GetTypeInfo(node.Operand).Type;
+            var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
+            return new LuaInvocationExpressionSyntax(type.IsNullableType() ? LuaIdentifierNameSyntax.BitNotOfNull : LuaIdentifierNameSyntax.BitNot, operand);
           }
         default: {
             var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
