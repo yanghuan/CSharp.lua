@@ -44,6 +44,12 @@ namespace CSharpLua {
     }
   }
 
+  public sealed class InvalidOperationException : System.InvalidOperationException {
+    public InvalidOperationException() {
+      Contract.Assert(false);
+    }
+  }
+
   public static class Utility {
     public static T First<T>(this IList<T> list) {
       return list[0];

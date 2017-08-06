@@ -1741,16 +1741,16 @@ namespace CSharpLua {
       ISymbol symbol = symbolInfo.Symbol;
       Contract.Assert(symbol != null);
       LuaExpressionSyntax identifier;
-      void FillLocalVar()  {
-        var nameIdentifier = new LuaIdentifierNameSyntax(symbol.Name);
-        CheckLocalSymbolName(symbol, ref nameIdentifier);
-        identifier = nameIdentifier;
-      }
       switch (symbol.Kind) {
         case SymbolKind.Local:
-        case SymbolKind.Parameter:
+        case SymbolKind.Parameter: {
+            var nameIdentifier = new LuaIdentifierNameSyntax(symbol.Name);
+            CheckLocalSymbolName(symbol, ref nameIdentifier);
+            identifier = nameIdentifier;
+            break;
+          }
         case SymbolKind.RangeVariable: {
-            FillLocalVar();
+            identifier = GetRangeVariableIdentifierName(node);
             break;
           }
         case SymbolKind.TypeParameter:
@@ -1780,7 +1780,9 @@ namespace CSharpLua {
         case SymbolKind.Method: {
             var methodSymbol = (IMethodSymbol)symbol;
             if (methodSymbol.MethodKind == MethodKind.LocalFunction) {
-              FillLocalVar();
+              var nameIdentifier = new LuaIdentifierNameSyntax(symbol.Name);
+              CheckLocalSymbolName(symbol, ref nameIdentifier);
+              identifier = nameIdentifier;
             }
             else {
               identifier = GetMethodNameExpression(methodSymbol, node);

@@ -22,12 +22,15 @@ local Collection = System.Collection
 local wrap = Collection.wrap
 local unWrap = Collection.unWrap
 local sort = Collection.sort
+local is = System.is
+local cast = System.cast
 local NullReferenceException = System.NullReferenceException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local InvalidOperationException = System.InvalidOperationException
 local EqualityComparer_1 = System.EqualityComparer_1
 local Comparer_1 = System.Comparer_1
+local IEnumerable_1 = System.IEnumerable_1
 local Empty = System.Array.Empty
 
 local select = select
@@ -127,22 +130,20 @@ local function selectMany(source, collectionSelector, resultSelector, T)
   if collectionSelector == nil then throw(ArgumentNullException("collectionSelector")) end
   if resultSelector == nil then throw(ArgumentNullException("resultSelector")) end
   return createInternal(T, function() 
-    local midEn
-    local index = -1
+    local index, element, midEn = -1
     return IEnumerator(source, function(en) 
       while true do
         if midEn and midEn:MoveNext() then
-          if resultSelector ~= nil then
-            return true, resultSelector(midEn, midEn:getCurrent())
-          end
-          return true, midEn:getCurrent()
+          return true, resultSelector(element, midEn:getCurrent())
         else
           if not en:MoveNext() then return false end
           index = index + 1
-          midEn = collectionSelector(en:getCurrent(), index):GetEnumerator()
+          local current = en:getCurrent()
+          midEn = collectionSelector(current, index):GetEnumerator()
           if midEn == nil then
             throw(NullReferenceException())
           end
+          element = current
         end  
       end
     end)
@@ -610,6 +611,21 @@ function Enumerable.ToLookup(source, ...)
   else
     return toLookup(source, ...)
   end
+end
+
+function Enumerable.Cast(source, T)
+  if source == nil then throw(ArgumentNullException("source")) end
+  if is(source, IEnumerable_1(T)) then
+    return source
+  end
+  return createInternal(T, function()
+    return IEnumerator(source, function(en) 
+      if en:MoveNext() then
+        return true, cast(T, en:getCurrent())
+      end
+      return false
+    end)
+  end)
 end
 
 local function first(source, ...)

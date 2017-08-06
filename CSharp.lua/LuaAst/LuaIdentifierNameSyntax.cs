@@ -108,15 +108,18 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax SystemObjectEqualsStatic = new LuaIdentifierNameSyntax("System.Object.EqualsStatic");
     public readonly static LuaIdentifierNameSyntax DateTime = new LuaIdentifierNameSyntax("System.DateTime");
     public readonly static LuaIdentifierNameSyntax TimeSpan = new LuaIdentifierNameSyntax("System.TimeSpan");
-    public readonly static LuaIdentifierNameSyntax AnonymousType = new LuaIdentifierNameSyntax("System.anonymousType");
+    public readonly static LuaIdentifierNameSyntax AnonymousTypeCreate = new LuaIdentifierNameSyntax("System.anonymousType");
+    public readonly static LuaIdentifierNameSyntax AnonymousType = new LuaIdentifierNameSyntax("System.AnonymousType");
     public readonly static LuaIdentifierNameSyntax SystemNew = new LuaIdentifierNameSyntax("System.new");
     public readonly static LuaIdentifierNameSyntax StackAlloc = new LuaIdentifierNameSyntax("System.stackalloc");
     public readonly static LuaIdentifierNameSyntax GenericT = new LuaIdentifierNameSyntax("__genericT__");
     public readonly static LuaIdentifierNameSyntax Base = new LuaIdentifierNameSyntax("__base__");
 
     #region QueryExpression
+    public readonly static LuaIdentifierNameSyntax LinqCast = new LuaIdentifierNameSyntax("Linq.Cast");
     public readonly static LuaIdentifierNameSyntax LinqWhere = new LuaIdentifierNameSyntax("Linq.Where");
     public readonly static LuaIdentifierNameSyntax LinqSelect = new LuaIdentifierNameSyntax("Linq.Select");
+    public readonly static LuaIdentifierNameSyntax LinqSelectMany = new LuaIdentifierNameSyntax("Linq.SelectMany");
     public readonly static LuaIdentifierNameSyntax LinqOrderBy = new LuaIdentifierNameSyntax("Linq.OrderBy");
     public readonly static LuaIdentifierNameSyntax LinqOrderByDescending = new LuaIdentifierNameSyntax("Linq.OrderByDescending");
     public readonly static LuaIdentifierNameSyntax LinqThenBy = new LuaIdentifierNameSyntax("Linq.ThenBy");

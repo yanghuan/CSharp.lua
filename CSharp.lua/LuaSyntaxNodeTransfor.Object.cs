@@ -121,6 +121,27 @@ namespace CSharpLua {
       return function;
     }
 
+    public override LuaSyntaxNode VisitAnonymousObjectMemberDeclarator(AnonymousObjectMemberDeclaratorSyntax node) {
+      LuaIdentifierNameSyntax name;
+      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      if (node.NameEquals != null) {
+        name = (LuaIdentifierNameSyntax)node.NameEquals.Accept(this);
+      }
+      else {
+        name = (LuaIdentifierNameSyntax)expression;
+      }
+      return new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), expression);
+    }
+
+    public override LuaSyntaxNode VisitAnonymousObjectCreationExpression(AnonymousObjectCreationExpressionSyntax node) {
+      LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+      foreach (var initializer in node.Initializers) {
+        var item = (LuaKeyValueTableItemSyntax)initializer.Accept(this);
+        table.Items.Add(item);
+      }
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AnonymousTypeCreate, table);
+    }
+
     public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
       Contract.Assert(node.IsKind(SyntaxKind.ArrayInitializerExpression));
       var symbol = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;

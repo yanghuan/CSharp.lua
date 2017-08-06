@@ -131,10 +131,9 @@ namespace CSharpLua {
       }
     }
 
-    private bool CheckReservedWord(ref string name, SyntaxNode node) {
+    private bool CheckLocalReservedWord(ref string name, SyntaxNode node) {
       if (LuaSyntaxNode.IsReservedWord(name)) {
         name = GetUniqueIdentifier(name, node, 1);
-        AddLocalVariableMapping(new LuaIdentifierNameSyntax(name), node);
         return true;
       }
       return false;
@@ -148,9 +147,10 @@ namespace CSharpLua {
 
     private void CheckLocalVariableName(ref LuaIdentifierNameSyntax identifierName, SyntaxNode node) {
       string name = identifierName.ValueText;
-      bool isReserved = CheckReservedWord(ref name, node);
+      bool isReserved = CheckLocalReservedWord(ref name, node);
       if (isReserved) {
         identifierName = new LuaIdentifierNameSyntax(name);
+        AddLocalVariableMapping(identifierName, node);
       }
     }
 
