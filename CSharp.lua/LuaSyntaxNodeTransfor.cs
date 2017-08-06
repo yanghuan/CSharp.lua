@@ -2421,10 +2421,35 @@ namespace CSharpLua {
       }
     }
 
+    private void CheckForeachCast(LuaIdentifierNameSyntax identifier, ForEachStatementSyntax node, LuaForInStatementSyntax forInStatement) {
+      var sourceType = semanticModel_.GetTypeInfo(node.Expression).Type;
+      var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
+      bool hasCast = false;
+      var interfaceType = sourceType.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
+      if (interfaceType != null) {
+        if (interfaceType.TypeArguments.First() != targetType) {
+          hasCast = true;
+        }
+      }
+      else {
+        interfaceType = sourceType.AllInterfaces.First(i => i.SpecialType == SpecialType.System_Collections_IEnumerable);
+        if (targetType.SpecialType != SpecialType.System_Object) {
+          hasCast = true;
+        }
+      }
+      if (hasCast) {
+        var cast = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, GetTypeName(targetType), identifier);
+        var assignment = new LuaAssignmentExpressionSyntax(identifier, cast);
+        forInStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+      }
+    }
+
     public override LuaSyntaxNode VisitForEachStatement(ForEachStatementSyntax node) {
       LuaIdentifierNameSyntax identifier = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
+      CheckLocalVariableName(ref identifier, node);
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       LuaForInStatementSyntax forInStatement = new LuaForInStatementSyntax(identifier, expression);
+      CheckForeachCast(identifier, node, forInStatement);
       VisitLoopBody(node.Statement, forInStatement.Body);
       return forInStatement;
     }
