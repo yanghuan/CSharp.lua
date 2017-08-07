@@ -57,7 +57,7 @@ end
 function Array.Empty(T)
   local t = emptys[T]
   if t == nil then
-    t = Array(T)(0)
+    t = Array(T)()
     emptys[T] = t
   end
   return t
