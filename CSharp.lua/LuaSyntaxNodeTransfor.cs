@@ -2462,7 +2462,8 @@ namespace CSharpLua {
       bool hasCast = false;
       var interfaceType = sourceType.IsGenericIEnumerableType() ? (INamedTypeSymbol)sourceType : sourceType.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
       if (interfaceType != null) {
-        if (interfaceType.TypeArguments.First() != targetType) {
+        var argumentType = interfaceType.TypeArguments.First();
+        if (argumentType != targetType && !sourceType.IsSubclassOf(targetType)) {
           hasCast = true;
         }
       }
