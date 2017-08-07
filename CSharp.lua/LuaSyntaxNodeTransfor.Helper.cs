@@ -390,6 +390,18 @@ namespace CSharpLua {
       }
     }
 
+    private LuaLiteralExpressionSyntax GetConstLiteralExpression(ILocalSymbol constLocal) {
+      Contract.Assert(constLocal.HasConstantValue);
+      if (constLocal.Type.SpecialType == SpecialType.System_Char) {
+        return new LuaCharacterLiteralExpression((char)constLocal.ConstantValue);
+      }
+      else {
+        var literalExpression = GetLiteralExpression(constLocal.ConstantValue);
+        string identifierToken = constLocal.Name;
+        return new LuaConstLiteralExpression(literalExpression, identifierToken);
+      }
+    }
+
     private LuaLiteralExpressionSyntax GetConstExpression(ExpressionSyntax node) {
       var constValue = semanticModel_.GetConstantValue(node);
       if (constValue.HasValue) {

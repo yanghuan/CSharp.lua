@@ -1712,7 +1712,7 @@ namespace CSharpLua {
       if (symbol.IsStatic) {
         if (symbol.HasConstantValue) {
           if (symbol.Type.SpecialType == SpecialType.System_String) {
-            if (((string)symbol.ConstantValue).Length < LuaSyntaxNode.StringConstInlineCount) {
+            if (((string)symbol.ConstantValue).Length <= LuaSyntaxNode.StringConstInlineCount) {
               return GetConstLiteralExpression(symbol);
             }
           } else {
@@ -1737,16 +1737,35 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
+      LuaIdentifierNameSyntax GetSampleName(ISymbol nodeSymbol) {
+        var nameIdentifier = new LuaIdentifierNameSyntax(nodeSymbol.Name);
+        CheckLocalSymbolName(nodeSymbol, ref nameIdentifier);
+        return nameIdentifier;
+      }
+
       SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
       ISymbol symbol = symbolInfo.Symbol;
       Contract.Assert(symbol != null);
       LuaExpressionSyntax identifier;
       switch (symbol.Kind) {
-        case SymbolKind.Local:
+        case SymbolKind.Local: {
+            var localSymbol = (ILocalSymbol)symbol;
+            if (localSymbol.IsConst) {
+              if (localSymbol.Type.SpecialType == SpecialType.System_String) {
+                if (((string)localSymbol.ConstantValue).Length <= LuaSyntaxNode.StringConstInlineCount) {
+                  return GetConstLiteralExpression(localSymbol);
+                }
+              }
+              else {
+                return GetConstLiteralExpression(localSymbol);
+              }
+            }
+
+            identifier = GetSampleName(symbol);
+            break;
+          }
         case SymbolKind.Parameter: {
-            var nameIdentifier = new LuaIdentifierNameSyntax(symbol.Name);
-            CheckLocalSymbolName(symbol, ref nameIdentifier);
-            identifier = nameIdentifier;
+            identifier = GetSampleName(symbol);
             break;
           }
         case SymbolKind.RangeVariable: {
@@ -1780,9 +1799,7 @@ namespace CSharpLua {
         case SymbolKind.Method: {
             var methodSymbol = (IMethodSymbol)symbol;
             if (methodSymbol.MethodKind == MethodKind.LocalFunction) {
-              var nameIdentifier = new LuaIdentifierNameSyntax(symbol.Name);
-              CheckLocalSymbolName(symbol, ref nameIdentifier);
-              identifier = nameIdentifier;
+              identifier = GetSampleName(symbol);
             }
             else {
               identifier = GetMethodNameExpression(methodSymbol, node);
@@ -1894,8 +1911,24 @@ namespace CSharpLua {
           AddLocalVariableMapping(new LuaRefNameSyntax(refExpression), variable);
         }
         else {
-          var variableDeclarator = (LuaVariableDeclaratorSyntax)variable.Accept(this);
-          variableListDeclaration.Variables.Add(variableDeclarator);
+          bool isConst = false;
+          var parent = node.Parent as LocalDeclarationStatementSyntax;
+          if (parent != null && parent.IsConst) {
+            isConst = true;
+            if (variable.Initializer.Value is LiteralExpressionSyntax value) {
+              var token = value.Token;
+              if (token.Value is string str) {
+                if (str.Length > LuaSyntaxNode.StringConstInlineCount) {
+                  isConst = false;
+                }
+              }
+            }           
+          }
+
+          if (!isConst) {
+            var variableDeclarator = (LuaVariableDeclaratorSyntax)variable.Accept(this);
+            variableListDeclaration.Variables.Add(variableDeclarator);
+          }
         }
       }
       bool isMultiNil = variableListDeclaration.Variables.Count > 0 && variableListDeclaration.Variables.All(i => i.Initializer == null);
@@ -2427,14 +2460,14 @@ namespace CSharpLua {
       var sourceType = semanticModel_.GetTypeInfo(node.Expression).Type;
       var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
       bool hasCast = false;
-      var interfaceType = sourceType.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
+      var interfaceType = sourceType.IsGenericIEnumerableType() ? (INamedTypeSymbol)sourceType : sourceType.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
       if (interfaceType != null) {
         if (interfaceType.TypeArguments.First() != targetType) {
           hasCast = true;
         }
       }
       else {
-        interfaceType = sourceType.AllInterfaces.First(i => i.SpecialType == SpecialType.System_Collections_IEnumerable);
+        interfaceType = sourceType.SpecialType == SpecialType.System_Collections_IEnumerable ? (INamedTypeSymbol)sourceType : sourceType.AllInterfaces.First(i => i.SpecialType == SpecialType.System_Collections_IEnumerable);
         if (targetType.SpecialType != SpecialType.System_Object) {
           hasCast = true;
         }
