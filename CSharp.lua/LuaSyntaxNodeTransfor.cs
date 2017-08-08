@@ -28,6 +28,8 @@ using Microsoft.CodeAnalysis;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
+    private const int kStringConstInlineCount = 15;
+
     private sealed class MethodInfo {
       public IMethodSymbol Symbol { get; }
       public IList<LuaExpressionSyntax> RefOrOutParameters { get; }
@@ -614,7 +616,7 @@ namespace CSharpLua {
         if (typeSymbol.SpecialType == SpecialType.System_String) {
           foreach (var variable in node.Declaration.Variables) {
             var value = (LiteralExpressionSyntax)variable.Initializer.Value;
-            if (value.Token.ValueText.Length > LuaSyntaxNode.StringConstInlineCount) {
+            if (value.Token.ValueText.Length > kStringConstInlineCount) {
               var variableSymbol = semanticModel_.GetDeclaredSymbol(variable);
               LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
               AddField(fieldName, typeSymbol, type, value, true, true, isPrivate, true, node.AttributeLists);
@@ -1712,7 +1714,7 @@ namespace CSharpLua {
       if (symbol.IsStatic) {
         if (symbol.HasConstantValue) {
           if (symbol.Type.SpecialType == SpecialType.System_String) {
-            if (((string)symbol.ConstantValue).Length <= LuaSyntaxNode.StringConstInlineCount) {
+            if (((string)symbol.ConstantValue).Length <= kStringConstInlineCount) {
               return GetConstLiteralExpression(symbol);
             }
           } else {
@@ -1752,7 +1754,7 @@ namespace CSharpLua {
             var localSymbol = (ILocalSymbol)symbol;
             if (localSymbol.IsConst) {
               if (localSymbol.Type.SpecialType == SpecialType.System_String) {
-                if (((string)localSymbol.ConstantValue).Length <= LuaSyntaxNode.StringConstInlineCount) {
+                if (((string)localSymbol.ConstantValue).Length <= kStringConstInlineCount) {
                   return GetConstLiteralExpression(localSymbol);
                 }
               }
@@ -1918,7 +1920,7 @@ namespace CSharpLua {
             if (variable.Initializer.Value is LiteralExpressionSyntax value) {
               var token = value.Token;
               if (token.Value is string str) {
-                if (str.Length > LuaSyntaxNode.StringConstInlineCount) {
+                if (str.Length > kStringConstInlineCount) {
                   isConst = false;
                 }
               }
@@ -2052,31 +2054,45 @@ namespace CSharpLua {
       return BinaryExpression;
     }
 
-    public override LuaSyntaxNode VisitCasePatternSwitchLabel(CasePatternSwitchLabelSyntax node) {
-      var left = switchs_.Peek().Temp;
-      var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
-      AddLocalVariableMapping(left, declarationPattern.Designation);
-      var switchStatement = FindParent<SwitchStatementSyntax>(node);
-      var leftType = semanticModel_.GetTypeInfo(switchStatement.Expression).Type;
-      var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;
-      if (leftType.IsSubclassOf(rightType)) {
-        return node.WhenClause != null ? node.WhenClause.Accept(this) : LuaIdentifierLiteralExpressionSyntax.True;
+    private LuaExpressionSyntax BuildSwitchLabelWhenClause(LuaExpressionSyntax expression, WhenClauseSyntax whenClause) {
+      if (whenClause != null) {
+        var whenExpression = (LuaExpressionSyntax)whenClause.Accept(this);
+        return new LuaBinaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.And, whenExpression);
       }
       else {
-        var type = (LuaExpressionSyntax)declarationPattern.Type.Accept(this);
-        var isInvoke = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, left, type);
-        if (node.WhenClause != null) {
-          var whenExpression = (LuaExpressionSyntax)node.WhenClause.Accept(this);
-          return new LuaBinaryExpressionSyntax(isInvoke, LuaSyntaxNode.Tokens.And, whenExpression);
+        return expression;
+      }
+    }
+
+    public override LuaSyntaxNode VisitCasePatternSwitchLabel(CasePatternSwitchLabelSyntax node) {
+      var left = switchs_.Peek().Temp;
+      if (node.Pattern is DeclarationPatternSyntax declarationPattern) {
+        AddLocalVariableMapping(left, declarationPattern.Designation);
+        var switchStatement = FindParent<SwitchStatementSyntax>(node);
+        var leftType = semanticModel_.GetTypeInfo(switchStatement.Expression).Type;
+        var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;
+        if (leftType.IsSubclassOf(rightType)) {
+          return node.WhenClause != null ? node.WhenClause.Accept(this) : LuaIdentifierLiteralExpressionSyntax.True;
         }
         else {
-          return isInvoke;
+          var type = (LuaExpressionSyntax)declarationPattern.Type.Accept(this);
+          var isInvoke = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, left, type);
+          return BuildSwitchLabelWhenClause(isInvoke, node.WhenClause);
         }
+      }
+      else {
+        var patternExpression = (LuaExpressionSyntax)node.Pattern.Accept(this);
+        var expression = new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.EqualsEquals, patternExpression);
+        return BuildSwitchLabelWhenClause(expression, node.WhenClause);
       }
     }
 
     public override LuaSyntaxNode VisitWhenClause(WhenClauseSyntax node) {
       return node.Condition.Accept(this);
+    }
+
+    public override LuaSyntaxNode VisitConstantPattern(ConstantPatternSyntax node) {
+      return node.Expression.Accept(this);
     }
 
     #endregion
@@ -2463,12 +2479,11 @@ namespace CSharpLua {
       var interfaceType = sourceType.IsGenericIEnumerableType() ? (INamedTypeSymbol)sourceType : sourceType.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
       if (interfaceType != null) {
         var argumentType = interfaceType.TypeArguments.First();
-        if (argumentType != targetType && !sourceType.IsSubclassOf(targetType)) {
+        if (!argumentType.Equals(targetType) && !argumentType.IsSubclassOf(targetType)) {
           hasCast = true;
         }
       }
       else {
-        interfaceType = sourceType.SpecialType == SpecialType.System_Collections_IEnumerable ? (INamedTypeSymbol)sourceType : sourceType.AllInterfaces.First(i => i.SpecialType == SpecialType.System_Collections_IEnumerable);
         if (targetType.SpecialType != SpecialType.System_Object) {
           hasCast = true;
         }

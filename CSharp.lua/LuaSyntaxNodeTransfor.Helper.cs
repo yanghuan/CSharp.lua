@@ -30,6 +30,7 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransfor {
     private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
+    private static readonly Regex identifierRegex_ = new Regex(@"^_|[a-zA-Z]\w*$", RegexOptions.Compiled);
     private Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
     private int localMappingCounter_;
     private Stack<bool> checkeds_ = new Stack<bool>();
@@ -131,9 +132,31 @@ namespace CSharpLua {
       }
     }
 
-    private bool CheckLocalReservedWord(ref string name, SyntaxNode node) {
+    private string EncodeToIdentifier(string name) {
+      StringBuilder sb = new StringBuilder();
+      foreach (char c in name) {
+        if (c < 127) {
+          sb.Append(c);
+        }
+        else {
+          string base63 = Utility.ToBase63(c);
+          sb.Append(base63);
+        }
+      }
+      if (char.IsNumber(sb[0])) {
+        sb.Insert(0, '_');
+      }
+      return sb.ToString();
+    }
+
+    private bool CheckLocalBadWord(ref string name, SyntaxNode node) {
       if (LuaSyntaxNode.IsReservedWord(name)) {
         name = GetUniqueIdentifier(name, node, 1);
+        return true;
+      }
+      else if (!identifierRegex_.IsMatch(name)) {
+        string newName = EncodeToIdentifier(name);
+        name = GetUniqueIdentifier(newName, node, 0);
         return true;
       }
       return false;
@@ -147,7 +170,7 @@ namespace CSharpLua {
 
     private void CheckLocalVariableName(ref LuaIdentifierNameSyntax identifierName, SyntaxNode node) {
       string name = identifierName.ValueText;
-      bool isReserved = CheckLocalReservedWord(ref name, node);
+      bool isReserved = CheckLocalBadWord(ref name, node);
       if (isReserved) {
         identifierName = new LuaIdentifierNameSyntax(name);
         AddLocalVariableMapping(identifierName, node);

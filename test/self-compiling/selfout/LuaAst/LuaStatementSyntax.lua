@@ -247,6 +247,29 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __ctor__ = __ctor__
     }
   end)
+  namespace.class("LuaShortCommentExpressionStatement", function (namespace) 
+    local getSingleCommentToken, Render, __ctor__
+    __ctor__ = function (this, expression) 
+      this.__base__.__ctor__(this)
+      this.Expression = expression or System.throw(CSharpLua.ArgumentNullException("expression" --[[nameof(expression)]]))
+    end
+    getSingleCommentToken = function (this) 
+      return "--" --[[Tokens.ShortComment]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render53(this)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.CSharpLua.LuaAst.LuaStatementSyntax
+        }
+      end, 
+      getSingleCommentToken = getSingleCommentToken, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
   namespace.class("LuaLongCommentStatement", function (namespace) 
     local getOpenCommentToken, getCloseCommentToken, Render, __ctor__
     __ctor__ = function (this, comment) 
@@ -260,7 +283,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "--]]" --[[Tokens.CloseLongComment]]
     end
     Render = function (this, renderer) 
-      renderer:Render53(this)
+      renderer:Render54(this)
     end
     return {
       __inherits__ = function (global) 
@@ -287,7 +310,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "goto" --[[Keyword.Goto]]
     end
     Render = function (this, renderer) 
-      renderer:Render55(this)
+      renderer:Render56(this)
     end
     return {
       __inherits__ = function (global) 
@@ -313,7 +336,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.GotoStatement = CSharpLuaLuaAst.LuaGotoStatement(identifier)
     end
     Render = function (this, renderer) 
-      renderer:Render57(this)
+      renderer:Render58(this)
     end
     return {
       __inherits__ = function (global) 
@@ -342,7 +365,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "::" --[[Tokens.Label]]
     end
     Render = function (this, renderer) 
-      renderer:Render56(this)
+      renderer:Render57(this)
     end
     return {
       __inherits__ = function (global) 

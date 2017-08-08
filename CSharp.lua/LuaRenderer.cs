@@ -288,7 +288,7 @@ namespace CSharpLua {
         WriteNewLine();
         AddIndent();
         bool isFirst = true;
-        foreach (LuaSyntaxNode itemNode in node.Items) {
+        foreach (var itemNode in node.Items) {
           if (isFirst) {
             isFirst = false;
           }

@@ -190,7 +190,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return ")" --[[Tokens.CloseParentheses]]
     end
     Render = function (this, renderer) 
-      renderer:Render54(this)
+      renderer:Render55(this)
     end
     return {
       __inherits__ = function (global) 
@@ -214,7 +214,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.__base__.__ctor__(this)
     end
     Render = function (this, renderer) 
-      renderer:Render58(this)
+      renderer:Render59(this)
     end
     return {
       __inherits__ = function (global) 

@@ -611,5 +611,18 @@ namespace CSharpLua {
       }
       return false;
     }
+
+    public static string ToBase63(int number) {
+      const string kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
+      int basis = kAlphabet.Length;
+      int n = number;
+      StringBuilder sb = new StringBuilder();
+      while (n > 0) {
+        char ch = kAlphabet[n % basis];
+        sb.Append(ch);
+        n /= basis;
+      }
+      return sb.ToString();
+    }
   }
 }

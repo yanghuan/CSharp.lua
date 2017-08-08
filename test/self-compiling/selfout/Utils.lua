@@ -6,6 +6,7 @@ local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local MicrosoftCodeAnalysisCSharpSyntax = Microsoft.CodeAnalysis.CSharp.Syntax
 local SystemIO = System.IO
 local SystemLinq = System.Linq
+local SystemText = System.Text
 local SystemThreading = System.Threading
 local CSharpLua
 local CSharpLuaLuaAst
@@ -57,6 +58,21 @@ System.namespace("CSharpLua", function (namespace)
       __ctor__ = __ctor__
     }
   end)
+  namespace.class("InvalidOperationException", function (namespace) 
+    local __ctor__
+    __ctor__ = function (this) 
+      this.__base__.__ctor__(this)
+      assert(false)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.System.InvalidOperationException
+        }
+      end, 
+      __ctor__ = __ctor__
+    }
+  end)
   namespace.class("Utility", function (namespace) 
     local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, TrimEnd, 
     GetCommondLines, GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
@@ -64,7 +80,7 @@ System.namespace("CSharpLua", function (namespace)
     IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
     IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation
+    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, ToBase63
     First = function (list, T) 
       return list:get(0)
     end
@@ -164,13 +180,11 @@ System.namespace("CSharpLua", function (namespace)
       return values:get(0)
     end
     GetCurrentDirectory = function (path) 
-      local CurrentDirectorySign1 = "~/"
-      local CurrentDirectorySign2 = "~\\"
 
-      if path:StartsWith(CurrentDirectorySign1) then
-        return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#CurrentDirectorySign1))
-      elseif path:StartsWith(CurrentDirectorySign2) then
-        return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#CurrentDirectorySign2))
+      if path:StartsWith("~/" --[[CurrentDirectorySign1]]) then
+        return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#("~/" --[[CurrentDirectorySign1]])))
+      elseif path:StartsWith("~\\" --[[CurrentDirectorySign2]]) then
+        return SystemIO.Path.Combine(System.AppDomain.getCurrentDomain():getBaseDirectory(), path:Substring(#("~\\" --[[CurrentDirectorySign2]])))
       end
 
       return SystemIO.Path.Combine(System.Environment.getCurrentDirectory(), path)
@@ -253,14 +267,13 @@ System.namespace("CSharpLua", function (namespace)
       return type:getTypeKind() == 3 --[[TypeKind.Delegate]]
     end
     IsIntegerType = function (type) 
+      if IsNullableType(type) then
+        type = First((System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, type)):getTypeArguments(), MicrosoftCodeAnalysis.ITypeSymbol)
+      end
       return type:getSpecialType() >= 9 --[[SpecialType.System_SByte]] and type:getSpecialType() <= 16 --[[SpecialType.System_UInt64]]
     end
     IsNullableType = function (type) 
-      if type:getSpecialType() == 32 --[[SpecialType.System_Nullable_T]] then
-        return true
-      end
-      local namedType = System.as(type, MicrosoftCodeAnalysis.INamedTypeSymbol)
-      return namedType ~= nil and namedType:getConstructedFrom() ~= nil and namedType:getConstructedFrom():getSpecialType() == 32 --[[SpecialType.System_Nullable_T]]
+      return type:getOriginalDefinition():getSpecialType() == 32 --[[SpecialType.System_Nullable_T]]
     end
     IsImmutable = function (type) 
       local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or IsStringType(type) or IsDelegateType(type)
@@ -385,7 +398,7 @@ System.namespace("CSharpLua", function (namespace)
             end
           else
             do
-              System.throw(System.InvalidOperationException())
+              System.throw(CSharpLua.InvalidOperationException())
             end
           end
         until 1
@@ -628,6 +641,18 @@ System.namespace("CSharpLua", function (namespace)
       until 1
       return false
     end
+    ToBase63 = function (number) 
+      local kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+      local basis = #kAlphabet
+      local n = number
+      local sb = SystemText.StringBuilder()
+      while n > 0 do
+        local ch = kAlphabet:get(n % basis)
+        sb:Append(ch)
+        n = n // basis
+      end
+      return sb:ToString()
+    end
     return {
       First = First, 
       Last = Last, 
@@ -676,7 +701,8 @@ System.namespace("CSharpLua", function (namespace)
       IsExtendSelf = IsExtendSelf, 
       IsTimeSpanType = IsTimeSpanType, 
       IsGenericIEnumerableType = IsGenericIEnumerableType, 
-      IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation
+      IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation, 
+      ToBase63 = ToBase63
     }
   end)
 end)

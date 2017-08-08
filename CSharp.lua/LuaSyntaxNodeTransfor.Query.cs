@@ -25,6 +25,8 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransfor {
+    private const string kQueryPlaceholderConflictName = "as";
+
     private interface IQueryRangeVariable {
       LuaIdentifierNameSyntax Name { get; }
       void AddPackCount();
@@ -44,9 +46,11 @@ namespace CSharpLua {
         ++packCount_;
       }
 
+      public bool HasPack => packCount_ > 0;
+
       public LuaIdentifierNameSyntax Name {
         get {
-          if (packCount_ > 0) {
+          if (HasPack) {
             throw new InvalidOperationException();
           }
           return name_;
@@ -84,7 +88,14 @@ namespace CSharpLua {
 
     private QueryIdentifier AddRangeIdentifier(SyntaxToken identifier) {
       string name = identifier.ValueText;
-      CheckLocalReservedWord(ref name, identifier.Parent);
+      if (name == LuaIdentifierNameSyntax.Placeholder.ValueText) {
+        if (queryIdentifiers_.Exists(i => i.HasPack)) {
+          name = kQueryPlaceholderConflictName;
+        }
+      }
+      else {
+        CheckLocalBadWord(ref name, identifier.Parent);
+      }
       var queryIdentifier = new QueryIdentifier(identifier, new LuaIdentifierNameSyntax(name));
       queryIdentifiers_.Add(queryIdentifier);
       return queryIdentifier;

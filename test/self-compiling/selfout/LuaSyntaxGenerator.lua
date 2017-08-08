@@ -412,29 +412,24 @@ System.namespace("CSharpLua", function (namespace)
       return false
     end
     ExportManifestFile = function (this, modules, outFolder) 
-      local kDir = "dir"
       local kDirInitCode = "dir = (dir and #dir > 0) and (dir .. '.') or \"\""
-      local kRequire = "require"
       local kLoadCode = "local load = function(module) return require(dir .. module) end"
-      local kLoad = "load"
-      local kInit = "System.init"
-      local kManifestFile = "manifest.lua"
 
       if #modules > 0 then
         modules:Sort()
         local types = GetExportTypes(this)
         if #types > 0 then
           local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
-          functionExpression:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kDir))
+          functionExpression:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "dir" --[[kDir]]))
           functionExpression:AddStatement1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kDirInitCode))
 
-          local requireIdentifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kRequire)
+          local requireIdentifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "require" --[[kRequire]])
           functionExpression:AddStatement(CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax:new(2, requireIdentifier, requireIdentifier))
 
           functionExpression:AddStatement1(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kLoadCode))
           functionExpression:AddStatement(CSharpLuaLuaAst.LuaBlankLinesStatement.One)
 
-          local loadIdentifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kLoad)
+          local loadIdentifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "load" --[[kLoad]])
           for _, module in System.each(modules) do
             local argument = CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, module))
             local invocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, loadIdentifier, argument)
@@ -448,14 +443,14 @@ System.namespace("CSharpLua", function (namespace)
             typeTable.Items:Add(CSharpLuaLuaAst.LuaSingleTableItemSyntax(CSharpLuaLuaAst.LuaStringLiteralExpressionSyntax(typeName)))
           end
 
-          local initInvocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, kInit), typeTable)
+          local initInvocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.init" --[[kInit]]), typeTable)
           FillManifestInitConf(this, initInvocation)
           functionExpression:AddStatement1(initInvocation)
 
           local luaCompilationUnit = CSharpLuaLuaAst.LuaCompilationUnitSyntax()
           luaCompilationUnit.Statements:Add(CSharpLuaLuaAst.LuaReturnStatementSyntax(functionExpression))
 
-          local outFile = SystemIO.Path.Combine(outFolder, kManifestFile)
+          local outFile = SystemIO.Path.Combine(outFolder, "manifest.lua" --[[kManifestFile]])
           Write(this, luaCompilationUnit, outFile)
         end
       end
@@ -567,7 +562,7 @@ System.namespace("CSharpLua", function (namespace)
       end
       if symbolExpression == nil then
         assert(false)
-        System.throw(System.InvalidOperationException())
+        System.throw(CSharpLua.InvalidOperationException())
       end
       return symbolExpression
     end
@@ -637,7 +632,7 @@ System.namespace("CSharpLua", function (namespace)
       end
 
       if symbolExpression == nil then
-        System.throw(System.InvalidOperationException())
+        System.throw(CSharpLua.InvalidOperationException())
       end
       return symbolExpression
     end
@@ -1085,7 +1080,7 @@ System.namespace("CSharpLua", function (namespace)
       default, isAutoField = this.isFieldPropertys_:TryGetValue(symbol)
       if not default then
         local isMateField = this.XmlMetaProvider:IsPropertyField(symbol)
-        if isMateField:getHasValue() then
+        if System.HasValueOfNull(isMateField) then
           isAutoField = isMateField:getValue()
         else
           if IsImplicitInterfaceImplementation(this, symbol) then

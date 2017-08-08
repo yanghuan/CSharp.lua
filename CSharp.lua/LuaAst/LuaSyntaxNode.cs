@@ -109,9 +109,10 @@ namespace CSharpLua.LuaAst {
     }
 
     public static string[] TempIdentifiers = {
-      "default", "extern", "ref", "out", "internal",
-      "void",  "case", "new", "object", "using",
-      "fixed", "override", "abstract", "checked", "virtual",
+      "default", "extern", "ref", "out", "try",
+      "case", "void", "byte", "char", "uint",
+      "lock",  "using", "fixed", "const", "object",
+      "internal", "virtual",
     };
 
     public readonly static HashSet<string> ReservedWords = new HashSet<string>() {
@@ -139,8 +140,6 @@ namespace CSharpLua.LuaAst {
     public static bool IsReservedWord(string identifier) {
       return ReservedWords.Contains(identifier);
     }
-
-    public const int StringConstInlineCount = 15;
   }
 
   public sealed class LuaSyntaxList<T> : List<T> where T : LuaSyntaxNode {

@@ -192,7 +192,7 @@ System.namespace("CSharpLua", function (namespace)
             end
           else
             do
-              System.throw(System.InvalidOperationException())
+              System.throw(CSharpLua.InvalidOperationException())
             end
           end
         until 1
@@ -395,6 +395,10 @@ System.namespace("CSharpLua", function (namespace)
 
       if CSharpLua.Utility.IsDelegateType(namedTypeSymbol) then
         return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Delegate
+      end
+
+      if namedTypeSymbol:getIsAnonymousType() then
+        return CSharpLuaLuaAst.LuaIdentifierNameSyntax.AnonymousType
       end
 
       local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor)
