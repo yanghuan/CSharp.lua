@@ -331,6 +331,10 @@ limitations under the License.
         <method name="TakeWhile" Template="Linq.TakeWhile({0}, {1})" />
         <method name="Skip" Template="Linq.Skip({0}, {1})" />
         <method name="SkipWhile" Template="Linq.SkipWhile({0}, {1})" />
+        <method name="Join" ArgCount="5" Template="Linq.Join({0}, {1}, {2}, {3}, {4}, {5}, nil, {^2}, {^3})" />
+        <method name="Join" ArgCount="6" Template="Linq.Join({0}, {1}, {2}, {3}, {4}, {5}, {6}, {^2}, {^3})" />
+        <method name="GroupJoin" ArgCount="5" Template="Linq.GroupJoin({0}, {1}, {2}, {3}, {4}, {5}, nil, {^2}, {^3})" />
+        <method name="GroupJoin" ArgCount="6" Template="Linq.GroupJoin({0}, {1}, {2}, {3}, {4}, {5}, {6}, {^2}, {^3})" />
         <method name="GroupBy" ArgCount="2" Template="Linq.GroupBy({0}, {1}, {^1})" />
         <method name="GroupBy" Template="Linq.GroupBy({0}, {1}, {2}, {^1})" >
           <arg type="System.Collections.Generic.IEnumerable^1" />

@@ -181,11 +181,11 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.LinqGroupBy, collection, keySelector, elementSelector, keyTypeName, elementTypeName);
     }
 
-    private LuaInvocationExpressionSyntax CreateQueryAnonymousType(LuaIdentifierNameSyntax key1, LuaExpressionSyntax value1, LuaIdentifierNameSyntax key2, LuaExpressionSyntax value2) {
+    private LuaExpressionSyntax CreateQueryAnonymousType(LuaIdentifierNameSyntax key1, LuaExpressionSyntax value1, LuaIdentifierNameSyntax key2, LuaExpressionSyntax value2) {
       LuaTableInitializerExpression table = new LuaTableInitializerExpression();
       table.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(key1), value1));
       table.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(key2), value2));
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AnonymousTypeCreate, table);
+      return table;
     }
 
     private LuaExpressionSyntax BuildFromClause(LuaExpressionSyntax collection, FromClauseSyntax node, QueryRangeVariable rangeVariable, out bool isOver) {

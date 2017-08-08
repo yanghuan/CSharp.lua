@@ -34,7 +34,7 @@ local IEnumerable_1 = System.IEnumerable_1
 local Empty = System.Array.Empty
 
 local select = select
-local tinser = table.insert
+local tinsert = table.insert
 local getmetatable = getmetatable
 
 local InternalEnumerable = System.define("System.Linq.InternalEnumerable", {
@@ -130,7 +130,8 @@ local function selectMany(source, collectionSelector, resultSelector, T)
   if collectionSelector == nil then throw(ArgumentNullException("collectionSelector")) end
   if resultSelector == nil then throw(ArgumentNullException("resultSelector")) end
   return createInternal(T, function() 
-    local index, element, midEn = -1
+    local element, midEn
+    local index = -1
     return IEnumerator(source, function(en) 
       while true do
         if midEn and midEn:MoveNext() then
@@ -247,9 +248,13 @@ function Lookup.__ctor__(this, comparer)
   this.count = 0
 end
 
-function Lookup.get(this, key)
+local function getGrouping(this, key)
   local hashCode = this.comparer.GetHashCode(key)
-  local grouping = this.groups[hashCode]
+  return this.groups[hashCode]
+end
+
+function Lookup.get(this, key)
+  local grouping = getGrouping(this, key)
   if grouping ~= nil then return grouping end 
   return Empty(this.__genericTElement__)
 end
@@ -259,8 +264,7 @@ function Lookup.GetCount(this)
 end
 
 function Lookup.Contains(this, key)
-  local hashCode = this.comparer.GetHashCode(key)
-  return this.groups[hashCode] ~= nil
+  return getGrouping(this, key) ~= nil
 end
 
 function Lookup.GetEnumerator(this)
@@ -299,7 +303,7 @@ local function addToLookup(this, key, value)
     this.groups[hashCode] = group        
     this.count = this.count + 1
   end
-  tinser(group, wrap(value))
+  tinsert(group, wrap(value))
 end
 
 local function createLookup(source, keySelector, elementSelector, comparer, TKey, TElement)
@@ -308,6 +312,152 @@ local function createLookup(source, keySelector, elementSelector, comparer, TKey
     addToLookup(lookup, keySelector(item), elementSelector(item))
   end
   return lookup
+end
+
+local function createLookupForJoin(source, keySelector, comparer, TKey, TElement)
+  local lookup = LookupFn(TKey, TElement)(comparer)
+  for _, item in each(source) do
+    local key = keySelector(item)
+    if key ~= nil then
+      addToLookup(lookup, key, item)
+    end
+  end
+  return lookup
+end
+
+function Enumerable.Join(outer, inner, outerKeySelector, innerKeySelector, resultSelector, comparer, TKey, TResult)
+  if outer == nil then throw(ArgumentNullException("outer")) end
+  if inner == nil then throw(ArgumentNullException("inner")) end
+  if outerKeySelector == nil then throw(ArgumentNullException("outerKeySelector")) end
+  if innerKeySelector == nil then throw(ArgumentNullException("innerKeySelector")) end
+  if resultSelector == nil then throw(ArgumentNullException("resultSelector")) end
+  local lookup = createLookupForJoin(inner, innerKeySelector, comparer, TKey, inner.__genericT__)
+  return createInternal(TResult, function ()
+    local item, grouping, index
+    return IEnumerator(outer, function (en)
+      while true do
+        if grouping ~= nil then
+          index = index + 1
+          if index < #grouping then
+            return true, resultSelector(item, unWrap(grouping[index + 1]))
+          end
+        end
+        if not en:MoveNext() then return false end
+        local current = en:getCurrent()
+        item = current
+        grouping = getGrouping(lookup, outerKeySelector(current))
+        index = -1
+      end
+    end)
+  end)
+end
+
+function Enumerable.GroupJoin(outer, inner, outerKeySelector, innerKeySelector, resultSelector, comparer, TKey, TResult)
+  if outer == nil then throw(ArgumentNullException("outer")) end
+  if inner == nil then throw(ArgumentNullException("inner")) end
+  if outerKeySelector == nil then throw(ArgumentNullException("outerKeySelector")) end
+  if innerKeySelector == nil then throw(ArgumentNullException("innerKeySelector")) end
+  if resultSelector == nil then throw(ArgumentNullException("resultSelector")) end
+  local lookup = createLookupForJoin(inner, innerKeySelector, comparer, TKey, inner.__genericT__)
+  return createInternal(TResult, function ()
+    return IEnumerable(outer, function (en)
+      if en:MoveNext() then
+        local item = en:getCurrent()
+        return true, resultSelector(item, lookup:get(outerKeySelector(item)))
+      end
+      return false
+    end)
+  end)
+end
+
+
+local function ordered(source, compare)
+  local orderedEnumerable = create(source, function()
+    local t = {}
+    local index = 0
+    return IEnumerator(source, function() 
+      index = index + 1
+      local v = t[index]
+      if v ~= nil then
+        return true, unWrap(v)
+      end
+      return false
+    end, 
+    function() 
+      for _, v in each(source) do
+        tinsert(t, wrap(v))
+      end  
+      sort(t, compare)
+    end)
+  end)
+  orderedEnumerable.source = source
+  orderedEnumerable.compare = compare
+  return orderedEnumerable
+end
+
+local function orderBy(source, keySelector, comparer, TKey, descending)
+  if source == nil then throw(ArgumentNullException("source")) end
+  if keySelector == nil then throw(ArgumentNullException("keySelector")) end
+  if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
+  local compare
+  if descending then
+    local c = comparer.Compare
+    compare = function(x, y)
+      return -c(keySelector(x), keySelector(y))
+    end
+  else
+    local c = comparer.Compare
+    compare = function(x, y)
+      return c(keySelector(x), keySelector(y))
+    end
+  end
+  return ordered(source, compare)
+end
+
+function Enumerable.OrderBy(source, keySelector, comparer, TKey)
+  return orderBy(source, keySelector, comparer, TKey, false)
+end
+
+function Enumerable.OrderByDescending(source, keySelector, comparer, TKey)
+  return orderBy(source, keySelector, comparer, TKey, true)
+end
+
+local function thenBy(source, keySelector, comparer, TKey, descending)
+  if source == nil then throw(ArgumentNullException("source")) end
+  if keySelector == nil then throw(ArgumentNullException("keySelector")) end
+  if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
+  local compare
+  local parentSource, parentCompare = source.source, source.compare
+  if descending then
+    local c = comparer.Compare
+    compare = function(x, y)
+      local v = parentCompare(x, y)
+      if v ~= 0 then
+        return v
+      else
+        return -c(keySelector(x), keySelector(y))
+      end
+    end
+  else
+    local c = comparer.Compare
+    compare = function(x, y)
+      local v = parentCompare(x, y)
+      if v ~= 0 then
+        return v
+      else
+        return c(keySelector(x), keySelector(y))
+      end
+    end
+  end
+  return ordered(parentSource, compare)
+end
+
+function Enumerable.ThenBy(source, keySelector, comparer, TKey)
+  return thenBy(source, keySelector, comparer, TKey, false)
+end
+
+function Enumerable.ThenByDescending(source, keySelector, comparer, TKey)
+  return thenBy(source, keySelector, comparer, TKey, true)
 end
 
 local function groupBy(source, keySelector, elementSelector, comparer, TKey, TElement)
@@ -377,7 +527,7 @@ function Enumerable.Concat(first, second)
     return IEnumerator(first, function(en)
       if secondEn == nil then
         if en:MoveNext() then
-            return true, en:getCurrent()
+          return true, en:getCurrent()
         end
         secondEn = second:GetEnumerator()
       end
@@ -533,7 +683,7 @@ function Enumerable.Reverse(source)
     end, 
     function() 
       for _, v in each(source) do
-        tinser(t, wrap(v))
+        tinsert(t, wrap(v))
       end  
       index = #t + 1
     end)
@@ -964,93 +1114,4 @@ function Enumerable.Max(source, ...)
     return compare(x, y) > 0
   end
   return minOrMax(maxFn, source, ...)
-end
-
-local function ordered(source, compare)
-  local orderedEnumerable = create(source, function()
-    local t = {}
-    local index = 0
-    return IEnumerator(source, function() 
-      index = index + 1
-      local v = t[index]
-      if v ~= nil then
-        return true, unWrap(v)
-      end
-      return false
-    end, 
-    function() 
-      for _, v in each(source) do
-        tinser(t, wrap(v))
-      end  
-      sort(t, compare)
-    end)
-  end)
-  orderedEnumerable.source = source
-  orderedEnumerable.compare = compare
-  return orderedEnumerable
-end
-
-local function orderBy(source, keySelector, comparer, TKey, descending)
-  if source == nil then throw(ArgumentNullException("source")) end
-  if keySelector == nil then throw(ArgumentNullException("keySelector")) end
-  if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
-  local compare
-  if descending then
-    local c = comparer.Compare
-    compare = function(x, y)
-      return -c(keySelector(x), keySelector(y))
-    end
-  else
-    local c = comparer.Compare
-    compare = function(x, y)
-      return c(keySelector(x), keySelector(y))
-    end
-  end
-  return ordered(source, compare)
-end
-
-function Enumerable.OrderBy(source, keySelector, comparer, TKey)
-  return orderBy(source, keySelector, comparer, TKey, false)
-end
-
-function Enumerable.OrderByDescending(source, keySelector, comparer, TKey)
-  return orderBy(source, keySelector, comparer, TKey, true)
-end
-
-local function thenBy(source, keySelector, comparer, TKey, descending)
-  if source == nil then throw(ArgumentNullException("source")) end
-  if keySelector == nil then throw(ArgumentNullException("keySelector")) end
-  if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
-  local compare
-  local parentSource, parentCompare = source.source, source.compare
-  if descending then
-    local c = comparer.Compare
-    compare = function(x, y)
-      local v = parentCompare(x, y)
-      if v ~= 0 then
-        return v
-      else
-        return -c(keySelector(x), keySelector(y))
-      end
-    end
-  else
-    local c = comparer.Compare
-    compare = function(x, y)
-      local v = parentCompare(x, y)
-      if v ~= 0 then
-        return v
-      else
-        return c(keySelector(x), keySelector(y))
-      end
-    end
-  end
-  return ordered(parentSource, compare)
-end
-
-function Enumerable.ThenBy(source, keySelector, comparer, TKey)
-  return thenBy(source, keySelector, comparer, TKey, false)
-end
-
-function Enumerable.ThenByDescending(source, keySelector, comparer, TKey)
-  return thenBy(source, keySelector, comparer, TKey, true)
 end
