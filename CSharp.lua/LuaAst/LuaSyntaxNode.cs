@@ -116,7 +116,10 @@ namespace CSharpLua.LuaAst {
 
     public readonly static HashSet<string> ReservedWords = new HashSet<string>() {
       //  lua reserved words
-      "and", "elseif", "end", "function", "local", "nil", "not", "or", "repeat", "then", "until",
+      Keyword.And, Keyword.Break, Keyword.Do, Keyword.Else, Keyword.ElseIf, Keyword.End,
+      Keyword.False, Keyword.For, Keyword.Function, Keyword.Goto, Keyword.If, Keyword.In,
+      Keyword.Local, Keyword.Nil, Keyword.Not, Keyword.Or, Keyword.Repeat, Keyword.Return,
+      Keyword.Then, Keyword.True, Keyword.Until, Keyword.While,
             
       // compiler reserved words
       "System", "Linq",
