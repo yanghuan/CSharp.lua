@@ -1769,7 +1769,7 @@ namespace CSharpLua {
             break;
           }
         case SymbolKind.RangeVariable: {
-            identifier = GetRangeVariableIdentifierName(node);
+            identifier = GetRangeIdentifierName(node);
             break;
           }
         case SymbolKind.TypeParameter:

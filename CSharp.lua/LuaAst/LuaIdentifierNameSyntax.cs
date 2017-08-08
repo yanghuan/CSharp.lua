@@ -125,6 +125,8 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax LinqThenBy = new LuaIdentifierNameSyntax("Linq.ThenBy");
     public readonly static LuaIdentifierNameSyntax LinqThenByDescending = new LuaIdentifierNameSyntax("Linq.ThenByDescending");
     public readonly static LuaIdentifierNameSyntax LinqGroupBy = new LuaIdentifierNameSyntax("Linq.GroupBy");
+    public readonly static LuaIdentifierNameSyntax LinqJoin = new LuaIdentifierNameSyntax("Linq.Join");
+    public readonly static LuaIdentifierNameSyntax LinqGroupJoin = new LuaIdentifierNameSyntax("Linq.GroupJoin");
     #endregion
 
     public LuaIdentifierNameSyntax(string valueText) {
