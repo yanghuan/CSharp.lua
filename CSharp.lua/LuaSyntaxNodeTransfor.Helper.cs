@@ -507,7 +507,7 @@ namespace CSharpLua {
             return new LuaStringLiteralExpressionSyntax(new LuaIdentifierNameSyntax(parentMethod.Identifier.ValueText));
           }
         case CallerAttributeKind.FilePath: {
-            return BuildStringLiteralExpression(node.SyntaxTree.FilePath);
+            return BuildStringLiteralExpression(generator_.RemoveBaseFolder(node.SyntaxTree.FilePath));
           }
         default:
           return null;

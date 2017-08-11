@@ -106,8 +106,8 @@ namespace CSharpLua {
         HasSemicolon = hasSemicolon_,
         Indent = indent_,
       };
-      LuaSyntaxGenerator generator = new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, Metas, setting, attributes_);
-      generator.Generate(folder_, output_);
+      LuaSyntaxGenerator generator = new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, Metas, setting, attributes_, folder_);
+      generator.Generate(output_);
     }
   }
 }

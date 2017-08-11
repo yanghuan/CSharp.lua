@@ -87,8 +87,9 @@ namespace CSharpLua {
     private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
     private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
     private IMethodSymbol mainEntryPoint_;
+    public string BaseFolder { get; }
 
-    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting, string[] attributes) {
+    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting, string[] attributes, string baseFolder = "") {
       CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
@@ -99,6 +100,7 @@ namespace CSharpLua {
         }
       }
       compilation_ = compilation;
+      BaseFolder = baseFolder;
       XmlMetaProvider = new XmlMetaProvider(metas);
       Setting = setting;
       if (attributes != null) {
@@ -134,19 +136,23 @@ namespace CSharpLua {
       }
     }
 
-    public void Generate(string baseFolder, string outFolder) {
+    public void Generate(string outFolder) {
       List<string> modules = new List<string>();
       foreach (var luaCompilationUnit in Create()) {
         string module;
-        string outFile = GetOutFilePath(luaCompilationUnit.FilePath, baseFolder, outFolder, out module);
+        string outFile = GetOutFilePath(luaCompilationUnit.FilePath, outFolder, out module);
         Write(luaCompilationUnit, outFile);
         modules.Add(module);
       }
       ExportManifestFile(modules, outFolder);
     }
 
-    private string GetOutFilePath(string inFilePath, string folder_, string output_, out string module) {
-      string path = inFilePath.Remove(0, folder_.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+    internal string RemoveBaseFolder(string patrh) {
+      return patrh.Remove(0, BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+    }
+
+    private string GetOutFilePath(string inFilePath, string output_, out string module) {
+      string path = RemoveBaseFolder(inFilePath);
       string extend = Path.GetExtension(path);
       path = path.Remove(path.Length - extend.Length, extend.Length);
       path = path.Replace('.', '_');
