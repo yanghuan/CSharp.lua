@@ -624,5 +624,17 @@ namespace CSharpLua {
       }
       return sb.ToString();
     }
+
+    public static bool IsExportSyntaxTrivia(this SyntaxTrivia syntaxTrivia) {
+      switch (syntaxTrivia.Kind()) {
+        case SyntaxKind.SingleLineCommentTrivia:
+        case SyntaxKind.MultiLineCommentTrivia:
+        case SyntaxKind.RegionDirectiveTrivia:
+        case SyntaxKind.EndRegionDirectiveTrivia:
+          return true;
+        default:
+          return false;
+      }
+    }
   }
 }
