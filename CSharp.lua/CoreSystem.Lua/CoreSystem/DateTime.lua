@@ -17,7 +17,6 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local div = System.div
-local sr = System.sr
 
 local TimeSpan = System.TimeSpan
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -186,7 +185,7 @@ local function getDataPart(ticks, part)
   if part == 1 then return n + 1 end
   local leapYear = y1 == 3 and (y4 ~= 24 or y100 == 3)
   local days = leapYear and daysToMonth366 or daysToMonth365
-  local m = sr(n, 5) + 1
+  local m = div(n, 32) + 1
   while n >= days[m + 1] do m = m + 1 end
   if part == 2 then return m end
   return n - days[m] + 1
