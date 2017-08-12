@@ -42,11 +42,12 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public void AddMemberDeclaration(LuaWrapFunctionStatementSynatx statement) {
-      if (statement == null) {
-        throw new ArgumentNullException(nameof(statement));
-      }
+    public void AddStatement(LuaStatementSyntax statement) {
       Body.Statements.Add(statement);
+    }
+
+    public void AddStatements(IEnumerable<LuaStatementSyntax> statements) {
+      Body.Statements.AddRange(statements);
     }
 
     internal override void Render(LuaRenderer renderer) {

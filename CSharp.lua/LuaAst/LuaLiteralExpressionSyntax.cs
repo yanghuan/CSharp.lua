@@ -81,9 +81,24 @@ namespace CSharpLua.LuaAst {
     public string OpenBracket => Tokens.OpenBracket;
     public string CloseBracket => Tokens.CloseBracket;
 
-    public LuaVerbatimStringLiteralExpressionSyntax(string text, int equalsCount) {
-      Text = text;
-      EqualsCount = equalsCount;
+    public LuaVerbatimStringLiteralExpressionSyntax(string value, bool checkNewLine = true) {
+      const string kCloseBracket = Tokens.CloseBracket;
+      char equals = Tokens.Equals[0];
+      int count = 0;
+      while (true) {
+        string closeToken = kCloseBracket + new string(equals, count) + kCloseBracket;
+        if (!value.Contains(closeToken)) {
+          break;
+        }
+        ++count;
+      }
+      if (checkNewLine) {
+        if (value[0] == '\n') {
+          value = '\n' + value;
+        }
+      }
+      Text = value;
+      EqualsCount = count;
     }
 
     internal override void Render(LuaRenderer renderer) {

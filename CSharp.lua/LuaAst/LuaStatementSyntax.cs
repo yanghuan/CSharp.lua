@@ -130,7 +130,7 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaShortCommentExpressionStatement : LuaStatementSyntax {
+  public class LuaShortCommentExpressionStatement : LuaStatementSyntax {
     public string SingleCommentToken => Tokens.ShortComment;
     public LuaExpressionSyntax Expression { get; }
 
@@ -143,17 +143,8 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaLongCommentStatement : LuaStatementSyntax {
-    public string OpenCommentToken => Tokens.OpenLongComment;
-    public string Comment { get; }
-    public string CloseCommentToken => Tokens.CloseLongComment;
-
-    public LuaLongCommentStatement(string comment) {
-      Comment = comment;
-    }
-
-    internal override void Render(LuaRenderer renderer) {
-      renderer.Render(this);
+  public sealed class LuaLongCommentStatement : LuaShortCommentExpressionStatement {
+    public LuaLongCommentStatement(string comment) : base(new LuaVerbatimStringLiteralExpressionSyntax(comment, false)) {
     }
   }
 

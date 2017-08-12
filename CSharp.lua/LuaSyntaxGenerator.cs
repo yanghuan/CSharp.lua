@@ -365,7 +365,7 @@ namespace CSharpLua {
           functionExpression.AddStatement(initInvocation);
 
           LuaCompilationUnitSyntax luaCompilationUnit = new LuaCompilationUnitSyntax();
-          luaCompilationUnit.Statements.Add(new LuaReturnStatementSyntax(functionExpression));
+          luaCompilationUnit.AddStatement(new LuaReturnStatementSyntax(functionExpression));
 
           string outFile = Path.Combine(outFolder, kManifestFile);
           Write(luaCompilationUnit, outFile);

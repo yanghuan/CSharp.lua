@@ -449,20 +449,7 @@ namespace CSharpLua {
     }
 
     private LuaVerbatimStringLiteralExpressionSyntax BuildVerbatimStringExpression(string value) {
-      const string kCloseBracket = LuaSyntaxNode.Tokens.CloseBracket;
-      char equals = LuaSyntaxNode.Tokens.Equals[0];
-      int count = 0;
-      while (true) {
-        string closeToken = kCloseBracket + new string(equals, count) + kCloseBracket;
-        if (!value.Contains(closeToken)) {
-          break;
-        }
-        ++count;
-      }
-      if (value[0] == '\n') {
-        value = '\n' + value;
-      }
-      return new LuaVerbatimStringLiteralExpressionSyntax(value, count);
+      return new LuaVerbatimStringLiteralExpressionSyntax(value);
     }
 
     private enum CallerAttributeKind {

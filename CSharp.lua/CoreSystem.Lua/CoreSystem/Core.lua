@@ -1000,51 +1000,59 @@ function System.GetValueOrDefault(this, defaultValue)
   return this
 end
 
-local namespace = {}
-local curName
+local namespace
+local curCacheName
 
-local function namespaceDef(kind, name, f)
-  if #curName > 0 then
-    name = curName .. "." .. name
+local function defIn(kind, name, f)
+  if #curCacheName > 0 then
+    name = curCacheName .. "." .. name
   end
   assert(modules[name] == nil, name)
-  local prevName = curName
-  curName = name
+  local prevName = curCacheName
+  curCacheName = name
   local t = f(namespace)
-  curName = prevName
+  curCacheName = prevName
   modules[name] = function()
     def(name, kind, t)
   end
 end
 
-function namespace.class(name, f)
-  namespaceDef("C", name, f) 
+local function defClassIn(name, f)
+  defIn("C", name, f) 
 end
 
-function namespace.struct(name, f)
-  namespaceDef("S", name, f) 
+local function defStructIn(name, f)
+  defIn("S", name, f) 
 end
 
-function namespace.interface(name, f)
-  namespaceDef("I", name, f) 
+local function defInterfaceIn(name, f)
+  defIn("I", name, f) 
 end
 
-function namespace.enum(name, f)
-  namespaceDef("E", name, f)
+local function defEnumIn(name, f)
+  defIn("E", name, f)
 end
 
-function namespace.namespace(name, f)
-  name = curName .. "." .. name
-  local prevName = curName
-  curName = name
+local function defNamespaceIn(name, f)
+  name = curCacheName .. "." .. name
+  local prevName = curCacheName
+  curCacheName = name
   f(namespace)
-  curName = prevName
+  curCacheName = prevName
 end
+
+namespace = {
+  class = defClassIn,
+  struct = defStructIn,
+  interface = defInterfaceIn,
+  enum = defEnumIn,
+  defNamespaceIn = defNamespaceIn,
+}
 
 function System.namespace(name, f)
-  curName = name
+  curCacheName = name
   f(namespace)
-  curName = nil
+  curCacheName = nil
 end
 
 local function config(conf) 

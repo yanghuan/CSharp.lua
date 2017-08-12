@@ -78,10 +78,14 @@ namespace CSharpLua {
       }
     }
 
-    internal void Render(LuaCompilationUnitSyntax node) {
-      foreach (var statement in node.Statements) {
-        statement.Render(this);
+    private void WriteNodes(IEnumerable<LuaSyntaxNode> nodes) {
+      foreach (var node in nodes) {
+        node.Render(this);
       }
+    }
+
+    internal void Render(LuaCompilationUnitSyntax node) {
+      WriteNodes(node.Statements);
     }
 
     internal void Render(LuaWrapFunctionStatementSynatx node) {
@@ -161,9 +165,7 @@ namespace CSharpLua {
       Write(node.OpenBraceToken);
       WriteNewLine();
       AddIndent();
-      foreach (var statement in node.Statements) {
-        statement.Render(this);
-      }
+      WriteNodes(node.Statements);
       Outdent();
       Write(node.CloseBraceToken);
     }
@@ -208,9 +210,7 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaStatementListSyntax node) {
-      foreach (var statement in node.Statements) {
-        statement.Render(this);
-      }
+      WriteNodes(node.Statements);
     }
 
     internal void Render(LuaLocalVariablesStatementSyntax node) {
@@ -422,9 +422,7 @@ namespace CSharpLua {
       WriteSpace();
       Write(node.OpenParenToken);
       node.Body.Render(this);
-      foreach (var elseIfNode in node.ElseIfStatements) {
-        elseIfNode.Render(this);
-      }
+      WriteNodes(node.ElseIfStatements);
       node.Else?.Render(this);
       Write(node.CloseParenToken);
       WriteNewLine();
@@ -536,13 +534,6 @@ namespace CSharpLua {
       WriteNewLine();
     }
 
-    internal void Render(LuaLongCommentStatement node) {
-      Write(node.OpenCommentToken);
-      Write(node.Comment);
-      Write(node.CloseCommentToken);
-      WriteNewLine();
-    }
-
     internal void Render(LuaParenthesizedExpressionSyntax node) {
       Write(node.OpenParenToken);
       node.Expression.Render(this);
@@ -572,9 +563,7 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaCodeTemplateExpressionSyntax node) {
-      foreach (var code in node.Expressions) {
-        code.Render(this);
-      }
+      WriteNodes(node.Expressions);
     }
 
     internal void Render(LuaPropertyAdapterExpressionSyntax node) {

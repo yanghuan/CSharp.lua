@@ -636,5 +636,9 @@ namespace CSharpLua {
           return false;
       }
     }
+
+    public static bool IsTypeDeclaration(this SyntaxKind kind) {
+      return kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration;
+    }
   }
 }

@@ -420,6 +420,7 @@ limitations under the License.
           <arg type="System.Func^2" />
           <arg type="System.Collections.Generic.IEqualityComparer^1" />
         </method>
+        <method name="Cast" Template="Linq.Cast({0}, {^0})" />
         <method name="First" Template="Linq.First({0}, {1})" />
         <method name="FirstOrDefault" Template="Linq.FirstOrDefault({0}, {1})" />
         <method name="Last" Template="Linq.Last({0}, {1})" />

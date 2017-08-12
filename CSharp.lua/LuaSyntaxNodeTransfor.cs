@@ -142,12 +142,21 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
-      LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax() { FilePath = node.SyntaxTree.FilePath };
+      LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax(node.SyntaxTree.FilePath);
       compilationUnits_.Push(compilationUnit);
-      foreach (var member in node.Members) {
-        LuaStatementSyntax luaMember = (LuaStatementSyntax)member.Accept(this);
-        compilationUnit.AddMember(luaMember);
+
+      var statements = VisitTriviaAndNode(node.DescendantTrivia(), node.Members, false);
+      foreach (LuaStatementSyntax statement in statements) {
+        if (statement is LuaTypeDeclarationSyntax typeeDeclaration) {
+          var ns = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
+          ns.AddStatement(typeeDeclaration);
+          compilationUnit.AddStatement(ns);
+        }
+        else {
+          compilationUnit.AddStatement(statement);
+        }
       }
+
       compilationUnits_.Pop();
       return compilationUnit;
     }
@@ -157,10 +166,8 @@ namespace CSharpLua {
       bool isContained = node.Parent.IsKind(SyntaxKind.NamespaceDeclaration);
       LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(isContained ? symbol.Name : symbol.ToString());
       LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name, isContained);
-      foreach (var member in node.Members) {
-        var memberNode = (LuaWrapFunctionStatementSynatx)member.Accept(this);
-        namespaceDeclaration.AddMemberDeclaration(memberNode);
-      }
+      var statements = VisitTriviaAndNode(node.DescendantTrivia(), node.Members);
+      namespaceDeclaration.AddStatements(statements.Cast<LuaStatementSyntax>());
       return namespaceDeclaration;
     }
 
@@ -170,7 +177,7 @@ namespace CSharpLua {
           var newMember = member.Accept(this);
           SyntaxKind kind = member.Kind();
           if (kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration) {
-            typeDeclaration.AddMemberDeclaration((LuaWrapFunctionStatementSynatx)newMember);
+            typeDeclaration.AddStatement((LuaTypeDeclarationSyntax)newMember);
           }
         }
       }
@@ -891,9 +898,8 @@ namespace CSharpLua {
     }
 
     private sealed class BlockCommonNode : IComparable<BlockCommonNode> {
-      const int kCommentCharCount = 2;
       public SyntaxTrivia SyntaxTrivia { get; }
-      public StatementSyntax Statement { get; }
+      public CSharpSyntaxNode SyntaxNode { get; }
       public FileLinePositionSpan LineSpan { get; }
 
       public BlockCommonNode(SyntaxTrivia syntaxTrivia) {
@@ -901,8 +907,8 @@ namespace CSharpLua {
         LineSpan = syntaxTrivia.SyntaxTree.GetLineSpan(syntaxTrivia.Span);
       }
 
-      public BlockCommonNode(StatementSyntax statement) {
-        Statement = statement;
+      public BlockCommonNode(CSharpSyntaxNode statement) {
+        SyntaxNode = statement;
         LineSpan = statement.SyntaxTree.GetLineSpan(statement.Span);
       }
 
@@ -916,44 +922,71 @@ namespace CSharpLua {
             && otherLineSpan.EndLinePosition < LineSpan.EndLinePosition;
       }
 
-      public void Visit(LuaSyntaxNodeTransfor transfor, LuaBlockSyntax block, ref int lastLine) {
+      public LuaBlankLinesStatement CheckBlankLine(ref int lastLine) {
+        LuaBlankLinesStatement statement = null;
         if (lastLine != -1) {
           int count = LineSpan.StartLinePosition.Line - lastLine - 1;
           if (count > 0) {
-            block.Statements.Add(new LuaBlankLinesStatement(count));
+            statement = new LuaBlankLinesStatement(count);
           }
         }
+        lastLine = LineSpan.EndLinePosition.Line;
+        return statement;
+      }
 
-        if (Statement != null) {
-          LuaStatementSyntax statementNode = (LuaStatementSyntax)Statement.Accept(transfor);
-          block.Statements.Add(statementNode);
+      public LuaSyntaxNode Visit(LuaSyntaxNodeTransfor transfor) {
+        const int kCommentCharCount = 2;
+        if (SyntaxNode != null) {
+          return SyntaxNode.Accept(transfor);
         }
         else {
           string content = SyntaxTrivia.ToString();
           switch (SyntaxTrivia.Kind()) {
             case SyntaxKind.SingleLineCommentTrivia: {
                 string commentContent = content.Substring(kCommentCharCount);
-                LuaShortCommentStatement singleComment = new LuaShortCommentStatement(commentContent);
-                block.Statements.Add(singleComment);
-                break;
+                return new LuaShortCommentStatement(commentContent);
               }
             case SyntaxKind.MultiLineCommentTrivia: {
                 string commentContent = content.Substring(kCommentCharCount, content.Length - kCommentCharCount - kCommentCharCount);
-                LuaLongCommentStatement longComment = new LuaLongCommentStatement(commentContent);
-                block.Statements.Add(longComment);
-                break;
+                return new LuaLongCommentStatement(commentContent);
               }
             case SyntaxKind.RegionDirectiveTrivia:
             case SyntaxKind.EndRegionDirectiveTrivia: {
-                block.Statements.Add(new LuaShortCommentStatement(content));
-                break;
+                return new LuaShortCommentStatement(content);
               }
             default:
               throw new InvalidOperationException();
           }
         }
+      }
+    }
 
-        lastLine = LineSpan.EndLinePosition.Line;
+    private IEnumerable<LuaSyntaxNode> VisitTriviaAndNode(IEnumerable<SyntaxTrivia> trivias, IEnumerable<CSharpSyntaxNode> nodes, bool isCheckBlank = true) {
+      var syntaxTrivias = trivias.Where(i => i.IsExportSyntaxTrivia());
+      var syntaxTriviaNodes = syntaxTrivias.Select(i => new BlockCommonNode(i));
+
+      List<BlockCommonNode> list = nodes.Select(i => new BlockCommonNode(i)).ToList();
+      bool hasComments = false;
+      foreach (var comment in syntaxTriviaNodes) {
+        bool isContains = list.Any(i => i.Contains(comment));
+        if (!isContains) {
+          list.Add(comment);
+          hasComments = true;
+        }
+      }
+      if (hasComments) {
+        list.Sort();
+      }
+
+      int lastLine = -1;
+      foreach (var common in list) {
+        if (isCheckBlank) {
+          var black = common.CheckBlankLine(ref lastLine);
+          if (black != null) {
+            yield return black;
+          }
+        }
+        yield return common.Visit(this);
       }
     }
 
@@ -961,26 +994,8 @@ namespace CSharpLua {
       LuaBlockStatementSyntax block = new LuaBlockStatementSyntax();
       blocks_.Push(block);
 
-      var syntaxTrivias = node.DescendantTrivia().Where(i => i.IsExportSyntaxTrivia());
-      var syntaxTriviaNodes = syntaxTrivias.Select(i => new BlockCommonNode(i));
-
-      List<BlockCommonNode> nodes = node.Statements.Select(i => new BlockCommonNode(i)).ToList();
-      bool hasComments = false;
-      foreach (var comment in syntaxTriviaNodes) {
-        bool isContains = nodes.Any(i => i.Contains(comment));
-        if (!isContains) {
-          nodes.Add(comment);
-          hasComments = true;
-        }
-      }
-      if (hasComments) {
-        nodes.Sort();
-      }
-
-      int lastLine = -1;
-      foreach (var common in nodes) {
-        common.Visit(this, block, ref lastLine);
-      }
+      var statements = VisitTriviaAndNode(node.DescendantTrivia(), node.Statements);
+      block.Statements.AddRange(statements.Cast<LuaStatementSyntax>());
 
       blocks_.Pop();
       return block;
