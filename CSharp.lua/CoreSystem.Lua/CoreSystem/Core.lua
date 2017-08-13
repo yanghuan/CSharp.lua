@@ -809,16 +809,6 @@ function System.event(name)
   return add, remove
 end
 
-function System.new(cls)
-  local ctor = cls.__ctor__
-  if type(ctor) == "table" then
-    ctor = ctor[1]
-  end
-  local this = setmetatable({}, cls)
-  ctor(this)
-  return this
-end
-
 function System.CreateInstance(type, ...)
   return type.c(...)
 end

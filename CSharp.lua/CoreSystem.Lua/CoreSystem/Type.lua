@@ -309,6 +309,22 @@ function System.cast(cls, obj)
   throw(InvalidCastException(), 1)
 end
 
+function System.new(cls)
+  if cls == Int or cls == Double then
+    return 0
+  end
+  if cls == Boolean then
+    return false
+  end
+  local ctor = cls.__ctor__
+  if type(ctor) == "table" then
+    ctor = ctor[1]
+  end
+  local this = setmetatable({}, cls)
+  ctor(this)
+  return this
+end
+
 function System.CreateInstance(type, ...)
   if type == nil then
     throw(ArgumentNullException("type"))
