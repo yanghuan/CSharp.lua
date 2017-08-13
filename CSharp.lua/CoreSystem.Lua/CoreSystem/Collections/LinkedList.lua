@@ -18,8 +18,6 @@ local System = System
 local throw = System.throw
 local Collection = System.Collection
 local changeVersion = Collection.changeVersion
-local addCount = Collection.addCount
-local clearCount = Collection.clearCount
 local each = Collection.each
 local ArgumentNullException = System.ArgumentNullException
 local InvalidOperationException = System.InvalidOperationException
@@ -57,18 +55,22 @@ local LinkedList = {}
 function LinkedList.__ctor__(this, ...)
   local len = select("#", ...)
   if len == 0 then
+    this.Count = 0
   else
     local collection = ...
     if collection == nil then
       throw(ArgumentNullException("collection"))
     end
+    this.Count = 0
     for _, item in each(collection) do
       this:addLast(item)
     end
   end
 end
 
-LinkedList.getCount = Collection.getCount
+function LinkedList.getCount(this)
+  return this.Count
+end
 
 function LinkedList.getFirst(this)    
   return this.head
@@ -93,16 +95,16 @@ local function insertNodeBefore(this, node, newNode)
   newNode.prev = node.prev
   node.prev.next = newNode
   node.prev = newNode
+  this.Count = this.Count + 1
   changeVersion(this)
-  addCount(this, 1)
 end
 
 local function insertNodeToEmptyList(this, newNode)
   newNode.next = newNode
   newNode.prev = newNode
   this.head = newNode
+  this.Count = this.Count + 1
   changeVersion(this)
-  addCount(this, 1)
 end
 
 function LinkedList.AddAfter(this, node, newNode)    
@@ -193,7 +195,7 @@ function LinkedList.Clear(this)
     invalidate(temp)
   end
   this.head = nil
-  clearCount(this)
+  this.Count = 0
   changeVersion(this)
 end
 
@@ -262,7 +264,7 @@ local function remvoeNode(this, node)
     end
   end
   invalidate(node)
-  addCount(this, - 1)
+  this.Count = this.Count - 1
   changeVersion(this)
 end
 

@@ -304,7 +304,11 @@ limitations under the License.
           <get Template="#{this}" />
         </property>
       </class>
-      <class name="LinkedList^1" Name="System.LinkedList" />
+      <class name="LinkedList^1" Name="System.LinkedList">
+        <property name="Count">
+          <field IsField="true" />
+        </property>
+      </class>
       <class name="LinkedListNode^1" Name="System.LinkedListNode">
         <property name="Value">
           <field IsField="true" />
@@ -321,7 +325,8 @@ limitations under the License.
       <class name="Comparer^1">
         <method name="Compare" Template="{this}.Compare({0}, {1})" />
       </class>
-    </namespace>
+    
+  </namespace>
     <namespace name="System.Linq">
       <class name="Enumerable">
         <method name="Where" Template="Linq.Where({0}, {1})" />
