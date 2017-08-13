@@ -73,7 +73,6 @@ namespace CSharpLua.LuaAst {
       Declarator = declarator;
     }
 
-
     public LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
       Declarator = new LuaVariableDeclaratorSyntax(identifier, expression);
     }
@@ -141,6 +140,15 @@ namespace CSharpLua.LuaAst {
         Comments.Statements.AddRange(documentationComments);
       }
     }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuatLocalTupleVariableExpression : LuaExpressionSyntax {
+    public string LocalKeyword => Tokens.Local;
+    public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);

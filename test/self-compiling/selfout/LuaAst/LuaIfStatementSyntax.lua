@@ -46,7 +46,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "end" --[[Keyword.End]]
     end
     Render = function (this, renderer) 
-      renderer:Render40(this)
+      renderer:Render41(this)
     end
     return {
       __inherits__ = function (global) 
@@ -82,7 +82,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "then" --[[Keyword.Then]]
     end
     Render = function (this, renderer) 
-      renderer:Render41(this)
+      renderer:Render42(this)
     end
     return {
       __inherits__ = function (global) 
@@ -110,7 +110,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "else" --[[Keyword.Else]]
     end
     Render = function (this, renderer) 
-      renderer:Render42(this)
+      renderer:Render43(this)
     end
     return {
       __inherits__ = function (global) 
@@ -214,7 +214,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     Render = function (this, renderer) 
       CheckHasCaseLabel(this)
       CheckHasDefaultLabel(this)
-      renderer:Render48(this)
+      renderer:Render49(this)
     end
     return {
       __inherits__ = function (global) 

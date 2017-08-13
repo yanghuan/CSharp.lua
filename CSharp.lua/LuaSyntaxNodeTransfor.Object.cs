@@ -46,6 +46,10 @@ namespace CSharpLua {
           var argument = node.ArgumentList.Arguments.First();
           return argument.Expression.Accept(this);
         }
+        else if (symbol.ContainingType.IsTupleType) {
+          var expressions = node.ArgumentList.Arguments.Select(i => (LuaExpressionSyntax)i.Expression.Accept(this));
+          return BuildValueTupleCreateExpression(expressions);
+        }
         else {
           var expression = (LuaExpressionSyntax)node.Type.Accept(this);
           var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
@@ -992,9 +996,14 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitDeclarationExpression(DeclarationExpressionSyntax node) {
-      var name = (LuaIdentifierNameSyntax)node.Designation.Accept(this);
-      blocks_.Peek().Statements.Add(new LuaLocalVariableDeclaratorSyntax(name));
-      return name;
+      if (node.Parent.IsKind(SyntaxKind.Argument)) {      //out var 
+        var name = (LuaIdentifierNameSyntax)node.Designation.Accept(this);
+        blocks_.Peek().Statements.Add(new LuaLocalVariableDeclaratorSyntax(name));
+        return name;
+      }
+      else {    //ValueTuple deconstruction
+        return node.Designation.Accept(this);
+      }
     }
 
     public override LuaSyntaxNode VisitSingleVariableDesignation(SingleVariableDesignationSyntax node) {
@@ -1026,13 +1035,38 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitRefExpression(RefExpressionSyntax node) {
       if (node.Expression.IsKind(SyntaxKind.InvocationExpression)) {
-        throw new CompilationErrorException($"{node.GetLocationString()} : 'ref returns' is not support");
+        throw new CompilationErrorException(node, "ref returns is not support");
       }
       return node.Expression.Accept(this);
     }
 
     public override LuaSyntaxNode VisitTupleType(TupleTypeSyntax node) {
       return LuaIdentifierNameSyntax.ValueTupleType;
+    }
+
+    private LuaExpressionSyntax BuildValueTupleCreateExpression(IEnumerable<LuaExpressionSyntax> expressions) {
+      LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+      table.Items.AddRange(expressions.Select(i => new LuaSingleTableItemSyntax(i)));
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ValueTupleTypeCreate, table);
+    }
+
+    public override LuaSyntaxNode VisitTupleExpression(TupleExpressionSyntax node) {
+      var expressions = node.Arguments.Select(i => (LuaExpressionSyntax)i.Expression.Accept(this));
+      if (node.Parent.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+        var assigment = (AssignmentExpressionSyntax)node.Parent;
+        if (assigment.Left == node) {
+          LuaSequenceListExpressionSyntax list = new LuaSequenceListExpressionSyntax();
+          list.Expressions.AddRange(expressions);
+          return list;
+        }
+      }
+      return BuildValueTupleCreateExpression(expressions);
+    }
+
+    public override LuaSyntaxNode VisitParenthesizedVariableDesignation(ParenthesizedVariableDesignationSyntax node) {
+      LuatLocalTupleVariableExpression expression = new LuatLocalTupleVariableExpression();
+      expression.Variables.AddRange(node.Variables.Select(i => (LuaIdentifierNameSyntax)i.Accept(this)));
+      return expression;
     }
   }
 }

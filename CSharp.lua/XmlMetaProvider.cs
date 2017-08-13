@@ -442,6 +442,10 @@ namespace CSharpLua {
         return LuaIdentifierNameSyntax.AnonymousType;
       }
 
+      if (namedTypeSymbol.IsTupleType) {
+        return LuaIdentifierNameSyntax.ValueTupleType;
+      }
+
       LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor);
       var typeArguments = GetTypeArguments(namedTypeSymbol, transfor);
       if (typeArguments.Count == 0) {

@@ -52,7 +52,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Placeholder
     end
     Render = function (this, renderer) 
-      renderer:Render44(this)
+      renderer:Render45(this)
     end
     return {
       __inherits__ = function (global) 
@@ -100,7 +100,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "=" --[[Tokens.Equals]]
     end
     Render = function (this, renderer) 
-      renderer:Render45(this)
+      renderer:Render46(this)
     end
     return {
       __inherits__ = function (global) 
@@ -135,7 +135,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "while" --[[Keyword.While]]
     end
     Render = function (this, renderer) 
-      renderer:Render46(this)
+      renderer:Render47(this)
     end
     return {
       __inherits__ = function (global) 
@@ -169,7 +169,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "until" --[[Keyword.Until]]
     end
     Render = function (this, renderer) 
-      renderer:Render47(this)
+      renderer:Render48(this)
     end
     return {
       __inherits__ = function (global) 

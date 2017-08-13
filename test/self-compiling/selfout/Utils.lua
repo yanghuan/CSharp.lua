@@ -46,9 +46,12 @@ System.namespace("CSharpLua", function (namespace)
   end)
 
   namespace.class("CompilationErrorException", function (namespace) 
-    local __ctor__
-    __ctor__ = function (this, message) 
+    local __ctor1__, __ctor2__
+    __ctor1__ = function (this, message) 
       this.__base__.__ctor__(this, message)
+    end
+    __ctor2__ = function (this, node, message) 
+      this.__base__.__ctor__(this, ("{0}: {1}, please refactor your code."):Format(CSharpLua.Utility.GetLocationString(node), message))
     end
     return {
       __inherits__ = function (global) 
@@ -56,7 +59,10 @@ System.namespace("CSharpLua", function (namespace)
           global.System.Exception
         }
       end, 
-      __ctor__ = __ctor__
+      __ctor__ = {
+        __ctor1__, 
+        __ctor2__
+      }
     }
   end)
 
@@ -99,7 +105,8 @@ System.namespace("CSharpLua", function (namespace)
     IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
     IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, ToBase63, IsExportSyntaxTrivia, IsTypeDeclaration
+    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, ToBase63, IsExportSyntaxTrivia, IsTypeDeclaration, 
+    GetIEnumerableElementType, DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount
     First = function (list, T) 
       return list:get(0)
     end
@@ -685,6 +692,36 @@ System.namespace("CSharpLua", function (namespace)
     IsTypeDeclaration = function (kind) 
       return kind >= 8855 --[[SyntaxKind.ClassDeclaration]] and kind <= 8858 --[[SyntaxKind.EnumDeclaration]]
     end
+    GetIEnumerableElementType = function (symbol) 
+      local default
+      if IsGenericIEnumerableType(symbol) then
+        default = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, symbol)
+      else
+        default = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getAllInterfaces(), function (i) 
+          return IsGenericIEnumerableType(i)
+        end, MicrosoftCodeAnalysis.INamedTypeSymbol)
+      end
+      local interfaceType = default
+      local extern = interfaceType
+      if extern ~= nil then
+        extern = First(extern.getTypeArguments(), MicrosoftCodeAnalysis.ITypeSymbol)
+      end
+      return extern
+    end
+    DynamicGetProperty = function (symbol, name, T) 
+      return System.cast(T, symbol:GetType():GetProperty(name):GetValue(symbol))
+    end
+    GetTupleElementTypes = function (typeSymbol) 
+      assert(typeSymbol:getIsTupleType())
+      return DynamicGetProperty(typeSymbol, "TupleElementTypes", System.IReadOnlyCollection_1(MicrosoftCodeAnalysis.ITypeSymbol))
+    end
+    GetTupleElementIndex = function (fieldSymbol) 
+      assert(fieldSymbol:getContainingType():getIsTupleType())
+      return DynamicGetProperty(fieldSymbol, "TupleElementIndex", System.Int) + 1
+    end
+    GetTupleElementCount = function (typeSymbol) 
+      return GetTupleElementTypes(typeSymbol):getCount()
+    end
     return {
       First = First, 
       Last = Last, 
@@ -736,7 +773,11 @@ System.namespace("CSharpLua", function (namespace)
       IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation, 
       ToBase63 = ToBase63, 
       IsExportSyntaxTrivia = IsExportSyntaxTrivia, 
-      IsTypeDeclaration = IsTypeDeclaration
+      IsTypeDeclaration = IsTypeDeclaration, 
+      GetIEnumerableElementType = GetIEnumerableElementType, 
+      GetTupleElementTypes = GetTupleElementTypes, 
+      GetTupleElementIndex = GetTupleElementIndex, 
+      GetTupleElementCount = GetTupleElementCount
     }
   end)
 end)

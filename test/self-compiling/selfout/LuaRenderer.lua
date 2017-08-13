@@ -32,7 +32,7 @@ System.namespace("CSharpLua", function (namespace)
     Render36, Render37, Render38, Render39, Render40, Render41, Render42, Render43, 
     Render44, Render45, Render46, Render47, Render48, Render49, Render50, Render51, 
     Render52, Render53, Render54, Render55, Render56, Render57, Render58, Render59, 
-    __ctor__
+    Render60, Render61, __ctor__
     __ctor__ = function (this, generator, writer) 
       this.generator_ = generator
       this.writer_ = writer
@@ -369,13 +369,18 @@ System.namespace("CSharpLua", function (namespace)
       WriteNewLine(this)
     end
     Render39 = function (this, node) 
+      Write(this, node:getLocalKeyword())
+      WriteSpace(this)
+      WriteSeparatedSyntaxList(this, node.Variables)
+    end
+    Render40 = function (this, node) 
       node.Left:Render(this)
       WriteSpace(this)
       Write(this, node.OperatorToken)
       WriteSpace(this)
       node.Right:Render(this)
     end
-    Render40 = function (this, node) 
+    Render41 = function (this, node) 
       Write(this, node:getIfKeyword())
       WriteSpace(this)
       node.Condition:Render(this)
@@ -390,7 +395,7 @@ System.namespace("CSharpLua", function (namespace)
       Write(this, node:getCloseParenToken())
       WriteNewLine(this)
     end
-    Render41 = function (this, node) 
+    Render42 = function (this, node) 
       Write(this, node:getElseIfKeyword())
       WriteSpace(this)
       node.Condition:Render(this)
@@ -398,16 +403,16 @@ System.namespace("CSharpLua", function (namespace)
       Write(this, node:getOpenParenToken())
       node.Body:Render(this)
     end
-    Render42 = function (this, node) 
+    Render43 = function (this, node) 
       Write(this, node:getElseKeyword())
       node.Body:Render(this)
     end
-    Render43 = function (this, node) 
+    Render44 = function (this, node) 
       Write(this, node.OperatorToken)
       WriteSpace(this)
       node.Operand:Render(this)
     end
-    Render44 = function (this, node) 
+    Render45 = function (this, node) 
       Write(this, node:getForKeyword())
       WriteSpace(this)
       node:getPlaceholder():Render(this)
@@ -421,7 +426,7 @@ System.namespace("CSharpLua", function (namespace)
       node.Body:Render(this)
       WriteNewLine(this)
     end
-    Render45 = function (this, node) 
+    Render46 = function (this, node) 
       Write(this, node:getForKeyword())
       WriteSpace(this)
       node.Identifier:Render(this)
@@ -439,7 +444,7 @@ System.namespace("CSharpLua", function (namespace)
       node.Body:Render(this)
       WriteNewLine(this)
     end
-    Render46 = function (this, node) 
+    Render47 = function (this, node) 
       Write(this, node:getWhileKeyword())
       WriteSpace(this)
       node.Condition:Render(this)
@@ -447,7 +452,7 @@ System.namespace("CSharpLua", function (namespace)
       node.Body:Render(this)
       WriteNewLine(this)
     end
-    Render47 = function (this, node) 
+    Render48 = function (this, node) 
       Write(this, node:getRepeatKeyword())
       node.Body:Render(this)
       Write(this, node:getUntilKeyword())
@@ -456,46 +461,46 @@ System.namespace("CSharpLua", function (namespace)
       Write1(this, node:getSemicolonToken())
       WriteNewLine(this)
     end
-    Render48 = function (this, node) 
+    Render49 = function (this, node) 
       node.RepeatStatement:Render(this)
     end
-    Render49 = function (this, node) 
+    Render50 = function (this, node) 
       Write(this, node:getBreakKeyword())
       Write1(this, node:getSemicolonToken())
       WriteNewLine(this)
     end
-    Render50 = function (this, node) 
+    Render51 = function (this, node) 
       node.Assignment:Render(this)
       node:getBreak():Render(this)
     end
-    Render51 = function (this, node) 
+    Render52 = function (this, node) 
       for i = 0, node.Count - 1 do
         WriteNewLine(this)
       end
     end
-    Render52 = function (this, node) 
+    Render53 = function (this, node) 
       Write(this, node:getSingleCommentToken())
       Write(this, node.Comment)
       WriteNewLine(this)
     end
-    Render53 = function (this, node) 
+    Render54 = function (this, node) 
       Write(this, node:getSingleCommentToken())
       node.Expression:Render(this)
       WriteNewLine(this)
     end
-    Render54 = function (this, node) 
+    Render55 = function (this, node) 
       Write(this, node:getOpenParenToken())
       node.Expression:Render(this)
       Write(this, node:getCloseParenToken())
     end
-    Render55 = function (this, node) 
+    Render56 = function (this, node) 
       Write(this, node:getGotoKeyword())
       WriteSpace(this)
       node.Identifier:Render(this)
       Write1(this, node:getSemicolonToken())
       WriteNewLine(this)
     end
-    Render56 = function (this, node) 
+    Render57 = function (this, node) 
       Write(this, node:getPrefixToken())
       node.Identifier:Render(this)
       Write(this, node:getSuffixToken())
@@ -506,20 +511,23 @@ System.namespace("CSharpLua", function (namespace)
         default:Render(this)
       end
     end
-    Render57 = function (this, node) 
+    Render58 = function (this, node) 
       node.Assignment:Render(this)
       node.GotoStatement:Render(this)
     end
-    Render58 = function (this, node) 
+    Render59 = function (this, node) 
       WriteNodes(this, node.Expressions)
     end
-    Render59 = function (this, node) 
+    Render60 = function (this, node) 
       if node.Expression ~= nil then
         node.Expression:Render(this)
         Write(this, node.OperatorToken)
       end
       node.Name:Render(this)
       node.ArgumentList:Render(this)
+    end
+    Render61 = function (this, node) 
+      WriteSeparatedSyntaxList(this, node.Expressions)
     end
     return {
       isNewLine_ = false, 
@@ -584,6 +592,8 @@ System.namespace("CSharpLua", function (namespace)
       Render57 = Render57, 
       Render58 = Render58, 
       Render59 = Render59, 
+      Render60 = Render60, 
+      Render61 = Render61, 
       __ctor__ = __ctor__
     }
   end)

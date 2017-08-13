@@ -460,7 +460,7 @@ namespace CSharpLua {
         isPrivate = false;
         bool success = generator_.SetMainEntryPoint(symbol);
         if (!success) {
-          throw new CompilationErrorException($"{node.GetLocationString()} : has more than one entry point");
+          throw new CompilationErrorException(node, "has more than one entry point");
         }
       }
 
@@ -524,37 +524,6 @@ namespace CSharpLua {
       return base.VisitMethodDeclaration(node);
     }
 
-    private LuaExpressionSyntax GetValueTupleDefaultExpression(ITypeSymbol typeSymbol) {
-      var elementTypes = typeSymbol.GetTupleElementTypes();
-      LuaTableInitializerExpression table = new LuaTableInitializerExpression();
-      table.Items.AddRange(elementTypes.Select(i => new LuaSingleTableItemSyntax(GetDefaultValueExpression(i))));
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ValueTupleTypeCreate, table);
-    }
-
-    private  LuaExpressionSyntax GetDefaultValueExpression(ITypeSymbol typeSymbol) {
-      if (typeSymbol.IsReferenceType) {
-        return LuaIdentifierLiteralExpressionSyntax.Nil;
-      }
-
-      if (typeSymbol.IsValueType) {
-        if (typeSymbol.IsNullableType()) {
-          return LuaIdentifierLiteralExpressionSyntax.Nil;
-        }
-
-        if (typeSymbol.IsTupleType) {
-          return GetValueTupleDefaultExpression(typeSymbol);
-        }
-
-        var predefinedValueType = GetPredefinedValueTypeDefaultValue(typeSymbol);
-        if (predefinedValueType != null) {
-          return predefinedValueType;
-        }
-      }
-
-      var typeName = GetTypeName(typeSymbol);
-      return BuildDefaultValue(typeName);
-    }
-
     private static LuaExpressionSyntax GetPredefinedValueTypeDefaultValue(ITypeSymbol typeSymbol) {
       switch (typeSymbol.SpecialType) {
         case SpecialType.None: {
@@ -597,8 +566,7 @@ namespace CSharpLua {
       int index = CurFunction.TempIndex++;
       string name = LuaSyntaxNode.TempIdentifiers.GetOrDefault(index);
       if (name == null) {
-        throw new CompilationErrorException($"{node.GetLocationString()} : Your code is startling, {LuaSyntaxNode.TempIdentifiers.Length} "
-            + "temporary variables is not enough, please refactor your code.");
+        throw new CompilationErrorException(node, $"Your code is startling,{LuaSyntaxNode.TempIdentifiers.Length} temporary variables is not enough");
       }
       return new LuaIdentifierNameSyntax(name);
     }
@@ -959,7 +927,9 @@ namespace CSharpLua {
       public LuaSyntaxNode Visit(LuaSyntaxNodeTransfor transfor) {
         const int kCommentCharCount = 2;
         if (SyntaxNode != null) {
-          return SyntaxNode.Accept(transfor);
+          var node = SyntaxNode.Accept(transfor);
+          Contract.Assert(node != null);
+          return node;
         }
         else {
           string content = SyntaxTrivia.ToString();
@@ -1139,7 +1109,14 @@ namespace CSharpLua {
         case SyntaxKind.SimpleAssignmentExpression: {
             var left = (LuaExpressionSyntax)leftNode.Accept(this);
             var right = (LuaExpressionSyntax)rightNode.Accept(this);
-            CheckValueTypeAndConversion(rightNode, ref right);
+            if (leftNode.IsKind(SyntaxKind.DeclarationExpression) || leftNode.IsKind(SyntaxKind.TupleExpression)) {
+              if (!rightNode.IsKind(SyntaxKind.TupleExpression)) {
+                right = BuildDeconstructExpression(rightNode, right);
+              }
+            }
+            else {
+              CheckValueTypeAndConversion(rightNode, ref right);
+            }
             return BuildLuaSimpleAssignmentExpression(left, right);
           }
         case SyntaxKind.AddAssignmentExpression: {
@@ -1353,7 +1330,7 @@ namespace CSharpLua {
         arguments = new List<LuaExpressionSyntax>();
         foreach (var argument in node.ArgumentList.Arguments) {
           if (argument.NameColon != null) {
-            throw new CompilationErrorException($"{argument.GetLocationString()} : named argument is not support.");
+            throw new CompilationErrorException(argument, "named argument is not support at dynamic");
           }
           FillInvocationArgument(arguments, argument, ImmutableArray<IParameterSymbol>.Empty, refOrOutArguments);
         }
@@ -2533,10 +2510,9 @@ namespace CSharpLua {
       var sourceType = semanticModel_.GetTypeInfo(node.Expression).Type;
       var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
       bool hasCast = false;
-      var interfaceType = sourceType.IsGenericIEnumerableType() ? (INamedTypeSymbol)sourceType : sourceType.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
-      if (interfaceType != null) {
-        var argumentType = interfaceType.TypeArguments.First();
-        if (!argumentType.Equals(targetType) && !argumentType.IsSubclassOf(targetType)) {
+      var elementType = sourceType.GetIEnumerableElementType();
+      if (elementType != null) {
+        if (!elementType.Equals(targetType) && !elementType.IsSubclassOf(targetType)) {
           hasCast = true;
         }
       }
@@ -2558,6 +2534,18 @@ namespace CSharpLua {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       LuaForInStatementSyntax forInStatement = new LuaForInStatementSyntax(identifier, expression);
       CheckForeachCast(identifier, node, forInStatement);
+      VisitLoopBody(node.Statement, forInStatement.Body);
+      return forInStatement;
+    }
+
+    public override LuaSyntaxNode VisitForEachVariableStatement(ForEachVariableStatementSyntax node) {
+      var temp = GetTempIdentifier(node);
+      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      LuaForInStatementSyntax forInStatement = new LuaForInStatementSyntax(temp, expression);
+      var left = (LuatLocalTupleVariableExpression)node.Variable.Accept(this);
+      var elementType = semanticModel_.GetTypeInfo(node.Expression).Type;
+      var right = BuildDeconstructExpression(elementType, temp, node.Expression);
+      forInStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(left, right)));
       VisitLoopBody(node.Statement, forInStatement.Body);
       return forInStatement;
     }

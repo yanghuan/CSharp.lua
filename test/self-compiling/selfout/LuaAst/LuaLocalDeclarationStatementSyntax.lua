@@ -279,4 +279,31 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       __ctor__ = __ctor__
     }
   end)
+
+  namespace.class("LuatLocalTupleVariableExpression", function (namespace) 
+    local getLocalKeyword, Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Variables = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaIdentifierNameSyntax)()
+    end
+    __ctor__ = function (this) 
+      __init__(this)
+      this.__base__.__ctor__(this)
+    end
+    getLocalKeyword = function (this) 
+      return "local" --[[Keyword.Local]]
+    end
+    Render = function (this, renderer) 
+      renderer:Render39(this)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
+        }
+      end, 
+      getLocalKeyword = getLocalKeyword, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
 end)

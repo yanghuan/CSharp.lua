@@ -158,7 +158,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.Right = right
     end
     Render = function (this, renderer) 
-      renderer:Render39(this)
+      renderer:Render40(this)
     end
     return {
       __inherits__ = function (global) 
@@ -182,7 +182,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.OperatorToken = operatorToken
     end
     Render = function (this, renderer) 
-      renderer:Render43(this)
+      renderer:Render44(this)
     end
     return {
       __inherits__ = function (global) 
@@ -211,7 +211,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return ")" --[[Tokens.CloseParentheses]]
     end
     Render = function (this, renderer) 
-      renderer:Render54(this)
+      renderer:Render55(this)
     end
     return {
       __inherits__ = function (global) 
@@ -236,7 +236,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.__base__.__ctor__(this)
     end
     Render = function (this, renderer) 
-      renderer:Render58(this)
+      renderer:Render59(this)
     end
     return {
       __inherits__ = function (global) 
@@ -316,6 +316,29 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     Render = function (this, renderer) 
       this.Expression:Render(renderer)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.CSharpLua.LuaAst.LuaExpressionSyntax
+        }
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+
+  namespace.class("LuaSequenceListExpressionSyntax", function (namespace) 
+    local Render, __init__, __ctor__
+    __init__ = function (this) 
+      this.Expressions = CSharpLuaLuaAst.LuaSyntaxList_1(CSharpLuaLuaAst.LuaExpressionSyntax)()
+    end
+    __ctor__ = function (this) 
+      __init__(this)
+      this.__base__.__ctor__(this)
+    end
+    Render = function (this, renderer) 
+      renderer:Render61(this)
     end
     return {
       __inherits__ = function (global) 

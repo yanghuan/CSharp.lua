@@ -102,7 +102,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return clone
     end
     Render = function (this, renderer) 
-      renderer:Render59(this)
+      renderer:Render60(this)
     end
     return {
       __inherits__ = function (global) 

@@ -407,6 +407,13 @@ namespace CSharpLua {
       WriteNewLine();
     }
 
+
+    internal void Render(LuatLocalTupleVariableExpression node) {
+      Write(node.LocalKeyword);
+      WriteSpace();
+      WriteSeparatedSyntaxList(node.Variables);
+    }
+
     internal void Render(LuaBinaryExpressionSyntax node) {
       node.Left.Render(this);
       WriteSpace();
@@ -573,6 +580,10 @@ namespace CSharpLua {
       }
       node.Name.Render(this);
       node.ArgumentList.Render(this);
+    }
+
+    internal void Render(LuaSequenceListExpressionSyntax node) {
+      WriteSeparatedSyntaxList(node.Expressions);
     }
   }
 }

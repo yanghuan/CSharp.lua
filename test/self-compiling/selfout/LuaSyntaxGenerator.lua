@@ -221,7 +221,7 @@ System.namespace("CSharpLua", function (namespace)
             return i:getSeverity() == 3 --[[DiagnosticSeverity.Error]]
           end, MicrosoftCodeAnalysis.Diagnostic)
           local message = System.String.Join("\n", errors, MicrosoftCodeAnalysis.Diagnostic)
-          System.throw(CSharpLua.CompilationErrorException(message))
+          System.throw(CSharpLua.CompilationErrorException:new(1, message))
         end
       end)
       this.compilation_ = compilation

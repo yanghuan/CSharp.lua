@@ -36,6 +36,9 @@ namespace CSharpLua {
   public sealed class CompilationErrorException : Exception {
     public CompilationErrorException(string message) : base(message) {
     }
+
+    public CompilationErrorException(SyntaxNode node, string message) : base($"{node.GetLocationString()}: {message}, please refactor your code.") {
+    }
   }
 
   public sealed class ArgumentNullException : System.ArgumentNullException {
@@ -639,6 +642,11 @@ namespace CSharpLua {
 
     public static bool IsTypeDeclaration(this SyntaxKind kind) {
       return kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration;
+    }
+
+    public static ITypeSymbol GetIEnumerableElementType(this ITypeSymbol symbol) {
+      var interfaceType = symbol.IsGenericIEnumerableType() ? (INamedTypeSymbol)symbol : symbol.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
+      return interfaceType?.TypeArguments.First();
     }
 
     private static T DynamicGetProperty<T>(this ISymbol symbol, string name) {

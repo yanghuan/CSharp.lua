@@ -188,4 +188,12 @@ namespace CSharpLua.LuaAst {
       Expression.Render(renderer);
     }
   }
+
+  public sealed class LuaSequenceListExpressionSyntax : LuaExpressionSyntax {
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 }

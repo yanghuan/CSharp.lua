@@ -1132,5 +1132,56 @@ namespace CSharpLua {
     Fail:
       return null;
     }
+
+    private LuaExpressionSyntax GetValueTupleDefaultExpression(ITypeSymbol typeSymbol) {
+      var elementTypes = typeSymbol.GetTupleElementTypes();
+      return BuildValueTupleCreateExpression(elementTypes.Select(i => GetDefaultValueExpression(i)));
+    }
+
+    private LuaExpressionSyntax GetDefaultValueExpression(ITypeSymbol typeSymbol) {
+      if (typeSymbol.IsReferenceType) {
+        return LuaIdentifierLiteralExpressionSyntax.Nil;
+      }
+
+      if (typeSymbol.IsValueType) {
+        if (typeSymbol.IsNullableType()) {
+          return LuaIdentifierLiteralExpressionSyntax.Nil;
+        }
+
+        if (typeSymbol.IsTupleType) {
+          return GetValueTupleDefaultExpression(typeSymbol);
+        }
+
+        var predefinedValueType = GetPredefinedValueTypeDefaultValue(typeSymbol);
+        if (predefinedValueType != null) {
+          return predefinedValueType;
+        }
+      }
+
+      var typeName = GetTypeName(typeSymbol);
+      return BuildDefaultValue(typeName);
+    }
+
+    private LuaExpressionSyntax BuildDeconstructExpression(ITypeSymbol typeSymbol, LuaExpressionSyntax expression, SyntaxNode node) {
+      const string kDeconstructName = "Deconstruct";
+      LuaExpressionSyntax methodName;
+      if (typeSymbol.IsTupleType) {
+        methodName = new LuaIdentifierNameSyntax(kDeconstructName);
+      }
+      else {
+        var methods = typeSymbol.GetMembers(kDeconstructName);
+        if (methods.IsEmpty) {
+          throw new CompilationErrorException(node, "current version Roslyn not public api get extension Deconstruct method symbol");
+        }
+        var methodSymbol = (IMethodSymbol)methods.First();
+        methodName = GetMemberName(methodSymbol);
+      }
+      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, methodName, true));
+    }
+
+    private LuaExpressionSyntax BuildDeconstructExpression(ExpressionSyntax node, LuaExpressionSyntax expression) {
+      var typeSymbol = semanticModel_.GetTypeInfo(node).Type;
+      return BuildDeconstructExpression(typeSymbol, expression, node);
+    }
   }
 }

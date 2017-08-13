@@ -131,7 +131,7 @@ function Double.IsInfinity(v)
 end 
 
 function Double.__default__()
-  return 0.0
+  return 0
 end
 
 function Double.ParseSingle(s)

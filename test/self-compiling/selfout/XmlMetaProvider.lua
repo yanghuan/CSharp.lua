@@ -416,6 +416,10 @@ System.namespace("CSharpLua", function (namespace)
         return CSharpLuaLuaAst.LuaIdentifierNameSyntax.AnonymousType
       end
 
+      if namedTypeSymbol:getIsTupleType() then
+        return CSharpLuaLuaAst.LuaIdentifierNameSyntax.ValueTupleType
+      end
+
       local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor)
       local typeArguments = GetTypeArguments(this, namedTypeSymbol, transfor)
       if #typeArguments == 0 then

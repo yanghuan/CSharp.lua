@@ -177,7 +177,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "break" --[[Keyword.Break]]
     end
     Render = function (this, renderer) 
-      renderer:Render49(this)
+      renderer:Render50(this)
     end
     return {
       __inherits__ = function (global) 
@@ -206,7 +206,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return CSharpLuaLuaAst.LuaBreakStatementSyntax.Statement
     end
     Render = function (this, renderer) 
-      renderer:Render50(this)
+      renderer:Render51(this)
     end
     return {
       __inherits__ = function (global) 
@@ -232,7 +232,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.Count = count
     end
     Render = function (this, renderer) 
-      renderer:Render51(this)
+      renderer:Render52(this)
     end
     return {
       __inherits__ = function (global) 
@@ -257,7 +257,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "--" --[[Tokens.ShortComment]]
     end
     Render = function (this, renderer) 
-      renderer:Render52(this)
+      renderer:Render53(this)
     end
     return {
       __inherits__ = function (global) 
@@ -281,7 +281,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "--" --[[Tokens.ShortComment]]
     end
     Render = function (this, renderer) 
-      renderer:Render53(this)
+      renderer:Render54(this)
     end
     return {
       __inherits__ = function (global) 
@@ -323,7 +323,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "goto" --[[Keyword.Goto]]
     end
     Render = function (this, renderer) 
-      renderer:Render55(this)
+      renderer:Render56(this)
     end
     return {
       __inherits__ = function (global) 
@@ -350,7 +350,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       this.GotoStatement = CSharpLuaLuaAst.LuaGotoStatement(identifier)
     end
     Render = function (this, renderer) 
-      renderer:Render57(this)
+      renderer:Render58(this)
     end
     return {
       __inherits__ = function (global) 
@@ -380,7 +380,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       return "::" --[[Tokens.Label]]
     end
     Render = function (this, renderer) 
-      renderer:Render56(this)
+      renderer:Render57(this)
     end
     return {
       __inherits__ = function (global) 

@@ -934,7 +934,16 @@ function System.tuple(...)
   return setmetatable({...}, Tuple)
 end
 
-local ValueTuple = {}
+local ValueTuple
+ValueTuple = {
+  __default__ = function(this)
+    local t = {}
+    for k, v in pairs(this) do
+      t[k] = v:__default__()
+    end
+    return setmetatable(t, ValueTuple)
+  end
+}
 defStc("System.ValueTuple", ValueTuple)
 
 function System.valueTuple(t)
