@@ -1164,19 +1164,22 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax BuildDeconstructExpression(ITypeSymbol typeSymbol, LuaExpressionSyntax expression, SyntaxNode node) {
       const string kDeconstructName = "Deconstruct";
-      LuaExpressionSyntax methodName;
+      LuaInvocationExpressionSyntax BuildInvocation()  {
+        return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, new LuaIdentifierNameSyntax(kDeconstructName), true));
+      }
+
       if (typeSymbol.IsTupleType) {
-        methodName = new LuaIdentifierNameSyntax(kDeconstructName);
+        var invocationExpression = BuildInvocation();
+        invocationExpression.AddArgument(new LuaIdentifierNameSyntax(typeSymbol.GetTupleElementCount()));
+        return invocationExpression;
       }
       else {
         var methods = typeSymbol.GetMembers(kDeconstructName);
         if (methods.IsEmpty) {
           throw new CompilationErrorException(node, "current version Roslyn not public api get extension Deconstruct method symbol");
         }
-        var methodSymbol = (IMethodSymbol)methods.First();
-        methodName = GetMemberName(methodSymbol);
+        return BuildInvocation();
       }
-      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, methodName, true));
     }
 
     private LuaExpressionSyntax BuildDeconstructExpression(ExpressionSyntax node, LuaExpressionSyntax expression) {

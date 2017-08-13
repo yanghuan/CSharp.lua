@@ -934,7 +934,9 @@ function System.tuple(...)
   return setmetatable({...}, Tuple)
 end
 
+local tunpack = table.unpack
 local ValueTuple
+
 ValueTuple = {
   __default__ = function(this)
     local t = {}
@@ -942,8 +944,12 @@ ValueTuple = {
       t[k] = v:__default__()
     end
     return setmetatable(t, ValueTuple)
+  end,
+  Deconstruct = function(this, count)
+    return tunpack(this, 1, count)
   end
 }
+
 defStc("System.ValueTuple", ValueTuple)
 
 function System.valueTuple(t)
