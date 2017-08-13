@@ -18,6 +18,7 @@ local setmetatable = setmetatable
 local getmetatable = getmetatable
 local type = type
 local ipairs = ipairs
+local pairs  = pairs
 local assert = assert
 local table = table
 local tinsert = table.insert
@@ -39,7 +40,7 @@ local identityFn = function(x) return x end
 local equals = function(x, y) return x == y end
 local modules = {}
 local usings = {}
-local Object = {}
+local Object, ValueType
 
 local function new(cls, ...)
   local this = setmetatable({}, cls)
@@ -146,30 +147,42 @@ enumMetatable.__index = enumMetatable
 local interfaceMetatable = { __kind__ = "I", __default__ = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
-local function setBase(cls)
+local function setBase(cls, kind)
   cls.__index = cls 
   cls.__call = new
-  local extends = cls.__inherits__
-  if extends ~= nil then
-    if type(extends) == "function" then
-      extends = extends(global, cls)
-    end           
-    local base = extends[1]
-    if base.__kind__ == "C" then
-      cls.__base__ = base
-      tremove(extends, 1)
-      if #extends > 0 then
-          cls.__interfaces__ = extends
+  if kind == "S" then
+    local extends = cls.__inherits__
+    if extends ~= nil then
+      if type(extends) == "function" then
+        extends = extends(global, cls)
       end 
-      setmetatable(cls, base)
-    else
       cls.__interfaces__ = extends
-      setmetatable(cls, Object)
+      cls.__inherits__ = nil
     end
-    cls.__inherits__ = nil
-  elseif cls ~= Object then
-    setmetatable(cls, Object)
-  end  
+    setmetatable(cls, ValueType)
+  else
+    local extends = cls.__inherits__
+    if extends ~= nil then
+      if type(extends) == "function" then
+        extends = extends(global, cls)
+      end           
+      local base = extends[1]
+      if base.__kind__ == "C" then
+        cls.__base__ = base
+        tremove(extends, 1)
+        if #extends > 0 then
+          cls.__interfaces__ = extends
+        end 
+        setmetatable(cls, base)
+      else
+        cls.__interfaces__ = extends
+        setmetatable(cls, Object)
+      end
+      cls.__inherits__ = nil
+    else
+      setmetatable(cls, Object)
+    end  
+  end
   local attributes = cls.__attributes__
   if attributes ~= nil then
     cls.__attributes__ = attributes(global)
@@ -178,7 +191,9 @@ end
 
 local function staticCtorSetBase(cls)
   setmetatable(cls, nil)
-  setBase(cls)
+  local kind = cls.__kind__
+  cls.__kind__ = nil
+  setBase(cls, kind)
   cls:__staticCtor__()
   cls.__staticCtor__ = nil
 end
@@ -227,10 +242,10 @@ local function def(name, kind, cls, generic)
     cls.__name__ = generic
   end
   if kind == "C" or kind == "S" then
-	cls.__kind__ = kind
     if cls.__staticCtor__ == nil then
-      setBase(cls)
+      setBase(cls, kind)
     else
+    	cls.__kind__ = kind
       setmetatable(cls, staticCtorMetatable)
     end
   elseif kind == "I" then
@@ -341,14 +356,14 @@ if version < 5.3 then
     return xor(x, y)
   end
 
-  function System.slOfnull(x, y)
+  function System.slOfNull(x, y)
     if x == nil or y == nil then
       return nil
     end
     return sl(x, y)
   end
 
-  function System.srOfnull(x, y)
+  function System.srOfNull(x, y)
     if x == nil or y == nil then
       return nil
     end
@@ -851,16 +866,7 @@ local function multiNew(cls, inx, ...)
   return this
 end
 
-Object.__call = new
-Object.__default__ = emptyFn
-Object.__ctor__ = emptyFn
-Object.__kind__ = "C"
-Object.new = multiNew
-Object.EqualsObj = equals
-Object.ReferenceEquals = equals
-Object.GetHashCode = identityFn
-
-function Object.EqualsStatic(x, y)
+local function equalsStatic(x, y)
   if x == y then
     return true
   end
@@ -870,70 +876,79 @@ function Object.EqualsStatic(x, y)
   return x:EqualsObj(y)
 end
 
-function Object.ToString(this)
-  return this.__name__
-end
+Object = defCls("System.Object", {
+  __call = new,
+  __default__ = emptyFn,
+  __ctor__ = emptyFn,
+  __kind__ = "C",
+  new = multiNew,
+  EqualsObj = equals,
+  ReferenceEquals = equals,
+  GetHashCode = identityFn,
+  EqualsStatic = equalsStatic,
+  GetType = false,
+  ToString = function(this) return this.__name__ end
+})
 
-defCls("System.Object", Object)
-
-local anonymousType = {}
-defCls("System.AnonymousType", anonymousType)
-
-function System.anonymousType(t)
-  return setmetatable(t, anonymousType)
-end
-
-local tuple = {}
-defCls("System.Tuple", tuple)
-
-function System.tuple(...)
-  return setmetatable({...}, tuple)
-end
-
-local function ptrAccess(p)
-  local arr = p.arr
-  if arr == nil then
-    throw(System.NullReferenceException)
-  end
-  return arr 
-end
-
-local function ptrAddress(p)
-  return tostring(p):sub(7) + p.offset
-end
-
-local ptr = {
-  __index = false,
-  offset = 0,
-  get = function(this)
-    return ptrAccess(this):get(this.offset)
+ValueType = {
+  __kind__ = "S",
+  __default__ = function(this) 
+    local cls = getmetatable(this)
+    local t = {}
+    for k, v in pairs(this) do
+      if type(v) == "table" and v.__kind__ == "S" then
+        t[k] = v:__default__()
+      end
+    end
+    return setmetatable(t, cls)
   end,
-  set = function(this, value)
-    return ptrAccess(this):set(this.offset, value)
+  __clone__ = function(this)
+    local cls = getmetatable(this)
+    local t = {}
+    for k, v in pairs(this) do
+      if type(v) == "table" and v.__kind__ == "S" then
+        t[k] = v:__clone__()
+      else
+        t[k] = v
+      end
+    end
+    return setmetatable(t, cls)
   end,
-  __add = function(this, num)
-    return setmetatable({ arr = this.arr, offset = this.offset + num }, ptr)
+  EqualsObj = function (this, obj)
+    if getmetatable(this) ~= getmetatable(obj) then return false end
+    for k, v in pairs(this) do
+      if not equalsStatic(v, obj[k]) then
+        return false
+      end
+    end
+    return true
   end,
-  __sub = function(this, num)
-    return setmetatable({ arr = this.arr, offset = this.offset - num }, ptr)
-  end,
-  __lt = function(t1, t2)
-    return ptrAddress(t1) < ptrAddress(t2)
-  end,
-  __le = function(t1, t2)
-    return ptrAddress(t1) <= ptrAddress(t2)
+  GetHashCode = function (this)
+    throw(System.NotSupportedException("User-defined struct not support GetHashCode"), 1)
   end
 }
-ptr.__index = ptr
 
-function System.stackalloc(arrayType, len)
-  if len < 0 then
-    throw(System.OverflowException)
-  end
-  if len == 0 then
-    return setmetatable({}, ptr)
-  end
-  return setmetatable({ arr = arrayType:new(len) }, ptr)
+defCls("System.ValueType", ValueType)
+
+local AnonymousType = {}
+defCls("System.AnonymousType", AnonymousType)
+
+function System.anonymousType(t)
+  return setmetatable(t, AnonymousType)
+end
+
+local Tuple = {}
+defCls("System.Tuple", Tuple)
+
+function System.tuple(...)
+  return setmetatable({...}, Tuple)
+end
+
+local ValueTuple = {}
+defStc("System.ValueTuple", ValueTuple)
+
+function System.valueTuple(t)
+  return setmetatable(t, ValueTuple)
 end
 
 debug.setmetatable(nil, {
@@ -1004,6 +1019,52 @@ function System.GetValueOrDefault(this, defaultValue)
   return this
 end
 
+local function ptrAccess(p)
+  local arr = p.arr
+  if arr == nil then
+    throw(System.NullReferenceException)
+  end
+  return arr 
+end
+
+local function ptrAddress(p)
+  return tostring(p):sub(7) + p.offset
+end
+
+local ptr = {
+  __index = false,
+  offset = 0,
+  get = function(this)
+    return ptrAccess(this):get(this.offset)
+  end,
+  set = function(this, value)
+    return ptrAccess(this):set(this.offset, value)
+  end,
+  __add = function(this, num)
+    return setmetatable({ arr = this.arr, offset = this.offset + num }, ptr)
+  end,
+  __sub = function(this, num)
+    return setmetatable({ arr = this.arr, offset = this.offset - num }, ptr)
+  end,
+  __lt = function(t1, t2)
+    return ptrAddress(t1) < ptrAddress(t2)
+  end,
+  __le = function(t1, t2)
+    return ptrAddress(t1) <= ptrAddress(t2)
+  end
+}
+ptr.__index = ptr
+
+function System.stackalloc(arrayType, len)
+  if len < 0 then
+    throw(System.OverflowException)
+  end
+  if len == 0 then
+    return setmetatable({}, ptr)
+  end
+  return setmetatable({ arr = arrayType:new(len) }, ptr)
+end
+
 local namespace
 local curCacheName
 
@@ -1021,36 +1082,18 @@ local function defIn(kind, name, f)
   end
 end
 
-local function defClassIn(name, f)
-  defIn("C", name, f) 
-end
-
-local function defStructIn(name, f)
-  defIn("S", name, f) 
-end
-
-local function defInterfaceIn(name, f)
-  defIn("I", name, f) 
-end
-
-local function defEnumIn(name, f)
-  defIn("E", name, f)
-end
-
-local function defNamespaceIn(name, f)
-  name = curCacheName .. "." .. name
-  local prevName = curCacheName
-  curCacheName = name
-  f(namespace)
-  curCacheName = prevName
-end
-
 namespace = {
-  class = defClassIn,
-  struct = defStructIn,
-  interface = defInterfaceIn,
-  enum = defEnumIn,
-  defNamespaceIn = defNamespaceIn,
+  class = function(name, f) defIn("C", name, f) end,
+  struct = function(name, f) defIn("S", name, f) end,
+  interface = function(name, f) defIn("I", name, f) end,
+  enum = function(name, f) defIn("E", name, f) end,
+  namespace = function(name, f) 
+    name = curCacheName .. "." .. name
+    local prevName = curCacheName
+    curCacheName = name
+    f(namespace)
+    curCacheName = prevName
+  end,
 }
 
 function System.namespace(name, f)

@@ -828,18 +828,7 @@ namespace CSharpLua {
       }
 
       var type = semanticModel_.GetTypeInfo(node.Type).Type;
-      if (type.Kind != SymbolKind.TypeParameter) {
-        if (type.IsValueType) {
-          var expression = GetPredefinedDefaultValue(type);
-          return expression ?? BuildDefaultValueExpression(node.Type);
-        }
-        else {
-          return LuaIdentifierLiteralExpressionSyntax.Nil;
-        }
-      }
-      else {
-        return BuildDefaultValueExpression(node.Type);
-      }
+      return GetDefaultValueExpression(type);
     }
 
     public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
@@ -1040,6 +1029,10 @@ namespace CSharpLua {
         throw new CompilationErrorException($"{node.GetLocationString()} : 'ref returns' is not support");
       }
       return node.Expression.Accept(this);
+    }
+
+    public override LuaSyntaxNode VisitTupleType(TupleTypeSyntax node) {
+      return LuaIdentifierNameSyntax.ValueTupleType;
     }
   }
 }

@@ -640,5 +640,23 @@ namespace CSharpLua {
     public static bool IsTypeDeclaration(this SyntaxKind kind) {
       return kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration;
     }
+
+    private static T DynamicGetProperty<T>(this ISymbol symbol, string name) {
+      return (T)symbol.GetType().GetProperty(name).GetValue(symbol);
+    }
+
+    public static IReadOnlyCollection<ITypeSymbol> GetTupleElementTypes(this ITypeSymbol typeSymbol) {
+      Contract.Assert(typeSymbol.IsTupleType);
+      return typeSymbol.DynamicGetProperty<IReadOnlyCollection<ITypeSymbol>>("TupleElementTypes");
+    }
+
+    public static int GetTupleElementIndex(this IFieldSymbol fieldSymbol) {
+      Contract.Assert(fieldSymbol.ContainingType.IsTupleType);
+      return fieldSymbol.DynamicGetProperty<int>("TupleElementIndex") + 1;
+    }
+
+    public static int GetTupleElementCount(this ITypeSymbol typeSymbol) {
+      return typeSymbol.GetTupleElementTypes().Count;
+    }
   }
 }

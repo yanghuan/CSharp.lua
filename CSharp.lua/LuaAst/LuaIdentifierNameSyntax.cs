@@ -102,7 +102,7 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax setmetatable = new LuaIdentifierNameSyntax("setmetatable");
     public readonly static LuaIdentifierNameSyntax getmetatable = new LuaIdentifierNameSyntax("getmetatable");
     public readonly static LuaIdentifierNameSyntax Clone = new LuaIdentifierNameSyntax("__clone__");
-    public readonly static LuaIdentifierNameSyntax EqualsObj = new LuaIdentifierNameSyntax("EqualsObj");
+    public readonly static LuaIdentifierNameSyntax ValueType = new LuaIdentifierNameSyntax("System.ValueType");
     public readonly static LuaIdentifierNameSyntax Obj = new LuaIdentifierNameSyntax("obj");
     public readonly static LuaIdentifierNameSyntax EqualsStatic = new LuaIdentifierNameSyntax("equalsStatic");
     public readonly static LuaIdentifierNameSyntax SystemObjectEqualsStatic = new LuaIdentifierNameSyntax("System.Object.EqualsStatic");
@@ -114,6 +114,8 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax StackAlloc = new LuaIdentifierNameSyntax("System.stackalloc");
     public readonly static LuaIdentifierNameSyntax GenericT = new LuaIdentifierNameSyntax("__genericT__");
     public readonly static LuaIdentifierNameSyntax Base = new LuaIdentifierNameSyntax("__base__");
+    public readonly static LuaIdentifierNameSyntax ValueTupleType = new LuaIdentifierNameSyntax("System.ValueTuple");
+    public readonly static LuaIdentifierNameSyntax ValueTupleTypeCreate = new LuaIdentifierNameSyntax("System.valueTuple");
 
     #region QueryExpression
     public readonly static LuaIdentifierNameSyntax LinqCast = new LuaIdentifierNameSyntax("Linq.Cast");

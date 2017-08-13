@@ -81,7 +81,7 @@ namespace CSharpLua.LuaAst {
       typeParameters_.AddRange(typeParameters);
     }
 
-    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument) {
+    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument = null) {
       bool hasLazyGenericArgument = false;
       if (genericArgument != null) {
         if (genericArgument.IsLazy) {

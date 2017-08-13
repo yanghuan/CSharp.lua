@@ -34,6 +34,7 @@ local function compare(this, v)
   return 1
 end
 
+Boolean.GetHashCode = System.identityFn
 Boolean.CompareTo = compare
 
 function Boolean.CompareToObj(this, v)

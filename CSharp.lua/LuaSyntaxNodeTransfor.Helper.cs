@@ -794,46 +794,6 @@ namespace CSharpLua {
       return filelds;
     }
 
-    private void AddStructEqualsObjMethod(INamedTypeSymbol symbol, LuaStructDeclarationSyntax declaration, LuaExpressionSyntax typeName, List<LuaIdentifierNameSyntax> fields) {
-      var thisIdentifier = LuaIdentifierNameSyntax.This;
-      LuaIdentifierNameSyntax obj = LuaIdentifierNameSyntax.Obj;
-      LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
-      functionExpression.AddParameter(thisIdentifier);
-      functionExpression.AddParameter(obj);
-
-      var left = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.getmetatable, obj);
-      LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.NotEquals, typeName));
-      ifStatement.Body.Statements.Add(new LuaReturnStatementSyntax(LuaIdentifierNameSyntax.False));
-      functionExpression.AddStatement(ifStatement);
-
-      if (fields.Count > 0) {
-        var equalsStatic = LuaIdentifierNameSyntax.EqualsStatic;
-        LuaLocalVariableDeclaratorSyntax variableDeclarator = new LuaLocalVariableDeclaratorSyntax(equalsStatic, LuaIdentifierNameSyntax.SystemObjectEqualsStatic);
-        functionExpression.AddStatement(variableDeclarator);
-        LuaExpressionSyntax expression = null;
-        foreach (LuaIdentifierNameSyntax field in fields) {
-          LuaMemberAccessExpressionSyntax argument1 = new LuaMemberAccessExpressionSyntax(thisIdentifier, field);
-          LuaMemberAccessExpressionSyntax argument2 = new LuaMemberAccessExpressionSyntax(obj, field);
-          LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(equalsStatic, argument1, argument2);
-          if (expression == null) {
-            expression = invocation;
-          }
-          else {
-            expression = new LuaBinaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.And, invocation);
-          }
-        }
-        Contract.Assert(expression != null);
-        functionExpression.AddStatement(new LuaReturnStatementSyntax(expression));
-      }
-      declaration.AddMethod(LuaIdentifierNameSyntax.EqualsObj, functionExpression, false);
-    }
-
-    private void BuildStructMethods(INamedTypeSymbol symbol, LuaStructDeclarationSyntax declaration) {
-      LuaExpressionSyntax typeName = AddStructDefaultMethod(symbol, declaration);
-      var fileds = AddStructCloneMethod(symbol, declaration, typeName);
-      AddStructEqualsObjMethod(symbol, declaration, typeName, fileds);
-    }
-
     private void CheckValueTypeAndConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
       ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(node).Type;
       CheckValueTypeClone(typeSymbol, ref expression);
@@ -843,7 +803,8 @@ namespace CSharpLua {
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, ref LuaExpressionSyntax expression) {
       if (typeSymbol != null) {
         if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.IsFromCode()) {
-          expression = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Default, true));
+          var invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Clone, true));
+          expression = invocation;
         }
       }
     }

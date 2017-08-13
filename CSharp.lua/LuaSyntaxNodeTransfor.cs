@@ -365,7 +365,6 @@ namespace CSharpLua {
       LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
       LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
       var symbol = VisitTypeDeclaration(node, structDeclaration);
-      BuildStructMethods(symbol, structDeclaration);
       generator_.AddTypeSymbol(symbol);
       return structDeclaration;
     }
@@ -525,8 +524,35 @@ namespace CSharpLua {
       return base.VisitMethodDeclaration(node);
     }
 
-    private static LuaExpressionSyntax GetPredefinedDefaultValue(ITypeSymbol typeSymbol) {
-      return typeSymbol.IsNullableType() ? LuaIdentifierLiteralExpressionSyntax.Nil : GetPredefinedValueTypeDefaultValue(typeSymbol);
+    private LuaExpressionSyntax GetValueTupleDefaultExpression(ITypeSymbol typeSymbol) {
+      var elementTypes = typeSymbol.GetTupleElementTypes();
+      LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+      table.Items.AddRange(elementTypes.Select(i => new LuaSingleTableItemSyntax(GetDefaultValueExpression(i))));
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ValueTupleTypeCreate, table);
+    }
+
+    private  LuaExpressionSyntax GetDefaultValueExpression(ITypeSymbol typeSymbol) {
+      if (typeSymbol.IsReferenceType) {
+        return LuaIdentifierLiteralExpressionSyntax.Nil;
+      }
+
+      if (typeSymbol.IsValueType) {
+        if (typeSymbol.IsNullableType()) {
+          return LuaIdentifierLiteralExpressionSyntax.Nil;
+        }
+
+        if (typeSymbol.IsTupleType) {
+          return GetValueTupleDefaultExpression(typeSymbol);
+        }
+
+        var predefinedValueType = GetPredefinedValueTypeDefaultValue(typeSymbol);
+        if (predefinedValueType != null) {
+          return predefinedValueType;
+        }
+      }
+
+      var typeName = GetTypeName(typeSymbol);
+      return BuildDefaultValue(typeName);
     }
 
     private static LuaExpressionSyntax GetPredefinedValueTypeDefaultValue(ITypeSymbol typeSymbol) {
@@ -579,11 +605,6 @@ namespace CSharpLua {
 
     private static LuaInvocationExpressionSyntax BuildDefaultValue(LuaExpressionSyntax typeExpression) {
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, typeExpression);
-    }
-
-    private LuaInvocationExpressionSyntax BuildDefaultValueExpression(TypeSyntax type) {
-      var identifier = (LuaExpressionSyntax)type.Accept(this);
-      return BuildDefaultValue(identifier);
     }
 
     private void VisitBaseFieldDeclarationSyntax(BaseFieldDeclarationSyntax node) {
@@ -649,6 +670,7 @@ namespace CSharpLua {
         valueExpression = (LuaExpressionSyntax)expression.Accept(this);
         valueIsLiteral = expression is LiteralExpressionSyntax;
       }
+
       if (valueExpression == null) {
         if (typeSymbol.IsValueType && !typeSymbol.IsNullableType()) {
           LuaExpressionSyntax defalutValue = GetPredefinedValueTypeDefaultValue(typeSymbol);
@@ -656,7 +678,7 @@ namespace CSharpLua {
             valueExpression = defalutValue;
             valueIsLiteral = true;
           } else {
-            valueExpression = BuildDefaultValueExpression(type);
+            valueExpression = GetDefaultValueExpression(typeSymbol);
           }
         }
       }
@@ -1392,10 +1414,7 @@ namespace CSharpLua {
       LuaExpressionSyntax defaultValue = isCheckCallerAttribute ? CheckCallerAttribute(parameter, node) : null;
       if (defaultValue == null) {
         if (parameter.ExplicitDefaultValue == null && parameter.Type.IsValueType) {
-          defaultValue = GetPredefinedDefaultValue(parameter.Type);
-          if (defaultValue == null) {
-            defaultValue = BuildDefaultValue(GetTypeName(parameter.Type));
-          }
+          defaultValue = GetDefaultValueExpression(parameter.Type);
         } else {
           defaultValue = GetLiteralExpression(parameter.ExplicitDefaultValue);
         }
@@ -1491,6 +1510,12 @@ namespace CSharpLua {
     private LuaExpressionSyntax CheckMemberAccessCodeTemplate(ISymbol symbol, MemberAccessExpressionSyntax node) {
       if (symbol.Kind == SymbolKind.Field) {
         IFieldSymbol fieldSymbol = (IFieldSymbol)symbol;
+        if (fieldSymbol.ContainingType.IsTupleType) {
+          int elementIndex = fieldSymbol.GetTupleElementIndex();
+          var targetExpression = (LuaExpressionSyntax)node.Expression.Accept(this);
+          return new LuaTableIndexAccessExpressionSyntax(targetExpression, new LuaIdentifierNameSyntax(elementIndex));
+        }
+
         string codeTemplate = XmlMetaProvider.GetFieldCodeTemplate(fieldSymbol);
         if (codeTemplate != null) {
           return BuildCodeTemplateExpression(codeTemplate, node.Expression);
