@@ -739,59 +739,19 @@ namespace CSharpLua {
       return expressions;
     }
 
-    private void AddStructCloneMethodItem(LuaTableInitializerExpression table, LuaIdentifierNameSyntax name, ITypeSymbol typeSymbol) {
-      LuaExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name);
-      CheckValueTypeClone(typeSymbol, ref memberAccess);
-      table.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), memberAccess));
-    }
-
-    private LuaExpressionSyntax AddStructDefaultMethod(INamedTypeSymbol symbol, LuaStructDeclarationSyntax declaration) {
-      LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
-      LuaExpressionSyntax typeName = GetTypeName(symbol);
-      functionExpression.AddStatement(new LuaReturnStatementSyntax(new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.setmetatable, LuaTableInitializerExpression.Empty, typeName)));
-      declaration.AddMethod(LuaIdentifierNameSyntax.Default, functionExpression, false);
-      return typeName;
-    }
-
-    private List<LuaIdentifierNameSyntax> AddStructCloneMethod(INamedTypeSymbol symbol, LuaStructDeclarationSyntax declaration, LuaExpressionSyntax typeName) {
-      List<LuaIdentifierNameSyntax> filelds = new List<LuaIdentifierNameSyntax>();
-      LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
-      functionExpression.AddParameter(LuaIdentifierNameSyntax.This);
-      LuaTableInitializerExpression cloneTable = new LuaTableInitializerExpression();
-      foreach (var member in symbol.GetMembers()) {
-        if (!member.IsStatic && member.Kind != SymbolKind.Method) {
-          switch (member.Kind) {
-            case SymbolKind.Field: {
-                IFieldSymbol memberSymbol = (IFieldSymbol)member;
-                LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
-                AddStructCloneMethodItem(cloneTable, name, memberSymbol.Type);
-                filelds.Add(name);
-                break;
-              }
-            case SymbolKind.Property: {
-                IPropertySymbol memberSymbol = (IPropertySymbol)member;
-                if (IsPropertyField(memberSymbol)) {
-                  LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
-                  AddStructCloneMethodItem(cloneTable, name, memberSymbol.Type);
-                  filelds.Add(name);
-                }
-                break;
-              }
-            case SymbolKind.Event: {
-                IEventSymbol memberSymbol = (IEventSymbol)member;
-                if (IsEventFiled(memberSymbol)) {
-                  LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(member.Name);
-                  AddStructCloneMethodItem(cloneTable, name, null);
-                  filelds.Add(name);
-                }
-                break;
-              }
-          }
-        }
+    private void TryAddStructDefaultMethod(INamedTypeSymbol symbol, LuaStructDeclarationSyntax declaration) {
+      if (declaration.IsInitStatementExists) {
+        LuaIdentifierNameSyntax className = new LuaIdentifierNameSyntax(symbol.Name);
+        var thisIdentifier = LuaIdentifierNameSyntax.This;
+        LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+        functionExpression.AddParameter(className);
+        var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.setmetatable, LuaTableInitializerExpression.Empty, className);
+        LuaLocalVariableDeclaratorSyntax local = new LuaLocalVariableDeclaratorSyntax(thisIdentifier, invocation);
+        functionExpression.AddStatement(local);
+        functionExpression.AddStatement(new LuaExpressionStatementSyntax(new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Init, thisIdentifier)));
+        functionExpression.AddStatement(new LuaReturnStatementSyntax(thisIdentifier));
+        declaration.AddMethod(LuaIdentifierNameSyntax.Default, functionExpression, false);
       }
-      functionExpression.AddStatement(new LuaReturnStatementSyntax(new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.setmetatable, cloneTable, typeName)));
-      declaration.AddMethod(LuaIdentifierNameSyntax.Clone, functionExpression, false);
-      return filelds;
     }
 
     private void CheckValueTypeAndConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {

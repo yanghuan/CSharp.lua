@@ -145,7 +145,7 @@ namespace CSharpLua {
       LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax(node.SyntaxTree.FilePath);
       compilationUnits_.Push(compilationUnit);
 
-      var statements = VisitTriviaAndNode(node.DescendantTrivia(), node.Members, false);
+      var statements = VisitTriviaAndNode(node, node.Members, false);
       foreach (LuaStatementSyntax statement in statements) {
         if (statement is LuaTypeDeclarationSyntax typeeDeclaration) {
           var ns = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
@@ -166,7 +166,7 @@ namespace CSharpLua {
       bool isContained = node.Parent.IsKind(SyntaxKind.NamespaceDeclaration);
       LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(isContained ? symbol.Name : symbol.ToString());
       LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name, isContained);
-      var statements = VisitTriviaAndNode(node.DescendantTrivia(), node.Members);
+      var statements = VisitTriviaAndNode(node, node.Members);
       namespaceDeclaration.AddStatements(statements.Cast<LuaStatementSyntax>());
       return namespaceDeclaration;
     }
@@ -365,6 +365,7 @@ namespace CSharpLua {
       LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
       LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
       var symbol = VisitTypeDeclaration(node, structDeclaration);
+      TryAddStructDefaultMethod(symbol, structDeclaration);
       generator_.AddTypeSymbol(symbol);
       return structDeclaration;
     }
@@ -953,8 +954,8 @@ namespace CSharpLua {
       }
     }
 
-    private IEnumerable<LuaSyntaxNode> VisitTriviaAndNode(IEnumerable<SyntaxTrivia> trivias, IEnumerable<CSharpSyntaxNode> nodes, bool isCheckBlank = true) {
-      var syntaxTrivias = trivias.Where(i => i.IsExportSyntaxTrivia());
+    private IEnumerable<LuaSyntaxNode> VisitTriviaAndNode(SyntaxNode rootNode, IEnumerable<CSharpSyntaxNode> nodes, bool isCheckBlank = true) {
+      var syntaxTrivias = rootNode.DescendantTrivia().Where(i => i.IsExportSyntaxTrivia(rootNode));
       var syntaxTriviaNodes = syntaxTrivias.Select(i => new BlockCommonNode(i));
 
       List<BlockCommonNode> list = nodes.Select(i => new BlockCommonNode(i)).ToList();
@@ -986,7 +987,7 @@ namespace CSharpLua {
       LuaBlockStatementSyntax block = new LuaBlockStatementSyntax();
       blocks_.Push(block);
 
-      var statements = VisitTriviaAndNode(node.DescendantTrivia(), node.Statements);
+      var statements = VisitTriviaAndNode(node, node.Statements);
       block.Statements.AddRange(statements.Cast<LuaStatementSyntax>());
 
       blocks_.Pop();

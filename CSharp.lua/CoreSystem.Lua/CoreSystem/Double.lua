@@ -130,10 +130,6 @@ function Double.IsInfinity(v)
   return v == posInf or v == negInf    
 end 
 
-function Double.__default__()
-  return 0
-end
-
 function Double.ParseSingle(s)
   local v = parseWithException(s)
   if v < -3.40282347E+38 or v > 3.40282347E+38 then
@@ -148,6 +144,10 @@ function Double.TryParseSingle(s)
     return true, v
   end
   return false, 0
+end
+
+function Double.__default__()
+  return 0
 end
 
 function Double.__inherits__()

@@ -33,6 +33,7 @@ local function compare(this, v)
   return 0
 end
 
+Int.GetHashCode = System.identityFn
 Int.CompareTo = compare
 
 function Int.CompareToObj(this, v)
@@ -98,10 +99,6 @@ function Int.TryParse(s)
   return tryParse(s, -2147483648, 2147483647)
 end
 
-function Int.__default__()
-  return 0
-end 
-
 function Int.ParseByte(s)
   return parseWithException(s, 0, 255)
 end
@@ -157,6 +154,10 @@ end
 function Int.TryParseUInt64(s)
   return tryParse(s, 0, 18446744073709551615)
 end
+
+function Int.__default__()
+  return 0
+end 
 
 function Int.__inherits__()
   return { System.IComparable, System.IFormattable, System.IComparable_1(Int), System.IEquatable_1(Int) }

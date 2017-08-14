@@ -336,22 +336,22 @@ System.namespace("CSharpLua", function (namespace)
     GetConstLiteralExpression1, GetConstExpression, BuildStringLiteralTokenExpression, BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind1, CheckCallerAttribute, 
     CheckUsingStaticNameSyntax, MayBeFalse, MayBeNull, MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, BuildFieldOrPropertyMemberAccessExpression, 
     VisitAttributeList, VisitAttributeArgument, VisitNameColon, VisitAttributeArgumentList, VisitNameEquals, BuildObjectCreationInvocation, VisitAttribute, BuildAttributes, 
-    AddStructCloneMethodItem, AddStructDefaultMethod, AddStructCloneMethod, CheckValueTypeAndConversion, CheckValueTypeClone, BuildDocumentationComment, BuildBaseTypeName, VisitTypeParameterList, 
-    FillExternalTypeParameters, BuildTypeParameters, CheckFieldNameOfProtobufnet, GetMemberName, AddInnerName, RemoveNilArgumentsAtTail, IsNilLuaExpression, TryRemoveNilArgumentsAtTail, 
-    PushChecked, PopChecked, getIsCurChecked, CheckConversion, GetOperatorMemberAccessExpression, BuildConversionExpression, GerUserDefinedOperatorExpression, IsNumericalForVariableMatch, 
-    IsNumericalForLess, IsNumericalForGreater, GetNumericalForStatement, GetValueTupleDefaultExpression, GetDefaultValueExpression, BuildDeconstructExpression, BuildDeconstructExpression1, VisitObjectCreationExpression, 
-    BuildObjectInitializerExpression, VisitAnonymousObjectMemberDeclarator, VisitAnonymousObjectCreationExpression, VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, 
-    VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, BuildCallBaseConstructor, BuildCallBaseConstructor1, VisitConstructorDeclaration, 
-    VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitAnonymousMethodExpression, VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, 
-    VisitThrowExpression, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, 
-    VisitUsingStatement, VisitThisExpression, CheckBaseVisitType, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, 
-    VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, BuildOperatorMethodDeclaration, VisitConversionOperatorDeclaration, VisitOperatorDeclaration, 
-    VisitSizeOfExpression, VisitStackAllocArrayCreationExpression, VisitUnsafeStatement, VisitFixedStatement, VisitLockStatement, VisitArrowExpressionClause, VisitLocalFunctionStatement, VisitDeclarationExpression, 
-    VisitSingleVariableDesignation, VisitIsPatternExpression, VisitDeclarationPattern, VisitRefExpression, VisitTupleType, BuildValueTupleCreateExpression, VisitTupleExpression, VisitParenthesizedVariableDesignation, 
-    AddRangeIdentifier, GetRangeIdentifierName, VisitQueryExpression, VisitFromClause, VisitWhereClause, VisitQueryBody, VisitSelectClause, VisitQueryContinuation, 
-    VisitLetClause, VisitJoinClause, VisitJoinIntoClause, BuildQueryWhere, BuildOrdering, BuildQueryOrderBy, BuildQuerySelect, BuildGroupClause, 
-    CreateQueryAnonymousType, IsSpecialQueryNode, BuildFromClause, BuildLetClause, BuildQueryJoin, BuildJoinClause, BuildQueryBody, BuildQueryContinuation, 
-    __staticCtor__, __init__, __ctor__
+    TryAddStructDefaultMethod, CheckValueTypeAndConversion, CheckValueTypeClone, BuildDocumentationComment, BuildBaseTypeName, VisitTypeParameterList, FillExternalTypeParameters, BuildTypeParameters, 
+    CheckFieldNameOfProtobufnet, GetMemberName, AddInnerName, RemoveNilArgumentsAtTail, IsNilLuaExpression, TryRemoveNilArgumentsAtTail, PushChecked, PopChecked, 
+    getIsCurChecked, CheckConversion, GetOperatorMemberAccessExpression, BuildConversionExpression, GerUserDefinedOperatorExpression, IsNumericalForVariableMatch, IsNumericalForLess, IsNumericalForGreater, 
+    GetNumericalForStatement, GetValueTupleDefaultExpression, GetDefaultValueExpression, BuildDeconstructExpression, BuildDeconstructExpression1, VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitAnonymousObjectMemberDeclarator, 
+    VisitAnonymousObjectCreationExpression, VisitInitializerExpression, VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, 
+    FillMultiArrayInitializer, VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, BuildCallBaseConstructor, BuildCallBaseConstructor1, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, 
+    VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitAnonymousMethodExpression, VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitThrowExpression, VisitCatchFilterClause, 
+    VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, 
+    CheckBaseVisitType, VisitBaseExpression, VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, 
+    VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, BuildOperatorMethodDeclaration, VisitConversionOperatorDeclaration, VisitOperatorDeclaration, VisitSizeOfExpression, VisitStackAllocArrayCreationExpression, 
+    VisitUnsafeStatement, VisitFixedStatement, VisitLockStatement, VisitArrowExpressionClause, VisitLocalFunctionStatement, VisitDeclarationExpression, VisitSingleVariableDesignation, VisitIsPatternExpression, 
+    VisitDeclarationPattern, VisitRefExpression, VisitTupleType, BuildValueTupleCreateExpression, VisitTupleExpression, VisitParenthesizedVariableDesignation, AddRangeIdentifier, GetRangeIdentifierName, 
+    VisitQueryExpression, VisitFromClause, VisitWhereClause, VisitQueryBody, VisitSelectClause, VisitQueryContinuation, VisitLetClause, VisitJoinClause, 
+    VisitJoinIntoClause, BuildQueryWhere, BuildOrdering, BuildQueryOrderBy, BuildQuerySelect, BuildGroupClause, CreateQueryAnonymousType, IsSpecialQueryNode, 
+    BuildFromClause, BuildLetClause, BuildQueryJoin, BuildJoinClause, BuildQueryBody, BuildQueryContinuation, __staticCtor__, __init__, 
+    __ctor__
     __staticCtor__ = function (this) 
       operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
         default:set("!=", "~=" --[[Tokens.NotEquals]])
@@ -441,7 +441,7 @@ System.namespace("CSharpLua", function (namespace)
       local compilationUnit = CSharpLuaLuaAst.LuaCompilationUnitSyntax(node:getSyntaxTree():getFilePath())
       this.compilationUnits_:Push(compilationUnit)
 
-      local statements = VisitTriviaAndNode(this, node:DescendantTrivia(nil, false), node:getMembers(), false)
+      local statements = VisitTriviaAndNode(this, node, node:getMembers(), false)
       for _, statement in System.each(statements) do
         statement = System.cast(CSharpLuaLuaAst.LuaStatementSyntax, statement)
         local typeeDeclaration = statement
@@ -468,7 +468,7 @@ System.namespace("CSharpLua", function (namespace)
       end
       local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, default)
       local namespaceDeclaration = CSharpLuaLuaAst.LuaNamespaceDeclarationSyntax(name, isContained)
-      local statements = VisitTriviaAndNode(this, node:DescendantTrivia(nil, false), node:getMembers(), true)
+      local statements = VisitTriviaAndNode(this, node, node:getMembers(), true)
       namespaceDeclaration:AddStatements(Linq.Cast(statements, CSharpLuaLuaAst.LuaStatementSyntax))
       return namespaceDeclaration
     end
@@ -663,6 +663,7 @@ System.namespace("CSharpLua", function (namespace)
       local name = GetTypeDeclarationName(this, node)
       local structDeclaration = CSharpLuaLuaAst.LuaStructDeclarationSyntax(name)
       local symbol = VisitTypeDeclaration(this, node, structDeclaration)
+      TryAddStructDefaultMethod(this, symbol, structDeclaration)
       this.generator_:AddTypeSymbol(symbol)
       return structDeclaration
     end
@@ -1191,10 +1192,10 @@ System.namespace("CSharpLua", function (namespace)
       identifier = CheckLocalVariableName(this, identifier, node)
       return CSharpLuaLuaAst.LuaParameterSyntax(identifier)
     end
-    VisitTriviaAndNode = function (this, trivias, nodes, isCheckBlank) 
-      return System.yieldIEnumerable(function (this, trivias, nodes, isCheckBlank) 
-        local syntaxTrivias = Linq.Where(trivias, function (i) 
-          return CSharpLua.Utility.IsExportSyntaxTrivia(i)
+    VisitTriviaAndNode = function (this, rootNode, nodes, isCheckBlank) 
+      return System.yieldIEnumerable(function (this, rootNode, nodes, isCheckBlank) 
+        local syntaxTrivias = Linq.Where(rootNode:DescendantTrivia(nil, false), function (i) 
+          return CSharpLua.Utility.IsExportSyntaxTrivia(i, rootNode)
         end)
         local syntaxTriviaNodes = Linq.Select(syntaxTrivias, function (i) 
           return CSharpLuaLuaSyntaxNodeTransfor.BlockCommonNode:new(1, i)
@@ -1229,13 +1230,13 @@ System.namespace("CSharpLua", function (namespace)
           end
           System.yieldReturn(common:Visit(this))
         end
-      end, CSharpLuaLuaAst.LuaSyntaxNode, this, trivias, nodes, isCheckBlank)
+      end, CSharpLuaLuaAst.LuaSyntaxNode, this, rootNode, nodes, isCheckBlank)
     end
     VisitBlock = function (this, node) 
       local block = CSharpLuaLuaAst.LuaBlockStatementSyntax()
       this.blocks_:Push(block)
 
-      local statements = VisitTriviaAndNode(this, node:DescendantTrivia(nil, false), node:getStatements(), true)
+      local statements = VisitTriviaAndNode(this, node, node:getStatements(), true)
       block.Statements:AddRange(Linq.Cast(statements, CSharpLuaLuaAst.LuaStatementSyntax))
 
       this.blocks_:Pop()
@@ -3713,62 +3714,19 @@ System.namespace("CSharpLua", function (namespace)
       end
       return expressions
     end
-    AddStructCloneMethodItem = function (this, table, name, typeSymbol) 
-      local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, name, false)
-      memberAccess = CheckValueTypeClone(this, typeSymbol, memberAccess)
-      table.Items:Add(CSharpLuaLuaAst.LuaKeyValueTableItemSyntax(CSharpLuaLuaAst.LuaTableLiteralKeySyntax(name), memberAccess))
-    end
-    AddStructDefaultMethod = function (this, symbol, declaration) 
-      local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
-      local typeName = GetTypeName(this, symbol)
-      functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.setmetatable, CSharpLuaLuaAst.LuaTableInitializerExpression.Empty, typeName)))
-      declaration:AddMethod(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Default, functionExpression, false, false)
-      return typeName
-    end
-    AddStructCloneMethod = function (this, symbol, declaration, typeName) 
-      local filelds = System.List(CSharpLuaLuaAst.LuaIdentifierNameSyntax)()
-      local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
-      functionExpression:AddParameter1(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This)
-      local cloneTable = CSharpLuaLuaAst.LuaTableInitializerExpression()
-      for _, member in System.each(symbol:GetMembers()) do
-        if not member:getIsStatic() and member:getKind() ~= 9 --[[SymbolKind.Method]] then
-          repeat
-            local default = member:getKind()
-            if default == 6 --[[SymbolKind.Field]] then
-              do
-                local memberSymbol = System.cast(MicrosoftCodeAnalysis.IFieldSymbol, member)
-                local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, member:getName())
-                AddStructCloneMethodItem(this, cloneTable, name, memberSymbol:getType())
-                filelds:Add(name)
-                break
-              end
-            elseif default == 15 --[[SymbolKind.Property]] then
-              do
-                local memberSymbol = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, member)
-                if IsPropertyField(this, memberSymbol) then
-                  local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, member:getName())
-                  AddStructCloneMethodItem(this, cloneTable, name, memberSymbol:getType())
-                  filelds:Add(name)
-                end
-                break
-              end
-            elseif default == 5 --[[SymbolKind.Event]] then
-              do
-                local memberSymbol = System.cast(MicrosoftCodeAnalysis.IEventSymbol, member)
-                if IsEventFiled(this, memberSymbol) then
-                  local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, member:getName())
-                  AddStructCloneMethodItem(this, cloneTable, name)
-                  filelds:Add(name)
-                end
-                break
-              end
-            end
-          until 1
-        end
+    TryAddStructDefaultMethod = function (this, symbol, declaration) 
+      if declaration:getIsInitStatementExists() then
+        local className = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName())
+        local thisIdentifier = CSharpLuaLuaAst.LuaIdentifierNameSyntax.This
+        local functionExpression = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
+        functionExpression:AddParameter1(className)
+        local invocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.setmetatable, CSharpLuaLuaAst.LuaTableInitializerExpression.Empty, className)
+        local local_ = CSharpLuaLuaAst.LuaLocalVariableDeclaratorSyntax:new(2, thisIdentifier, invocation)
+        functionExpression:AddStatement(local_)
+        functionExpression:AddStatement(CSharpLuaLuaAst.LuaExpressionStatementSyntax(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Init, thisIdentifier)))
+        functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(thisIdentifier))
+        declaration:AddMethod(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Default, functionExpression, false, false)
       end
-      functionExpression:AddStatement(CSharpLuaLuaAst.LuaReturnStatementSyntax(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(3, CSharpLuaLuaAst.LuaIdentifierNameSyntax.setmetatable, cloneTable, typeName)))
-      declaration:AddMethod(CSharpLuaLuaAst.LuaIdentifierNameSyntax.Clone, functionExpression, false, false)
-      return filelds
     end
     CheckValueTypeAndConversion = function (this, node, expression) 
       local typeSymbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node, System.default(SystemThreading.CancellationToken)):getType()
@@ -4127,18 +4085,21 @@ System.namespace("CSharpLua", function (namespace)
       return BuildDefaultValue(typeName)
     end
     BuildDeconstructExpression = function (this, typeSymbol, expression, node) 
-      local methodName
+      local function BuildInvocation() 
+        return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(expression, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Deconstruct" --[[kDeconstructName]]), true))
+      end
+
       if typeSymbol:getIsTupleType() then
-        methodName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Deconstruct" --[[kDeconstructName]])
+        local invocationExpression = BuildInvocation()
+        invocationExpression:AddArgument(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(2, CSharpLua.Utility.GetTupleElementCount(typeSymbol)))
+        return invocationExpression
       else
         local methods = typeSymbol:GetMembers("Deconstruct" --[[kDeconstructName]])
         if methods:getIsEmpty() then
           System.throw(CSharpLua.CompilationErrorException:new(2, node, "current version Roslyn not public api get extension Deconstruct method symbol"))
         end
-        local methodSymbol = System.cast(MicrosoftCodeAnalysis.IMethodSymbol, CSharpLua.Utility.First(methods, MicrosoftCodeAnalysis.ISymbol))
-        methodName = GetMemberName(this, methodSymbol)
+        return BuildInvocation()
       end
-      return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(expression, methodName, true))
     end
     BuildDeconstructExpression1 = function (this, node, expression) 
       local typeSymbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetTypeInfo(this.semanticModel_, node, System.default(SystemThreading.CancellationToken)):getType()

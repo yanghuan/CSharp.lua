@@ -786,7 +786,7 @@ function System.create(t, f)
 end
 
 function System.default(T)
-  return T.__default__()
+  return T:__default__()
 end
 
 function System.property(name)
@@ -882,15 +882,8 @@ Object = defCls("System.Object", {
 
 ValueType = {
   __kind__ = "S",
-  __default__ = function(this) 
-    local cls = getmetatable(this)
-    local t = {}
-    for k, v in pairs(this) do
-      if type(v) == "table" and v.__kind__ == "S" then
-        t[k] = v:__default__()
-      end
-    end
-    return setmetatable(t, cls)
+  __default__ = function(cls) 
+    return setmetatable({}, cls)
   end,
   __clone__ = function(this)
     local cls = getmetatable(this)
@@ -914,7 +907,7 @@ ValueType = {
     return true
   end,
   GetHashCode = function (this)
-    throw(System.NotSupportedException("User-defined struct not support GetHashCode"), 1)
+    throw(System.NotSupportedException(this.__name__ .. " User-defined struct not support GetHashCode"), 1)
   end
 }
 
@@ -935,21 +928,14 @@ function System.tuple(...)
 end
 
 local tunpack = table.unpack
-local ValueTuple
-
-ValueTuple = {
-  __default__ = function(this)
-    local t = {}
-    for k, v in pairs(this) do
-      t[k] = v:__default__()
-    end
-    return setmetatable(t, ValueTuple)
+local ValueTuple = {
+  __default__ = function()
+    throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
   end,
   Deconstruct = function(this, count)
     return tunpack(this, 1, count)
   end
 }
-
 defStc("System.ValueTuple", ValueTuple)
 
 function System.valueTuple(t)
