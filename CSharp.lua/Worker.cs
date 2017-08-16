@@ -30,9 +30,10 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
   public sealed class Worker {
     private static readonly string[] SystemDlls = new string[] {
-      "mscorlib.dll",
       "System.dll",
       "System.Core.dll",
+      "System.Runtime.dll",
+      "System.Linq.dll",
       "Microsoft.CSharp.dll",
     };
     private const string kDllSuffix = ".dll";
@@ -73,13 +74,21 @@ namespace CSharpLua {
 
     private IEnumerable<string> Libs {
       get {
-        string runtimeDir = RuntimeEnvironment.GetRuntimeDirectory();
+        string privateMscorlibPath = typeof(object).Assembly.Location;
+        string systemLibDir = Path.GetDirectoryName(privateMscorlibPath);
         List<string> libs = new List<string>();
-        libs.AddRange(SystemDlls.Select(i => Path.Combine(runtimeDir, i)));
+        libs.Add(privateMscorlibPath);
+        foreach (string systemDll in SystemDlls) {
+          string path = Path.Combine(systemLibDir, systemDll);
+          if (!File.Exists(path)) {
+            throw new CmdArgumentException($"systemLib '{path}' is not found");
+          }
+          libs.Add(path);
+        }
         foreach (string lib in libs_) {
           string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
           if (!File.Exists(path)) {
-            string file = Path.Combine(runtimeDir, Path.GetFileName(path));
+            string file = Path.Combine(systemLibDir, Path.GetFileName(path));
             if (!File.Exists(file)) {
               throw new CmdArgumentException($"lib '{path}' is not found");
             }

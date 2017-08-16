@@ -241,6 +241,4 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 #test/**/*.lua
-/CSharp.lua/CoreSystem.Lua/CoreSystem.sln
-/CSharp.lua/CoreSystem.config
-/CSharp.lua/CoreSystem.luaproj
+/CSharp.lua/Properties/launchSettings.json
