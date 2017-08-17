@@ -18,14 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Emit;
-using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed class Worker {
@@ -72,29 +70,40 @@ namespace CSharpLua {
       }
     }
 
+    private bool IsCorrectSystemDll(string path) {
+      try {
+        Assembly.LoadFile(path);
+        return true;
+      }
+      catch (Exception) {
+        return false;
+      }
+    }
+
     private IEnumerable<string> Libs {
       get {
-        string privateMscorlibPath = typeof(object).Assembly.Location;
-        string systemLibDir = Path.GetDirectoryName(privateMscorlibPath);
+        string privateCorePath = typeof(object).Assembly.Location;
         List<string> libs = new List<string>();
-        libs.Add(privateMscorlibPath);
-        foreach (string systemDll in SystemDlls) {
-          string path = Path.Combine(systemLibDir, systemDll);
-          if (!File.Exists(path)) {
-            throw new CmdArgumentException($"systemLib '{path}' is not found");
+        libs.Add(privateCorePath);
+
+        string systemDir = Path.GetDirectoryName(privateCorePath);
+        foreach (string path in Directory.EnumerateFiles(systemDir, "*.dll")) {
+          if (IsCorrectSystemDll(path)) {
+            libs.Add(path);
           }
-          libs.Add(path);
         }
+
         foreach (string lib in libs_) {
           string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
-          if (!File.Exists(path)) {
-            string file = Path.Combine(systemLibDir, Path.GetFileName(path));
-            if (!File.Exists(file)) {
-              throw new CmdArgumentException($"lib '{path}' is not found");
-            }
-            path = file;
+          if (File.Exists(path)) {
+            libs.Add(path);
           }
-          libs.Add(path);
+          else {
+            string file = Path.Combine(systemDir, Path.GetFileName(path));
+            if (!File.Exists(file)) {
+              throw new CmdArgumentException($"-l {path} is not found");
+            }
+          }
         }
         return libs;
       }

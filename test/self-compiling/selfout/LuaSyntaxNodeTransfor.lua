@@ -3265,7 +3265,6 @@ System.namespace("CSharpLua", function (namespace)
       local matchs = codeTemplateRegex_:Matches(codeTemplate)
       local prevIndex = 0
       for _, match in System.each(matchs) do
-        match = System.cast(SystemTextRegularExpressions.Match, match)
         if match:getIndex() > prevIndex then
           local prevToken = codeTemplate:Substring(prevIndex, match:getIndex() - prevIndex)
           codeTemplateExpression.Expressions:Add(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, prevToken))

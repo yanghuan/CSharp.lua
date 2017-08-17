@@ -19,7 +19,7 @@ local Linq = System.Linq.Enumerable
 local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local SystemIO = System.IO
-local SystemRuntimeInteropServices = System.Runtime.InteropServices
+local SystemReflection = System.Reflection
 local SystemThreading = System.Threading
 local CSharpLua
 local CSharpLuaLuaSyntaxGenerator
@@ -29,9 +29,9 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua", function (namespace) 
   namespace.class("Worker", function (namespace) 
-    local SystemDlls, getMetas, getLibs, Do, Compiler, __staticCtor__, __ctor__
+    local SystemDlls, getMetas, IsCorrectSystemDll, getLibs, Do, Compiler, __staticCtor__, __ctor__
     __staticCtor__ = function (this) 
-      SystemDlls = System.Array(System.String)("mscorlib.dll", "System.dll", "System.Core.dll", "Microsoft.CSharp.dll")
+      SystemDlls = System.Array(System.String)("System.dll", "System.Core.dll", "System.Runtime.dll", "System.Linq.dll", "Microsoft.CSharp.dll")
     end
     __ctor__ = function (this, folder, output, lib, meta, csc, isClassic, indent, hasSemicolon, atts) 
       this.folder_ = folder
@@ -59,12 +59,29 @@ System.namespace("CSharpLua", function (namespace)
       metas:AddRange(this.metas_)
       return metas
     end
+    IsCorrectSystemDll = function (this, path) 
+      local default, extern = System.try(function () 
+        SystemReflection.Assembly.LoadFile(path)
+        return true, true
+      end, function (default) 
+        return true, false
+      end)
+      if default then
+        return extern
+      end
+    end
     getLibs = function (this) 
-      local runtimeDir = SystemRuntimeInteropServices.RuntimeEnvironment.GetRuntimeDirectory()
+      local privateCorePath = System.typeof(System.Object):getAssembly():getLocation()
       local libs = System.List(System.String)()
-      libs:AddRange(Linq.Select(SystemDlls, function (i) 
-        return SystemIO.Path.Combine(runtimeDir, i)
-      end, System.String))
+      libs:Add(privateCorePath)
+
+      local systemDir = SystemIO.Path.GetDirectoryName(privateCorePath)
+      for _, path in System.each(SystemIO.Directory.EnumerateFiles(systemDir, "*.dll")) do
+        if IsCorrectSystemDll(this, path) then
+          libs:Add(path)
+        end
+      end
+
       for _, lib in System.each(this.libs_) do
         local default
         if lib:EndsWith(".dll" --[[Worker.kDllSuffix]]) then
@@ -73,14 +90,14 @@ System.namespace("CSharpLua", function (namespace)
           default = lib .. ".dll" --[[Worker.kDllSuffix]]
         end
         local path = default
-        if not SystemIO.File.Exists(path) then
-          local file = SystemIO.Path.Combine(runtimeDir, SystemIO.Path.GetFileName(path))
+        if SystemIO.File.Exists(path) then
+          libs:Add(path)
+        else
+          local file = SystemIO.Path.Combine(systemDir, SystemIO.Path.GetFileName(path))
           if not SystemIO.File.Exists(file) then
-            System.throw(CSharpLua.CmdArgumentException(("lib '{0}' is not found"):Format(path)))
+            System.throw(CSharpLua.CmdArgumentException(("-l {0} is not found"):Format(path)))
           end
-          path = file
         end
-        libs:Add(path)
       end
       return libs
     end

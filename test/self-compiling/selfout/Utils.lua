@@ -218,7 +218,7 @@ System.namespace("CSharpLua", function (namespace)
     Split = function (s, isPath) 
       local list = System.HashSet(System.String)()
       if not System.String.IsNullOrEmpty(s) then
-        local array = s:Split(59 --[[';']])
+        local array = s:Split(59 --[[';']], 0)
         for _, i in System.each(array) do
           local default
           if isPath then
