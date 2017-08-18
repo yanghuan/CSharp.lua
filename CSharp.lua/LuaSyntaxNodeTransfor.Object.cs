@@ -767,11 +767,19 @@ namespace CSharpLua {
         blocks_.Push(function.Body);
       }
 
-      var temp = GetTempIdentifier(node.Expression);
-      conditionalTemps_.Push(temp);
+      bool isRoot = !node.Parent.IsKind(SyntaxKind.ConditionalAccessExpression);
+      if (isRoot) {
+        conditionalTemps_.Push(GetTempIdentifier(node.Expression));
+      }
 
+      var temp = conditionalTemps_.Peek();
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-      CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, expression));
+      if (isRoot) {
+        CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, expression));
+      }
+      else {
+        CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, expression)));
+      }
 
       LuaBinaryExpressionSyntax condition = new LuaBinaryExpressionSyntax(temp, LuaSyntaxNode.Tokens.NotEquals, LuaIdentifierNameSyntax.Nil);
       LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
@@ -780,18 +788,25 @@ namespace CSharpLua {
       blocks_.Push(ifStatement.Body);
       var whenNotNull = (LuaExpressionSyntax)node.WhenNotNull.Accept(this);
       blocks_.Pop();
-      conditionalTemps_.Pop();
+
+      if (isRoot) {
+        conditionalTemps_.Pop();
+      }
 
       if (node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
         if (isEmpty) {
           throw new InvalidOperationException();
         }
-        ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(whenNotNull));
+        if (!node.WhenNotNull.IsKind(SyntaxKind.ConditionalAccessExpression)) {
+          ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(whenNotNull));
+        }    
         return LuaExpressionSyntax.EmptyExpression;
       }
       else {
-        LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(temp, whenNotNull);
-        ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+        if (!node.WhenNotNull.IsKind(SyntaxKind.ConditionalAccessExpression)) {
+          LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(temp, whenNotNull);
+          ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+        }
         if (isEmpty) {
           var function = CurFunction;
           function.AddStatement(new LuaReturnStatementSyntax(temp));
