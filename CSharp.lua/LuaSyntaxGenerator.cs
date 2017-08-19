@@ -604,9 +604,10 @@ namespace CSharpLua {
     private List<ISymbol> GetSameNameMembers(ISymbol symbol) {
       List<ISymbol> members = new List<ISymbol>();
       var names = GetSymbolNames(symbol);
-      var curTypeSymbol = symbol.ContainingType;
+      var rootType = symbol.ContainingType;
+      var curTypeSymbol = rootType;
       while (true) {
-        AddSimilarNameMembers(curTypeSymbol, names, members);
+        AddSimilarNameMembers(curTypeSymbol, names, members, rootType != curTypeSymbol);
         var baseTypeSymbol = curTypeSymbol.BaseType;
         if (baseTypeSymbol != null && baseTypeSymbol.IsFromCode()) {
           curTypeSymbol = baseTypeSymbol;
@@ -619,7 +620,7 @@ namespace CSharpLua {
       return members;
     }
 
-    private void AddSimilarNameMembers(INamedTypeSymbol typeSymbol, List<string> names, List<ISymbol> outList) {
+    private void AddSimilarNameMembers(INamedTypeSymbol typeSymbol, List<string> names, List<ISymbol> outList, bool isWithoutPrivate = false) {
       Contract.Assert(typeSymbol.IsFromCode());
       foreach (var member in typeSymbol.GetMembers()) {
         if (member.IsOverride) {
@@ -628,9 +629,12 @@ namespace CSharpLua {
             continue;
           }
         }
-        var memberNames = GetSymbolNames(member);
-        if (memberNames.Exists(i => names.Contains(i))) {
-          outList.Add(member);
+
+        if (!isWithoutPrivate || !member.IsPrivate()) {
+          var memberNames = GetSymbolNames(member);
+          if (memberNames.Exists(i => names.Contains(i))) {
+            outList.Add(member);
+          }
         }
       }
     }
@@ -862,6 +866,7 @@ namespace CSharpLua {
     }
 
     private string GetRefactorName(INamedTypeSymbol typeSymbol, IEnumerable<INamedTypeSymbol> childrens, ISymbol symbol) {
+      bool isPrivate = symbol.IsPrivate();
       string originalName = GetSymbolBaseName(symbol);
 
       int index = 1;
@@ -872,11 +877,11 @@ namespace CSharpLua {
 
         bool isEnable = true;
         if (typeSymbol != null) {
-          isEnable = IsNewNameEnable(typeSymbol, checkName1, checkName2);
+          isEnable = IsNewNameEnable(typeSymbol, checkName1, checkName2, isPrivate);
         }
         else {
-          if (childrens != null) {
-            isEnable = childrens.All(i => IsNewNameEnable(i, checkName1, checkName2));
+          if (!isPrivate && childrens != null) {
+            isEnable = childrens.All(i => IsNewNameEnable(i, checkName1, checkName2, isPrivate));
           }
         }
         if (isEnable) {
@@ -891,25 +896,27 @@ namespace CSharpLua {
       return set != null && set.Contains(newName);
     }
 
-    private bool IsNewNameEnable(INamedTypeSymbol typeSymbol, string checkName1, string checkName2) {
-      bool isEnable = IsNewNameEnable(typeSymbol, checkName1);
+    private bool IsNewNameEnable(INamedTypeSymbol typeSymbol, string checkName1, string checkName2, bool isPrivate) {
+      bool isEnable = IsNewNameEnable(typeSymbol, checkName1, isPrivate);
       if (isEnable) {
         if (checkName2 != null) {
-          isEnable = IsNewNameEnable(typeSymbol, checkName2);
+          isEnable = IsNewNameEnable(typeSymbol, checkName2, isPrivate);
         }
       }
       return isEnable;
     }
 
-    private bool IsNewNameEnable(INamedTypeSymbol typeSymbol, string newName) {
-      bool isEnable = IsNameEnableOfCurAndChildrens(typeSymbol, newName);
+    private bool IsNewNameEnable(INamedTypeSymbol typeSymbol, string newName, bool isPrivate) {
+      bool isEnable = IsNameEnableOfCurAndChildrens(typeSymbol, newName, isPrivate);
       if (isEnable) {
-        var p = typeSymbol.BaseType;
-        while (p != null) {
-          if (!IsCurTypeNameEnable(p, newName)) {
-            return false;
+        if (!isPrivate) {
+          var p = typeSymbol.BaseType;
+          while (p != null) {
+            if (!IsCurTypeNameEnable(p, newName)) {
+              return false;
+            }
+            p = p.BaseType;
           }
-          p = p.BaseType;
         }
         return true;
       }
@@ -920,16 +927,18 @@ namespace CSharpLua {
       return !IsTypeNameUsed(typeSymbol, newName) && typeSymbol.GetMembers(newName).IsEmpty;
     }
 
-    private bool IsNameEnableOfCurAndChildrens(INamedTypeSymbol typeSymbol, string newName) {
+    private bool IsNameEnableOfCurAndChildrens(INamedTypeSymbol typeSymbol, string newName, bool isPrivate) {
       if (!IsCurTypeNameEnable(typeSymbol, newName)) {
         return false;
       }
 
-      var childrens = extends_.GetOrDefault(typeSymbol);
-      if (childrens != null) {
-        foreach (INamedTypeSymbol children in childrens) {
-          if (!IsNameEnableOfCurAndChildrens(children, newName)) {
-            return false;
+      if (!isPrivate) {
+        var childrens = extends_.GetOrDefault(typeSymbol);
+        if (childrens != null) {
+          foreach (INamedTypeSymbol children in childrens) {
+            if (!IsNameEnableOfCurAndChildrens(children, newName, isPrivate)) {
+              return false;
+            }
           }
         }
       }
@@ -947,12 +956,13 @@ namespace CSharpLua {
     }
 
     private string GetInnerGetRefactorName(ISymbol symbol) {
+      bool isPrivate = symbol.IsPrivate();
       string originalName = GetSymbolBaseName(symbol);
 
       int index = 0;
       while (true) {
         string newName = index == 0 ? originalName : originalName + index;
-        bool isEnable = IsInnerNameEnable(symbol.ContainingType, newName);
+        bool isEnable = IsInnerNameEnable(symbol.ContainingType, newName, isPrivate);
         if (isEnable) {
           return newName;
         }
@@ -960,26 +970,28 @@ namespace CSharpLua {
       }
     }
 
-    private bool IsInnerNameEnable(INamedTypeSymbol typeSymbol, string newName) {
-      bool isEnable = IsInnerNameEnableOfChildrens(typeSymbol, newName);
+    private bool IsInnerNameEnable(INamedTypeSymbol typeSymbol, string newName, bool isPrivate) {
+      bool isEnable = IsInnerNameEnableOfChildrens(typeSymbol, newName, isPrivate);
       if (isEnable) {
-        var p = typeSymbol.BaseType;
-        while (p != null) {
-          if (!IsCurTypeNameEnable(p, newName)) {
-            return false;
+        if (!isPrivate) {
+          var p = typeSymbol.BaseType;
+          while (p != null) {
+            if (!IsCurTypeNameEnable(p, newName)) {
+              return false;
+            }
+            p = p.BaseType;
           }
-          p = p.BaseType;
         }
         return true;
       }
       return false;
     }
 
-    private bool IsInnerNameEnableOfChildrens(INamedTypeSymbol typeSymbol, string newName) {
+    private bool IsInnerNameEnableOfChildrens(INamedTypeSymbol typeSymbol, string newName, bool isPrivate) {
       var childrens = extends_.GetOrDefault(typeSymbol);
       if (childrens != null) {
         foreach (INamedTypeSymbol children in childrens) {
-          if (!IsNameEnableOfCurAndChildrens(children, newName)) {
+          if (!IsNameEnableOfCurAndChildrens(children, newName, isPrivate)) {
             return false;
           }
         }
