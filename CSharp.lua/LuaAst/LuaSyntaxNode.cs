@@ -126,7 +126,7 @@ namespace CSharpLua.LuaAst {
       "System", "Linq",
     };
 
-    public readonly static HashSet<string> SpecialReservedWords = new HashSet<string>() {
+    public readonly static HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
       // lua metatable methods
       "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
       "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",
@@ -139,6 +139,10 @@ namespace CSharpLua.LuaAst {
 
     public static bool IsReservedWord(string identifier) {
       return ReservedWords.Contains(identifier);
+    }
+
+    public static bool IsMethodReservedWord(string identifier) {
+      return IsReservedWord(identifier) || SpecialMethodReservedWords.Contains(identifier);
     }
   }
 

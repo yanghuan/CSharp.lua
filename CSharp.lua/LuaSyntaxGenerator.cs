@@ -139,8 +139,7 @@ namespace CSharpLua {
     public void Generate(string outFolder) {
       List<string> modules = new List<string>();
       foreach (var luaCompilationUnit in Create()) {
-        string module;
-        string outFile = GetOutFilePath(luaCompilationUnit.FilePath, outFolder, out module);
+        string outFile = GetOutFilePath(luaCompilationUnit.FilePath, outFolder, out string module);
         Write(luaCompilationUnit, outFile);
         modules.Add(module);
       }
@@ -278,9 +277,7 @@ namespace CSharpLua {
       if (types_.Count > 0) {
         types_.Sort((x, y) => x.ToString().CompareTo(y.ToString()));
 
-        List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>>();
-        typesList.Add(types_);
-
+        List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>>() { types_ };
         while (true) {
           HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>();
           var lastTypes = typesList.Last();
@@ -441,6 +438,13 @@ namespace CSharpLua {
         LuaSymbolNameSyntax symbolName = new LuaSymbolNameSyntax(identifierName);
         memberNames_.Add(symbol, symbolName);
         name = symbolName;
+
+        if (symbol.Kind == SymbolKind.Method) {
+          string originalString = identifierName.ValueText;
+          if (LuaSyntaxNode.IsMethodReservedWord(originalString)) {
+            refactorNames_.Add(symbol);
+          }
+        }
       }
       return name;
     }
@@ -497,7 +501,6 @@ namespace CSharpLua {
         ++index;
       }
       if (symbolExpression == null) {
-        Contract.Assert(false);
         throw new InvalidOperationException();
       }
       return symbolExpression;
@@ -727,8 +730,7 @@ namespace CSharpLua {
         if (countOfA == 1) {
           var implementationOfA = a.InterfaceImplementations().First();
           var implementationOfB = b.InterfaceImplementations().First();
-          int result;
-          if (MemberSymbolBoolComparison(implementationOfA, implementationOfB, i => !i.IsExplicitInterfaceImplementation(), out result)) {
+          if (MemberSymbolBoolComparison(implementationOfA, implementationOfB, i => !i.IsExplicitInterfaceImplementation(), out int result)) {
             return result;
           }
         }
@@ -736,8 +738,7 @@ namespace CSharpLua {
         return MemberSymbolCommonComparison(a, b);
       }
 
-      int v;
-      if (MemberSymbolBoolComparison(a, b, i => i.IsAbstract, out v)) {
+      if (MemberSymbolBoolComparison(a, b, i => i.IsAbstract, out var v)) {
         return v;
       }
       if (MemberSymbolBoolComparison(a, b, i => i.IsVirtual, out v)) {
@@ -835,8 +836,7 @@ namespace CSharpLua {
 
     private void UpdateName(ISymbol symbol, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {
       memberNames_[symbol].Update(newName);
-      string checkName1, checkName2;
-      GetRefactorCheckName(symbol, newName, out checkName1, out checkName2);
+      GetRefactorCheckName(symbol, newName, out string checkName1, out string checkName2);
       TryAddNewUsedName(symbol.ContainingType, checkName1);
       if (checkName2 != null) {
         TryAddNewUsedName(symbol.ContainingType, checkName2);
@@ -872,8 +872,7 @@ namespace CSharpLua {
       int index = 1;
       while (true) {
         string newName = originalName + index;
-        string checkName1, checkName2;
-        GetRefactorCheckName(symbol, newName, out checkName1, out checkName2);
+        GetRefactorCheckName(symbol, newName, out string checkName1, out string checkName2);
 
         bool isEnable = true;
         if (typeSymbol != null) {
@@ -1103,8 +1102,7 @@ namespace CSharpLua {
     }
 
     internal bool IsPropertyField(IPropertySymbol symbol) {
-      bool isAutoField;
-      if (!isFieldPropertys_.TryGetValue(symbol, out isAutoField)) {
+      if (!isFieldPropertys_.TryGetValue(symbol, out bool isAutoField)) {
         bool? isMateField = XmlMetaProvider.IsPropertyField(symbol);
         if (isMateField.HasValue) {
           isAutoField = isMateField.Value;

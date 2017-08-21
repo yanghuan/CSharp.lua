@@ -63,8 +63,7 @@ namespace CSharpLua {
 
     private IEnumerable<string> Metas {
       get {
-        List<string> metas = new List<string>();
-        metas.Add(Utility.GetCurrentDirectory(kSystemMeta));
+        List<string> metas = new List<string>() { Utility.GetCurrentDirectory(kSystemMeta) };
         metas.AddRange(metas_);
         return metas;
       }
@@ -83,8 +82,7 @@ namespace CSharpLua {
     private IEnumerable<string> Libs {
       get {
         string privateCorePath = typeof(object).Assembly.Location;
-        List<string> libs = new List<string>();
-        libs.Add(privateCorePath);
+        List<string> libs = new List<string>() { privateCorePath };
 
         string systemDir = Path.GetDirectoryName(privateCorePath);
         foreach (string path in Directory.EnumerateFiles(systemDir, "*.dll")) {

@@ -169,9 +169,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaPropertyOrEventIdentifierNameSyntax GetClone() {
-      LuaPropertyOrEventIdentifierNameSyntax clone = new LuaPropertyOrEventIdentifierNameSyntax(IsProperty, Name);
-      clone.IsGetOrAdd = IsGetOrAdd;
-      return clone;
+      return new LuaPropertyOrEventIdentifierNameSyntax(IsProperty, Name) { IsGetOrAdd = IsGetOrAdd };
     }
 
     internal override void Render(LuaRenderer renderer) {

@@ -132,30 +132,13 @@ namespace CSharpLua {
       }
     }
 
-    private string EncodeToIdentifier(string name) {
-      StringBuilder sb = new StringBuilder();
-      foreach (char c in name) {
-        if (c < 127) {
-          sb.Append(c);
-        }
-        else {
-          string base63 = Utility.ToBase63(c);
-          sb.Append(base63);
-        }
-      }
-      if (char.IsNumber(sb[0])) {
-        sb.Insert(0, '_');
-      }
-      return sb.ToString();
-    }
-
     private bool CheckLocalBadWord(ref string name, SyntaxNode node) {
       if (LuaSyntaxNode.IsReservedWord(name)) {
         name = GetUniqueIdentifier(name, node, 1);
         return true;
       }
       else if (!identifierRegex_.IsMatch(name)) {
-        string newName = EncodeToIdentifier(name);
+        string newName = Utility.EncodeToIdentifier(name);
         name = GetUniqueIdentifier(newName, node, 0);
         return true;
       }
@@ -284,8 +267,7 @@ namespace CSharpLua {
           AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
         }
         else if (key[0] == '^') {
-          int typeIndex;
-          if (int.TryParse(key.Substring(1), out typeIndex)) {
+          if (int.TryParse(key.Substring(1), out int typeIndex)) {
             var typeArgument = typeArguments.GetOrDefault(typeIndex);
             if (typeArgument != null) {
               LuaExpressionSyntax typeName;
@@ -300,8 +282,7 @@ namespace CSharpLua {
           }
         }
         else if (key[0] == '*') {
-          int paramsIndex;
-          if (int.TryParse(key.Substring(1), out paramsIndex)) {
+          if (int.TryParse(key.Substring(1), out int paramsIndex)) {
             LuaCodeTemplateExpressionSyntax paramsExpression = new LuaCodeTemplateExpressionSyntax();
             foreach (var argument in arguments.Skip(paramsIndex)) {
               var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
@@ -313,8 +294,7 @@ namespace CSharpLua {
           }
         }
         else {
-          int argumentIndex;
-          if (int.TryParse(key, out argumentIndex)) {
+          if (int.TryParse(key, out int argumentIndex)) {
             var argument = arguments.ElementAtOrDefault(argumentIndex);
             if (argument != null) {
               var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
@@ -610,8 +590,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
-      var propertyMethod = name as LuaPropertyAdapterExpressionSyntax;
-      if (propertyMethod != null) {
+      if (name is LuaPropertyAdapterExpressionSyntax propertyMethod) {
         var arguments = propertyMethod.ArgumentList.Arguments;
         if (arguments.Count == 1) {
           if (arguments[0].Expression == LuaIdentifierNameSyntax.This) {

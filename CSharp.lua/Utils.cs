@@ -67,8 +67,7 @@ namespace CSharpLua {
     }
 
     public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T t = default(T)) {
-      T v;
-      if (dict.TryGetValue(key, out v)) {
+      if (dict.TryGetValue(key, out T v)) {
         return v;
       }
       return t;
@@ -615,7 +614,7 @@ namespace CSharpLua {
       return false;
     }
 
-    public static string ToBase63(int number) {
+    private static string ToBase63(int number) {
       const string kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
       int basis = kAlphabet.Length;
       int n = number;
@@ -624,6 +623,23 @@ namespace CSharpLua {
         char ch = kAlphabet[n % basis];
         sb.Append(ch);
         n /= basis;
+      }
+      return sb.ToString();
+    }
+
+    public static string EncodeToIdentifier(string name) {
+      StringBuilder sb = new StringBuilder();
+      foreach (char c in name) {
+        if (c < 127) {
+          sb.Append(c);
+        }
+        else {
+          string base63 = ToBase63(c);
+          sb.Append(base63);
+        }
+      }
+      if (char.IsNumber(sb[0])) {
+        sb.Insert(0, '_');
       }
       return sb.ToString();
     }
