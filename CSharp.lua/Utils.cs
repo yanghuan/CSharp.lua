@@ -26,6 +26,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CSharpLua.LuaAst;
+using System.Text.RegularExpressions;
 
 namespace CSharpLua {
   public sealed class CmdArgumentException : Exception {
@@ -614,36 +615,6 @@ namespace CSharpLua {
       return false;
     }
 
-    private static string ToBase63(int number) {
-      const string kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
-      int basis = kAlphabet.Length;
-      int n = number;
-      StringBuilder sb = new StringBuilder();
-      while (n > 0) {
-        char ch = kAlphabet[n % basis];
-        sb.Append(ch);
-        n /= basis;
-      }
-      return sb.ToString();
-    }
-
-    public static string EncodeToIdentifier(string name) {
-      StringBuilder sb = new StringBuilder();
-      foreach (char c in name) {
-        if (c < 127) {
-          sb.Append(c);
-        }
-        else {
-          string base63 = ToBase63(c);
-          sb.Append(base63);
-        }
-      }
-      if (char.IsNumber(sb[0])) {
-        sb.Insert(0, '_');
-      }
-      return sb.ToString();
-    }
-
     public static bool IsExportSyntaxTrivia(this SyntaxTrivia syntaxTrivia, SyntaxNode rootNode) {
       switch (syntaxTrivia.Kind()) {
         case SyntaxKind.SingleLineCommentTrivia:
@@ -682,6 +653,46 @@ namespace CSharpLua {
 
     public static int GetTupleElementCount(this ITypeSymbol typeSymbol) {
       return typeSymbol.GetTupleElementTypes().Count;
+    }
+
+    private static readonly Regex identifierRegex_ = new Regex(@"^_|[a-zA-Z]\w*$", RegexOptions.Compiled);
+
+    public static bool IsIdentifierIllegal(ref string identifierName) {
+      if (!identifierRegex_.IsMatch(identifierName)) {
+        identifierName = EncodeToIdentifier(identifierName);
+        return true;
+      }
+      return false;
+    }
+
+    private static string ToBase63(int number) {
+      const string kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
+      int basis = kAlphabet.Length;
+      int n = number;
+      StringBuilder sb = new StringBuilder();
+      while (n > 0) {
+        char ch = kAlphabet[n % basis];
+        sb.Append(ch);
+        n /= basis;
+      }
+      return sb.ToString();
+    }
+
+    private static string EncodeToIdentifier(string name) {
+      StringBuilder sb = new StringBuilder();
+      foreach (char c in name) {
+        if (c < 127) {
+          sb.Append(c);
+        }
+        else {
+          string base63 = ToBase63(c);
+          sb.Append(base63);
+        }
+      }
+      if (char.IsNumber(sb[0])) {
+        sb.Insert(0, '_');
+      }
+      return sb.ToString();
     }
   }
 }

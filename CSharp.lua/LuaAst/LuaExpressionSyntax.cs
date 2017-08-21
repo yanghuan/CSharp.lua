@@ -36,14 +36,8 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Right { get; }
 
     public LuaAssignmentExpressionSyntax(LuaExpressionSyntax left, LuaExpressionSyntax right) {
-      if (left == null) {
-        throw new ArgumentNullException(nameof(left));
-      }
-      if (right == null) {
-        throw new ArgumentNullException(nameof(right));
-      }
-      Left = left;
-      Right = right;
+      Left = left ?? throw new ArgumentNullException(nameof(left));
+      Right = right ?? throw new ArgumentNullException(nameof(right));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -75,15 +69,9 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Right { get; }
 
     public LuaBinaryExpressionSyntax(LuaExpressionSyntax left, string operatorToken, LuaExpressionSyntax right) {
-      if (left == null) {
-        throw new ArgumentNullException(nameof(left));
-      }
-      if (right == null) {
-        throw new ArgumentNullException(nameof(right));
-      }
-      Left = left;
+      Left = left ?? throw new ArgumentNullException(nameof(left));
       OperatorToken = operatorToken;
-      Right = right;
+      Right = right ?? throw new ArgumentNullException(nameof(right));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -96,10 +84,7 @@ namespace CSharpLua.LuaAst {
     public string OperatorToken { get; }
 
     public LuaPrefixUnaryExpressionSyntax(LuaExpressionSyntax operand, string operatorToken) {
-      if (operand == null) {
-        throw new ArgumentNullException(nameof(operand));
-      }
-      Operand = operand;
+      Operand = operand ?? throw new ArgumentNullException(nameof(operand));
       OperatorToken = operatorToken;
     }
 
@@ -114,10 +99,7 @@ namespace CSharpLua.LuaAst {
     public string CloseParenToken => Tokens.CloseParentheses;
 
     public LuaParenthesizedExpressionSyntax(LuaExpressionSyntax expression) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      Expression = expression;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -147,14 +129,8 @@ namespace CSharpLua.LuaAst {
     public LuaArrayRankSpecifierSyntax RankSpecifier { get; }
 
     public LuaArrayTypeAdapterExpressionSyntax(LuaInvocationExpressionSyntax invocationExpression, LuaArrayRankSpecifierSyntax rankSpecifier) {
-      if (invocationExpression == null) {
-        throw new ArgumentNullException(nameof(invocationExpression));
-      }
-      if (rankSpecifier == null) {
-        throw new ArgumentNullException(nameof(rankSpecifier));
-      }
-      InvocationExpression = invocationExpression;
-      RankSpecifier = rankSpecifier;
+      InvocationExpression = invocationExpression ?? throw new ArgumentNullException(nameof(invocationExpression));
+      RankSpecifier = rankSpecifier ?? throw new ArgumentNullException(nameof(rankSpecifier));
     }
 
     public LuaExpressionSyntax BaseType {
@@ -178,10 +154,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Expression { get; }
 
     public LuaInternalMethodExpressionSyntax(LuaExpressionSyntax expression) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      Expression = expression;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
     internal override void Render(LuaRenderer renderer) {

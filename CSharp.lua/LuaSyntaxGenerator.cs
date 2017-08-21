@@ -398,6 +398,7 @@ namespace CSharpLua {
     private List<INamedTypeSymbol> types_ = new List<INamedTypeSymbol>();
     private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> typeDeclarationAttributes_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
     private Dictionary<ISymbol, LuaSymbolNameSyntax> propertyOrEvnetInnerFieldNames_ = new Dictionary<ISymbol, LuaSymbolNameSyntax>();
+    private Dictionary<ISymbol, string> illegalIdentifiers_ = new Dictionary<ISymbol, string>();
 
     internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
       types_.Add(typeSymbol);
@@ -443,6 +444,10 @@ namespace CSharpLua {
           string originalString = identifierName.ValueText;
           if (LuaSyntaxNode.IsMethodReservedWord(originalString)) {
             refactorNames_.Add(symbol);
+          }
+          else if (Utility.IsIdentifierIllegal(ref originalString)) {
+            refactorNames_.Add(symbol);
+            illegalIdentifiers_.Add(symbol, originalString);
           }
         }
       }
@@ -867,7 +872,7 @@ namespace CSharpLua {
 
     private string GetRefactorName(INamedTypeSymbol typeSymbol, IEnumerable<INamedTypeSymbol> childrens, ISymbol symbol) {
       bool isPrivate = symbol.IsPrivate();
-      string originalName = GetSymbolBaseName(symbol);
+      string originalName = illegalIdentifiers_.GetOrDefault(symbol) ?? GetSymbolBaseName(symbol);
 
       int index = 1;
       while (true) {

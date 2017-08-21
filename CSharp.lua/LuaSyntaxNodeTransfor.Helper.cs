@@ -30,7 +30,6 @@ using CSharpLua.LuaAst;
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransfor {
     private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
-    private static readonly Regex identifierRegex_ = new Regex(@"^_|[a-zA-Z]\w*$", RegexOptions.Compiled);
     private Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
     private int localMappingCounter_;
     private Stack<bool> checkeds_ = new Stack<bool>();
@@ -137,9 +136,8 @@ namespace CSharpLua {
         name = GetUniqueIdentifier(name, node, 1);
         return true;
       }
-      else if (!identifierRegex_.IsMatch(name)) {
-        string newName = Utility.EncodeToIdentifier(name);
-        name = GetUniqueIdentifier(newName, node, 0);
+      else if (Utility.IsIdentifierIllegal(ref name)) {
+        name = GetUniqueIdentifier(name, node, 0);
         return true;
       }
       return false;
