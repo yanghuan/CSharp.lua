@@ -183,9 +183,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       end
     end
     GetClone = function (this) 
-      local clone = CSharpLuaLuaAst.LuaPropertyOrEventIdentifierNameSyntax:new(1, this.IsProperty, this.Name)
-      clone.IsGetOrAdd = this.IsGetOrAdd
-      return clone
+      return System.create(CSharpLuaLuaAst.LuaPropertyOrEventIdentifierNameSyntax:new(1, this.IsProperty, this.Name), function (default) 
+        default.IsGetOrAdd = this.IsGetOrAdd
+      end)
     end
     Render = function (this, renderer) 
       renderer:Render6(this)

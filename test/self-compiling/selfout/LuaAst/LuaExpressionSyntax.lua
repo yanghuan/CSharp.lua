@@ -65,14 +65,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getOperatorToken, Render, __ctor__
     __ctor__ = function (this, left, right) 
       this.__base__.__ctor__(this)
-      if left == nil then
-        System.throw(CSharpLua.ArgumentNullException("left" --[[nameof(left)]]))
-      end
-      if right == nil then
-        System.throw(CSharpLua.ArgumentNullException("right" --[[nameof(right)]]))
-      end
-      this.Left = left
-      this.Right = right
+      this.Left = left or System.throw(CSharpLua.ArgumentNullException("left" --[[nameof(left)]]))
+      this.Right = right or System.throw(CSharpLua.ArgumentNullException("right" --[[nameof(right)]]))
     end
     getOperatorToken = function (this) 
       return "=" --[[Tokens.Equals]]
@@ -147,15 +141,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local Render, __ctor__
     __ctor__ = function (this, left, operatorToken, right) 
       this.__base__.__ctor__(this)
-      if left == nil then
-        System.throw(CSharpLua.ArgumentNullException("left" --[[nameof(left)]]))
-      end
-      if right == nil then
-        System.throw(CSharpLua.ArgumentNullException("right" --[[nameof(right)]]))
-      end
-      this.Left = left
+      this.Left = left or System.throw(CSharpLua.ArgumentNullException("left" --[[nameof(left)]]))
       this.OperatorToken = operatorToken
-      this.Right = right
+      this.Right = right or System.throw(CSharpLua.ArgumentNullException("right" --[[nameof(right)]]))
     end
     Render = function (this, renderer) 
       renderer:Render40(this)
@@ -175,10 +163,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local Render, __ctor__
     __ctor__ = function (this, operand, operatorToken) 
       this.__base__.__ctor__(this)
-      if operand == nil then
-        System.throw(CSharpLua.ArgumentNullException("operand" --[[nameof(operand)]]))
-      end
-      this.Operand = operand
+      this.Operand = operand or System.throw(CSharpLua.ArgumentNullException("operand" --[[nameof(operand)]]))
       this.OperatorToken = operatorToken
     end
     Render = function (this, renderer) 
@@ -199,10 +184,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getOpenParenToken, getCloseParenToken, Render, __ctor__
     __ctor__ = function (this, expression) 
       this.__base__.__ctor__(this)
-      if expression == nil then
-        System.throw(CSharpLua.ArgumentNullException("expression" --[[nameof(expression)]]))
-      end
-      this.Expression = expression
+      this.Expression = expression or System.throw(CSharpLua.ArgumentNullException("expression" --[[nameof(expression)]]))
     end
     getOpenParenToken = function (this) 
       return "(" --[[Tokens.OpenParentheses]]
@@ -274,14 +256,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getBaseType, getIsSimapleArray, Render, __ctor__
     __ctor__ = function (this, invocationExpression, rankSpecifier) 
       this.__base__.__ctor__(this)
-      if invocationExpression == nil then
-        System.throw(CSharpLua.ArgumentNullException("invocationExpression" --[[nameof(invocationExpression)]]))
-      end
-      if rankSpecifier == nil then
-        System.throw(CSharpLua.ArgumentNullException("rankSpecifier" --[[nameof(rankSpecifier)]]))
-      end
-      this.InvocationExpression = invocationExpression
-      this.RankSpecifier = rankSpecifier
+      this.InvocationExpression = invocationExpression or System.throw(CSharpLua.ArgumentNullException("invocationExpression" --[[nameof(invocationExpression)]]))
+      this.RankSpecifier = rankSpecifier or System.throw(CSharpLua.ArgumentNullException("rankSpecifier" --[[nameof(rankSpecifier)]]))
     end
     getBaseType = function (this) 
       return this.InvocationExpression.ArgumentList.Arguments:get(0).Expression
@@ -309,10 +285,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local Render, __ctor__
     __ctor__ = function (this, expression) 
       this.__base__.__ctor__(this)
-      if expression == nil then
-        System.throw(CSharpLua.ArgumentNullException("expression" --[[nameof(expression)]]))
-      end
-      this.Expression = expression
+      this.Expression = expression or System.throw(CSharpLua.ArgumentNullException("expression" --[[nameof(expression)]]))
     end
     Render = function (this, renderer) 
       this.Expression:Render(renderer)

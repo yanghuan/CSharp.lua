@@ -162,7 +162,6 @@ return function (dir)
     "CSharpLua.XmlMetaProvider.XmlMetaModel.MethodModel", 
     "CSharpLua.XmlMetaProvider.XmlMetaModel.NamespaceModel", 
     "CSharpLua.XmlMetaProvider.XmlMetaModel.PropertyModel", 
-    "CSharpLua.XmlMetaProvider.XmlMetaModel.PropertyModel.FieldPropery", 
     "CSharpLua.XmlMetaProvider.XmlMetaModel.TemplateModel"
   }, {
     Main = "CSharpLua.Program.Main"

@@ -54,10 +54,11 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     namespace.class("Keyword", function (namespace) 
       return {}
     end)
-    local Render, SpecailWord, ReservedWords, SpecialReservedWords, IsReservedWord, __staticCtor__
+    local Render, SpecailWord, ReservedWords, SpecialMethodReservedWords, IsReservedWord, IsMethodReservedWord, __staticCtor__
     __staticCtor__ = function (this) 
       this.SpecailWord = SpecailWord
       this.IsReservedWord = IsReservedWord
+      this.IsMethodReservedWord = IsMethodReservedWord
       this.TempIdentifiers = System.Array(System.String)("default", "extern", "ref", "out", "try", "case", "void", "byte", "char", "uint", "lock", "using", "fixed", "const", "object", "internal", "virtual")
       ReservedWords = System.create(System.HashSet(System.String)(), function (default) 
         default:Add("and" --[[Keyword.And]])
@@ -85,7 +86,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         default:Add("System")
         default:Add("Linq")
       end)
-      SpecialReservedWords = System.create(System.HashSet(System.String)(), function (default) 
+      SpecialMethodReservedWords = System.create(System.HashSet(System.String)(), function (default) 
         default:Add("__add")
         default:Add("__sub")
         default:Add("__mul")
@@ -118,7 +119,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         default:Add("__attributes__")
         default:Add("__clone__")
       end)
-      this.ReservedWords, this.SpecialReservedWords = ReservedWords, SpecialReservedWords
+      this.ReservedWords, this.SpecialMethodReservedWords = ReservedWords, SpecialMethodReservedWords
     end
     Render = function (this, renderer) 
       System.throw(System.NotSupportedException(("{0} is not override"):Format(this:GetType():getName())))
@@ -128,6 +129,9 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     end
     IsReservedWord = function (identifier) 
       return ReservedWords:Contains(identifier)
+    end
+    IsMethodReservedWord = function (identifier) 
+      return IsReservedWord(identifier) or SpecialMethodReservedWords:Contains(identifier)
     end
     return {
       Render = Render, 

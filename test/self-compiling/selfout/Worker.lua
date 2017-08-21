@@ -54,8 +54,9 @@ System.namespace("CSharpLua", function (namespace)
       end
     end
     getMetas = function (this) 
-      local metas = System.List(System.String)()
-      metas:Add(CSharpLua.Utility.GetCurrentDirectory("~/System.xml" --[[Worker.kSystemMeta]]))
+      local metas = System.create(System.List(System.String)(), function (default) 
+        default:Add(CSharpLua.Utility.GetCurrentDirectory("~/System.xml" --[[Worker.kSystemMeta]]))
+      end)
       metas:AddRange(this.metas_)
       return metas
     end
@@ -72,8 +73,9 @@ System.namespace("CSharpLua", function (namespace)
     end
     getLibs = function (this) 
       local privateCorePath = System.typeof(System.Object):getAssembly():getLocation()
-      local libs = System.List(System.String)()
-      libs:Add(privateCorePath)
+      local libs = System.create(System.List(System.String)(), function (default) 
+        default:Add(privateCorePath)
+      end)
 
       local systemDir = SystemIO.Path.GetDirectoryName(privateCorePath)
       for _, path in System.each(SystemIO.Directory.EnumerateFiles(systemDir, "*.dll")) do

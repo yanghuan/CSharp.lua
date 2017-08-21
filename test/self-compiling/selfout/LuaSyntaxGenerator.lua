@@ -206,6 +206,7 @@ System.namespace("CSharpLua", function (namespace)
       this.types_ = System.List(MicrosoftCodeAnalysis.INamedTypeSymbol)()
       this.typeDeclarationAttributes_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))()
       this.propertyOrEvnetInnerFieldNames_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, CSharpLuaLuaAst.LuaSymbolNameSyntax)()
+      this.illegalIdentifiers_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, System.String)()
       this.implicitInterfaceImplementations_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, System.HashSet(MicrosoftCodeAnalysis.ISymbol))()
       this.implicitInterfaceTypes_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.Dictionary(MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol))()
       this.isFieldPropertys_ = System.Dictionary(MicrosoftCodeAnalysis.IPropertySymbol, System.Boolean)()
@@ -386,9 +387,9 @@ System.namespace("CSharpLua", function (namespace)
           return x:ToString():CompareTo(y:ToString())
         end)
 
-        local typesList = System.List(System.List(MicrosoftCodeAnalysis.INamedTypeSymbol))()
-        typesList:Add(this.types_)
-
+        local typesList = System.create(System.List(System.List(MicrosoftCodeAnalysis.INamedTypeSymbol))(), function (default) 
+          default:Add(this.types_)
+        end)
         while true do
           local parentTypes = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)()
           local lastTypes = CSharpLua.Utility.Last(typesList, System.List(MicrosoftCodeAnalysis.INamedTypeSymbol))
@@ -528,6 +529,18 @@ System.namespace("CSharpLua", function (namespace)
         local symbolName = CSharpLuaLuaAst.LuaSymbolNameSyntax(identifierName)
         this.memberNames_:Add(symbol, symbolName)
         name = symbolName
+
+        if symbol:getKind() == 9 --[[SymbolKind.Method]] then
+          local originalString = identifierName.ValueText
+          local default
+          default, originalString = CSharpLua.Utility.IsIdentifierIllegal(originalString)
+          if CSharpLuaLuaAst.LuaSyntaxNode.IsMethodReservedWord(originalString) then
+            this.refactorNames_:Add(symbol)
+          elseif default then
+            this.refactorNames_:Add(symbol)
+            this.illegalIdentifiers_:Add(symbol, originalString)
+          end
+        end
       end
       return name
     end
@@ -581,7 +594,6 @@ System.namespace("CSharpLua", function (namespace)
         index = index + 1
       end
       if symbolExpression == nil then
-        assert(false)
         System.throw(CSharpLua.InvalidOperationException())
       end
       return symbolExpression
@@ -677,15 +689,16 @@ System.namespace("CSharpLua", function (namespace)
     GetStaticClassSameNameMembers = function (this, symbol) 
       local members = System.List(MicrosoftCodeAnalysis.ISymbol)()
       local names = GetSymbolNames(this, symbol)
-      AddSimilarNameMembers(this, symbol:getContainingType(), names, members)
+      AddSimilarNameMembers(this, symbol:getContainingType(), names, members, false)
       return members
     end
     GetSameNameMembers = function (this, symbol) 
       local members = System.List(MicrosoftCodeAnalysis.ISymbol)()
       local names = GetSymbolNames(this, symbol)
-      local curTypeSymbol = symbol:getContainingType()
+      local rootType = symbol:getContainingType()
+      local curTypeSymbol = rootType
       while true do
-        AddSimilarNameMembers(this, curTypeSymbol, names, members)
+        AddSimilarNameMembers(this, curTypeSymbol, names, members, rootType ~= curTypeSymbol)
         local baseTypeSymbol = curTypeSymbol:getBaseType()
         if baseTypeSymbol ~= nil and CSharpLua.Utility.IsFromCode(baseTypeSymbol) then
           curTypeSymbol = baseTypeSymbol
@@ -696,7 +709,7 @@ System.namespace("CSharpLua", function (namespace)
       members:Sort(System.bind(this, MemberSymbolComparison))
       return members
     end
-    AddSimilarNameMembers = function (this, typeSymbol, names, outList) 
+    AddSimilarNameMembers = function (this, typeSymbol, names, outList, isWithoutPrivate) 
       assert(CSharpLua.Utility.IsFromCode(typeSymbol))
       for _, member in System.each(typeSymbol:GetMembers()) do
         local continue
@@ -708,11 +721,14 @@ System.namespace("CSharpLua", function (namespace)
               break
             end
           end
-          local memberNames = GetSymbolNames(this, member)
-          if memberNames:Exists(function (i) 
-            return names:Contains(i)
-          end) then
-            outList:Add(member)
+
+          if not isWithoutPrivate or not CSharpLua.Utility.IsPrivate(member) then
+            local memberNames = GetSymbolNames(this, member)
+            if memberNames:Exists(function (i) 
+              return names:Contains(i)
+            end) then
+              outList:Add(member)
+            end
           end
           continue = true
         until 1
@@ -842,7 +858,7 @@ System.namespace("CSharpLua", function (namespace)
         local type = a:getContainingType()
         local names = GetSymbolNames(this, a)
         local members = System.List(MicrosoftCodeAnalysis.ISymbol)()
-        AddSimilarNameMembers(this, type, names, members)
+        AddSimilarNameMembers(this, type, names, members, false)
         local indexOfA = members:IndexOf(a)
         assert(indexOfA ~= - 1)
         local indexOfB = members:IndexOf(b)
@@ -917,7 +933,8 @@ System.namespace("CSharpLua", function (namespace)
     end
     UpdateName = function (this, symbol, newName, alreadyRefactorSymbols) 
       this.memberNames_:get(symbol):Update(newName)
-      local checkName1, checkName2
+      local checkName1
+      local checkName2
       checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName)
       TryAddNewUsedName(this, symbol:getContainingType(), checkName1)
       if checkName2 ~= nil then
@@ -946,21 +963,23 @@ System.namespace("CSharpLua", function (namespace)
       return checkName1, checkName2
     end
     GetRefactorName = function (this, typeSymbol, childrens, symbol) 
-      local originalName = GetSymbolBaseName(this, symbol)
+      local isPrivate = CSharpLua.Utility.IsPrivate(symbol)
+      local originalName = CSharpLua.Utility.GetOrDefault1(this.illegalIdentifiers_, symbol, nil, MicrosoftCodeAnalysis.ISymbol, System.String) or GetSymbolBaseName(this, symbol)
 
       local index = 1
       while true do
         local newName = originalName .. index
-        local checkName1, checkName2
+        local checkName1
+        local checkName2
         checkName1, checkName2 = GetRefactorCheckName(this, symbol, newName)
 
         local isEnable = true
         if typeSymbol ~= nil then
-          isEnable = IsNewNameEnable(this, typeSymbol, checkName1, checkName2)
+          isEnable = IsNewNameEnable(this, typeSymbol, checkName1, checkName2, isPrivate)
         else
-          if childrens ~= nil then
+          if not isPrivate and childrens ~= nil then
             isEnable = Linq.All(childrens, function (i) 
-              return IsNewNameEnable(this, i, checkName1, checkName2)
+              return IsNewNameEnable(this, i, checkName1, checkName2, isPrivate)
             end)
           end
         end
@@ -974,24 +993,26 @@ System.namespace("CSharpLua", function (namespace)
       local set = CSharpLua.Utility.GetOrDefault1(this.typeNameUseds_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(System.String))
       return set ~= nil and set:Contains(newName)
     end
-    IsNewNameEnable = function (this, typeSymbol, checkName1, checkName2) 
-      local isEnable = IsNewNameEnable1(this, typeSymbol, checkName1)
+    IsNewNameEnable = function (this, typeSymbol, checkName1, checkName2, isPrivate) 
+      local isEnable = IsNewNameEnable1(this, typeSymbol, checkName1, isPrivate)
       if isEnable then
         if checkName2 ~= nil then
-          isEnable = IsNewNameEnable1(this, typeSymbol, checkName2)
+          isEnable = IsNewNameEnable1(this, typeSymbol, checkName2, isPrivate)
         end
       end
       return isEnable
     end
-    IsNewNameEnable1 = function (this, typeSymbol, newName) 
-      local isEnable = IsNameEnableOfCurAndChildrens(this, typeSymbol, newName)
+    IsNewNameEnable1 = function (this, typeSymbol, newName, isPrivate) 
+      local isEnable = IsNameEnableOfCurAndChildrens(this, typeSymbol, newName, isPrivate)
       if isEnable then
-        local p = typeSymbol:getBaseType()
-        while p ~= nil do
-          if not IsCurTypeNameEnable(this, p, newName) then
-            return false
+        if not isPrivate then
+          local p = typeSymbol:getBaseType()
+          while p ~= nil do
+            if not IsCurTypeNameEnable(this, p, newName) then
+              return false
+            end
+            p = p:getBaseType()
           end
-          p = p:getBaseType()
         end
         return true
       end
@@ -1000,16 +1021,18 @@ System.namespace("CSharpLua", function (namespace)
     IsCurTypeNameEnable = function (this, typeSymbol, newName) 
       return not IsTypeNameUsed(this, typeSymbol, newName) and typeSymbol:GetMembers(newName):getIsEmpty()
     end
-    IsNameEnableOfCurAndChildrens = function (this, typeSymbol, newName) 
+    IsNameEnableOfCurAndChildrens = function (this, typeSymbol, newName, isPrivate) 
       if not IsCurTypeNameEnable(this, typeSymbol, newName) then
         return false
       end
 
-      local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))
-      if childrens ~= nil then
-        for _, children in System.each(childrens) do
-          if not IsNameEnableOfCurAndChildrens(this, children, newName) then
-            return false
+      if not isPrivate then
+        local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))
+        if childrens ~= nil then
+          for _, children in System.each(childrens) do
+            if not IsNameEnableOfCurAndChildrens(this, children, newName, isPrivate) then
+              return false
+            end
           end
         end
       end
@@ -1025,6 +1048,7 @@ System.namespace("CSharpLua", function (namespace)
       end
     end
     GetInnerGetRefactorName = function (this, symbol) 
+      local isPrivate = CSharpLua.Utility.IsPrivate(symbol)
       local originalName = GetSymbolBaseName(this, symbol)
 
       local index = 0
@@ -1036,32 +1060,34 @@ System.namespace("CSharpLua", function (namespace)
           default = originalName .. index
         end
         local newName = default
-        local isEnable = IsInnerNameEnable(this, symbol:getContainingType(), newName)
+        local isEnable = IsInnerNameEnable(this, symbol:getContainingType(), newName, isPrivate)
         if isEnable then
           return newName
         end
         index = index + 1
       end
     end
-    IsInnerNameEnable = function (this, typeSymbol, newName) 
-      local isEnable = IsInnerNameEnableOfChildrens(this, typeSymbol, newName)
+    IsInnerNameEnable = function (this, typeSymbol, newName, isPrivate) 
+      local isEnable = IsInnerNameEnableOfChildrens(this, typeSymbol, newName, isPrivate)
       if isEnable then
-        local p = typeSymbol:getBaseType()
-        while p ~= nil do
-          if not IsCurTypeNameEnable(this, p, newName) then
-            return false
+        if not isPrivate then
+          local p = typeSymbol:getBaseType()
+          while p ~= nil do
+            if not IsCurTypeNameEnable(this, p, newName) then
+              return false
+            end
+            p = p:getBaseType()
           end
-          p = p:getBaseType()
         end
         return true
       end
       return false
     end
-    IsInnerNameEnableOfChildrens = function (this, typeSymbol, newName) 
+    IsInnerNameEnableOfChildrens = function (this, typeSymbol, newName, isPrivate) 
       local childrens = CSharpLua.Utility.GetOrDefault1(this.extends_, typeSymbol, nil, MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))
       if childrens ~= nil then
         for _, children in System.each(childrens) do
-          if not IsNameEnableOfCurAndChildrens(this, children, newName) then
+          if not IsNameEnableOfCurAndChildrens(this, children, newName, isPrivate) then
             return false
           end
         end

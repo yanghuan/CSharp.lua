@@ -22,6 +22,7 @@ local MicrosoftCodeAnalysisCSharpSyntax = Microsoft.CodeAnalysis.CSharp.Syntax
 local SystemIO = System.IO
 local SystemLinq = System.Linq
 local SystemText = System.Text
+local SystemTextRegularExpressions = System.Text.RegularExpressions
 local SystemThreading = System.Threading
 local CSharpLua
 local CSharpLuaLuaAst
@@ -105,8 +106,67 @@ System.namespace("CSharpLua", function (namespace)
     IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
     IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, ToBase63, IsExportSyntaxTrivia, IsTypeDeclaration, 
-    GetIEnumerableElementType, DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount
+    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, IsTypeDeclaration, GetIEnumerableElementType, 
+    DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, identifierRegex_, IsIdentifierIllegal, ToBase63, EncodeToIdentifier, 
+    __staticCtor__
+    __staticCtor__ = function (this) 
+      this.First = First
+      this.Last = Last
+      this.GetOrDefault = GetOrDefault
+      this.GetOrDefault1 = GetOrDefault1
+      this.TryAdd = TryAdd
+      this.AddAt = AddAt
+      this.IndexOf = IndexOf
+      this.TrimEnd = TrimEnd
+      this.GetCommondLines = GetCommondLines
+      this.GetArgument = GetArgument
+      this.GetCurrentDirectory = GetCurrentDirectory
+      this.Split = Split
+      this.IsPrivate = IsPrivate
+      this.IsPrivate1 = IsPrivate1
+      this.IsStatic = IsStatic
+      this.IsAbstract = IsAbstract
+      this.IsReadOnly = IsReadOnly
+      this.IsConst = IsConst
+      this.IsParams = IsParams
+      this.IsPartial = IsPartial
+      this.IsOutOrRef = IsOutOrRef
+      this.IsStringType = IsStringType
+      this.IsDelegateType = IsDelegateType
+      this.IsIntegerType = IsIntegerType
+      this.IsNullableType = IsNullableType
+      this.IsImmutable = IsImmutable
+      this.IsInterfaceImplementation = IsInterfaceImplementation
+      this.InterfaceImplementations = InterfaceImplementations
+      this.IsFromCode = IsFromCode
+      this.IsOverridable = IsOverridable
+      this.OverriddenSymbol = OverriddenSymbol
+      this.IsOverridden = IsOverridden
+      this.IsPropertyField = IsPropertyField
+      this.IsEventFiled = IsEventFiled
+      this.HasStaticCtor = HasStaticCtor
+      this.IsStaticLazy = IsStaticLazy
+      this.IsAssignment = IsAssignment
+      this.IsSystemLinqEnumerable = IsSystemLinqEnumerable
+      this.GetLocationString = GetLocationString
+      this.IsSubclassOf = IsSubclassOf
+      this.IsAssignableFrom = IsAssignableFrom
+      this.CheckMethodDefinition = CheckMethodDefinition
+      this.CheckOriginalDefinition = CheckOriginalDefinition
+      this.IsMainEntryPoint = IsMainEntryPoint
+      this.IsExtendSelf = IsExtendSelf
+      this.IsTimeSpanType = IsTimeSpanType
+      this.IsGenericIEnumerableType = IsGenericIEnumerableType
+      this.IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation
+      this.IsExportSyntaxTrivia = IsExportSyntaxTrivia
+      this.IsTypeDeclaration = IsTypeDeclaration
+      this.GetIEnumerableElementType = GetIEnumerableElementType
+      this.GetTupleElementTypes = GetTupleElementTypes
+      this.GetTupleElementIndex = GetTupleElementIndex
+      this.GetTupleElementCount = GetTupleElementCount
+      this.IsIdentifierIllegal = IsIdentifierIllegal
+      identifierRegex_ = SystemTextRegularExpressions.Regex([[^_|[a-zA-Z]\w*$]], 8 --[[RegexOptions.Compiled]])
+    end
     First = function (list, T) 
       return list:get(0)
     end
@@ -667,18 +727,6 @@ System.namespace("CSharpLua", function (namespace)
       until 1
       return false
     end
-    ToBase63 = function (number) 
-      local kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
-      local basis = #kAlphabet
-      local n = number
-      local sb = SystemText.StringBuilder()
-      while n > 0 do
-        local ch = kAlphabet:get(n % basis)
-        sb:Append(ch)
-        n = n // basis
-      end
-      return sb:ToString()
-    end
     IsExportSyntaxTrivia = function (syntaxTrivia, rootNode) 
       repeat
         local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(syntaxTrivia)
@@ -723,62 +771,42 @@ System.namespace("CSharpLua", function (namespace)
     GetTupleElementCount = function (typeSymbol) 
       return GetTupleElementTypes(typeSymbol):getCount()
     end
+    IsIdentifierIllegal = function (identifierName) 
+      if not identifierRegex_:IsMatch(identifierName) then
+        identifierName = EncodeToIdentifier(identifierName)
+        return true, identifierName
+      end
+      return false, identifierName
+    end
+    ToBase63 = function (number) 
+      local kAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+      local basis = #kAlphabet
+      local n = number
+      local sb = SystemText.StringBuilder()
+      while n > 0 do
+        local ch = kAlphabet:get(n % basis)
+        sb:Append(ch)
+        n = n // basis
+      end
+      return sb:ToString()
+    end
+    EncodeToIdentifier = function (name) 
+      local sb = SystemText.StringBuilder()
+      for _, c in System.each(name) do
+        if c < 127 then
+          sb:Append(c)
+        else
+          local base63 = ToBase63(c)
+          sb:Append(base63)
+        end
+      end
+      if System.Char.IsNumber(sb:get(0)) then
+        sb:Insert(0, 95 --[['_']])
+      end
+      return sb:ToString()
+    end
     return {
-      First = First, 
-      Last = Last, 
-      GetOrDefault = GetOrDefault, 
-      GetOrDefault1 = GetOrDefault1, 
-      TryAdd = TryAdd, 
-      AddAt = AddAt, 
-      IndexOf = IndexOf, 
-      TrimEnd = TrimEnd, 
-      GetCommondLines = GetCommondLines, 
-      GetArgument = GetArgument, 
-      GetCurrentDirectory = GetCurrentDirectory, 
-      Split = Split, 
-      IsPrivate = IsPrivate, 
-      IsPrivate1 = IsPrivate1, 
-      IsStatic = IsStatic, 
-      IsAbstract = IsAbstract, 
-      IsReadOnly = IsReadOnly, 
-      IsConst = IsConst, 
-      IsParams = IsParams, 
-      IsPartial = IsPartial, 
-      IsOutOrRef = IsOutOrRef, 
-      IsStringType = IsStringType, 
-      IsDelegateType = IsDelegateType, 
-      IsIntegerType = IsIntegerType, 
-      IsNullableType = IsNullableType, 
-      IsImmutable = IsImmutable, 
-      IsInterfaceImplementation = IsInterfaceImplementation, 
-      InterfaceImplementations = InterfaceImplementations, 
-      IsFromCode = IsFromCode, 
-      IsOverridable = IsOverridable, 
-      OverriddenSymbol = OverriddenSymbol, 
-      IsOverridden = IsOverridden, 
-      IsPropertyField = IsPropertyField, 
-      IsEventFiled = IsEventFiled, 
-      HasStaticCtor = HasStaticCtor, 
-      IsStaticLazy = IsStaticLazy, 
-      IsAssignment = IsAssignment, 
-      IsSystemLinqEnumerable = IsSystemLinqEnumerable, 
-      GetLocationString = GetLocationString, 
-      IsSubclassOf = IsSubclassOf, 
-      IsAssignableFrom = IsAssignableFrom, 
-      CheckMethodDefinition = CheckMethodDefinition, 
-      CheckOriginalDefinition = CheckOriginalDefinition, 
-      IsMainEntryPoint = IsMainEntryPoint, 
-      IsExtendSelf = IsExtendSelf, 
-      IsTimeSpanType = IsTimeSpanType, 
-      IsGenericIEnumerableType = IsGenericIEnumerableType, 
-      IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation, 
-      ToBase63 = ToBase63, 
-      IsExportSyntaxTrivia = IsExportSyntaxTrivia, 
-      IsTypeDeclaration = IsTypeDeclaration, 
-      GetIEnumerableElementType = GetIEnumerableElementType, 
-      GetTupleElementTypes = GetTupleElementTypes, 
-      GetTupleElementIndex = GetTupleElementIndex, 
-      GetTupleElementCount = GetTupleElementCount
+      __staticCtor__ = __staticCtor__
     }
   end)
 end)

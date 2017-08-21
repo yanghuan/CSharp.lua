@@ -36,12 +36,21 @@ System.namespace("CSharpLua", function (namespace)
         return {}
       end)
       namespace.class("PropertyModel", function (namespace) 
-        namespace.class("FieldPropery", function (namespace) 
-          return {
-            IsField = false
-          }
-        end)
-        return {}
+        local getCheckIsField
+        getCheckIsField = function (this) 
+          if this.IsField ~= nil then
+            if this.IsField:Equals(System.Boolean.TrueString, 5 --[[StringComparison.OrdinalIgnoreCase]]) then
+              return true
+            end
+            if this.IsField:Equals(System.Boolean.FalseString, 5 --[[StringComparison.OrdinalIgnoreCase]]) then
+              return false
+            end
+          end
+          return nil
+        end
+        return {
+          getCheckIsField = getCheckIsField
+        }
       end)
       namespace.class("FieldModel", function (namespace) 
         return {}
@@ -509,9 +518,11 @@ System.namespace("CSharpLua", function (namespace)
           default = default:GetPropertyModel(symbol:getName())
         end
         local info = default
-        if info ~= nil and info.field ~= nil then
-          return info.field.IsField
+        local extern = info
+        if extern ~= nil then
+          extern = extern.getCheckIsField()
         end
+        return extern
       end
       return nil
     end
@@ -519,11 +530,10 @@ System.namespace("CSharpLua", function (namespace)
       if MayHaveCodeMeta(this, symbol) then
         local default = GetTypeMetaInfo(this, symbol)
         if default ~= nil then
-          local extern = extern:GetFieldModel(symbol:getName())
-          if extern ~= nil then
-            extern = extern.Template
+          default = default:GetFieldModel(symbol:getName())
+          if default ~= nil then
+            default = default.Template
           end
-          default = extern
         end
         return default
       end
@@ -566,11 +576,10 @@ System.namespace("CSharpLua", function (namespace)
       if not CSharpLua.Utility.IsFromCode(symbol) then
         local default = GetTypeMetaInfo(this, symbol)
         if default ~= nil then
-          local extern = extern:GetMethodMetaInfo(symbol:getName())
-          if extern ~= nil then
-            extern = extern:GetMetaInfo(symbol, metaType)
+          default = default:GetMethodMetaInfo(symbol:getName())
+          if default ~= nil then
+            default = default:GetMetaInfo(symbol, metaType)
           end
-          default = extern
         end
         codeTemplate = default
       end
