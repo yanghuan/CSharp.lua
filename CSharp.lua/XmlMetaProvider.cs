@@ -35,11 +35,6 @@ namespace CSharpLua {
       }
 
       public sealed class PropertyModel {
-        public sealed class FieldPropery {
-          [XmlAttribute]
-          public bool IsField;
-        }
-
         [XmlAttribute]
         public string name;
         [XmlAttribute]
@@ -48,8 +43,22 @@ namespace CSharpLua {
         public TemplateModel set;
         [XmlElement]
         public TemplateModel get;
-        [XmlElement]
-        public FieldPropery field;
+        [XmlAttribute]
+        public string IsField;
+
+        public bool? CheckIsField {
+          get {
+            if (IsField != null) {
+              if (IsField.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase)) {
+                return true;
+              }
+              if (IsField.Equals(bool.FalseString, StringComparison.OrdinalIgnoreCase)) {
+                return false;
+              }
+            }
+            return null;
+          }
+        }
       }
 
       public sealed class FieldModel {
@@ -541,9 +550,7 @@ namespace CSharpLua {
     public bool? IsPropertyField(IPropertySymbol symbol) {
       if (MayHaveCodeMeta(symbol)) {
         var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
-        if (info != null && info.field != null) {
-          return info.field.IsField;
-        }
+        return info?.CheckIsField;
       }
       return null;
     }

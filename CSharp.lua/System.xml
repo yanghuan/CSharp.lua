@@ -314,17 +314,11 @@ limitations under the License.
         </property>
       </class>
       <class name="LinkedList^1" Name="System.LinkedList">
-        <property name="Count">
-          <field IsField="true" />
-        </property>
+        <property name="Count" IsField="true" />
       </class>
       <class name="LinkedListNode^1" Name="System.LinkedListNode">
-        <property name="Value">
-          <field IsField="true" />
-        </property>
-        <property name="List">
-          <field IsField="true" />
-        </property>
+        <property name="Value" IsField="true" />
+        <property name="List" IsField="true" />
       </class>
       <class name="HashSet^1" Name="System.HashSet" />
       <class name="EqualityComparer^1">
