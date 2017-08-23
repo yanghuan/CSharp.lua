@@ -74,7 +74,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       if isContained then
         default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace
       else
-        default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.System
+        default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.System1
       end
       this:UpdateIdentifiers(name, default, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Namespace)
     end

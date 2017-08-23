@@ -23,14 +23,14 @@ System.usingDeclare(function (global)
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
   namespace.class("LuaIdentifierNameSyntax", function (namespace) 
-    local Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, 
+    local Empty, Placeholder, One, System1, Namespace, Class, Struct, Interface, 
     Enum, Value, This, True, False, Throw, Each, YieldReturn, 
     Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, 
     Ctor, Inherits, Default, SystemDefault, Property, Event, Nil, TypeOf, 
     Continue, StringChar, ToStr, SystemToString, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, 
     IntegerDiv, IntegerDivOfNull, IntegerMod, IntegerModOfNull, BitNot, BitNotOfNull, BitAnd, BitAndOfNull, 
     BitOr, BitOrOfNull, BitXor, BitXorOfNull, ShiftRight, ShiftRightOfNull, ShiftLeft, ShiftLeftOfNull, 
-    Try, Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, 
+    Try, Is, As, Cast, Using, UsingX, Linq1, SystemLinqEnumerable, 
     New, Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, 
     setmetatable, getmetatable, Clone, ValueType, Obj, EqualsStatic, SystemObjectEqualsStatic, DateTime, 
     TimeSpan, AnonymousTypeCreate, AnonymousType, SystemNew, StackAlloc, GenericT, Base, ValueTupleType, 
@@ -40,7 +40,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       Empty = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "")
       Placeholder = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "_")
       One = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(2, 1)
-      System = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System")
+      System1 = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System")
       Namespace = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "namespace")
       Class = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "class")
       Struct = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "struct")
@@ -99,7 +99,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       Cast = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.cast")
       Using = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.using")
       UsingX = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.usingX")
-      Linq = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Linq")
+      Linq1 = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Linq")
       SystemLinqEnumerable = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "System.Linq.Enumerable")
       New = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "new")
       Format = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Format")
@@ -137,7 +137,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       LinqGroupBy = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Linq.GroupBy")
       LinqJoin = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Linq.Join")
       LinqGroupJoin = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, "Linq.GroupJoin")
-      this.Empty, this.Placeholder, this.One, this.System, this.Namespace, this.Class, this.Struct, this.Interface, this.Enum, this.Value, this.This, this.True, this.False, this.Throw, this.Each, this.YieldReturn, this.Object, this.Array, this.ArrayEmpty, this.MultiArray, this.Create, this.Add, this.StaticCtor, this.Init, this.Ctor, this.Inherits, this.Default, this.SystemDefault, this.Property, this.Event, this.Nil, this.TypeOf, this.Continue, this.StringChar, this.ToStr, this.SystemToString, this.ToEnumString, this.DelegateCombine, this.DelegateRemove, this.DelegateBind, this.IntegerDiv, this.IntegerDivOfNull, this.IntegerMod, this.IntegerModOfNull, this.BitNot, this.BitNotOfNull, this.BitAnd, this.BitAndOfNull, this.BitOr, this.BitOrOfNull, this.BitXor, this.BitXorOfNull, this.ShiftRight, this.ShiftRightOfNull, this.ShiftLeft, this.ShiftLeftOfNull, this.Try, this.Is, this.As, this.Cast, this.Using, this.UsingX, this.Linq, this.SystemLinqEnumerable, this.New, this.Format, this.Delegate, this.Int, this.UsingDeclare, this.Global, this.Attributes, this.Trunc, this.setmetatable, this.getmetatable, this.Clone, this.ValueType, this.Obj, this.EqualsStatic, this.SystemObjectEqualsStatic, this.DateTime, this.TimeSpan, this.AnonymousTypeCreate, this.AnonymousType, this.SystemNew, this.StackAlloc, this.GenericT, this.Base, this.ValueTupleType, this.ValueTupleTypeCreate, this.LinqCast, this.LinqWhere, this.LinqSelect, this.LinqSelectMany, this.LinqOrderBy, this.LinqOrderByDescending, this.LinqThenBy, this.LinqThenByDescending, this.LinqGroupBy, this.LinqJoin, this.LinqGroupJoin = Empty, Placeholder, One, System, Namespace, Class, Struct, Interface, Enum, Value, This, True, False, Throw, Each, YieldReturn, Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, Inherits, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, StringChar, ToStr, SystemToString, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerDivOfNull, IntegerMod, IntegerModOfNull, BitNot, BitNotOfNull, BitAnd, BitAndOfNull, BitOr, BitOrOfNull, BitXor, BitXorOfNull, ShiftRight, ShiftRightOfNull, ShiftLeft, ShiftLeftOfNull, Try, Is, As, Cast, Using, UsingX, Linq, SystemLinqEnumerable, New, Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, setmetatable, getmetatable, Clone, ValueType, Obj, EqualsStatic, SystemObjectEqualsStatic, DateTime, TimeSpan, AnonymousTypeCreate, AnonymousType, SystemNew, StackAlloc, GenericT, Base, ValueTupleType, ValueTupleTypeCreate, LinqCast, LinqWhere, LinqSelect, LinqSelectMany, LinqOrderBy, LinqOrderByDescending, LinqThenBy, LinqThenByDescending, LinqGroupBy, LinqJoin, LinqGroupJoin
+      this.Empty, this.Placeholder, this.One, this.System1, this.Namespace, this.Class, this.Struct, this.Interface, this.Enum, this.Value, this.This, this.True, this.False, this.Throw, this.Each, this.YieldReturn, this.Object, this.Array, this.ArrayEmpty, this.MultiArray, this.Create, this.Add, this.StaticCtor, this.Init, this.Ctor, this.Inherits, this.Default, this.SystemDefault, this.Property, this.Event, this.Nil, this.TypeOf, this.Continue, this.StringChar, this.ToStr, this.SystemToString, this.ToEnumString, this.DelegateCombine, this.DelegateRemove, this.DelegateBind, this.IntegerDiv, this.IntegerDivOfNull, this.IntegerMod, this.IntegerModOfNull, this.BitNot, this.BitNotOfNull, this.BitAnd, this.BitAndOfNull, this.BitOr, this.BitOrOfNull, this.BitXor, this.BitXorOfNull, this.ShiftRight, this.ShiftRightOfNull, this.ShiftLeft, this.ShiftLeftOfNull, this.Try, this.Is, this.As, this.Cast, this.Using, this.UsingX, this.Linq1, this.SystemLinqEnumerable, this.New, this.Format, this.Delegate, this.Int, this.UsingDeclare, this.Global, this.Attributes, this.Trunc, this.setmetatable, this.getmetatable, this.Clone, this.ValueType, this.Obj, this.EqualsStatic, this.SystemObjectEqualsStatic, this.DateTime, this.TimeSpan, this.AnonymousTypeCreate, this.AnonymousType, this.SystemNew, this.StackAlloc, this.GenericT, this.Base, this.ValueTupleType, this.ValueTupleTypeCreate, this.LinqCast, this.LinqWhere, this.LinqSelect, this.LinqSelectMany, this.LinqOrderBy, this.LinqOrderByDescending, this.LinqThenBy, this.LinqThenByDescending, this.LinqGroupBy, this.LinqJoin, this.LinqGroupJoin = Empty, Placeholder, One, System1, Namespace, Class, Struct, Interface, Enum, Value, This, True, False, Throw, Each, YieldReturn, Object, Array, ArrayEmpty, MultiArray, Create, Add, StaticCtor, Init, Ctor, Inherits, Default, SystemDefault, Property, Event, Nil, TypeOf, Continue, StringChar, ToStr, SystemToString, ToEnumString, DelegateCombine, DelegateRemove, DelegateBind, IntegerDiv, IntegerDivOfNull, IntegerMod, IntegerModOfNull, BitNot, BitNotOfNull, BitAnd, BitAndOfNull, BitOr, BitOrOfNull, BitXor, BitXorOfNull, ShiftRight, ShiftRightOfNull, ShiftLeft, ShiftLeftOfNull, Try, Is, As, Cast, Using, UsingX, Linq1, SystemLinqEnumerable, New, Format, Delegate, Int, UsingDeclare, Global, Attributes, Trunc, setmetatable, getmetatable, Clone, ValueType, Obj, EqualsStatic, SystemObjectEqualsStatic, DateTime, TimeSpan, AnonymousTypeCreate, AnonymousType, SystemNew, StackAlloc, GenericT, Base, ValueTupleType, ValueTupleTypeCreate, LinqCast, LinqWhere, LinqSelect, LinqSelectMany, LinqOrderBy, LinqOrderByDescending, LinqThenBy, LinqThenByDescending, LinqGroupBy, LinqJoin, LinqGroupJoin
     end
     __ctor1__ = function (this, valueText) 
       CSharpLuaLuaAst.LuaExpressionSyntax.__ctor__(this)

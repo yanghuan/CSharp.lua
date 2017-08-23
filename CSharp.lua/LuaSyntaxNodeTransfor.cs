@@ -264,8 +264,7 @@ namespace CSharpLua {
       CurCompilationUnit.AddTypeDeclarationCount();
     }
 
-    private INamedTypeSymbol VisitTypeDeclaration(TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
-      INamedTypeSymbol typeSymbol = semanticModel_.GetDeclaredSymbol(node);
+    private INamedTypeSymbol VisitTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
       if (node.Modifiers.IsPartial()) {
         if (typeSymbol.DeclaringSyntaxReferences.Length > 1) {
           generator_.AddPartialTypeDeclaration(typeSymbol, node, typeDeclaration, CurCompilationUnit);
@@ -346,34 +345,31 @@ namespace CSharpLua {
       major.CompilationUnit.AddTypeDeclarationCount();
     }
 
-    private LuaIdentifierNameSyntax GetTypeDeclarationName(TypeDeclarationSyntax typeDeclaration) {
-      string name = typeDeclaration.Identifier.ValueText;
-      if (typeDeclaration.TypeParameterList != null) {
-        name += "_" + typeDeclaration.TypeParameterList.Parameters.Count;
-      }
-      return new LuaIdentifierNameSyntax(name);
+    private void GetTypeDeclarationName(TypeDeclarationSyntax typeDeclaration, out LuaIdentifierNameSyntax name, out INamedTypeSymbol typeSymbol) {
+      typeSymbol = semanticModel_.GetDeclaredSymbol(typeDeclaration);
+      name = generator_.GetTypeDeclarationName(typeSymbol);
     }
 
     public override LuaSyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
-      LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
+      GetTypeDeclarationName(node, out var name, out var typeSymbol);
       LuaClassDeclarationSyntax classDeclaration = new LuaClassDeclarationSyntax(name);
-      VisitTypeDeclaration(node, classDeclaration);
+      VisitTypeDeclaration(typeSymbol, node, classDeclaration);
       return classDeclaration;
     }
 
     public override LuaSyntaxNode VisitStructDeclaration(StructDeclarationSyntax node) {
-      LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
+      GetTypeDeclarationName(node, out var name, out var typeSymbol);
       LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
-      var symbol = VisitTypeDeclaration(node, structDeclaration);
+      var symbol = VisitTypeDeclaration(typeSymbol, node, structDeclaration);
       TryAddStructDefaultMethod(symbol, structDeclaration);
       generator_.AddTypeSymbol(symbol);
       return structDeclaration;
     }
 
     public override LuaSyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node) {
-      LuaIdentifierNameSyntax name = GetTypeDeclarationName(node);
+      GetTypeDeclarationName(node, out var name, out var typeSymbol);
       LuaInterfaceDeclarationSyntax interfaceDeclaration = new LuaInterfaceDeclarationSyntax(name);
-      var symbol = VisitTypeDeclaration(node, interfaceDeclaration);
+      var symbol = VisitTypeDeclaration(typeSymbol, node, interfaceDeclaration);
       generator_.AddTypeSymbol(symbol);
       return interfaceDeclaration;
     }

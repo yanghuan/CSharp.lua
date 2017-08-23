@@ -398,7 +398,8 @@ namespace CSharpLua {
     private List<INamedTypeSymbol> types_ = new List<INamedTypeSymbol>();
     private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> typeDeclarationAttributes_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
     private Dictionary<ISymbol, LuaSymbolNameSyntax> propertyOrEvnetInnerFieldNames_ = new Dictionary<ISymbol, LuaSymbolNameSyntax>();
-    private Dictionary<ISymbol, string> illegalIdentifiers_ = new Dictionary<ISymbol, string>();
+    private Dictionary<ISymbol, string> memberIllegalNames_ = new Dictionary<ISymbol, string>();
+    private Dictionary<INamedTypeSymbol, LuaSymbolNameSyntax> typeRefactorNames_ = new Dictionary<INamedTypeSymbol, LuaSymbolNameSyntax>();
 
     internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
       types_.Add(typeSymbol);
@@ -439,19 +440,52 @@ namespace CSharpLua {
         LuaSymbolNameSyntax symbolName = new LuaSymbolNameSyntax(identifierName);
         memberNames_.Add(symbol, symbolName);
         name = symbolName;
+        CheckMemberBadName(identifierName.ValueText, symbol);
+      }
+      return name;
+    }
 
-        if (symbol.Kind == SymbolKind.Method) {
-          string originalString = identifierName.ValueText;
+    private void CheckMemberBadName(string originalString, ISymbol symbol) {
+      if (symbol.IsFromCode()) {
+        bool isCheckNeedReserved = false;
+        bool isCheckIllegalIdentifier = true;
+        switch (symbol.Kind) {
+          case SymbolKind.Field:
+          case SymbolKind.Method:
+            isCheckNeedReserved = true;
+            break;
+
+          case SymbolKind.Property:
+            var propertySymbol = (IPropertySymbol)symbol;
+            if (propertySymbol.IsIndexer) {
+              isCheckIllegalIdentifier = false;
+            }
+            else {
+              isCheckNeedReserved = true;
+            }
+            break;
+
+          case SymbolKind.Event:
+            if (IsEventFiled((IEventSymbol)symbol)) {
+              isCheckNeedReserved = true;
+            }
+            break;
+        }
+
+        if (isCheckNeedReserved) {
           if (LuaSyntaxNode.IsMethodReservedWord(originalString)) {
             refactorNames_.Add(symbol);
+            isCheckIllegalIdentifier = false;
           }
-          else if (Utility.IsIdentifierIllegal(ref originalString)) {
+        }
+
+        if (isCheckIllegalIdentifier) {
+          if (Utility.IsIdentifierIllegal(ref originalString)) {
             refactorNames_.Add(symbol);
-            illegalIdentifiers_.Add(symbol, originalString);
+            memberIllegalNames_.Add(symbol, originalString);
           }
         }
       }
-      return name;
     }
 
     private LuaIdentifierNameSyntax InternalGetMemberName(ISymbol symbol) {
@@ -872,7 +906,7 @@ namespace CSharpLua {
 
     private string GetRefactorName(INamedTypeSymbol typeSymbol, IEnumerable<INamedTypeSymbol> childrens, ISymbol symbol) {
       bool isPrivate = symbol.IsPrivate();
-      string originalName = illegalIdentifiers_.GetOrDefault(symbol) ?? GetSymbolBaseName(symbol);
+      string originalName = memberIllegalNames_.GetOrDefault(symbol) ?? GetSymbolBaseName(symbol);
 
       int index = 1;
       while (true) {
@@ -1159,6 +1193,31 @@ namespace CSharpLua {
 
     internal bool IsSealed(INamedTypeSymbol typeSymbol) {
       return typeSymbol.IsSealed || !IsExtendExists(typeSymbol);
+    }
+
+    private LuaSymbolNameSyntax GetTypeSymbolName(INamedTypeSymbol typeSymbol, string name) {
+      LuaSymbolNameSyntax symbolName = new LuaSymbolNameSyntax(new LuaIdentifierNameSyntax(name));
+      typeRefactorNames_.Add(typeSymbol, symbolName);
+      return symbolName;
+    }
+
+    internal LuaIdentifierNameSyntax GetTypeDeclarationName(INamedTypeSymbol typeSymbol) {
+      string name = typeSymbol.Name;
+      int typeParametersCount = typeSymbol.TypeParameters.Length;
+      if (typeParametersCount > 0) {
+        name += "_" + typeParametersCount;
+      }
+      else {
+        if (LuaSyntaxNode.IsReservedWord(name)) {
+          return GetTypeSymbolName(typeSymbol, name);
+        }
+      }
+
+      if (Utility.IsIdentifierIllegal(ref name)) {
+        return GetTypeSymbolName(typeSymbol, name);
+      }
+
+      return new LuaIdentifierNameSyntax(name);
     }
   }
 }

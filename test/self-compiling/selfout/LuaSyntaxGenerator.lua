@@ -186,12 +186,13 @@ System.namespace("CSharpLua", function (namespace)
     local Encoding, Create, Write, Generate, RemoveBaseFolder, GetOutFilePath, getIsCheckedOverflow, IsEnumExport, 
     AddExportEnum, AddEnumDeclaration, IsExportAttribute, CheckExportEnums, AddPartialTypeDeclaration, CheckPartialTypes, GetSemanticModel, IsBaseType, 
     IsTypeEnable, AddSuperTypeTo, GetExportTypes, SetMainEntryPoint, ExportManifestFile, FillManifestInitConf, AddTypeSymbol, CheckExtends, 
-    TryAddExtend, AddTypeDeclarationAttribute, GetMemberName, InternalGetMemberName, GetAllTypeSameName, AddInnerName, GetSymbolBaseName, GetStaticClassMemberName, 
-    GetMethodNameFromIndex, TryAddNewUsedName, GetStaticClassSameNameMembers, GetSameNameMembers, AddSimilarNameMembers, GetSymbolNames, MemberSymbolBoolComparison, MemberSymbolComparison, 
-    MemberSymbolCommonComparison, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, GetRefactorCheckName, 
-    GetRefactorName, IsTypeNameUsed, IsNewNameEnable, IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, CheckRefactorInnerNames, GetInnerGetRefactorName, 
-    IsInnerNameEnable, IsInnerNameEnableOfChildrens, DoPretreatment, AddImplicitInterfaceImplementation, FindImplicitImplementationForInterfaceMember, IsImplicitInterfaceImplementation, IsPropertyField, IsEventFiled, 
-    AllInterfaceImplementations, AllInterfaceImplementationsCount, HasStaticCtor, IsExtendExists, IsSealed, __staticCtor__, __init__, __ctor__
+    TryAddExtend, AddTypeDeclarationAttribute, GetMemberName, CheckMemberBadName, InternalGetMemberName, GetAllTypeSameName, AddInnerName, GetSymbolBaseName, 
+    GetStaticClassMemberName, GetMethodNameFromIndex, TryAddNewUsedName, GetStaticClassSameNameMembers, GetSameNameMembers, AddSimilarNameMembers, GetSymbolNames, MemberSymbolBoolComparison, 
+    MemberSymbolComparison, MemberSymbolCommonComparison, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, 
+    GetRefactorCheckName, GetRefactorName, IsTypeNameUsed, IsNewNameEnable, IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, CheckRefactorInnerNames, 
+    GetInnerGetRefactorName, IsInnerNameEnable, IsInnerNameEnableOfChildrens, DoPretreatment, AddImplicitInterfaceImplementation, FindImplicitImplementationForInterfaceMember, IsImplicitInterfaceImplementation, IsPropertyField, 
+    IsEventFiled, AllInterfaceImplementations, AllInterfaceImplementationsCount, HasStaticCtor, IsExtendExists, IsSealed, GetTypeSymbolName, GetTypeDeclarationName, 
+    __staticCtor__, __init__, __ctor__
     __staticCtor__ = function (this) 
       Encoding = SystemText.UTF8Encoding(false)
     end
@@ -206,7 +207,8 @@ System.namespace("CSharpLua", function (namespace)
       this.types_ = System.List(MicrosoftCodeAnalysis.INamedTypeSymbol)()
       this.typeDeclarationAttributes_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol))()
       this.propertyOrEvnetInnerFieldNames_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, CSharpLuaLuaAst.LuaSymbolNameSyntax)()
-      this.illegalIdentifiers_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, System.String)()
+      this.memberIllegalNames_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, System.String)()
+      this.typeRefactorNames_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, CSharpLuaLuaAst.LuaSymbolNameSyntax)()
       this.implicitInterfaceImplementations_ = System.Dictionary(MicrosoftCodeAnalysis.ISymbol, System.HashSet(MicrosoftCodeAnalysis.ISymbol))()
       this.implicitInterfaceTypes_ = System.Dictionary(MicrosoftCodeAnalysis.INamedTypeSymbol, System.Dictionary(MicrosoftCodeAnalysis.ISymbol, MicrosoftCodeAnalysis.ISymbol))()
       this.isFieldPropertys_ = System.Dictionary(MicrosoftCodeAnalysis.IPropertySymbol, System.Boolean)()
@@ -529,20 +531,51 @@ System.namespace("CSharpLua", function (namespace)
         local symbolName = CSharpLuaLuaAst.LuaSymbolNameSyntax(identifierName)
         this.memberNames_:Add(symbol, symbolName)
         name = symbolName
+        CheckMemberBadName(this, identifierName.ValueText, symbol)
+      end
+      return name
+    end
+    CheckMemberBadName = function (this, originalString, symbol) 
+      if CSharpLua.Utility.IsFromCode(symbol) then
+        local isCheckNeedReserved = false
+        local isCheckIllegalIdentifier = true
+        repeat
+          local default = symbol:getKind()
+          if default == 6 --[[SymbolKind.Field]] or default == 9 --[[SymbolKind.Method]] then
+            isCheckNeedReserved = true
+            break
+          elseif default == 15 --[[SymbolKind.Property]] then
+            local propertySymbol = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
+            if propertySymbol:getIsIndexer() then
+              isCheckIllegalIdentifier = false
+            else
+              isCheckNeedReserved = true
+            end
+            break
+          elseif default == 5 --[[SymbolKind.Event]] then
+            if IsEventFiled(this, System.cast(MicrosoftCodeAnalysis.IEventSymbol, symbol)) then
+              isCheckNeedReserved = true
+            end
+            break
+          end
+        until 1
 
-        if symbol:getKind() == 9 --[[SymbolKind.Method]] then
-          local originalString = identifierName.ValueText
-          local default
-          default, originalString = CSharpLua.Utility.IsIdentifierIllegal(originalString)
+        if isCheckNeedReserved then
           if CSharpLuaLuaAst.LuaSyntaxNode.IsMethodReservedWord(originalString) then
             this.refactorNames_:Add(symbol)
-          elseif default then
+            isCheckIllegalIdentifier = false
+          end
+        end
+
+        if isCheckIllegalIdentifier then
+          local extern
+          extern, originalString = CSharpLua.Utility.IsIdentifierIllegal(originalString)
+          if extern then
             this.refactorNames_:Add(symbol)
-            this.illegalIdentifiers_:Add(symbol, originalString)
+            this.memberIllegalNames_:Add(symbol, originalString)
           end
         end
       end
-      return name
     end
     InternalGetMemberName = function (this, symbol) 
       if symbol:getKind() == 9 --[[SymbolKind.Method]] then
@@ -964,7 +997,7 @@ System.namespace("CSharpLua", function (namespace)
     end
     GetRefactorName = function (this, typeSymbol, childrens, symbol) 
       local isPrivate = CSharpLua.Utility.IsPrivate(symbol)
-      local originalName = CSharpLua.Utility.GetOrDefault1(this.illegalIdentifiers_, symbol, nil, MicrosoftCodeAnalysis.ISymbol, System.String) or GetSymbolBaseName(this, symbol)
+      local originalName = CSharpLua.Utility.GetOrDefault1(this.memberIllegalNames_, symbol, nil, MicrosoftCodeAnalysis.ISymbol, System.String) or GetSymbolBaseName(this, symbol)
 
       local index = 1
       while true do
@@ -1169,6 +1202,30 @@ System.namespace("CSharpLua", function (namespace)
     IsSealed = function (this, typeSymbol) 
       return typeSymbol:getIsSealed() or not IsExtendExists(this, typeSymbol)
     end
+    GetTypeSymbolName = function (this, typeSymbol, name) 
+      local symbolName = CSharpLuaLuaAst.LuaSymbolNameSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name))
+      this.typeRefactorNames_:Add(typeSymbol, symbolName)
+      return symbolName
+    end
+    GetTypeDeclarationName = function (this, typeSymbol) 
+      local name = typeSymbol:getName()
+      local typeParametersCount = typeSymbol:getTypeParameters():getLength()
+      if typeParametersCount > 0 then
+        name = name .. ("_" .. typeParametersCount)
+      else
+        if CSharpLuaLuaAst.LuaSyntaxNode.IsReservedWord(name) then
+          return GetTypeSymbolName(this, typeSymbol, name)
+        end
+      end
+
+      local default
+      default, name = CSharpLua.Utility.IsIdentifierIllegal(name)
+      if default then
+        return GetTypeSymbolName(this, typeSymbol, name)
+      end
+
+      return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name)
+    end
     return {
       isExportAttributesAll_ = false, 
       Generate = Generate, 
@@ -1191,6 +1248,7 @@ System.namespace("CSharpLua", function (namespace)
       HasStaticCtor = HasStaticCtor, 
       IsExtendExists = IsExtendExists, 
       IsSealed = IsSealed, 
+      GetTypeDeclarationName = GetTypeDeclarationName, 
       __staticCtor__ = __staticCtor__, 
       __ctor__ = __ctor__
     }

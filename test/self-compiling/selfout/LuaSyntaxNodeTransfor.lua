@@ -564,8 +564,7 @@ System.namespace("CSharpLua", function (namespace)
       this.typeDeclarations_:Pop()
       getCurCompilationUnit(this):AddTypeDeclarationCount()
     end
-    VisitTypeDeclaration = function (this, node, typeDeclaration) 
-      local typeSymbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node, System.default(SystemThreading.CancellationToken))
+    VisitTypeDeclaration = function (this, typeSymbol, node, typeDeclaration) 
       if CSharpLua.Utility.IsPartial(node:getModifiers()) then
         if typeSymbol:getDeclaringSyntaxReferences():getLength() > 1 then
           this.generator_:AddPartialTypeDeclaration(typeSymbol, node, typeDeclaration, getCurCompilationUnit(this))
@@ -644,31 +643,35 @@ System.namespace("CSharpLua", function (namespace)
       major.TypeDeclaration.IsPartialMark = false
       major.CompilationUnit:AddTypeDeclarationCount()
     end
-    GetTypeDeclarationName = function (this, typeDeclaration) 
-      local name = typeDeclaration:getIdentifier():getValueText()
-      if typeDeclaration:getTypeParameterList() ~= nil then
-        name = name .. ("_" .. typeDeclaration:getTypeParameterList():getParameters():getCount())
-      end
-      return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name)
+    GetTypeDeclarationName = function (this, typeDeclaration, name, typeSymbol) 
+      typeSymbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, typeDeclaration, System.default(SystemThreading.CancellationToken))
+      name = this.generator_:GetTypeDeclarationName(typeSymbol)
+      return name, typeSymbol
     end
     VisitClassDeclaration = function (this, node) 
-      local name = GetTypeDeclarationName(this, node)
+      local name
+      local typeSymbol
+      name, typeSymbol = GetTypeDeclarationName(this, node)
       local classDeclaration = CSharpLuaLuaAst.LuaClassDeclarationSyntax(name)
-      VisitTypeDeclaration(this, node, classDeclaration)
+      VisitTypeDeclaration(this, typeSymbol, node, classDeclaration)
       return classDeclaration
     end
     VisitStructDeclaration = function (this, node) 
-      local name = GetTypeDeclarationName(this, node)
+      local name
+      local typeSymbol
+      name, typeSymbol = GetTypeDeclarationName(this, node)
       local structDeclaration = CSharpLuaLuaAst.LuaStructDeclarationSyntax(name)
-      local symbol = VisitTypeDeclaration(this, node, structDeclaration)
+      local symbol = VisitTypeDeclaration(this, typeSymbol, node, structDeclaration)
       TryAddStructDefaultMethod(this, symbol, structDeclaration)
       this.generator_:AddTypeSymbol(symbol)
       return structDeclaration
     end
     VisitInterfaceDeclaration = function (this, node) 
-      local name = GetTypeDeclarationName(this, node)
+      local name
+      local typeSymbol
+      name, typeSymbol = GetTypeDeclarationName(this, node)
       local interfaceDeclaration = CSharpLuaLuaAst.LuaInterfaceDeclarationSyntax(name)
-      local symbol = VisitTypeDeclaration(this, node, interfaceDeclaration)
+      local symbol = VisitTypeDeclaration(this, typeSymbol, node, interfaceDeclaration)
       this.generator_:AddTypeSymbol(symbol)
       return interfaceDeclaration
     end
@@ -696,7 +699,7 @@ System.namespace("CSharpLua", function (namespace)
 
       local nameSyntax = System.cast(MicrosoftCodeAnalysisCSharpSyntax.SimpleNameSyntax, returnType)
       local name = "yield" --[[Tokens.Yield]] .. nameSyntax:getIdentifier():getValueText()
-      local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.System, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name), false)
+      local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.System1, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name), false)
       local invokeExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess)
       local wrapFunction = CSharpLuaLuaAst.LuaFunctionExpressionSyntax()
 
@@ -3069,7 +3072,7 @@ System.namespace("CSharpLua", function (namespace)
     end
     GetCastToNumberExpression = function (this, expression, targetType, isFromFloat) 
       local name = (isFromFloat and "To" or "to") .. targetType:getName()
-      local methodName = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.System, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name), false)
+      local methodName = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.System1, CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name), false)
       return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, methodName, expression)
     end
     VisitCheckedStatement = function (this, node) 
@@ -3553,7 +3556,7 @@ System.namespace("CSharpLua", function (namespace)
         local pos = name:LastIndexOf(46 --[['.']])
         if pos ~= - 1 then
           local prefix = name:Substring(0, pos)
-          if prefix ~= CSharpLuaLuaAst.LuaIdentifierNameSyntax.System.ValueText then
+          if prefix ~= CSharpLuaLuaAst.LuaIdentifierNameSyntax.System1.ValueText then
             local newPrefix = prefix:Replace(".", "")
             local methodInfo = getCurMethodInfoOrNull(this)
             if methodInfo ~= nil then

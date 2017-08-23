@@ -165,7 +165,7 @@ System.namespace("CSharpLua", function (namespace)
       this.GetTupleElementIndex = GetTupleElementIndex
       this.GetTupleElementCount = GetTupleElementCount
       this.IsIdentifierIllegal = IsIdentifierIllegal
-      identifierRegex_ = SystemTextRegularExpressions.Regex([[^_|[a-zA-Z]\w*$]], 8 --[[RegexOptions.Compiled]])
+      identifierRegex_ = SystemTextRegularExpressions.Regex([[^[a-zA-Z_][a-zA-Z0-9_]*$]], 8 --[[RegexOptions.Compiled]])
     end
     First = function (list, T) 
       return list:get(0)

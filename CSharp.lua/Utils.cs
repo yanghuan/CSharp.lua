@@ -655,7 +655,7 @@ namespace CSharpLua {
       return typeSymbol.GetTupleElementTypes().Count;
     }
 
-    private static readonly Regex identifierRegex_ = new Regex(@"^_|[a-zA-Z]\w*$", RegexOptions.Compiled);
+    private static readonly Regex identifierRegex_ = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$", RegexOptions.Compiled);
 
     public static bool IsIdentifierIllegal(ref string identifierName) {
       if (!identifierRegex_.IsMatch(identifierName)) {
