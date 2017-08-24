@@ -108,7 +108,7 @@ System.namespace("CSharpLua", function (namespace)
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
     IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, IsTypeDeclaration, GetIEnumerableElementType, 
     DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, identifierRegex_, IsIdentifierIllegal, ToBase63, EncodeToIdentifier, 
-    __staticCtor__
+    FillExternalTypeName, GetTypeShortName, GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, __staticCtor__
     __staticCtor__ = function (this) 
       this.First = First
       this.Last = Last
@@ -165,6 +165,10 @@ System.namespace("CSharpLua", function (namespace)
       this.GetTupleElementIndex = GetTupleElementIndex
       this.GetTupleElementCount = GetTupleElementCount
       this.IsIdentifierIllegal = IsIdentifierIllegal
+      this.GetTypeShortName = GetTypeShortName
+      this.GetNewIdentifierName = GetNewIdentifierName
+      this.InternalGetAllNamespaces = InternalGetAllNamespaces
+      this.GetAllNamespaces = GetAllNamespaces
       identifierRegex_ = SystemTextRegularExpressions.Regex([[^[a-zA-Z_][a-zA-Z0-9_]*$]], 8 --[[RegexOptions.Compiled]])
     end
     First = function (list, T) 
@@ -804,6 +808,84 @@ System.namespace("CSharpLua", function (namespace)
         sb:Insert(0, 95 --[['_']])
       end
       return sb:ToString()
+    end
+    FillExternalTypeName = function (sb, typeSymbol, funcOfTypeName) 
+      local externalType = typeSymbol:getContainingType()
+      if externalType ~= nil then
+        FillExternalTypeName(sb, externalType, funcOfTypeName)
+        local default = funcOfTypeName
+        if default ~= nil then
+          default = default(typeSymbol)
+        end
+        local typeName = default or externalType:getName()
+        sb:Append(typeName)
+        local typeParametersCount = externalType:getTypeParameters():getLength()
+        if typeParametersCount > 0 then
+          sb:Append(95 --[['_']])
+          sb:Append(typeParametersCount)
+        end
+        sb:Append(46 --[['.']])
+      end
+    end
+    GetTypeShortName = function (typeSymbol, funcOfNamespace, funcOfTypeName) 
+      local sb = SystemText.StringBuilder()
+      local namespaceName
+      local namespaceSymbol = typeSymbol:getContainingNamespace()
+      if namespaceSymbol:getIsGlobalNamespace() then
+        namespaceName = ""
+      else
+        namespaceName = namespaceSymbol:ToString()
+        local default = funcOfNamespace
+        if default ~= nil then
+          default = default(namespaceSymbol, namespaceName)
+        end
+        local newName = default
+        if newName ~= nil then
+          namespaceName = newName
+        end
+      end
+      if #namespaceName > 0 then
+        sb:Append(namespaceName)
+        sb:Append(46 --[['.']])
+      end
+      FillExternalTypeName(sb, typeSymbol, funcOfTypeName)
+      local extern = funcOfTypeName
+      if extern ~= nil then
+        extern = extern(typeSymbol)
+      end
+      local typeName = extern or typeSymbol:getName()
+      sb:Append(typeName)
+      local typeParametersCount = typeSymbol:getTypeParameters():getLength()
+      if typeParametersCount > 0 then
+        sb:Append(95 --[['_']])
+        sb:Append(typeParametersCount)
+      end
+      return sb:ToString()
+    end
+    GetNewIdentifierName = function (name, index) 
+      repeat
+        local default = index
+        if default == 0 then
+          return name
+        elseif default == 1 then
+          return name .. "_"
+        elseif default == 2 then
+          return "_" .. name
+        else
+          return name .. (index - 2)
+        end
+      until 1
+    end
+    InternalGetAllNamespaces = function (symbol) 
+      return System.yieldIEnumerable(function (symbol) 
+        repeat
+          System.yieldReturn(symbol)
+          symbol = symbol:getContainingNamespace()
+        until not (not symbol:getIsGlobalNamespace())
+      end, MicrosoftCodeAnalysis.INamespaceSymbol, symbol)
+    end
+    GetAllNamespaces = function (symbol) 
+      return Linq.Reverse(InternalGetAllNamespaces(symbol))
     end
     return {
       __staticCtor__ = __staticCtor__

@@ -329,28 +329,28 @@ System.namespace("CSharpLua", function (namespace)
     GetTempUnaryExpression, GetTempPropertyUnaryExpression, VisitPrefixUnaryExpression, BuildPostfixUnaryExpression, BuildPropertyPostfixUnaryExpression, VisitPostfixUnaryExpression, VisitContinueStatement, VisitLoopBody, 
     CheckForeachCast, VisitForEachStatement, VisitForEachVariableStatement, VisitWhileStatement, VisitForStatement, VisitDoStatement, VisitYieldStatement, VisitParenthesizedExpression, 
     VisitConditionalExpression, VisitGotoStatement, VisitLabeledStatement, VisitEmptyStatement, VisitCastExpression, BuildCastExpression, GetCastToNumberExpression, VisitCheckedStatement, 
-    VisitCheckedExpression, codeTemplateRegex_, IsLocalVarExists, GetNewIdentifierName, FindFromCur, FindParent, FindParent1, FindParent2, 
-    GetUniqueIdentifier, CheckLocalBadWord, AddLocalVariableMapping, CheckLocalVariableName, CheckLocalSymbolName, GetConstructorIndex, IsContinueExists, IsReturnExists, 
-    GetCaseLabelIndex, BuildCodeTemplateExpression, AddCodeTemplateExpression, BuildCodeTemplateExpression1, AddExportEnum, IsPropertyField, IsEventFiled, GetTypeDeclarationSymbol, 
-    IsInternalMember, BuildEmptyArray, BuildArray, BuildArray1, GetLiteralExpression, GetConstLiteralExpression, GetConstLiteralExpression1, GetConstExpression, 
-    BuildStringLiteralTokenExpression, BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind1, CheckCallerAttribute, CheckUsingStaticNameSyntax, MayBeFalse, 
-    MayBeNull, MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, BuildFieldOrPropertyMemberAccessExpression, VisitAttributeList, VisitAttributeArgument, 
-    VisitNameColon, VisitAttributeArgumentList, VisitNameEquals, BuildObjectCreationInvocation, VisitAttribute, BuildAttributes, TryAddStructDefaultMethod, CheckValueTypeAndConversion, 
-    CheckValueTypeClone, BuildDocumentationComment, BuildBaseTypeName, VisitTypeParameterList, FillExternalTypeParameters, BuildTypeParameters, CheckFieldNameOfProtobufnet, GetMemberName, 
-    AddInnerName, RemoveNilArgumentsAtTail, IsNilLuaExpression, TryRemoveNilArgumentsAtTail, PushChecked, PopChecked, getIsCurChecked, CheckConversion, 
-    GetOperatorMemberAccessExpression, BuildConversionExpression, GerUserDefinedOperatorExpression, IsNumericalForVariableMatch, IsNumericalForLess, IsNumericalForGreater, GetNumericalForStatement, GetValueTupleDefaultExpression, 
-    GetDefaultValueExpression, BuildDeconstructExpression, BuildDeconstructExpression1, VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitAnonymousObjectMemberDeclarator, VisitAnonymousObjectCreationExpression, VisitInitializerExpression, 
-    VisitBracketedArgumentList, VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, 
-    VisitImplicitArrayCreationExpression, BuildCallBaseConstructor, BuildCallBaseConstructor1, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, 
-    VisitAnonymousMethodExpression, VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitThrowExpression, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, 
-    VisitTryCatchesExpress, BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, CheckBaseVisitType, VisitBaseExpression, 
-    VisitConditionalAccessExpression, VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, 
-    VisitAliasQualifiedName, BuildOperatorMethodDeclaration, VisitConversionOperatorDeclaration, VisitOperatorDeclaration, VisitSizeOfExpression, VisitStackAllocArrayCreationExpression, VisitUnsafeStatement, VisitFixedStatement, 
-    VisitLockStatement, VisitArrowExpressionClause, VisitLocalFunctionStatement, VisitDeclarationExpression, VisitSingleVariableDesignation, VisitIsPatternExpression, VisitDeclarationPattern, VisitRefExpression, 
-    VisitTupleType, BuildValueTupleCreateExpression, VisitTupleExpression, VisitParenthesizedVariableDesignation, AddRangeIdentifier, GetRangeIdentifierName, VisitQueryExpression, VisitFromClause, 
-    VisitWhereClause, VisitQueryBody, VisitSelectClause, VisitQueryContinuation, VisitLetClause, VisitJoinClause, VisitJoinIntoClause, BuildQueryWhere, 
-    BuildOrdering, BuildQueryOrderBy, BuildQuerySelect, BuildGroupClause, CreateQueryAnonymousType, IsSpecialQueryNode, BuildFromClause, BuildLetClause, 
-    BuildQueryJoin, BuildJoinClause, BuildQueryBody, BuildQueryContinuation, __staticCtor__, __init__, __ctor__
+    VisitCheckedExpression, codeTemplateRegex_, IsLocalVarExists, FindFromCur, FindParent, FindParent1, FindParent2, GetUniqueIdentifier, 
+    CheckLocalBadWord, AddLocalVariableMapping, CheckLocalVariableName, CheckLocalSymbolName, GetConstructorIndex, IsContinueExists, IsReturnExists, GetCaseLabelIndex, 
+    BuildCodeTemplateExpression, AddCodeTemplateExpression, BuildCodeTemplateExpression1, AddExportEnum, IsPropertyField, IsEventFiled, GetTypeDeclarationSymbol, IsInternalMember, 
+    BuildEmptyArray, BuildArray, BuildArray1, GetLiteralExpression, GetConstLiteralExpression, GetConstLiteralExpression1, GetConstExpression, BuildStringLiteralTokenExpression, 
+    BuildStringLiteralExpression, BuildVerbatimStringExpression, GetCallerAttributeKind, GetCallerAttributeKind1, CheckCallerAttribute, CheckUsingStaticNameSyntax, MayBeFalse, MayBeNull, 
+    MayBeNullOrFalse, ImportTypeName, GetTypeShortName, GetTypeName, BuildFieldOrPropertyMemberAccessExpression, VisitAttributeList, VisitAttributeArgument, VisitNameColon, 
+    VisitAttributeArgumentList, VisitNameEquals, BuildObjectCreationInvocation, VisitAttribute, BuildAttributes, TryAddStructDefaultMethod, CheckValueTypeAndConversion, CheckValueTypeClone, 
+    BuildDocumentationComment, BuildBaseTypeName, VisitTypeParameterList, FillExternalTypeParameters, BuildTypeParameters, CheckFieldNameOfProtobufnet, GetMemberName, AddInnerName, 
+    RemoveNilArgumentsAtTail, IsNilLuaExpression, TryRemoveNilArgumentsAtTail, PushChecked, PopChecked, getIsCurChecked, CheckConversion, GetOperatorMemberAccessExpression, 
+    BuildConversionExpression, GerUserDefinedOperatorExpression, IsNumericalForVariableMatch, IsNumericalForLess, IsNumericalForGreater, GetNumericalForStatement, GetValueTupleDefaultExpression, GetDefaultValueExpression, 
+    BuildDeconstructExpression, BuildDeconstructExpression1, VisitObjectCreationExpression, BuildObjectInitializerExpression, VisitAnonymousObjectMemberDeclarator, VisitAnonymousObjectCreationExpression, VisitInitializerExpression, VisitBracketedArgumentList, 
+    VisitImplicitElementAccess, VisitGenericName, VisitOmittedArraySizeExpression, VisitArrayRankSpecifier, VisitArrayType, FillMultiArrayInitializer, VisitArrayCreationExpression, VisitImplicitArrayCreationExpression, 
+    BuildCallBaseConstructor, BuildCallBaseConstructor1, VisitConstructorDeclaration, VisitSimpleBaseType, VisitLambdaExpression, VisitSimpleLambdaExpression, VisitParenthesizedLambdaExpression, VisitAnonymousMethodExpression, 
+    VisitTypeParameter, VisitTypeOfExpression, VisitThrowStatement, VisitThrowExpression, VisitCatchFilterClause, VisitCatchClause, VisitCatchDeclaration, VisitTryCatchesExpress, 
+    BuildCheckReturnInvocationExpression, VisitFinallyClause, VisitTryStatement, VisitUsingStatement, VisitThisExpression, CheckBaseVisitType, VisitBaseExpression, VisitConditionalAccessExpression, 
+    VisitMemberBindingExpression, VisitElementBindingExpression, VisitDefaultExpression, VisitElementAccessExpression, VisitInterpolatedStringExpression, VisitInterpolation, VisitInterpolatedStringText, VisitAliasQualifiedName, 
+    BuildOperatorMethodDeclaration, VisitConversionOperatorDeclaration, VisitOperatorDeclaration, VisitSizeOfExpression, VisitStackAllocArrayCreationExpression, VisitUnsafeStatement, VisitFixedStatement, VisitLockStatement, 
+    VisitArrowExpressionClause, VisitLocalFunctionStatement, VisitDeclarationExpression, VisitSingleVariableDesignation, VisitIsPatternExpression, VisitDeclarationPattern, VisitRefExpression, VisitTupleType, 
+    BuildValueTupleCreateExpression, VisitTupleExpression, VisitParenthesizedVariableDesignation, AddRangeIdentifier, GetRangeIdentifierName, VisitQueryExpression, VisitFromClause, VisitWhereClause, 
+    VisitQueryBody, VisitSelectClause, VisitQueryContinuation, VisitLetClause, VisitJoinClause, VisitJoinIntoClause, BuildQueryWhere, BuildOrdering, 
+    BuildQueryOrderBy, BuildQuerySelect, BuildGroupClause, CreateQueryAnonymousType, IsSpecialQueryNode, BuildFromClause, BuildLetClause, BuildQueryJoin, 
+    BuildJoinClause, BuildQueryBody, BuildQueryContinuation, __staticCtor__, __init__, __ctor__
     __staticCtor__ = function (this) 
       operatorTokenMapps_ = System.create(System.Dictionary(System.String, System.String)(), function (default) 
         default:set("!=", "~=" --[[Tokens.NotEquals]])
@@ -663,7 +663,6 @@ System.namespace("CSharpLua", function (namespace)
       local structDeclaration = CSharpLuaLuaAst.LuaStructDeclarationSyntax(name)
       local symbol = VisitTypeDeclaration(this, typeSymbol, node, structDeclaration)
       TryAddStructDefaultMethod(this, symbol, structDeclaration)
-      this.generator_:AddTypeSymbol(symbol)
       return structDeclaration
     end
     VisitInterfaceDeclaration = function (this, node) 
@@ -672,13 +671,13 @@ System.namespace("CSharpLua", function (namespace)
       name, typeSymbol = GetTypeDeclarationName(this, node)
       local interfaceDeclaration = CSharpLuaLuaAst.LuaInterfaceDeclarationSyntax(name)
       local symbol = VisitTypeDeclaration(this, typeSymbol, node, interfaceDeclaration)
-      this.generator_:AddTypeSymbol(symbol)
       return interfaceDeclaration
     end
     VisitEnumDeclaration = function (this, node) 
-      local symbol = MicrosoftCodeAnalysisCSharp.CSharpExtensions.GetDeclaredSymbol(this.semanticModel_, node, System.default(SystemThreading.CancellationToken))
-      local name = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, node:getIdentifier():getValueText())
-      local enumDeclaration = CSharpLuaLuaAst.LuaEnumDeclarationSyntax(symbol:ToString(), name, getCurCompilationUnit(this))
+      local name
+      local typeSymbol
+      name, typeSymbol = GetTypeDeclarationName(this, node)
+      local enumDeclaration = CSharpLuaLuaAst.LuaEnumDeclarationSyntax(typeSymbol:ToString(), name, getCurCompilationUnit(this))
       this.typeDeclarations_:Push(enumDeclaration)
       local comments = BuildDocumentationComment(this, node)
       enumDeclaration:AddDocumentComments(comments)
@@ -687,7 +686,6 @@ System.namespace("CSharpLua", function (namespace)
         enumDeclaration:Add(statement)
       end
       this.typeDeclarations_:Pop()
-      this.generator_:AddTypeSymbol(symbol)
       this.generator_:AddEnumDeclaration(enumDeclaration)
       return enumDeclaration
     end
@@ -2245,7 +2243,7 @@ System.namespace("CSharpLua", function (namespace)
       for _, variable in System.each(node:getVariables()) do
         if variable:getInitializer() ~= nil and MicrosoftCodeAnalysis.CSharpExtensions.IsKind(variable:getInitializer():getValue(), 9050 --[[SyntaxKind.RefExpression]]) then
           local refExpression = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, variable:getInitializer():getValue():Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-          AddLocalVariableMapping(this, CSharpLuaLuaAst.LuaRefNameSyntax(refExpression), variable)
+          AddLocalVariableMapping(this, CSharpLuaLuaAst.LuaSymbolNameSyntax(refExpression), variable)
         else
           local isConst = false
           local parent = node:getParent()
@@ -3096,20 +3094,6 @@ System.namespace("CSharpLua", function (namespace)
       local searcher = CSharpLuaLuaSyntaxNodeTransfor.LocalVarSearcher(name)
       return searcher:Find(root)
     end
-    GetNewIdentifierName = function (this, name, index) 
-      repeat
-        local default = index
-        if default == 0 then
-          return name
-        elseif default == 1 then
-          return name .. "_"
-        elseif default == 2 then
-          return "_" .. name
-        else
-          return name .. (index - 2)
-        end
-      until 1
-    end
     FindFromCur = function (this, node, macth) 
       local cur = node
       while cur ~= nil do
@@ -3142,7 +3126,7 @@ System.namespace("CSharpLua", function (namespace)
     GetUniqueIdentifier = function (this, name, node, index) 
       local root = FindParent2(this, node, MicrosoftCodeAnalysisCSharpSyntax.BaseMethodDeclarationSyntax)
       while true do
-        local newName = GetNewIdentifierName(this, name, index)
+        local newName = CSharpLua.Utility.GetNewIdentifierName(name, index)
         local exists = IsLocalVarExists(this, newName, root)
         if not exists then
           return newName
@@ -3574,10 +3558,10 @@ System.namespace("CSharpLua", function (namespace)
       return name
     end
     GetTypeShortName = function (this, symbol) 
-      return getXmlMetaProvider(this):GetTypeShortName(symbol, this)
+      return this.generator_:GetTypeShortName(symbol, this)
     end
     GetTypeName = function (this, symbol) 
-      return getXmlMetaProvider(this):GetTypeName(symbol, this)
+      return this.generator_:GetTypeName(symbol, this)
     end
     BuildFieldOrPropertyMemberAccessExpression = function (this, expression, name, isStatic) 
       local propertyMethod = name

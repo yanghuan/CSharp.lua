@@ -416,130 +416,25 @@ namespace CSharpLua {
       }
     }
 
-    private string GetNamespaceMapName(INamespaceSymbol symbol) {
-      if (symbol.IsGlobalNamespace) {
-        return string.Empty;
-      }
-      else {
-        string name = symbol.ToString();
-        return namespaceNameMaps_.GetOrDefault(name, name);
-      }
+    public string GetNamespaceMapName(INamespaceSymbol symbol, string original) {
+      return namespaceNameMaps_.GetOrDefault(original);
     }
 
-    public LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransfor transfor) {
-      Contract.Assert(symbol != null);
-      if (symbol.Kind == SymbolKind.TypeParameter) {
-        return new LuaIdentifierNameSyntax(symbol.Name);
-      }
-
-      if (symbol.Kind == SymbolKind.ArrayType) {
-        var arrayType = (IArrayTypeSymbol)symbol;
-        LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
-        return new LuaInvocationExpressionSyntax(arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray, elementTypeExpression);
-      }
-
-      var namedTypeSymbol = (INamedTypeSymbol)symbol;
-      if (namedTypeSymbol.TypeKind == TypeKind.Enum) {
-        return LuaIdentifierNameSyntax.Int;
-      }
-
-      if (namedTypeSymbol.IsDelegateType()) {
-        return LuaIdentifierNameSyntax.Delegate;
-      }
-
-      if (namedTypeSymbol.IsAnonymousType) {
-        return LuaIdentifierNameSyntax.AnonymousType;
-      }
-
-      if (namedTypeSymbol.IsTupleType) {
-        return LuaIdentifierNameSyntax.ValueTupleType;
-      }
-
-      LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor);
-      var typeArguments = GetTypeArguments(namedTypeSymbol, transfor);
-      if (typeArguments.Count == 0) {
-        return baseTypeName;
-      }
-      else {
-        var invocationExpression = new LuaInvocationExpressionSyntax(baseTypeName);
-        invocationExpression.AddArguments(typeArguments);
-        return invocationExpression;
-      }
-    }
-
-    private List<LuaExpressionSyntax> GetTypeArguments(INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
-      List<LuaExpressionSyntax> typeArguments = new List<LuaExpressionSyntax>();
-      FillExternalTypeArgument(typeArguments, typeSymbol, transfor);
-      FillTypeArguments(typeArguments, typeSymbol, transfor);
-      return typeArguments;
-    }
-
-    private void FillExternalTypeArgument(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
-      var externalType = typeSymbol.ContainingType;
-      if (externalType != null) {
-        FillExternalTypeArgument(typeArguments, externalType, transfor);
-        FillTypeArguments(typeArguments, externalType, transfor);
-      }
-    }
-
-    private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransfor transfor) {
-      foreach (var typeArgument in typeSymbol.TypeArguments) {
-        LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
-        typeArguments.Add(typeArgumentExpression);
-      }
-    }
-
-    private bool MayHaveCodeMeta(ISymbol symbol) {
+    internal bool MayHaveCodeMeta(ISymbol symbol) {
       return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
-    }
-
-    private void FillExternalTypeName(StringBuilder sb, INamedTypeSymbol typeSymbol) {
-      var externalType = typeSymbol.ContainingType;
-      if (externalType != null) {
-        FillExternalTypeName(sb, externalType);
-        sb.Append(externalType.Name);
-        int typeParametersCount = externalType.TypeParameters.Length;
-        if (typeParametersCount > 0) {
-          sb.Append('_');
-          sb.Append(typeParametersCount);
-        }
-        sb.Append('.');
-      }
     }
 
     private string GetTypeShortString(ISymbol symbol) {
       INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
-      string namespaceName = GetNamespaceMapName(typeSymbol.ContainingNamespace);
-      StringBuilder sb = new StringBuilder();
-      if (namespaceName.Length > 0) {
-        sb.Append(namespaceName);
-        sb.Append('.');
-      }
-      FillExternalTypeName(sb, typeSymbol);
-      sb.Append(typeSymbol.Name);
-      int typeParametersCount = typeSymbol.TypeParameters.Length;
-      if (typeParametersCount > 0) {
-        sb.Append('_');
-        sb.Append(typeParametersCount);
-      }
-      return sb.ToString();
+      return typeSymbol.GetTypeShortName(GetNamespaceMapName);
     }
 
-    internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransfor transfor = null) {
-      string name = GetTypeShortString(symbol);
+    internal string GetTypeMapName(ISymbol symbol, string shortName) {
       if (MayHaveCodeMeta(symbol)) {
-        TypeMetaInfo info = typeMetas_.GetOrDefault(name);
-        if (info != null) {
-          string newName = info.Model.Name;
-          if (newName != null) {
-            name = newName;
-          }
-        }
+        TypeMetaInfo info = typeMetas_.GetOrDefault(shortName);
+        return info?.Model.Name;
       }
-      if (transfor != null) {
-        transfor.ImportTypeName(ref name, symbol);
-      }
-      return new LuaIdentifierNameSyntax(name);
+      return null;
     }
 
     private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {

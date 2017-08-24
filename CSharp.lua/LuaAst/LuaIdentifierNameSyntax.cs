@@ -20,9 +20,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis;
-
 namespace CSharpLua.LuaAst {
   public class LuaIdentifierNameSyntax : LuaExpressionSyntax {
     public string ValueText { get; }
@@ -178,28 +175,14 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaSymbolNameSyntax : LuaIdentifierNameSyntax {
-    public LuaIdentifierNameSyntax IdentifierName { get; private set; }
+    public LuaExpressionSyntax NameExpression { get; private set; }
 
-    public LuaSymbolNameSyntax(LuaIdentifierNameSyntax identifierName) : base("") {
-      IdentifierName = identifierName;
+    public LuaSymbolNameSyntax(LuaExpressionSyntax identifierName) : base("") {
+      NameExpression = identifierName;
     }
 
     public void Update(string newName) {
-      if (IdentifierName.ValueText != newName) {
-        IdentifierName = new LuaIdentifierNameSyntax(newName);
-      }
-    }
-
-    internal override void Render(LuaRenderer renderer) {
-      IdentifierName.Render(renderer);
-    }
-  }
-
-  public sealed class LuaRefNameSyntax : LuaIdentifierNameSyntax {
-    public LuaExpressionSyntax NameExpression { get; }
-
-    public LuaRefNameSyntax(LuaExpressionSyntax nameExpression) : base("") {
-      NameExpression = nameExpression ?? throw new ArgumentNullException(nameof(nameExpression));
+      NameExpression = new LuaIdentifierNameSyntax(newName);
     }
 
     internal override void Render(LuaRenderer renderer) {

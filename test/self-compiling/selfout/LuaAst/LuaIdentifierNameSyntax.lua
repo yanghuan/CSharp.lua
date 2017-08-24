@@ -15,10 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 local System = System
-local CSharpLua
 local CSharpLuaLuaAst
 System.usingDeclare(function (global) 
-  CSharpLua = global.CSharpLua
   CSharpLuaLuaAst = CSharpLua.LuaAst
 end)
 System.namespace("CSharpLua.LuaAst", function (namespace) 
@@ -212,33 +210,10 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local Update, Render, __ctor__
     __ctor__ = function (this, identifierName) 
       this.__base__.__ctor__[1](this, "")
-      this.IdentifierName = identifierName
+      this.NameExpression = identifierName
     end
     Update = function (this, newName) 
-      if this.IdentifierName.ValueText ~= newName then
-        this.IdentifierName = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, newName)
-      end
-    end
-    Render = function (this, renderer) 
-      this.IdentifierName:Render(renderer)
-    end
-    return {
-      __inherits__ = function (global) 
-        return {
-          global.CSharpLua.LuaAst.LuaIdentifierNameSyntax
-        }
-      end, 
-      Update = Update, 
-      Render = Render, 
-      __ctor__ = __ctor__
-    }
-  end)
-
-  namespace.class("LuaRefNameSyntax", function (namespace) 
-    local Render, __ctor__
-    __ctor__ = function (this, nameExpression) 
-      this.__base__.__ctor__[1](this, "")
-      this.NameExpression = nameExpression or System.throw(CSharpLua.ArgumentNullException("nameExpression" --[[nameof(nameExpression)]]))
+      this.NameExpression = CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, newName)
     end
     Render = function (this, renderer) 
       this.NameExpression:Render(renderer)
@@ -249,6 +224,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
           global.CSharpLua.LuaAst.LuaIdentifierNameSyntax
         }
       end, 
+      Update = Update, 
       Render = Render, 
       __ctor__ = __ctor__
     }

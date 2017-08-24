@@ -104,7 +104,6 @@ return function (dir)
     "CSharpLua.LuaAst.LuaPrefixUnaryExpressionSyntax", 
     "CSharpLua.LuaAst.LuaPropertyAdapterExpressionSyntax", 
     "CSharpLua.LuaAst.LuaPropertyOrEventIdentifierNameSyntax", 
-    "CSharpLua.LuaAst.LuaRefNameSyntax", 
     "CSharpLua.LuaAst.LuaRepeatStatementSyntax", 
     "CSharpLua.LuaAst.LuaReturnStatementSyntax", 
     "CSharpLua.LuaAst.LuaSequenceListExpressionSyntax", 

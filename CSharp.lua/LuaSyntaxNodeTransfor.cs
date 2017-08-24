@@ -345,7 +345,7 @@ namespace CSharpLua {
       major.CompilationUnit.AddTypeDeclarationCount();
     }
 
-    private void GetTypeDeclarationName(TypeDeclarationSyntax typeDeclaration, out LuaIdentifierNameSyntax name, out INamedTypeSymbol typeSymbol) {
+    private void GetTypeDeclarationName(BaseTypeDeclarationSyntax typeDeclaration, out LuaIdentifierNameSyntax name, out INamedTypeSymbol typeSymbol) {
       typeSymbol = semanticModel_.GetDeclaredSymbol(typeDeclaration);
       name = generator_.GetTypeDeclarationName(typeSymbol);
     }
@@ -362,7 +362,6 @@ namespace CSharpLua {
       LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
       var symbol = VisitTypeDeclaration(typeSymbol, node, structDeclaration);
       TryAddStructDefaultMethod(symbol, structDeclaration);
-      generator_.AddTypeSymbol(symbol);
       return structDeclaration;
     }
 
@@ -370,14 +369,12 @@ namespace CSharpLua {
       GetTypeDeclarationName(node, out var name, out var typeSymbol);
       LuaInterfaceDeclarationSyntax interfaceDeclaration = new LuaInterfaceDeclarationSyntax(name);
       var symbol = VisitTypeDeclaration(typeSymbol, node, interfaceDeclaration);
-      generator_.AddTypeSymbol(symbol);
       return interfaceDeclaration;
     }
 
     public override LuaSyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node) {
-      INamedTypeSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
-      LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
-      LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(symbol.ToString(), name, CurCompilationUnit);
+      GetTypeDeclarationName(node, out var name, out var typeSymbol);
+      LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(typeSymbol.ToString(), name, CurCompilationUnit);
       typeDeclarations_.Push(enumDeclaration);
       var comments = BuildDocumentationComment(node);
       enumDeclaration.AddDocumentComments(comments);
@@ -386,7 +383,6 @@ namespace CSharpLua {
         enumDeclaration.Add(statement);
       }
       typeDeclarations_.Pop();
-      generator_.AddTypeSymbol(symbol);
       generator_.AddEnumDeclaration(enumDeclaration);
       return enumDeclaration;
     }
@@ -1930,7 +1926,7 @@ namespace CSharpLua {
       foreach (VariableDeclaratorSyntax variable in node.Variables) {
         if (variable.Initializer != null && variable.Initializer.Value.IsKind(SyntaxKind.RefExpression)) {
           var refExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
-          AddLocalVariableMapping(new LuaRefNameSyntax(refExpression), variable);
+          AddLocalVariableMapping(new LuaSymbolNameSyntax(refExpression), variable);
         }
         else {
           bool isConst = false;

@@ -21,12 +21,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CSharpLua.LuaAst;
-using System.Text.RegularExpressions;
 
 namespace CSharpLua {
   public sealed class CmdArgumentException : Exception {
@@ -693,6 +693,74 @@ namespace CSharpLua {
         sb.Insert(0, '_');
       }
       return sb.ToString();
+    }
+
+    private static void FillExternalTypeName(StringBuilder sb, INamedTypeSymbol typeSymbol, Func<INamedTypeSymbol, string> funcOfTypeName) {
+      var externalType = typeSymbol.ContainingType;
+      if (externalType != null) {
+        FillExternalTypeName(sb, externalType, funcOfTypeName);
+        string typeName = funcOfTypeName?.Invoke(typeSymbol) ?? externalType.Name;
+        sb.Append(typeName);
+        int typeParametersCount = externalType.TypeParameters.Length;
+        if (typeParametersCount > 0) {
+          sb.Append('_');
+          sb.Append(typeParametersCount);
+        }
+        sb.Append('.');
+      }
+    }
+
+    public static string GetTypeShortName(this INamedTypeSymbol typeSymbol, Func<INamespaceSymbol, string, string> funcOfNamespace = null, Func<INamedTypeSymbol, string> funcOfTypeName = null) {
+      StringBuilder sb = new StringBuilder();
+      string namespaceName;
+      var namespaceSymbol = typeSymbol.ContainingNamespace;
+      if (namespaceSymbol.IsGlobalNamespace) {
+        namespaceName = string.Empty;
+      }
+      else {
+        namespaceName = namespaceSymbol.ToString();
+        string newName = funcOfNamespace?.Invoke(namespaceSymbol, namespaceName);
+        if (newName != null) {
+          namespaceName = newName;
+        }
+      }
+      if (namespaceName.Length > 0) {
+        sb.Append(namespaceName);
+        sb.Append('.');
+      }
+      FillExternalTypeName(sb, typeSymbol, funcOfTypeName);
+      string typeName = funcOfTypeName?.Invoke(typeSymbol) ?? typeSymbol.Name;
+      sb.Append(typeName);
+      int typeParametersCount = typeSymbol.TypeParameters.Length;
+      if (typeParametersCount > 0) {
+        sb.Append('_');
+        sb.Append(typeParametersCount);
+      }
+      return sb.ToString();
+    }
+
+    public static string GetNewIdentifierName(string name, int index) {
+      switch (index) {
+        case 0:
+          return name;
+        case 1:
+          return name + "_";
+        case 2:
+          return "_" + name;
+        default:
+          return name + (index - 2);
+      }
+    }
+
+    public static IEnumerable<INamespaceSymbol> InternalGetAllNamespaces(INamespaceSymbol symbol) {
+      do {
+        yield return symbol;
+        symbol = symbol.ContainingNamespace;
+      } while (!symbol.IsGlobalNamespace);
+    }
+
+    public static IEnumerable<INamespaceSymbol> GetAllNamespaces(this INamespaceSymbol symbol) {
+      return InternalGetAllNamespaces(symbol).Reverse();
     }
   }
 }

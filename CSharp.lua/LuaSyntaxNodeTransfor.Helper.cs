@@ -77,19 +77,6 @@ namespace CSharpLua {
       return searcher.Find(root);
     }
 
-    private string GetNewIdentifierName(string name, int index) {
-      switch (index) {
-        case 0:
-          return name;
-        case 1:
-          return name + "_";
-        case 2:
-          return "_" + name;
-        default:
-          return name + (index - 2);
-      }
-    }
-
     private SyntaxNode FindFromCur(SyntaxNode node, Func<SyntaxNode, bool> macth) {
       var cur = node;
       while (cur != null) {
@@ -122,7 +109,7 @@ namespace CSharpLua {
     private string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
       var root = FindParent<BaseMethodDeclarationSyntax>(node);
       while (true) {
-        string newName = GetNewIdentifierName(name, index);
+        string newName = Utility.GetNewIdentifierName(name, index);
         bool exists = IsLocalVarExists(newName, root);
         if (!exists) {
           return newName;
@@ -580,11 +567,11 @@ namespace CSharpLua {
     }
 
     private LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {
-      return XmlMetaProvider.GetTypeShortName(symbol, this);
+      return generator_.GetTypeShortName(symbol, this);
     }
 
     private LuaExpressionSyntax GetTypeName(ISymbol symbol) {
-      return XmlMetaProvider.GetTypeName(symbol, this);
+      return generator_.GetTypeName(symbol, this);
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {

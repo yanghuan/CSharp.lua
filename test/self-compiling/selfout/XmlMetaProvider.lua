@@ -17,15 +17,12 @@ limitations under the License.
 local System = System
 local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local SystemIO = System.IO
-local SystemText = System.Text
 local SystemXmlSerialization = System.Xml.Serialization
 local CSharpLua
-local CSharpLuaLuaAst
 local CSharpLuaXmlMetaProvider
 local CSharpLuaXmlMetaProviderXmlMetaModel
 System.usingDeclare(function (global) 
   CSharpLua = global.CSharpLua
-  CSharpLuaLuaAst = CSharpLua.LuaAst
   CSharpLuaXmlMetaProvider = CSharpLua.XmlMetaProvider
   CSharpLuaXmlMetaProviderXmlMetaModel = CSharpLua.XmlMetaProvider.XmlMetaModel
 end)
@@ -307,9 +304,9 @@ System.namespace("CSharpLua", function (namespace)
         __ctor__ = __ctor__
       }
     end)
-    local LoadNamespace, LoadType, GetNamespaceMapName, GetTypeName, GetTypeArguments, FillExternalTypeArgument, FillTypeArguments, MayHaveCodeMeta, 
-    FillExternalTypeName, GetTypeShortString, GetTypeShortName, GetTypeMetaInfo, IsPropertyField, GetFieldCodeTemplate, GetProertyCodeTemplate, GetInternalMethodMetaInfo, 
-    GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, IsMethodIgnoreGeneric, IsExportAttribute, CheckFieldNameOfProtobufnet, __init__, __ctor__
+    local LoadNamespace, LoadType, GetNamespaceMapName, MayHaveCodeMeta, GetTypeShortString, GetTypeMapName, GetTypeMetaInfo, IsPropertyField, 
+    GetFieldCodeTemplate, GetProertyCodeTemplate, GetInternalMethodMetaInfo, GetMethodMetaInfo, GetMethodMapName, GetMethodCodeTemplate, IsMethodIgnoreGeneric, IsExportAttribute, 
+    CheckFieldNameOfProtobufnet, __init__, __ctor__
     __init__ = function (this) 
       this.namespaceNameMaps_ = System.Dictionary(System.String, System.String)()
       this.typeMetas_ = System.Dictionary(System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo)()
@@ -386,126 +383,26 @@ System.namespace("CSharpLua", function (namespace)
         this.typeMetas_:Add(classesfullName, info)
       end
     end
-    GetNamespaceMapName = function (this, symbol) 
-      if symbol:getIsGlobalNamespace() then
-        return ""
-      else
-        local name = symbol:ToString()
-        return CSharpLua.Utility.GetOrDefault1(this.namespaceNameMaps_, name, name, System.String, System.String)
-      end
-    end
-    GetTypeName = function (this, symbol, transfor) 
-      assert(symbol ~= nil)
-      if symbol:getKind() == 17 --[[SymbolKind.TypeParameter]] then
-        return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, symbol:getName())
-      end
-
-      if symbol:getKind() == 1 --[[SymbolKind.ArrayType]] then
-        local arrayType = System.cast(MicrosoftCodeAnalysis.IArrayTypeSymbol, symbol)
-        local elementTypeExpression = GetTypeName(this, arrayType:getElementType(), transfor)
-        local default
-        if arrayType:getRank() == 1 then
-          default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.Array
-        else
-          default = CSharpLuaLuaAst.LuaIdentifierNameSyntax.MultiArray
-        end
-        return CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, default, elementTypeExpression)
-      end
-
-      local namedTypeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, symbol)
-      if namedTypeSymbol:getTypeKind() == 5 --[[TypeKind.Enum]] then
-        return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Int
-      end
-
-      if CSharpLua.Utility.IsDelegateType(namedTypeSymbol) then
-        return CSharpLuaLuaAst.LuaIdentifierNameSyntax.Delegate
-      end
-
-      if namedTypeSymbol:getIsAnonymousType() then
-        return CSharpLuaLuaAst.LuaIdentifierNameSyntax.AnonymousType
-      end
-
-      if namedTypeSymbol:getIsTupleType() then
-        return CSharpLuaLuaAst.LuaIdentifierNameSyntax.ValueTupleType
-      end
-
-      local baseTypeName = GetTypeShortName(this, namedTypeSymbol, transfor)
-      local typeArguments = GetTypeArguments(this, namedTypeSymbol, transfor)
-      if #typeArguments == 0 then
-        return baseTypeName
-      else
-        local invocationExpression = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, baseTypeName)
-        invocationExpression:AddArguments(typeArguments)
-        return invocationExpression
-      end
-    end
-    GetTypeArguments = function (this, typeSymbol, transfor) 
-      local typeArguments = System.List(CSharpLuaLuaAst.LuaExpressionSyntax)()
-      FillExternalTypeArgument(this, typeArguments, typeSymbol, transfor)
-      FillTypeArguments(this, typeArguments, typeSymbol, transfor)
-      return typeArguments
-    end
-    FillExternalTypeArgument = function (this, typeArguments, typeSymbol, transfor) 
-      local externalType = typeSymbol:getContainingType()
-      if externalType ~= nil then
-        FillExternalTypeArgument(this, typeArguments, externalType, transfor)
-        FillTypeArguments(this, typeArguments, externalType, transfor)
-      end
-    end
-    FillTypeArguments = function (this, typeArguments, typeSymbol, transfor) 
-      for _, typeArgument in System.each(typeSymbol:getTypeArguments()) do
-        local typeArgumentExpression = GetTypeName(this, typeArgument, transfor)
-        typeArguments:Add(typeArgumentExpression)
-      end
+    GetNamespaceMapName = function (this, symbol, original) 
+      return CSharpLua.Utility.GetOrDefault1(this.namespaceNameMaps_, original, nil, System.String, System.String)
     end
     MayHaveCodeMeta = function (this, symbol) 
       return symbol:getDeclaredAccessibility() == 6 --[[Accessibility.Public]] and not CSharpLua.Utility.IsFromCode(symbol)
     end
-    FillExternalTypeName = function (this, sb, typeSymbol) 
-      local externalType = typeSymbol:getContainingType()
-      if externalType ~= nil then
-        FillExternalTypeName(this, sb, externalType)
-        sb:Append(externalType:getName())
-        local typeParametersCount = externalType:getTypeParameters():getLength()
-        if typeParametersCount > 0 then
-          sb:Append(95 --[['_']])
-          sb:Append(typeParametersCount)
-        end
-        sb:Append(46 --[['.']])
-      end
-    end
     GetTypeShortString = function (this, symbol) 
       local typeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition())
-      local namespaceName = GetNamespaceMapName(this, typeSymbol:getContainingNamespace())
-      local sb = SystemText.StringBuilder()
-      if #namespaceName > 0 then
-        sb:Append(namespaceName)
-        sb:Append(46 --[['.']])
-      end
-      FillExternalTypeName(this, sb, typeSymbol)
-      sb:Append(typeSymbol:getName())
-      local typeParametersCount = typeSymbol:getTypeParameters():getLength()
-      if typeParametersCount > 0 then
-        sb:Append(95 --[['_']])
-        sb:Append(typeParametersCount)
-      end
-      return sb:ToString()
+      return CSharpLua.Utility.GetTypeShortName(typeSymbol, System.bind(this, GetNamespaceMapName))
     end
-    GetTypeShortName = function (this, symbol, transfor) 
-      local name = GetTypeShortString(this, symbol)
+    GetTypeMapName = function (this, symbol, shortName) 
       if MayHaveCodeMeta(this, symbol) then
-        local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, name, nil, System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo)
-        if info ~= nil then
-          local newName = info:getModel().Name
-          if newName ~= nil then
-            name = newName
-          end
+        local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, shortName, nil, System.String, CSharpLuaXmlMetaProvider.TypeMetaInfo)
+        local default = info
+        if default ~= nil then
+          default = default.getModel().Name
         end
+        return default
       end
-      if transfor ~= nil then
-        name = transfor:ImportTypeName(name, symbol)
-      end
-      return CSharpLuaLuaAst.LuaIdentifierNameSyntax:new(1, name)
+      return nil
     end
     GetTypeMetaInfo = function (this, memberSymbol) 
       local typeName = GetTypeShortString(this, memberSymbol:getContainingType())
@@ -628,8 +525,9 @@ System.namespace("CSharpLua", function (namespace)
       return fieldName
     end
     return {
-      GetTypeName = GetTypeName, 
-      GetTypeShortName = GetTypeShortName, 
+      GetNamespaceMapName = GetNamespaceMapName, 
+      MayHaveCodeMeta = MayHaveCodeMeta, 
+      GetTypeMapName = GetTypeMapName, 
       IsPropertyField = IsPropertyField, 
       GetFieldCodeTemplate = GetFieldCodeTemplate, 
       GetProertyCodeTemplate = GetProertyCodeTemplate, 
