@@ -1148,6 +1148,7 @@ namespace CSharpLua {
         if (type.TypeParameters.IsEmpty) {
           if (LuaSyntaxNode.IsReservedWord(name)) {
             RefactorTypeName(type, type.Name, 1);
+            return;
           }
         }
 
@@ -1156,12 +1157,16 @@ namespace CSharpLua {
         }
       }
 
-      private void RefactorTypeName(INamedTypeSymbol type, string name, int index = 0) {
+      private void RefactorTypeName(INamedTypeSymbol type, string name, int index) {
+        string newName = GetTypeOrNamespaceNewName(classTypes_, type, name, index);
+        generator_.typeRefactorNames_.Add(type, newName);
+      }
+
+      private string GetTypeOrNamespaceNewName(IEnumerable<ISymbol> allSymbols, ISymbol symbol, string name, int index = 0) {
         while (true) {
           string newName = Utility.GetNewIdentifierName(name, index);
-          if (!CheckTypeNameExists(classTypes_, type, newName)) {
-            generator_.typeRefactorNames_.Add(type, newName);
-            break;
+          if (!CheckTypeNameExists(allSymbols, symbol, newName)) {
+            return newName;
           }
         }
       }
@@ -1172,28 +1177,22 @@ namespace CSharpLua {
 
       private void CheckNamespace() {
         var all = classTypes_.SelectMany(i => i.ContainingNamespace.GetAllNamespaces()).Distinct().ToArray();
-        foreach (var i in all) {
-          string name = i.Name;
-
+        foreach (var symbol in all) {
+          string name = symbol.Name;
           if (LuaSyntaxNode.IsReservedWord(name)) {
-            RefactorNamespaceName(all, i, i.Name, 1);
+            RefactorNamespaceName(all, symbol, symbol.Name, 1);
           }
           else {
             if (Utility.IsIdentifierIllegal(ref name)) {
-              RefactorNamespaceName(all, i, name, 0);
+              RefactorNamespaceName(all, symbol, name, 0);
             }
           }
         }
       }
 
-      private void RefactorNamespaceName(INamespaceSymbol[] all, INamespaceSymbol curr, string name, int index) {
-        while (true) {
-          string newName = Utility.GetNewIdentifierName(name, index);
-          if (!CheckTypeNameExists(all, curr, newName)) {
-            generator_.namespaceRefactorNames_.Add(curr, newName);
-            break;
-          }
-        }
+      private void RefactorNamespaceName(INamespaceSymbol[] all, INamespaceSymbol symbol, string name, int index) {
+        string newName = GetTypeOrNamespaceNewName(all, symbol, name, index);
+        generator_.namespaceRefactorNames_.Add(symbol, newName);
       }
     }
 
