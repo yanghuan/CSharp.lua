@@ -84,7 +84,7 @@ System.namespace("CSharpLua", function (namespace)
     end)
     namespace.class("PretreatmentChecker", function (namespace) 
       local GetDeclaredSymbol, VisitClassDeclaration, VisitStructDeclaration, VisitInterfaceDeclaration, VisitEnumDeclaration, Check, CheckImplicitInterfaceImplementation, IsExtendSelf, 
-      CheckTypeName, RefactorTypeName, CheckTypeNameExists, CheckNamespace, RefactorNamespaceName, __init__, __ctor__
+      CheckTypeName, RefactorTypeName, GetTypeOrNamespaceNewName, CheckTypeNameExists, CheckNamespace, RefactorNamespaceName, __init__, __ctor__
       __init__ = function (this) 
         this.classTypes_ = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)()
       end
@@ -192,6 +192,7 @@ System.namespace("CSharpLua", function (namespace)
         if type:getTypeParameters():getIsEmpty() then
           if CSharpLuaLuaAst.LuaSyntaxNode.IsReservedWord(name) then
             RefactorTypeName(this, type, type:getName(), 1)
+            return
           end
         end
 
@@ -202,11 +203,14 @@ System.namespace("CSharpLua", function (namespace)
         end
       end
       RefactorTypeName = function (this, type, name, index) 
+        local newName = GetTypeOrNamespaceNewName(this, this.classTypes_, type, name, index)
+        this.generator_.typeRefactorNames_:Add(type, newName)
+      end
+      GetTypeOrNamespaceNewName = function (this, allSymbols, symbol, name, index) 
         while true do
           local newName = CSharpLua.Utility.GetNewIdentifierName(name, index)
-          if not CheckTypeNameExists(this.classTypes_, type, newName) then
-            this.generator_.typeRefactorNames_:Add(type, newName)
-            break
+          if not CheckTypeNameExists(allSymbols, symbol, newName) then
+            return newName
           end
         end
       end
@@ -221,28 +225,22 @@ System.namespace("CSharpLua", function (namespace)
         local all = Linq.ToArray(Linq.Distinct(Linq.SelectMany(this.classTypes_, function (i) 
           return CSharpLua.Utility.GetAllNamespaces(i:getContainingNamespace())
         end, MicrosoftCodeAnalysis.INamespaceSymbol)))
-        for _, i in System.each(all) do
-          local name = i:getName()
-
+        for _, symbol in System.each(all) do
+          local name = symbol:getName()
           if CSharpLuaLuaAst.LuaSyntaxNode.IsReservedWord(name) then
-            RefactorNamespaceName(this, all, i, i:getName(), 1)
+            RefactorNamespaceName(this, all, symbol, symbol:getName(), 1)
           else
             local default
             default, name = CSharpLua.Utility.IsIdentifierIllegal(name)
             if default then
-              RefactorNamespaceName(this, all, i, name, 0)
+              RefactorNamespaceName(this, all, symbol, name, 0)
             end
           end
         end
       end
-      RefactorNamespaceName = function (this, all, curr, name, index) 
-        while true do
-          local newName = CSharpLua.Utility.GetNewIdentifierName(name, index)
-          if not CheckTypeNameExists(all, curr, newName) then
-            this.generator_.namespaceRefactorNames_:Add(curr, newName)
-            break
-          end
-        end
+      RefactorNamespaceName = function (this, all, symbol, name, index) 
+        local newName = GetTypeOrNamespaceNewName(this, all, symbol, name, index)
+        this.generator_.namespaceRefactorNames_:Add(symbol, newName)
       end
       return {
         __inherits__ = function (global) 

@@ -1899,7 +1899,13 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node) {
       switch (node.Kind()) {
         case SyntaxKind.NumericLiteralExpression: {
-            return new LuaIdentifierLiteralExpressionSyntax(node.Token.Text);
+            string value = node.Token.ValueText;
+            if (node.Token.Value is float || node.Token.Value is double) {
+              if (!value.Contains('.')) {
+                value += ".0";
+              }
+            }
+            return new LuaIdentifierLiteralExpressionSyntax(value);
           }
         case SyntaxKind.StringLiteralExpression: {
             return BuildStringLiteralTokenExpression(node.Token);
