@@ -2572,8 +2572,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitYieldStatement(YieldStatementSyntax node) {
       CurFunction.HasYield = true;
       if (node.IsKind(SyntaxKind.YieldBreakStatement)) {
-        LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.YieldBreak);
-        return new LuaExpressionStatementSyntax(invocationExpression);
+        return new LuaReturnStatementSyntax();
       } else {
         var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
         LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.YieldReturn);
