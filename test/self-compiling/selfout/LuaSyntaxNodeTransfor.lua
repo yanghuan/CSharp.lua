@@ -2213,7 +2213,13 @@ System.namespace("CSharpLua", function (namespace)
         local default = node:Kind()
         if default == 8749 --[[SyntaxKind.NumericLiteralExpression]] then
           do
-            return CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, node:getToken():getText())
+            local value = node:getToken():getValueText()
+            if System.is(node:getToken():getValue(), System.Double) or System.is(node:getToken():getValue(), System.Double) then
+              if not Linq.Contains(value, 46 --[['.']]) then
+                value = value .. ".0"
+              end
+            end
+            return CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax:new(1, value)
           end
         elseif default == 8750 --[[SyntaxKind.StringLiteralExpression]] then
           do

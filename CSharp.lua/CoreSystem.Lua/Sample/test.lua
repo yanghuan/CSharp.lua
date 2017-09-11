@@ -240,7 +240,3 @@ test(testType, "Type")
 test(testSplit, "testSplit")
 --test(testConsole, "Console")
 --test(testIO, "IO")
-
-
-
-
