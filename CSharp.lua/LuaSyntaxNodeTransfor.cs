@@ -394,8 +394,8 @@ namespace CSharpLua {
     private void VisitYield(TypeSyntax returnType, LuaFunctionExpressionSyntax function) {
       Contract.Assert(function.HasYield);
 
-      var nameSyntax = (SimpleNameSyntax)returnType;
-      string name = LuaSyntaxNode.Tokens.Yield + nameSyntax.Identifier.ValueText;
+      var retrurnTypeSymbol = semanticModel_.GetTypeInfo(returnType).Type;
+      string name = LuaSyntaxNode.Tokens.Yield + retrurnTypeSymbol.Name;
       LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
       LuaInvocationExpressionSyntax invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
       LuaFunctionExpressionSyntax wrapFunction = new LuaFunctionExpressionSyntax();
@@ -405,7 +405,7 @@ namespace CSharpLua {
       wrapFunction.AddStatements(function.Body.Statements);
       invokeExpression.AddArgument(wrapFunction);
       if (returnType.IsKind(SyntaxKind.GenericName)) {
-        var genericNameSyntax = (GenericNameSyntax)nameSyntax;
+        var genericNameSyntax = (GenericNameSyntax)returnType;
         var typeName = genericNameSyntax.TypeArgumentList.Arguments.First();
         var expression = (LuaExpressionSyntax)typeName.Accept(this);
         invokeExpression.AddArgument(expression);
@@ -2565,11 +2565,11 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitYieldStatement(YieldStatementSyntax node) {
       CurFunction.HasYield = true;
-      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       if (node.IsKind(SyntaxKind.YieldBreakStatement)) {
-        LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(expression);
-        return returnStatement;
+        LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.YieldBreak);
+        return new LuaExpressionStatementSyntax(invocationExpression);
       } else {
+        var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
         LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.YieldReturn);
         invocationExpression.AddArgument(expression);
         return new LuaExpressionStatementSyntax(invocationExpression);

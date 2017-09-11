@@ -40,6 +40,7 @@ namespace CSharpLua.LuaAst {
     public readonly static LuaIdentifierNameSyntax Throw = new LuaIdentifierNameSyntax("System.throw");
     public readonly static LuaIdentifierNameSyntax Each = new LuaIdentifierNameSyntax("System.each");
     public readonly static LuaIdentifierNameSyntax YieldReturn = new LuaIdentifierNameSyntax("System.yieldReturn");
+    public readonly static LuaIdentifierNameSyntax YieldBreak = new LuaIdentifierNameSyntax("System.yieldBreak");
     public readonly static LuaIdentifierNameSyntax Object = new LuaIdentifierNameSyntax("System.Object");
     public readonly static LuaIdentifierNameSyntax Array = new LuaIdentifierNameSyntax("System.Array");
     public readonly static LuaIdentifierNameSyntax ArrayEmpty = new LuaIdentifierNameSyntax("System.Array.Empty");
