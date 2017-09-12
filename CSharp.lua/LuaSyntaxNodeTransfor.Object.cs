@@ -381,9 +381,11 @@ namespace CSharpLua {
       LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
       PushFunction(function);
 
-      foreach (var parameter in parameters) {
-        var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
-        function.ParameterList.Parameters.Add(luaParameter);
+      if (parameters != null) {
+        foreach (var parameter in parameters) {
+          var luaParameter = (LuaParameterSyntax)parameter.Accept(this);
+          function.ParameterList.Parameters.Add(luaParameter);
+        }
       }
 
       LuaExpressionSyntax resultExpression = function;
@@ -421,7 +423,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax node) {
-      return VisitLambdaExpression(node.ParameterList.Parameters, node.Body);
+      return VisitLambdaExpression(node.ParameterList?.Parameters, node.Body);
     }
 
     public override LuaSyntaxNode VisitTypeParameter(TypeParameterSyntax node) {
