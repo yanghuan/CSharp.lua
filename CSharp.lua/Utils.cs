@@ -752,7 +752,7 @@ namespace CSharpLua {
       }
     }
 
-    public static IEnumerable<INamespaceSymbol> InternalGetAllNamespaces(INamespaceSymbol symbol) {
+    private static IEnumerable<INamespaceSymbol> InternalGetAllNamespaces(INamespaceSymbol symbol) {
       do {
         yield return symbol;
         symbol = symbol.ContainingNamespace;
@@ -760,6 +760,9 @@ namespace CSharpLua {
     }
 
     public static IEnumerable<INamespaceSymbol> GetAllNamespaces(this INamespaceSymbol symbol) {
+      if (symbol.IsGlobalNamespace) {
+        return Array.Empty<INamespaceSymbol>();
+      }
       return InternalGetAllNamespaces(symbol).Reverse();
     }
   }
