@@ -18,13 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Text;
-using CSharpLua.LuaAst;
+
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
+using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
@@ -151,8 +150,7 @@ namespace CSharpLua {
           var ns = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
           ns.AddStatement(typeeDeclaration);
           compilationUnit.AddStatement(ns);
-        }
-        else {
+        } else {
           compilationUnit.AddStatement(statement);
         }
       }
@@ -437,8 +435,7 @@ namespace CSharpLua {
       if (symbol.MethodKind == MethodKind.LocalFunction) {
         methodName = new LuaIdentifierNameSyntax(symbol.Name);
         CheckLocalVariableName(ref methodName, node);
-      }
-      else {
+      } else {
         methodName = GetMemberName(symbol);
       }
       LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
@@ -448,8 +445,7 @@ namespace CSharpLua {
       bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
       if (!symbol.IsStatic) {
         function.AddParameter(LuaIdentifierNameSyntax.This);
-      }
-      else if (symbol.IsMainEntryPoint()) {
+      } else if (symbol.IsMainEntryPoint()) {
         isPrivate = false;
         bool success = generator_.SetMainEntryPoint(symbol);
         if (!success) {
@@ -478,8 +474,7 @@ namespace CSharpLua {
       if (body != null) {
         LuaBlockSyntax block = (LuaBlockSyntax)body.Accept(this);
         function.AddStatements(block.Statements);
-      }
-      else {
+      } else {
         blocks_.Push(function.Body);
         var expression = (LuaExpressionSyntax)expressionBody.Accept(this);
         blocks_.Pop();
@@ -488,8 +483,7 @@ namespace CSharpLua {
 
       if (function.HasYield) {
         VisitYield(returnType, function);
-      }
-      else {
+      } else {
         if (symbol.ReturnsVoid && refOrOutParameters.Count > 0) {
           var returnStatement = new LuaMultipleReturnStatementSyntax();
           returnStatement.Expressions.AddRange(refOrOutParameters);
@@ -674,13 +668,11 @@ namespace CSharpLua {
               if (accessor.Body != null) {
                 var block = (LuaBlockSyntax)accessor.Body.Accept(this);
                 functionExpression.AddStatements(block.Statements);
-              }
-              else {
+              } else {
                 var bodyExpression = (LuaExpressionSyntax)accessor.ExpressionBody.Accept(this);
                 if (isGet) {
                   functionExpression.AddStatement(new LuaReturnStatementSyntax(bodyExpression));
-                }
-                else {
+                } else {
                   functionExpression.AddStatement(bodyExpression);
                 }
               }
@@ -827,13 +819,11 @@ namespace CSharpLua {
               if (accessor.Body != null) {
                 var block = (LuaBlockSyntax)accessor.Body.Accept(this);
                 function.AddStatements(block.Statements);
-              }
-              else {
+              } else {
                 var bodyExpression = (LuaExpressionSyntax)accessor.ExpressionBody.Accept(this);
                 if (isGet) {
                   function.AddStatement(new LuaReturnStatementSyntax(bodyExpression));
-                }
-                else {
+                } else {
                   function.AddStatement(bodyExpression);
                 }
               }
@@ -843,8 +833,7 @@ namespace CSharpLua {
               }
             });
           }
-        }
-        else {
+        } else {
           Fill((function, name) => {
             var bodyExpression = (LuaExpressionSyntax)node.ExpressionBody.Accept(this);
             function.AddStatement(bodyExpression);
@@ -917,11 +906,16 @@ namespace CSharpLua {
       public LuaSyntaxNode Visit(LuaSyntaxNodeTransfor transfor) {
         const int kCommentCharCount = 2;
         if (SyntaxNode != null) {
-          var node = SyntaxNode.Accept(transfor);
-          Contract.Assert(node != null);
-          return node;
-        }
-        else {
+          try {
+            var node = SyntaxNode.Accept(transfor);
+            if (node == null) {
+              throw new InvalidOperationException();
+            }
+            return node;
+          } catch (Exception e) {
+            throw new Exception($"Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue, {SyntaxNode.GetLocationString()}", e);
+          }
+        } else {
           string content = SyntaxTrivia.ToString();
           switch (SyntaxTrivia.Kind()) {
             case SyntaxKind.SingleLineCommentTrivia: {
@@ -1099,8 +1093,7 @@ namespace CSharpLua {
               if (!rightNode.IsKind(SyntaxKind.TupleExpression)) {
                 right = BuildDeconstructExpression(rightNode, right);
               }
-            }
-            else {
+            } else {
               CheckValueTypeAndConversion(rightNode, ref right);
             }
             return BuildLuaSimpleAssignmentExpression(left, right);
@@ -1773,8 +1766,7 @@ namespace CSharpLua {
                 if (((string)localSymbol.ConstantValue).Length <= kStringConstInlineCount) {
                   return GetConstLiteralExpression(localSymbol);
                 }
-              }
-              else {
+              } else {
                 return GetConstLiteralExpression(localSymbol);
               }
             }
@@ -1818,8 +1810,7 @@ namespace CSharpLua {
             var methodSymbol = (IMethodSymbol)symbol;
             if (methodSymbol.MethodKind == MethodKind.LocalFunction) {
               identifier = GetSampleName(symbol);
-            }
-            else {
+            } else {
               identifier = GetMethodNameExpression(methodSymbol, node);
             }
             break;
@@ -1933,8 +1924,7 @@ namespace CSharpLua {
         if (variable.Initializer != null && variable.Initializer.Value.IsKind(SyntaxKind.RefExpression)) {
           var refExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
           AddLocalVariableMapping(new LuaSymbolNameSyntax(refExpression), variable);
-        }
-        else {
+        } else {
           bool isConst = false;
           if (node.Parent is LocalDeclarationStatementSyntax parent && parent.IsConst) {
             isConst = true;
@@ -2078,8 +2068,7 @@ namespace CSharpLua {
       if (whenClause != null) {
         var whenExpression = (LuaExpressionSyntax)whenClause.Accept(this);
         return new LuaBinaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.And, whenExpression);
-      }
-      else {
+      } else {
         return expression;
       }
     }
@@ -2093,14 +2082,12 @@ namespace CSharpLua {
         var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;
         if (leftType.IsSubclassOf(rightType)) {
           return node.WhenClause != null ? node.WhenClause.Accept(this) : LuaIdentifierLiteralExpressionSyntax.True;
-        }
-        else {
+        } else {
           var type = (LuaExpressionSyntax)declarationPattern.Type.Accept(this);
           var isInvoke = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, left, type);
           return BuildSwitchLabelWhenClause(isInvoke, node.WhenClause);
         }
-      }
-      else {
+      } else {
         var patternExpression = (LuaExpressionSyntax)node.Pattern.Accept(this);
         var expression = new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.EqualsEquals, patternExpression);
         return BuildSwitchLabelWhenClause(expression, node.WhenClause);
@@ -2351,7 +2338,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
       SyntaxKind kind = node.Kind();
-      switch(kind) {
+      switch (kind) {
         case SyntaxKind.PreIncrementExpression:
         case SyntaxKind.PreDecrementExpression: {
             bool isSingleLine = IsSingleLineUnary(node);
@@ -2491,8 +2478,7 @@ namespace CSharpLua {
         if (!elementType.Equals(targetType) && !elementType.IsSubclassOf(targetType)) {
           hasCast = true;
         }
-      }
-      else {
+      } else {
         if (targetType.SpecialType != SpecialType.System_Object) {
           hasCast = true;
         }
