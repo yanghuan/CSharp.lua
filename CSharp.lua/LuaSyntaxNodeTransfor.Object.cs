@@ -1023,6 +1023,10 @@ namespace CSharpLua {
       }
     }
 
+    public override LuaSyntaxNode VisitDiscardDesignation(DiscardDesignationSyntax node) {
+      return new LuaIdentifierNameSyntax(node.UnderscoreToken.ValueText);
+    }
+
     public override LuaSyntaxNode VisitSingleVariableDesignation(SingleVariableDesignationSyntax node) {
       LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Identifier.ValueText);
       CheckLocalVariableName(ref name, node);
