@@ -2599,7 +2599,7 @@ namespace CSharpLua {
       } else {
         LuaExpressionSyntax Accept(ExpressionSyntax expressionNode) {
           var expression = (LuaExpressionSyntax)expressionNode.Accept(this);
-          return expressionNode is BinaryExpressionSyntax ? new LuaParenthesizedExpressionSyntax(expression) : expression;
+          return expressionNode.IsKind(SyntaxKind.LogicalAndExpression) || expressionNode.IsKind(SyntaxKind.LogicalOrExpression) ? new LuaParenthesizedExpressionSyntax(expression) : expression;
         }
 
         var condition = Accept(node.Condition);
