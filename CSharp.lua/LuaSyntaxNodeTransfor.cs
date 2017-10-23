@@ -2597,9 +2597,14 @@ namespace CSharpLua {
         CurBlock.Statements.Add(ifStatement);
         return temp;
       } else {
-        var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
-        var whenTrue = (LuaExpressionSyntax)node.WhenTrue.Accept(this);
-        var whenFalse = (LuaExpressionSyntax)node.WhenFalse.Accept(this);
+        LuaExpressionSyntax Accept(ExpressionSyntax expressionNode) {
+          var expression = (LuaExpressionSyntax)expressionNode.Accept(this);
+          return expressionNode is BinaryExpressionSyntax ? new LuaParenthesizedExpressionSyntax(expression) : expression;
+        }
+
+        var condition = Accept(node.Condition);
+        var whenTrue = Accept(node.WhenTrue);
+        var whenFalse = Accept(node.WhenFalse);
         return new LuaBinaryExpressionSyntax(new LuaBinaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.And, whenTrue), LuaSyntaxNode.Tokens.Or, whenFalse);
       }
     }
