@@ -1,4 +1,4 @@
-set version=1.1.0
+set version=1.1.1
 set binDir=CSharp.lua
 set coreDir=CoreSystem.lua
 set _7z="D:\Program Files\7-Zip\7z"

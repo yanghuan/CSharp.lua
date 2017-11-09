@@ -242,3 +242,4 @@ ModelManifest.xml
 .fake/
 #test/**/*.lua
 /CSharp.lua/Properties/launchSettings.json
+/download/*.zip
