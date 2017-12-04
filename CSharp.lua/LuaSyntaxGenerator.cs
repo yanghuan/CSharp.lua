@@ -885,8 +885,7 @@ namespace CSharpLua {
     private string GetRefactorName(INamedTypeSymbol typeSymbol, IEnumerable<INamedTypeSymbol> childrens, ISymbol symbol) {
       bool isPrivate = symbol.IsPrivate();
       int index;
-      string originalName;
-      if (memberIllegalNames_.TryGetValue(symbol, out originalName)) {
+      if (memberIllegalNames_.TryGetValue(symbol, out string originalName)) {
         index = 0;
       } else {
         originalName = GetSymbolBaseName(symbol);
