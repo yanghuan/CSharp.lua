@@ -303,7 +303,7 @@ local function addToLookup(this, key, value)
   if groupIndex == nil then
 	groupIndex = #this.groups + 1
 	this.indexs[hashCode] = groupIndex
-	group =  setmetatable({ key = key, __genericT__ = this.__genericTElement__ }, Grouping)
+	group = setmetatable({ key = key, __genericT__ = this.__genericTElement__ }, Grouping)
 	this.groups[groupIndex] = group
   else
 	group = this.groups[groupIndex]
