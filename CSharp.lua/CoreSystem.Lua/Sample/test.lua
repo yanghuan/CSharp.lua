@@ -188,6 +188,26 @@ local function testLinq()
   printList(t1)
 end 
 
+local function testGroupBy() 
+  local Linq = System.Linq.Enumerable
+  local list = System.List(System.Object)()
+  list:Add({ id = 5, Template = 30 })
+  list:Add({ id = 6, Template = 30 })
+  list:Add({ id = 1, Template = 1 })
+  list:Add({ id = 2, Template = 2 })
+  list:Add({ id = 3, Template = 1 })
+  list:Add({ id = 4, Template = 2 })
+  local groups = Linq.GroupBy(list, function (i) return i.Template end, System.Int)
+  local s = ""
+  for _,  group in System.each(groups) do
+    for _, item in System.each(group) do
+      s = s .. item.id
+    end
+  end
+  print(s)
+  assert(s == "561324");
+end
+
 local function testType()
   local ins = 2
   print(System.is(ins, System.Double))
@@ -235,6 +255,7 @@ test(testDictionary, "Dictionary")
 test(testYeild, "Yeild")
 test(testDelegate, "Delegate")
 test(testLinq, "Linq")
+test(testGroupBy, "GroupBy")
 test(testType, "Type")
 --test(testNumCast, "NumCast")
 test(testSplit, "testSplit")

@@ -245,12 +245,13 @@ local Lookup = {}
 function Lookup.__ctor__(this, comparer)
   this.comparer = comparer or EqualityComparer_1(this.__genericTKey__).getDefault()
   this.groups = {}
-  this.count = 0
+  this.indexs = {}
 end
 
 local function getGrouping(this, key)
   local hashCode = this.comparer.GetHashCode(key)
-  return this.groups[hashCode]
+  local groupIndex = this.indexs[hashCode]
+  return this.groups[groupIndex]
 end
 
 function Lookup.get(this, key)
@@ -260,7 +261,7 @@ function Lookup.get(this, key)
 end
 
 function Lookup.GetCount(this)
-  return this.count
+  return #this.groups
 end
 
 function Lookup.Contains(this, key)
@@ -268,7 +269,7 @@ function Lookup.Contains(this, key)
 end
 
 function Lookup.GetEnumerator(this)
-  return Collection.dictionaryEnumerator(this.groups, 2)
+  return Collection.arrayEnumerator(this.groups)
 end
 
 local LookupFn = System.define("System.Linq.Lookup", function(TKey, TElement)
@@ -297,11 +298,16 @@ System.define("System.Linq.Grouping", Grouping)
 
 local function addToLookup(this, key, value)
   local hashCode = this.comparer.GetHashCode(key)
-  local group = this.groups[hashCode]
-  if group == nil then
-    group = setmetatable({ key = key, __genericT__ = this.__genericTElement__ }, Grouping)
-    this.groups[hashCode] = group        
-    this.count = this.count + 1
+  local groupIndex = this.indexs[hashCode]
+  local group
+  if groupIndex == nil then
+	groupIndex = #this.groups + 1
+	this.indexs[hashCode] = groupIndex
+	group =  setmetatable({ key = key, __genericT__ = this.__genericTElement__ }, Grouping)
+	this.groups[groupIndex] = group
+  else
+	group = this.groups[groupIndex]
+	assert(group)
   end
   tinsert(group, wrap(value))
 end
