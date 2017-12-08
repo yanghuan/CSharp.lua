@@ -33,6 +33,7 @@ local Comparer_1 = System.Comparer_1
 local IEnumerable_1 = System.IEnumerable_1
 local Empty = System.Array.Empty
 
+local assert = assert
 local select = select
 local tinsert = table.insert
 local getmetatable = getmetatable
