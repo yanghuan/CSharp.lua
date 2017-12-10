@@ -242,7 +242,7 @@ function DateTime.Subtract(this, v)
   if getmetatable(v) == DateTime then
     return TimeSpan(this.ticks - v.ticks)
   end
-  return DateTime(this.ticks - ts.ticks, this.kind) 
+  return DateTime(this.ticks - v.ticks, this.kind) 
 end
 
 function DateTime.getDay(this)
