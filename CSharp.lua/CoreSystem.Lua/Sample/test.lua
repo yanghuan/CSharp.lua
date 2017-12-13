@@ -71,7 +71,7 @@ local function testDictionary()
   dict:Add("c", 25)
   dict:Add("d", 30)
   for _,  pair in System.each(dict) do
-    print(pair.Key, pair.Value)
+    print(pair.key, pair.value)
   end
 end
 
