@@ -648,8 +648,8 @@ function DictionaryEnumerator.MoveNext(this)
   if k ~= nil then
     if this.kind == 0 then
       local pair = this.pair
-      pair.key = k
-      pair.value = unWrap(v)
+      pair.Key = k
+      pair.Value = unWrap(v)
       this.current = pair
     elseif this.kind == 1 then
       this.current = unWrap(k)
@@ -672,7 +672,7 @@ function Collection.dictionaryEnumerator(t, kind)
     dict = t,
     version = getVersion(t),
     kind = kind,
-    pair = kind == 0 and { key = false, value = false } or nil
+    pair = kind == 0 and { Key = false, Value = false } or nil
   }
   setmetatable(en, DictionaryEnumerator)
   return en
