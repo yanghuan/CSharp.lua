@@ -47,14 +47,14 @@ namespace CSharpLua {
     private bool hasSemicolon_;
     private string[] attributes_;
 
-    public Worker(string folder, string output, string lib, string meta, string csc, bool isClassic, string indent, bool hasSemicolon, string atts) {
+    public Worker(string folder, string output, string lib, string meta, string csc, bool isClassic, string indent, string atts) {
       folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
       cscArguments_ = string.IsNullOrEmpty(csc) ? Array.Empty<string>() : csc.Trim().Split(';', ',', ' ');
       isNewest_ = !isClassic;
-      hasSemicolon_ = hasSemicolon;
+      hasSemicolon_ = false;
       int.TryParse(indent, out indent_);
       if (atts != null) {
         attributes_ = Utility.Split(atts, false);

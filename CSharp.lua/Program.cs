@@ -36,7 +36,6 @@ Options
 
 -c              : support classic lua version(5.1), default support 5.3 
 -i              : indent number, default is 2
--sem            : append semicolon when statement over
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported    
 ";
     public static void Main(string[] args) {
@@ -57,12 +56,11 @@ Options
           string csc = cmds.GetArgument("-csc", true);
           bool isClassic = cmds.ContainsKey("-c");
           string indent = cmds.GetArgument("-i", true);
-          bool hasSemicolon = cmds.ContainsKey("-sem");
           string atts = cmds.GetArgument("-a", true);
           if (atts == null && cmds.ContainsKey("-a")) {
             atts = string.Empty;
           }
-          Worker w = new Worker(folder, output, lib, meta, csc, isClassic, indent, hasSemicolon, atts);
+          Worker w = new Worker(folder, output, lib, meta, csc, isClassic, indent, atts);
           w.Do();
           Console.WriteLine("all operator success");
           Console.WriteLine($"end {DateTime.Now}");
