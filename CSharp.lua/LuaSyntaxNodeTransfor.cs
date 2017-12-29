@@ -237,6 +237,13 @@ namespace CSharpLua {
       }
 
       BuildTypeMembers(typeDeclaration, node);
+      CheckTypeDeclarationCtos(typeSymbol, typeDeclaration);
+
+      typeDeclarations_.Pop();
+      CurCompilationUnit.AddTypeDeclarationCount();
+    }
+
+    private void CheckTypeDeclarationCtos(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration) {
       if (typeDeclaration.IsNoneCtros) {
         var bseTypeSymbol = typeSymbol.BaseType;
         if (bseTypeSymbol != null) {
@@ -256,10 +263,15 @@ namespace CSharpLua {
             }
           }
         }
+      } else if (typeSymbol.IsValueType) {
+        LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
+        function.AddParameter(LuaIdentifierNameSyntax.This);
+        typeDeclaration.AddCtor(function, true);
       }
 
-      typeDeclarations_.Pop();
-      CurCompilationUnit.AddTypeDeclarationCount();
+      if (typeSymbol.IsValueType) {
+        TryAddStructDefaultMethod(typeSymbol, typeDeclaration);
+      }
     }
 
     private INamedTypeSymbol VisitTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
@@ -336,6 +348,7 @@ namespace CSharpLua {
         BuildTypeMembers(major.TypeDeclaration, typeDeclaration.Node);
       }
 
+      CheckTypeDeclarationCtos(major.Symbol, major.TypeDeclaration);
       typeDeclarations_.Pop();
       compilationUnits_.Pop();
 
@@ -358,8 +371,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitStructDeclaration(StructDeclarationSyntax node) {
       GetTypeDeclarationName(node, out var name, out var typeSymbol);
       LuaStructDeclarationSyntax structDeclaration = new LuaStructDeclarationSyntax(name);
-      var symbol = VisitTypeDeclaration(typeSymbol, node, structDeclaration);
-      TryAddStructDefaultMethod(symbol, structDeclaration);
+      VisitTypeDeclaration(typeSymbol, node, structDeclaration);
       return structDeclaration;
     }
 

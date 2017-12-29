@@ -253,7 +253,7 @@ namespace CSharpLua.LuaAst {
 
     public void SetStaticCtorEmpty() {
       Contract.Assert(staticcCtorStatements_.Count == 0);
-      staticcCtorStatements_.Add(LuaStatementSyntax.Empty);
+      staticcCtorStatements_.Add(Empty);
     }
 
     public bool IsNoneCtros {

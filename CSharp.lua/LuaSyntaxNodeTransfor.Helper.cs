@@ -153,12 +153,12 @@ namespace CSharpLua {
     }
 
     private int GetConstructorIndex(IMethodSymbol constructorSymbol) {
-      if (constructorSymbol.IsFromCode()) {
+      if (constructorSymbol.ContainingType.IsFromCode()) {
         var typeSymbol = (INamedTypeSymbol)constructorSymbol.ReceiverType;
         var ctors = typeSymbol.Constructors.Where(i => !i.IsStatic).ToList();
         if (ctors.Count > 1) {
           int firstCtorIndex = ctors.IndexOf(i => i.Parameters.IsEmpty);
-          if (firstCtorIndex != -1) {
+          if (firstCtorIndex != -1 && firstCtorIndex != 0) {
             var firstCtor = ctors[firstCtorIndex];
             ctors.Remove(firstCtor);
             ctors.Insert(0, firstCtor);
@@ -703,7 +703,8 @@ namespace CSharpLua {
       return expressions;
     }
 
-    private void TryAddStructDefaultMethod(INamedTypeSymbol symbol, LuaStructDeclarationSyntax declaration) {
+    private void TryAddStructDefaultMethod(INamedTypeSymbol symbol, LuaTypeDeclarationSyntax declaration) {
+      Contract.Assert(symbol.IsValueType);
       if (declaration.IsInitStatementExists) {
         LuaIdentifierNameSyntax className = new LuaIdentifierNameSyntax(symbol.Name);
         var thisIdentifier = LuaIdentifierNameSyntax.This;
@@ -712,7 +713,7 @@ namespace CSharpLua {
         var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.setmetatable, LuaTableInitializerExpression.Empty, className);
         LuaLocalVariableDeclaratorSyntax local = new LuaLocalVariableDeclaratorSyntax(thisIdentifier, invocation);
         functionExpression.AddStatement(local);
-        functionExpression.AddStatement(new LuaExpressionStatementSyntax(new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Init, thisIdentifier)));
+        functionExpression.AddStatement(new LuaExpressionStatementSyntax(new LuaInvocationExpressionSyntax(declaration.IsNoneCtros ? LuaIdentifierNameSyntax.Ctor : LuaIdentifierNameSyntax.Init, thisIdentifier)));
         functionExpression.AddStatement(new LuaReturnStatementSyntax(thisIdentifier));
         declaration.AddMethod(LuaIdentifierNameSyntax.Default, functionExpression, false);
       }
@@ -720,17 +721,13 @@ namespace CSharpLua {
 
     private void CheckValueTypeAndConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
       ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(node).Type;
-      CheckValueTypeClone(typeSymbol, ref expression);
-      CheckConversion(node, ref expression);
-    }
-
-    private void CheckValueTypeClone(ITypeSymbol typeSymbol, ref LuaExpressionSyntax expression) {
       if (typeSymbol != null) {
-        if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.IsFromCode()) {
+        if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && !node.IsKind(SyntaxKind.ObjectCreationExpression) && typeSymbol.IsFromCode()) {
           var invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Clone, true));
           expression = invocation;
         }
       }
+      CheckConversion(node, ref expression);
     }
 
     private List<LuaStatementSyntax> BuildDocumentationComment(CSharpSyntaxNode node) {
