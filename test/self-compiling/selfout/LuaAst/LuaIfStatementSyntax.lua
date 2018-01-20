@@ -202,8 +202,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
         assert(this.headIfStatement_ ~= nil)
         this.caseLabelVariables_.Variables:AddRange(this.CaseLabels:getValues())
         for _, pair in System.each(this.CaseLabels) do
-          local caseLabelStatement = FindMatchIfStatement(this, pair:getKey())
-          local labelIdentifier = pair:getValue()
+          local caseLabelStatement = FindMatchIfStatement(this, pair.key)
+          local labelIdentifier = pair.value
           this.RepeatStatement.Body.Statements:Add(CSharpLuaLuaAst.LuaLabeledStatement(labelIdentifier))
           local ifStatement = CSharpLuaLuaAst.LuaIfStatementSyntax(labelIdentifier)
           ifStatement.Body.Statements:AddRange(caseLabelStatement.Statements)

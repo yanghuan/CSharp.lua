@@ -33,7 +33,7 @@ System.namespace("CSharpLua", function (namespace)
     __staticCtor__ = function (this) 
       SystemDlls = System.Array(System.String)("System.dll", "System.Core.dll", "System.Runtime.dll", "System.Linq.dll", "Microsoft.CSharp.dll")
     end
-    __ctor__ = function (this, folder, output, lib, meta, csc, isClassic, indent, hasSemicolon, atts) 
+    __ctor__ = function (this, folder, output, lib, meta, csc, isClassic, indent, atts) 
       this.folder_ = folder
       this.output_ = output
       this.libs_ = CSharpLua.Utility.Split(lib, true)
@@ -46,7 +46,7 @@ System.namespace("CSharpLua", function (namespace)
       end
       this.cscArguments_ = default
       this.isNewest_ = not isClassic
-      this.hasSemicolon_ = hasSemicolon
+      this.hasSemicolon_ = false
       local extern
       extern, this.indent_ = System.Int.TryParse(indent, nil)
       if atts ~= nil then

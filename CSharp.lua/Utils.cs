@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
@@ -764,6 +765,10 @@ namespace CSharpLua {
         return Array.Empty<INamespaceSymbol>();
       }
       return InternalGetAllNamespaces(symbol).Reverse();
+    }
+
+    public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
+      return new LuaExpressionStatementSyntax(expression);
     }
   }
 }

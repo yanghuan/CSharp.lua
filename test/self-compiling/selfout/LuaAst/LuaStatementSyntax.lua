@@ -71,10 +71,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local Render, __ctor__
     __ctor__ = function (this, expression) 
       this.__base__.__ctor__(this)
-      if expression == nil then
-        System.throw(CSharpLua.ArgumentNullException("expression" --[[nameof(expression)]]))
-      end
-      this.Expression = expression
+      this.Expression = expression or System.throw(CSharpLua.ArgumentNullException("expression" --[[nameof(expression)]]))
     end
     Render = function (this, renderer) 
       renderer:Render2(this)
@@ -314,10 +311,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getGotoKeyword, Render, __ctor__
     __ctor__ = function (this, identifier) 
       this.__base__.__ctor__(this)
-      if identifier == nil then
-        System.throw(CSharpLua.ArgumentNullException("identifier" --[[nameof(identifier)]]))
-      end
-      this.Identifier = identifier
+      this.Identifier = identifier or System.throw(CSharpLua.ArgumentNullException("identifier" --[[nameof(identifier)]]))
     end
     getGotoKeyword = function (this) 
       return "goto" --[[Keyword.Goto]]
@@ -367,10 +361,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getPrefixToken, getSuffixToken, Render, __ctor__
     __ctor__ = function (this, identifier, statement) 
       this.__base__.__ctor__(this)
-      if identifier == nil then
-        System.throw(CSharpLua.ArgumentNullException("identifier" --[[nameof(identifier)]]))
-      end
-      this.Identifier = identifier
+      this.Identifier = identifier or System.throw(CSharpLua.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       this.Statement = statement
     end
     getPrefixToken = function (this) 

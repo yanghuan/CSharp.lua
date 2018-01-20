@@ -35,10 +35,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Expression { get; }
 
     public LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      Expression = expression;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -153,10 +150,7 @@ namespace CSharpLua.LuaAst {
     public string GotoKeyword => Tokens.Goto;
 
     public LuaGotoStatement(LuaIdentifierNameSyntax identifier) {
-      if (identifier == null) {
-        throw new ArgumentNullException(nameof(identifier));
-      }
-      Identifier = identifier;
+      Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -190,10 +184,7 @@ namespace CSharpLua.LuaAst {
     public LuaStatementSyntax Statement { get; }
 
     public LuaLabeledStatement(LuaIdentifierNameSyntax identifier, LuaStatementSyntax statement = null) {
-      if (identifier == null) {
-        throw new ArgumentNullException(nameof(identifier));
-      }
-      Identifier = identifier;
+      Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
       Statement = statement;
     }
 
