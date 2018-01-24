@@ -108,7 +108,7 @@ System.namespace("CSharpLua", function (namespace)
     IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
     IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, IsTypeDeclaration, GetIEnumerableElementType, 
     DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, identifierRegex_, IsIdentifierIllegal, ToBase63, EncodeToIdentifier, 
-    FillExternalTypeName, GetTypeShortName, GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, __staticCtor__
+    FillExternalTypeName, GetTypeShortName, GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, ToStatement, __staticCtor__
     __staticCtor__ = function (this) 
       this.First = First
       this.Last = Last
@@ -167,8 +167,8 @@ System.namespace("CSharpLua", function (namespace)
       this.IsIdentifierIllegal = IsIdentifierIllegal
       this.GetTypeShortName = GetTypeShortName
       this.GetNewIdentifierName = GetNewIdentifierName
-      this.InternalGetAllNamespaces = InternalGetAllNamespaces
       this.GetAllNamespaces = GetAllNamespaces
+      this.ToStatement = ToStatement
       identifierRegex_ = SystemTextRegularExpressions.Regex([[^[a-zA-Z_][a-zA-Z0-9_]*$]], 8 --[[RegexOptions.Compiled]])
     end
     First = function (list, T) 
@@ -885,7 +885,13 @@ System.namespace("CSharpLua", function (namespace)
       end, MicrosoftCodeAnalysis.INamespaceSymbol, symbol)
     end
     GetAllNamespaces = function (symbol) 
+      if symbol:getIsGlobalNamespace() then
+        return System.Array.Empty(MicrosoftCodeAnalysis.INamespaceSymbol)
+      end
       return Linq.Reverse(InternalGetAllNamespaces(symbol))
+    end
+    ToStatement = function (expression) 
+      return CSharpLuaLuaAst.LuaExpressionStatementSyntax(expression)
     end
     return {
       __staticCtor__ = __staticCtor__

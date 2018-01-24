@@ -35,7 +35,6 @@ Options
 
 -c              : support classic lua version(5.1), default support 5.3 
 -i              : indent number, default is 2
--sem            : append semicolon when statement over
 -a              : attributes need to export, use ';' to separate, if "-a" only, all attributes whill be exported    
 ]]
     Main = function (args) 
@@ -56,12 +55,11 @@ Options
           local csc = CSharpLua.Utility.GetArgument(cmds, "-csc", true)
           local isClassic = cmds:ContainsKey("-c")
           local indent = CSharpLua.Utility.GetArgument(cmds, "-i", true)
-          local hasSemicolon = cmds:ContainsKey("-sem")
           local atts = CSharpLua.Utility.GetArgument(cmds, "-a", true)
           if atts == nil and cmds:ContainsKey("-a") then
             atts = ""
           end
-          local w = CSharpLua.Worker(folder, output, lib, meta, csc, isClassic, indent, hasSemicolon, atts)
+          local w = CSharpLua.Worker(folder, output, lib, meta, csc, isClassic, indent, atts)
           w:Do()
           System.Console.WriteLine("all operator success")
           System.Console.WriteLine(("end {0}"):Format(System.DateTime.getNow()))

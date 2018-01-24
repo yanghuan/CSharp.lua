@@ -1161,9 +1161,9 @@ System.namespace("CSharpLua", function (namespace)
     end
     CheckRefactorInnerNames = function (this) 
       for _, innerName in System.each(this.propertyOrEvnetInnerFieldNames_) do
-        local symbol = innerName:getKey()
+        local symbol = innerName.key
         local newName = GetInnerGetRefactorName(this, symbol)
-        innerName:getValue():Update(newName)
+        innerName.value:Update(newName)
         TryAddNewUsedName(this, symbol:getContainingType(), newName)
       end
     end

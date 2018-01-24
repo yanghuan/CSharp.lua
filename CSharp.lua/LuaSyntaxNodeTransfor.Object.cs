@@ -965,7 +965,7 @@ namespace CSharpLua {
       } else {
         var block = blocks_.Peek();
         block.AddLocalArea(result.Name);
-        var localVar = new LuaLocalVariableDeclaratorSyntax(result.Name, result.Function);
+        var localVar = new LuaAssignmentExpressionSyntax(result.Name, result.Function).ToStatement();
         if (result.Comments.Count > 0) {
           LuaStatementListSyntax statementList = new LuaStatementListSyntax();
           statementList.Statements.AddRange(result.Comments);
