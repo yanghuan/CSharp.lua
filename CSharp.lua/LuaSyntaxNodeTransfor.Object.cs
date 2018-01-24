@@ -109,8 +109,18 @@ namespace CSharpLua {
           }
         } else {
           LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(temp, LuaIdentifierNameSyntax.Add, true);
-          var value = (LuaExpressionSyntax)expression.Accept(this);
-          function.AddStatement(new LuaInvocationExpressionSyntax(memberAccess, value));
+          LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
+          if (expression.IsKind(SyntaxKind.ComplexElementInitializerExpression)) {
+            var initializer = (InitializerExpressionSyntax)expression;
+            foreach (var expressionNode in initializer.Expressions) {
+              var argumnet = (LuaExpressionSyntax)expressionNode.Accept(this);
+              invocation.AddArgument(argumnet);
+            }
+          } else {
+            var value = (LuaExpressionSyntax)expression.Accept(this);
+            invocation.AddArgument(value);
+          }
+          function.AddStatement(invocation);
         }
       }
 
