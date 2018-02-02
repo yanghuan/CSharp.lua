@@ -916,13 +916,7 @@ defCls("System.ValueType", ValueType)
 local AnonymousType = {}
 defCls("System.AnonymousType", AnonymousType)
 
-local Attribute = {
-  __kind__ = "C",
-  __default__ = function(cls)
-    return setmetatale({}, cls)
-  end
-}
-defCls("System.Attribute", Attribute)
+defCls("System.Attribute", {})
 
 function System.anonymousType(t)
   return setmetatable(t, AnonymousType)
