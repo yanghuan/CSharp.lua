@@ -1368,7 +1368,7 @@ System.namespace("CSharpLua", function (namespace)
         local names = Linq.Select(CSharpLua.Utility.GetAllNamespaces(symbol), function (i) 
           return CSharpLua.Utility.GetOrDefault1(this.namespaceRefactorNames_, i, i:getName(), MicrosoftCodeAnalysis.INamespaceSymbol, System.String)
         end, System.String)
-        return System.String.Join(46 --[['.']], names, System.String)
+        return System.String.Join(".", names)
       else
         return this.XmlMetaProvider:GetNamespaceMapName(symbol, original)
       end

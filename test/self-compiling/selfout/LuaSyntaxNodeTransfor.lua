@@ -4199,8 +4199,18 @@ System.namespace("CSharpLua", function (namespace)
           end
         else
           local memberAccess = CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(temp, CSharpLuaLuaAst.LuaIdentifierNameSyntax.Add, true)
-          local value = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, expression:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
-          function_:AddStatement1(CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(2, memberAccess, value))
+          local invocation = CSharpLuaLuaAst.LuaInvocationExpressionSyntax:new(1, memberAccess)
+          if MicrosoftCodeAnalysis.CSharpExtensions.IsKind(expression, 8648 --[[SyntaxKind.ComplexElementInitializerExpression]]) then
+            local initializer = System.cast(MicrosoftCodeAnalysisCSharpSyntax.InitializerExpressionSyntax, expression)
+            for _, expressionNode in System.each(initializer:getExpressions()) do
+              local argumnet = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, expressionNode:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+              invocation:AddArgument(argumnet)
+            end
+          else
+            local value = System.cast(CSharpLuaLuaAst.LuaExpressionSyntax, expression:Accept(this, CSharpLuaLuaAst.LuaSyntaxNode))
+            invocation:AddArgument(value)
+          end
+          function_:AddStatement1(invocation)
         end
       end
 

@@ -1332,7 +1332,7 @@ namespace CSharpLua {
     private string GetNamespaceMapName(INamespaceSymbol symbol, string original) {
       if (symbol.IsFromCode()) {
         var names = symbol.GetAllNamespaces().Select(i => namespaceRefactorNames_.GetOrDefault(i, i.Name));
-        return string.Join('.', names);
+        return string.Join(".", names);
       } else {
         return XmlMetaProvider.GetNamespaceMapName(symbol, original);
       }

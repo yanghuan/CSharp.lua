@@ -916,8 +916,6 @@ defCls("System.ValueType", ValueType)
 local AnonymousType = {}
 defCls("System.AnonymousType", AnonymousType)
 
-defCls("System.Attribute", {})
-
 function System.anonymousType(t)
   return setmetatable(t, AnonymousType)
 end
@@ -943,6 +941,8 @@ defStc("System.ValueTuple", ValueTuple)
 function System.valueTuple(t)
   return setmetatable(t, ValueTuple)
 end
+
+defCls("System.Attribute", {})
 
 debug.setmetatable(nil, {
   __concat = function(a, b)
