@@ -916,6 +916,8 @@ defCls("System.ValueType", ValueType)
 local AnonymousType = {}
 defCls("System.AnonymousType", AnonymousType)
 
+defCls("System.Attribute", {})
+
 function System.anonymousType(t)
   return setmetatable(t, AnonymousType)
 end
