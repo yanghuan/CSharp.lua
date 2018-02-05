@@ -25,7 +25,6 @@ return function (dir)
   load("LuaRenderer")
   load("LuaSyntaxGenerator")
   load("LuaSyntaxNodeTransfor")
-  load("Program")
   load("Utils")
   load("Worker")
   load("XmlMetaProvider")
@@ -145,7 +144,6 @@ return function (dir)
     "CSharpLua.LuaSyntaxNodeTransfor.QueryPackVariable", 
     "CSharpLua.LuaSyntaxNodeTransfor.ReturnStatementSearcher", 
     "CSharpLua.PartialTypeDeclaration", 
-    "CSharpLua.Program", 
     "CSharpLua.Utility", 
     "CSharpLua.Worker", 
     "CSharpLua.XmlMetaProvider", 
@@ -162,7 +160,5 @@ return function (dir)
     "CSharpLua.XmlMetaProvider.XmlMetaModel.NamespaceModel", 
     "CSharpLua.XmlMetaProvider.XmlMetaModel.PropertyModel", 
     "CSharpLua.XmlMetaProvider.XmlMetaModel.TemplateModel"
-  }, {
-    Main = "CSharpLua.Program.Main"
   })
 end
