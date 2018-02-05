@@ -49,7 +49,7 @@ https://yanghuan.github.io/external/bridgelua-editor/index.html
 ## How to Use 
 ### Command Line Parameters
 ```cmd
-D:\>CSharp.Lua.exe -h
+D:\>donet CSharp.Lua.Launcher.dll -h
 Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
 Arguments 
 -s              : source directory, all *.cs files whill be compiled
