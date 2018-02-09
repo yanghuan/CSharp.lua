@@ -823,7 +823,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
-      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      var expression = BuildMemberAccessTargetExpression(node.Expression);
       var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       LuaIdentifierNameSyntax baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
       LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);

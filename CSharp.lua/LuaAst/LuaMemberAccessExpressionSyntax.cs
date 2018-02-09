@@ -28,14 +28,8 @@ namespace CSharpLua.LuaAst {
     public string OperatorToken { get; }
 
     public LuaMemberAccessExpressionSyntax(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isObjectColon = false) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      if (name == null) {
-        throw new ArgumentNullException(nameof(name));
-      }
-      Expression = expression;
-      Name = name;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+      Name = name ?? throw new ArgumentNullException(nameof(name));
       OperatorToken = isObjectColon ? Tokens.ObjectColon : Tokens.Dot;
     }
 
