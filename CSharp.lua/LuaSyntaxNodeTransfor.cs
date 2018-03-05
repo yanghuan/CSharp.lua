@@ -1562,8 +1562,7 @@ namespace CSharpLua {
         } else {
           if (symbol.IsStatic) {
             if (node.Expression.IsKind(SyntaxKind.IdentifierName)) {
-              var identifierName = (IdentifierNameSyntax)node.Expression;
-              if (GetTypeDeclarationSymbol(node) == symbol.ContainingSymbol) {
+              if (symbol.Kind == SymbolKind.Method && GetTypeDeclarationSymbol(node) == symbol.ContainingSymbol) {
                 return node.Name.Accept(this);
               }
             }
