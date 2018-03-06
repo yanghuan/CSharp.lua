@@ -312,6 +312,7 @@ namespace CSharpLua {
       LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
       PushFunction(function);
       bool isStatic = node.Modifiers.IsStatic();
+      function.IsStatic = isStatic;
       function.AddParameter(LuaIdentifierNameSyntax.This);
       var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
       function.ParameterList.Parameters.AddRange(parameterList.Parameters);

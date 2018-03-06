@@ -1601,7 +1601,7 @@ namespace CSharpLua {
           }
         } else {
           if (IsInternalNode(node)) {
-            if (CurFunctionOrNull is LuaConstructorAdapterExpressionSyntax) {
+            if (CurFunctionOrNull is LuaConstructorAdapterExpressionSyntax ctor && ctor.IsStatic) {
               return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name);
             } else {
               var typeName = GetTypeName(symbol.ContainingType);

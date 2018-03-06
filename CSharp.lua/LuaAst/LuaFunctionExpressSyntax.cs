@@ -63,6 +63,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaConstructorAdapterExpressionSyntax : LuaFunctionExpressionSyntax {
     public bool IsInvokeThisCtor { get; set; }
+    public bool IsStatic { get; set; }
   }
 
   public abstract class LuaCheckReturnFunctionExpressionSyntax : LuaFunctionExpressionSyntax {
