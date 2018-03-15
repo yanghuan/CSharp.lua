@@ -56,6 +56,14 @@ function Boolean.EqualsObj(this, v)
   return this == v
 end
 
+function Boolean.__concat(a, b)
+  if type(a) == "boolean" then
+    return tostring(a) .. b
+  else 
+    return a .. tostring(b)
+  end
+end
+
 Boolean.ToString = tostring
 
 local function parse(s)
