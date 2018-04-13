@@ -25,6 +25,7 @@ local ArgumentNullException = System.ArgumentNullException
 local table = table
 local tinsert = table.insert
 local tconcat = table.concat
+local schar = string.char
 
 local StringBuilder = {}
 
@@ -74,6 +75,12 @@ function StringBuilder.Append(this, ...)
     addCount(this, #value) 
   end
   return this
+end
+
+function StringBuilder.AppendChar(this, v) 
+  v = schar(v)
+  tinsert(this, v)
+  addCount(this, 1) 
 end
 
 function StringBuilder.AppendFormat(this, format, ...)

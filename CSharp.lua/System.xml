@@ -491,5 +491,12 @@ limitations under the License.
         <method name="GetType" Name="GetTypeFrom" />
       </class>
     </namespace>
+    <namespace name="System.Text">
+      <class name="StringBuilder">
+        <method name="Append" Name="AppendChar" >
+          <arg type="System.Char" />
+        </method> 
+      </class>
+    </namespace>
   </assembly>
 </meta>
