@@ -722,7 +722,11 @@ namespace CSharpLua {
     private void CheckValueTypeAndConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
       ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(node).Type;
       if (typeSymbol != null) {
-        if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && !node.IsKind(SyntaxKind.ObjectCreationExpression) && typeSymbol.IsFromCode()) {
+        if (typeSymbol.IsValueType
+          && typeSymbol.TypeKind != TypeKind.Enum
+          && !node.IsKind(SyntaxKind.ObjectCreationExpression)
+          && !node.IsKind(SyntaxKind.TupleExpression)
+          && typeSymbol.IsFromCode()) {
           var invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Clone, true));
           expression = invocation;
         }
