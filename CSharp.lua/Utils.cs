@@ -250,6 +250,10 @@ namespace CSharpLua {
       return isImmutable;
     }
 
+    public static bool IsSystemTuple(this ITypeSymbol type) {
+      return type.Name == "Tuple" && type.ContainingNamespace.Name == "System";
+    }
+
     public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
       if (!symbol.IsStatic) {
         var type = symbol.ContainingType;
@@ -643,7 +647,6 @@ namespace CSharpLua {
     }
 
     public static IReadOnlyCollection<ITypeSymbol> GetTupleElementTypes(this ITypeSymbol typeSymbol) {
-      Contract.Assert(typeSymbol.IsTupleType);
       return typeSymbol.DynamicGetProperty<IReadOnlyCollection<ITypeSymbol>>("TupleElementTypes");
     }
 
@@ -653,7 +656,8 @@ namespace CSharpLua {
     }
 
     public static int GetTupleElementCount(this ITypeSymbol typeSymbol) {
-      return typeSymbol.GetTupleElementTypes().Count;
+      var elementTypes = typeSymbol.GetTupleElementTypes();
+      return elementTypes.Count;
     }
 
     private static readonly Regex identifierRegex_ = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$", RegexOptions.Compiled);

@@ -1098,6 +1098,12 @@ namespace CSharpLua {
         invocationExpression.AddArgument(new LuaIdentifierNameSyntax(typeSymbol.GetTupleElementCount()));
         return invocationExpression;
       }
+      else if (typeSymbol.IsSystemTuple()) {
+        var nameTypeSymbol = (INamedTypeSymbol)typeSymbol;
+        var invocationExpression = BuildInvocation();
+        invocationExpression.AddArgument(new LuaIdentifierNameSyntax(nameTypeSymbol.TypeArguments.Length));
+        return invocationExpression;
+      }
       else {
         var methods = typeSymbol.GetMembers(kDeconstructName);
         if (methods.IsEmpty) {

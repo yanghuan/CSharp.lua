@@ -24,6 +24,7 @@ local table = table
 local tinsert = table.insert
 local tremove = table.remove
 local tconcat = table.concat
+local tunpack = table.unpack
 local floor = math.floor
 local ceil = math.ceil
 local error = error
@@ -920,21 +921,22 @@ function System.anonymousType(t)
   return setmetatable(t, AnonymousType)
 end
 
-local Tuple = {}
+local function tupleDeconstruct(tuple, count) 
+  return tunpack(tuple, 1, count)
+end
+
+local Tuple = { Deconstruct = tupleDeconstruct }
 defCls("System.Tuple", Tuple)
 
 function System.tuple(...)
   return setmetatable({...}, Tuple)
 end
 
-local tunpack = table.unpack
 local ValueTuple = {
   __default__ = function()
     throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
   end,
-  Deconstruct = function(this, count)
-    return tunpack(this, 1, count)
-  end
+  Deconstruct = tupleDeconstruct
 }
 defStc("System.ValueTuple", ValueTuple)
 
