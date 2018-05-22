@@ -880,6 +880,7 @@ Object = defCls("System.Object", {
   GetType = false,
   ToString = function(this) return this.__name__ end
 })
+setmetatable(Object, { __call = new })
 
 ValueType = {
   __kind__ = "S",
