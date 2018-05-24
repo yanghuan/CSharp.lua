@@ -36,11 +36,14 @@ namespace CSharpLua {
   }
 
   public sealed class CompilationErrorException : Exception {
-    public CompilationErrorException(string message) : base(message) {
+	public SyntaxNode SyntaxNode { get;}
+
+	public CompilationErrorException(string message) : base(message) {
     }
 
     public CompilationErrorException(SyntaxNode node, string message) : base($"{node.GetLocationString()}: {message}, please refactor your code.") {
-    }
+	  SyntaxNode = node;
+	}
   }
 
   public sealed class ArgumentNullException : System.ArgumentNullException {

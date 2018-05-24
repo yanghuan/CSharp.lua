@@ -924,7 +924,12 @@ namespace CSharpLua {
               throw new InvalidOperationException();
             }
             return node;
-          } catch (Exception e) {
+          } catch (CompilationErrorException e) {
+			if (e.SyntaxNode == null) {
+			  throw new CompilationErrorException(SyntaxNode, e.Message);
+			}
+			throw e;
+		  } catch (Exception e) {
             throw new Exception($"Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue, {SyntaxNode.GetLocationString()}", e);
           }
         } else {

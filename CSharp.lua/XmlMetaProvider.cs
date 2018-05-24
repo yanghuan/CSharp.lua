@@ -90,7 +90,9 @@ namespace CSharpLua {
         public int GenericArgCount = -1;
         [XmlAttribute]
         public bool IgnoreGeneric;
-      }
+		[XmlAttribute]
+		public bool Baned;
+	  }
 
       public sealed class ClassModel {
         [XmlAttribute]
@@ -218,11 +220,15 @@ namespace CSharpLua {
       }
 
       private string GetName(IMethodSymbol symbol) {
-        if (isSingleModel_) {
-          return models_.First().Name;
-        }
-
-        var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+		XmlMetaModel.MethodModel methodModel;
+		if (isSingleModel_) {
+		  methodModel = models_.First();
+        } else {
+		  methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+		}
+		if (methodModel != null && methodModel.Baned) {
+		  throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+		}
         return methodModel?.Name;
       }
 
