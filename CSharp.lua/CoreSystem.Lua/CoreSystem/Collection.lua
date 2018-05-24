@@ -736,7 +736,7 @@ function YieldEnumerator.MoveNext(this)
       this.current = v
       return true
     else
-        throw(v)
+      throw(v)
     end
   end
 end

@@ -33,6 +33,7 @@ local select = select
 local type = type
 
 local String = string
+String.traceback = System.emptyFn  -- make throw(str) not fail
 
 local function check(s, startIndex, count)
   local len = #s
