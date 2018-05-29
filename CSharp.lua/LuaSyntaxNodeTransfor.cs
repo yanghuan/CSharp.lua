@@ -1939,7 +1939,7 @@ namespace CSharpLua {
       foreach (VariableDeclaratorSyntax variable in node.Variables) {
         if (variable.Initializer != null && variable.Initializer.Value.IsKind(SyntaxKind.RefExpression)) {
           var refExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
-          AddLocalVariableMapping(new LuaSymbolNameSyntax(refExpression), variable);
+          AddLocalVariableMapping(new LuaExpressionNameSyntax(refExpression), variable);
         } else {
           bool isConst = false;
           if (node.Parent is LocalDeclarationStatementSyntax parent && parent.IsConst) {

@@ -93,6 +93,10 @@ function System.arrayFromTable(t, T)
   return setmetatable(t, Array(T))
 end
 
+function System.arrayFromList(t)
+  return setmetatable(t, Array(t.__genericT__))
+end
+
 local MultiArray = {}
 
 function MultiArray.__ctor__(this, rank, ...)

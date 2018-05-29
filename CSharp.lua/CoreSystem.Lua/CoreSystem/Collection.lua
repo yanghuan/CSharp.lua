@@ -595,10 +595,11 @@ local function each(t)
   if t == nil then
     throw(NullReferenceException(), 1)
   end
-  if isArrayLike(t) then
+  local getEnumerator = assert(t.GetEnumerator, t.__name__)
+  if getEnumerator == arrayEnumerator then
     return ipairsArray(t)
   end
-  local en = t:GetEnumerator()
+  local en = getEnumerator(t)
   return eachFn, en
 end
 

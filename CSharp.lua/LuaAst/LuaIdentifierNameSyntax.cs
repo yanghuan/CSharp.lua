@@ -174,10 +174,22 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaSymbolNameSyntax : LuaIdentifierNameSyntax {
-    public LuaExpressionSyntax NameExpression { get; private set; }
+  public sealed class LuaExpressionNameSyntax : LuaIdentifierNameSyntax {
+    public LuaExpressionSyntax Expression { get; }
 
-    public LuaSymbolNameSyntax(LuaExpressionSyntax identifierName) : base("") {
+    public LuaExpressionNameSyntax(LuaExpressionSyntax expression) : base("") {
+      Expression = expression;
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      Expression.Render(renderer);
+    }
+  }
+
+  public sealed class LuaSymbolNameSyntax : LuaIdentifierNameSyntax {
+    public LuaIdentifierNameSyntax NameExpression { get; private set; }
+
+    public LuaSymbolNameSyntax(LuaIdentifierNameSyntax identifierName) : base("") {
       NameExpression = identifierName;
     }
 
