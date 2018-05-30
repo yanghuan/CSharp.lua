@@ -206,6 +206,26 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     }
   end)
 
+  namespace.class("LuaExpressionNameSyntax", function (namespace) 
+    local Render, __ctor__
+    __ctor__ = function (this, expression) 
+      this.__base__.__ctor__[1](this, "")
+      this.Expression = expression
+    end
+    Render = function (this, renderer) 
+      this.Expression:Render(renderer)
+    end
+    return {
+      __inherits__ = function (global) 
+        return {
+          global.CSharpLua.LuaAst.LuaIdentifierNameSyntax
+        }
+      end, 
+      Render = Render, 
+      __ctor__ = __ctor__
+    }
+  end)
+
   namespace.class("LuaSymbolNameSyntax", function (namespace) 
     local Update, Render, __ctor__
     __ctor__ = function (this, identifierName) 

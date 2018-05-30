@@ -53,6 +53,7 @@ System.namespace("CSharpLua", function (namespace)
     end
     __ctor2__ = function (this, node, message) 
       this.__base__.__ctor__(this, ("{0}: {1}, please refactor your code."):Format(CSharpLua.Utility.GetLocationString(node), message))
+      this.SyntaxNode = node
     end
     return {
       __inherits__ = function (global) 
@@ -103,12 +104,12 @@ System.namespace("CSharpLua", function (namespace)
     local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, TrimEnd, 
     GetCommondLines, GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
     IsReadOnly, IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, 
-    IsNullableType, IsImmutable, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, IsOverridden, 
-    IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, 
-    IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, 
-    IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, IsTypeDeclaration, GetIEnumerableElementType, 
-    DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, identifierRegex_, IsIdentifierIllegal, ToBase63, EncodeToIdentifier, 
-    FillExternalTypeName, GetTypeShortName, GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, ToStatement, __staticCtor__
+    IsNullableType, IsImmutable, IsSystemTuple, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsOverridable, OverriddenSymbol, 
+    IsOverridden, IsPropertyField, IsEventFiled, HasStaticCtor, IsStaticLazy, IsAssignment, systemLinqEnumerableType_, IsSystemLinqEnumerable, 
+    GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, CheckMethodDefinition, 
+    CheckOriginalDefinition, IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, IsTypeDeclaration, 
+    GetIEnumerableElementType, DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, identifierRegex_, IsIdentifierIllegal, ToBase63, 
+    EncodeToIdentifier, FillExternalTypeName, GetTypeShortName, GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, ToStatement, __staticCtor__
     __staticCtor__ = function (this) 
       this.First = First
       this.Last = Last
@@ -136,6 +137,7 @@ System.namespace("CSharpLua", function (namespace)
       this.IsIntegerType = IsIntegerType
       this.IsNullableType = IsNullableType
       this.IsImmutable = IsImmutable
+      this.IsSystemTuple = IsSystemTuple
       this.IsInterfaceImplementation = IsInterfaceImplementation
       this.InterfaceImplementations = InterfaceImplementations
       this.IsFromCode = IsFromCode
@@ -368,6 +370,9 @@ System.namespace("CSharpLua", function (namespace)
     IsImmutable = function (type) 
       local isImmutable = (type:getIsValueType() and type:getIsDefinition()) or IsStringType(type) or IsDelegateType(type)
       return isImmutable
+    end
+    IsSystemTuple = function (type) 
+      return type:getName() == "Tuple" and type:getContainingNamespace():getName() == "System"
     end
     IsInterfaceImplementation = function (symbol, T) 
       if not symbol:getIsStatic() then
@@ -765,7 +770,6 @@ System.namespace("CSharpLua", function (namespace)
       return System.cast(T, symbol:GetType():GetProperty(name):GetValue(symbol))
     end
     GetTupleElementTypes = function (typeSymbol) 
-      assert(typeSymbol:getIsTupleType())
       return DynamicGetProperty(typeSymbol, "TupleElementTypes", System.IReadOnlyCollection_1(MicrosoftCodeAnalysis.ITypeSymbol))
     end
     GetTupleElementIndex = function (fieldSymbol) 
@@ -773,7 +777,8 @@ System.namespace("CSharpLua", function (namespace)
       return DynamicGetProperty(fieldSymbol, "TupleElementIndex", System.Int) + 1
     end
     GetTupleElementCount = function (typeSymbol) 
-      return GetTupleElementTypes(typeSymbol):getCount()
+      local elementTypes = GetTupleElementTypes(typeSymbol)
+      return elementTypes:getCount()
     end
     IsIdentifierIllegal = function (identifierName) 
       if not identifierRegex_:IsMatch(identifierName) then
@@ -789,7 +794,7 @@ System.namespace("CSharpLua", function (namespace)
       local sb = SystemText.StringBuilder()
       while n > 0 do
         local ch = kAlphabet:get(n % basis)
-        sb:Append(ch)
+        sb:AppendChar(ch)
         n = n // basis
       end
       return sb:ToString()
@@ -798,7 +803,7 @@ System.namespace("CSharpLua", function (namespace)
       local sb = SystemText.StringBuilder()
       for _, c in System.each(name) do
         if c < 127 then
-          sb:Append(c)
+          sb:AppendChar(c)
         else
           local base63 = ToBase63(c)
           sb:Append(base63)
@@ -821,10 +826,10 @@ System.namespace("CSharpLua", function (namespace)
         sb:Append(typeName)
         local typeParametersCount = externalType:getTypeParameters():getLength()
         if typeParametersCount > 0 then
-          sb:Append(95 --[['_']])
+          sb:AppendChar(95 --[['_']])
           sb:Append(typeParametersCount)
         end
-        sb:Append(46 --[['.']])
+        sb:AppendChar(46 --[['.']])
       end
     end
     GetTypeShortName = function (typeSymbol, funcOfNamespace, funcOfTypeName) 
@@ -846,7 +851,7 @@ System.namespace("CSharpLua", function (namespace)
       end
       if #namespaceName > 0 then
         sb:Append(namespaceName)
-        sb:Append(46 --[['.']])
+        sb:AppendChar(46 --[['.']])
       end
       FillExternalTypeName(sb, typeSymbol, funcOfTypeName)
       local extern = funcOfTypeName
@@ -857,7 +862,7 @@ System.namespace("CSharpLua", function (namespace)
       sb:Append(typeName)
       local typeParametersCount = typeSymbol:getTypeParameters():getLength()
       if typeParametersCount > 0 then
-        sb:Append(95 --[['_']])
+        sb:AppendChar(95 --[['_']])
         sb:Append(typeParametersCount)
       end
       return sb:ToString()

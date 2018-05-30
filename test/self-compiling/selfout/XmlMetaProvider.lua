@@ -63,6 +63,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         return {
           IgnoreGeneric = false, 
+          Baned = false, 
           __ctor__ = __ctor__
         }
       end)
@@ -155,13 +156,17 @@ System.namespace("CSharpLua", function (namespace)
         return true
       end
       GetName = function (this, symbol) 
+        local methodModel
         if this.isSingleModel_ then
-          return CSharpLua.Utility.First(this.models_, CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel).Name
+          methodModel = CSharpLua.Utility.First(this.models_, CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel)
+        else
+          methodModel = this.models_:Find(function (i) 
+            return IsMethodMatch(this, i, symbol)
+          end)
         end
-
-        local methodModel = this.models_:Find(function (i) 
-          return IsMethodMatch(this, i, symbol)
-        end)
+        if methodModel ~= nil and methodModel.Baned then
+          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0}.{1} is baned"):Format(symbol:getContainingType():getName(), symbol:getName())))
+        end
         local default = methodModel
         if default ~= nil then
           default = default.Name

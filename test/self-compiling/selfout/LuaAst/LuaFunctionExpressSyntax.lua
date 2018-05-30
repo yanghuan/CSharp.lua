@@ -87,7 +87,8 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
           global.CSharpLua.LuaAst.LuaFunctionExpressionSyntax
         }
       end, 
-      IsInvokeThisCtor = false
+      IsInvokeThisCtor = false, 
+      IsStatic = false
     }
   end)
 

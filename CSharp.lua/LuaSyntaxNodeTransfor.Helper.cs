@@ -215,7 +215,15 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression) {
-      return BuildCodeTemplateExpression(codeTemplate, targetExpression, Array.Empty<ExpressionSyntax>(), ImmutableArray<ITypeSymbol>.Empty);
+      return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, null, null);
+    }
+
+    private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<LuaExpressionSyntax> arguments, IList<ITypeSymbol> typeArguments) {
+      return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, arguments.Select<LuaExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => i), typeArguments);
+    }
+
+    private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<ExpressionSyntax> arguments, IList<ITypeSymbol> typeArguments) {
+      return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, arguments.Select<ExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => (LuaExpressionSyntax)i.Accept(this)), typeArguments);
     }
 
     private void AddCodeTemplateExpression(LuaExpressionSyntax expression, string comma, LuaCodeTemplateExpressionSyntax codeTemplateExpression) {
@@ -225,7 +233,7 @@ namespace CSharpLua {
       codeTemplateExpression.Expressions.Add(expression);
     }
 
-    private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<ExpressionSyntax> arguments, ImmutableArray<ITypeSymbol> typeArguments) {
+    private LuaExpressionSyntax InternalBuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<Func<LuaExpressionSyntax>> arguments, IList<ITypeSymbol> typeArguments) {
       LuaCodeTemplateExpressionSyntax codeTemplateExpression = new LuaCodeTemplateExpressionSyntax();
 
       var matchs = codeTemplateRegex_.Matches(codeTemplate);
@@ -270,7 +278,7 @@ namespace CSharpLua {
           if (int.TryParse(key.Substring(1), out int paramsIndex)) {
             LuaCodeTemplateExpressionSyntax paramsExpression = new LuaCodeTemplateExpressionSyntax();
             foreach (var argument in arguments.Skip(paramsIndex)) {
-              var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
+              var argumentExpression = argument();
               paramsExpression.Expressions.Add(argumentExpression);
             }
             if (paramsExpression.Expressions.Count > 0) {
@@ -282,7 +290,7 @@ namespace CSharpLua {
           if (int.TryParse(key, out int argumentIndex)) {
             var argument = arguments.ElementAtOrDefault(argumentIndex);
             if (argument != null) {
-              var argumentExpression = (LuaExpressionSyntax)argument.Accept(this);
+              var argumentExpression = argument();
               AddCodeTemplateExpression(argumentExpression, comma, codeTemplateExpression);
             }
           }
@@ -864,6 +872,11 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildConversionExpression(IMethodSymbol methodSymbol, LuaExpressionSyntax expression) {
+      var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
+      if (codeTemplate != null) {
+        return BuildCodeTemplateExpression(codeTemplate, null, new LuaExpressionSyntax[] { expression }, null);
+      }
+
       var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
       return new LuaInvocationExpressionSyntax(memberAccess, expression);
     }
@@ -873,13 +886,15 @@ namespace CSharpLua {
       if (methodSymbol != null) {
         var typeSymbol = methodSymbol.ContainingType;
         if (typeSymbol != null) {
-          if (typeSymbol.TypeKind != TypeKind.Enum
-            && typeSymbol.TypeKind != TypeKind.Delegate
-            && typeSymbol.SpecialType == SpecialType.None
-            && !typeSymbol.IsTimeSpanType()) {
-            var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
+          if (typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.TypeKind != TypeKind.Delegate && typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType()) {
+            var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
+            if (codeTemplate != null) {
+              return BuildCodeTemplateExpression(codeTemplate, null, new ExpressionSyntax[] { node.Left, node.Right }, null);
+            }
+
             var left = (LuaExpressionSyntax)node.Left.Accept(this);
             var right = (LuaExpressionSyntax)node.Right.Accept(this);
+            var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
             return new LuaInvocationExpressionSyntax(memberAccess, left, right);
           }
         }

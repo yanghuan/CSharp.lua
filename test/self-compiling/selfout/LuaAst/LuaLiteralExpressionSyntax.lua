@@ -117,7 +117,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getText, setText, getOpenBracket, getCloseBracket, Render, __ctor__
     __ctor__ = function (this, value, checkNewLine) 
       this.__base__.__ctor__(this)
-      local equals = "=" --[[Tokens.Equals]]:get(0)
+      local equals = ("=" --[[Tokens.Equals]]):get(0)
       local count = 0
       while true do
         local closeToken = ("]" --[[kCloseBracket]] .. System.String(equals, count)) .. "]" --[[kCloseBracket]]
