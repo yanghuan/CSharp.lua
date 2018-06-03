@@ -1540,7 +1540,7 @@ namespace CSharpLua {
           if (symbol.IsStatic) {
             if (node.Expression.IsKind(SyntaxKind.IdentifierName)) {
               var identifierName = (IdentifierNameSyntax)node.Expression;
-              if (GetTypeDeclarationSymbol(node) == symbol.ContainingSymbol) {
+              if (GetTypeDeclarationSymbol(node) == symbol.ContainingSymbol && !generator_.IsPropertyFieldOrEventFiled(symbol)) {
                 return node.Name.Accept(this);
               }
             }

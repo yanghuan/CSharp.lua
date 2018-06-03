@@ -1218,6 +1218,15 @@ namespace CSharpLua {
       return !IsImplicitInterfaceImplementation(symbol) && symbol.IsEventFiled();
     }
 
+    internal bool IsPropertyFieldOrEventFiled(ISymbol symbol) {
+      if (symbol is IPropertySymbol propertySymbol) {
+        return propertySymbol.IsPropertyField();
+      } else if (symbol is IEventSymbol eventSymbol) {
+        return eventSymbol.IsEventFiled();
+      }
+      return false;
+    }
+
     private IEnumerable<ISymbol> AllInterfaceImplementations(ISymbol symbol) {
       var interfaceImplementations = symbol.InterfaceImplementations();
       var implicitImplementations = implicitInterfaceImplementations_.GetOrDefault(symbol);
