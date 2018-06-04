@@ -19,11 +19,11 @@ C# code
 using System;
 
 namespace HelloLua {
-    public static class Program {
-        public static void Main() {
-            Console.WriteLine("hello lua!");
-        }
+  public static class Program {
+    public static void Main() {
+      Console.WriteLine("hello lua!");
     }
+  }
 }
 ```
 To Lua
