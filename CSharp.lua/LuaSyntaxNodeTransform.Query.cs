@@ -24,7 +24,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
-  public sealed partial class LuaSyntaxNodeTransfor {
+  public sealed partial class LuaSyntaxNodeTransform {
     private const string kQueryPlaceholderConflictName = "as";
 
     private interface IQueryRangeVariable {

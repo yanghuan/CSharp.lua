@@ -25,7 +25,7 @@ using Microsoft.CodeAnalysis;
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
-  public sealed partial class LuaSyntaxNodeTransfor {
+  public sealed partial class LuaSyntaxNodeTransform {
     private Stack<LuaIdentifierNameSyntax> conditionalTemps_ = new Stack<LuaIdentifierNameSyntax>();
 
     public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {

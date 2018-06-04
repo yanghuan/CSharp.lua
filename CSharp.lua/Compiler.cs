@@ -26,7 +26,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSharpLua {
-  public sealed class Worker {
+  public sealed class Compiler {
     private static readonly string[] SystemDlls = new string[] {
       "System.dll",
       "System.Core.dll",
@@ -47,7 +47,7 @@ namespace CSharpLua {
     private bool hasSemicolon_;
     private string[] attributes_;
 
-    public Worker(string folder, string output, string lib, string meta, string csc, bool isClassic, string indent, string atts) {
+    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string indent, string atts) {
       folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
@@ -108,10 +108,10 @@ namespace CSharpLua {
     }
 
     public void Do() {
-      Compiler();
+      Compile();
     }
 
-    private void Compiler() {
+    private void Compile() {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse(cscArguments_, null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithDocumentationMode(DocumentationMode.Parse);
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);

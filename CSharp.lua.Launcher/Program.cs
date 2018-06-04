@@ -60,7 +60,7 @@ Options
           if (atts == null && cmds.ContainsKey("-a")) {
             atts = string.Empty;
           }
-          Worker w = new Worker(folder, output, lib, meta, csc, isClassic, indent, atts);
+          Compiler w = new Compiler(folder, output, lib, meta, csc, isClassic, indent, atts);
           w.Do();
           Console.WriteLine("all operator success");
           Console.WriteLine($"end {DateTime.Now}");

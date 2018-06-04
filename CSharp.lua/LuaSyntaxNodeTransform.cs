@@ -26,7 +26,7 @@ using Microsoft.CodeAnalysis;
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
-  public sealed partial class LuaSyntaxNodeTransfor : CSharpSyntaxVisitor<LuaSyntaxNode> {
+  public sealed partial class LuaSyntaxNodeTransform : CSharpSyntaxVisitor<LuaSyntaxNode> {
     private const int kStringConstInlineCount = 15;
 
     private sealed class MethodInfo {
@@ -65,7 +65,7 @@ namespace CSharpLua {
       ["^"] = LuaSyntaxNode.Tokens.BitXor,
     };
 
-    public LuaSyntaxNodeTransfor(LuaSyntaxGenerator generator, SemanticModel semanticModel) {
+    public LuaSyntaxNodeTransform(LuaSyntaxGenerator generator, SemanticModel semanticModel) {
       generator_ = generator;
       semanticModel_ = semanticModel;
     }
@@ -915,7 +915,7 @@ namespace CSharpLua {
         return statement;
       }
 
-      public LuaSyntaxNode Visit(LuaSyntaxNodeTransfor transfor) {
+      public LuaSyntaxNode Visit(LuaSyntaxNodeTransform transfor) {
         const int kCommentCharCount = 2;
         if (SyntaxNode != null) {
           try {

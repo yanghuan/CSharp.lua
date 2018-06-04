@@ -28,7 +28,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
-  public sealed partial class LuaSyntaxNodeTransfor {
+  public sealed partial class LuaSyntaxNodeTransform {
     private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
     private Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
     private int localMappingCounter_;
