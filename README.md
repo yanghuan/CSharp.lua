@@ -13,6 +13,8 @@ CSharp.lua is a C# to Lua compiler. Write C# then run on lua VM.
 
 * Self-Compiling, run "./test/self-compiling/self.bat".
 
+* Used by dotnet Standard 2.0, Ability to use across platforms.
+
 ## Sample
 C# code
 ```csharp
