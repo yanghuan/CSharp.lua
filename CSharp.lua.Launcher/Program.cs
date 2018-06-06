@@ -64,22 +64,18 @@ Options
           w.Do();
           Console.WriteLine("all operator success");
           Console.WriteLine($"end {DateTime.Now}");
-        }
-        catch (CmdArgumentException e) {
+        } catch (CmdArgumentException e) {
           Console.Error.WriteLine(e.Message);
           ShowHelpInfo();
           Environment.ExitCode = -1;
-        }
-        catch (CompilationErrorException e) {
+        } catch (CompilationErrorException e) {
           Console.Error.WriteLine(e.Message);
           Environment.ExitCode = -1;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
           Console.Error.WriteLine(e.ToString());
           Environment.ExitCode = -1;
         }
-      }
-      else {
+      } else {
         ShowHelpInfo();
         Environment.ExitCode = -1;
       }

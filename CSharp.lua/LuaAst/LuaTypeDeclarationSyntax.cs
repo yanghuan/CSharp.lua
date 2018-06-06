@@ -131,8 +131,7 @@ namespace CSharpLua.LuaAst {
         if (isStaticLazy) {
           var thisAssignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), name);
           staticLazyStatements_.Add(new LuaExpressionStatementSyntax(thisAssignment));
-        }
-        else {
+        } else {
           AddResultTable(name);
         }
       }
@@ -152,13 +151,11 @@ namespace CSharpLua.LuaAst {
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
             if (isImmutable) {
               methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-            }
-            else {
+            } else {
               staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
             }
           }
-        }
-        else {
+        } else {
           if (isReadOnly) {
             local_.Variables.Add(name);
             if (value != null) {
@@ -166,21 +163,18 @@ namespace CSharpLua.LuaAst {
               staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
               staticAssignmentNames_.Add(name);
             }
-          }
-          else {
+          } else {
             if (value != null) {
               LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), value);
               staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
             }
           }
         }
-      }
-      else {
+      } else {
         if (value != null) {
           if (isImmutable) {
             AddResultTable(name, value);
-          }
-          else {
+          } else {
             AddInitFiled(name, value);
           }
         }
@@ -195,8 +189,7 @@ namespace CSharpLua.LuaAst {
         get = new LuaPropertyOrEventIdentifierNameSyntax(true, true, name);
         set = new LuaPropertyOrEventIdentifierNameSyntax(true, false, name);
 
-      }
-      else {
+      } else {
         initMethodIdentifier = LuaIdentifierNameSyntax.Event;
         get = new LuaPropertyOrEventIdentifierNameSyntax(false, true, name);
         set = new LuaPropertyOrEventIdentifierNameSyntax(false, false, name);
@@ -216,17 +209,14 @@ namespace CSharpLua.LuaAst {
         if (isStatic) {
           if (isImmutable) {
             AddResultTable(name, value);
-          }
-          else {
+          } else {
             LuaAssignmentExpressionSyntax thisAssignment = new LuaAssignmentExpressionSyntax(name, value);
             staticLazyStatements_.Add(new LuaExpressionStatementSyntax(thisAssignment));
           }
-        }
-        else {
+        } else {
           if (isImmutable) {
             AddResultTable(name, value);
-          }
-          else {
+          } else {
             AddInitFiled(name, value);
           }
         }
@@ -271,8 +261,7 @@ namespace CSharpLua.LuaAst {
     public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool isZeroParameters) {
       if (isZeroParameters) {
         ctors_.Insert(0, function);
-      }
-      else {
+      } else {
         ctors_.Add(function);
       }
     }
@@ -336,8 +325,7 @@ namespace CSharpLua.LuaAst {
 
         if (ctors_.Count == 1) {
           AddInitFunction(body, LuaIdentifierNameSyntax.Ctor, ctors_.First());
-        }
-        else {
+        } else {
           LuaTableInitializerExpression ctrosTable = new LuaTableInitializerExpression();
           int index = 1;
           foreach (var ctor in ctors_) {
@@ -349,8 +337,7 @@ namespace CSharpLua.LuaAst {
           }
           AddResultTable(LuaIdentifierNameSyntax.Ctor, ctrosTable);
         }
-      }
-      else {
+      } else {
         if (hasInit) {
           AddInitFunction(body, LuaIdentifierNameSyntax.Ctor, GetInitFunction());
         }
@@ -392,8 +379,7 @@ namespace CSharpLua.LuaAst {
         }
         AddAllStatementsTo(wrapFunction.Body);
         Body.Statements.Add(new LuaReturnStatementSyntax(wrapFunction));
-      }
-      else {
+      } else {
         AddAllStatementsTo(Body);
       }
       base.Render(renderer);

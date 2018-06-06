@@ -42,7 +42,7 @@ namespace CSharpLua {
         name_ = name;
       }
 
-      public void AddPackCount () {
+      public void AddPackCount() {
         ++packCount_;
       }
 
@@ -70,13 +70,13 @@ namespace CSharpLua {
       private IQueryRangeVariable x1_;
       private IQueryRangeVariable x2_;
 
-      public QueryPackVariable(IQueryRangeVariable x1, IQueryRangeVariable x2) {   
+      public QueryPackVariable(IQueryRangeVariable x1, IQueryRangeVariable x2) {
         x1_ = x1;
         x2_ = x2;
         AddPackCount();
       }
 
-      public LuaIdentifierNameSyntax Name =>  LuaIdentifierNameSyntax.Placeholder;
+      public LuaIdentifierNameSyntax Name => LuaIdentifierNameSyntax.Placeholder;
 
       public void AddPackCount() {
         x1_.AddPackCount();
@@ -92,8 +92,7 @@ namespace CSharpLua {
         if (queryIdentifiers_.Exists(i => i.HasPack)) {
           name = kQueryPlaceholderConflictName;
         }
-      }
-      else {
+      } else {
         CheckLocalBadWord(ref name, identifier.Parent);
       }
       var queryIdentifier = new QueryIdentifier(identifier, new LuaIdentifierNameSyntax(name));
@@ -182,8 +181,7 @@ namespace CSharpLua {
         if (ordering == node.Orderings.First()) {
           var methodName = isDescending ? LuaIdentifierNameSyntax.LinqOrderByDescending : LuaIdentifierNameSyntax.LinqOrderBy;
           collection = BuildOrdering(methodName, collection, ordering, rangeVariable);
-        }
-        else {
+        } else {
           var methodName = isDescending ? LuaIdentifierNameSyntax.LinqThenByDescending : LuaIdentifierNameSyntax.LinqThenBy;
           collection = BuildOrdering(methodName, collection, ordering, rangeVariable);
         }
@@ -262,8 +260,7 @@ namespace CSharpLua {
         var type = semanticModel_.GetTypeInfo(selectClause.Expression).Type;
         resultSelectorType = GetTypeName(type);
         isOver = true;
-      }
-      else {
+      } else {
         resultSelectorExpression = CreateQueryAnonymousType(rangeVariable.Name, rangeVariable.Name, rangeVariable2.Name, rangeVariable2.Name);
         resultSelectorType = LuaIdentifierNameSyntax.AnonymousType;
         rangeVariable = new QueryPackVariable(rangeVariable, rangeVariable2);
@@ -294,8 +291,7 @@ namespace CSharpLua {
         var typeSymbol = semanticModel_.GetTypeInfo(selectClause.Expression).Type;
         resultSelectorType = GetTypeName(typeSymbol);
         return true;
-      }
-      else {
+      } else {
         resultSelectorExpression = CreateQueryAnonymousType(rangeVariable.Name, rangeVariable.Name, queryIdentifier.Name, queryIdentifier.Name);
         resultSelectorType = LuaIdentifierNameSyntax.AnonymousType;
         rangeVariable = new QueryPackVariable(rangeVariable, queryIdentifier);
@@ -332,8 +328,7 @@ namespace CSharpLua {
         resultSelector.AddParameter(rangeVariable.Name);
         resultSelector.AddParameter(rangeVariable2.Name);
         isOver = BuildQueryJoin(node, out resultSelectorExpression, out resultSelectorType, ref rangeVariable, rangeVariable2);
-      }
-      else {
+      } else {
         methodName = LuaIdentifierNameSyntax.LinqGroupJoin;
         var rangeVariableOfInto = AddRangeIdentifier(node.Into.Identifier);
         resultSelector.AddParameter(rangeVariable.Name);
@@ -384,8 +379,7 @@ namespace CSharpLua {
       if (node.SelectOrGroup.IsKind(SyntaxKind.SelectClause)) {
         var selectClause = (SelectClauseSyntax)node.SelectOrGroup;
         collection = BuildQuerySelect(collection, selectClause, rangeVariable);
-      }
-      else {
+      } else {
         var groupClause = (GroupClauseSyntax)node.SelectOrGroup;
         collection = BuildGroupClause(collection, groupClause, rangeVariable);
       }

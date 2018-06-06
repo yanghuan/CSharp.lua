@@ -90,9 +90,9 @@ namespace CSharpLua {
         public int GenericArgCount = -1;
         [XmlAttribute]
         public bool IgnoreGeneric;
-		[XmlAttribute]
-		public bool Baned;
-	  }
+        [XmlAttribute]
+        public bool Baned;
+      }
 
       public sealed class ClassModel {
         [XmlAttribute]
@@ -171,8 +171,7 @@ namespace CSharpLua {
         string name;
         if (typeSymbol.TypeArguments.Length == 0) {
           name = $"{namespaceName}.{symbol.Name}";
-        }
-        else {
+        } else {
           name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
         }
         return name == typeString;
@@ -220,15 +219,15 @@ namespace CSharpLua {
       }
 
       private string GetName(IMethodSymbol symbol) {
-		XmlMetaModel.MethodModel methodModel;
-		if (isSingleModel_) {
-		  methodModel = models_.First();
+        XmlMetaModel.MethodModel methodModel;
+        if (isSingleModel_) {
+          methodModel = models_.First();
         } else {
-		  methodModel = models_.Find(i => IsMethodMatch(i, symbol));
-		}
-		if (methodModel != null && methodModel.Baned) {
-		  throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
-		}
+          methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+        }
+        if (methodModel != null && methodModel.Baned) {
+          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+        }
         return methodModel?.Name;
       }
 
@@ -379,8 +378,7 @@ namespace CSharpLua {
               }
             }
           }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
           throw new Exception($"load xml file wrong at {file}", e);
         }
       }
@@ -489,8 +487,7 @@ namespace CSharpLua {
           if (symbol.OverriddenMethod != null) {
             codeTemplate = GetInternalMethodMetaInfo(symbol.OverriddenMethod, metaType);
           }
-        }
-        else {
+        } else {
           var interfaceImplementations = symbol.InterfaceImplementations();
           if (interfaceImplementations != null) {
             foreach (IMethodSymbol interfaceMethod in interfaceImplementations) {

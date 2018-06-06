@@ -101,14 +101,12 @@ namespace CSharpLua.LuaAst {
         if (statement != null) {
           if (ifStatement == null) {
             ifStatement = statement;
-          }
-          else {
+          } else {
             LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(statement.Condition);
             elseIfStatement.Body.Statements.AddRange(statement.Body.Statements);
             ifStatement.ElseIfStatements.Add(elseIfStatement);
           }
-        }
-        else {
+        } else {
           Contract.Assert(defaultBock_ == null);
           defaultBock_ = (LuaBlockSyntax)section;
         }
@@ -122,8 +120,7 @@ namespace CSharpLua.LuaAst {
           ifStatement.Else = elseClause;
         }
         headIfStatement_ = ifStatement;
-      }
-      else {
+      } else {
         if (defaultBock_ != null) {
           body.Statements.AddRange(defaultBock_.Statements);
         }
@@ -145,8 +142,7 @@ namespace CSharpLua.LuaAst {
     private LuaBlockSyntax FindMatchIfStatement(int index) {
       if (index == 0) {
         return headIfStatement_.Body;
-      }
-      else {
+      } else {
         return headIfStatement_.ElseIfStatements[index - 1].Body;
       }
     }

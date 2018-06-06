@@ -36,14 +36,14 @@ namespace CSharpLua {
   }
 
   public sealed class CompilationErrorException : Exception {
-	public SyntaxNode SyntaxNode { get;}
+    public SyntaxNode SyntaxNode { get; }
 
-	public CompilationErrorException(string message) : base(message) {
+    public CompilationErrorException(string message) : base(message) {
     }
 
     public CompilationErrorException(SyntaxNode node, string message) : base($"{node.GetLocationString()}: {message}, please refactor your code.") {
-	  SyntaxNode = node;
-	}
+      SyntaxNode = node;
+    }
   }
 
   public sealed class ArgumentNullException : System.ArgumentNullException {
@@ -90,8 +90,7 @@ namespace CSharpLua {
     public static void AddAt<T>(this IList<T> list, int index, T v) {
       if (index < list.Count) {
         list[index] = v;
-      }
-      else {
+      } else {
         int count = index - list.Count;
         for (int i = 0; i < count; ++i) {
           list.Add(default(T));
@@ -133,8 +132,7 @@ namespace CSharpLua {
             values.Clear();
           }
           key = i;
-        }
-        else {
+        } else {
           values.Add(i);
         }
       }
@@ -162,8 +160,7 @@ namespace CSharpLua {
 
       if (path.StartsWith(CurrentDirectorySign1)) {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path.Substring(CurrentDirectorySign1.Length));
-      }
-      else if (path.StartsWith(CurrentDirectorySign2)) {
+      } else if (path.StartsWith(CurrentDirectorySign2)) {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path.Substring(CurrentDirectorySign2.Length));
       }
 
@@ -314,8 +311,7 @@ namespace CSharpLua {
             return true;
           }
           symbol = overriddenSymbol;
-        }
-        else {
+        } else {
           return false;
         }
       }
@@ -340,15 +336,13 @@ namespace CSharpLua {
                     if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
                       Contract.Assert(!hasGet);
                       hasGet = true;
-                    }
-                    else {
+                    } else {
                       Contract.Assert(!hasSet);
                       hasSet = true;
                     }
                   }
                 }
-              }
-              else {
+              } else {
                 Contract.Assert(!hasGet);
                 hasGet = true;
               }
@@ -413,8 +407,7 @@ namespace CSharpLua {
     public static bool IsSystemLinqEnumerable(this INamedTypeSymbol symbol) {
       if (systemLinqEnumerableType_ != null) {
         return symbol == systemLinqEnumerableType_;
-      }
-      else {
+      } else {
         bool success = symbol.ToString() == LuaIdentifierNameSyntax.SystemLinqEnumerable.ValueText;
         if (success) {
           systemLinqEnumerableType_ = symbol;
@@ -534,8 +527,7 @@ namespace CSharpLua {
         if (symbol.ReducedFrom != null && symbol.ReducedFrom != symbol) {
           symbol = symbol.ReducedFrom;
         }
-      }
-      else {
+      } else {
         CheckSymbolDefinition(ref symbol);
       }
     }
@@ -547,8 +539,7 @@ namespace CSharpLua {
         if (methodSymbol != symbol) {
           symbol = methodSymbol;
         }
-      }
-      else {
+      } else {
         CheckSymbolDefinition(ref symbol);
       }
     }
@@ -558,8 +549,7 @@ namespace CSharpLua {
         if (symbol.ReturnsVoid || symbol.ReturnType.SpecialType == SpecialType.System_Int32) {
           if (symbol.Parameters.IsEmpty) {
             return true;
-          }
-          else if (symbol.Parameters.Length == 1) {
+          } else if (symbol.Parameters.Length == 1) {
             var parameterType = symbol.Parameters[0].Type;
             if (parameterType.TypeKind == TypeKind.Array) {
               var arrayType = (IArrayTypeSymbol)parameterType;
@@ -691,8 +681,7 @@ namespace CSharpLua {
       foreach (char c in name) {
         if (c < 127) {
           sb.Append(c);
-        }
-        else {
+        } else {
           string base63 = ToBase63(c);
           sb.Append(base63);
         }
@@ -724,8 +713,7 @@ namespace CSharpLua {
       var namespaceSymbol = typeSymbol.ContainingNamespace;
       if (namespaceSymbol.IsGlobalNamespace) {
         namespaceName = string.Empty;
-      }
-      else {
+      } else {
         namespaceName = namespaceSymbol.ToString();
         string newName = funcOfNamespace?.Invoke(namespaceSymbol, namespaceName);
         if (newName != null) {

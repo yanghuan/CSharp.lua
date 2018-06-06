@@ -109,8 +109,7 @@ namespace CSharpLua.LuaAst {
           if (usingDeclare.Prefix != usingDeclare.NewPrefix) {
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), new LuaIdentifierNameSyntax(usingDeclare.Prefix));
             functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-          }
-          else {
+          } else {
             LuaMemberAccessExpressionSyntax right = new LuaMemberAccessExpressionSyntax(global, new LuaIdentifierNameSyntax(usingDeclare.Prefix));
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), right);
             functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));

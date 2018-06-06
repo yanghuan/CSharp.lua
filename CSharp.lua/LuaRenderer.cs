@@ -123,8 +123,7 @@ namespace CSharpLua {
       foreach (LuaSyntaxNode node in list) {
         if (isFirst) {
           isFirst = false;
-        }
-        else {
+        } else {
           WriteComma();
         }
         node.Render(this);
@@ -253,8 +252,7 @@ namespace CSharpLua {
       foreach (var assignment in node.Assignments) {
         if (isFirst) {
           isFirst = false;
-        }
-        else {
+        } else {
           Write(LuaSyntaxNode.Tokens.Semicolon);
           WriteSpace();
         }
@@ -291,8 +289,7 @@ namespace CSharpLua {
         foreach (var itemNode in node.Items) {
           if (isFirst) {
             isFirst = false;
-          }
-          else {
+          } else {
             WriteComma();
             WriteNewLine();
           }
@@ -350,8 +347,7 @@ namespace CSharpLua {
         foreach (var variable in node.Variables) {
           if (isFirst) {
             isFirst = false;
-          }
-          else {
+          } else {
             WriteSpace();
           }
           variable.Render(this);

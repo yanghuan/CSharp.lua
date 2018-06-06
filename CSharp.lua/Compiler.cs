@@ -73,8 +73,7 @@ namespace CSharpLua {
       try {
         Assembly.LoadFile(path);
         return true;
-      }
-      catch (Exception) {
+      } catch (Exception) {
         return false;
       }
     }
@@ -95,8 +94,7 @@ namespace CSharpLua {
           string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
           if (File.Exists(path)) {
             libs.Add(path);
-          }
-          else {
+          } else {
             string file = Path.Combine(systemDir, Path.GetFileName(path));
             if (!File.Exists(file)) {
               throw new CmdArgumentException($"-l {path} is not found");
