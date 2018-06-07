@@ -82,11 +82,10 @@ namespace CSharpLua.LuaAst {
     public string CloseBracket => Tokens.CloseBracket;
 
     public LuaVerbatimStringLiteralExpressionSyntax(string value, bool checkNewLine = true) {
-      const string kCloseBracket = Tokens.CloseBracket;
       char equals = Tokens.Equals[0];
       int count = 0;
       while (true) {
-        string closeToken = kCloseBracket + new string(equals, count) + kCloseBracket;
+        string closeToken = CloseBracket + new string(equals, count) + CloseBracket;
         if (!value.Contains(closeToken)) {
           break;
         }

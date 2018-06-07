@@ -110,7 +110,7 @@ namespace CSharpLua {
     }
 
     private void Compile() {
-      var commandLineArguments = CSharpCommandLineParser.Default.Parse(cscArguments_, null, null);
+      var commandLineArguments = CSharpCommandLineParser.Default.Parse(cscArguments_.Concat(new string[] { "-define:__CSharpLua__" }), null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithDocumentationMode(DocumentationMode.Parse);
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), parseOptions, file));

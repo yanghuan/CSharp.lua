@@ -941,6 +941,9 @@ namespace CSharpLua {
               }
             case SyntaxKind.MultiLineCommentTrivia: {
                 string commentContent = content.Substring(kCommentCharCount, content.Length - kCommentCharCount - kCommentCharCount);
+                if (CheckInsertLuaCodeTemplate(commentContent, out var codeStatement)) {
+                  return codeStatement;
+                }
                 return new LuaLongCommentStatement(commentContent);
               }
             case SyntaxKind.RegionDirectiveTrivia:
@@ -951,6 +954,38 @@ namespace CSharpLua {
               throw new InvalidOperationException();
           }
         }
+      }
+
+      private bool CheckInsertLuaCodeTemplate(string commentContent, out LuaStatementListSyntax statementList) {
+        statementList = null;
+
+        char openBracket = LuaSyntaxNode.Tokens.OpenBracket[0];
+        int index = commentContent.IndexOf(openBracket);
+        if (index != -1) {
+          char equals = LuaSyntaxNode.Tokens.Equals[0];
+          int count = 0;
+          ++index;
+          while (commentContent[index] == equals) {
+            ++index;
+            ++count;
+          }
+          if (commentContent[index] == openBracket) {
+            string closeToken = LuaSyntaxNode.Tokens.CloseBracket + new string(equals, count) + LuaSyntaxNode.Tokens.CloseBracket;
+            int begin = index + 1;
+            int end = commentContent.IndexOf(closeToken, begin);
+            if (end != -1) {
+              int start = begin + closeToken.Length;
+              string code = commentContent.Substring(start, end - start);
+              string[] codes = code.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+              var statements = codes.Select(i => i.Trim()).Where(i => !string.IsNullOrEmpty(i)).Select(i => new LuaIdentifierNameSyntax(i).ToStatement());
+              statementList = new LuaStatementListSyntax();
+              statementList.Statements.AddRange(statements);
+              return true;
+            }
+          }
+        }
+
+        return false;
       }
     }
 
