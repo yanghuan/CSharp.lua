@@ -16,12 +16,10 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -637,7 +635,6 @@ namespace CSharpLua {
 
         foreach (var argumentNode in node.ArgumentList.Arguments) {
           var argumentExpression = (LuaExpressionSyntax)argumentNode.Expression.Accept(this);
-          CheckValueTypeAndConversion(argumentNode.Expression, ref argumentExpression);
           if (argumentNode.NameEquals == null) {
             if (argumentNode.NameColon != null) {
               string name = argumentNode.NameColon.Name.Identifier.ValueText;
@@ -706,19 +703,36 @@ namespace CSharpLua {
       }
     }
 
-    private void CheckValueTypeAndConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
-      ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(node).Type;
-      if (typeSymbol != null) {
-        if (typeSymbol.IsValueType
-          && typeSymbol.TypeKind != TypeKind.Enum
-          && !node.IsKind(SyntaxKind.ObjectCreationExpression)
-          && !node.IsKind(SyntaxKind.TupleExpression)
-          && typeSymbol.IsFromCode()) {
+    private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {
+      if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.IsFromCode()) {
+        bool need = false;
+        switch (node.Parent.Kind()) {
+          case SyntaxKind.Argument:
+          case SyntaxKind.ReturnStatement:  {
+              need = true;
+              break;
+            }
+          case SyntaxKind.SimpleAssignmentExpression: {
+              var assignment = (AssignmentExpressionSyntax)node.Parent;
+              if (assignment.Right == node) {
+                need = true;
+              }
+              break;
+            }
+          case SyntaxKind.EqualsValueClause: {
+              var equalsValueClause = (EqualsValueClauseSyntax)node.Parent; 
+              if (equalsValueClause.Value == node) {
+                need = true;
+              }
+              break;
+            }
+        }
+
+        if (need) {
           var invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Clone, true));
           expression = invocation;
         }
       }
-      CheckConversion(node, ref expression);
     }
 
     private List<LuaStatementSyntax> BuildDocumentationComment(CSharpSyntaxNode node) {

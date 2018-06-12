@@ -1145,8 +1145,6 @@ namespace CSharpLua {
               if (!rightNode.IsKind(SyntaxKind.TupleExpression)) {
                 right = BuildDeconstructExpression(rightNode, right);
               }
-            } else {
-              CheckValueTypeAndConversion(rightNode, ref right);
             }
             return BuildLuaSimpleAssignmentExpression(left, right);
           }
@@ -1823,10 +1821,13 @@ namespace CSharpLua {
             }
 
             identifier = GetSampleName(symbol);
+            CheckValueTypeClone(localSymbol.Type, node, ref identifier);
             break;
           }
         case SymbolKind.Parameter: {
+            var parameterSymbol = (IParameterSymbol)symbol;
             identifier = GetSampleName(symbol);
+            CheckValueTypeClone(parameterSymbol.Type, node, ref identifier);
             break;
           }
         case SymbolKind.RangeVariable: {
@@ -1854,7 +1855,9 @@ namespace CSharpLua {
             break;
           }
         case SymbolKind.Field: {
-            identifier = GetFieldNameExpression((IFieldSymbol)symbol, node);
+            var fieldSymbol = (IFieldSymbol)symbol;
+            identifier = GetFieldNameExpression(fieldSymbol, node);
+            CheckValueTypeClone(fieldSymbol.Type, node, ref identifier);
             break;
           }
         case SymbolKind.Method: {
@@ -1894,8 +1897,6 @@ namespace CSharpLua {
       } else if (node.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
         refOrOutArguments.Add(expression);
         expression = LuaIdentifierNameSyntax.Nil;
-      } else {
-        CheckValueTypeAndConversion(node.Expression, ref expression);
       }
       if (node.NameColon != null) {
         string name = node.NameColon.Name.Identifier.ValueText;

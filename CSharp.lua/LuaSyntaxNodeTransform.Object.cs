@@ -92,8 +92,6 @@ namespace CSharpLua {
           AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
           var left = assignment.Left.Accept(this);
           var right = (LuaExpressionSyntax)assignment.Right.Accept(this);
-          CheckValueTypeAndConversion(assignment.Right, ref right);
-
           if (assignment.Left.IsKind(SyntaxKind.ImplicitElementAccess)) {
             var argumentList = (LuaArgumentListSyntax)left;
             LuaIdentifierNameSyntax methodName = new LuaIdentifierNameSyntax(LuaSyntaxNode.Tokens.Set);
