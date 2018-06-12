@@ -2027,7 +2027,6 @@ namespace CSharpLua {
         value = node.Value;
       }
       var expression = (LuaExpressionSyntax)value.Accept(this);
-      CheckConversion(node.Value, ref expression);
       return new LuaEqualsValueClauseSyntax(expression);
     }
 
