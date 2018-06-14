@@ -229,7 +229,11 @@ namespace CSharpLua {
       codeTemplateExpression.Expressions.Add(expression);
     }
 
-    private LuaExpressionSyntax InternalBuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<Func<LuaExpressionSyntax>> arguments, IList<ITypeSymbol> typeArguments) {
+    private LuaExpressionSyntax InternalBuildCodeTemplateExpression(
+      string codeTemplate, 
+      ExpressionSyntax targetExpression, 
+      IEnumerable<Func<LuaExpressionSyntax>> arguments, 
+      IList<ITypeSymbol> typeArguments) {
       LuaCodeTemplateExpressionSyntax codeTemplateExpression = new LuaCodeTemplateExpressionSyntax();
 
       var matchs = codeTemplateRegex_.Matches(codeTemplate);
@@ -462,14 +466,17 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node) {
+    private bool CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node, LuaExpressionSyntax expression, out LuaMemberAccessExpressionSyntax outExpression) {
       if (!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
         if (symbol.ContainingType != GetTypeDeclarationSymbol(node)) {           //using static
-          var luadTypeExpression = GetTypeName(symbol.ContainingType);
-          return luadTypeExpression;
+          var usingStaticType = GetTypeName(symbol.ContainingType);
+          outExpression = new LuaMemberAccessExpressionSyntax(usingStaticType, expression);
+          return true;
         }
       }
-      return null;
+
+      outExpression = null;
+      return false;
     }
 
     private bool MayBeFalse(ExpressionSyntax expression, ITypeSymbol type) {
