@@ -33,8 +33,8 @@ local negInf = - 1 / 0
 local nanHashCode = {}
 
 Double.NaN = nan
-Double.NegInf = negInf
-Double.PosInf = posInf
+Double.NegativeInfinity = negInf
+Double.PositiveInfinity = posInf
 
 --http://lua-users.org/wiki/InfAndNanComparisons
 local function isNaN(v)

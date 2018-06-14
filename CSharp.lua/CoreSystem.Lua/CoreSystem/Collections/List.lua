@@ -19,7 +19,6 @@ local throw = System.throw
 local foreach = System.foreach
 local Collection = System.Collection
 local unWrap = Collection.unWrap
-local checkIndex = Collection.checkIndex
 local checkIndexAndCount = Collection.checkIndexAndCount
 local copyArray = Collection.copyArray
 local ArgumentNullException = System.ArgumentNullException
