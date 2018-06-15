@@ -711,10 +711,17 @@ namespace CSharpLua {
     }
 
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {
-      if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.IsFromCode()) {
+      if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.SpecialType == SpecialType.None) {
         bool need = false;
         switch (node.Parent.Kind()) {
-          case SyntaxKind.Argument:
+          case SyntaxKind.Argument: {
+              var symbol = semanticModel_.GetSymbolInfo(node.Parent.Parent.Parent).Symbol;
+              if (symbol != null && !symbol.IsFromCode()) {
+                break;
+              }
+              need = true;
+              break;
+            }
           case SyntaxKind.ReturnStatement:  {
               need = true;
               break;
@@ -722,6 +729,10 @@ namespace CSharpLua {
           case SyntaxKind.SimpleAssignmentExpression: {
               var assignment = (AssignmentExpressionSyntax)node.Parent;
               if (assignment.Right == node) {
+                var symbol = semanticModel_.GetSymbolInfo(assignment.Left).Symbol;
+                if (symbol != null && !symbol.IsFromCode()) {
+                  break;
+                }
                 need = true;
               }
               break;

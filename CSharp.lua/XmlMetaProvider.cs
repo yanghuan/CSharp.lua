@@ -105,8 +105,6 @@ namespace CSharpLua {
         public FieldModel[] Fields;
         [XmlElement("method")]
         public MethodModel[] Methods;
-        [XmlAttribute]
-        public string Import;
       }
 
       public sealed class NamespaceModel {

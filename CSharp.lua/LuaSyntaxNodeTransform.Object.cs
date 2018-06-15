@@ -823,15 +823,6 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
       var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-      if (symbol != null) {
-        bool isGet = !node.Parent.Kind().IsAssignment();
-        string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(symbol, isGet);
-        if (codeTemplate != null) {
-          var codeExpression = BuildCodeTemplateExpression(codeTemplate, node.Expression);
-          CurBlock.Statements.Add(codeExpression.ToStatement());
-        }
-      }
-
       var expression = BuildMemberAccessTargetExpression(node.Expression);
       LuaIdentifierNameSyntax baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
       LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);
