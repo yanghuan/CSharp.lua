@@ -239,7 +239,7 @@ end
 
 System.define("System.Type", Type)
 
-function isInterfaceOf(t, ifaceType)
+local function isInterfaceOf(t, ifaceType)
   repeat
     local interfaces = t.__interfaces__
     if interfaces then
