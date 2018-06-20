@@ -20,6 +20,8 @@ local removeAtArray = Collection.removeAtArray
 local getArray = Collection.getArray
 local insertRangeArray = Collection.insertRangeArray
 
+local select = select
+
 local Stack = {}
 
 function Stack.__ctor__(this, ...)
