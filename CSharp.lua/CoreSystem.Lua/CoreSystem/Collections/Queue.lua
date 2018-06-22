@@ -22,6 +22,8 @@ local getArray = Collection.getArray
 local insertRangeArray = Collection.insertRangeArray
 local InvalidOperationException = System.InvalidOperationException
 
+local select = select
+
 local Queue = {}
 
 function Queue.__ctor__(this, ...)

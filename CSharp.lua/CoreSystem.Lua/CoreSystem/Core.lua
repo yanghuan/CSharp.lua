@@ -1003,7 +1003,7 @@ end
 
 function System.GetValueOrDefaultT(this, T)
   if this == nil then
-    return T.__default__()
+    return T:__default__()
   end
   return this
 end

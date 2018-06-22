@@ -24,6 +24,8 @@ local copyArray = Collection.copyArray
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
+local select = select
+
 local List = {}
 
 function List.__ctor__(this, ...)
