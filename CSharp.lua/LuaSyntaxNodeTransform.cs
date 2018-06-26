@@ -145,7 +145,7 @@ namespace CSharpLua {
       compilationUnits_.Push(compilationUnit);
 
       var statements = VisitTriviaAndNode(node, node.Members, false);
-      foreach (LuaStatementSyntax statement in statements) {
+      foreach (var statement in statements) {
         if (statement is LuaTypeDeclarationSyntax typeeDeclaration) {
           var ns = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
           ns.AddStatement(typeeDeclaration);
@@ -165,7 +165,7 @@ namespace CSharpLua {
       LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(isContained ? symbol.Name : symbol.ToString());
       LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name, isContained);
       var statements = VisitTriviaAndNode(node, node.Members);
-      namespaceDeclaration.AddStatements(statements.Cast<LuaStatementSyntax>());
+      namespaceDeclaration.AddStatements(statements);
       return namespaceDeclaration;
     }
 
@@ -906,6 +906,9 @@ namespace CSharpLua {
       public LuaBlankLinesStatement CheckBlankLine(ref int lastLine) {
         LuaBlankLinesStatement statement = null;
         if (lastLine != -1) {
+          if (SyntaxTrivia != null && SyntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia) {
+            ++lastLine;
+          }
           int count = LineSpan.StartLinePosition.Line - lastLine - 1;
           if (count > 0) {
             statement = new LuaBlankLinesStatement(count);
@@ -946,6 +949,10 @@ namespace CSharpLua {
                 }
                 return new LuaLongCommentStatement(commentContent);
               }
+            case SyntaxKind.SingleLineDocumentationCommentTrivia:
+            case SyntaxKind.DisabledTextTrivia: {
+                return LuaStatementSyntax.Empty;
+              }
             case SyntaxKind.RegionDirectiveTrivia:
             case SyntaxKind.EndRegionDirectiveTrivia: {
                 return new LuaShortCommentStatement(content);
@@ -956,8 +963,8 @@ namespace CSharpLua {
         }
       }
 
-      private bool CheckInsertLuaCodeTemplate(string commentContent, out LuaStatementListSyntax statementList) {
-        statementList = null;
+      private bool CheckInsertLuaCodeTemplate(string commentContent, out LuaStatementSyntax statement) {
+        statement = null;
 
         char openBracket = LuaSyntaxNode.Tokens.OpenBracket[0];
         int index = commentContent.IndexOf(openBracket);
@@ -976,10 +983,7 @@ namespace CSharpLua {
             if (end != -1) {
               int start = begin + closeToken.Length;
               string code = commentContent.Substring(start, end - start);
-              string[] codes = code.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-              var statements = codes.Select(i => i.Trim()).Where(i => !string.IsNullOrEmpty(i)).Select(i => new LuaIdentifierNameSyntax(i).ToStatement());
-              statementList = new LuaStatementListSyntax();
-              statementList.Statements.AddRange(statements);
+              statement = new LuaIdentifierNameSyntax(code.Trim()).ToStatement();
               return true;
             }
           }
@@ -989,7 +993,7 @@ namespace CSharpLua {
       }
     }
 
-    private IEnumerable<LuaSyntaxNode> VisitTriviaAndNode(SyntaxNode rootNode, IEnumerable<CSharpSyntaxNode> nodes, bool isCheckBlank = true) {
+    private IEnumerable<LuaStatementSyntax> VisitTriviaAndNode(SyntaxNode rootNode, IEnumerable<CSharpSyntaxNode> nodes, bool isCheckBlank = true) {
       var syntaxTrivias = rootNode.DescendantTrivia().Where(i => i.IsExportSyntaxTrivia(rootNode));
       var syntaxTriviaNodes = syntaxTrivias.Select(i => new BlockCommonNode(i));
 
@@ -1014,7 +1018,7 @@ namespace CSharpLua {
             yield return black;
           }
         }
-        yield return common.Visit(this);
+        yield return (LuaStatementSyntax)common.Visit(this);
       }
     }
 
@@ -1023,7 +1027,7 @@ namespace CSharpLua {
       blocks_.Push(block);
 
       var statements = VisitTriviaAndNode(node, node.Statements);
-      block.Statements.AddRange(statements.Cast<LuaStatementSyntax>());
+      block.Statements.AddRange(statements);
 
       blocks_.Pop();
       return block;

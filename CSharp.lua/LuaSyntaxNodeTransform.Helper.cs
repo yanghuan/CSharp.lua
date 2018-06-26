@@ -711,7 +711,7 @@ namespace CSharpLua {
     }
 
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {
-      if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.SpecialType == SpecialType.None) {
+      if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType())) {
         bool need = false;
         switch (node.Parent.Kind()) {
           case SyntaxKind.Argument: {

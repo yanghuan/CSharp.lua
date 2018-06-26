@@ -226,13 +226,16 @@ function String.IsNullOrEmpty(value)
   return value == nil or #value == 0
 end
 
-local function simpleFormat(format, args, getFn)
+local function simpleFormat(format, args, len, getFn)
   return (format:gsub("{(%d)}", function(n)
-    local v = getFn(args, n)
-    if v == nil then
+    if n >= len then
       throw(FormatException())
     end
-    return v:ToString() 
+    local v = getFn(args, n)
+    if v ~= nil then
+      return v:ToString()
+    end
+    return ""
   end))
 end
 
@@ -241,12 +244,12 @@ function String.Format(format, ...)
   if len == 1 then
     local args = ...
     if System.isArrayLike(args) then
-      return simpleFormat(format, args, function (t, n)
+      return simpleFormat(format, args, #args, function (t, n)
         return t:get(n + 0)  -- make n to number
       end)
     end 
   end
-  return simpleFormat(format, { ... }, function (t, n)
+  return simpleFormat(format, { ... }, len, function (t, n)
     return t[n + 1]
   end)
 end

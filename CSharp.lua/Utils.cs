@@ -614,13 +614,17 @@ namespace CSharpLua {
     }
 
     public static bool IsExportSyntaxTrivia(this SyntaxTrivia syntaxTrivia, SyntaxNode rootNode) {
-      switch (syntaxTrivia.Kind()) {
+      SyntaxKind kind = syntaxTrivia.Kind();
+      switch (kind) {
         case SyntaxKind.SingleLineCommentTrivia:
         case SyntaxKind.MultiLineCommentTrivia:
+        case SyntaxKind.SingleLineDocumentationCommentTrivia:
+        case SyntaxKind.DisabledTextTrivia:
         case SyntaxKind.RegionDirectiveTrivia:
-        case SyntaxKind.EndRegionDirectiveTrivia:
-          var span = rootNode.IsKind(SyntaxKind.CompilationUnit) ? rootNode.FullSpan : rootNode.Span;
-          return span.Contains(syntaxTrivia.Span);
+        case SyntaxKind.EndRegionDirectiveTrivia: {
+            var span = rootNode.IsKind(SyntaxKind.CompilationUnit) ? rootNode.FullSpan : rootNode.Span;
+            return span.Contains(syntaxTrivia.Span);
+          }
         default:
           return false;
       }

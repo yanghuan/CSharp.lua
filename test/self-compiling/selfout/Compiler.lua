@@ -28,8 +28,8 @@ System.usingDeclare(function (global)
   CSharpLuaLuaSyntaxGenerator = CSharpLua.LuaSyntaxGenerator
 end)
 System.namespace("CSharpLua", function (namespace) 
-  namespace.class("Worker", function (namespace) 
-    local SystemDlls, getMetas, IsCorrectSystemDll, getLibs, Do, Compiler, __staticCtor__, __ctor__
+  namespace.class("Compiler", function (namespace) 
+    local SystemDlls, getMetas, IsCorrectSystemDll, getLibs, Do, Compile, __staticCtor__, __ctor__
     __staticCtor__ = function (this) 
       SystemDlls = System.Array(System.String)("System.dll", "System.Core.dll", "System.Runtime.dll", "System.Linq.dll", "Microsoft.CSharp.dll")
     end
@@ -55,7 +55,7 @@ System.namespace("CSharpLua", function (namespace)
     end
     getMetas = function (this) 
       local metas = System.create(System.List(System.String)(), function (default) 
-        default:Add(CSharpLua.Utility.GetCurrentDirectory("~/System.xml" --[[Worker.kSystemMeta]]))
+        default:Add(CSharpLua.Utility.GetCurrentDirectory("~/System.xml" --[[Compiler.kSystemMeta]]))
       end)
       metas:AddRange(this.metas_)
       return metas
@@ -86,10 +86,10 @@ System.namespace("CSharpLua", function (namespace)
 
       for _, lib in System.each(this.libs_) do
         local default
-        if lib:EndsWith(".dll" --[[Worker.kDllSuffix]]) then
+        if lib:EndsWith(".dll" --[[Compiler.kDllSuffix]]) then
           default = lib
         else
-          default = lib .. ".dll" --[[Worker.kDllSuffix]]
+          default = lib .. ".dll" --[[Compiler.kDllSuffix]]
         end
         local path = default
         if SystemIO.File.Exists(path) then
@@ -104,10 +104,10 @@ System.namespace("CSharpLua", function (namespace)
       return libs
     end
     Do = function (this) 
-      Compiler(this)
+      Compile(this)
     end
-    Compiler = function (this) 
-      local commandLineArguments = MicrosoftCodeAnalysisCSharp.CSharpCommandLineParser.getDefault():Parse(this.cscArguments_)
+    Compile = function (this) 
+      local commandLineArguments = MicrosoftCodeAnalysisCSharp.CSharpCommandLineParser.getDefault():Parse(Linq.Concat(this.cscArguments_, System.Array(System.String)("-define:__CSharpLua__")))
       local parseOptions = commandLineArguments:getParseOptions():WithDocumentationMode(1 --[[DocumentationMode.Parse]])
       local files = SystemIO.Directory.EnumerateFiles(this.folder_, "*.cs", 1 --[[SearchOption.AllDirectories]])
       local syntaxTrees = Linq.Select(files, function (file) 

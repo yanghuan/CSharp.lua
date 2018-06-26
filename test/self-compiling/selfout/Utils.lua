@@ -737,11 +737,14 @@ System.namespace("CSharpLua", function (namespace)
       return false
     end
     IsExportSyntaxTrivia = function (syntaxTrivia, rootNode) 
+      local kind = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(syntaxTrivia)
       repeat
-        local default = MicrosoftCodeAnalysisCSharp.CSharpExtensions.Kind(syntaxTrivia)
-        if default == 8541 --[[SyntaxKind.SingleLineCommentTrivia]] or default == 8542 --[[SyntaxKind.MultiLineCommentTrivia]] or default == 8552 --[[SyntaxKind.RegionDirectiveTrivia]] or default == 8553 --[[SyntaxKind.EndRegionDirectiveTrivia]] then
-          local span = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(rootNode, 8840 --[[SyntaxKind.CompilationUnit]]) and rootNode:getFullSpan() or rootNode:getSpan()
-          return span:Contains(syntaxTrivia:getSpan())
+        local default = kind
+        if default == 8541 --[[SyntaxKind.SingleLineCommentTrivia]] or default == 8542 --[[SyntaxKind.MultiLineCommentTrivia]] or default == 8544 --[[SyntaxKind.SingleLineDocumentationCommentTrivia]] or default == 8546 --[[SyntaxKind.DisabledTextTrivia]] or default == 8552 --[[SyntaxKind.RegionDirectiveTrivia]] or default == 8553 --[[SyntaxKind.EndRegionDirectiveTrivia]] then
+          do
+            local span = MicrosoftCodeAnalysis.CSharpExtensions.IsKind(rootNode, 8840 --[[SyntaxKind.CompilationUnit]]) and rootNode:getFullSpan() or rootNode:getSpan()
+            return span:Contains(syntaxTrivia:getSpan())
+          end
         else
           return false
         end

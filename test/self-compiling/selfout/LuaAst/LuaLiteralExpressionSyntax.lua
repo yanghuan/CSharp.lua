@@ -120,7 +120,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       local equals = ("=" --[[Tokens.Equals]]):get(0)
       local count = 0
       while true do
-        local closeToken = ("]" --[[kCloseBracket]] .. System.String(equals, count)) .. "]" --[[kCloseBracket]]
+        local closeToken = (getCloseBracket(this) .. System.String(equals, count)) .. getCloseBracket(this)
         if not value:Contains(closeToken) then
           break
         end

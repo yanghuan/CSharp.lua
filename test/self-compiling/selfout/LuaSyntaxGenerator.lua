@@ -263,9 +263,9 @@ System.namespace("CSharpLua", function (namespace)
     MemberSymbolComparison, MemberSymbolCommonComparison, CheckRefactorNames, RefactorCurTypeSymbol, RefactorInterfaceSymbol, RefactorName, RefactorChildrensOverridden, UpdateName, 
     GetRefactorCheckName, GetRefactorName, IsTypeNameUsed, IsNewNameEnable, IsNewNameEnable1, IsCurTypeNameEnable, IsNameEnableOfCurAndChildrens, CheckRefactorInnerNames, 
     GetInnerGetRefactorName, IsInnerNameEnable, IsInnerNameEnableOfChildrens, DoPretreatment, AddImplicitInterfaceImplementation, FindImplicitImplementationForInterfaceMember, IsImplicitInterfaceImplementation, IsPropertyField, 
-    IsEventFiled, AllInterfaceImplementations, AllInterfaceImplementationsCount, HasStaticCtor, IsExtendExists, IsSealed, GetTypeRefactorName, GetTypeDeclarationName, 
-    GetTypeName, GetTypeArguments, FillExternalTypeArgument, FillTypeArguments, GetNamespaceMapName, GetTypeShortName, __staticCtor__, __init__, 
-    __ctor__
+    IsEventFiled, IsPropertyFieldOrEventFiled, AllInterfaceImplementations, AllInterfaceImplementationsCount, HasStaticCtor, IsExtendExists, IsSealed, GetTypeRefactorName, 
+    GetTypeDeclarationName, GetTypeName, GetTypeArguments, FillExternalTypeArgument, FillTypeArguments, GetNamespaceMapName, GetTypeShortName, __staticCtor__, 
+    __init__, __ctor__
     __staticCtor__ = function (this) 
       Encoding = SystemText.UTF8Encoding(false)
     end
@@ -319,7 +319,7 @@ System.namespace("CSharpLua", function (namespace)
       for _, syntaxTree in System.each(this.compilation_:getSyntaxTrees()) do
         local semanticModel = GetSemanticModel(this, syntaxTree)
         local compilationUnitSyntax = System.cast(MicrosoftCodeAnalysisCSharpSyntax.CompilationUnitSyntax, syntaxTree:GetRoot(System.default(SystemThreading.CancellationToken)))
-        local transfor = CSharpLua.LuaSyntaxNodeTransfor(this, semanticModel)
+        local transfor = CSharpLua.LuaSyntaxNodeTransform(this, semanticModel)
         local luaCompilationUnit = System.cast(CSharpLuaLuaAst.LuaCompilationUnitSyntax, compilationUnitSyntax:Accept(transfor, CSharpLuaLuaAst.LuaSyntaxNode))
         luaCompilationUnits:Add(luaCompilationUnit)
       end
@@ -418,7 +418,7 @@ System.namespace("CSharpLua", function (namespace)
         this.partialTypes_:Clear()
         for _, typeDeclarations in System.each(types) do
           local major = Linq.Min(typeDeclarations)
-          local transfor = CSharpLua.LuaSyntaxNodeTransfor(this)
+          local transfor = CSharpLua.LuaSyntaxNodeTransform(this)
           transfor:AcceptPartialType(major, typeDeclarations)
         end
       end
@@ -1262,6 +1262,16 @@ System.namespace("CSharpLua", function (namespace)
     IsEventFiled = function (this, symbol) 
       return not IsImplicitInterfaceImplementation(this, symbol) and CSharpLua.Utility.IsEventFiled(symbol)
     end
+    IsPropertyFieldOrEventFiled = function (this, symbol) 
+      local propertySymbol = symbol
+      local eventSymbol = symbol
+      if System.is(propertySymbol, MicrosoftCodeAnalysis.IPropertySymbol) then
+        return CSharpLua.Utility.IsPropertyField(propertySymbol)
+      elseif System.is(eventSymbol, MicrosoftCodeAnalysis.IEventSymbol) then
+        return CSharpLua.Utility.IsEventFiled(eventSymbol)
+      end
+      return false
+    end
     AllInterfaceImplementations = function (this, symbol) 
       local interfaceImplementations = CSharpLua.Utility.InterfaceImplementations(symbol, MicrosoftCodeAnalysis.ISymbol)
       local implicitImplementations = CSharpLua.Utility.GetOrDefault1(this.implicitInterfaceImplementations_, symbol, nil, MicrosoftCodeAnalysis.ISymbol, System.HashSet(MicrosoftCodeAnalysis.ISymbol))
@@ -1407,6 +1417,7 @@ System.namespace("CSharpLua", function (namespace)
       AddInnerName = AddInnerName, 
       IsPropertyField = IsPropertyField, 
       IsEventFiled = IsEventFiled, 
+      IsPropertyFieldOrEventFiled = IsPropertyFieldOrEventFiled, 
       HasStaticCtor = HasStaticCtor, 
       IsExtendExists = IsExtendExists, 
       IsSealed = IsSealed, 
