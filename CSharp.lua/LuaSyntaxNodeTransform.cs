@@ -457,6 +457,9 @@ namespace CSharpLua {
       bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
       if (!symbol.IsStatic) {
         function.AddParameter(LuaIdentifierNameSyntax.This);
+        if (isPrivate &&  generator_.IsMonoBehaviourSpeicalMethod(symbol)) {
+          isPrivate = false;
+        }
       } else if (symbol.IsMainEntryPoint()) {
         isPrivate = false;
         bool success = generator_.SetMainEntryPoint(symbol);

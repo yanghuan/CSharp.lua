@@ -87,6 +87,8 @@ namespace CSharpLua {
     private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
     private IMethodSymbol mainEntryPoint_;
     public string BaseFolder { get; }
+    private HashSet<string> monoBehaviourSpeicalMethodNames_;
+    private INamedTypeSymbol monoBehaviourTypeSymbol_;
 
     public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting, string[] attributes, string baseFolder = "") {
       CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
@@ -107,6 +109,12 @@ namespace CSharpLua {
           isExportAttributesAll_ = true;
         } else {
           exportAttributes_ = new HashSet<string>(attributes);
+        }
+      }
+      if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
+        monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
+        if (monoBehaviourTypeSymbol_ != null) {
+          monoBehaviourSpeicalMethodNames_ = new HashSet<string>() { "Awake", "Start", "Update", "FixedUpdate", "LateUpdate" };
         }
       }
       DoPretreatment();
@@ -1017,6 +1025,13 @@ namespace CSharpLua {
         }
       }
       return true;
+    }
+
+    public bool IsMonoBehaviourSpeicalMethod(IMethodSymbol symbol) {
+      if (monoBehaviourSpeicalMethodNames_ != null && monoBehaviourSpeicalMethodNames_.Contains(symbol.Name)) {
+        return monoBehaviourTypeSymbol_.IsAssignableFrom(symbol.ContainingType);
+      }
+      return false;
     }
 
     #endregion
