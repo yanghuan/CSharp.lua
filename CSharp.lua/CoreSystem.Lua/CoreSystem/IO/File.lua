@@ -18,6 +18,7 @@ local System = System
 local throw = System.throw
 local each = System.each
 
+local io = io
 local open = io.open
 local tinsert = table.insert
 
@@ -55,16 +56,10 @@ function File.ReadAllText(path)
 end
 
 function File.ReadAllLines(path)
-  local f = openFile(path, mode)
   local t = {}
-  while true do
-    local line = f:read()
-    if line == nil then
-      break
-    end
+  for line in io.lines(path) do
     tinsert(t, line)
   end
-  f:close()
   return System.arrayFromTable(t, System.String)
 end
 
@@ -83,7 +78,7 @@ function File.WriteAllText(path, contents)
 end
 
 function File.WriteAllLines(path, contents)
-  local f = openFile(path, mode)
+  local f = openFile(path, "w")
   for _, line in each(contents) do
     if line == nil then
       f:write("\n")

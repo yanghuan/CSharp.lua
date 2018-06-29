@@ -85,7 +85,7 @@ local function IEnumerator(source, tryGetNext, init)
        return false
     end,
     getCurrent = function()
-        return current
+      return current
     end
   }, InternalEnumerator)
 end
@@ -817,7 +817,7 @@ end
 
 function Enumerable.FirstOrDefault(source, ...)
   local ok, result = first(source, ...)
-  return ok and result or source.__genericT__.__default__()
+  return ok and result or source.__genericT__:__default__()
 end
 
 local function last(source, ...)
@@ -859,7 +859,7 @@ end
 
 function Enumerable.LastOrDefault(source, ...)
   local ok, result = last(source, ...)
-  return ok and result or source.__genericT__.__default__()
+  return ok and result or source.__genericT__:__default__()
 end
 
 local function single(source, ...)
@@ -902,7 +902,7 @@ end
 
 function Enumerable.SingleOrDefault(source, ...)
   local ok, result = single(source, ...)
-  return ok and result or source.__genericT__.__default__()
+  return ok and result or source.__genericT__:__default__()
 end
 
 local function elementAt(source, index)
@@ -924,7 +924,7 @@ end
 
 function Enumerable.ElementAtOrDefault(source, index)
   local ok, result = elementAt(source, index)
-  return ok and result or source.__genericT__.__default__()
+  return ok and result or source.__genericT__:__default__()
 end
 
 function Enumerable.Range(start, count)
@@ -1082,7 +1082,7 @@ local function minOrMax(compareFn, source, ...)
     if selector == nil then throw(ArgumentNullException("selector")) end
   end
   local compare = Comparer_1(T).getDefault().Compare
-  local value = T.__default__()
+  local value = T:__default__()
   if value == nil then
     for _, x in each(source) do
       x = selector(x)

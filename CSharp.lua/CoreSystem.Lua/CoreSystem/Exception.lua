@@ -37,7 +37,7 @@ local function toString(this)
   return tconcat(t)
 end
 
-System.define("System.Exception", {
+local Exception = System.define("System.Exception", {
   __tostring = toString,
 
   __ctor__ = function(this, message, innerException) 
@@ -66,7 +66,7 @@ System.define("System.Exception", {
 
 System.define("System.ArgumentException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, paramName, innerException) 
     System.Exception.__ctor__(this, message or "Value does not fall within the expected range.", innerException)
@@ -143,7 +143,7 @@ System.define("System.CultureNotFoundException", {
 
 System.define("System.KeyNotFoundException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Key not found.", innerException)
@@ -152,7 +152,7 @@ System.define("System.KeyNotFoundException", {
 
 System.define("System.ArithmeticException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Overflow or underflow in the arithmetic operation.", innerException)
@@ -179,7 +179,7 @@ System.define("System.OverflowException", {
 
 System.define("System.FormatException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Invalid format.", innerException)
@@ -188,7 +188,7 @@ System.define("System.FormatException", {
 
 System.define("System.InvalidCastException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "The cast is not valid.", innerException)
@@ -197,7 +197,7 @@ System.define("System.InvalidCastException", {
 
 System.define("System.InvalidOperationException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Operation is not valid due to the current state of the object.", innerException)
@@ -206,7 +206,7 @@ System.define("System.InvalidOperationException", {
 
 System.define("System.NotImplementedException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "The method or operation is not implemented.", innerException)
@@ -215,7 +215,7 @@ System.define("System.NotImplementedException", {
 
 System.define("System.NotSupportedException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Specified method is not supported.", innerException)
@@ -224,7 +224,7 @@ System.define("System.NotSupportedException", {
 
 System.define("System.NullReferenceException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Object is null.", innerException)
@@ -233,7 +233,7 @@ System.define("System.NullReferenceException", {
 
 System.define("System.RankException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Attempted to operate on an array with the incorrect number of dimensions.", innerException)
@@ -242,7 +242,7 @@ System.define("System.RankException", {
 
 System.define("System.TypeLoadException", {
   __tostring = toString,
-  __inherits__ = { System.Exception },
+  __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
     System.Exception.__ctor__(this, message or "Failed when load type.", innerException)
