@@ -1061,7 +1061,7 @@ namespace CSharpLua {
         var typeSymbol = GetDeclaredSymbol(node);
         classTypes_.Add(typeSymbol);
 
-        var types = node.Members.OfType<TypeDeclarationSyntax>();
+        var types = node.Members.OfType<BaseTypeDeclarationSyntax>();
         foreach (var type in types) {
           type.Accept(this);
         }
