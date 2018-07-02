@@ -899,7 +899,10 @@ namespace CSharpLua {
       if (methodSymbol != null) {
         var typeSymbol = methodSymbol.ContainingType;
         if (typeSymbol != null) {
-          if (typeSymbol.TypeKind != TypeKind.Enum && typeSymbol.TypeKind != TypeKind.Delegate && typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType()) {
+          if (typeSymbol.TypeKind != TypeKind.Enum 
+            && typeSymbol.TypeKind != TypeKind.Delegate 
+            && typeSymbol.SpecialType == SpecialType.None 
+            && !typeSymbol.IsTimeSpanType()) {
             var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
             if (codeTemplate != null) {
               return BuildCodeTemplateExpression(codeTemplate, null, new ExpressionSyntax[] { node.Left, node.Right }, null);

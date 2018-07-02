@@ -95,61 +95,76 @@ local function testDelegate()
     prints = prints .. s
     print(s)
   end
+
   local function assertExt(s)
     assert(prints == s, s)
     prints = ""
   end
+
   local d1 = function() printExt("d1") end
   local d2 = function() printExt("d2") end
   local d3 = function() printExt("d3") end
-  System.combine(nil, d1)()
+
+  local f = nil + d1 
+  f()
+  assertExt("d1") 
+  print("--")
+  
+  f = d1 + nil
+  f()
   assertExt("d1")
   print("--")
-    
-  System.combine(d1, nil)()
-  assertExt("d1")
-  print("--")
-    
-  System.combine(d1, d2)()
+  
+  f = d1 + d2
+  f()
   assertExt("d1d2")
   print("--")
-    
-  System.combine(d1, System.combine(d2, d3))()
+   
+  f = d1 + (d2 + d3) 
+  f()
   assertExt("d1d2d3")
   print("--")
-    
-  System.combine(System.combine(d1, d2), System.combine(d2, d3))()
+     
+  f = (d1 + d2) + (d2 + d3)  
+  f()
   assertExt("d1d2d2d3")
   print("--")
-    
-  System.remove(System.combine(d1, d2), d1)()
+  
+  f = d1 + d2 - d1  
+  f()
   assertExt("d2")
   print("--")
-    
-  System.remove(System.combine(d1, d2), d2)()
+   
+  f = d1 + d2 - d2 
+  f()
   assertExt("d1")
   print("--")
-    
-  System.remove(System.combine(System.combine(d1, d2), d1), d1)()
+   
+  f = d1 + d2 + d1 - d1
+  f()
   assertExt("d1d2")
   print("--")
     
-  System.remove(System.combine(System.combine(d1, d2), d3), System.combine(d1, d2))()
+   
+  f = d1 + d2 + d3 - (d1 + d2) 
+  f()
   assertExt("d3")
   print("--")
     
-  System.remove(System.combine(System.combine(d1, d2), d3), System.combine(d2, d1))()
+  f = d1 + d2 + d3 - (d2 + d1)
+  f()
   assertExt("d1d2d3")
   print("--")
-    
-  local fn0 = System.combine(System.combine(d1, d2), System.combine(System.combine(d3, d1), d2))
-  local fn1 = System.combine(d1, d2)
-  System.remove(fn0, fn1)()
+   
+  f = (d1 + d2) + (d3 + d1 + d2) 
+  local f1 = d1 + d2
+  f = f - f1
+  f()
   assertExt("d1d2d3")
     
   print("--")
-  local i = System.remove(System.combine(d1, d2), System.combine(d1, d2))
-  print(i == nil)
+  f = (d1 + d2) - (d1 + d2)
+  print(f == nil)
 end
 
 local function testLinq()

@@ -75,7 +75,6 @@ local function combine(fn1, fn2)
 end
 
 Delegate.Combine = combine
-System.combine = combine
 
 local function bind(target, method)
   if target == nil then
@@ -172,7 +171,6 @@ local function remove(fn1, fn2)
 end
 
 Delegate.Remove = remove
-System.remove = remove
 
 function Delegate.RemoveAll(source, value)
   local newDelegate
@@ -207,8 +205,27 @@ local function equals(fn1, fn2)
   return equalsSingle(fn1, fn2)
 end
 
+Delegate.__add = combine
+multicast.__add = combine
+memberMethod.__add = combine
+
+Delegate.__sub = remove
+multicast.__sub = remove
+memberMethod.__sub = remove
+
 multicast.__eq = equals
 memberMethod.__eq = equals
+ 
+ local metatableOfNil = debug.getmetatable(nil)
+ metatableOfNil.__add = function (a, b)
+  if a == nil then
+    if b == nil or type(b) == "number" then
+      return nil
+    end
+    return b
+  end
+  return nil
+ end
 
 function Delegate.EqualsObj(this, obj)
   local typename = type(obj)

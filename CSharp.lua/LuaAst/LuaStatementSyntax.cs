@@ -28,7 +28,9 @@ namespace CSharpLua.LuaAst {
       internal override void Render(LuaRenderer renderer) {
       }
     }
+
     public readonly static LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
+    public readonly static LuaStatementSyntax Colon = new LuaIdentifierNameSyntax(Semicolon.kSemicolon).ToStatement();
   }
 
   public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {

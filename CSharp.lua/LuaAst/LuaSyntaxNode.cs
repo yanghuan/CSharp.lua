@@ -28,8 +28,10 @@ namespace CSharpLua.LuaAst {
     }
 
     public sealed class Semicolon {
+      public const string kSemicolon = ";";
+
       public override string ToString() {
-        return ";";
+        return kSemicolon;
       }
     }
 
