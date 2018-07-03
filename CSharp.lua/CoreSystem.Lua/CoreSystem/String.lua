@@ -31,6 +31,7 @@ local tconcat = table.concat
 local setmetatable = setmetatable
 local select = select
 local type = type
+local tonumber = tonumber
 
 local String = string
 String.traceback = System.emptyFn  -- make throw(str) not fail
@@ -232,6 +233,7 @@ end
 
 local function simpleFormat(format, args, len, getFn)
   return (format:gsub("{(%d)}", function(n)
+    n = tonumber(n)
     if n >= len then
       throw(FormatException())
     end
@@ -249,7 +251,7 @@ function String.Format(format, ...)
     local args = ...
     if System.isArrayLike(args) then
       return simpleFormat(format, args, #args, function (t, n)
-        return t:get(n + 0)  -- make n to number
+        return t:get(n)
       end)
     end 
   end
