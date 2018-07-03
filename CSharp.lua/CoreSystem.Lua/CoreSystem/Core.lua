@@ -247,6 +247,7 @@ local function def(name, kind, cls, generic)
       setBase(cls, kind)
     else
     	cls.__kind__ = kind
+      cls.__call = new
       setmetatable(cls, staticCtorMetatable)
     end
   elseif kind == "I" then
