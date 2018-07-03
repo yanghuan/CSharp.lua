@@ -145,7 +145,7 @@ local function buildMethodInfo(cls, name, f)
 end
 
 function Assembly.getEntryPoint(this)
-  local entryPoint = System.entryPoint
+  local entryPoint = System.config.entryPoint
   if entryPoint ~= nil then
     local _, _, t, name = entryPoint:find("(.*)%.(.*)")
     local cls = getClass(t)

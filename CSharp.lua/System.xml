@@ -58,7 +58,7 @@ limitations under the License.
       <class name="String">
         <field name="Empty" Template="&quot;&quot;" />
         <property name="Length">
-          <get Template="#{this}" />
+          <get Template="(#{this})" />
         </property>
       </class>
       <class name="Enum">
@@ -82,7 +82,7 @@ limitations under the License.
       </class>
       <class name="Array">
         <property name="Length">
-          <get Template="#{this}" />
+          <get Template="(#{this})" />
         </property>
         <method name="Exists" IgnoreGeneric="true" />
         <method name="Find" IgnoreGeneric="true" />
@@ -295,18 +295,18 @@ limitations under the License.
     <namespace name="System.Collections.Generic" Name="System">
       <class name="List^1" Name="System.List">
         <property name="Count">
-          <get Template="#{this}" />
+          <get Template="(#{this})" />
         </property>
       </class>
       <class name="Dictionary^2" Name="System.Dictionary"/>
       <class name="Queue^1" Name="System.Queue">
         <property name="Count">
-          <get Template="#{this}" />
+          <get Template="(#{this})" />
         </property>
       </class>
       <class name="Stack^1" Name="System.Stack">
         <property name="Count">
-          <get Template="#{this}" />
+          <get Template="(#{this})" />
         </property>
       </class>
       <class name="LinkedList^1" Name="System.LinkedList">

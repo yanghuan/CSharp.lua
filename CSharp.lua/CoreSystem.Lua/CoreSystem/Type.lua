@@ -254,6 +254,8 @@ local function isInterfaceOf(t, ifaceType)
   return false
 end
 
+local isUserdataTypeOf = System.config.isUserdataTypeOf
+
 function isTypeOf(obj, cls)    
   if cls == Object then return true end
   local typename = type(obj)
@@ -280,8 +282,15 @@ function isTypeOf(obj, cls)
     end
   elseif typename == "boolean" then
     return cls == Boolean
-  else 
+  elseif typename == "function" then 
     return cls == Delegate
+  elseif typename == "userdata" then
+    if isUserdataTypeOf then
+      return isUserdataTypeOf(obj, cls)
+    end
+    return true
+  else
+    assert(false)
   end
 end
 

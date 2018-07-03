@@ -1099,10 +1099,5 @@ function System.namespace(name, f)
   curCacheName = nil
 end
 
-local function config(conf) 
-  if conf ~= nil then
-    System.time = conf.time
-  end
-end
+return function (config) System.config = config or {} end
 
-return config

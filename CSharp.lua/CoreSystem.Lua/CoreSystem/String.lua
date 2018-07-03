@@ -35,6 +35,10 @@ local type = type
 local String = string
 String.traceback = System.emptyFn  -- make throw(str) not fail
 
+function String.getLength(this)
+  return #this
+end
+
 local function check(s, startIndex, count)
   local len = #s
   startIndex = startIndex or 0
