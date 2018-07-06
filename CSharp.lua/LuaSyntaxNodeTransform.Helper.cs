@@ -831,7 +831,7 @@ namespace CSharpLua {
     private void RemoveNilArgumentsAtTail(List<LuaExpressionSyntax> arguments) {
       int i;
       for (i = arguments.Count - 1; i >= 0; --i) {
-        if (!IsNilLuaExpression(arguments[i])) {
+        if (!arguments[i].IsNil()) {
           break;
         }
       }
@@ -840,10 +840,6 @@ namespace CSharpLua {
       if (nilArgumentCount > 0) {
         arguments.RemoveRange(nilStartIndex, nilArgumentCount);
       }
-    }
-
-    private bool IsNilLuaExpression(LuaExpressionSyntax expression) {
-      return expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
     }
 
     private void TryRemoveNilArgumentsAtTail(ISymbol symbol, List<LuaExpressionSyntax> arguments) {

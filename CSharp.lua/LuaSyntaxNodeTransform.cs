@@ -641,7 +641,7 @@ namespace CSharpLua {
     private LuaExpressionSyntax GetFieldValueExpression(TypeSyntax type, ITypeSymbol typeSymbol, ExpressionSyntax expression, out bool valueIsLiteral) {
       LuaExpressionSyntax valueExpression = null;
       valueIsLiteral = false;
-      if (expression != null) {
+      if (expression != null && !expression.IsKind(SyntaxKind.NullLiteralExpression)) {
         valueExpression = (LuaExpressionSyntax)expression.Accept(this);
         valueIsLiteral = expression is LiteralExpressionSyntax;
       }

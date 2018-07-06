@@ -769,5 +769,9 @@ namespace CSharpLua {
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
       return new LuaExpressionStatementSyntax(expression);
     }
+
+    public static bool IsNil(this LuaExpressionSyntax expression) {
+      return expression == null || expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
+    }
   }
 }

@@ -159,14 +159,22 @@ namespace CSharpLua.LuaAst {
           if (isReadOnly) {
             local_.Variables.Add(name);
             if (value != null) {
-              LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
-              staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
-              staticAssignmentNames_.Add(name);
+              if (isImmutable) {
+                AddResultTable(name, value);
+              } else {
+                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
+                staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
+                staticAssignmentNames_.Add(name);
+              }
             }
           } else {
             if (value != null) {
-              LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), value);
-              staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
+              if (isImmutable) {
+                AddResultTable(name, value);
+              } else {
+                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), value);
+                staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
+              }
             }
           }
         }

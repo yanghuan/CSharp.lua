@@ -1114,5 +1114,9 @@ function System.namespace(name, f)
   curCacheName = nil
 end
 
-return function (config) System.config = config or {} end
-
+System.config = {}
+return function (config) 
+  if config then
+    System.config = config
+  end
+end
