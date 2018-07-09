@@ -1263,7 +1263,7 @@ namespace CSharpLua {
       }
     }
 
-    public override LuaSyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node) {
+    private LuaExpressionSyntax InternalVisitAssignmentExpression(AssignmentExpressionSyntax node) {
       List<LuaExpressionSyntax> assignments = new List<LuaExpressionSyntax>();
 
       while (true) {
@@ -1288,6 +1288,22 @@ namespace CSharpLua {
         multipleAssignment.Assignments.AddRange(assignments);
         return multipleAssignment;
       }
+    }
+
+    public override LuaSyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node) {
+      var assignment = InternalVisitAssignmentExpression(node);
+      if (node.Parent.IsKind(SyntaxKind.ParenthesizedExpression) || !node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
+        CurBlock.Statements.Add(assignment.ToStatement());
+        if (assignment is LuaLineMultipleExpressionSyntax lineMultipleExpression) {
+          assignment = lineMultipleExpression.Assignments.Last();
+        }
+        if (assignment is LuaAssignmentExpressionSyntax assignmentExpression) {
+          assignment = assignmentExpression.Left;
+        } else {
+          assignment = (LuaExpressionSyntax)node.Left.Accept(this);
+        }
+      }
+      return assignment;
     }
 
     private LuaExpressionSyntax BuildInvokeRefOrOut(InvocationExpressionSyntax node, LuaExpressionSyntax invocation, IEnumerable<LuaExpressionSyntax> refOrOutArguments) {
@@ -2057,16 +2073,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node) {
-      ExpressionSyntax value;
-      if (node.Value.Kind().IsAssignment()) {
-        var assignmentExpression = (AssignmentExpressionSyntax)node.Value;
-        var assignment = (LuaExpressionSyntax)VisitAssignmentExpression(assignmentExpression);
-        CurBlock.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-        value = assignmentExpression.Left;
-      } else {
-        value = node.Value;
-      }
-      var expression = (LuaExpressionSyntax)value.Accept(this);
+      var expression = (LuaExpressionSyntax)node.Value.Accept(this);
       return new LuaEqualsValueClauseSyntax(expression);
     }
 
@@ -2651,8 +2658,8 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
-      CheckPrevIsInvokeStatement();
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      CheckPrevIsInvokeStatement();
       return new LuaParenthesizedExpressionSyntax(expression);
     }
 
