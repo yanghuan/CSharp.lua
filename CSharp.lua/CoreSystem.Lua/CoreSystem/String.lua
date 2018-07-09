@@ -180,6 +180,10 @@ function String.Join(separator, value, startIndex, count)
   return tconcat(t, separator)
 end
 
+local function escape(s)
+  return s:gsub("([%%%^%.])", "%%%1")
+end
+
 local function checkIndexOf(str, value, startIndex, count, comparisonType)
   if value == nil then
     throw(ArgumentNullException("value"))
@@ -197,7 +201,7 @@ function String.LastIndexOf(str, value, startIndex, count, comparisonType)
   if type(value) == "number" then
     value = schar(value)
   end
-  str, value, startIndex = checkIndexOf(str, value, startIndex, count, comparisonType)
+  str, value, startIndex = checkIndexOf(str, escape(value), startIndex, count, comparisonType)
   local index = str:match(".*()" .. value)
   if index then
     return index - 1 + startIndex
@@ -211,7 +215,7 @@ local function indexOfAny(str, chars, startIndex, count)
   end
   startIndex, count = check(str, startIndex, count)
   str = str:sub(startIndex + 1, startIndex + count)
-  return str, "[" .. schar(unpack(chars)) .. "]", startIndex
+  return str, "[" .. escape(schar(unpack(chars))) .. "]", startIndex
 end
 
 function String.LastIndexOfAny(str, chars, startIndex, count)
@@ -303,10 +307,6 @@ function String.ToCharArray(str, startIndex, count)
     tinsert(t, str:byte(i))
   end
   return System.arrayFromTable(t, System.Char)
-end
-
-local function escape(s)
-  return s:gsub("([%%%^%.])", "%%%1")
 end
 
 function String.Replace(this, a, b)
