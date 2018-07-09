@@ -332,7 +332,7 @@ function String.Remove(this, startIndex, count)
 end
 
 function String.Substring(this, startIndex, count)
-  startIndex, count = check(str, startIndex, count)
+  startIndex, count = check(this, startIndex, count)
   return this:sub(startIndex + 1, startIndex + count)
 end
 
