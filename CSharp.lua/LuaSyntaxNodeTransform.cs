@@ -1587,7 +1587,11 @@ namespace CSharpLua {
         bool isGet = !node.Parent.Kind().IsAssignment();
         string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, isGet);
         if (codeTemplate != null) {
-          return BuildCodeTemplateExpression(codeTemplate, node.Expression);
+          var result = BuildCodeTemplateExpression(codeTemplate, node.Expression);
+          if (codeTemplate[0] == '#' && node.Parent.Parent.IsKind(SyntaxKind.InvocationExpression)) {
+            result = new LuaParenthesizedExpressionSyntax(result);
+          }
+          return result;
         }
       }
       return null;
