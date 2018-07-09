@@ -94,6 +94,25 @@ namespace CSharpLua.LuaAst {
       var global = LuaIdentifierNameSyntax.Global;
       LuaTableInitializerExpression table = new LuaTableInitializerExpression();
       foreach (var baseType in baseTypes) {
+        if (baseType is LuaInvocationExpressionSyntax invocation) {
+          var newArguments = new List<(int index, LuaMemberAccessExpressionSyntax expression)>();
+          int index = 0;
+          foreach (var argument in invocation.ArgumentList.Arguments) {
+            var argumentExpression = argument.Expression;
+            if (argumentExpression is LuaIdentifierNameSyntax argumentIdentifier) {
+              if (!argumentIdentifier.ValueText.StartsWith("System")) {
+                var newArgumentExpression = new LuaMemberAccessExpressionSyntax(global, argumentExpression);
+                newArguments.Add((index, newArgumentExpression));
+              }
+            }
+            ++index;
+          }
+
+          foreach (var newArgument in newArguments) {
+            invocation.ArgumentList.Arguments[newArgument.index] = new LuaArgumentSyntax(newArgument.expression);
+          }
+        }
+
         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(global, baseType);
         table.Items.Add(new LuaSingleTableItemSyntax(memberAccess));
       }
