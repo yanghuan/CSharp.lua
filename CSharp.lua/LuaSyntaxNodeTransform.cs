@@ -2487,8 +2487,9 @@ namespace CSharpLua {
     private LuaSyntaxNode BuildPropertyPostfixUnaryExpression(bool isSingleLine, string operatorToken, LuaPropertyAdapterExpressionSyntax get, LuaPropertyAdapterExpressionSyntax set, SyntaxNode node) {
       set.IsGetOrAdd = false;
       if (isSingleLine) {
-        LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(get, operatorToken, LuaIdentifierNameSyntax.One);
-        return new LuaAssignmentExpressionSyntax(set, binary);
+        var binary = new LuaBinaryExpressionSyntax(get, operatorToken, LuaIdentifierNameSyntax.One);
+        set.ArgumentList.AddArgument(binary);
+        return set;
       } else {
         var temp = GetTempIdentifier(node);
         CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, get));
