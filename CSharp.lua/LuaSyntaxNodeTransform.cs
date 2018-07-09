@@ -1659,6 +1659,8 @@ namespace CSharpLua {
                 methodName = new LuaMemberAccessExpressionSyntax(target, methodName);
               }
               return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, target, methodName);
+            } else if (IsDelegateInvoke(symbol, node.Name)) {
+              return BuildMemberAccessExpression(symbol, node.Expression);
             }
           }
 
@@ -1667,6 +1669,10 @@ namespace CSharpLua {
           return new LuaMemberAccessExpressionSyntax(expression, identifier, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
         }
       }
+    }
+
+    private static bool IsDelegateInvoke(ISymbol symbol, SimpleNameSyntax name) {
+      return symbol.ContainingType.IsDelegateType() && name.Identifier.ValueText == "Invoke";
     }
 
     public override LuaSyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {

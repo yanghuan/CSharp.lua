@@ -793,12 +793,9 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitMemberBindingExpression(MemberBindingExpressionSyntax node) {
       ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
-      if (node.Name.Identifier.ValueText == "Invoke") {
-        if (symbol.ContainingType.IsDelegateType()) {
-          return conditionalTemps_.Peek();
-        }
+      if (IsDelegateInvoke(symbol, node.Name)) {
+        return conditionalTemps_.Peek();
       }
-
       var nameExpression = (LuaExpressionSyntax)node.Name.Accept(this);
       return new LuaMemberAccessExpressionSyntax(conditionalTemps_.Peek(), nameExpression, symbol.Kind == SymbolKind.Method);
     }
