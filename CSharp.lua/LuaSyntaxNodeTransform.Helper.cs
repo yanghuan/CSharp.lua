@@ -716,7 +716,7 @@ namespace CSharpLua {
         switch (node.Parent.Kind()) {
           case SyntaxKind.Argument: {
               var symbol = semanticModel_.GetSymbolInfo(node.Parent.Parent.Parent).Symbol;
-              if (symbol != null && !symbol.IsFromCode()) {
+              if (symbol != null && symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
                 break;
               }
               need = true;
@@ -730,7 +730,7 @@ namespace CSharpLua {
               var assignment = (AssignmentExpressionSyntax)node.Parent;
               if (assignment.Right == node) {
                 var symbol = semanticModel_.GetSymbolInfo(assignment.Left).Symbol;
-                if (symbol != null && !symbol.IsFromCode()) {
+                if (symbol != null && symbol.IsFromAssembly()) {
                   break;
                 }
                 need = true;

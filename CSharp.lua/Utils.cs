@@ -280,6 +280,10 @@ namespace CSharpLua {
       return !symbol.DeclaringSyntaxReferences.IsEmpty;
     }
 
+    public static bool IsFromAssembly(this ISymbol symbol) {
+      return !symbol.IsFromCode();
+    }
+
     public static bool IsOverridable(this ISymbol symbol) {
       return !symbol.IsStatic && (symbol.IsAbstract || symbol.IsVirtual || symbol.IsOverride);
     }
@@ -764,6 +768,17 @@ namespace CSharpLua {
         return Array.Empty<INamespaceSymbol>();
       }
       return InternalGetAllNamespaces(symbol).Reverse();
+    }
+
+    public static bool IsCollectionType(this INamedTypeSymbol symbol) {
+      INamespaceSymbol containingNamespace = symbol.ContainingNamespace;
+      while (!containingNamespace.IsGlobalNamespace) {
+        if (containingNamespace.Name == "Collections" && containingNamespace.ContainingNamespace.Name == "System") {
+          return true;
+        }
+        containingNamespace = containingNamespace.ContainingNamespace;
+      }
+      return false;
     }
 
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
