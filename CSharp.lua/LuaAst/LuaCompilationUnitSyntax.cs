@@ -86,42 +86,83 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private void CheckUsingDeclares() {
+    /// <summary>
+    /// Sorts and adds all using statements at the start of the file to the Lua file and adds a call to System.usingDeclare to define the variabeles created.
+    /// </summary>
+    private void CheckUsingDeclares()
+    {
       var imports = usingDeclares_.Where(i => !i.IsFromCode).ToList();
-      if (imports.Count > 0) {
+      if (imports.Count > 0)
+      {
         imports.Sort((x, y) => x.Prefix.CompareTo(y.Prefix));
-        foreach (var import in imports) {
+        foreach (var import in imports)
+        {
           AddImport(new LuaIdentifierNameSyntax(import.NewPrefix), new LuaIdentifierNameSyntax(import.Prefix));
         }
       }
 
+      // Get all using statements in the file
       var usingDeclares = usingDeclares_.Where(i => i.IsFromCode).ToList();
-      if (usingDeclares.Count > 0) {
+      if (usingDeclares.Count > 0)
+      {
+
+        // Sort all using statements
         usingDeclares.Sort((x, y) => x.Prefix.CompareTo(y.Prefix));
-        foreach (var usingDeclare in usingDeclares) {
-          AddImport(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), null);
+
+        // Insert an local variabele definition for each using statement
+        foreach (var usingDeclare in usingDeclares)
+        {
+          AddImport(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), null); // local Import
         }
 
+        // Create the System.usingDeclare anonymous function for this Lua file
         var global = LuaIdentifierNameSyntax.Global;
         LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+        // Add the global parameter to the function we can use for accessing namespaces
         functionExpression.AddParameter(global);
-        foreach (var usingDeclare in usingDeclares) {
-          if (usingDeclare.Prefix != usingDeclare.NewPrefix) {
-            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), new LuaIdentifierNameSyntax(usingDeclare.Prefix));
-            functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-          } else {
-            LuaMemberAccessExpressionSyntax right = new LuaMemberAccessExpressionSyntax(global, new LuaIdentifierNameSyntax(usingDeclare.Prefix));
-            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), right);
-            functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+
+        // Determine how each local variabele we created for each usingDeclare will be defined
+        foreach (var usingDeclare in usingDeclares)
+        {
+          LuaAssignmentExpressionSyntax assignment;
+
+          var root = "";
+          try
+          {
+            // Find the string representation of the root namepsace of the usingdeclare
+            root = usingDeclare.Prefix.Substring(0, usingDeclare.Prefix.IndexOf('.'));
           }
+          catch (ArgumentOutOfRangeException)
+          {
+          }
+
+          // If the using declare is a root namespace
+          if (usingDeclare.Prefix == usingDeclare.NewPrefix
+              // or No parent namespace of the current using declare was defined
+              || !usingDeclares.Exists(x => x.Prefix == root))
+          {
+            // Global is needed to find the namespace
+            LuaMemberAccessExpressionSyntax right = new LuaMemberAccessExpressionSyntax(global, new LuaIdentifierNameSyntax(usingDeclare.Prefix));
+            assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), right);
+          }
+          else
+          {
+            // A usingdeclare of the root namespace of the current usingdeclare was found, so no need to use global
+            assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), new LuaIdentifierNameSyntax(usingDeclare.Prefix));
+          }
+
+          // Add the local variabele assignment to the usingDeclare function body
+          functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
         }
 
+        // End the anonymous function we passed to System.usingDeclare and close the parameter bracket
         LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.UsingDeclare, functionExpression);
         importAreaStatements.Statements.Add(new LuaExpressionStatementSyntax(invocationExpression));
       }
 
       int index = Statements.FindIndex(i => i is LuaNamespaceDeclarationSyntax);
-      if (index != -1) {
+      if (index != -1)
+      {
         Statements.Insert(index, importAreaStatements);
       }
     }
