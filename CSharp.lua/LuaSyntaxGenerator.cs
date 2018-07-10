@@ -81,7 +81,7 @@ namespace CSharpLua {
     public XmlMetaProvider XmlMetaProvider { get; }
     public SettingInfo Setting { get; set; }
     private HashSet<string> exportEnums_ = new HashSet<string>();
-    private bool isExportAttributesAll_;
+    private readonly bool isExportAttributesAll_;
     private HashSet<string> exportAttributes_;
     private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
     private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
@@ -1236,9 +1236,9 @@ namespace CSharpLua {
 
     internal bool IsPropertyFieldOrEventFiled(ISymbol symbol) {
       if (symbol is IPropertySymbol propertySymbol) {
-        return propertySymbol.IsPropertyField();
+        return IsPropertyField(propertySymbol);
       } else if (symbol is IEventSymbol eventSymbol) {
-        return eventSymbol.IsEventFiled();
+        return IsEventFiled(eventSymbol);
       }
       return false;
     }
@@ -1293,14 +1293,14 @@ namespace CSharpLua {
       return new LuaIdentifierNameSyntax(GetTypeRefactorName(typeSymbol) ?? name);
     }
 
-    internal LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
+    internal LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null, bool isGetInheritTypeName = false) {
       if (symbol.Kind == SymbolKind.TypeParameter) {
         return new LuaIdentifierNameSyntax(symbol.Name);
       }
 
       if (symbol.Kind == SymbolKind.ArrayType) {
         var arrayType = (IArrayTypeSymbol)symbol;
-        LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
+        LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor, isGetInheritTypeName);
         return new LuaInvocationExpressionSyntax(arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray, elementTypeExpression);
       }
 
@@ -1325,8 +1325,8 @@ namespace CSharpLua {
         return LuaIdentifierNameSyntax.TupleType;
       }
 
-      LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor);
-      var typeArguments = GetTypeArguments(namedTypeSymbol, transfor);
+      LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor, isGetInheritTypeName);
+      var typeArguments = GetTypeArguments(namedTypeSymbol, transfor, isGetInheritTypeName);
       if (typeArguments.Count == 0) {
         return baseTypeName;
       } else {
@@ -1336,24 +1336,24 @@ namespace CSharpLua {
       }
     }
 
-    private List<LuaExpressionSyntax> GetTypeArguments(INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
+    private List<LuaExpressionSyntax> GetTypeArguments(INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor, bool isGetInheritTypeName) {
       List<LuaExpressionSyntax> typeArguments = new List<LuaExpressionSyntax>();
-      FillExternalTypeArgument(typeArguments, typeSymbol, transfor);
-      FillTypeArguments(typeArguments, typeSymbol, transfor);
+      FillExternalTypeArgument(typeArguments, typeSymbol, transfor, isGetInheritTypeName);
+      FillTypeArguments(typeArguments, typeSymbol, transfor, isGetInheritTypeName);
       return typeArguments;
     }
 
-    private void FillExternalTypeArgument(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
+    private void FillExternalTypeArgument(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor, bool isGetInheritTypeName) {
       var externalType = typeSymbol.ContainingType;
       if (externalType != null) {
-        FillExternalTypeArgument(typeArguments, externalType, transfor);
-        FillTypeArguments(typeArguments, externalType, transfor);
+        FillExternalTypeArgument(typeArguments, externalType, transfor, isGetInheritTypeName);
+        FillTypeArguments(typeArguments, externalType, transfor, isGetInheritTypeName);
       }
     }
 
-    private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
+    private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor, bool isGetInheritTypeName) {
       foreach (var typeArgument in typeSymbol.TypeArguments) {
-        LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
+        LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor, isGetInheritTypeName);
         typeArguments.Add(typeArgumentExpression);
       }
     }
@@ -1367,14 +1367,18 @@ namespace CSharpLua {
       }
     }
 
-    internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
+    internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null, bool isGetInheritTypeName = false) {
       INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
       string name = typeSymbol.GetTypeShortName(GetNamespaceMapName, GetTypeRefactorName);
       string newName = XmlMetaProvider.GetTypeMapName(typeSymbol, name);
       if (newName != null) {
         name = newName;
       }
-      transfor?.ImportTypeName(ref name, symbol);
+      if (isGetInheritTypeName && typeSymbol.IsFromCode()) {
+        name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
+      } else {
+        transfor?.ImportTypeName(ref name, symbol);
+      }
       return new LuaIdentifierNameSyntax(name);
     }
 

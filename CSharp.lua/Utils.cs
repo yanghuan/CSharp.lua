@@ -354,6 +354,11 @@ namespace CSharpLua {
               if (isField) {
                 if (symbol.IsInterfaceImplementation()) {
                   isField = false;
+                } else {
+                  var documentTrivia = property.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
+                  if (documentTrivia != null && documentTrivia.HasIgnoreAttribute()) {
+                    isField = false;
+                  }
                 }
               }
               return isField;
@@ -371,6 +376,11 @@ namespace CSharpLua {
       }
       return false;
     }
+
+    private static bool HasIgnoreAttribute(this SyntaxTrivia trivia) {
+      return trivia.ToString().Contains(LuaDocumentStatement.kNoField);
+    }
+
     public static bool IsEventFiled(this IEventSymbol symbol) {
       if (!symbol.IsFromCode() || symbol.IsOverridable()) {
         return false;

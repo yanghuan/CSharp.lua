@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -196,6 +197,9 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaDocumentStatement : LuaStatementSyntax {
+    private const string kAttributePrefix = "@CSharpLua.";
+    public const string kNoField = kAttributePrefix + nameof(AttributeFlags.NoField);
+
     [Flags]
     public enum AttributeFlags {
       None = 0,
@@ -203,52 +207,99 @@ namespace CSharpLua.LuaAst {
       NoField = 1 << 1,
     }
 
-    private static readonly Dictionary<string, AttributeFlags> attributes_ = new Dictionary<string, AttributeFlags>();
-    public readonly List<string> texts = new List<string>();
-    public AttributeFlags Attr { get; private set; }
-    public bool IsEmpty => texts.Count == 0;
-
-    static LuaDocumentStatement() {
-      var t = typeof(AttributeFlags);
-      foreach (AttributeFlags value in Enum.GetValues(t)) {
-        if (value != AttributeFlags.None) {
-          string name = Enum.GetName(t, value);
-          attributes_.Add($"@CSharpLua.{name}", value);
-        }
-      }
-    }
+    public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();
+    public bool IsEmpty => Statements.Count == 0;
+    private AttributeFlags attr_;
+    public bool HasIgnoreAttribute => attr_.HasFlag(AttributeFlags.Ignore);
 
     public LuaDocumentStatement() {
     }
 
     public LuaDocumentStatement(string triviaText) {
-      var array = triviaText.Replace("///", string.Empty).Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-      foreach (string comment in array) {
-        Add(comment);
+      var items = triviaText.Replace("///", string.Empty)
+        .Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(i => i.Trim()).ToList();
+
+      int curIndex = 0;
+      while (curIndex < items.Count) {
+        int beginIndex = items.FindIndex(curIndex, i => i == Tokens.OpenSummary);
+        if (beginIndex != -1) {
+          AddLineText(items, curIndex, beginIndex);
+          int endIndex = items.FindIndex(beginIndex + 1, it => it == Tokens.CloseSummary);
+          Contract.Assert(endIndex != -1);
+          LuaSummaryDocumentStatement summary = new LuaSummaryDocumentStatement();
+          bool hasAttr = false;
+          for (int i = beginIndex + 1; i < endIndex; ++i) {
+            string text = items[i];
+            if (IsAttribute(text, out AttributeFlags arrt)) {
+              attr_ |= arrt;
+              hasAttr = true;
+            } else {
+              summary.Texts.Add(text);
+            }
+          }
+          if (summary.Texts.Count > 0 || !hasAttr) {
+            Statements.Add(summary);
+          }
+          curIndex = endIndex + 1;
+        } else {
+          AddLineText(items, curIndex, items.Count);
+          curIndex = items.Count;
+        }
       }
     }
 
-    private void Add(string text) {
-      text = text.Trim();
-      if (text[0] == '@') {
-        var attr = attributes_.GetOrDefault(text);
-        if (attr != AttributeFlags.None) {
-          Attr |= attr;
-        } else {
-          texts.Add(text);
-        }
-      } else {
-        texts.Add(text);
+    private void AddLineText(List<string> items, int beginIndex, int endIndex) {
+      for (int i = beginIndex + 1; i < endIndex; ++i) {
+        string text = items[i];
+        Statements.Add(new LuaLineDocumentStatement(text));
       }
+    }
+
+    private static bool IsAttribute(string text, out AttributeFlags attr) {
+      attr = AttributeFlags.None;
+      int index = text.IndexOf(kAttributePrefix);
+      if (index != -1) {
+        string s = text.Substring(index + kAttributePrefix.Length);
+        if(Enum.TryParse(s, out attr)) {
+          return true;
+        } else {
+          throw new CompilationErrorException($"{s} is not define attribute");
+        }
+      }
+      return false;
     }
 
     public void Add(LuaDocumentStatement document) {
-      texts.AddRange(document.texts);
-      Attr |= document.Attr;
+      Statements.AddRange(document.Statements);
+      attr_ |= document.attr_;
     }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
   }
+
+  public sealed class LuaSummaryDocumentStatement : LuaStatementSyntax {
+    public string OpenSummary = Tokens.OpenSummary;
+    public string CloseSummary = Tokens.CloseSummary;
+    public readonly List<string> Texts = new List<string>();
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaLineDocumentStatement : LuaStatementSyntax {
+    public string Text { get; }
+
+    public LuaLineDocumentStatement(string text) {
+      Text = text;
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
 }

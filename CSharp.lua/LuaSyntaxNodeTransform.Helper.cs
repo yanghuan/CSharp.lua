@@ -543,7 +543,7 @@ namespace CSharpLua {
     }
 
     internal void ImportTypeName(ref string name, ISymbol symbol) {
-      if (baseNameNodeCounter_ == 0) {
+      if (!IsGetInheritTypeName) {
         int pos = name.LastIndexOf('.');
         if (pos != -1) {
           string prefix = name.Substring(0, pos);
@@ -569,7 +569,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax GetTypeName(ISymbol symbol) {
-      return generator_.GetTypeName(symbol, this);
+      return generator_.GetTypeName(symbol, this, IsGetInheritTypeName);
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
@@ -630,9 +630,9 @@ namespace CSharpLua {
       INamedTypeSymbol typeDeclarationSymbol = GetTypeDeclarationSymbol(node);
       generator_.AddTypeDeclarationAttribute(typeDeclarationSymbol, typeSymbol);
 
-      ++baseNameNodeCounter_;
+      ++inheritNameNodeCounter_;
       var expression = GetTypeName(typeSymbol);
-      --baseNameNodeCounter_;
+      --inheritNameNodeCounter_;
       LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.Global, expression));
 
       if (node.ArgumentList != null) {
@@ -765,10 +765,10 @@ namespace CSharpLua {
       return null;
     }
 
-    private LuaExpressionSyntax BuildBaseTypeName(BaseTypeSyntax baseType) {
-      ++baseNameNodeCounter_;
+    private LuaExpressionSyntax BuildInheritTypeName(BaseTypeSyntax baseType) {
+      ++inheritNameNodeCounter_;
       var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
-      --baseNameNodeCounter_;
+      --inheritNameNodeCounter_;
       return baseTypeName;
     }
 

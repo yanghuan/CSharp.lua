@@ -818,10 +818,10 @@ end
 
 function System.event(name)
   local function add(this, v)
-    this[name] = System.combine(this[name], v)
+    this[name] = this[name] + v
   end
   local function remove(this, v)
-    this[name] = System.remove(this[name], v)
+    this[name] = this[name] - v
   end
   return add, remove
 end

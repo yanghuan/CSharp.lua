@@ -108,7 +108,7 @@ namespace CSharpLua.LuaAst {
         // Insert an local variabele definition for each using statement
         foreach (var import in imports)
         {
-          AddImport(new LuaIdentifierNameSyntax(import.NewPrefix), null); // Lua code: 'local ImportName'
+          AddImport(new LuaIdentifierNameSyntax(import.NewPrefix), new LuaIdentifierNameSyntax(import.Prefix)); // Lua code: 'local ImportName'
         }
       }
 
@@ -130,7 +130,7 @@ namespace CSharpLua.LuaAst {
       functionExpression.AddParameter(global);
 
       // Determine how each local variabele we created for each usingDeclare will be defined
-      foreach (var usingDeclare in usingDeclares_) // loop trough both imports and other using declares
+      foreach (var usingDeclare in usingDeclares) // loop trough both imports and other using declares
       {
         LuaAssignmentExpressionSyntax assignment;
 

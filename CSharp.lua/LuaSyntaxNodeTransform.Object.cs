@@ -894,7 +894,6 @@ namespace CSharpLua {
 
       PopFunction();
       methodInfos_.Pop();
-
     }
 
     public override LuaSyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node) {
