@@ -753,6 +753,10 @@ namespace CSharpLua {
               bool isReadOnly = IsReadOnlyProperty(node);
               AddField(fieldName, typeSymbol, node.Type, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
             } else {
+              if (!isPrivate) {
+                var attributes = BuildAttributes(node.AttributeLists);
+                CurType.AddFieldAttributes(new LuaIdentifierNameSyntax(node.Identifier.ValueText), attributes);
+              }
               LuaIdentifierNameSyntax propertyName = GetMemberName(symbol);
               LuaIdentifierNameSyntax innerName = AddInnerName(symbol);
               LuaExpressionSyntax valueExpression = GetFieldValueExpression(node.Type, typeSymbol, node.Initializer?.Value, out bool valueIsLiteral);
