@@ -690,7 +690,9 @@ namespace CSharpLua {
                 var block = (LuaBlockSyntax)accessor.Body.Accept(this);
                 functionExpression.AddStatements(block.Statements);
               } else {
+                blocks_.Push(functionExpression.Body);
                 var bodyExpression = (LuaExpressionSyntax)accessor.ExpressionBody.Accept(this);
+                blocks_.Pop();
                 if (isGet) {
                   functionExpression.AddStatement(new LuaReturnStatementSyntax(bodyExpression));
                 } else {
@@ -1290,9 +1292,27 @@ namespace CSharpLua {
       }
     }
 
+    private static bool IsInlineAssignment(AssignmentExpressionSyntax node) {
+      bool isInlineAssignment = false;
+      SyntaxKind kind = node.Parent.Kind();
+      if (kind == SyntaxKind.ParenthesizedExpression) {
+        isInlineAssignment = true;
+      } else {
+        switch (kind) {
+          case SyntaxKind.ExpressionStatement:
+          case SyntaxKind.ArrowExpressionClause:
+            break;
+          default:
+            isInlineAssignment = true;
+            break;
+        }
+      }
+      return isInlineAssignment;
+    }
+
     public override LuaSyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node) {
       var assignment = InternalVisitAssignmentExpression(node);
-      if (node.Parent.IsKind(SyntaxKind.ParenthesizedExpression) || !node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
+      if (IsInlineAssignment(node)) {
         CurBlock.Statements.Add(assignment.ToStatement());
         if (assignment is LuaLineMultipleExpressionSyntax lineMultipleExpression) {
           assignment = lineMultipleExpression.Assignments.Last();
