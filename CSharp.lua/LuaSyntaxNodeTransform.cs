@@ -221,7 +221,7 @@ namespace CSharpLua {
       typeDeclarations_.Push(typeDeclaration);
 
       var comments = BuildDocumentationComment(node);
-      typeDeclaration.AddDocumentComments(comments);
+      typeDeclaration.AddDocument(comments);
 
       var attributes = BuildAttributes(node.AttributeLists);
       typeDeclaration.AddClassAttributes(attributes);
@@ -301,8 +301,8 @@ namespace CSharpLua {
       List<LuaExpressionSyntax> attributes = new List<LuaExpressionSyntax>();
       foreach (var typeDeclaration in typeDeclarations) {
         semanticModel_ = generator_.GetSemanticModel(typeDeclaration.Node.SyntaxTree);
-        var comments = BuildDocumentationComment(typeDeclaration.Node);
-        major.TypeDeclaration.AddDocumentComments(comments);
+        var document = BuildDocumentationComment(typeDeclaration.Node);
+        major.TypeDeclaration.AddDocument(document);
 
         var expressions = BuildAttributes(typeDeclaration.Node.AttributeLists);
         attributes.AddRange(expressions);
@@ -392,8 +392,8 @@ namespace CSharpLua {
       GetTypeDeclarationName(node, out var name, out var typeSymbol);
       LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(typeSymbol.ToString(), name, CurCompilationUnit);
       typeDeclarations_.Push(enumDeclaration);
-      var comments = BuildDocumentationComment(node);
-      enumDeclaration.AddDocumentComments(comments);
+      var document = BuildDocumentationComment(node);
+      enumDeclaration.AddDocument(document);
       foreach (var member in node.Members) {
         var statement = (LuaKeyValueTableItemSyntax)member.Accept(this);
         enumDeclaration.Add(statement);
@@ -440,7 +440,7 @@ namespace CSharpLua {
       public LuaFunctionExpressionSyntax Function;
       public bool IsPrivate;
       public LuaIdentifierNameSyntax Name;
-      public List<LuaStatementSyntax> Comments;
+      public LuaDocumentStatement Document;
     }
 
     private MethodDeclarationResult BuildMethodDeclaration(CSharpSyntaxNode node, SyntaxList<AttributeListSyntax> attributeLists, ParameterListSyntax parameterList, TypeParameterListSyntax typeParameterList, BlockSyntax body, ArrowExpressionClauseSyntax expressionBody, TypeSyntax returnType) {
@@ -459,7 +459,7 @@ namespace CSharpLua {
       LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
       PushFunction(function);
 
-      var comments = BuildDocumentationComment(node);
+      var document = BuildDocumentationComment(node);
       bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
       if (!symbol.IsStatic) {
         function.AddParameter(LuaIdentifierNameSyntax.This);
@@ -519,14 +519,14 @@ namespace CSharpLua {
         Name = methodName,
         Function = function,
         IsPrivate = isPrivate,
-        Comments = comments,
+        Document = document,
       };
     }
 
     public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
       if (!node.Modifiers.IsAbstract()) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
-        CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Symbol.IsStaticLazy(), result.Comments);
+        CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Symbol.IsStaticLazy(), result.Document);
         return result.Function;
       }
       return base.VisitMethodDeclaration(node);

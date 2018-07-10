@@ -957,14 +957,14 @@ namespace CSharpLua {
       var body = parentNode.IsKind(SyntaxKind.MethodDeclaration) ? ((MethodDeclarationSyntax)parentNode).Body : ((LocalFunctionStatementSyntax)parentNode).Body;
       bool isOnlyOne = body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
       if (isOnlyOne) {
-        return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Comments);
+        return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Document);
       } else {
         var block = blocks_.Peek();
         block.AddLocalArea(result.Name);
         var localVar = new LuaAssignmentExpressionSyntax(result.Name, result.Function).ToStatement();
-        if (result.Comments.Count > 0) {
+        if (result.Document != null && !result.Document.IsEmpty) {
           LuaStatementListSyntax statementList = new LuaStatementListSyntax();
-          statementList.Statements.AddRange(result.Comments);
+          statementList.Statements.Add(result.Document);
           statementList.Statements.Add(localVar);
           return statementList;
         } else {

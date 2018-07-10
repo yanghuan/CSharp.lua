@@ -565,6 +565,23 @@ namespace CSharpLua {
       node.GotoStatement.Render(this);
     }
 
+    internal void Render(LuaDocumentStatement node) {
+      if (!node.IsEmpty) {
+        bool isFirst = true;
+        foreach (string text in node.texts) {
+          if (isFirst) {
+            isFirst = false;
+          } else {
+            WriteNewLine();
+          }
+          Write(LuaSyntaxNode.Tokens.ShortComment);
+          WriteSpace();
+          Write(text);
+        }
+        WriteNewLine();
+      }
+    }
+
     internal void Render(LuaCodeTemplateExpressionSyntax node) {
       WriteNodes(node.Expressions);
     }

@@ -44,7 +44,7 @@ namespace CSharpLua.LuaAst {
 
     private List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
     private LuaTableInitializerExpression attributes_ = new LuaTableInitializerExpression();
-    private List<LuaStatementSyntax> documentComments_ = new List<LuaStatementSyntax>();
+    private LuaDocumentStatement document_ = new LuaDocumentStatement();
 
     public LuaTypeDeclarationSyntax() {
     }
@@ -55,8 +55,10 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    internal void AddDocumentComments(List<LuaStatementSyntax> commets) {
-      documentComments_.AddRange(commets);
+    internal void AddDocument(LuaDocumentStatement document) {
+      if (document != null) {
+        document_.Add(document);
+      }
     }
 
     internal void AddClassAttributes(List<LuaExpressionSyntax> attributes) {
@@ -137,13 +139,11 @@ namespace CSharpLua.LuaAst {
       resultTable_.Items.Add(item);
     }
 
-    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, bool isStaticLazy = false, List<LuaStatementSyntax> documentationComments = null) {
+    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, bool isStaticLazy = false, LuaDocumentStatement document = null) {
       local_.Variables.Add(name);
       LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, method);
-      if (documentationComments != null && documentationComments.Count > 0) {
-        LuaStatementListSyntax statementList = new LuaStatementListSyntax();
-        statementList.Statements.AddRange(documentationComments);
-        methodList_.Statements.Add(statementList);
+      if (document != null && !document.IsEmpty) {
+        methodList_.Statements.Add(document);
       }
       methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
       if (!isPrivate) {
@@ -395,10 +395,7 @@ namespace CSharpLua.LuaAst {
         return;
       }
 
-      foreach (var comment in documentComments_) {
-        comment.Render(renderer);
-      }
-
+      document_.Render(renderer);
       if (typeParameters_.Count > 0) {
         LuaFunctionExpressionSyntax wrapFunction = new LuaFunctionExpressionSyntax();
         foreach (var type in typeParameters_) {

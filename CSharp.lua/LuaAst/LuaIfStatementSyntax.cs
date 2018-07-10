@@ -32,10 +32,7 @@ namespace CSharpLua.LuaAst {
     public string CloseParenToken => Tokens.End;
 
     public LuaIfStatementSyntax(LuaExpressionSyntax condition) {
-      if (condition == null) {
-        throw new ArgumentNullException(nameof(condition));
-      }
-      Condition = condition;
+      Condition = condition ?? throw new ArgumentNullException(nameof(condition));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -50,10 +47,7 @@ namespace CSharpLua.LuaAst {
     public readonly LuaBlockSyntax Body = new LuaBlockSyntax();
 
     public LuaElseIfStatementSyntax(LuaExpressionSyntax condition) {
-      if (condition == null) {
-        throw new ArgumentNullException(nameof(condition));
-      }
-      Condition = condition;
+      Condition = condition ?? throw new ArgumentNullException(nameof(condition)); ;
     }
 
     internal override void Render(LuaRenderer renderer) {

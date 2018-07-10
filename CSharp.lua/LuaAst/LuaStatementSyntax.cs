@@ -194,4 +194,61 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
   }
+
+  public sealed class LuaDocumentStatement : LuaStatementSyntax {
+    [Flags]
+    public enum AttributeFlags {
+      None = 0,
+      Ignore = 1 << 0,
+      NoField = 1 << 1,
+    }
+
+    private static readonly Dictionary<string, AttributeFlags> attributes_ = new Dictionary<string, AttributeFlags>();
+    public readonly List<string> texts = new List<string>();
+    public AttributeFlags Attr { get; private set; }
+    public bool IsEmpty => texts.Count == 0;
+
+    static LuaDocumentStatement() {
+      var t = typeof(AttributeFlags);
+      foreach (AttributeFlags value in Enum.GetValues(t)) {
+        if (value != AttributeFlags.None) {
+          string name = Enum.GetName(t, value);
+          attributes_.Add($"@CSharpLua.{name}", value);
+        }
+      }
+    }
+
+    public LuaDocumentStatement() {
+    }
+
+    public LuaDocumentStatement(string triviaText) {
+      var array = triviaText.Replace("///", string.Empty).Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+      foreach (string comment in array) {
+        Add(comment);
+      }
+    }
+
+    private void Add(string text) {
+      text = text.Trim();
+      if (text[0] == '@') {
+        var attr = attributes_.GetOrDefault(text);
+        if (attr != AttributeFlags.None) {
+          Attr |= attr;
+        } else {
+          texts.Add(text);
+        }
+      } else {
+        texts.Add(text);
+      }
+    }
+
+    public void Add(LuaDocumentStatement document) {
+      texts.AddRange(document.texts);
+      Attr |= document.Attr;
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
 }

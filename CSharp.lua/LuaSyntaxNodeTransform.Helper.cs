@@ -753,24 +753,16 @@ namespace CSharpLua {
       }
     }
 
-    private List<LuaStatementSyntax> BuildDocumentationComment(CSharpSyntaxNode node) {
-      List<LuaStatementSyntax> comments = new List<LuaStatementSyntax>();
+    private LuaDocumentStatement BuildDocumentationComment(CSharpSyntaxNode node) {
       foreach (var trivia in node.GetLeadingTrivia()) {
         if (trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)) {
           string triviaText = trivia.ToString();
           if (!string.IsNullOrWhiteSpace(triviaText)) {
-            string shortComment = LuaSyntaxNode.Tokens.ShortComment;
-            var array = triviaText.Replace("///", string.Empty).Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            LuaStatementListSyntax codes = new LuaStatementListSyntax();
-            foreach (string comment in array) {
-              var commentExpression = new LuaIdentifierNameSyntax(shortComment + ' ' + comment.Trim());
-              codes.Statements.Add(new LuaExpressionStatementSyntax(commentExpression));
-            }
-            comments.Add(codes);
+            return new LuaDocumentStatement(triviaText);
           }
         }
       }
-      return comments;
+      return null;
     }
 
     private LuaExpressionSyntax BuildBaseTypeName(BaseTypeSyntax baseType) {
