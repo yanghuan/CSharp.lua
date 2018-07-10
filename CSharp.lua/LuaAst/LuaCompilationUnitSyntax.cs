@@ -147,7 +147,7 @@ namespace CSharpLua.LuaAst {
         // If the using declare is a root namespace
         if (usingDeclare.Prefix == usingDeclare.NewPrefix
             // or No parent namespace of the current using declare was defined
-            || !usingDeclares.Exists(x => x.Prefix == root))
+            || !usingDeclares_.Exists(x => x.Prefix == root))
         {
           // Global is needed to find the namespace
           LuaMemberAccessExpressionSyntax right = new LuaMemberAccessExpressionSyntax(global, new LuaIdentifierNameSyntax(usingDeclare.Prefix));
