@@ -217,7 +217,7 @@ namespace CSharpLua.LuaAst {
 
     public LuaDocumentStatement(string triviaText) {
       var items = triviaText.Replace("///", string.Empty)
-        .Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+        .Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
         .Select(i => i.Trim()).ToList();
 
       int curIndex = 0;
