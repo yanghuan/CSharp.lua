@@ -631,11 +631,13 @@ namespace CSharpLua {
         ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
         if (typeSymbol.SpecialType == SpecialType.System_String) {
           foreach (var variable in node.Declaration.Variables) {
-            var value = (LiteralExpressionSyntax)variable.Initializer.Value;
-            if (value.Token.ValueText.Length > kStringConstInlineCount) {
+            var constValue = semanticModel_.GetConstantValue(variable.Initializer.Value);
+            Contract.Assert(constValue.HasValue);
+            string v = (string)constValue.Value;
+            if (v.Length > kStringConstInlineCount) {
               var variableSymbol = semanticModel_.GetDeclaredSymbol(variable);
               LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
-              AddField(fieldName, typeSymbol, type, value, true, true, isPrivate, true, node.AttributeLists);
+              AddField(fieldName, typeSymbol, type, variable.Initializer.Value, true, true, isPrivate, true, node.AttributeLists);
             }
           }
         }
@@ -1705,6 +1707,13 @@ namespace CSharpLua {
         return new LuaMemberAccessExpressionSyntax(expression, name, node.Parent.IsKind(SyntaxKind.InvocationExpression));
       }
 
+      if (symbol.Kind == SymbolKind.NamedType) {
+        var expressionSymbol = semanticModel_.GetSymbolInfo(node.Expression).Symbol;
+        if (expressionSymbol.Kind == SymbolKind.Namespace) {
+          return node.Name.Accept(this); 
+        }
+      }
+
       var luaExpression = InternalVisitMemberAccessExpression(symbol, node);
       CheckConversion(node, ref luaExpression);
       return luaExpression;
@@ -1921,13 +1930,6 @@ namespace CSharpLua {
             break;
           }
         case SymbolKind.NamedType: {
-            if (node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-              var parent = (MemberAccessExpressionSyntax)node.Parent;
-              if (parent.Name == node) {
-                identifier = new LuaIdentifierNameSyntax(symbol.Name);
-                break;
-              }
-            }
             identifier = GetTypeName(symbol);
             break;
           }
