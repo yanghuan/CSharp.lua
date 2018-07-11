@@ -194,14 +194,14 @@ local function checkIndexOf(str, value, startIndex, count, comparisonType)
     str = str:lower()
     value = value:lower()
   end
-  return str, value, startIndex
+  return str, escape(value), startIndex
 end
 
 function String.LastIndexOf(str, value, startIndex, count, comparisonType)
   if type(value) == "number" then
     value = schar(value)
   end
-  str, value, startIndex = checkIndexOf(str, escape(value), startIndex, count, comparisonType)
+  str, value, startIndex = checkIndexOf(str, value, startIndex, count, comparisonType)
   local index = str:match(".*()" .. value)
   if index then
     return index - 1 + startIndex
