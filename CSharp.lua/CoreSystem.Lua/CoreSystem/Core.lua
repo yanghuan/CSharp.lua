@@ -29,7 +29,7 @@ local floor = math.floor
 local ceil = math.ceil
 local error = error
 local select = select
-local pcall = pcall
+local xpcall = xpcall
 local rawget = rawget
 local rawset = rawset
 local tostring = tostring
@@ -54,15 +54,20 @@ local function throw(e, lv)
   error(e)
 end
 
+local function xpcallErr(e)
+  if type(e) == "string" then
+    e = System.Exception(e)
+    e:traceback()
+    return e
+  end
+end
+
 local function try(try, catch, finally)
-  local ok, status, result = pcall(try)
+  local ok, status, result = xpcall(try, xpcallErr)
   if not ok then
     if catch then
-      if type(status) == "string" then
-        status = System.Exception(status)
-      end
       if finally then
-        ok, status, result = pcall(catch, status)
+        ok, status, result = xpcall(catch, xpcallErr, status)
       else
         ok, status, result = true, catch(status)
       end
@@ -78,7 +83,7 @@ local function try(try, catch, finally)
     finally()
   end
   if not ok then
-    throw(status)
+    error(status)
   end
   return status, result
 end
