@@ -161,7 +161,9 @@ namespace CSharpLua.LuaAst {
             local_.Variables.Add(name);
             if (value != null) {
               if (isImmutable) {
-                AddResultTable(name, value);
+                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
+                methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+                AddResultTable(name);
               } else {
                 LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
                 staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
