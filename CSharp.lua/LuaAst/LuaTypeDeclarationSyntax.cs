@@ -45,6 +45,7 @@ namespace CSharpLua.LuaAst {
     private List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
     private LuaTableInitializerExpression attributes_ = new LuaTableInitializerExpression();
     private LuaDocumentStatement document_ = new LuaDocumentStatement();
+    public bool IsIgnoreExport => document_.HasIgnoreAttribute;
 
     public LuaTypeDeclarationSyntax() {
     }
@@ -397,7 +398,7 @@ namespace CSharpLua.LuaAst {
         return;
       }
 
-      if (document_.HasIgnoreAttribute) {
+      if (IsIgnoreExport) {
         return;
       }
 

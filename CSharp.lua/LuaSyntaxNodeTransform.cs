@@ -244,13 +244,13 @@ namespace CSharpLua {
       }
 
       BuildTypeMembers(typeDeclaration, node);
-      CheckTypeDeclarationCtos(typeSymbol, typeDeclaration);
+      CheckTypeDeclaration(typeSymbol, typeDeclaration);
 
       typeDeclarations_.Pop();
       CurCompilationUnit.AddTypeDeclarationCount();
     }
 
-    private void CheckTypeDeclarationCtos(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration) {
+    private void CheckTypeDeclaration(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration) {
       if (typeDeclaration.IsNoneCtros) {
         var bseTypeSymbol = typeSymbol.BaseType;
         if (bseTypeSymbol != null) {
@@ -278,6 +278,10 @@ namespace CSharpLua {
 
       if (typeSymbol.IsValueType) {
         TryAddStructDefaultMethod(typeSymbol, typeDeclaration);
+      }
+
+      if (typeDeclaration.IsIgnoreExport) {
+        generator_.AddIgnoreExportType(typeSymbol);
       }
     }
 
@@ -355,7 +359,7 @@ namespace CSharpLua {
         BuildTypeMembers(major.TypeDeclaration, typeDeclaration.Node);
       }
 
-      CheckTypeDeclarationCtos(major.Symbol, major.TypeDeclaration);
+      CheckTypeDeclaration(major.Symbol, major.TypeDeclaration);
       typeDeclarations_.Pop();
       compilationUnits_.Pop();
 

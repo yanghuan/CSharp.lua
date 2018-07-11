@@ -81,6 +81,7 @@ namespace CSharpLua {
     public XmlMetaProvider XmlMetaProvider { get; }
     public SettingInfo Setting { get; set; }
     private HashSet<string> exportEnums_ = new HashSet<string>();
+    public HashSet<INamedTypeSymbol> ignoreExportTypes_ = new HashSet<INamedTypeSymbol>();
     private readonly bool isExportAttributesAll_;
     private HashSet<string> exportAttributes_;
     private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
@@ -188,6 +189,10 @@ namespace CSharpLua {
       enumDeclarations_.Add(enumDeclaration);
     }
 
+    internal void AddIgnoreExportType(INamedTypeSymbol type) {
+      ignoreExportTypes_.Add(type);
+    }
+
     internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
       if (isExportAttributesAll_) {
         return true;
@@ -251,11 +256,15 @@ namespace CSharpLua {
       return symbol.TypeKind != TypeKind.Interface;
     }
 
-    private bool IsTypeEnable(INamedTypeSymbol type) {
+    private bool IsTypeEnableExport(INamedTypeSymbol type) {
+      bool isExport = true;
       if (type.TypeKind == TypeKind.Enum) {
-        return IsEnumExport(type.ToString());
+        isExport = IsEnumExport(type.ToString());
       }
-      return true;
+      if (ignoreExportTypes_.Contains(type)) {
+        isExport = false;
+      }
+      return isExport;
     }
 
     private void AddSuperTypeTo(HashSet<INamedTypeSymbol> parentTypes, INamedTypeSymbol rootType, INamedTypeSymbol superType) {
@@ -310,7 +319,7 @@ namespace CSharpLua {
         }
 
         typesList.Reverse();
-        var types = typesList.SelectMany(i => i).Distinct().Where(IsTypeEnable);
+        var types = typesList.SelectMany(i => i).Distinct().Where(IsTypeEnableExport);
         allTypes.AddRange(types);
       }
       return allTypes;
