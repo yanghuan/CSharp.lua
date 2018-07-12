@@ -45,6 +45,8 @@ namespace CSharpLua {
         public TemplateModel get;
         [XmlAttribute]
         public string IsField;
+        [XmlAttribute]
+        public bool Baned;
 
         public bool? CheckIsField {
           get {
@@ -66,6 +68,8 @@ namespace CSharpLua {
         public string name;
         [XmlAttribute]
         public string Template;
+        [XmlAttribute]
+        public bool Baned;
       }
 
       public sealed class ArgumentModel {
@@ -105,6 +109,8 @@ namespace CSharpLua {
         public FieldModel[] Fields;
         [XmlElement("method")]
         public MethodModel[] Methods;
+        [XmlAttribute]
+        public bool Baned;
       }
 
       public sealed class NamespaceModel {
@@ -434,6 +440,9 @@ namespace CSharpLua {
     internal string GetTypeMapName(ISymbol symbol, string shortName) {
       if (MayHaveCodeMeta(symbol)) {
         TypeMetaInfo info = typeMetas_.GetOrDefault(shortName);
+        if (info != null && info.Model.Baned) {
+            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+        }
         return info?.Model.Name;
       }
       return null;
@@ -454,7 +463,11 @@ namespace CSharpLua {
 
     public string GetFieldCodeTemplate(IFieldSymbol symbol) {
       if (MayHaveCodeMeta(symbol)) {
-        return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
+        var info = GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name);
+        if (info != null && info.Baned) {
+            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+        }
+        return info?.Template;
       }
       return null;
     }
@@ -463,7 +476,10 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
         if (info != null) {
-          return isGet ? info.get?.Template : info.set?.Template;
+            if (info.Baned) {
+                throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+            }
+            return isGet ? info.get?.Template : info.set?.Template;
         }
       }
       return null;
