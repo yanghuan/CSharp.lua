@@ -120,11 +120,15 @@ namespace CSharpLua {
         public string Name;
         [XmlElement("class")]
         public ClassModel[] Classes;
+        [XmlAttribute]
+        public bool Baned;
       }
 
       public sealed class AssemblyModel {
         [XmlElement("namespace")]
         public NamespaceModel[] Namespaces;
+        [XmlElement("class")]
+        public ClassModel[] Classes;
       }
 
       public sealed class ExportModel {
@@ -354,7 +358,7 @@ namespace CSharpLua {
       }
     }
 
-    private Dictionary<string, string> namespaceNameMaps_ = new Dictionary<string, string>();
+    private Dictionary<string, XmlMetaModel.NamespaceModel> namespaceNameMaps_ = new Dictionary<string, XmlMetaModel.NamespaceModel>();
     private Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
     private HashSet<string> exportAttributes_ = new HashSet<string>();
 
@@ -365,9 +369,14 @@ namespace CSharpLua {
           using (Stream stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read)) {
             XmlMetaModel model = (XmlMetaModel)xmlSeliz.Deserialize(stream);
             var assembly = model.Assembly;
-            if (assembly != null && assembly.Namespaces != null) {
-              foreach (var namespaceModel in assembly.Namespaces) {
-                LoadNamespace(namespaceModel);
+            if (assembly != null) {
+              if (assembly.Namespaces != null) {
+                foreach (var namespaceModel in assembly.Namespaces) {
+                  LoadNamespace(namespaceModel);
+                }
+              }
+              if (assembly.Classes != null) {
+                LoadType(string.Empty, assembly.Classes);
               }
             }
             var export = model.Export;
@@ -390,15 +399,15 @@ namespace CSharpLua {
 
     private void LoadNamespace(XmlMetaModel.NamespaceModel model) {
       string namespaceName = model.name;
-      if (string.IsNullOrEmpty(namespaceName)) {
-        throw new ArgumentException("namespace's name is empty");
+      if (namespaceName == null) {
+        throw new ArgumentException("namespace's name is null");
       }
 
-      if (!string.IsNullOrEmpty(model.Name)) {
+      if (namespaceName.Length > 0 && !string.IsNullOrEmpty(model.Name)) {
         if (namespaceNameMaps_.ContainsKey(namespaceName)) {
           throw new ArgumentException($"namespace [{namespaceName}] is already has");
         }
-        namespaceNameMaps_.Add(namespaceName, model.Name);
+        namespaceNameMaps_.Add(namespaceName, model);
       }
 
       if (model.Classes != null) {
@@ -414,7 +423,7 @@ namespace CSharpLua {
           throw new ArgumentException($"namespace [{namespaceName}] has a class's name is empty");
         }
 
-        string classesfullName = namespaceName + '.' + className;
+        string classesfullName = namespaceName.Length > 0 ? namespaceName + '.' + className : className;
         classesfullName = classesfullName.Replace('^', '_');
         if (typeMetas_.ContainsKey(classesfullName)) {
           throw new ArgumentException($"type [{classesfullName}] is already has");
@@ -425,7 +434,14 @@ namespace CSharpLua {
     }
 
     public string GetNamespaceMapName(INamespaceSymbol symbol, string original) {
-      return namespaceNameMaps_.GetOrDefault(original);
+      var info = namespaceNameMaps_.GetOrDefault(original);
+      if (info != null) {
+        if (info.Baned) {
+          throw new CompilationErrorException($"{symbol.ToString()} is baned");
+        }
+        return info.Name;
+      }
+      return null;
     }
 
     internal bool MayHaveCodeMeta(ISymbol symbol) {
@@ -441,7 +457,7 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         TypeMetaInfo info = typeMetas_.GetOrDefault(shortName);
         if (info != null && info.Model.Baned) {
-            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
         }
         return info?.Model.Name;
       }
@@ -465,7 +481,7 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         var info = GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name);
         if (info != null && info.Baned) {
-            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
         }
         return info?.Template;
       }
@@ -476,10 +492,10 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
         if (info != null) {
-            if (info.Baned) {
-                throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
-            }
-            return isGet ? info.get?.Template : info.set?.Template;
+          if (info.Baned) {
+            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          }
+          return isGet ? info.get?.Template : info.set?.Template;
         }
       }
       return null;
