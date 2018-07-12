@@ -225,12 +225,15 @@ local staticCtorMetatable = {
 }
 
 local function setHasStaticCtor(cls, kind)
+  local name = cls.__name__
+  cls.__name__ = nil
   local t = {}
   for k, v in pairs(cls) do
     t[k] = v
     cls[k] = nil
   end  
   cls[cls] = t
+  cls.__name__ = name
   cls.__kind__ = kind
   cls.__call = new
   setmetatable(cls, staticCtorMetatable)
