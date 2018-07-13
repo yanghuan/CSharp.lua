@@ -15,70 +15,71 @@ limitations under the License.
 --]]
 
 local System = System
+local defInf = System.defInf
 local emptyFn = System.emptyFn
 
-System.defInf("System.IFormattable")
-System.defInf("System.IComparable")
-System.defInf("System.IFormatProvider")
-System.defInf("System.ICloneable")
+defInf("System.IFormattable")
+defInf("System.IComparable")
+defInf("System.IFormatProvider")
+defInf("System.ICloneable")
 
-System.defInf("System.IComparable_1", emptyFn)
-System.defInf("System.IEquatable_1", emptyFn)
+defInf("System.IComparable_1", emptyFn)
+defInf("System.IEquatable_1", emptyFn)
 
-System.defInf("System.IPromise")
-System.defInf("System.IDisposable")
+defInf("System.IPromise")
+defInf("System.IDisposable")
 
-local IEnumerable = System.defInf("System.IEnumerable")
-local IEnumerator = System.defInf("System.IEnumerator")
+local IEnumerable = defInf("System.IEnumerable")
+local IEnumerator = defInf("System.IEnumerator")
 
-local ICollection = System.defInf("System.ICollection", {
+local ICollection = defInf("System.ICollection", {
   __inherits__ = { IEnumerable }
 })
 
-System.defInf("System.IList", {
+defInf("System.IList", {
   __inherits__ = { ICollection }
 })
 
-System.defInf("System.IDictionary", {
+defInf("System.IDictionary", {
   __inherits__ = { ICollection }
 })
 
-System.defInf("System.IEnumerator_1", function(T) 
+defInf("System.IEnumerator_1", function(T) 
   return {
     __inherits__ = { IEnumerator }
   }
 end)
 
-local IEnumerable_1 = System.defInf("System.IEnumerable_1", function(T) 
+local IEnumerable_1 = defInf("System.IEnumerable_1", function(T) 
   return {
     __inherits__ = { IEnumerable }
   }
 end)
 
-local ICollection_1 = System.defInf("System.ICollection_1", function(T) 
+local ICollection_1 = defInf("System.ICollection_1", function(T) 
   return { 
     __inherits__ = { IEnumerable_1(T) } 
   }
 end)
 
-System.defInf('System.IDictionary_2', function(TKey, TValue) 
+defInf('System.IDictionary_2', function(TKey, TValue) 
   return {
     __inherits__ = IEnumerable
   }
 end)
 
-System.defInf("System.IList_1", function(T) 
+defInf("System.IList_1", function(T) 
   return {
     __inherits__ = { ICollection_1(T) }
   }
 end)
 
-System.defInf("System.ISet_1", function(T) 
+defInf("System.ISet_1", function(T) 
   return {
     __inherits__ = { ICollection_1(T) }
   }
 end)
 
-System.defInf("System.IComparer_1", emptyFn)
-System.defInf("System.IEqualityComparer")
-System.defInf("System.IEqualityComparer_1", emptyFn)
+defInf("System.IComparer_1", emptyFn)
+defInf("System.IEqualityComparer")
+defInf("System.IEqualityComparer_1", emptyFn)

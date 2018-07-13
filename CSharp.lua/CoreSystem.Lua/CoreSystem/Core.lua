@@ -33,6 +33,8 @@ local xpcall = xpcall
 local rawget = rawget
 local rawset = rawset
 local tostring = tostring
+local sfind = string.find
+local ssub = string.sub
 local global = _G
 
 local emptyFn = function() end
@@ -90,25 +92,32 @@ end
 
 local function set(className, cls)
   local scope = global
-  local starInx = 1
+  local starIndex = 1
   while true do
-    local pos = className:find("%.", starInx) or 0
-    local name = className:sub(starInx, pos -1)
+    local pos = sfind(className, "%.", starIndex) or 0
+    local name = ssub(className, starIndex, pos -1)
     if pos ~= 0 then
       local t = rawget(scope, name)
       if t == nil then
-        t = {}
-        rawset(scope, name, t)
+        if cls then
+          t = {}
+          rawset(scope, name, t)
+        else
+          return nil
+        end
       end
       scope = t
+      starIndex = pos + 1
     else
-      assert(rawget(scope, name) == nil, className)
-      rawset(scope, name, cls)
-      break
+      if cls then
+        assert(rawget(scope, name) == nil, className)
+        rawset(scope, name, cls)
+        return cls
+      else
+        return rawget(scope, name)
+      end
     end
-    starInx = pos + 1
   end
-  return cls
 end
 
 local function defaultValOfZero()
@@ -315,6 +324,7 @@ System = {
   equals = equals,
   try = try,
   throw = throw,
+  getClass = set,
   define = defCls,
   defInf = defInf,
   defStc = defStc,
@@ -329,7 +339,7 @@ end
 
 System.trunc = trunc
 
-local _, _, version = _VERSION:find("^Lua (.*)$")
+local _, _, version = sfind(_VERSION, "^Lua (.*)$")
 version = tonumber(version)
 System.luaVersion = version
 
@@ -836,25 +846,6 @@ end
 
 function System.CreateInstance(type, ...)
   return type.c(...)
-end
-
-function System.getClass(className)
-  local scope = global
-  local starInx = 1
-  while true do
-    local pos = className:find("%.", starInx) or 0
-    local name = className:sub(starInx, pos -1)
-    if pos ~= 0 then
-      local t = rawget(scope, name)
-      if t == nil then
-        return nil
-      end
-      scope = t
-    else
-      return rawget(scope, name)
-    end
-    starInx = pos + 1
-  end
 end
 
 function System.usingDeclare(f)

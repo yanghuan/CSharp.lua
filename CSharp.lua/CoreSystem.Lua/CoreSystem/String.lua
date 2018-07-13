@@ -22,12 +22,21 @@ local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local FormatException = System.FormatException
 local IndexOutOfRangeException = System.IndexOutOfRangeException
 
-local unpack = table.unpack
 local string = string
 local schar = string.char
+local srep = string.rep
+local slower = string.lower
+local supper = string.upper
+local sbyte = string.byte
+local ssub = string.sub
+local sfind = string.find
+local smatch = string.match
+local sgsub = string.gsub
+
 local table = table
 local tinsert = table.insert
 local tconcat = table.concat
+local unpack = table.unpack
 local setmetatable = setmetatable
 local select = select
 local type = type
@@ -60,7 +69,7 @@ local function ctor(_, ...)
     if count <= 0 then
       throw(ArgumentOutOfRangeException("count"))
     end
-    return schar(c):rep(count)
+    return srep(schar(c), count)
   end
   local value, startIndex, length = ...
   startIndex, length = check(value, startIndex, length)
@@ -80,14 +89,14 @@ local function compare(strA, strB, ignoreCaseOrType, cultureInfo)
     if type(ignoreCaseOrType) == "number" then
       -- StringComparison
       if ignoreCaseOrType % 2 ~= 0 then
-        strA = strA:lower()
-        strB = strB:lower()
+        strA = slower(strA)
+        strB = slower(strB)
       end
     else
       -- ignoreCase
       if ignoreCaseOrType then
-        strA = strA:lower()
-        strB = strB:lower()
+        strA = slower(strA)
+        strB = slower(strB)
       end
 
       if cultureInfo then
@@ -136,7 +145,7 @@ function String.get(this, index)
   if index < 0 or index >= #this then
       throw(IndexOutOfRangeException())
   end
-  return this:byte(index + 1)
+  return sbyte(this, index + 1)
 end
 
 function String.Concat(...)
@@ -181,7 +190,7 @@ function String.Join(separator, value, startIndex, count)
 end
 
 local function escape(s)
-  return s:gsub("([%%%^%.])", "%%%1")
+  return sgsub(s, "([%%%^%.])", "%%%1")
 end
 
 local function checkIndexOf(str, value, startIndex, count, comparisonType)
@@ -189,10 +198,10 @@ local function checkIndexOf(str, value, startIndex, count, comparisonType)
     throw(ArgumentNullException("value"))
   end
   startIndex, count = check(str, startIndex, count)
-  str = str:sub(startIndex + 1, startIndex + count)
+  str = ssub(str, startIndex + 1, startIndex + count)
   if comparisonType and comparisonType % 2 ~= 0 then
-    str = str:lower()
-    value = value:lower()
+    str = slower(str)
+    value = slower(value)
   end
   return str, escape(value), startIndex
 end
@@ -202,7 +211,7 @@ function String.LastIndexOf(str, value, startIndex, count, comparisonType)
     value = schar(value)
   end
   str, value, startIndex = checkIndexOf(str, value, startIndex, count, comparisonType)
-  local index = str:match(".*()" .. value)
+  local index = smatch(str, ".*()" .. value)
   if index then
     return index - 1 + startIndex
   end
@@ -214,13 +223,13 @@ local function indexOfAny(str, chars, startIndex, count)
     throw(ArgumentNullException("chars"))
   end
   startIndex, count = check(str, startIndex, count)
-  str = str:sub(startIndex + 1, startIndex + count)
+  str = ssub(str, startIndex + 1, startIndex + count)
   return str, "[" .. escape(schar(unpack(chars))) .. "]", startIndex
 end
 
 function String.LastIndexOfAny(str, chars, startIndex, count)
   str, chars, startIndex = indexOfAny(str, chars, startIndex, count)
-  local index = str:match("^.*()" .. chars)
+  local index = smatch(str, "^.*()" .. chars)
   if index then
     return index - 1 + startIndex
   end
@@ -228,7 +237,7 @@ function String.LastIndexOfAny(str, chars, startIndex, count)
 end
 
 function String.IsNullOrWhiteSpace(value)
-  return value == nil or value:find("^%s*$") ~= nil
+  return value == nil or sfind(value, "^%s*$") ~= nil
 end
 
 function String.IsNullOrEmpty(value)
@@ -236,7 +245,7 @@ function String.IsNullOrEmpty(value)
 end
 
 local function simpleFormat(format, args, len, getFn)
-  return (format:gsub("{(%d)}", function(n)
+  return (sgsub(format, "{(%d)}", function(n)
     n = tonumber(n)
     if n >= len then
       throw(FormatException())
@@ -265,23 +274,23 @@ function String.Format(format, ...)
 end
 
 function String.StartsWith(this, prefix)
-  return this:sub(1, #prefix) == prefix
+  return ssub(this, 1, #prefix) == prefix
 end
 
 function String.EndsWith(this, suffix)
-  return suffix == "" or this:sub(-#suffix) == suffix
+  return suffix == "" or ssub(this, -#suffix) == suffix
 end
 
 function String.Contains(this, value)
   if value == nil then
     throw(ArgumentNullException("value"))
   end
-  return this:find(value) ~= nil
+  return sfind(this, value) ~= nil
 end
 
 function String.IndexOfAny(str, chars, startIndex, count)
   str, chars, startIndex = indexOfAny(str, chars, startIndex, count)
-  local index = str:find(chars)
+  local index = sfind(str, chars)
   if index then
     return index - 1 + startIndex
   end
@@ -293,7 +302,7 @@ function String.IndexOf(str, value, startIndex, count, comparisonType)
     value = schar(value)
   end
   str, value, startIndex = checkIndexOf(str, value, startIndex, count, comparisonType)
-  local index = str:find(value)
+  local index = sfind(str, value)
   if index then
     return index - 1 + startIndex
   end
@@ -304,7 +313,7 @@ function String.ToCharArray(str, startIndex, count)
   startIndex, count = check(str, startIndex, count)
   local t = { }
   for i = startIndex + 1, startIndex + count do
-    tinsert(t, str:byte(i))
+    tinsert(t, sbyte(str, i))
   end
   return System.arrayFromTable(t, System.Char)
 end
@@ -315,7 +324,7 @@ function String.Replace(this, a, b)
     b = schar(b)
   end
   a = escape(a)
-  return this:gsub(a, b)
+  return sgsub(this, a, b)
 end
 
 function String.Insert(this, startIndex, value) 
@@ -323,24 +332,24 @@ function String.Insert(this, startIndex, value)
     throw(ArgumentNullException("value"))
   end
   startIndex = check(this, startIndex)
-  return this:sub(1, startIndex) .. value .. this:sub(startIndex + 1)
+  return ssub(this, 1, startIndex) .. value .. ssub(this, startIndex + 1)
 end
 
 function String.Remove(this, startIndex, count) 
   startIndex, count = stringCheck(this, startIndex, count)
-  return this:sub(1, startIndex) .. this:sub(startIndex + 1 + count)
+  return ssub(this, 1, startIndex) .. ssub(this, startIndex + 1 + count)
 end
 
 function String.Substring(this, startIndex, count)
   startIndex, count = check(this, startIndex, count)
-  return this:sub(startIndex + 1, startIndex + count)
+  return ssub(this, startIndex + 1, startIndex + count)
 end
 
 local function findAny(s, strings, startIndex)
   local findBegin, findEnd, findStr
   for _, str in ipairs(strings) do
     local pattern = escape(str)
-    local posBegin, posEnd = string.find(s, pattern, startIndex)
+    local posBegin, posEnd = sfind(s, pattern, startIndex)
     if posBegin then
       if not findBegin or posBegin < findBegin then
         findBegin, findEnd, findStr = posBegin, posEnd, str
@@ -354,7 +363,7 @@ String.FindAny = findAny
 
 function String.Split(this, strings, count, options) 
   local t = {}
-  local find = string.find
+  local find = sfind
   if type(strings) == "table" then
     if #strings == 0 then
       return t
@@ -378,7 +387,7 @@ function String.Split(this, strings, count, options)
   while true do
     local posBegin, posEnd = find(this, strings, startIndex)
     posBegin = posBegin or 0
-    local subStr = this:sub(startIndex, posBegin -1)
+    local subStr = ssub(this, startIndex, posBegin -1)
     if options ~= 1 or #subStr > 0 then
       tinsert(t, subStr)
       if count then
@@ -396,8 +405,8 @@ function String.Split(this, strings, count, options)
   return System.arrayFromTable(t, String) 
 end
 
-String.ToLower = string.lower
-String.ToUpper = string.upper
+String.ToLower = slower
+String.ToUpper = supper
 
 function String.TrimEnd(this, chars)
   if chars then
@@ -407,7 +416,7 @@ function String.TrimEnd(this, chars)
   else 
     chars = "(.-)%s*$"
   end
-  return (this:gsub(chars, "%1"))
+  return (sgsub(this, chars, "%1"))
 end
 
 function String.TrimStart(this, chars) 
@@ -418,7 +427,7 @@ function String.TrimStart(this, chars)
   else 
     chars = "^%s*(.-)"
   end
-  return (this:gsub(chars, "%1"))
+  return (sgsub(this, chars, "%1"))
 end
 
 function String.Trim(this, chars) 
@@ -429,7 +438,7 @@ function String.Trim(this, chars)
   else 
     chars = "^%s*(.-)%s*$"
   end
-  return (this:gsub(chars, "%1"))
+  return (sgsub(this, chars, "%1"))
 end
 
 function String.__inherits__()
