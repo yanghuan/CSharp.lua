@@ -173,7 +173,7 @@ namespace CSharpLua {
         isSingleModel_ = isSingle;
       }
 
-      private bool IsTypeMatch(ITypeSymbol symbol, string typeString) {
+      private static string GetTypeString(ITypeSymbol symbol) {
         INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
         string namespaceName = typeSymbol.ContainingNamespace.ToString();
         string name;
@@ -182,7 +182,18 @@ namespace CSharpLua {
         } else {
           name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
         }
-        return name == typeString;
+        return name;
+      }
+
+      private bool IsTypeMatch(ITypeSymbol symbol, string typeString) {
+        if (symbol.Kind == SymbolKind.ArrayType) {
+          var typeSymbol = (IArrayTypeSymbol)symbol;
+          string elementTypeName = GetTypeString(typeSymbol.ElementType);
+          return elementTypeName + "[]" == typeString;
+        } else {
+          string name = GetTypeString(symbol);
+          return name == typeString;
+        }
       }
 
       private bool IsMethodMatch(XmlMetaModel.MethodModel model, IMethodSymbol symbol) {
