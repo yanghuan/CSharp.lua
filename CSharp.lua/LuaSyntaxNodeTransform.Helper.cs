@@ -633,7 +633,7 @@ namespace CSharpLua {
       ++inheritNameNodeCounter_;
       var expression = GetTypeName(typeSymbol);
       --inheritNameNodeCounter_;
-      LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.Global, expression));
+      LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, expression);
 
       if (node.ArgumentList != null) {
         List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();

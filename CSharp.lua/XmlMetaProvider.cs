@@ -588,13 +588,5 @@ namespace CSharpLua {
     public bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
       return exportAttributes_.Count > 0 && exportAttributes_.Contains(attributeTypeSymbol.ToString());
     }
-
-    public void CheckFieldNameOfProtobufnet(ref string fieldName, ITypeSymbol containingType) {
-      if (!containingType.Interfaces.IsEmpty) {
-        if (containingType.Interfaces.First().ToString() == "ProtoBuf.IExtensible") {
-          fieldName = fieldName.TrimStart('_');
-        }
-      }
-    }
   }
 }
