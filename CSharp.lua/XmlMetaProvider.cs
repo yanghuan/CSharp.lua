@@ -23,7 +23,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.CodeAnalysis;
-using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed class XmlMetaProvider {
@@ -75,6 +74,8 @@ namespace CSharpLua {
       public sealed class ArgumentModel {
         [XmlAttribute]
         public string type;
+        [XmlElement("arg")]
+        public ArgumentModel[] GenericArgs;
       }
 
       public sealed class MethodModel {
@@ -173,7 +174,7 @@ namespace CSharpLua {
         isSingleModel_ = isSingle;
       }
 
-      private bool IsTypeMatch(ITypeSymbol symbol, string typeString) {
+      private static string GetTypeString(ITypeSymbol symbol) {
         INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
         string namespaceName = typeSymbol.ContainingNamespace.ToString();
         string name;
@@ -182,7 +183,42 @@ namespace CSharpLua {
         } else {
           name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
         }
-        return name == typeString;
+        return name;
+      }
+
+      private static bool IsTypeMatch(ITypeSymbol symbol, string typeString) {
+        if (symbol.Kind == SymbolKind.ArrayType) {
+          var typeSymbol = (IArrayTypeSymbol)symbol;
+          string elementTypeName = GetTypeString(typeSymbol.ElementType);
+          return elementTypeName + "[]" == typeString;
+        } else {
+          string name = GetTypeString(symbol);
+          return name == typeString;
+        }
+      }
+
+      private static bool IsArgMatch(ITypeSymbol symbol, XmlMetaModel.ArgumentModel parameterModel) {
+        if (!IsTypeMatch(symbol, parameterModel.type)) {
+          return false;
+        }
+
+        if (parameterModel.GenericArgs != null) {
+          var typeSymbol = (INamedTypeSymbol)symbol;
+          if (typeSymbol.TypeArguments.Length != parameterModel.GenericArgs.Length) {
+            return false;
+          }
+
+          int index = 0;
+          foreach (var typeArgument in typeSymbol.TypeArguments) {
+            var genericArgModel = parameterModel.GenericArgs[index];
+            if (!IsArgMatch(typeArgument, genericArgModel)) {
+              return false;
+            }
+            ++index;
+          }
+        }
+
+        return true;
       }
 
       private bool IsMethodMatch(XmlMetaModel.MethodModel model, IMethodSymbol symbol) {
@@ -216,7 +252,7 @@ namespace CSharpLua {
           int index = 0;
           foreach (var parameter in symbol.Parameters) {
             var parameterModel = model.Args[index];
-            if (!IsTypeMatch(parameter.Type, parameterModel.type)) {
+            if (!IsArgMatch(parameter.Type, parameterModel)) {
               return false;
             }
             ++index;
