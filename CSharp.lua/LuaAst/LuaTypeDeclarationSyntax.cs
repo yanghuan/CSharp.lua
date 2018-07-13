@@ -34,7 +34,6 @@ namespace CSharpLua.LuaAst {
     private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
     protected LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
 
-    private List<LuaStatementSyntax> staticLazyStatements_ = new List<LuaStatementSyntax>();
     private List<LuaStatementSyntax> staticInitStatements_ = new List<LuaStatementSyntax>();
     private List<LuaStatementSyntax> staticcCtorStatements_ = new List<LuaStatementSyntax>();
     private List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new List<LuaIdentifierNameSyntax>();
@@ -117,7 +116,7 @@ namespace CSharpLua.LuaAst {
       resultTable_.Items.Add(item);
     }
 
-    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, bool isStaticLazy = false, LuaDocumentStatement document = null) {
+    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, LuaDocumentStatement document = null) {
       bool isIgnore = document != null && document.HasIgnoreAttribute;
       if (isIgnore) {
         return;
@@ -130,12 +129,7 @@ namespace CSharpLua.LuaAst {
       }
       methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
       if (!isPrivate) {
-        if (isStaticLazy) {
-          var thisAssignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), name);
-          staticLazyStatements_.Add(new LuaExpressionStatementSyntax(thisAssignment));
-        } else {
-          AddResultTable(name);
-        }
+        AddResultTable(name);
       }
     }
 
@@ -240,8 +234,8 @@ namespace CSharpLua.LuaAst {
           if (isImmutable) {
             AddResultTable(name, value);
           } else {
-            LuaAssignmentExpressionSyntax thisAssignment = new LuaAssignmentExpressionSyntax(name, value);
-            staticLazyStatements_.Add(new LuaExpressionStatementSyntax(thisAssignment));
+            LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, innerName), value);
+            staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
           }
         } else {
           if (isImmutable) {
@@ -318,7 +312,6 @@ namespace CSharpLua.LuaAst {
 
     private void CheckStaticCtorFunction(LuaBlockSyntax body) {
       List<LuaStatementSyntax> statements = new List<LuaStatementSyntax>();
-      statements.AddRange(staticLazyStatements_);
       statements.AddRange(staticInitStatements_);
       statements.AddRange(staticcCtorStatements_);
       if (statements.Count > 0) {

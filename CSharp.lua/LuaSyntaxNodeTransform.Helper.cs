@@ -50,7 +50,7 @@ namespace CSharpLua {
     }
 
     private sealed class LocalVarSearcher : LuaSyntaxSearcher {
-      private string name_;
+      private readonly string name_;
 
       public LocalVarSearcher(string name) {
         name_ = name;

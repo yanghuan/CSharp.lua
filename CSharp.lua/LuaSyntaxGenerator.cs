@@ -1362,6 +1362,9 @@ namespace CSharpLua {
 
     private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor, bool isGetInheritTypeName) {
       foreach (var typeArgument in typeSymbol.TypeArguments) {
+        if (typeArgument.Kind == SymbolKind.ErrorType) {
+          break;
+        }
         LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor, isGetInheritTypeName);
         typeArguments.Add(typeArgumentExpression);
       }

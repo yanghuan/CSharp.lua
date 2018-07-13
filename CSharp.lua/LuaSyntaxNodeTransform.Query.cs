@@ -34,7 +34,7 @@ namespace CSharpLua {
 
     private sealed class QueryIdentifier : IQueryRangeVariable {
       public SyntaxToken Identifier { get; }
-      private LuaIdentifierNameSyntax name_;
+      private readonly LuaIdentifierNameSyntax name_;
       private int packCount_;
 
       public QueryIdentifier(SyntaxToken identifier, LuaIdentifierNameSyntax name) {
@@ -192,8 +192,7 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildQuerySelect(LuaExpressionSyntax collection, SelectClauseSyntax node, IQueryRangeVariable rangeVariable) {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       if (node.Expression.IsKind(SyntaxKind.IdentifierName)) {
-        var identifierName = expression as LuaIdentifierNameSyntax;
-        if (identifierName != null && identifierName.ValueText == rangeVariable.Name.ValueText) {
+        if (expression is LuaIdentifierNameSyntax identifierName && identifierName.ValueText == rangeVariable.Name.ValueText) {
           return collection;
         }
       }
@@ -216,8 +215,7 @@ namespace CSharpLua {
 
       var groupExpression = (LuaExpressionSyntax)node.GroupExpression.Accept(this);
       if (node.GroupExpression.IsKind(SyntaxKind.IdentifierName)) {
-        var groupIdentifierName = groupExpression as LuaIdentifierNameSyntax;
-        if (groupIdentifierName != null && groupIdentifierName.ValueText == rangeVariable.Name.ValueText) {
+        if (groupExpression is LuaIdentifierNameSyntax groupIdentifierName && groupIdentifierName.ValueText == rangeVariable.Name.ValueText) {
           return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.LinqGroupBy, collection, keySelector, keyTypeName);
         }
       }
@@ -343,8 +341,7 @@ namespace CSharpLua {
       foreach (var clause in node.Clauses) {
         switch (clause.Kind()) {
           case SyntaxKind.FromClause: {
-              bool isOver;
-              collection = BuildFromClause(collection, (FromClauseSyntax)clause, ref rangeVariable, out isOver);
+              collection = BuildFromClause(collection, (FromClauseSyntax)clause, ref rangeVariable, out bool isOver);
               if (isOver) {
                 goto Continuation;
               }
@@ -355,8 +352,7 @@ namespace CSharpLua {
               break;
             }
           case SyntaxKind.JoinClause: {
-              bool isOver;
-              collection = BuildJoinClause(collection, (JoinClauseSyntax)clause, ref rangeVariable, out isOver);
+              collection = BuildJoinClause(collection, (JoinClauseSyntax)clause, ref rangeVariable, out bool isOver);
               if (isOver) {
                 goto Continuation;
               }

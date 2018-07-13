@@ -425,7 +425,7 @@ namespace CSharpLua {
         return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf, typeNameExpression);
       }
 
-      var typeName = (LuaIdentifierNameSyntax)node.Type.Accept(this);
+      var typeName = (LuaExpressionSyntax)node.Type.Accept(this);
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf, typeName);
     }
 
@@ -890,7 +890,7 @@ namespace CSharpLua {
       var comments = BuildDocumentationComment(node);
       LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
       function.AddStatements(block.Statements);
-      CurType.AddMethod(name, function, isPrivate, symbol.IsStaticLazy(), comments);
+      CurType.AddMethod(name, function, isPrivate, comments);
 
       PopFunction();
       methodInfos_.Pop();
