@@ -280,6 +280,10 @@ namespace CSharpLua {
       return !symbol.DeclaringSyntaxReferences.IsEmpty;
     }
 
+    public static bool IsFromAssembly(this ISymbol symbol) {
+      return !symbol.IsFromCode();
+    }
+
     public static bool IsOverridable(this ISymbol symbol) {
       return !symbol.IsStatic && (symbol.IsAbstract || symbol.IsVirtual || symbol.IsOverride);
     }
@@ -350,6 +354,11 @@ namespace CSharpLua {
               if (isField) {
                 if (symbol.IsInterfaceImplementation()) {
                   isField = false;
+                } else {
+                  var documentTrivia = property.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
+                  if (documentTrivia != null && documentTrivia.HasIgnoreAttribute()) {
+                    isField = false;
+                  }
                 }
               }
               return isField;
@@ -367,6 +376,11 @@ namespace CSharpLua {
       }
       return false;
     }
+
+    private static bool HasIgnoreAttribute(this SyntaxTrivia trivia) {
+      return trivia.ToString().Contains(LuaDocumentStatement.kNoField);
+    }
+
     public static bool IsEventFiled(this IEventSymbol symbol) {
       if (!symbol.IsFromCode() || symbol.IsOverridable()) {
         return false;
@@ -387,15 +401,6 @@ namespace CSharpLua {
 
     public static bool HasStaticCtor(this INamedTypeSymbol typeSymbol) {
       return typeSymbol.Constructors.Any(i => i.IsStatic);
-    }
-
-    public static bool IsStaticLazy(this ISymbol symbol) {
-      bool success = symbol.IsStatic && !symbol.IsPrivate();
-      if (success) {
-        var typeSymbol = symbol.ContainingType;
-        return typeSymbol.HasStaticCtor();
-      }
-      return success;
     }
 
     public static bool IsAssignment(this SyntaxKind kind) {
@@ -764,6 +769,17 @@ namespace CSharpLua {
         return Array.Empty<INamespaceSymbol>();
       }
       return InternalGetAllNamespaces(symbol).Reverse();
+    }
+
+    public static bool IsCollectionType(this INamedTypeSymbol symbol) {
+      INamespaceSymbol containingNamespace = symbol.ContainingNamespace;
+      while (!containingNamespace.IsGlobalNamespace) {
+        if (containingNamespace.Name == "Collections" && containingNamespace.ContainingNamespace.Name == "System") {
+          return true;
+        }
+        containingNamespace = containingNamespace.ContainingNamespace;
+      }
+      return false;
     }
 
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {

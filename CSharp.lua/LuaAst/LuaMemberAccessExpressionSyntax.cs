@@ -87,9 +87,10 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaPropertyAdapterExpressionSyntax GetClone() {
-      LuaPropertyAdapterExpressionSyntax clone = new LuaPropertyAdapterExpressionSyntax(Name.GetClone());
-      clone.Expression = Expression;
-      clone.OperatorToken = OperatorToken;
+      LuaPropertyAdapterExpressionSyntax clone = new LuaPropertyAdapterExpressionSyntax(Name.GetClone()) {
+        Expression = Expression,
+        OperatorToken = OperatorToken,
+      };
       clone.ArgumentList.Arguments.AddRange(ArgumentList.Arguments);
       return clone;
     }

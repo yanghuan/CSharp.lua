@@ -425,7 +425,7 @@ namespace CSharpLua {
         return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf, typeNameExpression);
       }
 
-      var typeName = (LuaIdentifierNameSyntax)node.Type.Accept(this);
+      var typeName = (LuaExpressionSyntax)node.Type.Accept(this);
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.TypeOf, typeName);
     }
 
@@ -890,11 +890,10 @@ namespace CSharpLua {
       var comments = BuildDocumentationComment(node);
       LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
       function.AddStatements(block.Statements);
-      CurType.AddMethod(name, function, isPrivate, symbol.IsStaticLazy(), comments);
+      CurType.AddMethod(name, function, isPrivate, comments);
 
       PopFunction();
       methodInfos_.Pop();
-
     }
 
     public override LuaSyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node) {
@@ -957,14 +956,14 @@ namespace CSharpLua {
       var body = parentNode.IsKind(SyntaxKind.MethodDeclaration) ? ((MethodDeclarationSyntax)parentNode).Body : ((LocalFunctionStatementSyntax)parentNode).Body;
       bool isOnlyOne = body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
       if (isOnlyOne) {
-        return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Comments);
+        return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Document);
       } else {
         var block = blocks_.Peek();
         block.AddLocalArea(result.Name);
         var localVar = new LuaAssignmentExpressionSyntax(result.Name, result.Function).ToStatement();
-        if (result.Comments.Count > 0) {
+        if (result.Document != null && !result.Document.IsEmpty) {
           LuaStatementListSyntax statementList = new LuaStatementListSyntax();
-          statementList.Statements.AddRange(result.Comments);
+          statementList.Statements.Add(result.Document);
           statementList.Statements.Add(localVar);
           return statementList;
         } else {

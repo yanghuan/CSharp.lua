@@ -50,7 +50,7 @@ namespace CSharpLua {
     }
 
     private sealed class LocalVarSearcher : LuaSyntaxSearcher {
-      private string name_;
+      private readonly string name_;
 
       public LocalVarSearcher(string name) {
         name_ = name;
@@ -543,7 +543,7 @@ namespace CSharpLua {
     }
 
     internal void ImportTypeName(ref string name, ISymbol symbol) {
-      if (baseNameNodeCounter_ == 0) {
+      if (!IsGetInheritTypeName) {
         int pos = name.LastIndexOf('.');
         if (pos != -1) {
           string prefix = name.Substring(0, pos);
@@ -569,7 +569,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax GetTypeName(ISymbol symbol) {
-      return generator_.GetTypeName(symbol, this);
+      return generator_.GetTypeName(symbol, this, IsGetInheritTypeName);
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
@@ -630,9 +630,9 @@ namespace CSharpLua {
       INamedTypeSymbol typeDeclarationSymbol = GetTypeDeclarationSymbol(node);
       generator_.AddTypeDeclarationAttribute(typeDeclarationSymbol, typeSymbol);
 
-      ++baseNameNodeCounter_;
+      ++inheritNameNodeCounter_;
       var expression = GetTypeName(typeSymbol);
-      --baseNameNodeCounter_;
+      --inheritNameNodeCounter_;
       LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.Global, expression));
 
       if (node.ArgumentList != null) {
@@ -716,7 +716,7 @@ namespace CSharpLua {
         switch (node.Parent.Kind()) {
           case SyntaxKind.Argument: {
               var symbol = semanticModel_.GetSymbolInfo(node.Parent.Parent.Parent).Symbol;
-              if (symbol != null && !symbol.IsFromCode()) {
+              if (symbol != null && symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
                 break;
               }
               need = true;
@@ -730,7 +730,7 @@ namespace CSharpLua {
               var assignment = (AssignmentExpressionSyntax)node.Parent;
               if (assignment.Right == node) {
                 var symbol = semanticModel_.GetSymbolInfo(assignment.Left).Symbol;
-                if (symbol != null && !symbol.IsFromCode()) {
+                if (symbol != null && symbol.IsFromAssembly()) {
                   break;
                 }
                 need = true;
@@ -753,30 +753,22 @@ namespace CSharpLua {
       }
     }
 
-    private List<LuaStatementSyntax> BuildDocumentationComment(CSharpSyntaxNode node) {
-      List<LuaStatementSyntax> comments = new List<LuaStatementSyntax>();
+    private LuaDocumentStatement BuildDocumentationComment(CSharpSyntaxNode node) {
       foreach (var trivia in node.GetLeadingTrivia()) {
         if (trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)) {
           string triviaText = trivia.ToString();
           if (!string.IsNullOrWhiteSpace(triviaText)) {
-            string shortComment = LuaSyntaxNode.Tokens.ShortComment;
-            var array = triviaText.Replace("///", string.Empty).Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            LuaStatementListSyntax codes = new LuaStatementListSyntax();
-            foreach (string comment in array) {
-              var commentExpression = new LuaIdentifierNameSyntax(shortComment + ' ' + comment.Trim());
-              codes.Statements.Add(new LuaExpressionStatementSyntax(commentExpression));
-            }
-            comments.Add(codes);
+            return new LuaDocumentStatement(triviaText);
           }
         }
       }
-      return comments;
+      return null;
     }
 
-    private LuaExpressionSyntax BuildBaseTypeName(BaseTypeSyntax baseType) {
-      ++baseNameNodeCounter_;
+    private LuaExpressionSyntax BuildInheritTypeName(BaseTypeSyntax baseType) {
+      ++inheritNameNodeCounter_;
       var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
-      --baseNameNodeCounter_;
+      --inheritNameNodeCounter_;
       return baseTypeName;
     }
 

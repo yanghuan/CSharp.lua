@@ -565,6 +565,29 @@ namespace CSharpLua {
       node.GotoStatement.Render(this);
     }
 
+    private void WriteWithShortComment(string text) {
+      Write(LuaSyntaxNode.Tokens.ShortComment);
+      WriteSpace();
+      Write(text);
+      WriteNewLine();
+    }
+
+    internal void Render(LuaDocumentStatement node) {
+      WriteNodes(node.Statements);
+    }
+
+    internal void Render(LuaSummaryDocumentStatement node) {
+      WriteWithShortComment(node.OpenSummary);
+      foreach (string text in node.Texts) {
+        WriteWithShortComment(text);
+      }
+      WriteWithShortComment(node.CloseSummary);
+    }
+
+    internal void Render(LuaLineDocumentStatement node) {
+      WriteWithShortComment(node.Text);
+    }
+
     internal void Render(LuaCodeTemplateExpressionSyntax node) {
       WriteNodes(node.Expressions);
     }

@@ -29,10 +29,12 @@ local floor = math.floor
 local ceil = math.ceil
 local error = error
 local select = select
-local pcall = pcall
+local xpcall = xpcall
 local rawget = rawget
 local rawset = rawset
 local tostring = tostring
+local sfind = string.find
+local ssub = string.sub
 local global = _G
 
 local emptyFn = function() end
@@ -54,15 +56,20 @@ local function throw(e, lv)
   error(e)
 end
 
+local function xpcallErr(e)
+  if type(e) == "string" then
+    e = System.Exception(e)
+    e:traceback()
+    return e
+  end
+end
+
 local function try(try, catch, finally)
-  local ok, status, result = pcall(try)
+  local ok, status, result = xpcall(try, xpcallErr)
   if not ok then
     if catch then
-      if type(status) == "string" then
-        status = System.Exception(status)
-      end
       if finally then
-        ok, status, result = pcall(catch, status)
+        ok, status, result = xpcall(catch, xpcallErr, status)
       else
         ok, status, result = true, catch(status)
       end
@@ -78,32 +85,39 @@ local function try(try, catch, finally)
     finally()
   end
   if not ok then
-    throw(status)
+    error(status)
   end
   return status, result
 end
 
 local function set(className, cls)
   local scope = global
-  local starInx = 1
+  local starIndex = 1
   while true do
-    local pos = className:find("%.", starInx) or 0
-    local name = className:sub(starInx, pos -1)
+    local pos = sfind(className, "%.", starIndex) or 0
+    local name = ssub(className, starIndex, pos -1)
     if pos ~= 0 then
       local t = rawget(scope, name)
       if t == nil then
-        t = {}
-        rawset(scope, name, t)
+        if cls then
+          t = {}
+          rawset(scope, name, t)
+        else
+          return nil
+        end
       end
       scope = t
+      starIndex = pos + 1
     else
-      assert(rawget(scope, name) == nil, className)
-      rawset(scope, name, cls)
-      break
+      if cls then
+        assert(rawget(scope, name) == nil, className)
+        rawset(scope, name, cls)
+        return cls
+      else
+        return rawget(scope, name)
+      end
     end
-    starInx = pos + 1
   end
-  return cls
 end
 
 local function defaultValOfZero()
@@ -220,12 +234,15 @@ local staticCtorMetatable = {
 }
 
 local function setHasStaticCtor(cls, kind)
+  local name = cls.__name__
+  cls.__name__ = nil
   local t = {}
   for k, v in pairs(cls) do
     t[k] = v
     cls[k] = nil
   end  
   cls[cls] = t
+  cls.__name__ = name
   cls.__kind__ = kind
   cls.__call = new
   setmetatable(cls, staticCtorMetatable)
@@ -307,6 +324,7 @@ System = {
   equals = equals,
   try = try,
   throw = throw,
+  getClass = set,
   define = defCls,
   defInf = defInf,
   defStc = defStc,
@@ -321,7 +339,7 @@ end
 
 System.trunc = trunc
 
-local _, _, version = _VERSION:find("^Lua (.*)$")
+local _, _, version = sfind(_VERSION, "^Lua (.*)$")
 version = tonumber(version)
 System.luaVersion = version
 
@@ -818,35 +836,16 @@ end
 
 function System.event(name)
   local function add(this, v)
-    this[name] = System.combine(this[name], v)
+    this[name] = this[name] + v
   end
   local function remove(this, v)
-    this[name] = System.remove(this[name], v)
+    this[name] = this[name] - v
   end
   return add, remove
 end
 
 function System.CreateInstance(type, ...)
   return type.c(...)
-end
-
-function System.getClass(className)
-  local scope = global
-  local starInx = 1
-  while true do
-    local pos = className:find("%.", starInx) or 0
-    local name = className:sub(starInx, pos -1)
-    if pos ~= 0 then
-      local t = rawget(scope, name)
-      if t == nil then
-        return nil
-      end
-      scope = t
-    else
-      return rawget(scope, name)
-    end
-    starInx = pos + 1
-  end
 end
 
 function System.usingDeclare(f)

@@ -28,6 +28,7 @@ local tinsert = table.insert
 local tremove = table.remove
 local tsort = table.sort
 local tmove = table.move
+local tconcat = table.concat
 local unpack = table.unpack
 local setmetatable = setmetatable
 local select = select
@@ -639,6 +640,47 @@ local function toLuaTable(array)
   return t
 end
 
+local KeyValuePair = {}
+
+function KeyValuePair.__ctor__(this, key, value)
+  this.Key, this.Value = key, value
+end
+
+function KeyValuePair.__clone__(this)
+  return setmetatable({ Key = this.Key, Value = this.Value }, KeyValuePair)
+end
+
+function KeyValuePair.__default__(T)
+  local TKey, TValue = T.__genericTKey__, T.__genericTValue__
+  return setmetatable({ Key = TKey:__default__(), Value = TValue:__default__() }, KeyValuePair)
+end
+
+function KeyValuePair.Deconstruct(this)
+  return this.Key, this.Value
+end
+
+function KeyValuePair.ToString(this)
+  local t = {}
+  tinsert(t, "[")
+  local k, v = this.Key, this.Value
+  if k ~= nil then
+    tinsert(t, k:ToString())
+  end
+  tinsert(t, ", ")
+  if v ~= nil then
+    tinsert(t, v:ToString())
+  end
+  tinsert(t, "]")
+  return tconcat(t)
+end
+
+System.defStc("System.KeyValuePair", function (TKey, TValue) 
+  return {
+    __genericTKey__ = TKey,
+    __genericTValue__ = TValue,
+  }
+end, KeyValuePair)
+
 local DictionaryEnumerator = {}
 DictionaryEnumerator.__index = DictionaryEnumerator
 
@@ -649,8 +691,8 @@ function DictionaryEnumerator.MoveNext(this)
   if k ~= nil then
     if this.kind == 0 then
       local pair = this.pair
-      pair.key = k
-      pair.value = unWrap(v)
+      pair.Key = k
+      pair.Value = unWrap(v)
       this.current = pair
     elseif this.kind == 1 then
       this.current = unWrap(k)
@@ -673,7 +715,11 @@ function Collection.dictionaryEnumerator(t, kind)
     dict = t,
     version = getVersion(t),
     kind = kind,
-    pair = kind == 0 and { key = false, value = false } or nil
+    pair = kind == 0 and setmetatable({ 
+      Key = false, 
+      Value = false,
+      __genericTKey__ = t.__genericTKey__,
+      __genericTValue__ = t.__genericTValue__ }, KeyValuePair) or nil
   }
   setmetatable(en, DictionaryEnumerator)
   return en
