@@ -1302,14 +1302,14 @@ namespace CSharpLua {
       return new LuaIdentifierNameSyntax(GetTypeRefactorName(typeSymbol) ?? name);
     }
 
-    internal LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null, bool isGetInheritTypeName = false) {
+    internal LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
       if (symbol.Kind == SymbolKind.TypeParameter) {
         return new LuaIdentifierNameSyntax(symbol.Name);
       }
 
       if (symbol.Kind == SymbolKind.ArrayType) {
         var arrayType = (IArrayTypeSymbol)symbol;
-        LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor, isGetInheritTypeName);
+        LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
         return new LuaInvocationExpressionSyntax(arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray, elementTypeExpression);
       }
 
@@ -1334,38 +1334,45 @@ namespace CSharpLua {
         return LuaIdentifierNameSyntax.TupleType;
       }
 
-      LuaIdentifierNameSyntax baseTypeName = GetTypeShortName(namedTypeSymbol, transfor, isGetInheritTypeName);
-      var typeArguments = GetTypeArguments(namedTypeSymbol, transfor, isGetInheritTypeName);
+      if (transfor != null) {
+        var curTypeDeclaration = transfor.CurTypeDeclaration;
+        if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(namedTypeSymbol, out var classIdentifier)) {
+          return classIdentifier;
+        }
+      }
+
+      LuaIdentifierNameSyntax typeName = GetTypeShortName(namedTypeSymbol, transfor);
+      var typeArguments = GetTypeArguments(namedTypeSymbol, transfor);
       if (typeArguments.Count == 0) {
-        return baseTypeName;
+        return typeName;
       } else {
-        var invocationExpression = new LuaInvocationExpressionSyntax(baseTypeName);
+        var invocationExpression = new LuaInvocationExpressionSyntax(typeName);
         invocationExpression.AddArguments(typeArguments);
         return invocationExpression;
       }
     }
 
-    private List<LuaExpressionSyntax> GetTypeArguments(INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor, bool isGetInheritTypeName) {
+    private List<LuaExpressionSyntax> GetTypeArguments(INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
       List<LuaExpressionSyntax> typeArguments = new List<LuaExpressionSyntax>();
-      FillExternalTypeArgument(typeArguments, typeSymbol, transfor, isGetInheritTypeName);
-      FillTypeArguments(typeArguments, typeSymbol, transfor, isGetInheritTypeName);
+      FillExternalTypeArgument(typeArguments, typeSymbol, transfor);
+      FillTypeArguments(typeArguments, typeSymbol, transfor);
       return typeArguments;
     }
 
-    private void FillExternalTypeArgument(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor, bool isGetInheritTypeName) {
+    private void FillExternalTypeArgument(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
       var externalType = typeSymbol.ContainingType;
       if (externalType != null) {
-        FillExternalTypeArgument(typeArguments, externalType, transfor, isGetInheritTypeName);
-        FillTypeArguments(typeArguments, externalType, transfor, isGetInheritTypeName);
+        FillExternalTypeArgument(typeArguments, externalType, transfor);
+        FillTypeArguments(typeArguments, externalType, transfor);
       }
     }
 
-    private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor, bool isGetInheritTypeName) {
+    private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
       foreach (var typeArgument in typeSymbol.TypeArguments) {
         if (typeArgument.Kind == SymbolKind.ErrorType) {
           break;
         }
-        LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor, isGetInheritTypeName);
+        LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
         typeArguments.Add(typeArgumentExpression);
       }
     }
@@ -1379,17 +1386,19 @@ namespace CSharpLua {
       }
     }
 
-    internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null, bool isGetInheritTypeName = false) {
+    internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
       INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
-      string name = typeSymbol.GetTypeShortName(GetNamespaceMapName, GetTypeRefactorName);
+      string name = typeSymbol.GetTypeShortName(GetNamespaceMapName, GetTypeRefactorName, transfor);
       string newName = XmlMetaProvider.GetTypeMapName(typeSymbol, name);
       if (newName != null) {
         name = newName;
       }
-      if (isGetInheritTypeName && typeSymbol.IsFromCode()) {
-        name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
-      } else {
-        transfor?.ImportTypeName(ref name, symbol);
+      if (transfor != null) {
+        if (transfor.IsGetInheritTypeName && typeSymbol.IsFromCode()) {
+          name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
+        } else {
+          transfor.ImportTypeName(ref name, symbol);
+        }
       }
       return new LuaIdentifierNameSyntax(name);
     }

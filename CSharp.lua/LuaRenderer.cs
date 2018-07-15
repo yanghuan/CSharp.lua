@@ -58,6 +58,10 @@ namespace CSharpLua {
       Write(", ");
     }
 
+    private void WriteCommaOnly() {
+      Write(",");
+    }
+
     private void WriteSpace() {
       Write(" ");
     }
@@ -148,7 +152,6 @@ namespace CSharpLua {
       Write(node.FunctionKeyword);
       WriteSpace();
       node.ParameterList.Render(this);
-      WriteSpace();
       node.Body.Render(this);
     }
 
@@ -290,7 +293,7 @@ namespace CSharpLua {
           if (isFirst) {
             isFirst = false;
           } else {
-            WriteComma();
+            WriteCommaOnly();
             WriteNewLine();
           }
           itemNode.Render(this);
