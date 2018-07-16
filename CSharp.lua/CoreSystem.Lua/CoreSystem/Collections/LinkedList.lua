@@ -32,7 +32,7 @@ local function newLinkedListNode(list, value)
   return setmetatable({ List = list, Value = value }, LinkedListNode)
 end
 
-function LinkedListNode.getNex(this)
+function LinkedListNode.getNext(this)
   local next = this.next
   if next == nil or next == this.List.head then
     return nil
