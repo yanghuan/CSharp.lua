@@ -1394,8 +1394,10 @@ namespace CSharpLua {
         name = newName;
       }
       if (transfor != null) {
-        if (transfor.IsGetInheritTypeName && typeSymbol.IsFromCode()) {
-          name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
+        if (transfor.IsGetInheritTypeName) {
+          if (!name.StartsWith(LuaIdentifierNameSyntax.System.ValueText)) {
+            name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
+          }
         } else {
           transfor.ImportTypeName(ref name, symbol);
         }

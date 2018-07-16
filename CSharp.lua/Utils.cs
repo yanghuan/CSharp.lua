@@ -727,7 +727,7 @@ namespace CSharpLua {
       LuaSyntaxNodeTransform transfor = null) {
       var externalType = typeSymbol.ContainingType;
       if (externalType != null) {
-        if (transfor != null) {
+        if (transfor != null && !externalType.IsGenericType) {
           var curTypeDeclaration = transfor.CurTypeDeclaration;
           if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(externalType, out var classIdentifier)) {
             sb.Append(classIdentifier.ValueText);
