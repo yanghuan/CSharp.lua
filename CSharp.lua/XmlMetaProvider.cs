@@ -474,8 +474,7 @@ namespace CSharpLua {
         string classesfullName = namespaceName.Length > 0 ? namespaceName + '.' + className : className;
         classesfullName = classesfullName.Replace('^', '_');
         if (typeMetas_.ContainsKey(classesfullName)) {
-                    //throw new ArgumentException($"type [{classesfullName}] is already has");
-                    return;
+          throw new ArgumentException($"type [{classesfullName}] is already has");
         }
         TypeMetaInfo info = new TypeMetaInfo(classModel);
         typeMetas_.Add(classesfullName, info);
