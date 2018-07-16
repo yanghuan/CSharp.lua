@@ -30,6 +30,7 @@ namespace CSharpLua.LuaAst {
 
   public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
     public bool IsPartialMark { get; set; }
+    public bool IsClassUsed { get; set; }
     private LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
     private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
     protected LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
@@ -382,8 +383,12 @@ namespace CSharpLua.LuaAst {
       CheckCtorsFunction(body);
       body.Statements.Add(methodList_);
       CheckAttributes();
-      LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(resultTable_);
-      body.Statements.Add(returnStatement);
+      if (IsClassUsed) {
+        body.Statements.Add(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Class, resultTable_).ToStatement());
+        body.Statements.Add(new LuaReturnStatementSyntax(LuaIdentifierNameSyntax.Class));
+      } else {
+        body.Statements.Add(new LuaReturnStatementSyntax(resultTable_));
+      }
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -393,6 +398,10 @@ namespace CSharpLua.LuaAst {
 
       if (IsIgnoreExport) {
         return;
+      }
+
+      if (IsClassUsed) {
+        local_.Variables.Add(LuaIdentifierNameSyntax.Class);
       }
 
       document_.Render(renderer);

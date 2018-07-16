@@ -315,15 +315,10 @@ namespace CSharpLua {
       return generator_.IsEventFiled(symbol);
     }
 
-    private INamedTypeSymbol GetTypeDeclarationSymbol(SyntaxNode node) {
-      var typeDeclaration = (TypeDeclarationSyntax)FindParent(node, i => i.IsKind(SyntaxKind.ClassDeclaration) || i.IsKind(SyntaxKind.StructDeclaration));
-      return semanticModel_.GetDeclaredSymbol(typeDeclaration);
-    }
-
     private bool IsInternalMember(SyntaxNode node, ISymbol symbol) {
       bool isVirtual = symbol.IsOverridable() && !generator_.IsSealed(symbol.ContainingType);
       if (!isVirtual) {
-        var typeSymbol = GetTypeDeclarationSymbol(node);
+        var typeSymbol = CurTypeSymbol;
         if (typeSymbol.Equals(symbol.ContainingType)) {
           return true;
         }
@@ -468,7 +463,7 @@ namespace CSharpLua {
 
     private bool CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node, LuaExpressionSyntax expression, out LuaMemberAccessExpressionSyntax outExpression) {
       if (!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-        if (symbol.ContainingType != GetTypeDeclarationSymbol(node)) {           //using static
+        if (symbol.ContainingType != CurTypeSymbol) {           //using static
           var usingStaticType = GetTypeName(symbol.ContainingType);
           outExpression = new LuaMemberAccessExpressionSyntax(usingStaticType, expression);
           return true;
@@ -547,7 +542,7 @@ namespace CSharpLua {
         int pos = name.LastIndexOf('.');
         if (pos != -1) {
           string prefix = name.Substring(0, pos);
-          if (prefix != LuaIdentifierNameSyntax.System.ValueText) {
+          if (prefix != LuaIdentifierNameSyntax.System.ValueText && prefix != LuaIdentifierNameSyntax.Class.ValueText) {
             string newPrefix = prefix.Replace(".", "");
             var methodInfo = CurMethodInfoOrNull;
             if (methodInfo != null) {
@@ -569,7 +564,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax GetTypeName(ISymbol symbol) {
-      return generator_.GetTypeName(symbol, this, IsGetInheritTypeName);
+      return generator_.GetTypeName(symbol, this);
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
@@ -627,7 +622,7 @@ namespace CSharpLua {
         return null;
       }
 
-      INamedTypeSymbol typeDeclarationSymbol = GetTypeDeclarationSymbol(node);
+      INamedTypeSymbol typeDeclarationSymbol = CurTypeSymbol;
       generator_.AddTypeDeclarationAttribute(typeDeclarationSymbol, typeSymbol);
 
       ++inheritNameNodeCounter_;

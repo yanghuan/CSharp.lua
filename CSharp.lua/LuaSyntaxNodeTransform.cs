@@ -44,18 +44,38 @@ namespace CSharpLua {
       }
     }
 
+    internal sealed class TypeDeclarationInfo {
+      public INamedTypeSymbol TypeSymbol { get; }
+      public LuaTypeDeclarationSyntax TypeDeclaration { get; }
+
+      public TypeDeclarationInfo(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax luaTypeDeclarationSyntax) {
+        TypeSymbol = typeSymbol;
+        TypeDeclaration = luaTypeDeclarationSyntax;
+      }
+
+      public bool CheckTypeName(INamedTypeSymbol getNameTypeSymbol, out LuaIdentifierNameSyntax name) {
+        if (getNameTypeSymbol.Equals(TypeSymbol)) {
+          TypeDeclaration.IsClassUsed = true;
+          name = LuaIdentifierNameSyntax.Class;
+          return true;
+        }
+        name = null;
+        return false;
+      }
+    }
+
     private LuaSyntaxGenerator generator_;
     private SemanticModel semanticModel_;
 
     private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
-    private Stack<LuaTypeDeclarationSyntax> typeDeclarations_ = new Stack<LuaTypeDeclarationSyntax>();
+    private Stack<TypeDeclarationInfo> typeDeclarations_ = new Stack<TypeDeclarationInfo>();
     private Stack<LuaFunctionExpressionSyntax> functions_ = new Stack<LuaFunctionExpressionSyntax>();
     private Stack<MethodInfo> methodInfos_ = new Stack<MethodInfo>();
     private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
     private Stack<LuaIfStatementSyntax> ifStatements_ = new Stack<LuaIfStatementSyntax>();
     private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
     private int inheritNameNodeCounter_;
-    private bool IsGetInheritTypeName => inheritNameNodeCounter_ > 0;
+    public bool IsGetInheritTypeName => inheritNameNodeCounter_ > 0;
 
     private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
       ["!="] = LuaSyntaxNode.Tokens.NotEquals,
@@ -100,7 +120,19 @@ namespace CSharpLua {
 
     private LuaTypeDeclarationSyntax CurType {
       get {
-        return typeDeclarations_.Peek();
+        return typeDeclarations_.Peek().TypeDeclaration;
+      }
+    }
+
+    private INamedTypeSymbol CurTypeSymbol  {
+     get {
+        return typeDeclarations_.Peek().TypeSymbol;
+      }
+    }
+
+    internal TypeDeclarationInfo CurTypeDeclaration{
+      get {
+        return typeDeclarations_.Count > 0 ? typeDeclarations_.Peek() : null;
       }
     }
 
@@ -219,7 +251,7 @@ namespace CSharpLua {
     }
 
     private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
-      typeDeclarations_.Push(typeDeclaration);
+      typeDeclarations_.Push(new TypeDeclarationInfo(typeSymbol, typeDeclaration));
 
       var comments = BuildDocumentationComment(node);
       typeDeclaration.AddDocument(comments);
@@ -301,7 +333,7 @@ namespace CSharpLua {
 
     internal void AcceptPartialType(PartialTypeDeclaration major, List<PartialTypeDeclaration> typeDeclarations) {
       compilationUnits_.Push(major.CompilationUnit);
-      typeDeclarations_.Push(major.TypeDeclaration);
+      typeDeclarations_.Push(new TypeDeclarationInfo(major.Symbol, major.TypeDeclaration));
 
       List<LuaExpressionSyntax> attributes = new List<LuaExpressionSyntax>();
       foreach (var typeDeclaration in typeDeclarations) {
@@ -396,7 +428,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node) {
       GetTypeDeclarationName(node, out var name, out var typeSymbol);
       LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(typeSymbol.ToString(), name, CurCompilationUnit);
-      typeDeclarations_.Push(enumDeclaration);
+      typeDeclarations_.Push(new TypeDeclarationInfo(typeSymbol, enumDeclaration));
       var document = BuildDocumentationComment(node);
       enumDeclaration.AddDocument(document);
       foreach (var member in node.Members) {
@@ -1650,7 +1682,7 @@ namespace CSharpLua {
         }
       }
 
-      if (symbol.IsStatic && node.Expression.IsKind(SyntaxKind.IdentifierName) && GetTypeDeclarationSymbol(node) == symbol.ContainingSymbol) {
+      if (symbol.IsStatic && node.Expression.IsKind(SyntaxKind.IdentifierName) && CurTypeSymbol == symbol.ContainingSymbol) {
         bool isOnlyName = false;
         if (symbol.Kind == SymbolKind.Method) {
           isOnlyName = true;

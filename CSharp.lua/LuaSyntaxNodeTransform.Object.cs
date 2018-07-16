@@ -674,7 +674,7 @@ namespace CSharpLua {
 
     private BaseVisitType CheckBaseVisitType<T>(MemberAccessExpressionSyntax parent, T symbol, Func<T, ISymbol> overriddenFunc) where T : ISymbol {
       if (symbol.IsOverridable()) {
-        var curTypeSymbol = GetTypeDeclarationSymbol(parent);
+        var curTypeSymbol = CurTypeSymbol;
         if (generator_.IsSealed(curTypeSymbol)) {
           bool exists = curTypeSymbol.GetMembers().OfType<T>().Any(i => {
             var overriddenSymbol = overriddenFunc(i);

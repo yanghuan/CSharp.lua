@@ -701,23 +701,7 @@ namespace CSharpLua {
       return sb.ToString();
     }
 
-    private static void FillExternalTypeName(StringBuilder sb, INamedTypeSymbol typeSymbol, Func<INamedTypeSymbol, string> funcOfTypeName) {
-      var externalType = typeSymbol.ContainingType;
-      if (externalType != null) {
-        FillExternalTypeName(sb, externalType, funcOfTypeName);
-        string typeName = funcOfTypeName?.Invoke(typeSymbol) ?? externalType.Name;
-        sb.Append(typeName);
-        int typeParametersCount = externalType.TypeParameters.Length;
-        if (typeParametersCount > 0) {
-          sb.Append('_');
-          sb.Append(typeParametersCount);
-        }
-        sb.Append('.');
-      }
-    }
-
-    public static string GetTypeShortName(this INamedTypeSymbol typeSymbol, Func<INamespaceSymbol, string, string> funcOfNamespace = null, Func<INamedTypeSymbol, string> funcOfTypeName = null) {
-      StringBuilder sb = new StringBuilder();
+    private static void FillNamespaceName(StringBuilder sb, INamedTypeSymbol typeSymbol, Func<INamespaceSymbol, string, string> funcOfNamespace) {
       string namespaceName;
       var namespaceSymbol = typeSymbol.ContainingNamespace;
       if (namespaceSymbol.IsGlobalNamespace) {
@@ -733,7 +717,46 @@ namespace CSharpLua {
         sb.Append(namespaceName);
         sb.Append('.');
       }
-      FillExternalTypeName(sb, typeSymbol, funcOfTypeName);
+    }
+
+    private static void FillExternalTypeName(
+      StringBuilder sb, 
+      INamedTypeSymbol typeSymbol, 
+      Func<INamespaceSymbol, string, string> funcOfNamespace, 
+      Func<INamedTypeSymbol, string> funcOfTypeName, 
+      LuaSyntaxNodeTransform transfor = null) {
+      var externalType = typeSymbol.ContainingType;
+      if (externalType != null) {
+        if (transfor != null) {
+          var curTypeDeclaration = transfor.CurTypeDeclaration;
+          if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(externalType, out var classIdentifier)) {
+            sb.Append(classIdentifier.ValueText);
+            sb.Append('.');
+            return;
+          }
+        }
+
+        FillExternalTypeName(sb, externalType, funcOfNamespace, funcOfTypeName);
+        string typeName = funcOfTypeName?.Invoke(typeSymbol) ?? externalType.Name;
+        sb.Append(typeName);
+        int typeParametersCount = externalType.TypeParameters.Length;
+        if (typeParametersCount > 0) {
+          sb.Append('_');
+          sb.Append(typeParametersCount);
+        }
+        sb.Append('.');
+      } else {
+        FillNamespaceName(sb, typeSymbol, funcOfNamespace);
+      }
+    }
+
+    public static string GetTypeShortName(
+      this INamedTypeSymbol typeSymbol,
+      Func<INamespaceSymbol, string, string> funcOfNamespace = null,
+      Func<INamedTypeSymbol, string> funcOfTypeName = null,
+      LuaSyntaxNodeTransform transfor = null) {
+      StringBuilder sb = new StringBuilder();
+      FillExternalTypeName(sb, typeSymbol, funcOfNamespace, funcOfTypeName, transfor);
       string typeName = funcOfTypeName?.Invoke(typeSymbol) ?? typeSymbol.Name;
       sb.Append(typeName);
       int typeParametersCount = typeSymbol.TypeParameters.Length;
