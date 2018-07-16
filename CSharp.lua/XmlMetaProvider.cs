@@ -175,27 +175,19 @@ namespace CSharpLua {
       }
 
       private static string GetTypeString(ITypeSymbol symbol) {
+        StringBuilder sb = new StringBuilder();
         INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
         var namespaceSymbol = typeSymbol.ContainingNamespace;
-        string name;
-        if (namespaceSymbol.IsGlobalNamespace) {
-          if (typeSymbol.TypeArguments.Length == 0) {
-              name = $"{symbol.Name}";
-          }
-          else {
-              name = $"{symbol.Name}^{typeSymbol.TypeArguments.Length}";
-          }
+        if (!namespaceSymbol.IsGlobalNamespace) {
+          sb.Append(namespaceSymbol.ToString());
+          sb.Append('.');
         }
-        else {
-          string namespaceName = namespaceSymbol.ToString();
-          if (typeSymbol.TypeArguments.Length == 0) {
-              name = $"{namespaceName}.{symbol.Name}";
-          }
-          else {
-              name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
-          }
+        sb.Append(symbol.Name);
+        if (typeSymbol.TypeArguments.Length > 0) {
+          sb.Append('^');
+          sb.Append(typeSymbol.TypeArguments.Length);
         }
-        return name;
+        return sb.ToString();
       }
 
       private static bool IsTypeMatch(ITypeSymbol symbol, string typeString) {
@@ -474,11 +466,11 @@ namespace CSharpLua {
         string classesfullName = namespaceName.Length > 0 ? namespaceName + '.' + className : className;
         classesfullName = classesfullName.Replace('^', '_');
         if (typeMetas_.ContainsKey(classesfullName)) {
-                    //throw new ArgumentException($"type [{classesfullName}] is already has");
-                    return;
+          Console.WriteLine($"WARNING: type [{classesfullName}] is already has");
+        } else {
+          TypeMetaInfo info = new TypeMetaInfo(classModel);
+          typeMetas_.Add(classesfullName, info);
         }
-        TypeMetaInfo info = new TypeMetaInfo(classModel);
-        typeMetas_.Add(classesfullName, info);
       }
     }
 
