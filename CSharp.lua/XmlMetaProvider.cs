@@ -176,12 +176,24 @@ namespace CSharpLua {
 
       private static string GetTypeString(ITypeSymbol symbol) {
         INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
-        string namespaceName = typeSymbol.ContainingNamespace.ToString();
+        var namespaceSymbol = typeSymbol.ContainingNamespace;
         string name;
-        if (typeSymbol.TypeArguments.Length == 0) {
-          name = $"{namespaceName}.{symbol.Name}";
-        } else {
-          name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
+        if (namespaceSymbol.IsGlobalNamespace) {
+          if (typeSymbol.TypeArguments.Length == 0) {
+              name = $"{symbol.Name}";
+          }
+          else {
+              name = $"{symbol.Name}^{typeSymbol.TypeArguments.Length}";
+          }
+        }
+        else {
+          string namespaceName = namespaceSymbol.ToString();
+          if (typeSymbol.TypeArguments.Length == 0) {
+              name = $"{namespaceName}.{symbol.Name}";
+          }
+          else {
+              name = $"{namespaceName}.{symbol.Name}^{typeSymbol.TypeArguments.Length}";
+          }
         }
         return name;
       }
@@ -462,7 +474,8 @@ namespace CSharpLua {
         string classesfullName = namespaceName.Length > 0 ? namespaceName + '.' + className : className;
         classesfullName = classesfullName.Replace('^', '_');
         if (typeMetas_.ContainsKey(classesfullName)) {
-          throw new ArgumentException($"type [{classesfullName}] is already has");
+                    //throw new ArgumentException($"type [{classesfullName}] is already has");
+                    return;
         }
         TypeMetaInfo info = new TypeMetaInfo(classModel);
         typeMetas_.Add(classesfullName, info);
