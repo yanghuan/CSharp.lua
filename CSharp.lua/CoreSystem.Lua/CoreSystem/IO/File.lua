@@ -89,4 +89,10 @@ function File.WriteAllLines(path, contents)
   f:close()
 end
 
+function File.Exists(path)
+  local file = io.open(path, "rb")
+  if file then file:close() end
+  return file ~= nil
+end
+
 System.define("System.IO.File", File)
