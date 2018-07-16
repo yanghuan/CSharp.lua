@@ -43,6 +43,7 @@ local identityFn = function(x) return x end
 local equals = function(x, y) return x == y end
 local modules = {}
 local usings = {}
+local defs = {}
 local Object, ValueType
 
 local function new(cls, ...)
@@ -282,6 +283,7 @@ local function def(name, kind, cls, generic)
     else
       setHasStaticCtor(cls, kind)
     end
+    defs[cls.__name__] = cls;
   elseif kind == "I" then
     local extends = cls.__inherits__
     if extends then
@@ -1112,6 +1114,16 @@ function System.namespace(name, f)
   f(namespace)
   curCacheName = nil
 end
+
+
+function System.getDefs()
+  local types = {};
+  for k , v in pairs(defs) do
+    table.insert(types, System.typeof(v));
+  end
+  return System.arrayFromTable(types, System.Type);
+end
+
 
 System.config = {}
 return function (config) 
