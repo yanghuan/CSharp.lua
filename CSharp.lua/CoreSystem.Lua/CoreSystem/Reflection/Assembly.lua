@@ -50,6 +50,8 @@ Assembly.GetCallingAssembly = getAssembly
 Assembly.GetEntryAssembly = getAssembly
 Assembly.GetExecutingAssembly = getAssembly
 Assembly.GetTypeFrom = Type.GetTypeFrom
+Assembly.GetTypes = System.getDefs
+Assembly.GetExportedTypes = System.getDefs
 
 System.define("System.Reflection.Assembly", Assembly)
 
@@ -73,7 +75,7 @@ local function isDefined(cls, name, attributeCls)
     local attrTable = attributes[name]
     if attrTable ~= nil then
       for _, v in ipairs(attrTable) do
-        if v == attributeCls then
+        if getmetatable(v) == attributeCls then
           return true
         end
       end
@@ -177,10 +179,15 @@ function Type.GetMethods(this)
     end
     cls = cls.__base__
   until cls == nil 
-  return System.arrayFromTable(t)  
+  return System.arrayFromTable(t, MethodInfo)  
 end
 
 local FieldInfo = { memberType = 4 }
+
+local function buildFieldInfo(cls, name) 
+  return setmetatable({ c = cls, name = name }, FieldInfo)
+end
+
 
 function FieldInfo.GetValue(this, obj)
   if obj ~= nil then
@@ -271,6 +278,37 @@ PropertyInfo.__eq = eq
 PropertyInfo.__inherits__ = { MemberInfo }
 
 System.define("System.Reflection.PropertyInfo", PropertyInfo)
+
+function Type.GetMembers(this)
+  local t = {}
+  local names = {};
+  local cls = this.c
+  repeat
+    for k, v in pairs(cls) do
+      if type(v) == "function" then
+        local methodInfo = buildMethodInfo(cls, k, v)
+        tinsert(t, methodInfo)
+        names[k] = true;
+      else
+        local fieldInfo = buildFieldInfo(cls, k)
+        tinsert(t, fieldInfo)
+        names[k] = true;
+      end
+    end
+    local attributes = cls.__attributes__;
+    if attributes then
+      for k , v in pairs(attributes) do
+        if not names[k] then
+            local fieldInfo = buildFieldInfo(cls, k)
+            tinsert(t, fieldInfo)
+            names[k] = true;
+        end
+      end
+    end
+    cls = cls.__base__
+  until cls == nil 
+  return System.arrayFromTable(t, MemberInfo)  
+end
 
 function Type.GetProperty(this, name)
   if name == nil then

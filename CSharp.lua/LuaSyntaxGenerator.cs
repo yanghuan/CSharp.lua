@@ -1231,7 +1231,7 @@ namespace CSharpLua {
           if (IsImplicitInterfaceImplementation(symbol)) {
             isAutoField = false;
           } else {
-            isAutoField = symbol.IsPropertyField();
+            isAutoField = symbol.IsStatic && symbol.IsPropertyField();
           }
         }
         isFieldPropertys_.Add(symbol, isAutoField);
