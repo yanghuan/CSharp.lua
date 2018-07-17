@@ -1087,6 +1087,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
+      LuaStatementSyntax result;
       if (CurFunction is LuaCheckReturnFunctionExpressionSyntax) {
         LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
         returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
@@ -1094,7 +1095,7 @@ namespace CSharpLua {
           var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
           returnStatement.Expressions.Add(expression);
         }
-        return returnStatement;
+        result = returnStatement;
       } else {
         var curMethodInfo = CurMethodInfoOrNull;
         if (curMethodInfo != null && curMethodInfo.RefOrOutParameters.Count > 0) {
@@ -1104,12 +1105,22 @@ namespace CSharpLua {
             returnStatement.Expressions.Add(expression);
           }
           returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
-          return returnStatement;
+          result = returnStatement;
         } else {
           var expression = (LuaExpressionSyntax)node.Expression?.Accept(this);
-          return new LuaReturnStatementSyntax(expression);
+          result = new LuaReturnStatementSyntax(expression);
         }
       }
+
+      if (node.Parent.IsKind(SyntaxKind.Block) && node.Parent.Parent is MemberDeclarationSyntax) {
+        var block = (BlockSyntax)node.Parent;
+        if (block.Statements.Last() != node) {
+          LuaBlockStatementSyntax blockStatement = new LuaBlockStatementSyntax();
+          blockStatement.Statements.Add(result);
+          result = blockStatement;
+        }
+      }
+      return result;
     }
 
     public override LuaSyntaxNode VisitExpressionStatement(ExpressionStatementSyntax node) {
