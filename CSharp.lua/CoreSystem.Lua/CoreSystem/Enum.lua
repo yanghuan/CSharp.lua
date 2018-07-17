@@ -24,6 +24,7 @@ local ArgumentException = System.ArgumentException
 
 local pairs = pairs
 local tostring = tostring
+local tinsert = table.insert
 
 local Enum = {}
 
@@ -50,13 +51,41 @@ end
 Enum.HasFlag = hasFlag
 Double.HasFlag = hasFlag
 
+function Enum.GetName(enumType, value)
+  if enumType == nil then throw(ArgumentNullException("enumType")) end
+  if value == nil then throw(ArgumentNullException("value")) end
+  if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
+  for k, v in pairs(enumType.c) do
+    if v == value then
+      return k
+    end
+  end
+  throw(ArgumentException())
+end
+
+function Enum.GetNames(enumType)
+  if enumType == nil then throw(ArgumentNullException("enumType")) end
+  if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
+  local t = {}
+  for k, v in pairs(enumType.c) do
+    tinsert(t, k)
+  end
+  return System.arrayFromTable(t, System.String)
+end
+
+function Enum.GetValues(enumType)
+  if enumType == nil then throw(ArgumentNullException("enumType")) end
+  if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
+  local t = {}
+  for k, v in pairs(enumType.c) do
+    tinsert(t, v)
+  end
+  return System.arrayFromTable(t, Int)
+end
+
 local function tryParseEnum(enumType, value, ignoreCase)
-  if enumType == nil then 
-    throw(ArgumentNullException("enumType"))
-  end
-  if not enumType:getIsEnum() then
-    throw(ArgumentException("Arg_MustBeEnum"))
-  end
+  if enumType == nil then throw(ArgumentNullException("enumType")) end
+  if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
   if value == nil then
     return
   end
