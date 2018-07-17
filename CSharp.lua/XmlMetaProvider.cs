@@ -285,18 +285,27 @@ namespace CSharpLua {
         }
 
         var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+        if (methodModel != null && methodModel.Baned) {
+          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+        }
         return methodModel?.Template;
       }
 
       private string GetIgnoreGeneric(IMethodSymbol symbol) {
         bool isIgnoreGeneric = false;
+        XmlMetaModel.MethodModel methodModel;
         if (isSingleModel_) {
-          isIgnoreGeneric = models_.First().IgnoreGeneric;
+          methodModel = models_.First();
+          isIgnoreGeneric = methodModel.IgnoreGeneric;
         } else {
-          var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
+          methodModel = models_.Find(i => IsMethodMatch(i, symbol));
           if (methodModel != null) {
             isIgnoreGeneric = methodModel.IgnoreGeneric;
           }
+        }
+        if (methodModel != null && methodModel.Baned)
+        {
+            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
         }
         return isIgnoreGeneric ? bool.TrueString : bool.FalseString;
       }
