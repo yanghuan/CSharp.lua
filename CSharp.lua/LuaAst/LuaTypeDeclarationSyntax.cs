@@ -233,16 +233,16 @@ namespace CSharpLua.LuaAst {
       if (value != null) {
         if (isStatic) {
           if (isImmutable) {
-            AddResultTable(name, value);
+            AddResultTable(innerName, value);
           } else {
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, innerName), value);
             staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
           }
         } else {
           if (isImmutable) {
-            AddResultTable(name, value);
+            AddResultTable(innerName, value);
           } else {
-            AddInitFiled(name, value);
+            AddInitFiled(innerName, value);
           }
         }
       }

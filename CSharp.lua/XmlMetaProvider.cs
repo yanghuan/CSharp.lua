@@ -303,9 +303,8 @@ namespace CSharpLua {
             isIgnoreGeneric = methodModel.IgnoreGeneric;
           }
         }
-        if (methodModel != null && methodModel.Baned)
-        {
-            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+        if (methodModel != null && methodModel.Baned) {
+          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
         }
         return isIgnoreGeneric ? bool.TrueString : bool.FalseString;
       }
@@ -476,7 +475,7 @@ namespace CSharpLua {
         classesfullName = classesfullName.Replace('^', '_');
         if (typeMetas_.ContainsKey(classesfullName)) {
           throw new ArgumentException($"type [{classesfullName}] is already has");
-        } 
+        }
         TypeMetaInfo info = new TypeMetaInfo(classModel);
         typeMetas_.Add(classesfullName, info);
       }
