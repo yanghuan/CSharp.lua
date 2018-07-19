@@ -273,13 +273,13 @@ namespace CSharpLua {
           }
         } else if (key[0] == '*') {
           if (int.TryParse(key.Substring(1), out int paramsIndex)) {
-            LuaCodeTemplateExpressionSyntax paramsExpression = new LuaCodeTemplateExpressionSyntax();
+            LuaSequenceListExpressionSyntax sequenceList = new LuaSequenceListExpressionSyntax();
             foreach (var argument in arguments.Skip(paramsIndex)) {
               var argumentExpression = argument();
-              paramsExpression.Expressions.Add(argumentExpression);
+              sequenceList.Expressions.Add(argumentExpression);
             }
-            if (paramsExpression.Expressions.Count > 0) {
-              AddCodeTemplateExpression(paramsExpression, comma, codeTemplateExpression);
+            if (sequenceList.Expressions.Count > 0) {
+              AddCodeTemplateExpression(sequenceList, comma, codeTemplateExpression);
             }
           }
         } else {
