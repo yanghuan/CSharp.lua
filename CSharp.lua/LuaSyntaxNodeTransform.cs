@@ -985,8 +985,11 @@ namespace CSharpLua {
               throw new CompilationErrorException(SyntaxNode, e.Message);
             }
             throw e;
-          } catch (Exception e) {
-            throw new Exception($"Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue, {SyntaxNode.GetLocationString()}", e);
+          } catch (BugErrorException) {
+            throw;
+          } 
+          catch (Exception e) {
+            throw new BugErrorException(SyntaxNode, e);
           }
         } else {
           string content = SyntaxTrivia.ToString();

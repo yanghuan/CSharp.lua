@@ -41,8 +41,15 @@ namespace CSharpLua {
     public CompilationErrorException(string message) : base(message) {
     }
 
-    public CompilationErrorException(SyntaxNode node, string message) : base($"{node.GetLocationString()}: {message}, please refactor your code.") {
+    public CompilationErrorException(SyntaxNode node, string message) 
+      : base($"{node.GetLocationString()}: {message}, please refactor your code.") {
       SyntaxNode = node;
+    }
+  }
+
+  public sealed class BugErrorException : Exception {
+    public BugErrorException(SyntaxNode node, Exception e) 
+      : base($"{node.GetLocationString()}: Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue", e) {
     }
   }
 

@@ -67,10 +67,7 @@ namespace CSharpLua.LuaAst {
     public LuaVariableDeclaratorSyntax Declarator { get; }
 
     public LuaLocalVariableDeclaratorSyntax(LuaVariableDeclaratorSyntax declarator) {
-      if (declarator == null) {
-        throw new ArgumentNullException(nameof(declarator));
-      }
-      Declarator = declarator;
+      Declarator = declarator ?? throw new ArgumentNullException(nameof(declarator));
     }
 
     public LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
@@ -88,10 +85,7 @@ namespace CSharpLua.LuaAst {
     public LuaEqualsValueClauseSyntax Initializer { get; set; }
 
     public LuaVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
-      if (identifier == null) {
-        throw new ArgumentNullException(nameof(identifier));
-      }
-      Identifier = identifier;
+      Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
       if (expression != null) {
         Initializer = new LuaEqualsValueClauseSyntax(expression);
       }
@@ -107,10 +101,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Value { get; }
 
     public LuaEqualsValueClauseSyntax(LuaExpressionSyntax value) {
-      if (value == null) {
-        throw new ArgumentNullException(nameof(value));
-      }
-      Value = value;
+      Value = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     internal override void Render(LuaRenderer renderer) {
