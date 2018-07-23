@@ -505,7 +505,7 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         TypeMetaInfo info = typeMetas_.GetOrDefault(shortName);
         if (info != null && info.Model.Baned) {
-          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol.ContainingType?.Name}.{symbol.Name} is baned");
         }
         return info?.Model.Name;
       }
