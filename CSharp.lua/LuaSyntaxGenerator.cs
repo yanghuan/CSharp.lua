@@ -91,6 +91,12 @@ namespace CSharpLua {
     private HashSet<string> monoBehaviourSpeicalMethodNames_;
     private INamedTypeSymbol monoBehaviourTypeSymbol_;
 
+    static LuaSyntaxGenerator() {
+      Contract.ContractFailed += (_, e) => {
+        throw new ApplicationException(e.Message, e.OriginalException);
+      };
+    }
+
     public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting, string[] attributes, string baseFolder = "") {
       CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
       using (MemoryStream ms = new MemoryStream()) {
