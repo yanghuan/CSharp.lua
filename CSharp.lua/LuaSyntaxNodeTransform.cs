@@ -2613,6 +2613,11 @@ namespace CSharpLua {
         block.Statements.Add(new LuaLocalVariableDeclaratorSyntax(continueIdentifier));
         LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
         WriteStatementOrBlock(bodyStatement, repeatStatement.Body);
+        if (repeatStatement.Body.Statements.Last() is LuaReturnStatementSyntax returnStatement) {
+          LuaBlockStatementSyntax returnBlock = new LuaBlockStatementSyntax();
+          returnBlock.Statements.Add(returnStatement);
+          repeatStatement.Body.Statements[repeatStatement.Body.Statements.Count - 1] = returnBlock;
+        }
         LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(continueIdentifier, LuaIdentifierNameSyntax.True);
         repeatStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
         block.Statements.Add(repeatStatement);
