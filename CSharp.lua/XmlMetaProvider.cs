@@ -175,11 +175,12 @@ namespace CSharpLua {
       }
 
       private static string GetTypeString(ITypeSymbol symbol) {
-        StringBuilder sb = new StringBuilder();
-        INamedTypeSymbol typeSymbol = symbol.OriginalDefinition as INamedTypeSymbol;
-        if(typeSymbol == null) {
-          return "";
+        if (symbol.Kind == SymbolKind.TypeParameter) {
+          return symbol.Name;
         }
+
+        StringBuilder sb = new StringBuilder();
+        INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
         var namespaceSymbol = typeSymbol.ContainingNamespace;
         if (!namespaceSymbol.IsGlobalNamespace) {
           sb.Append(namespaceSymbol.ToString());
