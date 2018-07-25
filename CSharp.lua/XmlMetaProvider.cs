@@ -176,7 +176,10 @@ namespace CSharpLua {
 
       private static string GetTypeString(ITypeSymbol symbol) {
         StringBuilder sb = new StringBuilder();
-        INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
+        INamedTypeSymbol typeSymbol = symbol.OriginalDefinition as INamedTypeSymbol;
+        if(typeSymbol == null) {
+          return "";
+        }
         var namespaceSymbol = typeSymbol.ContainingNamespace;
         if (!namespaceSymbol.IsGlobalNamespace) {
           sb.Append(namespaceSymbol.ToString());
