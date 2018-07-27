@@ -30,6 +30,9 @@ local function testDateTimeAndTimeSpan()
     
   date = date + System.TimeSpan.FromDays(2)
   print(date:ToString())
+  
+  date = date:AddMonths(2);
+  print(date:ToString())
     
   local baseTime = System.DateTime(1970, 1, 1) 
   print(baseTime:ToString())

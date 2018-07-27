@@ -17,6 +17,7 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local div = System.div
+local trunc = System.trunc
 
 local TimeSpan = System.TimeSpan
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -137,7 +138,7 @@ local function addTicks(this, value)
 end
 
 local function add(this, value, scale)
-  local millis = value * scale + (value >= 0 and 0.5 or -0.5)
+  local millis = trunc(value * scale + (value >= 0 and 0.5 or -0.5))
   return addTicks(this, millis * 10000)
 end
 
@@ -191,6 +192,29 @@ local function getDataPart(ticks, part)
   return n - days[m] + 1
 end
 
+local function getDatePart(ticks)
+  local year, month, day
+  local n = div(ticks, 864e9)
+  local y400 = div(n, 146097)
+  n = n - y400 * 146097
+  local y100 = div(n, 36524)
+  if y100 == 4 then y100 = 3 end
+  n = n - y100 * 36524
+  local y4 = div(n, 1461)
+  n = n - y4 * 1461;
+  local y1 = div(n, 365)
+  if y1 == 4 then y1 = 3 end
+  year = y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1
+  n = n - y1 * 365
+  local leapYear = y1 == 3 and (y4 ~= 24 or y100 == 3)
+  local days = leapYear and daysToMonth366 or daysToMonth365
+  local m = div(n, 32) + 1
+  while n >= days[m + 1] do m = m + 1 end
+  month = m
+  day = n - days[m] + 1
+  return year, month, day
+end
+
 local function daysInMonth(year, month)
   if month < 1 or month > 12 then
       throw(ArgumentOutOfRangeException("month"))
@@ -206,9 +230,8 @@ local function addMonths(this, months)
       throw(ArgumentOutOfRangeException("months"))
   end
   local ticks = this.ticks
-  local y = getDataPart(ticks, 0)
-  local m = getDataPart(ticks, 2)
-  local d = getDataPart(ticks, 3)
+  local y, m, d
+  y, m, d = getDatePart(ticks)
   local i = m - 1 + months
   if i >= 0 then
     m = i % 12 + 1
