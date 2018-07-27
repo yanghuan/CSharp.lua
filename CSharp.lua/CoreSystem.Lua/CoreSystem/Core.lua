@@ -787,7 +787,7 @@ end
 function System.using(t, f)
   local dispose = t and t.Dispose
   if dispose ~= nil then
-    local ok, status, ret = pcall(f, t)   
+    local ok, status, ret = xpcall(f, xpcallErr t)   
     dispose(t)
     if not ok then
       throw(status)
@@ -799,7 +799,7 @@ function System.using(t, f)
 end
 
 function System.usingX(f, ...)
-  local ok, status, ret = pcall(f, ...)
+  local ok, status, ret = xpcall(f, xpcallErr, ...)
   for i = 1, select("#", ...) do
     local t = select(i, ...)
     if t ~= nil then
