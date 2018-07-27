@@ -278,7 +278,7 @@ namespace CSharpLua {
           methodModel = models_.Find(i => IsMethodMatch(i, symbol));
         }
         if (methodModel != null && methodModel.Baned) {
-          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol} is baned");
         }
         return methodModel?.Name;
       }
@@ -290,7 +290,7 @@ namespace CSharpLua {
 
         var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
         if (methodModel != null && methodModel.Baned) {
-          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol} is baned");
         }
         return methodModel?.Template;
       }
@@ -308,7 +308,7 @@ namespace CSharpLua {
           }
         }
         if (methodModel != null && methodModel.Baned) {
-          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol} is baned");
         }
         return isIgnoreGeneric ? bool.TrueString : bool.FalseString;
       }
@@ -489,7 +489,7 @@ namespace CSharpLua {
       var info = namespaceNameMaps_.GetOrDefault(original);
       if (info != null) {
         if (info.Baned) {
-          throw new CompilationErrorException($"{symbol.ToString()} is baned");
+          throw new CompilationErrorException($"{symbol} is baned");
         }
         return info.Name;
       }
@@ -509,7 +509,7 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         TypeMetaInfo info = typeMetas_.GetOrDefault(shortName);
         if (info != null && info.Model.Baned) {
-          throw new CompilationErrorException($"{symbol.ContainingType?.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol} is baned");
         }
         return info?.Model.Name;
       }
@@ -518,7 +518,11 @@ namespace CSharpLua {
 
     private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
       string typeName = GetTypeShortString(memberSymbol.ContainingType);
-      return typeMetas_.GetOrDefault(typeName);
+      TypeMetaInfo info = typeMetas_.GetOrDefault(typeName);
+      if (info != null && info.Model.Baned) {
+        throw new CompilationErrorException($"{memberSymbol.ContainingType} is baned");
+      }
+      return info;
     }
 
     public bool? IsPropertyField(IPropertySymbol symbol) {
@@ -533,7 +537,7 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         var info = GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name);
         if (info != null && info.Baned) {
-          throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+          throw new CompilationErrorException($"{symbol} is baned");
         }
         return info?.Template;
       }
@@ -545,7 +549,7 @@ namespace CSharpLua {
         var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
         if (info != null) {
           if (info.Baned) {
-            throw new CompilationErrorException($"{symbol.ContainingType.Name}.{symbol.Name} is baned");
+            throw new CompilationErrorException($"{symbol} is baned");
           }
           return isGet ? info.get?.Template : info.set?.Template;
         }
