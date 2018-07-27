@@ -787,7 +787,7 @@ end
 function System.using(t, f)
   local dispose = t and t.Dispose
   if dispose ~= nil then
-    local ok, status, ret = xpcall(f, xpcallErr t)   
+    local ok, status, ret = xpcall(f, xpcallErr, t)   
     dispose(t)
     if not ok then
       throw(status)
