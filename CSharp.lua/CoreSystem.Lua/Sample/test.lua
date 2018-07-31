@@ -274,7 +274,7 @@ local function testStringBuilder()
   local sb = System.Text.StringBuilder()
   sb:Append("aa")
   sb:Append("bbcc")
-  sb:setLength(3)  
+  sb:setLength(5)  
   print(sb, sb:getLength())
 end
 
