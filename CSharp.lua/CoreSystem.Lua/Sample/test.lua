@@ -270,6 +270,14 @@ local function testIO()
   os.remove(path)
 end
 
+local function testStringBuilder()
+  local sb = System.Text.StringBuilder()
+  sb:Append("aa")
+  sb:Append("bbcc")
+  sb:setLength(3)  
+  print(sb, sb:getLength())
+end
+
 test(testDateTimeAndTimeSpan, "DateTime & TimeSpan")
 test(testArray, "Array")
 test(testList, "List")
@@ -283,3 +291,9 @@ test(testType, "Type")
 test(testSplit, "testSplit")
 --test(testConsole, "Console")
 --test(testIO, "IO")
+test(testStringBuilder, "StringBuilder")
+
+
+
+
+

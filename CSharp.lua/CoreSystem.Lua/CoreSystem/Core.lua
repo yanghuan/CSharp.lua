@@ -790,7 +790,7 @@ function System.using(t, f)
     local ok, status, ret = xpcall(f, xpcallErr, t)   
     dispose(t)
     if not ok then
-      throw(status)
+      error(status)
     end
     return status, ret
   else
@@ -810,7 +810,7 @@ function System.usingX(f, ...)
     end
   end
   if not ok then
-    throw(status)
+    error(status)
   end
   return status, ret
 end

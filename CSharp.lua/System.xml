@@ -488,6 +488,10 @@ limitations under the License.
         <method name="Append" Name="AppendChar" >
           <arg type="System.Char" />
         </method> 
+        <method name="Append" Name="AppendCharRepeat">
+          <arg type="System.Char" />
+          <arg type="System.Int32" />
+        </method>  
       </class>
     </namespace>
   </assembly>

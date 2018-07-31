@@ -18,14 +18,17 @@ local System = System
 local throw = System.throw
 local Collection = System.Collection
 local addCount = Collection.addCount
+local getCount = Collection.getCount
 local removeArrayAll = Collection.removeArrayAll
 local clearCount = Collection.clearCount
 local ArgumentNullException = System.ArgumentNullException
+local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
 local table = table
 local tinsert = table.insert
 local tconcat = table.concat
 local schar = string.char
+local ssub = string.sub
 
 local StringBuilder = {}
 
@@ -54,7 +57,37 @@ function StringBuilder.__ctor__(this, ...)
   end
 end
 
-StringBuilder.getLength = Collection.getCount
+StringBuilder.getLength = getCount
+
+function StringBuilder.setLength(this, value) 
+  if value < 0 then throw(ArgumentOutOfRangeException("value")) end
+  if value == 0 then
+    this:Clear()
+    return
+  end
+  local delta = value - getCount(this)
+  if delta > 0 then
+    this:AppendCharRepeat(0, delta)
+  else
+    local length, remain = #this, value
+    for i = 1, length do
+      local s = this[i]
+      local len = #s
+      if len >= remain then
+        if len ~= remain then
+          s = ssub(s, 0, remain)
+          this[i] = s
+        end
+        for j = i + 1, length do
+          this[j] = nil
+        end
+        break
+      end
+      remain = remain - len
+    end
+    addCount(this, delta)
+  end  
+end
 
 function StringBuilder.Append(this, ...)
   local len = select("#", "...")
@@ -81,6 +114,18 @@ function StringBuilder.AppendChar(this, v)
   v = schar(v)
   tinsert(this, v)
   addCount(this, 1) 
+  return this
+end
+
+function StringBuilder.AppendCharRepeat(this, v, repeatCount)
+  if repeatCount < 0 then throw(ArgumentOutOfRangeException("repeatCount")) end
+  if repeatCount == 0 then return this end
+  v = schar(v)
+  for i = 1, repeatCount do
+    tinsert(this, v) 
+  end
+  addCount(this, repeatCount) 
+  return this
 end
 
 function StringBuilder.AppendFormat(this, format, ...)
@@ -109,6 +154,5 @@ end
 
 StringBuilder.ToString = tconcat
 StringBuilder.__tostring = StringBuilder.ToString
-StringBuilder.__len = StringBuilder.GetLength
 
 System.define("System.Text.StringBuilder", StringBuilder)
