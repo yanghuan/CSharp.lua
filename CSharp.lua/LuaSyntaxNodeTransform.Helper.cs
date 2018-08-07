@@ -303,8 +303,7 @@ namespace CSharpLua {
     }
 
     private void AddExportEnum(ITypeSymbol enumType) {
-      Contract.Assert(enumType.TypeKind == TypeKind.Enum);
-      generator_.AddExportEnum(enumType.ToString());
+      generator_.AddExportEnum(enumType);
     }
 
     private bool IsPropertyField(IPropertySymbol symbol) {

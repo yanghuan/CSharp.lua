@@ -436,7 +436,7 @@ namespace CSharpLua {
         enumDeclaration.Add(statement);
       }
       typeDeclarations_.Pop();
-      generator_.AddEnumDeclaration(enumDeclaration);
+      generator_.AddEnumDeclaration(typeSymbol, enumDeclaration);
       return enumDeclaration;
     }
 

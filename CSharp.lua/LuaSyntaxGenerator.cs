@@ -187,11 +187,17 @@ namespace CSharpLua {
       return exportEnums_.Contains(enumTypeSymbol);
     }
 
-    internal void AddExportEnum(string enumTypeSymbol) {
-      exportEnums_.Add(enumTypeSymbol);
+    internal void AddExportEnum(ITypeSymbol enumType) {
+      Contract.Assert(enumType.TypeKind == TypeKind.Enum);
+      exportEnums_.Add(enumType.ToString());
     }
 
-    internal void AddEnumDeclaration(LuaEnumDeclarationSyntax enumDeclaration) {
+    internal void AddEnumDeclaration(INamedTypeSymbol type, LuaEnumDeclarationSyntax enumDeclaration) {
+      var attr = type.GetAttributes().FirstOrDefault();
+      if (attr != null && attr.AttributeClass.ToString() == "ProtoBuf.ProtoContractAttribute") {
+        // protobuf-net enum is always export
+        AddExportEnum(type);
+      }
       enumDeclarations_.Add(enumDeclaration);
     }
 
