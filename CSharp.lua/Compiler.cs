@@ -50,7 +50,7 @@ namespace CSharpLua {
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
-      cscArguments_ = string.IsNullOrEmpty(csc) ? Array.Empty<string>() : csc.Trim().Split(';', ',', ' ');
+      cscArguments_ = string.IsNullOrEmpty(csc) ? Array.Empty<string>() : csc.Trim().Split(' ', '\t');
       isNewest_ = !isClassic;
       hasSemicolon_ = false;
       int.TryParse(indent, out indent_);

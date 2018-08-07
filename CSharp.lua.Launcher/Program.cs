@@ -53,13 +53,13 @@ Options
           string output = cmds.GetArgument("-d");
           string lib = cmds.GetArgument("-l", true);
           string meta = cmds.GetArgument("-m", true);
-          string csc = cmds.GetArgument("-csc", true);
           bool isClassic = cmds.ContainsKey("-c");
           string indent = cmds.GetArgument("-i", true);
           string atts = cmds.GetArgument("-a", true);
           if (atts == null && cmds.ContainsKey("-a")) {
             atts = string.Empty;
           }
+          string csc = GetCSCArgument(cmds);
           Compiler w = new Compiler(folder, output, lib, meta, csc, isClassic, indent, atts);
           w.Do();
           Console.WriteLine("all operator success");
@@ -83,6 +83,35 @@ Options
 
     private static void ShowHelpInfo() {
       Console.Error.WriteLine(HelpCmdString);
+    }
+
+    private static bool IsArgumentKey(string key) {
+      switch (key) {
+        case "-s":
+        case "-d":
+        case "-l":
+        case "-m":
+        case "-c":
+        case "-i":
+        case "-a":
+          return true;
+      }
+      return false;
+    }
+
+    private static string GetCSCArgument(Dictionary<string, string[]> cmds) {
+      string argument = null;
+      if (cmds.ContainsKey("-csc")) {
+        int index = cmds.Keys.IndexOf(i => i == "-csc");
+        Contract.Assert(index != -1);
+        var remains = cmds.Keys.Skip(index + 1);
+        int end = remains.IndexOf(IsArgumentKey);
+        if (end != -1) {
+          remains = remains.Take(end);
+        }
+        return string.Join(" ", remains);
+      }
+      return argument;
     }
   }
 }
