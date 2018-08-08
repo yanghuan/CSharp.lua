@@ -193,10 +193,8 @@ namespace CSharpLua {
     }
 
     internal void AddEnumDeclaration(INamedTypeSymbol type, LuaEnumDeclarationSyntax enumDeclaration) {
-      var attr = type.GetAttributes().FirstOrDefault();
-      if (attr != null && attr.AttributeClass.ToString() == "ProtoBuf.ProtoContractAttribute") {
-        // protobuf-net enum is always export
-        AddExportEnum(type);
+      if (type.IsProtobufNetDeclaration()) {
+        AddExportEnum(type);      // protobuf-net enum is always export
       }
       enumDeclarations_.Add(enumDeclaration);
     }

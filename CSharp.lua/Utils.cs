@@ -333,6 +333,10 @@ namespace CSharpLua {
         return false;
       }
 
+      if (symbol.IsProtobufNetProperty()) {
+        return true;
+      }
+
       var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
       if (syntaxReference != null) {
         var node = syntaxReference.GetSyntax();
@@ -819,5 +823,35 @@ namespace CSharpLua {
     public static bool IsNil(this LuaExpressionSyntax expression) {
       return expression == null || expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
     }
+
+    #region hard code for protobuf-net
+
+    public static bool IsProtobufNetDeclaration(this INamedTypeSymbol type) {
+      var attr = type.GetAttributes().FirstOrDefault();
+      if (attr != null && attr.AttributeClass.ToString() == "ProtoBuf.ProtoContractAttribute") {
+        return true;
+      }
+      return false;
+    }
+
+    public static bool IsProtobufNetField(this IFieldSymbol symbol) {
+      var containingType = symbol.ContainingType;
+      if (!containingType.Interfaces.IsEmpty) {
+        if (containingType.Interfaces.First().ToString() == "ProtoBuf.IExtensible") {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    public static bool IsProtobufNetProperty(this IPropertySymbol symbol) {
+      var attr = symbol.GetAttributes().FirstOrDefault();
+      if (attr != null && attr.AttributeClass.ToString() == "ProtoBuf.ProtoMemberAttribute") {
+        return true;
+      }
+      return false;
+    }
+
+    #endregion
   }
 }

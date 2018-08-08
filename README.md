@@ -61,7 +61,7 @@ Options
 -h              : show the help message    
 -l              : libraries referenced, use ';' to separate      
 -m              : meta files, like System.xml, use ';' to separate     
--csc            : csc.exe command argumnets, use ';' to separate
+-csc            : csc.exe command argumnets, use ' ' or '\t' to separate
 
 -c              : support classic lua version(5.1), default support 5.3 
 -i              : indent number, default is 2
