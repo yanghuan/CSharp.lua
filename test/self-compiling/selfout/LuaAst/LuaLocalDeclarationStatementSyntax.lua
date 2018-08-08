@@ -138,10 +138,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local Render, __ctor1__, __ctor2__
     __ctor1__ = function (this, declarator)
       this.__base__.__ctor__(this)
-      if declarator == nil then
-        System.throw(CSharpLua.ArgumentNullException("declarator" --[[nameof(declarator)]]))
-      end
-      this.Declarator = declarator
+      this.Declarator = declarator or System.throw(CSharpLua.ArgumentNullException("declarator" --[[nameof(declarator)]]))
     end
     __ctor2__ = function (this, identifier, expression)
       this.__base__.__ctor__(this)
@@ -168,10 +165,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getLocalKeyword, Render, __ctor__
     __ctor__ = function (this, identifier, expression)
       this.__base__.__ctor__(this)
-      if identifier == nil then
-        System.throw(CSharpLua.ArgumentNullException("identifier" --[[nameof(identifier)]]))
-      end
-      this.Identifier = identifier
+      this.Identifier = identifier or System.throw(CSharpLua.ArgumentNullException("identifier" --[[nameof(identifier)]]))
       if expression ~= nil then
         this.Initializer = CSharpLuaLuaAst.LuaEqualsValueClauseSyntax(expression)
       end
@@ -198,10 +192,7 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
     local getEqualsToken, Render, __ctor__
     __ctor__ = function (this, value)
       this.__base__.__ctor__(this)
-      if value == nil then
-        System.throw(CSharpLua.ArgumentNullException("value" --[[nameof(value)]]))
-      end
-      this.Value = value
+      this.Value = value or System.throw(CSharpLua.ArgumentNullException("value" --[[nameof(value)]]))
     end
     getEqualsToken = function (this)
       return "=" --[[Tokens.Equals]]

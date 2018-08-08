@@ -49,6 +49,7 @@ return function (dir)
     "CSharpLua.LuaSyntaxNodeTransform.LuaSyntaxSearcher",
     "CSharpLua.LuaSyntaxNodeTransform.IQueryRangeVariable",
     "CSharpLua.ArgumentNullException",
+    "CSharpLua.BugErrorException",
     "CSharpLua.CmdArgumentException",
     "CSharpLua.CompilationErrorException",
     "CSharpLua.Compiler",

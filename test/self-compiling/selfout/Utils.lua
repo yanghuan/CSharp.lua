@@ -68,6 +68,21 @@ System.namespace("CSharpLua", function (namespace)
     }
   end)
 
+  namespace.class("BugErrorException", function (namespace)
+    local __ctor__
+    __ctor__ = function (this, node, e)
+      this.__base__.__ctor__(this, ("{0}: Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue"):Format(CSharpLua.Utility.GetLocationString(node)), e)
+    end
+    return {
+      __inherits__ = function (global)
+        return {
+          System.Exception
+        }
+      end,
+      __ctor__ = __ctor__
+    }
+  end)
+
   namespace.class("ArgumentNullException", function (namespace)
     local __ctor__
     __ctor__ = function (this, paramName)
@@ -101,8 +116,8 @@ System.namespace("CSharpLua", function (namespace)
   end)
 
   namespace.class("Utility", function (namespace)
-    local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, TrimEnd, 
-    GetCommondLines, GetArgument, GetCurrentDirectory, Split, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
+    local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, GetCommondLines, 
+    GetArgument, GetCurrentDirectory, Split, ReplaceNewline, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
     IsReadOnly, IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, 
     IsNullableType, IsImmutable, IsSystemTuple, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsFromAssembly, IsOverridable, 
     OverriddenSymbol, IsOverridden, IsPropertyField, HasIgnoreAttribute, IsEventFiled, HasStaticCtor, IsAssignment, systemLinqEnumerableType_, 
@@ -110,7 +125,7 @@ System.namespace("CSharpLua", function (namespace)
     CheckMethodDefinition, CheckOriginalDefinition, IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, 
     IsTypeDeclaration, GetIEnumerableElementType, DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, identifierRegex_, IsIdentifierIllegal, 
     ToBase63, EncodeToIdentifier, FillNamespaceName, FillExternalTypeName, GetTypeShortName, GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, 
-    IsCollectionType, ToStatement, IsNil, __staticCtor__
+    IsCollectionType, ToStatement, IsNil, IsProtobufNetDeclaration, IsProtobufNetField, IsProtobufNetProperty, __staticCtor__
     __staticCtor__ = function (this)
       identifierRegex_ = SystemTextRegularExpressions.Regex([[^[a-zA-Z_][a-zA-Z0-9_]*$]], 8 --[[RegexOptions.Compiled]])
     end
@@ -170,12 +185,6 @@ System.namespace("CSharpLua", function (namespace)
         index = index + 1
       end
       return - 1
-    end
-    TrimEnd = function (s, end_)
-      if s:EndsWith(end_) then
-        return s:Remove(#s - #end_, #end_)
-      end
-      return s
     end
     GetCommondLines = function (args)
       local cmds = System.Dictionary(System.String, System.Array(System.String))()
@@ -237,6 +246,9 @@ System.namespace("CSharpLua", function (namespace)
         end
       end
       return Linq.ToArray(list)
+    end
+    ReplaceNewline = function (s)
+      return s:Replace("\r\n", "\n"):Replace(13 --[['\r']], 10 --[['\n']])
     end
     IsPrivate = function (symbol)
       return symbol:getDeclaredAccessibility() == 1 --[[Accessibility.Private]]
@@ -391,6 +403,10 @@ System.namespace("CSharpLua", function (namespace)
     IsPropertyField = function (symbol)
       if not IsFromCode(symbol) or IsOverridable(symbol) then
         return false
+      end
+
+      if IsProtobufNetProperty(symbol) then
+        return true
       end
 
       local syntaxReference = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:getDeclaringSyntaxReferences(), MicrosoftCodeAnalysis.SyntaxReference)
@@ -787,7 +803,7 @@ System.namespace("CSharpLua", function (namespace)
     FillExternalTypeName = function (sb, typeSymbol, funcOfNamespace, funcOfTypeName, transfor)
       local externalType = typeSymbol:getContainingType()
       if externalType ~= nil then
-        if transfor ~= nil then
+        if transfor ~= nil and not externalType:getIsGenericType() then
           local curTypeDeclaration = transfor:getCurTypeDeclaration()
           local classIdentifier
           local default
@@ -876,6 +892,29 @@ System.namespace("CSharpLua", function (namespace)
     IsNil = function (expression)
       return expression == nil or expression == CSharpLuaLuaAst.LuaIdentifierNameSyntax.Nil or expression == CSharpLuaLuaAst.LuaIdentifierLiteralExpressionSyntax.Nil
     end
+    IsProtobufNetDeclaration = function (type)
+      local attr = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(type:GetAttributes(), MicrosoftCodeAnalysis.AttributeData)
+      if attr ~= nil and attr:getAttributeClass():ToString() == "ProtoBuf.ProtoContractAttribute" then
+        return true
+      end
+      return false
+    end
+    IsProtobufNetField = function (symbol)
+      local containingType = symbol:getContainingType()
+      if not containingType:getInterfaces():getIsEmpty() then
+        if First(containingType:getInterfaces(), MicrosoftCodeAnalysis.INamedTypeSymbol):ToString() == "ProtoBuf.IExtensible" then
+          return true
+        end
+      end
+      return false
+    end
+    IsProtobufNetProperty = function (symbol)
+      local attr = SystemLinq.ImmutableArrayExtensions.FirstOrDefault(symbol:GetAttributes(), MicrosoftCodeAnalysis.AttributeData)
+      if attr ~= nil and attr:getAttributeClass():ToString() == "ProtoBuf.ProtoMemberAttribute" then
+        return true
+      end
+      return false
+    end
     return {
       First = First,
       Last = Last,
@@ -884,11 +923,11 @@ System.namespace("CSharpLua", function (namespace)
       TryAdd = TryAdd,
       AddAt = AddAt,
       IndexOf = IndexOf,
-      TrimEnd = TrimEnd,
       GetCommondLines = GetCommondLines,
       GetArgument = GetArgument,
       GetCurrentDirectory = GetCurrentDirectory,
       Split = Split,
+      ReplaceNewline = ReplaceNewline,
       IsPrivate = IsPrivate,
       IsPrivate1 = IsPrivate1,
       IsStatic = IsStatic,
@@ -939,6 +978,9 @@ System.namespace("CSharpLua", function (namespace)
       IsCollectionType = IsCollectionType,
       ToStatement = ToStatement,
       IsNil = IsNil,
+      IsProtobufNetDeclaration = IsProtobufNetDeclaration,
+      IsProtobufNetField = IsProtobufNetField,
+      IsProtobufNetProperty = IsProtobufNetProperty,
       __staticCtor__ = __staticCtor__
     }
   end)

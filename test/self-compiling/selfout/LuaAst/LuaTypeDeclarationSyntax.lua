@@ -235,16 +235,16 @@ System.namespace("CSharpLua.LuaAst", function (namespace)
       if value ~= nil then
         if isStatic then
           if isImmutable then
-            AddResultTable1(this, name, value)
+            AddResultTable1(this, innerName, value)
           else
             local assignment = CSharpLuaLuaAst.LuaAssignmentExpressionSyntax(CSharpLuaLuaAst.LuaMemberAccessExpressionSyntax(CSharpLuaLuaAst.LuaIdentifierNameSyntax.This, innerName, false), value)
             this.staticInitStatements_:Add(CSharpLuaLuaAst.LuaExpressionStatementSyntax(assignment))
           end
         else
           if isImmutable then
-            AddResultTable1(this, name, value)
+            AddResultTable1(this, innerName, value)
           else
-            AddInitFiled(this, name, value)
+            AddInitFiled(this, innerName, value)
           end
         end
       end

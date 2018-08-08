@@ -117,13 +117,6 @@ namespace CSharpLua {
       return -1;
     }
 
-    public static string TrimEnd(this string s, string end) {
-      if (s.EndsWith(end)) {
-        return s.Remove(s.Length - end.Length, end.Length);
-      }
-      return s;
-    }
-
     public static Dictionary<string, string[]> GetCommondLines(string[] args) {
       Dictionary<string, string[]> cmds = new Dictionary<string, string[]>();
 
@@ -183,6 +176,10 @@ namespace CSharpLua {
         }
       }
       return list.ToArray();
+    }
+
+    public static string ReplaceNewline(this string s) {
+      return s.Replace("\r\n", "\n").Replace('\r', '\n');
     }
 
     public static bool IsPrivate(this ISymbol symbol) {

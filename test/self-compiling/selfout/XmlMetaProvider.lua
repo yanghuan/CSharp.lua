@@ -17,6 +17,7 @@ limitations under the License.
 local System = System
 local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local SystemIO = System.IO
+local SystemText = System.Text
 local SystemXmlSerialization = System.Xml.Serialization
 local CSharpLua
 local CSharpLuaXmlMetaProvider
@@ -112,15 +113,23 @@ System.namespace("CSharpLua", function (namespace)
         this.isSingleModel_ = isSingle
       end
       GetTypeString = function (symbol)
-        local typeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition())
-        local namespaceName = typeSymbol:getContainingNamespace():ToString()
-        local name
-        if typeSymbol:getTypeArguments():getLength() == 0 then
-          name = ("{0}.{1}"):Format(namespaceName, symbol:getName())
-        else
-          name = ("{0}.{1}^{2}"):Format(namespaceName, symbol:getName(), typeSymbol:getTypeArguments():getLength())
+        if symbol:getKind() == 17 --[[SymbolKind.TypeParameter]] then
+          return symbol:getName()
         end
-        return name
+
+        local sb = SystemText.StringBuilder()
+        local typeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition())
+        local namespaceSymbol = typeSymbol:getContainingNamespace()
+        if not namespaceSymbol:getIsGlobalNamespace() then
+          sb:Append(namespaceSymbol:ToString())
+          sb:AppendChar(46 --[['.']])
+        end
+        sb:Append(symbol:getName())
+        if typeSymbol:getTypeArguments():getLength() > 0 then
+          sb:AppendChar(94 --[['^']])
+          sb:Append(typeSymbol:getTypeArguments():getLength())
+        end
+        return sb:ToString()
       end
       IsTypeMatch = function (symbol, typeString)
         if symbol:getKind() == 1 --[[SymbolKind.ArrayType]] then
@@ -205,7 +214,7 @@ System.namespace("CSharpLua", function (namespace)
           end)
         end
         if methodModel ~= nil and methodModel.Baned then
-          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0}.{1} is baned"):Format(symbol:getContainingType():getName(), symbol:getName())))
+          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol)))
         end
         local default = methodModel
         if default ~= nil then
@@ -221,6 +230,9 @@ System.namespace("CSharpLua", function (namespace)
         local methodModel = this.models_:Find(function (i)
           return IsMethodMatch(this, i, symbol)
         end)
+        if methodModel ~= nil and methodModel.Baned then
+          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol)))
+        end
         local default = methodModel
         if default ~= nil then
           default = default.Template
@@ -229,15 +241,20 @@ System.namespace("CSharpLua", function (namespace)
       end
       GetIgnoreGeneric = function (this, symbol)
         local isIgnoreGeneric = false
+        local methodModel
         if this.isSingleModel_ then
-          isIgnoreGeneric = CSharpLua.Utility.First(this.models_, CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel).IgnoreGeneric
+          methodModel = CSharpLua.Utility.First(this.models_, CSharpLuaXmlMetaProviderXmlMetaModel.MethodModel)
+          isIgnoreGeneric = methodModel.IgnoreGeneric
         else
-          local methodModel = this.models_:Find(function (i)
+          methodModel = this.models_:Find(function (i)
             return IsMethodMatch(this, i, symbol)
           end)
           if methodModel ~= nil then
             isIgnoreGeneric = methodModel.IgnoreGeneric
           end
+        end
+        if methodModel ~= nil and methodModel.Baned then
+          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol)))
         end
         return isIgnoreGeneric and System.Boolean.TrueString or System.Boolean.FalseString
       end
@@ -443,7 +460,7 @@ System.namespace("CSharpLua", function (namespace)
       local info = CSharpLua.Utility.GetOrDefault1(this.namespaceNameMaps_, original, nil, System.String, CSharpLuaXmlMetaProviderXmlMetaModel.NamespaceModel)
       if info ~= nil then
         if info.Baned then
-          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol:ToString())))
+          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol)))
         end
         return info.Name
       end
@@ -460,7 +477,7 @@ System.namespace("CSharpLua", function (namespace)
       if MayHaveCodeMeta(this, symbol) then
         local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, shortName, nil, System.String, class.TypeMetaInfo)
         if info ~= nil and info:getModel().Baned then
-          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0}.{1} is baned"):Format(symbol:getContainingType():getName(), symbol:getName())))
+          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol)))
         end
         local default = info
         if default ~= nil then
@@ -472,7 +489,11 @@ System.namespace("CSharpLua", function (namespace)
     end
     GetTypeMetaInfo = function (this, memberSymbol)
       local typeName = GetTypeShortString(this, memberSymbol:getContainingType())
-      return CSharpLua.Utility.GetOrDefault1(this.typeMetas_, typeName, nil, System.String, class.TypeMetaInfo)
+      local info = CSharpLua.Utility.GetOrDefault1(this.typeMetas_, typeName, nil, System.String, class.TypeMetaInfo)
+      if info ~= nil and info:getModel().Baned then
+        System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(memberSymbol:getContainingType())))
+      end
+      return info
     end
     IsPropertyField = function (this, symbol)
       if MayHaveCodeMeta(this, symbol) then
@@ -497,7 +518,7 @@ System.namespace("CSharpLua", function (namespace)
         end
         local info = default
         if info ~= nil and info.Baned then
-          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0}.{1} is baned"):Format(symbol:getContainingType():getName(), symbol:getName())))
+          System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol)))
         end
         local extern = info
         if extern ~= nil then
@@ -516,7 +537,7 @@ System.namespace("CSharpLua", function (namespace)
         local info = default
         if info ~= nil then
           if info.Baned then
-            System.throw(CSharpLua.CompilationErrorException:new(1, ("{0}.{1} is baned"):Format(symbol:getContainingType():getName(), symbol:getName())))
+            System.throw(CSharpLua.CompilationErrorException:new(1, ("{0} is baned"):Format(symbol)))
           end
           local extern
           if isGet then

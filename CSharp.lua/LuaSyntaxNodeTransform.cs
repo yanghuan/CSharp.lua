@@ -1004,6 +1004,7 @@ namespace CSharpLua {
               }
             case SyntaxKind.MultiLineCommentTrivia: {
                 string commentContent = content.Substring(kCommentCharCount, content.Length - kCommentCharCount - kCommentCharCount);
+                commentContent = commentContent.ReplaceNewline();
                 if (CheckInsertLuaCodeTemplate(commentContent, out var codeStatement)) {
                   return codeStatement;
                 }

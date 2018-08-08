@@ -19,6 +19,7 @@ local Linq = System.Linq.Enumerable
 local MicrosoftCodeAnalysis = Microsoft.CodeAnalysis
 local MicrosoftCodeAnalysisCSharp = Microsoft.CodeAnalysis.CSharp
 local MicrosoftCodeAnalysisCSharpSyntax = Microsoft.CodeAnalysis.CSharp.Syntax
+local SystemDiagnosticsContracts = System.Diagnostics.Contracts
 local SystemIO = System.IO
 local SystemLinq = System.Linq
 local SystemText = System.Text
@@ -244,7 +245,7 @@ System.namespace("CSharpLua", function (namespace)
       return {
         __inherits__ = function (global)
           return {
-            Microsoft.CodeAnalysis.CSharp.CSharpSyntaxWalker
+            global.Microsoft.CodeAnalysis.CSharp.CSharpSyntaxWalker
           }
         end,
         VisitClassDeclaration = VisitClassDeclaration,
@@ -267,6 +268,9 @@ System.namespace("CSharpLua", function (namespace)
     GetTypeShortName, class, __staticCtor__, __init__, __ctor__
     __staticCtor__ = function (this)
       Encoding = SystemText.UTF8Encoding(false)
+      SystemDiagnosticsContracts.Contract.addContractFailed(function (_, e)
+        System.throw(System.ApplicationException(e:getMessage(), e:getOriginalException()))
+      end)
     end
     __init__ = function (this)
       this.exportEnums_ = System.HashSet(System.String)()
@@ -384,10 +388,15 @@ System.namespace("CSharpLua", function (namespace)
     IsEnumExport = function (this, enumTypeSymbol)
       return this.exportEnums_:Contains(enumTypeSymbol)
     end
-    AddExportEnum = function (this, enumTypeSymbol)
-      this.exportEnums_:Add(enumTypeSymbol)
+    AddExportEnum = function (this, enumType)
+      assert(enumType:getTypeKind() == 5 --[[TypeKind.Enum]])
+      this.exportEnums_:Add(enumType:ToString())
     end
-    AddEnumDeclaration = function (this, enumDeclaration)
+    AddEnumDeclaration = function (this, type, enumDeclaration)
+      if CSharpLua.Utility.IsProtobufNetDeclaration(type) then
+        AddExportEnum(this, type)
+        -- protobuf-net enum is always export
+      end
       this.enumDeclarations_:Add(enumDeclaration)
     end
     AddIgnoreExportType = function (this, type)
@@ -1435,8 +1444,10 @@ System.namespace("CSharpLua", function (namespace)
         name = newName
       end
       if transfor ~= nil then
-        if transfor:getIsGetInheritTypeName() and CSharpLua.Utility.IsFromCode(typeSymbol) then
-          name = (CSharpLuaLuaAst.LuaIdentifierNameSyntax.Global.ValueText .. '.') .. name
+        if transfor:getIsGetInheritTypeName() then
+          if not name:StartsWith(CSharpLuaLuaAst.LuaIdentifierNameSyntax.System1.ValueText) then
+            name = (CSharpLuaLuaAst.LuaIdentifierNameSyntax.Global.ValueText .. '.') .. name
+          end
         else
           name = transfor:ImportTypeName(name, symbol)
         end

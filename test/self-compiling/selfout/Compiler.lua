@@ -42,7 +42,7 @@ System.namespace("CSharpLua", function (namespace)
       if System.String.IsNullOrEmpty(csc) then
         default = System.Array.Empty(System.String)
       else
-        default = csc:Trim():Split(59 --[[';']], 44 --[[',']], 32 --[[' ']])
+        default = csc:Trim():Split(32 --[[' ']], 9 --[['\t']])
       end
       this.cscArguments_ = default
       this.isNewest_ = not isClassic
