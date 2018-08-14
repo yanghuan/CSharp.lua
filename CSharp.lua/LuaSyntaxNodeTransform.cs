@@ -1042,7 +1042,8 @@ namespace CSharpLua {
             int begin = index + 1;
             int end = commentContent.IndexOf(closeToken, begin);
             if (end != -1) {
-              string code = commentContent.Substring(begin, end - begin);
+              int start = begin + closeToken.Length;
+              string code = commentContent.Substring(start, end - start);
               statement = new LuaIdentifierNameSyntax(code.Trim()).ToStatement();
               return true;
             }
