@@ -182,7 +182,12 @@ namespace CSharpLua {
         StringBuilder sb = new StringBuilder();
         INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
         var namespaceSymbol = typeSymbol.ContainingNamespace;
-        if (!namespaceSymbol.IsGlobalNamespace) {
+        
+        if(symbol.ContainingType != null) {
+          sb.Append(GetTypeString(symbol.ContainingType));
+          sb.Append('.');
+        }
+        else if (!namespaceSymbol.IsGlobalNamespace) {
           sb.Append(namespaceSymbol.ToString());
           sb.Append('.');
         }
