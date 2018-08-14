@@ -1417,15 +1417,25 @@ namespace CSharpLua {
       if (node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
         string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
         if (codeTemplate != null) {
-          List<ExpressionSyntax> argumentExpressions = new List<ExpressionSyntax>();
+          List<LuaExpressionSyntax> argumentExpressions = new List<LuaExpressionSyntax>();
           var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
           if (symbol.IsExtensionMethod) {
-            argumentExpressions.Add(memberAccessExpression.Expression);
+            argumentExpressions.Add((LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
             if (symbol.ContainingType.IsSystemLinqEnumerable()) {
               CurCompilationUnit.ImportLinq();
             }
           }
-          argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => i.Expression));
+          argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => (LuaExpressionSyntax)i.Expression.Accept(this)));
+          // ²¹³äÄ¬ÈÏ²ÎÊý£¬has default value
+          if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
+            argumentExpressions.AddRange(symbol.Parameters.Where((p, i) => i >= node.ArgumentList.Arguments.Count).Select(parameter => {
+              if (parameter.ExplicitDefaultValue == null && parameter.Type.IsValueType) {
+                  return GetDefaultValueExpression(parameter.Type);
+              } else {
+                  return GetLiteralExpression(parameter.ExplicitDefaultValue);
+              }
+            }));
+          }
           var invocationExpression = BuildCodeTemplateExpression(codeTemplate, memberAccessExpression.Expression, argumentExpressions, symbol.TypeArguments);
           var refOrOuts = node.ArgumentList.Arguments.Where(i => i.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || i.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword));
           if (refOrOuts.Any()) {
