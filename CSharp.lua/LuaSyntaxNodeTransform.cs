@@ -1426,7 +1426,7 @@ namespace CSharpLua {
             }
           }
           argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => {
-            Func<LuaExpressionSyntax> func = () => (LuaExpressionSyntax)i.Accept(this);
+            Func<LuaExpressionSyntax> func = () => (LuaExpressionSyntax)i.Expression.Accept(this);
             return func;
           }));
           if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
