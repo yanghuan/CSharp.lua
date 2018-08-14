@@ -1417,20 +1417,25 @@ namespace CSharpLua {
       if (node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
         string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
         if (codeTemplate != null) {
-          List<LuaExpressionSyntax> argumentExpressions = new List<LuaExpressionSyntax>();
+          var argumentExpressions = new List<Func<LuaExpressionSyntax>>();
           var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
           if (symbol.IsExtensionMethod) {
-            argumentExpressions.Add((LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
+            argumentExpressions.Add(() => (LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
             if (symbol.ContainingType.IsSystemLinqEnumerable()) {
               CurCompilationUnit.ImportLinq();
             }
           }
-          argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => (LuaExpressionSyntax)i.Expression.Accept(this)));
-          // ²¹³äÄ¬ÈÏ²ÎÊý£¬has default value
+          argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => {
+            Func<LuaExpressionSyntax> func = () => (LuaExpressionSyntax)i.Accept(this);
+            return func;
+          }));
           if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
-            argumentExpressions.AddRange(symbol.Parameters.Where((p, i) => i >= node.ArgumentList.Arguments.Count).Select(parameter => GetDeafultParameterValue(parameter, node , false)));
+            argumentExpressions.AddRange(symbol.Parameters.Skip(argumentExpressions.Count).Where(i => !i.IsParams).Select(i => {
+              Func<LuaExpressionSyntax> func = () => GetDeafultParameterValue(i, node, true);
+              return func;
+            }));
           }
-          var invocationExpression = BuildCodeTemplateExpression(codeTemplate, memberAccessExpression.Expression, argumentExpressions, symbol.TypeArguments);
+          var invocationExpression = InternalBuildCodeTemplateExpression(codeTemplate, memberAccessExpression.Expression, argumentExpressions, symbol.TypeArguments);
           var refOrOuts = node.ArgumentList.Arguments.Where(i => i.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || i.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword));
           if (refOrOuts.Any()) {
             return BuildInvokeRefOrOut(node, invocationExpression, refOrOuts.Select(i => ((LuaArgumentSyntax)i.Accept(this)).Expression));
