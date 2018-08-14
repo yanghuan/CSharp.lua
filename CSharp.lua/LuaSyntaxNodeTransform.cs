@@ -1428,13 +1428,7 @@ namespace CSharpLua {
           argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => (LuaExpressionSyntax)i.Expression.Accept(this)));
           // ²¹³äÄ¬ÈÏ²ÎÊý£¬has default value
           if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
-            argumentExpressions.AddRange(symbol.Parameters.Where((p, i) => i >= node.ArgumentList.Arguments.Count).Select(parameter => {
-              if (parameter.ExplicitDefaultValue == null && parameter.Type.IsValueType) {
-                  return GetDefaultValueExpression(parameter.Type);
-              } else {
-                  return GetLiteralExpression(parameter.ExplicitDefaultValue);
-              }
-            }));
+            argumentExpressions.AddRange(symbol.Parameters.Where((p, i) => i >= node.ArgumentList.Arguments.Count).Select(parameter => GetDeafultParameterValue(parameter, node , false)));
           }
           var invocationExpression = BuildCodeTemplateExpression(codeTemplate, memberAccessExpression.Expression, argumentExpressions, symbol.TypeArguments);
           var refOrOuts = node.ArgumentList.Arguments.Where(i => i.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || i.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword));
