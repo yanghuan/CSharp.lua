@@ -1387,27 +1387,62 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildInvokeRefOrOut(InvocationExpressionSyntax node, LuaExpressionSyntax invocation, IEnumerable<LuaExpressionSyntax> refOrOutArguments) {
+      var locals = new LuaLocalVariablesStatementSyntax();
+      LuaMultipleAssignmentExpressionSyntax multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
+      LuaStatementListSyntax propertyStatements = new LuaStatementListSyntax();
+
+      void FillRefOrOutArguments() {
+        foreach (var refOrOutArgument in refOrOutArguments) {
+          if (refOrOutArgument is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
+            var propertyTemp = GetTempIdentifier(node);
+            locals.Variables.Add(propertyTemp);
+            multipleAssignment.Lefts.Add(propertyTemp);
+
+            var setPropertyAdapter = propertyAdapter.GetClone();
+            setPropertyAdapter.IsGetOrAdd = false;
+            setPropertyAdapter.ArgumentList.AddArgument(propertyTemp);
+            propertyStatements.Statements.Add(setPropertyAdapter.ToStatement());
+          }
+          else {
+            multipleAssignment.Lefts.Add(refOrOutArgument);
+          }
+        }
+      }
+
       if (node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
-        LuaMultipleAssignmentExpressionSyntax multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
         SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
         IMethodSymbol symbol = (IMethodSymbol)symbolInfo.Symbol;
         if (!symbol.ReturnsVoid) {
           var temp = GetTempIdentifier(node);
-          CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp));
+          locals.Variables.Add(temp);
           multipleAssignment.Lefts.Add(temp);
         }
-        multipleAssignment.Lefts.AddRange(refOrOutArguments);
-        multipleAssignment.Rights.Add(invocation);
-        return multipleAssignment;
-      } else {
-        var temp = GetTempIdentifier(node);
-        LuaMultipleAssignmentExpressionSyntax multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
-        multipleAssignment.Lefts.Add(temp);
-        multipleAssignment.Lefts.AddRange(refOrOutArguments);
+        FillRefOrOutArguments();
         multipleAssignment.Rights.Add(invocation);
 
-        CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp));
+        if (locals.Variables.Count > 0) {
+          CurBlock.Statements.Add(locals);
+        }
+        if (propertyStatements.Statements.Count > 0) {
+          CurBlock.Statements.Add(multipleAssignment.ToStatement());
+          CurBlock.Statements.Add(propertyStatements);
+          return LuaExpressionSyntax.EmptyExpression;
+        }
+        else {
+          return multipleAssignment;
+        }
+      }
+      else {
+        var temp = GetTempIdentifier(node);
+        locals.Variables.Add(temp);
+        multipleAssignment.Lefts.Add(temp);
+        FillRefOrOutArguments();
+        multipleAssignment.Rights.Add(invocation);
+        CurBlock.Statements.Add(locals);
         CurBlock.Statements.Add(new LuaExpressionStatementSyntax(multipleAssignment));
+        if (propertyStatements.Statements.Count > 0) {
+          CurBlock.Statements.Add(propertyStatements);
+        }
         return temp;
       }
     }
