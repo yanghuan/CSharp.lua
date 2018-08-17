@@ -211,7 +211,7 @@ local function staticCtorSetBase(cls)
     cls[k] = v
   end
   cls[cls] = nil
-  local kind = cls.kind
+  local kind = cls.__kind__
   cls.__kind__ = nil
   setBase(cls, kind)
   cls:__staticCtor__()
@@ -903,16 +903,21 @@ ValueType = {
     return setmetatable({}, cls)
   end,
   __clone__ = function(this)
-    local cls = getmetatable(this)
-    local t = {}
-    for k, v in pairs(this) do
-      if type(v) == "table" and v.__kind__ == "S" then
-        t[k] = v:__clone__()
-      else
-        t[k] = v
+    local type_ = type(this)
+    if type_ == "number" or type_ == "bool" then
+      return this
+    elseif type_ == "table" then
+      local cls = getmetatable(this)
+      local t = {}
+      for k, v in pairs(this) do
+        if type(v) == "table" and v.__kind__ == "S" then
+          t[k] = v:__clone__()
+        else
+          t[k] = v
+        end
       end
+      return setmetatable(t, cls)
     end
-    return setmetatable(t, cls)
   end,
   EqualsObj = function (this, obj)
     if getmetatable(this) ~= getmetatable(obj) then return false end
