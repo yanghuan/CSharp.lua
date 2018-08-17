@@ -818,8 +818,7 @@ namespace CSharpLua {
       return GetDefaultValueExpression(type);
     }
 
-    public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
-      var symbol = (IPropertySymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+    private LuaPropertyAdapterExpressionSyntax InternalVisitElementAccessExpression(IPropertySymbol symbol, ElementAccessExpressionSyntax node) {
       var expression = BuildMemberAccessTargetExpression(node.Expression);
       LuaIdentifierNameSyntax baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
       LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);
@@ -827,11 +826,32 @@ namespace CSharpLua {
       if (symbol != null) {
         List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
         propertyAdapter.ArgumentList.AddArguments(arguments);
-      } else {
+      }
+      else {
         var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
         propertyAdapter.ArgumentList.Arguments.AddRange(argumentList.Arguments);
       }
       return propertyAdapter;
+    }
+
+    public override LuaSyntaxNode VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
+      var symbol = semanticModel_.GetSymbolInfo(node).Symbol;
+      if (symbol != null && symbol.Kind == SymbolKind.Method) {
+        var typeSymbol = semanticModel_.GetTypeInfo(node.Expression).Type;
+        IPropertySymbol propertySymbol;
+        if (typeSymbol.TypeKind == TypeKind.Array) {
+          propertySymbol = null;
+        }
+        else {
+          propertySymbol = (IPropertySymbol)typeSymbol.GetMembers().First(i => i.IsIndexerProperty());
+        }
+        LuaExpressionSyntax resultExpression = InternalVisitElementAccessExpression(propertySymbol, node);
+        CheckConversion(node, ref resultExpression);
+        return resultExpression;
+      }
+      else {
+        return InternalVisitElementAccessExpression((IPropertySymbol)symbol, node);
+      }
     }
 
     public override LuaSyntaxNode VisitInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {
