@@ -29,16 +29,16 @@ namespace ILRuntimeTest.TestBase
                         if(!started)
                         {
                             started = true;
-                            ALog.Info("TestClass Start : {0}", type.Name);
+                            Console.WriteLine("TestClass Start : {0}", type.Name);
                         }
-                        ALog.Info("TestCase : {0}", member.Name);
+                        Console.WriteLine("TestCase : {0}", member.Name);
                         member.Invoke(null, new object[] { });
                     }
                 }
 
                 if (started)
                 {
-                    ALog.Info("TestClass Finish : {0}", type.Name);
+                    Console.WriteLine("TestClass Finish : {0}", type.Name);
                 }
             }
         }
