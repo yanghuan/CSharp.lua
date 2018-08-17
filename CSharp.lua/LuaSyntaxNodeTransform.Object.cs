@@ -204,7 +204,7 @@ namespace CSharpLua {
       int index = 0;
       foreach (var expression in initializer.Expressions) {
         if (expression.IsKind(SyntaxKind.ArrayInitializerExpression)) {
-          FillMultiArrayInitializer((InitializerExpressionSyntax)expression, rankSpecifier, invocation, index == 0);
+          FillMultiArrayInitializer((InitializerExpressionSyntax)expression, rankSpecifier, invocation, isFirst && index == 0);
         } else {
           var item = (LuaExpressionSyntax)expression.Accept(this);
           invocation.AddArgument(item);

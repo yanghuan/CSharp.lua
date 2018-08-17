@@ -293,7 +293,15 @@ test(testSplit, "testSplit")
 --test(testIO, "IO")
 test(testStringBuilder, "StringBuilder")
 
-
-
-
+ local pos = System.MultiArray(System.Int)({
+        2,
+        2,
+        3
+      }, 1, 2, 3, 3, 4, 5, 1, 3, 3, 2, 3, 4)
+      System.Console.WriteLine(pos:get(0, 1, 1))
+      local arr = System.MultiArray(System.Int)({
+        2,
+        3
+      }, 1, 2, 4, 3, 4, 6)
+      System.Console.WriteLine(arr:get(0, 0))
 
