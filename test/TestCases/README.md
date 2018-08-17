@@ -1,0 +1,1 @@
+a console program code, print Fibonacci number. run cmd.bat, auto compile './src/Program.cs' to './out/Program.lua', and then run it.
