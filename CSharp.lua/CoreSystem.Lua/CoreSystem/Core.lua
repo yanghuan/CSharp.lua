@@ -165,6 +165,12 @@ interfaceMetatable.__index = interfaceMetatable
 local function setBase(cls, kind)
   cls.__index = cls 
   cls.__call = new
+
+  local attributes = cls.__attributes__
+  if attributes ~= nil then
+    cls.__attributes__ = attributes(global)
+  end
+
   if kind == "S" then
     local extends = cls.__inherits__
     if extends ~= nil then
@@ -197,10 +203,6 @@ local function setBase(cls, kind)
     else
       setmetatable(cls, Object)
     end  
-  end
-  local attributes = cls.__attributes__
-  if attributes ~= nil then
-    cls.__attributes__ = attributes(global)
   end
 end
 
@@ -848,24 +850,6 @@ function System.CreateInstance(type, ...)
   return type.c(...)
 end
 
-function System.usingDeclare(f)
-  tinsert(usings, f)
-end
-
-function System.init(namelist, conf)
-  for _, name in ipairs(namelist) do
-    assert(modules[name], name)()
-  end
-  for _, f in ipairs(usings) do
-    f(global)
-  end
-  if conf ~= nil then
-    System.entryPoint = conf.Main
-  end
-  modules = nil
-  usings = nil
-end
-
 local function multiNew(cls, inx, ...) 
   local this = setmetatable({}, cls)
   cls.__ctor__[inx](this, ...)
@@ -1081,6 +1065,27 @@ function System.stackalloc(arrayType, len)
   return setmetatable({ arr = arrayType:new(len) }, ptr)
 end
 
+function System.usingDeclare(f)
+  tinsert(usings, f)
+end
+
+function System.init(namelist, conf)
+  local classes = {}
+  for _, name in ipairs(namelist) do
+    local cls = assert(modules[name], name)()
+    tinsert(classes, cls)
+  end
+  for _, f in ipairs(usings) do
+    f(global)
+  end
+  if conf ~= nil then
+    System.entryPoint = conf.Main
+  end
+  modules = nil
+  usings = nil
+  System.classes = classes
+end
+
 local namespace
 local curCacheName
 
@@ -1094,7 +1099,7 @@ local function defIn(kind, name, f)
   local t = f(namespace)
   curCacheName = prevName
   modules[name] = function()
-    def(name, kind, t)
+    return def(name, kind, t)
   end
 end
 

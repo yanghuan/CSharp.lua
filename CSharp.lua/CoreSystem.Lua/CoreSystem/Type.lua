@@ -354,6 +354,3 @@ function System.CreateInstance(type, ...)
   end
   return type.c(...)
 end
-
-
-

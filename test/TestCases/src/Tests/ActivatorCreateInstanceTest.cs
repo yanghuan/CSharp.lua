@@ -36,12 +36,14 @@ namespace TestCases
             ActivatorCreateInstanceTestClass inst = Activator.CreateInstance<ActivatorCreateInstanceTestClass>();
             Console.WriteLine($"Create without args: {inst}");
 
+            /*
             inst = (ActivatorCreateInstanceTestClass)Activator.CreateInstance(typeof(ActivatorCreateInstanceTestClass), 23, "custome value", 3.14f, new ActivatorCreateInstanceTestClass());
             Console.WriteLine($"Create with args 2: {inst}");
 
             inst = (ActivatorCreateInstanceTestClass)Activator.CreateInstance(typeof(ActivatorCreateInstanceTestClass), 34, "seconde time", 99.9f, new ActivatorCreateInstanceTestClass(-1, "repeat", -1.14f, null));
             Console.WriteLine($"Create with args 3: {inst}");
-
+            */
+            
             inst = (ActivatorCreateInstanceTestClass)Activator.CreateInstance(typeof(ActivatorCreateInstanceTestClass));
             Console.WriteLine($"Create with args 4: {inst}");
         }

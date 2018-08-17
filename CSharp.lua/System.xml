@@ -79,6 +79,8 @@ limitations under the License.
         <method name="GetType" ArgCount ="1" Name="GetTypeFrom" />
         <method name="GetType" ArgCount ="2" Name="GetTypeFrom" />
         <method name="GetType" ArgCount ="3" Name="GetTypeFrom" />
+        <method name="op_Equality" Template="{0} == {1}" />
+        <method name="op_Inequality" Template="{0} ~= {1}" />
       </class>
       <class name="Array">
         <property name="Length">

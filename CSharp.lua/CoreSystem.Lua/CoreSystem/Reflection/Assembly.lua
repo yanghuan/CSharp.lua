@@ -51,10 +51,28 @@ Assembly.GetEntryAssembly = getAssembly
 Assembly.GetExecutingAssembly = getAssembly
 Assembly.GetTypeFrom = Type.GetTypeFrom
 
+function Assembly.GetExportedTypes(this)
+  if this.exportedTypes then
+    return this.exportedTypes
+  end
+  local t = {}
+  for _, cls in ipairs(System.classes) do
+    local type_ = type(cls)
+    if type_  == "table" then
+      tinsert(t, typeof(cls))
+    else
+      assert(type_ == "function");
+    end
+  end
+  local array = System.arrayFromTable(t, Type)
+  this.exportedTypes = array
+  return array
+end
+
 System.define("System.Reflection.Assembly", Assembly)
 
 assembly = Assembly()
-assembly.name = "CSharp.lua, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+assembly.name = System.config.assemblyName or "CSharp.lua, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
 
 local MemberInfo = {}
 MemberInfo.getName = getName
@@ -73,7 +91,7 @@ local function isDefined(cls, name, attributeCls)
     local attrTable = attributes[name]
     if attrTable ~= nil then
       for _, v in ipairs(attrTable) do
-        if v == attributeCls then
+        if System.is(v, attributeCls) then
           return true
         end
       end
@@ -177,7 +195,7 @@ function Type.GetMethods(this)
     end
     cls = cls.__base__
   until cls == nil 
-  return System.arrayFromTable(t)  
+  return System.arrayFromTable(t, MethodInfo)  
 end
 
 local FieldInfo = { memberType = 4 }

@@ -22,6 +22,7 @@ local setArray = Collection.setArray
 local checkIndex = Collection.checkIndex 
 local arrayEnumerator = Collection.arrayEnumerator
 
+local assert = assert
 local select = select
 
 local Array = {}
@@ -81,6 +82,18 @@ Array.Sort = Collection.sortArray
 Array.TrueForAll = Collection.trueForAllOfArray
 Array.Copy = Collection.copyArray
 
+function Array.CreateInstance(elementType, length)
+  return Array(elementType.c):new(length)
+end
+
+function Array.GetValue(this, index)
+  return this:get(index)
+end
+
+function Array.SetValue(this, value, index)
+  this:set(index, value)
+end
+
 System.define("System.Array", function(T) 
   local cls = { 
     __inherits__ = { System.IList_1(T), System.IList }, 
@@ -90,6 +103,7 @@ System.define("System.Array", function(T)
 end, Array)
 
 function System.arrayFromTable(t, T)
+  assert(T)
   return setmetatable(t, Array(T))
 end
 

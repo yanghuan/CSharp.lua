@@ -244,3 +244,4 @@ ModelManifest.xml
 /CSharp.lua/Properties/launchSettings.json
 /CSharp.lua.Launcher/Properties/launchSettings.json
 /download/*.zip
+/Test/TestCases/out/
