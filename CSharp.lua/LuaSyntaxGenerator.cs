@@ -305,6 +305,10 @@ namespace CSharpLua {
           HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>();
           var lastTypes = typesList.Last();
           foreach (var type in lastTypes) {
+            if (type.ContainingType != null) {
+              AddSuperTypeTo(parentTypes, type, type.ContainingType);
+            }
+
             if (type.BaseType != null) {
               AddSuperTypeTo(parentTypes, type, type.BaseType);
             }
