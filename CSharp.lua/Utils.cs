@@ -670,6 +670,14 @@ namespace CSharpLua {
       return elementTypes.Count;
     }
 
+    public static bool IsIndexerProperty(this ISymbol symbol) {
+      if (symbol.Kind == SymbolKind.Property) {
+        var propertySymbol = (IPropertySymbol)symbol;
+        return propertySymbol.IsIndexer;
+      }
+      return false;
+    }
+
     private static readonly Regex identifierRegex_ = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$", RegexOptions.Compiled);
 
     public static bool IsIdentifierIllegal(ref string identifierName) {

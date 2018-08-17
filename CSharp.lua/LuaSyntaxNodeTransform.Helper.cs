@@ -709,6 +709,11 @@ namespace CSharpLua {
         bool need = false;
         switch (node.Parent.Kind()) {
           case SyntaxKind.Argument: {
+              var argument = (ArgumentSyntax)node.Parent;
+              if (argument.RefKindKeyword.IsKind(SyntaxKind.RefKeyword)  || argument.RefKindKeyword.IsKind(SyntaxKind.OutKeyword)) {
+                break;
+              }
+
               var symbol = semanticModel_.GetSymbolInfo(node.Parent.Parent.Parent).Symbol;
               if (symbol != null && symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
                 break;
