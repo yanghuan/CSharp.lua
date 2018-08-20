@@ -532,7 +532,7 @@ namespace CSharpLua {
       if (body != null) {
         LuaBlockSyntax block = (LuaBlockSyntax)body.Accept(this);
         function.AddStatements(block.Statements);
-      } else if (expressionBody != null) {
+      } else {
         blocks_.Push(function.Body);
         var expression = (LuaExpressionSyntax)expressionBody.Accept(this);
         blocks_.Pop();
@@ -561,7 +561,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
-      if (!node.Modifiers.IsAbstract()) {
+      if (!node.Modifiers.IsAbstract() && !node.Modifiers.IsExtern()) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
         CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document);
         return result.Function;

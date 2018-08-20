@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -208,6 +208,10 @@ namespace CSharpLua {
 
     public static bool IsAbstract(this SyntaxTokenList modifiers) {
       return modifiers.Any(i => i.IsKind(SyntaxKind.AbstractKeyword));
+    }
+
+    public static bool IsExtern(this SyntaxTokenList modifiers) {
+      return modifiers.Any(i => i.IsKind(SyntaxKind.ExternKeyword));
     }
 
     public static bool IsReadOnly(this SyntaxTokenList modifiers) {
