@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -972,8 +972,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitLocalFunctionStatement(LocalFunctionStatementSyntax node) {
       var result = BuildMethodDeclaration(node, default(SyntaxList<AttributeListSyntax>), node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
-      var parentNode = FindParent(node, i => i.IsKind(SyntaxKind.MethodDeclaration) || i.IsKind(SyntaxKind.LocalFunctionStatement));
-      var body = parentNode.IsKind(SyntaxKind.MethodDeclaration) ? ((MethodDeclarationSyntax)parentNode).Body : ((LocalFunctionStatementSyntax)parentNode).Body;
+      var body = FindParentMethodBody(node);
       bool isOnlyOne = body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
       if (isOnlyOne) {
         return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Document);

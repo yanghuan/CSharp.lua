@@ -2137,9 +2137,38 @@ namespace CSharpLua {
       return new LuaLocalDeclarationStatementSyntax(declaration);
     }
 
+    private bool IsValueTypeVariableDeclarationWithoutAssignment(ITypeSymbol typeSymbol, VariableDeclaratorSyntax variable) {
+      var body = FindParentMethodBody(variable);
+      int index = body.Statements.IndexOf((StatementSyntax)variable.Parent.Parent);
+      foreach (var i in body.Statements.Skip(index + 1)) {
+        if (i.IsKind(SyntaxKind.ExpressionStatement)) {
+          var expressionStatement = (ExpressionStatementSyntax)i;
+          if (expressionStatement.Expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+            var assignment = (AssignmentExpressionSyntax)expressionStatement.Expression;
+            if (assignment.Left.IsKind(SyntaxKind.IdentifierName)) {
+              var identifierName = (IdentifierNameSyntax)assignment.Left;
+              if (identifierName.Identifier.ValueText == variable.Identifier.ValueText) {
+                return false;
+              }
+            } else if (assignment.Left.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+              var memberAccessExpression = (MemberAccessExpressionSyntax)assignment.Left;
+              if (memberAccessExpression.Expression.IsKind(SyntaxKind.IdentifierName)) {
+                var identifierName = (IdentifierNameSyntax)memberAccessExpression.Expression;
+                if (identifierName.Identifier.ValueText == variable.Identifier.ValueText) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
     public override LuaSyntaxNode VisitVariableDeclaration(VariableDeclarationSyntax node) {
-      LuaVariableListDeclarationSyntax variableListDeclaration = new LuaVariableListDeclarationSyntax();
-      foreach (VariableDeclaratorSyntax variable in node.Variables) {
+      ITypeSymbol typeSymbol = null;
+      var variableListDeclaration = new LuaVariableListDeclarationSyntax();
+      foreach (var variable in node.Variables) {
         if (variable.Initializer != null && variable.Initializer.Value.IsKind(SyntaxKind.RefExpression)) {
           var refExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
           AddLocalVariableMapping(new LuaExpressionNameSyntax(refExpression), variable);
@@ -2158,6 +2187,15 @@ namespace CSharpLua {
           }
           if (!isConst) {
             var variableDeclarator = (LuaVariableDeclaratorSyntax)variable.Accept(this);
+            if (variableDeclarator.Initializer == null) {
+              if (typeSymbol == null) {
+                typeSymbol = semanticModel_.GetTypeInfo(node.Type).Type;
+              }
+              if (typeSymbol.IsCustomValueType() && IsValueTypeVariableDeclarationWithoutAssignment(typeSymbol, variable)) {
+                var typeExpression = GetTypeName(typeSymbol);
+                variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(BuildDefaultValue(typeExpression));
+              }
+            }
             variableListDeclaration.Variables.Add(variableDeclarator);
           }
         }
@@ -2286,7 +2324,7 @@ namespace CSharpLua {
       var left = switchs_.Peek().Temp;
       if (node.Pattern is DeclarationPatternSyntax declarationPattern) {
         AddLocalVariableMapping(left, declarationPattern.Designation);
-        var switchStatement = FindParent<SwitchStatementSyntax>(node);
+        var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
         var leftType = semanticModel_.GetTypeInfo(switchStatement.Expression).Type;
         var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;
         if (leftType.IsSubclassOf(rightType)) {

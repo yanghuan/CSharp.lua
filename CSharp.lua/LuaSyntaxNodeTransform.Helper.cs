@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -103,8 +103,18 @@ namespace CSharpLua {
       return (T)FindParent(node, i => i is T);
     }
 
+    private SyntaxNode FindParentMethodDeclaration(SyntaxNode node) {
+      return FindParent(node, i => i is BaseMethodDeclarationSyntax || i.IsKind(SyntaxKind.LocalFunctionStatement));
+    }
+
+    private BlockSyntax FindParentMethodBody(SyntaxNode node) {
+      var methodNode = FindParentMethodDeclaration(node);
+      var body = methodNode.IsKind(SyntaxKind.LocalFunctionStatement) ? ((LocalFunctionStatementSyntax)methodNode).Body : ((BaseMethodDeclarationSyntax)methodNode).Body;
+      return body;
+    }
+ 
     private string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
-      var root = FindParent<BaseMethodDeclarationSyntax>(node);
+      var root = FindParentMethodDeclaration(node);
       while (true) {
         string newName = Utility.GetNewIdentifierName(name, index);
         bool exists = IsLocalVarExists(newName, root);
@@ -705,7 +715,7 @@ namespace CSharpLua {
     }
 
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {
-      if (typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType())) {
+      if (typeSymbol.IsCustomValueType()) {
         bool need = false;
         switch (node.Parent.Kind()) {
           case SyntaxKind.Argument: {

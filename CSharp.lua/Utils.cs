@@ -603,6 +603,10 @@ namespace CSharpLua {
       return typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
     }
 
+    public static bool IsCustomValueType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType());
+    }
+
     public static bool IsExplicitInterfaceImplementation(this ISymbol symbol) {
       switch (symbol.Kind) {
         case SymbolKind.Property: {
