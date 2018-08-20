@@ -544,6 +544,16 @@ if version < 5.3 then
     return band(v, 0xffffffff)
   end
 
+  function System.toInt64(v, checked) 
+    if v >= -9223372036854775808 and v <= 9223372036854775807 then
+      return v
+    end
+    if checked then
+      throw(System.OverflowException(), 1) 
+    end
+    throw(System.InvalidCastException()) -- 2 ^ 51, Lua BitOp used 51 and 52
+  end
+
   function System.toUInt64(v, checked)
     if v >= 0 then
       return v
@@ -683,7 +693,11 @@ else
   function System.toInt32(v, checked)
     return toInt(v, -2147483648, 2147483647, 0xffffffff, 0x7fffffff, checked)
   end
-  
+
+  function System.toInt64(v, checked)
+    return toInt(v, -9223372036854775808, 9223372036854775807, 0xffffffffffffffff, 0x7fffffffffffffff, checked)
+  end
+
   function System.toUInt64(v, checked)
     if v >= 0 then
       return v
