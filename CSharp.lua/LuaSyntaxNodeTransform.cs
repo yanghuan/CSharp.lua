@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -532,7 +532,7 @@ namespace CSharpLua {
       if (body != null) {
         LuaBlockSyntax block = (LuaBlockSyntax)body.Accept(this);
         function.AddStatements(block.Statements);
-      } else {
+      } else if (expressionBody != null) {
         blocks_.Push(function.Body);
         var expression = (LuaExpressionSyntax)expressionBody.Accept(this);
         blocks_.Pop();
