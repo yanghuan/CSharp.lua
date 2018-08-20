@@ -684,7 +684,7 @@ else
     return toInt(v, -2147483648, 2147483647, 0xffffffff, 0x7fffffff, checked)
   end
   
-  function System.toUInt64(v, checked)
+  function System.toInt64(v, checked)
     if v >= 0 then
       return v
     end
