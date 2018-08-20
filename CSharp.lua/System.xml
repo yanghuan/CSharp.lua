@@ -49,11 +49,15 @@ limitations under the License.
       </class>
       <class name="Single" Name="System.Double" >
         <field name="NaN" Template="System.Double.NaN" />
+        <field name="PositiveInfinity" Template="System.Double.PositiveInfinity" />
+        <field name="NegativeInfinity" Template="System.Double.NegativeInfinity" />
         <method name="Parse" Name="ParseSingle" />
         <method name="TryParse" Name="TryParseSingle" />
       </class>
       <class name="Double">
         <field name="NaN" Template="System.Double.NaN" />
+        <field name="PositiveInfinity" Template="System.Double.PositiveInfinity" />
+        <field name="NegativeInfinity" Template="System.Double.NegativeInfinity" />
       </class>
       <class name="String">
         <field name="Empty" Template="&quot;&quot;" />
