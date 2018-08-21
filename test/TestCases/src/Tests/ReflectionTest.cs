@@ -10,7 +10,7 @@ namespace TestCases
 {
     public class ReflectionTest
     {
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest01()
         {
             Console.Write("Test typeof...");
@@ -18,7 +18,7 @@ namespace TestCases
             Console.WriteLine(typeof(TestCls) == typeof(TestCls2));
             Console.WriteLine(typeof(TestCls) != typeof(TestCls2));
         }
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest02()
         {
             var type = typeof(TestCls);
@@ -28,7 +28,7 @@ namespace TestCases
             method.Invoke(new TestCls(), new object[] { 100 });
             method2.Invoke(null, null);
         }
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest03()
         {
             var ins = new TestCls();
@@ -39,7 +39,7 @@ namespace TestCases
             method.Invoke(ins, new object[] { 100 });
             method2.Invoke(null, null);
         }
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest04()
         {
             var t = Type.GetType("TestCases.ReflectionTest/TestCls2");
@@ -60,7 +60,7 @@ namespace TestCases
             }
         }
 
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest05()
         {
             var fi = typeof(TestCls).GetField("aa");
@@ -84,7 +84,7 @@ namespace TestCases
                 Console.WriteLine(i);
             }
         }
-        [TestCase]
+      //[TestCase]
         public static void ReflectionTest06()
         {
             var arr = typeof(SingletonTest).GetFields();
@@ -97,7 +97,7 @@ namespace TestCases
             fi.SetValue(SingletonTest.Inst, 1.2f);
             Console.WriteLine(SingletonTest.Inst.testFloat);
         }
-        [TestCase]
+       //[TestCase]
         public static void ReflectionTest07()
         {
             //-----------------------------CLR-----------------------------//
@@ -122,7 +122,7 @@ namespace TestCases
                 throw new Exception("isDefeinded == false 3");
             }
         }
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest08()
         {
             //-----------------------------CLR-----------------------------//
@@ -209,7 +209,7 @@ namespace TestCases
         {
             public uint B { get; set; }
         }
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest09()
         {
             var r = new MyClass()
@@ -250,7 +250,7 @@ namespace TestCases
             public EnumTest.TestEnum EnumField { get; set; }
             public static int StaticField { get; set; }
         }
-        [TestCase]
+         //[TestCase]
         public static void ReflectionTest10()
         {
             Tx obj = new Tx { FloatField = 21, IntField = 21 };
@@ -307,7 +307,7 @@ namespace TestCases
                 }
             }
         }
-        [TestCase]
+        //[TestCase]
         public static void ReflectionTest11()
         {
             ReflectionTest11Sub(new test24Class());

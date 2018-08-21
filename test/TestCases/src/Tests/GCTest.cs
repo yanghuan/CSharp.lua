@@ -7,20 +7,17 @@ namespace TestCases
 {
     public static class GCTest
     {
-        static DataManager dataManager;
         [TestCase]
         public static void Start()
         {
-            Console.WriteLine("Start!");
-            dataManager = new DataManager();
-            dataManager.FillCollections();
+          Console.WriteLine("Start!");
+          DataManager dataManager = new DataManager();
+          dataManager.FillCollections();
+          
+          Console.WriteLine("CallGC!");
+          dataManager.CallGC();
         }
-        [TestCase]
-        public static void CallGC()
-        {
-            Console.WriteLine("CallGC!");
-            dataManager.CallGC();
-        }
+        
         [TestCase]
         public static void TestDicEnumerator()
         {

@@ -16,6 +16,7 @@ limitations under the License.
 
 local System = System
 local define = System.define
+local Object = System.Object
 
 local traceback = debug.traceback
 local tconcat = table.concat
@@ -41,6 +42,7 @@ end
 
 local Exception = define("System.Exception", {
   __tostring = toString,
+  ToString = toString,
 
   __ctor__ = function(this, message, innerException) 
     this.message = message
@@ -59,7 +61,14 @@ local Exception = define("System.Exception", {
     return this.errorStack
   end,
 
-  ToString = toString,
+  getData = function (this)
+    local data = this.data
+    if not data then
+      data = System.Dictionary(Object, Object)()
+      this.data = data
+    end
+    return data
+  end,
 
   traceback = function(this, lv)
     this.errorStack = traceback("", lv and lv + 3 or 3)

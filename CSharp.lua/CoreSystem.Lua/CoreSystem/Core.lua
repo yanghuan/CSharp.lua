@@ -62,6 +62,7 @@ local function xpcallErr(e)
     e:traceback()
     return e
   end
+  return e
 end
 
 local function try(try, catch, finally)
@@ -346,14 +347,15 @@ version = tonumber(version)
 System.luaVersion = version
 
 if version < 5.3 then
+  local bnot, band, bor, xor, sl, sr
   local ok, bit = pcall(require, "bit")
   if ok then
-    local bnot = bit.bnot
-    local band = bit.band
-    local bor = bit.bor
-    local xor = bit.bxor
-    local sl = bit.lshift
-    local sr = bit.rshift
+    bnot = bit.bnot
+    band = bit.band
+    bor = bit.bor
+    xor = bit.bxor
+    sl = bit.lshift
+    sr = bit.rshift
 
     System.bnot = bnot
     System.band = band

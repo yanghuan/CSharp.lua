@@ -99,12 +99,12 @@ namespace TestCases
             {
                 a = 123;
             }
-            [TestCase]
+            
             public void DoTestRef()
             {
                 TestRef(ref v);
             }
-            [TestCase]
+            
             public void DoTestRef2()
             {
                 t = new TestGenrRef();
@@ -114,10 +114,9 @@ namespace TestCases
                 Console.WriteLine("new val:" + t2.v);
                 Console.WriteLine("new val:" + t.v);
             }
-            [TestCase]
+            
             public void DoTestRef3()
             {
-#if COMPILE_BUG
                 ILRuntimeTest.TestFramework.TestStruct.DoTest(ref str);
 
                 Console.WriteLine("new val:" + str.value);
@@ -129,7 +128,6 @@ namespace TestCases
                 ILRuntimeTest.TestFramework.TestStruct.DoTest(ref v);
 
                 Console.WriteLine("new val:" + v);
-#endif
 
                 var b = str;
                 b.value = 1233333;
@@ -279,14 +277,12 @@ namespace TestCases
             Dictionary<int, TestGenrRef> dic = new Dictionary<int, TestGenrRef>();
             dic[123] = new TestGenrRef();
             TestGenrRef[] arr = new TestGenrRef[10];
-#if COMPILE_BUG
             if (dic.TryGetValue(123, out arr[1]))
             {
                 arr[1].DoTestRef();
             }
             else
                 throw new Exception();
-#endif
         }
 
         class LongHolder

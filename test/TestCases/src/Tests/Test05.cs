@@ -165,8 +165,8 @@ namespace TestCases
             for (int i = 0; i < 1; i++)
             {
                 row = new TestCases.NRow<A, B>();
-                row.K = (A)Convert.ChangeType(a, typeof(A));
-                row.V = (B)Convert.ChangeType(b, typeof(B));
+                //row.K = (A)Convert.ChangeType(a, typeof(A));
+                //row.V = (B)Convert.ChangeType(b, typeof(B));
                 res.Add(row);
             }
             return res;
@@ -211,7 +211,7 @@ namespace TestCases
         {
             Console.WriteLine("a = " + a + ", b = " + b.ToString());
         }
-        [TestCase]
+        
         public static void TestForEach()
         {
             List<string> a = new List<string>() { "1", "2", "3" };
@@ -241,7 +241,7 @@ namespace TestCases
         static string ParseOne(string line)
         {
             Console.WriteLine(line.ToString());            
-            throw new NotSupportedException("error");            
+            throw new NotSupportedException("error");      
         }
 
         static bool CheckValue(List<B> lst)

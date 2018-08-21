@@ -109,9 +109,8 @@ namespace TestCases
             obj.R = 1;
             obj.R2 = 2;
 
-            var m = typeof(InheritanceTest).GetMethod("InheritanceTest08_Sub");
-
-            m.Invoke(null, new object[] { obj });
+            //var m = typeof(InheritanceTest).GetMethod("InheritanceTest08_Sub");
+            //m.Invoke(null, new object[] { obj });
         }
 
         static void InheritanceTest08_Sub(AABase obj)
@@ -121,6 +120,7 @@ namespace TestCases
 
             Console.WriteLine(string.Format("{0},{1}", k, l));
         }
+        
         [TestCase]
         public static void InheritanceTest09()
         {
@@ -145,8 +145,10 @@ namespace TestCases
 
             if (list.Count != 1)
                 throw new Exception("Error");
-            c1 = (Child2)c2;
-            Console.WriteLine(c1.ToString());
+              
+            //c1 = (Child2)c2;
+            //Console.WriteLine(c1.ToString());
+            
             c1 = c2 as Child2;
             Console.WriteLine(c1 == null);
         }

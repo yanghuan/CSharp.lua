@@ -112,7 +112,7 @@ function Dictionary.ContainsValue(this, value)
       end
     end    
   else    
-    local equals = EqualityComparer_1(this.__genericTValue__).getDefault().equals
+    local equals = EqualityComparer_1(this.__genericTValue__).getDefault().Equals
       for _, v in pairs(this) do
         if equals(nil, value, unWrap(v)) then
           return true
