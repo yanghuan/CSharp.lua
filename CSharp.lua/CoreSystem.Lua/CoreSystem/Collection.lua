@@ -39,7 +39,6 @@ local ccreate = coroutine.create
 local cstatus = coroutine.status
 local cresume = coroutine.resume
 local ipairs = ipairs
-local rawequal = rawequal
 
 local Collection = {}
 local null = {}
@@ -103,14 +102,14 @@ Collection.checkIndex = checkIndex
 Collection.checkIndexAndCount = checkIndexAndCount
 
 local function wrap(v)
-  if rawequal(v, nil) then 
+  if v == nil then 
     return null 
   end
   return v
 end
 
 local function unWrap(v)
-  if rawequal(v, null) then 
+  if v == null then 
     return nil 
   end
   return v
