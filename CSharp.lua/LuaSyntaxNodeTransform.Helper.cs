@@ -103,18 +103,40 @@ namespace CSharpLua {
       return (T)FindParent(node, i => i is T);
     }
 
-    private SyntaxNode FindParentMethodDeclaration(SyntaxNode node) {
-      return FindParent(node, i => i is BaseMethodDeclarationSyntax || i.IsKind(SyntaxKind.LocalFunctionStatement));
+    private (SyntaxNode node, BlockSyntax body) FindParentMethodDeclaration(SyntaxNode node) {
+      BlockSyntax body = null;
+      var parnet = FindParent(node, i => {
+        switch (i.Kind()) {
+          case SyntaxKind.MethodDeclaration:
+          case SyntaxKind.OperatorDeclaration:
+          case SyntaxKind.ConversionOperatorDeclaration: {
+              var methodDeclaration = (BaseMethodDeclarationSyntax)i;
+              body = methodDeclaration.Body;
+              return true;
+            }
+          case SyntaxKind.LocalFunctionStatement: {
+              var localFunction = (LocalFunctionStatementSyntax)i;
+              body = localFunction.Body;
+              return true;
+            }
+          case SyntaxKind.GetAccessorDeclaration:
+          case SyntaxKind.SetAccessorDeclaration: {
+              var accessorDeclaration = (AccessorDeclarationSyntax)i;
+              body = accessorDeclaration.Body;
+              return true;
+            }
+        }
+        return false;
+      });
+      return (parnet, body);
     }
 
     private BlockSyntax FindParentMethodBody(SyntaxNode node) {
-      var methodNode = FindParentMethodDeclaration(node);
-      var body = methodNode.IsKind(SyntaxKind.LocalFunctionStatement) ? ((LocalFunctionStatementSyntax)methodNode).Body : ((BaseMethodDeclarationSyntax)methodNode).Body;
-      return body;
+     return FindParentMethodDeclaration(node).body;
     }
  
     private string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
-      var root = FindParentMethodDeclaration(node);
+      var (root, _) = FindParentMethodDeclaration(node);
       while (true) {
         string newName = Utility.GetNewIdentifierName(name, index);
         bool exists = IsLocalVarExists(newName, root);

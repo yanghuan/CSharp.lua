@@ -120,7 +120,11 @@ System.namespace("CSharpLua", function (namespace)
         local sb = SystemText.StringBuilder()
         local typeSymbol = System.cast(MicrosoftCodeAnalysis.INamedTypeSymbol, symbol:getOriginalDefinition())
         local namespaceSymbol = typeSymbol:getContainingNamespace()
-        if not namespaceSymbol:getIsGlobalNamespace() then
+
+        if symbol:getContainingType() ~= nil then
+          sb:Append(GetTypeString(symbol:getContainingType()))
+          sb:AppendChar(46 --[['.']])
+        elseif not namespaceSymbol:getIsGlobalNamespace() then
           sb:Append(namespaceSymbol:ToString())
           sb:AppendChar(46 --[['.']])
         end

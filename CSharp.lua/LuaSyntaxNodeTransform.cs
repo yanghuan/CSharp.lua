@@ -2139,23 +2139,25 @@ namespace CSharpLua {
 
     private bool IsValueTypeVariableDeclarationWithoutAssignment(ITypeSymbol typeSymbol, VariableDeclaratorSyntax variable) {
       var body = FindParentMethodBody(variable);
-      int index = body.Statements.IndexOf((StatementSyntax)variable.Parent.Parent);
-      foreach (var i in body.Statements.Skip(index + 1)) {
-        if (i.IsKind(SyntaxKind.ExpressionStatement)) {
-          var expressionStatement = (ExpressionStatementSyntax)i;
-          if (expressionStatement.Expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
-            var assignment = (AssignmentExpressionSyntax)expressionStatement.Expression;
-            if (assignment.Left.IsKind(SyntaxKind.IdentifierName)) {
-              var identifierName = (IdentifierNameSyntax)assignment.Left;
-              if (identifierName.Identifier.ValueText == variable.Identifier.ValueText) {
-                return false;
-              }
-            } else if (assignment.Left.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-              var memberAccessExpression = (MemberAccessExpressionSyntax)assignment.Left;
-              if (memberAccessExpression.Expression.IsKind(SyntaxKind.IdentifierName)) {
-                var identifierName = (IdentifierNameSyntax)memberAccessExpression.Expression;
+      if (body != null) {
+        int index = body.Statements.IndexOf((StatementSyntax)variable.Parent.Parent);
+        foreach (var i in body.Statements.Skip(index + 1)) {
+          if (i.IsKind(SyntaxKind.ExpressionStatement)) {
+            var expressionStatement = (ExpressionStatementSyntax)i;
+            if (expressionStatement.Expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+              var assignment = (AssignmentExpressionSyntax)expressionStatement.Expression;
+              if (assignment.Left.IsKind(SyntaxKind.IdentifierName)) {
+                var identifierName = (IdentifierNameSyntax)assignment.Left;
                 if (identifierName.Identifier.ValueText == variable.Identifier.ValueText) {
-                  return true;
+                  return false;
+                }
+              } else if (assignment.Left.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+                var memberAccessExpression = (MemberAccessExpressionSyntax)assignment.Left;
+                if (memberAccessExpression.Expression.IsKind(SyntaxKind.IdentifierName)) {
+                  var identifierName = (IdentifierNameSyntax)memberAccessExpression.Expression;
+                  if (identifierName.Identifier.ValueText == variable.Identifier.ValueText) {
+                    return true;
+                  }
                 }
               }
             }

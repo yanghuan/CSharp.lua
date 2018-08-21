@@ -500,6 +500,10 @@ System.namespace("CSharpLua", function (namespace)
           local parentTypes = System.HashSet(MicrosoftCodeAnalysis.INamedTypeSymbol)()
           local lastTypes = CSharpLua.Utility.Last(typesList, System.List(MicrosoftCodeAnalysis.INamedTypeSymbol))
           for _, type in System.each(lastTypes) do
+            if type:getContainingType() ~= nil then
+              AddSuperTypeTo(this, parentTypes, type, type:getContainingType())
+            end
+
             if type:getBaseType() ~= nil then
               AddSuperTypeTo(this, parentTypes, type, type:getBaseType())
             end

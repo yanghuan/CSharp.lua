@@ -973,7 +973,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitLocalFunctionStatement(LocalFunctionStatementSyntax node) {
       var result = BuildMethodDeclaration(node, default(SyntaxList<AttributeListSyntax>), node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
       var body = FindParentMethodBody(node);
-      bool isOnlyOne = body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
+      bool isOnlyOne = body == null || body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
       if (isOnlyOne) {
         return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Document);
       } else {

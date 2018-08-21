@@ -118,14 +118,15 @@ System.namespace("CSharpLua", function (namespace)
   namespace.class("Utility", function (namespace)
     local First, Last, GetOrDefault, GetOrDefault1, TryAdd, AddAt, IndexOf, GetCommondLines, 
     GetArgument, GetCurrentDirectory, Split, ReplaceNewline, IsPrivate, IsPrivate1, IsStatic, IsAbstract, 
-    IsReadOnly, IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, IsIntegerType, 
-    IsNullableType, IsImmutable, IsSystemTuple, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsFromAssembly, IsOverridable, 
-    OverriddenSymbol, IsOverridden, IsPropertyField, HasIgnoreAttribute, IsEventFiled, HasStaticCtor, IsAssignment, systemLinqEnumerableType_, 
-    IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, CheckSymbolDefinition, 
-    CheckMethodDefinition, CheckOriginalDefinition, IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, 
-    IsTypeDeclaration, GetIEnumerableElementType, DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, identifierRegex_, IsIdentifierIllegal, 
-    ToBase63, EncodeToIdentifier, FillNamespaceName, FillExternalTypeName, GetTypeShortName, GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, 
-    IsCollectionType, ToStatement, IsNil, IsProtobufNetDeclaration, IsProtobufNetField, IsProtobufNetProperty, __staticCtor__
+    IsExtern, IsReadOnly, IsConst, IsParams, IsPartial, IsOutOrRef, IsStringType, IsDelegateType, 
+    IsIntegerType, IsNullableType, IsImmutable, IsSystemTuple, IsInterfaceImplementation, InterfaceImplementations, IsFromCode, IsFromAssembly, 
+    IsOverridable, OverriddenSymbol, IsOverridden, IsPropertyField, HasIgnoreAttribute, IsEventFiled, HasStaticCtor, IsAssignment, 
+    systemLinqEnumerableType_, IsSystemLinqEnumerable, GetLocationString, IsSubclassOf, IsImplementInterface, IsBaseNumberType, IsNumberTypeAssignableFrom, IsAssignableFrom, 
+    CheckSymbolDefinition, CheckMethodDefinition, CheckOriginalDefinition, IsMainEntryPoint, IsExtendSelf, IsTimeSpanType, IsGenericIEnumerableType, IsCustomValueType, 
+    IsExplicitInterfaceImplementation, IsExportSyntaxTrivia, IsTypeDeclaration, GetIEnumerableElementType, DynamicGetProperty, GetTupleElementTypes, GetTupleElementIndex, GetTupleElementCount, 
+    IsIndexerProperty, identifierRegex_, IsIdentifierIllegal, ToBase63, EncodeToIdentifier, FillNamespaceName, FillExternalTypeName, GetTypeShortName, 
+    GetNewIdentifierName, InternalGetAllNamespaces, GetAllNamespaces, IsCollectionType, ToStatement, IsNil, IsProtobufNetDeclaration, IsProtobufNetField, 
+    IsProtobufNetProperty, __staticCtor__
     __staticCtor__ = function (this)
       identifierRegex_ = SystemTextRegularExpressions.Regex([[^[a-zA-Z_][a-zA-Z0-9_]*$]], 8 --[[RegexOptions.Compiled]])
     end
@@ -278,6 +279,11 @@ System.namespace("CSharpLua", function (namespace)
     IsAbstract = function (modifiers)
       return Linq.Any(modifiers, function (i)
         return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8356 --[[SyntaxKind.AbstractKeyword]])
+      end)
+    end
+    IsExtern = function (modifiers)
+      return Linq.Any(modifiers, function (i)
+        return MicrosoftCodeAnalysis.CSharpExtensions.IsKind(i, 8359 --[[SyntaxKind.ExternKeyword]])
       end)
     end
     IsReadOnly = function (modifiers)
@@ -668,6 +674,9 @@ System.namespace("CSharpLua", function (namespace)
     IsGenericIEnumerableType = function (typeSymbol)
       return typeSymbol:getOriginalDefinition():getSpecialType() == 25 --[[SpecialType.System_Collections_Generic_IEnumerable_T]]
     end
+    IsCustomValueType = function (typeSymbol)
+      return typeSymbol:getIsValueType() and typeSymbol:getTypeKind() ~= 5 --[[TypeKind.Enum]] and (typeSymbol:getSpecialType() == 0 --[[SpecialType.None]] and not IsTimeSpanType(typeSymbol))
+    end
     IsExplicitInterfaceImplementation = function (symbol)
       repeat
         local default = symbol:getKind()
@@ -744,6 +753,13 @@ System.namespace("CSharpLua", function (namespace)
     GetTupleElementCount = function (typeSymbol)
       local elementTypes = GetTupleElementTypes(typeSymbol)
       return elementTypes:getCount()
+    end
+    IsIndexerProperty = function (symbol)
+      if symbol:getKind() == 15 --[[SymbolKind.Property]] then
+        local propertySymbol = System.cast(MicrosoftCodeAnalysis.IPropertySymbol, symbol)
+        return propertySymbol:getIsIndexer()
+      end
+      return false
     end
     IsIdentifierIllegal = function (identifierName)
       if not identifierRegex_:IsMatch(identifierName) then
@@ -932,6 +948,7 @@ System.namespace("CSharpLua", function (namespace)
       IsPrivate1 = IsPrivate1,
       IsStatic = IsStatic,
       IsAbstract = IsAbstract,
+      IsExtern = IsExtern,
       IsReadOnly = IsReadOnly,
       IsConst = IsConst,
       IsParams = IsParams,
@@ -964,6 +981,7 @@ System.namespace("CSharpLua", function (namespace)
       IsExtendSelf = IsExtendSelf,
       IsTimeSpanType = IsTimeSpanType,
       IsGenericIEnumerableType = IsGenericIEnumerableType,
+      IsCustomValueType = IsCustomValueType,
       IsExplicitInterfaceImplementation = IsExplicitInterfaceImplementation,
       IsExportSyntaxTrivia = IsExportSyntaxTrivia,
       IsTypeDeclaration = IsTypeDeclaration,
@@ -971,6 +989,7 @@ System.namespace("CSharpLua", function (namespace)
       GetTupleElementTypes = GetTupleElementTypes,
       GetTupleElementIndex = GetTupleElementIndex,
       GetTupleElementCount = GetTupleElementCount,
+      IsIndexerProperty = IsIndexerProperty,
       IsIdentifierIllegal = IsIdentifierIllegal,
       GetTypeShortName = GetTypeShortName,
       GetNewIdentifierName = GetNewIdentifierName,
