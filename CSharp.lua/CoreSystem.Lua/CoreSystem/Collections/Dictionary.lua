@@ -163,7 +163,11 @@ end
 
 function Dictionary.set(this, key, value)
   checkKey(key)
+  local oldValue = this[key];
   this[key] = wrap(value)
+  if rawequal(oldValue,nil) then
+    addCount(this, 1)
+  end
   changeVersion(this)
 end
 
