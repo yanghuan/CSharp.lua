@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -460,11 +460,13 @@ namespace CSharpLua {
         throw new ArgumentException("namespace's name is null");
       }
 
-      if (namespaceName.Length > 0 && !string.IsNullOrEmpty(model.Name)) {
+      if (namespaceName.Length > 0) {
         if (namespaceNameMaps_.ContainsKey(namespaceName)) {
           throw new ArgumentException($"namespace [{namespaceName}] is already has");
         }
-        namespaceNameMaps_.Add(namespaceName, model);
+        if (!string.IsNullOrEmpty(model.Name) || model.Baned) {
+          namespaceNameMaps_.Add(namespaceName, model);
+        }
       }
 
       if (model.Classes != null) {
