@@ -189,16 +189,16 @@ local function setBase(cls, kind)
         extends = extends(global, cls)
       end           
       local base = extends[1]
-      if base.__kind__ == "C" then
-        cls.__base__ = base
-        tremove(extends, 1)
-        if #extends > 0 then
-          cls.__interfaces__ = extends
-        end 
-        setmetatable(cls, base)
-      else
+      if base.__kind__ == "I" then
         cls.__interfaces__ = extends
         setmetatable(cls, Object)
+      else
+        cls.__base__ = base
+        setmetatable(cls, base)
+        if #extends > 1 then
+          tremove(extends, 1)
+          cls.__interfaces__ = extends
+        end
       end
       cls.__inherits__ = nil
     else
