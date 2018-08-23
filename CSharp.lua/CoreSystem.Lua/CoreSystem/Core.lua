@@ -167,11 +167,6 @@ local function setBase(cls, kind)
   cls.__index = cls 
   cls.__call = new
 
-  local attributes = cls.__attributes__
-  if attributes ~= nil then
-    cls.__attributes__ = attributes(global)
-  end
-
   if kind == "S" then
     local extends = cls.__inherits__
     if extends ~= nil then
@@ -204,6 +199,11 @@ local function setBase(cls, kind)
     else
       setmetatable(cls, Object)
     end  
+  end
+
+  local attributes = rawget(cls, "__attributes__")
+  if attributes ~= nil then
+    cls.__attributes__ = attributes(global)
   end
 end
 
