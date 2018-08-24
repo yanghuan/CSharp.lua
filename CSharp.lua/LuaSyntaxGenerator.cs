@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -1302,6 +1302,8 @@ namespace CSharpLua {
 
     private Dictionary<INamespaceSymbol, string> namespaceRefactorNames_ = new Dictionary<INamespaceSymbol, string>();
     private Dictionary<INamedTypeSymbol, string> typeRefactorNames_ = new Dictionary<INamedTypeSymbol, string>();
+    private int genericTypeCounter_;
+    public bool IsNoneGenericTypeCounter => genericTypeCounter_ == 0;
 
     private string GetTypeRefactorName(INamedTypeSymbol symbol) {
       return typeRefactorNames_.GetOrDefault(symbol);
@@ -1348,7 +1350,7 @@ namespace CSharpLua {
         return LuaIdentifierNameSyntax.TupleType;
       }
 
-      if (transfor != null) {
+      if (transfor != null && transfor.IsNoneGenericTypeCounter) {
         var curTypeDeclaration = transfor.CurTypeDeclaration;
         if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(namedTypeSymbol, out var classIdentifier)) {
           return classIdentifier;
@@ -1362,7 +1364,11 @@ namespace CSharpLua {
       } else {
         var invocationExpression = new LuaInvocationExpressionSyntax(typeName);
         invocationExpression.AddArguments(typeArguments);
-        return invocationExpression;
+        LuaExpressionSyntax luaExpression = invocationExpression;
+        if (transfor != null) {
+          transfor.ImportTypeName(ref luaExpression, namedTypeSymbol);
+        }
+        return luaExpression;
       }
     }
 
@@ -1382,12 +1388,16 @@ namespace CSharpLua {
     }
 
     private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
-      foreach (var typeArgument in typeSymbol.TypeArguments) {
-        if (typeArgument.Kind == SymbolKind.ErrorType) {
-          break;
+      if (typeSymbol.TypeArguments.Length > 0) {
+        ++genericTypeCounter_;
+        foreach (var typeArgument in typeSymbol.TypeArguments) {
+          if (typeArgument.Kind == SymbolKind.ErrorType) {
+            break;
+          }
+          LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
+          typeArguments.Add(typeArgumentExpression);
         }
-        LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
-        typeArguments.Add(typeArgumentExpression);
+        --genericTypeCounter_;
       }
     }
 

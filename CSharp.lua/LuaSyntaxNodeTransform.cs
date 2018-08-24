@@ -76,6 +76,7 @@ namespace CSharpLua {
     private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
     private int inheritNameNodeCounter_;
     public bool IsGetInheritTypeName => inheritNameNodeCounter_ > 0;
+    public bool IsNoneGenericTypeCounter => generator_.IsNoneGenericTypeCounter;
 
     private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
       ["!="] = LuaSyntaxNode.Tokens.NotEquals,

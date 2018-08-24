@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.CodeAnalysis;
@@ -107,6 +108,7 @@ namespace CSharpLua {
       BlockSyntax body = null;
       var parnet = FindParent(node, i => {
         switch (i.Kind()) {
+          case SyntaxKind.ConstructorDeclaration:
           case SyntaxKind.MethodDeclaration:
           case SyntaxKind.OperatorDeclaration:
           case SyntaxKind.ConversionOperatorDeclaration: {
@@ -568,6 +570,18 @@ namespace CSharpLua {
       return MayBeNull(conditionalWhenTrue, type) || MayBeFalse(conditionalWhenTrue, type);
     }
 
+    private bool IsLocalVarExistsInCurMethod(string name) {
+      var methodInfo = CurMethodInfoOrNull;
+      if (methodInfo != null) {
+        var syntaxReference = methodInfo.Symbol.DeclaringSyntaxReferences.First();
+        var root = syntaxReference.GetSyntax();
+        if (IsLocalVarExists(name, root)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     internal void ImportTypeName(ref string name, ISymbol symbol) {
       if (!IsGetInheritTypeName) {
         int pos = name.LastIndexOf('.');
@@ -575,19 +589,46 @@ namespace CSharpLua {
           string prefix = name.Substring(0, pos);
           if (prefix != LuaIdentifierNameSyntax.System.ValueText && prefix != LuaIdentifierNameSyntax.Class.ValueText) {
             string newPrefix = prefix.Replace(".", "");
-            var methodInfo = CurMethodInfoOrNull;
-            if (methodInfo != null) {
-              var syntaxReference = methodInfo.Symbol.DeclaringSyntaxReferences.First();
-              var root = syntaxReference.GetSyntax();
-              if (IsLocalVarExists(newPrefix, root)) {
-                return;
-              }
-            }
-            name = newPrefix + name.Substring(pos);
-            CurCompilationUnit.AddImport(prefix, newPrefix, symbol.IsFromCode());
+            if (!IsLocalVarExistsInCurMethod(newPrefix)) {
+              name = newPrefix + name.Substring(pos);
+              CurCompilationUnit.AddImport(prefix, newPrefix, symbol.IsFromCode());
+            }      
           }
         }
       }
+    }
+
+    internal void ImportTypeName(ref LuaExpressionSyntax luaExpression, INamedTypeSymbol symbol) {
+      Contract.Assert(symbol.IsGenericType);
+      if (!IsGetInheritTypeName && !symbol.IsTypeParameterExists()) {
+        var invocationExpression = (LuaInvocationExpressionSyntax)luaExpression;
+        string newName = GetGenericTypeImportName(invocationExpression, out var argumentTypeNames);
+        if (!IsLocalVarExistsInCurMethod(newName)) {
+          CurCompilationUnit.AddImport(invocationExpression, newName, argumentTypeNames, !symbol.IsAbsoluteFromAssembly());
+          luaExpression = new LuaIdentifierNameSyntax(newName);
+        }
+      }
+    }
+
+    private static void FillGenericTypeImportName(StringBuilder sb, List<string> argumentTypeNames, LuaInvocationExpressionSyntax invocationExpression) {
+      var identifierName =(LuaIdentifierNameSyntax)invocationExpression.Expression;
+      sb.Append(identifierName.ValueText.LastName());
+      foreach (var argument in invocationExpression.ArgumentList.Arguments) {
+        if (argument.Expression is LuaIdentifierNameSyntax typeName) {
+          string argumentTypeName = typeName.ValueText;
+          sb.Append(argumentTypeName.LastName());
+          argumentTypeNames.Add(argumentTypeName);
+        } else {
+          FillGenericTypeImportName(sb, argumentTypeNames,(LuaInvocationExpressionSyntax)argument.Expression);
+        }
+      }
+    }
+
+    private static string GetGenericTypeImportName(LuaInvocationExpressionSyntax invocationExpression, out List<string> argumentTypeNames) {
+      StringBuilder sb = new StringBuilder();
+      argumentTypeNames = new List<string>();
+      FillGenericTypeImportName(sb, argumentTypeNames, invocationExpression);
+      return sb.ToString();
     }
 
     private LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol) {
