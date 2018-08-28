@@ -488,6 +488,26 @@ limitations under the License.
       <class name="Assembly">
         <method name="GetType" Name="GetTypeFrom" />
       </class>
+      <class name="MemberInfo">
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+      </class>
+      <class name="FieldInfo">
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+      </class>
+      <class name="PropertyInfo">
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+      </class>
+      <class name="MethodInfo">
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+      </class>
+      <class name="MethodBase">
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+      </class>
     </namespace>
     <namespace name="System.Text">
       <class name="StringBuilder">
