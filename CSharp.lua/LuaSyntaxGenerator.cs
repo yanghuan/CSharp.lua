@@ -1325,8 +1325,15 @@ namespace CSharpLua {
 
       if (symbol.Kind == SymbolKind.ArrayType) {
         var arrayType = (IArrayTypeSymbol)symbol;
-        LuaExpressionSyntax elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
-        return new LuaInvocationExpressionSyntax(arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray, elementTypeExpression);
+        ++genericTypeCounter_;
+        var elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
+        --genericTypeCounter_;
+        var arrayTypeExpression = arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
+        LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(arrayTypeExpression, elementTypeExpression);
+        if (transfor != null) {
+          transfor.ImportTypeName(ref luaExpression, arrayType);
+        }
+        return luaExpression;
       }
 
       var namedTypeSymbol = (INamedTypeSymbol)symbol;

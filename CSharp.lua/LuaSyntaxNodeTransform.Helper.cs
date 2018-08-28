@@ -598,25 +598,27 @@ namespace CSharpLua {
       }
     }
 
-    internal void ImportTypeName(ref LuaExpressionSyntax luaExpression, INamedTypeSymbol symbol) {
-      Contract.Assert(symbol.IsGenericType);
+    internal void ImportTypeName(ref LuaExpressionSyntax luaExpression, ITypeSymbol symbol) {
       if (!IsGetInheritTypeName && !symbol.IsTypeParameterExists()) {
         var invocationExpression = (LuaInvocationExpressionSyntax)luaExpression;
         string newName = GetGenericTypeImportName(invocationExpression, out var argumentTypeNames);
         if (!IsLocalVarExistsInCurMethod(newName)) {
-          CurCompilationUnit.AddImport(invocationExpression, newName, argumentTypeNames, !symbol.IsAbsoluteFromAssembly());
+          CurCompilationUnit.AddImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode());
           luaExpression = new LuaIdentifierNameSyntax(newName);
         }
       }
     }
 
     private static void FillGenericTypeImportName(StringBuilder sb, List<string> argumentTypeNames, LuaInvocationExpressionSyntax invocationExpression) {
+      string CheckLastName(string lastName) {
+        return lastName == "Dictionary" ? "Dict" : lastName;
+      }
       var identifierName =(LuaIdentifierNameSyntax)invocationExpression.Expression;
-      sb.Append(identifierName.ValueText.LastName());
+      sb.Append(CheckLastName(identifierName.ValueText.LastName()));
       foreach (var argument in invocationExpression.ArgumentList.Arguments) {
         if (argument.Expression is LuaIdentifierNameSyntax typeName) {
           string argumentTypeName = typeName.ValueText;
-          sb.Append(argumentTypeName.LastName());
+          sb.Append(CheckLastName(argumentTypeName.LastName()));
           argumentTypeNames.Add(argumentTypeName);
         } else {
           FillGenericTypeImportName(sb, argumentTypeNames,(LuaInvocationExpressionSyntax)argument.Expression);

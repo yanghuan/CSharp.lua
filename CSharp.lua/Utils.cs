@@ -837,53 +837,62 @@ namespace CSharpLua {
       return false;
     }
 
-    public static bool IsTypeParameterExists(this INamedTypeSymbol symbol) {
-      if (symbol.ContainingType != null) {
-        if (symbol.ContainingType.IsTypeParameterExists()) {
-          return true;
-        }
-      }
-
-      foreach (var typeArgument in symbol.TypeArguments) {
-        if (typeArgument.TypeKind == TypeKind.TypeParameter) {
-          return true;
-        }
-
-        if (typeArgument is INamedTypeSymbol type) {
-          if (type.IsTypeParameterExists()) {
+    public static bool IsTypeParameterExists(this ITypeSymbol symbol) {
+      switch (symbol.Kind) {
+        case SymbolKind.ArrayType: {
+            var arrayType = (IArrayTypeSymbol)symbol;
+            if (arrayType.ElementType.IsTypeParameterExists()) {
+              return true;
+            }
+            break;
+          }
+        case SymbolKind.NamedType: {
+            var nameTypeSymbol = (INamedTypeSymbol)symbol;
+            foreach (var typeArgument in nameTypeSymbol.TypeArguments) {
+              if (typeArgument.IsTypeParameterExists()) {
+                return true;
+              }
+            }
+            if (symbol.ContainingType != null) {
+              if (symbol.ContainingType.IsTypeParameterExists()) {
+                return true;
+              }
+            }
+            break;
+          }
+        case SymbolKind.TypeParameter: {
             return true;
           }
-        }
-        else if (typeArgument is IArrayTypeSymbol arrayType && arrayType.ElementType is INamedTypeSymbol elementType) {
-          if (!elementType.IsTypeParameterExists()) {
-            return true;
-          }
-        }
       }
 
       return false;
     }
 
-    public static bool IsAbsoluteFromAssembly(this INamedTypeSymbol symbol) {
-      bool isFromAssembly = symbol.IsFromAssembly();
-      if (!isFromAssembly) {
-        return false;
+    public static bool IsAbsoluteFromCode(this ITypeSymbol symbol) {
+      if (symbol.IsFromCode()) {
+        return true;
       }
 
-      foreach (var typeArgument in symbol.TypeArguments) {
-        if (typeArgument is INamedTypeSymbol type) {
-          if (!type.IsAbsoluteFromAssembly()) {
-            return false;
+      switch (symbol.Kind) {
+        case SymbolKind.ArrayType: {
+            var arrayType = (IArrayTypeSymbol)symbol;
+            if (arrayType.ElementType.IsAbsoluteFromCode()) {
+              return true;
+            }
+            break;
           }
-        }
-        else if (typeArgument is IArrayTypeSymbol arrayType && arrayType.ElementType is INamedTypeSymbol baseType) {
-          if (!baseType.IsAbsoluteFromAssembly()) {
-            return false;
+        case SymbolKind.NamedType: {
+            var nameTypeSymbol = (INamedTypeSymbol)symbol;
+            foreach (var typeArgument in nameTypeSymbol.TypeArguments) {
+              if (typeArgument.IsAbsoluteFromCode()) {
+                return true;
+              }
+            }
+            break;
           }
-        }
       }
 
-      return true;
+      return false;
     }
 
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
