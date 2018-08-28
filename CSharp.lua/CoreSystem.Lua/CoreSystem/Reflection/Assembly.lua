@@ -145,15 +145,6 @@ function MethodInfo.Invoke(this, obj, parameters)
   end
 end
 
-local function eq(left, right)
-  if left == right then
-    return true
-  else
-    return left.c == right.c and left.name == right.name
-  end
-end
-
-MethodInfo.__eq = eq
 MethodInfo.__inherits__ = { MemberInfo }
 
 System.define("System.Reflection.MethodInfo", MethodInfo)

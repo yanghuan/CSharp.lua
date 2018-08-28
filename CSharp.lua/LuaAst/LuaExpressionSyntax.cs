@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -125,18 +125,12 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaArrayTypeAdapterExpressionSyntax : LuaExpressionSyntax {
-    public LuaInvocationExpressionSyntax InvocationExpression { get; }
+    public LuaExpressionSyntax TypeExpression { get; }
     public LuaArrayRankSpecifierSyntax RankSpecifier { get; }
 
-    public LuaArrayTypeAdapterExpressionSyntax(LuaInvocationExpressionSyntax invocationExpression, LuaArrayRankSpecifierSyntax rankSpecifier) {
-      InvocationExpression = invocationExpression ?? throw new ArgumentNullException(nameof(invocationExpression));
+    public LuaArrayTypeAdapterExpressionSyntax(LuaExpressionSyntax typeExpression, LuaArrayRankSpecifierSyntax rankSpecifier) {
+      TypeExpression = typeExpression ?? throw new ArgumentNullException(nameof(typeExpression));
       RankSpecifier = rankSpecifier ?? throw new ArgumentNullException(nameof(rankSpecifier));
-    }
-
-    public LuaExpressionSyntax BaseType {
-      get {
-        return InvocationExpression.ArgumentList.Arguments[0].Expression;
-      }
     }
 
     public bool IsSimapleArray {
@@ -146,7 +140,7 @@ namespace CSharpLua.LuaAst {
     }
 
     internal override void Render(LuaRenderer renderer) {
-      InvocationExpression.Render(renderer);
+      TypeExpression.Render(renderer);
     }
   }
 

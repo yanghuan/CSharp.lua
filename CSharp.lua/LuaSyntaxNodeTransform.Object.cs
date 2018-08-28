@@ -148,8 +148,8 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
       Contract.Assert(node.IsKind(SyntaxKind.ArrayInitializerExpression));
-      var arrayType = BuildArrayTypeFromInitializer(node);
-      return BuildArrayCreationExpression(arrayType, node);
+      var arrayType = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
+      return BuildArrayTypeFromInitializer(arrayType, node);
     }
 
     public override LuaSyntaxNode VisitBracketedArgumentList(BracketedArgumentListSyntax node) {
@@ -183,16 +183,10 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitArrayType(ArrayTypeSyntax node) {
-      var elementType = (LuaExpressionSyntax)node.ElementType.Accept(this);
-
-      LuaInvocationExpressionSyntax typeExpress = null;
-      foreach (var rank in node.RankSpecifiers.Reverse()) {
-        var arrayTypeName = rank.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
-        typeExpress = new LuaInvocationExpressionSyntax(arrayTypeName, typeExpress ?? elementType);
-      }
-
+      var arrayType = semanticModel_.GetTypeInfo(node).Type;
+      var typeExpress = GetTypeName(arrayType);
       var arrayRankSpecifier = (LuaArrayRankSpecifierSyntax)node.RankSpecifiers[0].Accept(this);
-      LuaArrayTypeAdapterExpressionSyntax arrayTypeAdapter = new LuaArrayTypeAdapterExpressionSyntax(typeExpress, arrayRankSpecifier);
+      var arrayTypeAdapter = new LuaArrayTypeAdapterExpressionSyntax(typeExpress, arrayRankSpecifier);
       return arrayTypeAdapter;
     }
 
@@ -227,11 +221,11 @@ namespace CSharpLua {
         if (arrayType.IsSimapleArray) {
           var size = arrayType.RankSpecifier.Sizes[0];
           if (size == null) {
-            return BuildEmptyArray(arrayType.BaseType);
+            return new LuaInvocationExpressionSyntax(arrayType);
           }
 
           if (size is LuaLiteralExpressionSyntax constSize && constSize.Text == 0.ToString()) {
-            return BuildEmptyArray(arrayType.BaseType);
+            return new LuaInvocationExpressionSyntax(arrayType);
           }
 
           LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(arrayType, LuaIdentifierNameSyntax.New, true);
@@ -255,24 +249,15 @@ namespace CSharpLua {
       return BuildArrayCreationExpression(arrayType, node.Initializer);
     }
 
-    private LuaArrayTypeAdapterExpressionSyntax BuildArrayTypeFromInitializer(InitializerExpressionSyntax initializer) {
-      int rank = 1;
-      var firstExpression = initializer.Expressions.First();
-      if (firstExpression.IsKind(SyntaxKind.ArrayInitializerExpression)) {
-        do {
-          ++rank;
-          firstExpression = ((InitializerExpressionSyntax)firstExpression).Expressions.First();
-        } while (firstExpression.IsKind(SyntaxKind.ArrayInitializerExpression));
-      }
-      var symbol = semanticModel_.GetTypeInfo(firstExpression).Type;
-      LuaExpressionSyntax elementType = GetTypeName(symbol);
-      LuaInvocationExpressionSyntax typeExpress = new LuaInvocationExpressionSyntax(rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray, elementType);
-      return new LuaArrayTypeAdapterExpressionSyntax(typeExpress, new LuaArrayRankSpecifierSyntax(rank));
+    private LuaExpressionSyntax BuildArrayTypeFromInitializer(IArrayTypeSymbol arrayType, InitializerExpressionSyntax initializer) {
+      var typeExpress = GetTypeName(arrayType);
+      var arrayExpression = new LuaArrayTypeAdapterExpressionSyntax(typeExpress, new LuaArrayRankSpecifierSyntax(arrayType.Rank));
+      return BuildArrayCreationExpression(arrayExpression, initializer);
     }
 
     public override LuaSyntaxNode VisitImplicitArrayCreationExpression(ImplicitArrayCreationExpressionSyntax node) {
-      var arrayType = BuildArrayTypeFromInitializer(node.Initializer);
-      return BuildArrayCreationExpression(arrayType, node.Initializer);
+      var arrayType = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).Type;
+      return BuildArrayTypeFromInitializer(arrayType, node.Initializer);
     }
 
     private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol type, ITypeSymbol baseType, int ctroCounter) {
