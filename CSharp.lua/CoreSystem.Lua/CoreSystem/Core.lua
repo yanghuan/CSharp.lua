@@ -882,6 +882,10 @@ local function equalsStatic(x, y)
   return x:EqualsObj(y)
 end
 
+local function inequalsStatic(x, y)
+  return not equalsStatic(x, y);
+end
+
 Object = defCls("System.Object", {
   __call = new,
   __default__ = emptyFn,
@@ -892,6 +896,8 @@ Object = defCls("System.Object", {
   ReferenceEquals = equals,
   GetHashCode = identityFn,
   EqualsStatic = equalsStatic,
+  op_Inequality = inequalsStatic,
+  op_Equality = equalsStatic,
   GetType = false,
   ToString = function(this) return this.__name__ end
 })
