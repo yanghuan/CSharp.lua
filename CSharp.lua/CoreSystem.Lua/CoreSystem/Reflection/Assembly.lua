@@ -76,6 +76,7 @@ assembly.name = System.config.assemblyName or "CSharp.lua, Version=1.0.0.0, Cult
 
 local MemberInfo = {}
 MemberInfo.getName = getName
+MemberInfo.__inherits__ = { System.Object }
 
 function MemberInfo.getMemberType(this) 
   return this.memberType 
@@ -196,6 +197,11 @@ end
 
 local FieldInfo = { memberType = 4 }
 
+local function buildFieldInfo(cls, name) 
+  return setmetatable({ c = cls, name = name }, FieldInfo)
+end
+
+
 function FieldInfo.GetValue(this, obj)
   if obj ~= nil then
     checkObj(obj, this.c)
@@ -285,6 +291,37 @@ PropertyInfo.__eq = eq
 PropertyInfo.__inherits__ = { MemberInfo }
 
 System.define("System.Reflection.PropertyInfo", PropertyInfo)
+
+function Type.GetMembers(this)
+  local t = {}
+  local names = {};
+  local cls = this.c
+  repeat
+    for k, v in pairs(cls) do
+      if type(v) == "function" then
+        local methodInfo = buildMethodInfo(cls, k, v)
+        tinsert(t, methodInfo)
+        names[k] = true;
+      else
+        local fieldInfo = buildFieldInfo(cls, k)
+        tinsert(t, fieldInfo)
+        names[k] = true;
+      end
+    end
+    local attributes = cls.__attributes__;
+    if attributes then
+      for k , v in pairs(attributes) do
+        if not names[k] then
+            local fieldInfo = buildFieldInfo(cls, k)
+            tinsert(t, fieldInfo)
+            names[k] = true;
+        end
+      end
+    end
+    cls = cls.__base__
+  until cls == nil 
+  return System.arrayFromTable(t, MemberInfo)  
+end
 
 function Type.GetProperty(this, name)
   if name == nil then
