@@ -11,7 +11,7 @@ indent_style = space
 [*.{cs,csx,vb,vbx}]
 indent_size = 2
 insert_final_newline = true
-charset = utf-8-bom
+charset = utf-8
 
 ###############################
 # C# Coding Conventions       #
@@ -63,7 +63,7 @@ csharp_new_line_between_query_expression_clauses = false
 # Indentation preferences
 csharp_indent_case_contents = true
 csharp_indent_switch_labels = true
-csharp_indent_labels = flush_left
+csharp_indent_labels = one_less_than_current
 
 # Space preferences
 csharp_space_after_cast = false
