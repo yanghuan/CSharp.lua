@@ -80,18 +80,19 @@ local function bind(target, method)
   if target == nil then
     throw(ArgumentNullException())
   end
-  local delegate = target[method];
+  assert(method)
+
+  local delegate = target[method]
   if delegate ~= nil then
-    return delegate;
+    return delegate
   end
 
-  assert(method)
   local t = {
     target = target,
     method = method,
   }
   setmetatable(t, memberMethod)
-  target[method] = t;
+  target[method] = t
   return t
 end
 
