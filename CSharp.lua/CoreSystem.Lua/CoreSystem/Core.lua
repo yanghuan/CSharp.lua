@@ -603,6 +603,12 @@ if version < 5.3 then
       end
     end
   end
+
+  if table.pack == nil then
+    table.pack = function(...)
+      return { n = select("#", ...), ... }
+    end
+  end
 else  
   load[[
   local System = System
