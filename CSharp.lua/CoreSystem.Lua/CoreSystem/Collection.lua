@@ -29,6 +29,7 @@ local tremove = table.remove
 local tsort = table.sort
 local tmove = table.move
 local tconcat = table.concat
+local pack = table.pack
 local unpack = table.unpack
 local setmetatable = setmetatable
 local select = select
@@ -770,7 +771,7 @@ function YieldEnumerator.MoveNext(this)
     local args = this.args
     local ok, v
     if args then
-      ok, v = cresume(co, unpack(args))
+      ok, v = cresume(co, unpack(args, 1, args.n))
       this.args = nil
     else
       ok, v = cresume(co)
@@ -795,7 +796,7 @@ end
 System.define("System.YieldEnumerator", YieldEnumerator)
 
 function Collection.yieldIEnumerator(f, T, ...)
-  return setmetatable({ co = ccreate(f), __genericT__ = T, args = { ... } }, YieldEnumerator)
+  return setmetatable({ co = ccreate(f), __genericT__ = T, args = pack(...) }, YieldEnumerator)
 end
 
 local YieldEnumerable = {}
@@ -808,7 +809,7 @@ end
 System.define("System.YieldEnumerable", YieldEnumerable)
 
 function Collection.yieldIEnumerable(f, T, ...)
-  return setmetatable({ f = f, __genericT__ = T, args = { ... } }, YieldEnumerable)
+  return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerable)
 end
 
 Collection.yieldReturn = coroutine.yield
