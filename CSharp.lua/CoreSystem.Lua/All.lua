@@ -47,4 +47,5 @@ return function(dir, conf)
   load("Console")
   load("IO.File")
   load("Reflection.Assembly")
+  load("Threads.Task")
 end

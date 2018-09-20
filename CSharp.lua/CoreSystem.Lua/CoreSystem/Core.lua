@@ -320,6 +320,10 @@ local function defStc(name, cls, genericSuper)
   return def(name, "S", cls, genericSuper)
 end
 
+local function defEnum(name, cls)
+  return def(name, "E", cls)
+end
+
 System = {
   emptyFn = emptyFn,
   falseFn = falseFn,
@@ -331,6 +335,7 @@ System = {
   define = defCls,
   defInf = defInf,
   defStc = defStc,
+  defEnum = defEnum,
   global = global,
 }
 

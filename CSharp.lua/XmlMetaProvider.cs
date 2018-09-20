@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,6 +110,8 @@ namespace CSharpLua {
         public FieldModel[] Fields;
         [XmlElement("method")]
         public MethodModel[] Methods;
+        [XmlAttribute]
+        public bool IgnoreGeneric;
         [XmlAttribute]
         public bool Baned;
       }
@@ -514,22 +516,35 @@ namespace CSharpLua {
 
     internal string GetTypeMapName(ISymbol symbol, string shortName) {
       if (MayHaveCodeMeta(symbol)) {
-        TypeMetaInfo info = typeMetas_.GetOrDefault(shortName);
-        if (info != null && info.Model.Baned) {
-          throw new CompilationErrorException($"{symbol} is baned");
-        }
+        var info = GetTypeMetaInfo(shortName);
         return info?.Model.Name;
       }
       return null;
     }
 
-    private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
-      string typeName = GetTypeShortString(memberSymbol.ContainingType);
-      TypeMetaInfo info = typeMetas_.GetOrDefault(typeName);
+    internal bool IsTypeIgnoreGeneric(INamedTypeSymbol typeSymbol) {
+      if (MayHaveCodeMeta(typeSymbol)) {
+        var info = GetTypeMetaInfo(typeSymbol);
+        return info != null && info.Model.IgnoreGeneric;
+      }
+      return false;
+    }
+
+    private TypeMetaInfo GetTypeMetaInfo(string shortName) {
+      var info = typeMetas_.GetOrDefault(shortName);
       if (info != null && info.Model.Baned) {
-        throw new CompilationErrorException($"{memberSymbol.ContainingType} is baned");
+        throw new CompilationErrorException($"{shortName} is baned");
       }
       return info;
+    }
+
+    private TypeMetaInfo GetTypeMetaInfo(INamedTypeSymbol typeSymbol) {
+      string shortName = GetTypeShortString(typeSymbol);
+      return GetTypeMetaInfo(shortName);
+    }
+
+    private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
+      return GetTypeMetaInfo(memberSymbol.ContainingType);
     }
 
     public bool? IsPropertyField(IPropertySymbol symbol) {
@@ -566,7 +581,7 @@ namespace CSharpLua {
 
     private string GetInternalMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {
       Contract.Assert(symbol != null);
-      if (symbol.DeclaredAccessibility != Accessibility.Public) {
+      if (!MayHaveCodeMeta(symbol)) {
         return null;
       }
 

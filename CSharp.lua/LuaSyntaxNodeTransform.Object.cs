@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -848,7 +848,12 @@ namespace CSharpLua {
           var stringText = (InterpolatedStringTextSyntax)content;
           sb.Append(stringText.TextToken.ValueText);
         } else {
-          var expression = (LuaExpressionSyntax)content.Accept(this);
+          var interpolation = (InterpolationSyntax)content;
+          ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(interpolation.Expression).Type;
+          var expression = (LuaExpressionSyntax)interpolation.Expression.Accept(this);
+          if (typeSymbol.TypeKind == TypeKind.Enum) {
+            expression = BuildEnumToStringExpression(typeSymbol, expression);
+          }
           expressions.Add(expression);
           sb.Append('{');
           sb.Append(index);
@@ -868,7 +873,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitInterpolation(InterpolationSyntax node) {
-      return node.Expression.Accept(this);
+      throw new InvalidOperationException();
     }
 
     public override LuaSyntaxNode VisitInterpolatedStringText(InterpolatedStringTextSyntax node) {
@@ -1050,6 +1055,11 @@ namespace CSharpLua {
       LuatLocalTupleVariableExpression expression = new LuatLocalTupleVariableExpression();
       expression.Variables.AddRange(node.Variables.Select(i => (LuaIdentifierNameSyntax)i.Accept(this)));
       return expression;
+    }
+
+    public override LuaSyntaxNode VisitAwaitExpression(AwaitExpressionSyntax node) {
+      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.Async, LuaIdentifierNameSyntax.Await, true), expression);
     }
   }
 }

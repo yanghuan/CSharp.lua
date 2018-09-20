@@ -520,5 +520,8 @@ limitations under the License.
         </method>  
       </class>
     </namespace>
+    <namespace name="System.Threading.Tasks" Name="System">
+      <class name="TaskCompletionSource^1" Name="System.TaskCompletionSource" IgnoreGeneric="true" />
+    </namespace> 
   </assembly>
 </meta>

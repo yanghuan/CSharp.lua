@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -450,9 +450,9 @@ namespace CSharpLua {
 
       var retrurnTypeSymbol = semanticModel_.GetTypeInfo(returnType).Type;
       string name = LuaSyntaxNode.Tokens.Yield + retrurnTypeSymbol.Name;
-      LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
-      LuaInvocationExpressionSyntax invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
-      LuaFunctionExpressionSyntax wrapFunction = new LuaFunctionExpressionSyntax();
+      var memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaIdentifierNameSyntax(name));
+      var invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
+      var wrapFunction = new LuaFunctionExpressionSyntax();
 
       var parameters = function.ParameterList.Parameters;
       wrapFunction.ParameterList.Parameters.AddRange(parameters);
@@ -468,9 +468,29 @@ namespace CSharpLua {
       }
       invokeExpression.ArgumentList.Arguments.AddRange(parameters.Select(i => new LuaArgumentSyntax(i.Identifier)));
 
-      LuaReturnStatementSyntax returnStatement = new LuaReturnStatementSyntax(invokeExpression);
+      var returnStatement = new LuaReturnStatementSyntax(invokeExpression);
       function.Body.Statements.Clear();
       function.AddStatement(returnStatement);
+    }
+
+    private void VisitAsync(bool returnsVoid,TypeSyntax returnType, LuaFunctionExpressionSyntax function) {
+      var memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, returnsVoid ? LuaIdentifierNameSyntax.AsyncVoid : LuaIdentifierNameSyntax.Async);
+      var invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
+      var wrapFunction = new LuaFunctionExpressionSyntax();
+
+      var parameters = function.ParameterList.Parameters;
+      wrapFunction.AddParameter(LuaIdentifierNameSyntax.Async);
+      wrapFunction.ParameterList.Parameters.AddRange(parameters);
+      wrapFunction.AddStatements(function.Body.Statements);
+      invokeExpression.AddArgument(wrapFunction);
+      invokeExpression.ArgumentList.Arguments.AddRange(parameters.Select(i => new LuaArgumentSyntax(i.Identifier)));
+
+      function.Body.Statements.Clear();
+      if (returnsVoid) {
+        function.AddStatement(invokeExpression);
+      } else {
+        function.AddStatement(new LuaReturnStatementSyntax(invokeExpression));
+      }     
     }
 
     private sealed class MethodDeclarationResult {
@@ -542,6 +562,8 @@ namespace CSharpLua {
 
       if (function.HasYield) {
         VisitYield(returnType, function);
+      } else if (symbol.IsAsync) {
+        VisitAsync(symbol.ReturnsVoid, returnType, function);
       } else {
         if (symbol.ReturnsVoid && refOrOutParameters.Count > 0) {
           var returnStatement = new LuaMultipleReturnStatementSyntax();
@@ -2358,6 +2380,13 @@ namespace CSharpLua {
       return LuaBreakStatementSyntax.Statement;
     }
 
+    private LuaExpressionSyntax BuildEnumToStringExpression(ITypeSymbol typeInfo, LuaExpressionSyntax original) {
+      AddExportEnum(typeInfo);
+      LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo);
+      LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToEnumString, true);
+      return new LuaInvocationExpressionSyntax(memberAccess, typeName);
+    }
+
     private LuaExpressionSyntax WrapStringConcatExpression(ExpressionSyntax expression) {
       ITypeSymbol typeInfo = semanticModel_.GetTypeInfo(expression).Type;
       var original = (LuaExpressionSyntax)expression.Accept(this);
@@ -2378,10 +2407,7 @@ namespace CSharpLua {
           var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
           return new LuaConstLiteralExpression(symbol.Name, typeInfo.ToString());
         } else {
-          AddExportEnum(typeInfo);
-          LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo);
-          LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToEnumString, true);
-          return new LuaInvocationExpressionSyntax(memberAccess, typeName);
+          return BuildEnumToStringExpression(typeInfo, original);
         }
       } else if (typeInfo.IsValueType) {
         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);

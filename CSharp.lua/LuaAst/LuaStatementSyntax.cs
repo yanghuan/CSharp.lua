@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,8 +30,8 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public readonly static LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
-    public readonly static LuaStatementSyntax Colon = new LuaIdentifierNameSyntax(Semicolon.kSemicolon).ToStatement();
+    public static readonly LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
+    public static readonly LuaStatementSyntax Colon = new LuaIdentifierNameSyntax(Semicolon.kSemicolon).ToStatement();
   }
 
   public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {

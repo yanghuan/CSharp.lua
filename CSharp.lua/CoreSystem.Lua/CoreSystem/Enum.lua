@@ -33,9 +33,11 @@ Enum.EqualsObj = Int.EqualsObj
 Enum.__default__ = Int.__default__
 
 local function toString(this, cls)
-  for k, v in pairs(cls) do
-    if v == this then
-      return k
+  if cls then
+    for k, v in pairs(cls) do
+      if v == this then
+        return k
+      end
     end
   end
   return tostring(this)

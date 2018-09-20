@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -189,7 +189,9 @@ namespace CSharpLua {
 
     internal void AddExportEnum(ITypeSymbol enumType) {
       Contract.Assert(enumType.TypeKind == TypeKind.Enum);
-      exportEnums_.Add(enumType.ToString());
+      if (enumType.IsFromCode()) {
+        exportEnums_.Add(enumType.ToString());
+      }
     }
 
     internal void AddEnumDeclaration(INamedTypeSymbol type, LuaEnumDeclarationSyntax enumDeclaration) {
@@ -1366,7 +1368,7 @@ namespace CSharpLua {
 
       LuaIdentifierNameSyntax typeName = GetTypeShortName(namedTypeSymbol, transfor);
       var typeArguments = GetTypeArguments(namedTypeSymbol, transfor);
-      if (typeArguments.Count == 0) {
+      if (typeArguments.Count == 0 || XmlMetaProvider.IsTypeIgnoreGeneric(namedTypeSymbol)) {
         return typeName;
       } else {
         var invocationExpression = new LuaInvocationExpressionSyntax(typeName);

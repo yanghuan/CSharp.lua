@@ -24,6 +24,7 @@ local NullReferenceException = System.NullReferenceException
 local EqualityComparer_1 = System.EqualityComparer_1
 local Comparer_1 = System.Comparer_1
 
+local table = table
 local tinsert = table.insert
 local tremove = table.remove
 local tsort = table.sort
@@ -37,8 +38,8 @@ local type = type
 local assert = assert
 local coroutine = coroutine
 local ccreate = coroutine.create
-local cstatus = coroutine.status
 local cresume = coroutine.resume
+local cyield = coroutine.yield
 local ipairs = ipairs
 
 local Collection = {}
@@ -504,8 +505,7 @@ function Collection.trueForAllOfArray(t, match)
 end
 
 local ipairsFn = ipairs(null)
-
-function ipairsArray(t)
+local function ipairsArray(t)
   local version = getVersion(t)
   return function(t, inx) 
     checkVersion(t, version)
@@ -514,11 +514,8 @@ function ipairsArray(t)
   end, t, 0
 end
 
-Collection.ipairs = ipairsArray
-
 local pairsFn = next
-
-function Collection.pairs(t)
+local function pairsDict(t)
   local version = getVersion(t)
   return function(t, inx) 
     checkVersion(t, version)
@@ -580,9 +577,7 @@ local function isArrayLike(t)
   return t.GetEnumerator == arrayEnumerator
 end
 
-Collection.isArrayLike = isArrayLike
-
-function Collection.isEnumerableLike(t)
+local function isEnumerableLike(t)
   return type(t) == "table" and t.GetEnumerator ~= nil
 end
 
@@ -604,8 +599,6 @@ local function each(t)
   local en = getEnumerator(t)
   return eachFn, en
 end
-
-Collection.each = each
 
 function Collection.insertRangeArray(t, index, collection) 
   if collection == nil then
@@ -759,33 +752,58 @@ function Collection.linkedListEnumerator(t)
   return en
 end
 
+local yieldCoroutinePool = {}
+local yieldCoroutineExit = {}
+
+local function yieldCoroutineCreate(f)
+  local co = tremove(yieldCoroutinePool)
+  if co == nil then
+    co = ccreate(function (...)
+      f(...)
+      while true do
+        f = nil
+        tinsert(yieldCoroutinePool, co)
+        f = cyield(yieldCoroutineExit)
+        f(cyield())
+      end
+    end)
+  else
+    cresume(co, f)
+  end
+  return co
+end
+
 local YieldEnumerator = {}
 YieldEnumerator.__inherits__ = { System.IEnumerator }
 
 function YieldEnumerator.MoveNext(this)
   local co = this.co
-  if cstatus(co) == "dead" then
-    this.current = nil
+  if co == "exit" then
     return false
-  else
+  end
+
+  local ok, v
+  if co == nil then
+    co = yieldCoroutineCreate(this.f)
+    this.co = co
     local args = this.args
-    local ok, v
-    if args then
-      ok, v = cresume(co, unpack(args, 1, args.n))
-      this.args = nil
+    ok, v = cresume(co, unpack(args, 1, args.n))
+    this.args = nil
+  else
+    ok, v = cresume(co)
+  end
+
+  if ok then
+    if v == yieldCoroutineExit then
+      this.co = "exit"
+      this.current = nil
+      return false
     else
-      ok, v = cresume(co)
-    end
-    if ok then
-      if cstatus(co) == "dead" then
-        this.current = nil
-        return false
-      end
       this.current = v
       return true
-    else
-      throw(v)
     end
+  else
+    throw(v)
   end
 end
 
@@ -795,32 +813,30 @@ end
 
 System.define("System.YieldEnumerator", YieldEnumerator)
 
-function Collection.yieldIEnumerator(f, T, ...)
-  return setmetatable({ co = ccreate(f), __genericT__ = T, args = pack(...) }, YieldEnumerator)
+local function yieldIEnumerator(f, T, ...)
+  return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerator)
 end
 
 local YieldEnumerable = {}
 YieldEnumerable.__inherits__ = { System.IEnumerable }
 
 function YieldEnumerable.GetEnumerator(this)
-  return setmetatable({ co = ccreate(this.f), __genericT__ = this.__genericT__, args = this.args }, YieldEnumerator)
+  return setmetatable({ f = this.f, __genericT__ = this.__genericT__, args = this.args }, YieldEnumerator)
 end
 
 System.define("System.YieldEnumerable", YieldEnumerable)
 
-function Collection.yieldIEnumerable(f, T, ...)
+local function yieldIEnumerable(f, T, ...)
   return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerable)
 end
 
-Collection.yieldReturn = coroutine.yield
-
-System.Collection = Collection
-System.each = Collection.each
-System.ipairs = Collection.ipairs
-System.pairs = Collection.pairs
-System.isArrayLike = Collection.isArrayLike
-System.isEnumerableLike = Collection.isEnumerableLike
-System.yieldIEnumerable = Collection.yieldIEnumerable
-System.yieldIEnumerator = Collection.yieldIEnumerator
-System.yieldReturn = Collection.yieldReturn 
 System.toLuaTable = toLuaTable
+System.Collection = Collection
+System.each = each
+System.ipairs = ipairsArray
+System.pairs = pairsDict
+System.isArrayLike = isArrayLike
+System.isEnumerableLike = isEnumerableLike
+System.yieldIEnumerator = yieldIEnumerator
+System.yieldIEnumerable = yieldIEnumerable
+System.yieldReturn = cyield
