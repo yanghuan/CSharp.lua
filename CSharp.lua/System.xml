@@ -520,8 +520,18 @@ limitations under the License.
         </method>  
       </class>
     </namespace>
+    <namespace name="System.Threading" Name="System">
+      <class name="Thread">
+        <property name="IsBackground" IsField="true" />
+        <property name="Name" IsField="true" />
+        <property name="Priority" IsField="true" />
+        <property name="ApartmentState" IsField="true" />
+        <property name="IsThreadPoolThread" IsField="true" />
+      </class>
+    </namespace>  
     <namespace name="System.Threading.Tasks" Name="System">
-      <class name="TaskCompletionSource^1" Name="System.TaskCompletionSource" IgnoreGeneric="true" />
-    </namespace> 
+      <class name="Task^1" IgnoreGeneric="true" />
+      <class name="TaskCompletionSource^1" IgnoreGeneric="true" />
+    </namespace>
   </assembly>
 </meta>

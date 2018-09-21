@@ -16,7 +16,9 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
+local try = System.try
 local trunc = System.trunc
+local post = System.post
 local Exception = System.Exception
 local NotImplementedException = System.NotImplementedException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -134,13 +136,13 @@ function TaskExceptionHolder.__gc(this)
 end
 
 local Task = {}
-local taskIdCounter = 1
+local nextTaskId = 1
 local currentTask
 local completedTask
 
 local function getNewId()
-  local id = taskIdCounter
-  taskIdCounter = taskIdCounter + 1
+  local id = nextTaskId
+  nextTaskId = nextTaskId + 1
   return id
 end
 
@@ -167,12 +169,10 @@ function Task.getStatus(this)
 end
 
 local function getException(this)
-  local exceptionsHolder = this.exceptionsHolder
-  if exceptionsHolder then
-    return createExceptionObject(exceptionsHolder)
-  else
-    return nil
+  if this.status == TaskStatusFaulted then
+    return createExceptionObject(this.data)
   end
+  return nil
 end
 
 Task.getException = getException
@@ -193,7 +193,7 @@ function Task.getIsFaulted(this)
 end
 
 local function fromResult(result)
-  return setmetatable({ status = TaskStatusRanToCompletion, result = result }, Task)
+  return setmetatable({ status = TaskStatusRanToCompletion, data = result }, Task)
 end
 
 Task.FromResult = fromResult
@@ -202,7 +202,7 @@ local function fromCanceled(cancellationToken)
   if cancellationToken and cancellationToken:getIsCancellationRequested() then 
     throw(ArgumentOutOfRangeException("cancellationToken"))
   end
-  return setmetatable({ status = TaskStatusCanceled, cancellationToken = cancellationToken }, Task)
+  return setmetatable({ status = TaskStatusCanceled, data = cancellationToken }, Task)
 end
 
 Task.FromCanceled = fromCanceled
@@ -224,13 +224,7 @@ local function trySetComplete(this, status, data)
   end
 
   this.status = status
-  if status == TaskStatusRanToCompletion then
-    this.result = data
-  elseif status == TaskStatusFaulted then
-    this.exceptionsHolder = data
-  elseif status == TaskStatusCanceled then
-    this.cancellationToken = data
-  end
+  this.data = data
 
   local continueActions = this.continueActions
   if continueActions then
@@ -261,8 +255,9 @@ local function newWaitingTask(isVoid)
   return setmetatable({ status = TaskStatusWaitingForActivation, isVoid = isVoid }, Task)
 end
 
-local setTimeout = System.config.setTimeout
-local clearTimeout = System.config.clearTimeout
+local config = System.config
+local setTimeout = config.setTimeout
+local clearTimeout = config.clearTimeout
 
 function Task.Delay(delay, cancellationToken)
   if not setTimeout or not clearTimeout then
@@ -317,7 +312,22 @@ local function getContinueActions(task)
   return continueActions
 end
 
-function Task.ContinueWith(this, ...)
+function Task.ContinueWith(this, continuationAction)
+  local t = newWaitingTask()
+  local function f()
+    try(function ()
+      assert(trySetResult(t, continuationAction()))
+    end, function (e)
+      assert(trySetException(t, e))
+    end)
+  end
+  if isCompleted(this) then
+    post(f)
+  else
+    local continueActions = getContinueActions(task)
+    tinsert(continueActions, f)
+  end
+  return t
 end
 
 local function await(t, task)
@@ -327,9 +337,9 @@ local function await(t, task)
     local status = task.status
     local ok, v
     if status == TaskStatusRanToCompletion then
-      ok, v = true, task.result 
+      ok, v = true, task.data
     elseif status == TaskStatusFaulted then
-      ok, v = false, getException(task)
+      ok, v = false, createExceptionObject(task.data)
     elseif status == TaskStatusCanceled then
       ok, v = false, TaskCanceledException(task)
     else
@@ -353,9 +363,9 @@ function Task.await(this, task)
   if status == TaskStatusWaitingForActivation then
     return await(this, task)
   elseif status == TaskStatusRanToCompletion then
-    return task.result
+    return task.data
   elseif status == TaskStatusFaulted then
-    throw(getException(task))
+    throw(createExceptionObject(task.data))
   elseif status ==  TaskStatusCanceled then
     throw(TaskCanceledException(task))
   else

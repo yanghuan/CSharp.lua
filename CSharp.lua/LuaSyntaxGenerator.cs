@@ -1366,10 +1366,18 @@ namespace CSharpLua {
         }
       }
 
-      LuaIdentifierNameSyntax typeName = GetTypeShortName(namedTypeSymbol, transfor);
+      var typeName = GetTypeShortName(namedTypeSymbol, transfor);
       var typeArguments = GetTypeArguments(namedTypeSymbol, transfor);
-      if (typeArguments.Count == 0 || XmlMetaProvider.IsTypeIgnoreGeneric(namedTypeSymbol)) {
+      if (typeArguments.Count == 0) {
         return typeName;
+      } else if (XmlMetaProvider.IsTypeIgnoreGeneric(namedTypeSymbol)) {
+        string name = typeName.ValueText;
+        int genericTokenPos = name.LastIndexOf('_');
+        if (genericTokenPos != -1) {
+          return new LuaIdentifierNameSyntax(name.Substring(0, genericTokenPos));
+        } else {
+          return typeName;
+        }
       } else {
         var invocationExpression = new LuaInvocationExpressionSyntax(typeName);
         invocationExpression.AddArguments(typeArguments);
@@ -1420,7 +1428,7 @@ namespace CSharpLua {
     }
 
     internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
-      INamedTypeSymbol typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
+      var typeSymbol = (INamedTypeSymbol)symbol.OriginalDefinition;
       string name = typeSymbol.GetTypeShortName(GetNamespaceMapName, GetTypeRefactorName, transfor);
       string newName = XmlMetaProvider.GetTypeMapName(typeSymbol, name);
       if (newName != null) {

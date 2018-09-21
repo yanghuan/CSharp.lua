@@ -319,6 +319,7 @@ local timeZoneTicks = getTimeZone() * 1e7
 DateTime.BaseUtcOffset = TimeSpan(timeZoneTicks)
 
 local time = System.config.time or ostime
+System.time = time
 
 function DateTime.getUtcNow()
   local seconds = time()

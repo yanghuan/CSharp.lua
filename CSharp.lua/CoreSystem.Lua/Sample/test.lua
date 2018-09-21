@@ -1,5 +1,5 @@
 require("strict")
---require("socket")
+require("socket")
 
 local timeoutFns = {}
 local function callTimeoutFns()
@@ -10,7 +10,7 @@ local function callTimeoutFns()
 end
 
 local conf = { 
-  --time = socket.gettime,
+  time = socket.gettime,
   setTimeout = function (delay, fn)
     table.insert(timeoutFns, fn)
   end,

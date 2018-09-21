@@ -16,7 +16,7 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
-local sr = System.sr
+local div = System.div
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local InvalidOperationException = System.InvalidOperationException
 local ArgumentNullException = System.ArgumentNullException
@@ -227,7 +227,7 @@ local function binarySearchArray(t, index, count, v, comparer)
   local lo = index
   local hi = index + count - 1
   while lo <= hi do
-    local i = lo + sr(hi - lo, 1)
+    local i = lo + div(hi - lo, 2)
     local order = compare(unWrap(t[i + 1]), v);
     if order == 0 then return i end
     if order < 0 then
@@ -278,7 +278,7 @@ local function findIndexOfArray(t, ...)
   for i = startIndex + 1, endIndex  do
     local item = unWrap(t[i])
     if match(item) then
-        return i - 1
+      return i - 1
     end
   end
   return -1
