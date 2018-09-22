@@ -155,4 +155,4 @@ end
 StringBuilder.ToString = tconcat
 StringBuilder.__tostring = StringBuilder.ToString
 
-System.define("System.Text.StringBuilder", StringBuilder)
+System.define("System.StringBuilder", StringBuilder)

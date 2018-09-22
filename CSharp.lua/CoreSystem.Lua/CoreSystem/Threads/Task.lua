@@ -19,6 +19,8 @@ local throw = System.throw
 local try = System.try
 local trunc = System.trunc
 local post = System.post
+local addTimer = System.addTimer
+local removeTimer = System.removeTimer
 local Exception = System.Exception
 local NotImplementedException = System.NotImplementedException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -255,15 +257,7 @@ local function newWaitingTask(isVoid)
   return setmetatable({ status = TaskStatusWaitingForActivation, isVoid = isVoid }, Task)
 end
 
-local config = System.config
-local setTimeout = config.setTimeout
-local clearTimeout = config.clearTimeout
-
 function Task.Delay(delay, cancellationToken)
-  if not setTimeout or not clearTimeout then
-    throw(NotImplementedException("System.config.setTimeout or clearTimeout is not set"))
-  end
-
   if type(delay) == "table" then
     delay = trunc(delay:getTotalMilliseconds())
     if delay < -1 or delay > 2147483647 then
@@ -280,24 +274,24 @@ function Task.Delay(delay, cancellationToken)
   end
 
   local t = newWaitingTask()
-  local timeoutId, registration  
+  local timerId, registration  
 
   if cancellationToken and cancellationToken:getCanBeCanceled() then
     registration = cancellationToken.source:register(function ()
       local success = trySetCanceled(t, cancellationToken)
-      if success and timeoutId then
-        clearTimeout(timeoutId)
+      if success and timerId then
+        removeTimer(timerId)
       end
     end)
   end
 
   if delay ~= -1 then
-    timeoutId = setTimeout(delay, function ()
+    timerId = addTimer(function ()
       local success = trySetResult(t)
       if success and registration then
         registration:Dispose()
       end
-    end)
+    end, delay)
   end
 
   return t

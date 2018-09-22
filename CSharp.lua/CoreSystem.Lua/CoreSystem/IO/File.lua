@@ -22,7 +22,7 @@ local io = io
 local open = io.open
 local tinsert = table.insert
 
-local IOException = System.define("System.IOException", {
+local IOException = System.define("System.IO.IOException", {
   __tostring = System.Exception.ToString,
   __inherits__ = { System.Exception },
   __ctor__ = function(this, message, innerException) 

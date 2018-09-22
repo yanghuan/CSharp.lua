@@ -1,4 +1,4 @@
-﻿--[[
+--[[
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,8 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local trunc = System.trunc
+local post = System.post
+local addTimer = System.addTimer
 local Exception = System.Exception
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -39,69 +41,15 @@ local ThreadStateException = System.define("System.ThreadStateException", {
   end
 })
 
-local Thread = {}
 local nextThreadId = 1
 local threadYield = {}
+local currentThread
 
 local function getThreadId()
   local id = nextThreadId
   nextThreadId = nextThreadId + 1
   return id
 end
-
-local mainThread = setmetatable({
-  id = getThreadId(),
-}, Thread)
-local currentThread = mainThread
-
-function Thread.getCurrentThread()
-  return currentThread
-end
-
-function Thread.__ctor__(this, start)
-  if start == nil then throw(ArgumentNullException("start")) end
-  this.start = start
-end
-
-function Thread.getIsAlive(this)
-  local co = this.co
-  return co and cstatus(co) ~= "dead"
-end
-
-function Thread.ManagedThreadId(this)
-  local id = this.id
-  if not id then
-    id = getThreadId()
-    this.id = id
-  end
-  return id
-end
-
-function Thread.Sleep(timeout)
-  if type(timeout) == "table" then
-    timeout = trunc(timeout:getTotalMilliseconds())
-    if timeout < -1 or timeout > 2147483647 then
-      throw(ArgumentOutOfRangeException("timeout"))
-    end
-  end
-  if currentThread == mainThread then
-    throw(NotSupportedException("mainThread not support"))
-  end
-  cyield(timeout)
-end
-
-function Thread.Yield()
-  if currentThread == mainThread then
-    return false
-  end
-  cyield(threadYield)
-  return true
-end
-
-Thread.IsBackground = false
-Thread.IsThreadPoolThread = false
-Thread.Priority = 2
-Thread.ApartmentState = 2
 
 local function run(t, obj)
   post(function ()
@@ -113,7 +61,9 @@ local function run(t, obj)
         run(t)  
       elseif v ~= nil then
         if v ~= -1 then
-          
+          addTimer(function () 
+            run(t)
+          end, v)
         end
       else   
         t.co = false
@@ -123,13 +73,58 @@ local function run(t, obj)
     end  
   end)
 end
- 
-function Thread.start(this, parameter)
-  if this.co ~= nil then throw(ThreadStateException()) end
-  local co = ccreate(this.start)
-  this.co = co
-  this.start = nil
-  run(this, parameter)
-end
 
-System.define("System.Thread", Thread)
+local Thread =  System.define("System.Thread", {
+  IsBackground = false,
+  IsThreadPoolThread = false,
+  Priority = 2,
+  ApartmentState = 2,
+  getCurrentThread = function ()
+    return currentThread
+  end,
+  __ctor__ = function (this, start)
+	  if start == nil then throw(ArgumentNullException("start")) end
+    this.start = start
+  end,
+  getIsAlive = function (this)
+    local co = this.co
+    return co and cstatus(co) ~= "dead"
+  end,
+  ManagedThreadId = function (this)
+	  local id = this.id
+    if not id then
+      id = getThreadId()
+      this.id = id
+    end
+    return id
+  end,
+  Sleep = function (timeout)
+    if currentThread == mainThread then
+      throw(NotSupportedException("mainThread not support"))
+    end
+    if type(timeout) == "table" then
+      timeout = trunc(timeout:getTotalMilliseconds())
+      if timeout < -1 or timeout > 2147483647 then
+        throw(ArgumentOutOfRangeException("timeout"))
+      end
+    end
+    cyield(timeout)
+  end,
+  Yield = function ()
+    if currentThread == mainThread then
+      return false
+    end
+    cyield(threadYield)
+    return true
+  end,
+  Start = function (this, parameter)
+    if this.co ~= nil then throw(ThreadStateException()) end
+    local co = ccreate(this.start)
+    this.co = co
+    this.start = nil
+    run(this, parameter)
+  end
+})
+
+local mainThread = setmetatable({ id = getThreadId() }, Thread)
+currentThread = mainThread

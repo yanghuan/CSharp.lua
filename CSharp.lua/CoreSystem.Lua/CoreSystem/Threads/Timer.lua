@@ -1,4 +1,4 @@
-﻿--[[
+--[[
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,39 @@ limitations under the License.
 --]]
 
 local System = System
-local config = System.config
-local post = config.post or function (action) action() end
-local cancelPost = config.cancelPost or System.empty
+local throw = System.throw
+local currentTimeMillis = System.currentTimeMillis
+local ArgumentNullException = System.ArgumentNullException
+local ArgumentOutOfRangeException  = System.ArgumentOutOfRangeException
+local NotImplementedException = System.NotImplementedException
 
-System.post = post
-System.cancelPost = cancelPost
+local type = type
+
+local config = System.config
+local setTimeout = config.setTimeout
+local clearTimeout = config.clearTimeout
+
+if setTimeout and clearTimeout then
+	System.post = function (fn) 
+		setTimeout(fn, 0) 
+	end
+else
+	System.post = function (fn)
+		fn()
+	end
+	local function notset()
+		throw(NotImplementedException("System.config.setTimeout or clearTimeout is not registered."))
+	end
+  setTimeout = notset
+  clearTimeout = notset
+end
 
 -- https://github.com/facebook/folly/blob/master/folly/TimeoutQueue.cpp
-local Linq = System.Linq.Enumerable
+local maxExpiration = 9223372036854775807  --[[Int64.MaxValue]]
 local LinkedListEvent =  System.LinkedList(System.Object) 
 local TimeoutQueue = System.define("System.TimeoutQueue", (function ()
-  local getNextId, Insert, Add, AddRepeating, AddRepeating1, getNextExpiration, Erase, RunOnce, 
-  RunLoop, getCount, Contains, RunInternal, __ctor__
+  local getNextId, Insert, Add, AddRepeating, AddRepeating1, getNextExpiration, Erase, RunLoop, 
+  getCount, Contains, IsNext, __ctor__
   __ctor__ = function (this)
     this.ids_ = {}
     this.events_ = LinkedListEvent()
@@ -39,11 +59,12 @@ local TimeoutQueue = System.define("System.TimeoutQueue", (function ()
   end
   Insert = function (this, e)
     this.ids_[e.Id] = e
-    local next = Linq.FirstOrDefault(this.events_, function (i)
-      return i.Expiration > e.Expiration
-    end)
+    local next = this.events_:getFirst()
+    while next ~= nil and next.Value.Expiration <= e.Expiration do
+      next = next:getNext()
+    end
     if next ~= nil then
-      e.LinkNode = this.events_:AddBefore(next.LinkNode, e)
+      e.LinkNode = this.events_:AddBefore(next, e)
     else
       e.LinkNode = this.events_:AddLast(e)
     end
@@ -56,7 +77,7 @@ local TimeoutQueue = System.define("System.TimeoutQueue", (function ()
   end
   AddRepeating1 = function (this, now, delay, interval, callback)
     local id = getNextId(this)
-    Insert(this,{
+    Insert(this, {
       Id = id,
       Expiration = now + delay,
       RepeatInterval = interval,
@@ -65,7 +86,7 @@ local TimeoutQueue = System.define("System.TimeoutQueue", (function ()
     return id
   end
   getNextExpiration = function (this)
-    return this.events_.Count > 0 and this.events_:getFirst().Value.Expiration or 9223372036854775807 --[[Int64.MaxValue]]
+    return this.events_.Count > 0 and this.events_:getFirst().Value.Expiration or maxExpiration
   end
   Erase = function (this, id)
     local e = this.ids_[id]
@@ -76,11 +97,21 @@ local TimeoutQueue = System.define("System.TimeoutQueue", (function ()
     end
     return false
   end
-  RunOnce = function (this, now)
-    return RunInternal(this, now, true)
-  end
   RunLoop = function (this, now)
-    return RunInternal(this, now, false)
+    while true do
+      local nextExp = getNextExpiration(this)
+      if nextExp <= now then
+        local e = this.events_:getFirst().Value
+        Erase(this, e.Id)
+        if e.RepeatInterval > 0 then
+          e.Expiration = now + e.RepeatInterval
+          Insert(this, e)
+        end
+        e.Callback(e.Id, now)
+      else
+        return nextExp
+      end
+    end
   end
   getCount = function (this)
     return this.events_.Count
@@ -88,49 +119,97 @@ local TimeoutQueue = System.define("System.TimeoutQueue", (function ()
   Contains = function (this, id)
     return this.ids_[id] ~= nil
   end
-  RunInternal = function (this, now, onceOnly)
-    local nextExp
-    repeat
-      local expired = Linq.ToList(Linq.TakeWhile(this.events_, function (i)
-        return i.Expiration <= now
-      end))
-      for _, e in System.each(expired) do
-        Erase(this, e.Id)
-        if e.RepeatInterval > 0 then
-          e.Expiration = e.Expiration + e.RepeatInterval
-          Insert(this, e)
-        end
-      end
-      for _, e in System.each(expired) do
-        e.Callback(e.Id, now)
-      end
-      nextExp = getNextExpiration(this)
-    until not (not onceOnly and nextExp <= now)
-    return nextExp
-  end
+	IsNext = function (this, id)
+		local first = this.events_:getFirst()
+		local nextId = first and first.Value.Id
+		return nextId == id
+	end
   return {
+    MaxExpiration = maxExpiration,
     nextId_ = 1,
     Add = Add,
     AddRepeating = AddRepeating,
     AddRepeating1 = AddRepeating1,
     getNextExpiration = getNextExpiration,
     Erase = Erase,
-    RunOnce = RunOnce,
     RunLoop = RunLoop,
     getCount = getCount,
     Contains = Contains,
-    __ctor__ = __ctor__
+    __ctor__ = __ctor__,
+		IsNext = IsNext
   }
 end)())
 
-local Timer = {}
+local timerQueue = TimeoutQueue()
+local driverTimer
 
+local function runTimerQueue()
+  local now = currentTimeMillis()
+  local nextExpiration = timerQueue:RunLoop(now)
+  if nextExpiration ~= maxExpiration then
+    driverTimer = setTimeout(runTimerQueue, nextExpiration - now)
+  else
+    driverTimer = nil
+  end
+end
 
+local function addTimer(fn, dueTime, period)
+  local now = currentTimeMillis()
+  local id = timerQueue:AddRepeating1(now, dueTime, period or 0, fn)
+  if timerQueue:IsNext(id) then
+    if driverTimer then
+      clearTimeout(driverTimer)
+    end
+    driverTimer = setTimeout(runTimerQueue, dueTime)
+  end
+  return id
+end
 
+local function removeTimer(id)
+  local isNext = timerQueue:IsNext(id)
+	timerQueue:Erase(id)
+	if isNext then
+		clearTimeout(driverTimer)
+		local delay = timerQueue:getNextExpiration() - time()
+		driverTimer = setTimeout(runTimerQueue, delay)
+	end
+end
 
+System.addTimer = addTimer
+System.removeTimer = removeTimer
 
-local config = System.config
-local setTimeout = config.setTimeout
-local clearTimeout = config.clearTimeout
+local function close(this)
+  local id = this.id
+  if id then
+    removeTimer(id)
+  end
+end
 
-System.define("System.Timer", Timer)
+local function change(this, dueTime, period)
+  if type(dueTime) == "table" then
+    dueTime = dueTime:getTotalMilliseconds()
+    period = period:getTotalMilliseconds()
+  end
+  if dueTime < -1 or dueTime > 0xfffffffe then
+    throw(ArgumentOutOfRangeException("dueTime"))
+  end
+  if period < -1 or period > 0xfffffffe then
+    throw(ArgumentOutOfRangeException("period"))
+  end
+  close(this)
+  if dueTime ~= -1 then
+    this.id = addTimer(this.callback, dueTime, period)
+  end
+  return true
+end
+
+System.define("System.Timer", {
+  __ctor__ =  function (this, callback, state,  dueTime, period)
+    if callback == nil then throw(ArgumentNullException("callback")) end
+    this.callback = function () callback(state) end
+    change(this, dueTime, period)
+  end,
+  Change = change,
+  Dispose = close,
+  __gc = close
+})

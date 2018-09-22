@@ -320,6 +320,7 @@ DateTime.BaseUtcOffset = TimeSpan(timeZoneTicks)
 
 local time = System.config.time or ostime
 System.time = time
+System.currentTimeMillis = function () return trunc(time() * 1000) end
 
 function DateTime.getUtcNow()
   local seconds = time()

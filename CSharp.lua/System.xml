@@ -121,7 +121,7 @@ limitations under the License.
       <class name="Environment">
         <method name="Exit" Template="os.exit({0})" />
         <property name="TickCount">
-          <get Template="(os.clock() * 1000)" />
+          <get Template="System.currentTimeMillis()" />
         </property>
         <property name="StackTrace">
           <get Template="debug.traceback()" />
@@ -510,7 +510,7 @@ limitations under the License.
       </class>
     </namespace>
     <namespace name="System.Text">
-      <class name="StringBuilder">
+      <class name="StringBuilder" Name="System.StringBuilder">
         <method name="Append" Name="AppendChar" >
           <arg type="System.Char" />
         </method> 
