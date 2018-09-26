@@ -372,8 +372,7 @@ test(testType, "Type")
 --test(testStringBuilder, "StringBuilder")
 --test(testConsole, "Console")
 --test(testIO, "IO")
---test(testAsync, "Async")
-
+test(testAsync, "Async")
 
 
 

@@ -1,4 +1,4 @@
-﻿--[[
+--[[
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ local addTimer = System.addTimer
 local removeTimer = System.removeTimer
 local Exception = System.Exception
 local NotImplementedException = System.NotImplementedException
+local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
 local type = type
@@ -90,14 +91,6 @@ local UnobservedTaskExceptionEventArgs = System.define("System.UnobservedTaskExc
 })
 
 local unobservedTaskException
-local function addUnobservedTaskException(value)
-  unobservedTaskException = unobservedTaskException + value
-end
-
-local function removeUnobservedTaskException(value)
-  unobservedTaskException = unobservedTaskException - value
-end
-
 local function publishUnobservedTaskException(sender, ueea)
   local handler = unobservedTaskException
   if handler then
@@ -105,12 +98,30 @@ local function publishUnobservedTaskException(sender, ueea)
   end
 end
 
-System.define("System.TaskScheduler", {
-  addUnobservedTaskException = addUnobservedTaskException,
-  removeUnobservedTaskException = removeUnobservedTaskException
+local TaskScheduler = System.define("System.TaskScheduler", {
+  addUnobservedTaskException = function (value)
+    unobservedTaskException = unobservedTaskException + value
+  end,
+  removeUnobservedTaskException = function (value)
+    unobservedTaskException = unobservedTaskException - value
+  end
 })
 
-local TaskExceptionHolder = {}
+local TaskExceptionHolder = {
+  __index = false,
+  __gc = function (this)
+    if not this.isHandled then
+      local e = this.exception
+      if e then
+        local ueea = UnobservedTaskExceptionEventArgs(e)
+        publishUnobservedTaskException(this.task, ueea)
+        if not ueea.observed then
+          print("Warning: TaskExceptionHolder" , e)
+        end
+      end
+    end
+  end
+}
 TaskExceptionHolder.__index = TaskExceptionHolder
 
 local function newTaskExceptionHolder(task, exception) 
@@ -124,20 +135,7 @@ local function createExceptionObject(this)
   return this.exception
 end
 
-function TaskExceptionHolder.__gc(this)
-  if not this.isHandled then
-    local e = this.exception
-    if e then
-      local ueea = UnobservedTaskExceptionEventArgs(e)
-      publishUnobservedTaskException(this.task, ueea)
-      if not ueea.observed then
-        print("Warning: TaskExceptionHolder" , e)
-      end
-    end
-  end
-end
-
-local Task = {}
+local Task
 local nextTaskId = 1
 local currentTask
 local completedTask
@@ -157,48 +155,14 @@ local function getId(this)
   return id 
 end
 
-Task.getId = getId
-
-function Task.getCurrentId()
-  local t = currentTask
-  if t then
-    return getId(t)
-  end
-end
-
-function Task.getStatus(this)
-  return this.status
-end
-
-local function getException(this)
-  if this.status == TaskStatusFaulted then
-    return createExceptionObject(this.data)
-  end
-  return nil
-end
-
-Task.getException = getException
-
 local function isCompleted(this)
   local status = this.status
   return status == TaskStatusRanToCompletion or status == TaskStatusFaulted or status == TaskStatusCanceled
 end
 
-Task.getIsCompleted = isCompleted
-
-function Task.getIsCanceled(this)
-  return this.status == TaskStatusCanceled
-end
-
-function Task.getIsFaulted(this)
-  return this.status == TaskStatusFaulted
-end
-
 local function fromResult(result)
   return setmetatable({ status = TaskStatusRanToCompletion, data = result }, Task)
 end
-
-Task.FromResult = fromResult
 
 local function fromCanceled(cancellationToken)
   if cancellationToken and cancellationToken:getIsCancellationRequested() then 
@@ -206,8 +170,6 @@ local function fromCanceled(cancellationToken)
   end
   return setmetatable({ status = TaskStatusCanceled, data = cancellationToken }, Task)
 end
-
-Task.FromCanceled = fromCanceled
 
 local function getCompletedTask()
   local t = completedTask
@@ -217,8 +179,6 @@ local function getCompletedTask()
   end
   return t
 end
-
-Task.getCompletedTask = getCompletedTask
 
 local function trySetComplete(this, status, data)
   if isCompleted(this) then
@@ -257,46 +217,6 @@ local function newWaitingTask(isVoid)
   return setmetatable({ status = TaskStatusWaitingForActivation, isVoid = isVoid }, Task)
 end
 
-function Task.Delay(delay, cancellationToken)
-  if type(delay) == "table" then
-    delay = trunc(delay:getTotalMilliseconds())
-    if delay < -1 or delay > 2147483647 then
-      throw(ArgumentOutOfRangeException("delay"))
-    end
-  elseif delay < -1 then
-    throw(ArgumentOutOfRangeException("millisecondsDelay"))  
-  end
-
-  if cancellationToken and cancellationToken:getIsCancellationRequested() then
-    return fromCanceled(cancellationToken)
-  elseif delay == 0 then
-    return getCompletedTask()
-  end
-
-  local t = newWaitingTask()
-  local timerId, registration  
-
-  if cancellationToken and cancellationToken:getCanBeCanceled() then
-    registration = cancellationToken.source:register(function ()
-      local success = trySetCanceled(t, cancellationToken)
-      if success and timerId then
-        removeTimer(timerId)
-      end
-    end)
-  end
-
-  if delay ~= -1 then
-    timerId = addTimer(function ()
-      local success = trySetResult(t)
-      if success and registration then
-        registration:Dispose()
-      end
-    end, delay)
-  end
-
-  return t
-end
-
 local function getContinueActions(task) 
   local continueActions = task.continueActions
   if continueActions == nil then
@@ -304,24 +224,6 @@ local function getContinueActions(task)
     task.continueActions = continueActions
   end
   return continueActions
-end
-
-function Task.ContinueWith(this, continuationAction)
-  local t = newWaitingTask()
-  local function f()
-    try(function ()
-      assert(trySetResult(t, continuationAction()))
-    end, function (e)
-      assert(trySetException(t, e))
-    end)
-  end
-  if isCompleted(this) then
-    post(f)
-  else
-    local continueActions = getContinueActions(task)
-    tinsert(continueActions, f)
-  end
-  return t
 end
 
 local function await(t, task)
@@ -352,22 +254,112 @@ local function await(t, task)
   end
 end
 
-function Task.await(this, task)
-  local status = task.status
-  if status == TaskStatusWaitingForActivation then
-    return await(this, task)
-  elseif status == TaskStatusRanToCompletion then
-    return task.data
-  elseif status == TaskStatusFaulted then
-    throw(createExceptionObject(task.data))
-  elseif status ==  TaskStatusCanceled then
-    throw(TaskCanceledException(task))
-  else
-    return await(this, task)
-  end
-end
+Task = System.define("System.Task", {
+  __ctor__ = function (this, action, state)
+    if action == nil then throw(ArgumentNullException("action")) end
+    this.status = TaskStatusCreated
+    this.data = function ()
+      action(state)
+    end
+  end,
+  getId = getId,
+  getCurrentId = function ()
+    local t = currentTask
+    if t then
+      return getId(t)
+    end
+  end,
+  getStatus = function (this)
+    return this.status
+  end,
+  getException = function (this)
+    if this.status == TaskStatusFaulted then
+      return createExceptionObject(this.data)
+    end
+    return nil
+  end,
+  getIsCompleted = isCompleted,
+  getIsCanceled = function (this)
+    return this.status == TaskStatusCanceled
+  end,
+  getIsFaulted = function (this)
+    return this.status == TaskStatusFaulted
+  end,
+  FromResult = fromResult,
+  FromCanceled = fromCanceled,
+  getCompletedTask = getCompletedTask,
+  Delay = function (delay, cancellationToken)
+    if type(delay) == "table" then
+      delay = trunc(delay:getTotalMilliseconds())
+      if delay < -1 or delay > 2147483647 then
+        throw(ArgumentOutOfRangeException("delay"))
+      end
+    elseif delay < -1 then
+      throw(ArgumentOutOfRangeException("millisecondsDelay"))  
+    end
 
-System.define("System.Task", Task)
+    if cancellationToken and cancellationToken:getIsCancellationRequested() then
+      return fromCanceled(cancellationToken)
+    elseif delay == 0 then
+      return getCompletedTask()
+    end
+
+    local t = newWaitingTask()
+    local timerId, registration  
+
+    if cancellationToken and cancellationToken:getCanBeCanceled() then
+      registration = cancellationToken.source:register(function ()
+        local success = trySetCanceled(t, cancellationToken)
+        if success and timerId then
+          removeTimer(timerId)
+        end
+      end)
+    end
+
+    if delay ~= -1 then
+      timerId = addTimer(function ()
+        local success = trySetResult(t)
+        if success and registration then
+          registration:Dispose()
+        end
+      end, delay)
+    end
+
+    return t
+  end,
+  ContinueWith = function (this, continuationAction)
+    if continuationAction == nil then throw(ArgumentNullException("continuationAction")) end
+    local t = newWaitingTask()
+    local function f()
+      try(function ()
+        assert(trySetResult(t, continuationAction()))
+      end, function (e)
+        assert(trySetException(t, e))
+      end)
+    end
+    if isCompleted(this) then
+      post(f)
+    else
+      local continueActions = getContinueActions(task)
+      tinsert(continueActions, f)
+    end
+    return t
+  end,
+  await = function (this, task)
+    local status = task.status
+    if status == TaskStatusWaitingForActivation then
+      return await(this, task)
+    elseif status == TaskStatusRanToCompletion then
+      return task.data
+    elseif status == TaskStatusFaulted then
+      throw(createExceptionObject(task.data))
+    elseif status ==  TaskStatusCanceled then
+      throw(TaskCanceledException(task))
+    else
+      return await(this, task)
+    end
+  end
+})
 
 local taskCoroutinePool = {}
 local function taskCoroutineCreate(t, f)

@@ -42,7 +42,6 @@ local ThreadStateException = System.define("System.ThreadStateException", {
 })
 
 local nextThreadId = 1
-local threadYield = {}
 local currentThread
 
 local function getThreadId()
@@ -51,27 +50,39 @@ local function getThreadId()
   return id
 end
 
+local function checkTimeout(timeout)
+  if type(timeout) == "table" then
+    timeout = trunc(timeout:getTotalMilliseconds())
+  end
+  if timeout < -1 or timeout > 2147483647 then
+    throw(ArgumentOutOfRangeException("timeout"))
+  end
+  return timeout
+end
+
 local function run(t, obj)
-  post(function ()
-    currentThread = t
-    local ok, v = cresume(t.co, obj)
-    currentThread = mainThread
-    if ok then
-      if v == threadYield then
-        run(t)  
-      elseif v ~= nil then
-        if v ~= -1 then
-          addTimer(function () 
-            run(t)
-          end, v)
+  if t.co then
+    post(function ()
+      currentThread = t
+      local co = t.co
+      local ok, v = cresume(co, obj)
+      currentThread = mainThread
+      if ok then
+        if type(v) == "function" then
+          v()
+        elseif cstatus(co) == "dead" then
+          local joinThread = t.joinThread
+          if joinThread then
+            run(joinThread, true)
+          end
+          t.co = false
         end
-      else   
+      else
         t.co = false
+        print("Warning: Thread.run" , v)
       end
-    else
-      print("Warning: Thread.Start" , e)
-    end  
-  end)
+    end)
+  end
 end
 
 local Thread =  System.define("System.Thread", {
@@ -102,20 +113,49 @@ local Thread =  System.define("System.Thread", {
     if currentThread == mainThread then
       throw(NotSupportedException("mainThread not support"))
     end
-    if type(timeout) == "table" then
-      timeout = trunc(timeout:getTotalMilliseconds())
-      if timeout < -1 or timeout > 2147483647 then
-        throw(ArgumentOutOfRangeException("timeout"))
+    timeout = checkTimeout(timeout)
+    local f
+    if timeout ~= -1 then
+      f = function ()
+        addTimer(function () 
+          run(currentThread) 
+        end, timeout)
       end
     end
-    cyield(timeout)
+    cyield(f)
   end,
   Yield = function ()
     if currentThread == mainThread then
       return false
     end
-    cyield(threadYield)
+    cyield(function ()
+      run(currentThread)
+    end)
     return true
+  end,
+  Join = function (this, timeout)
+    if currentThread == mainThread then
+      throw(NotSupportedException("mainThread not support"))
+    end
+    if this.joinThread then
+      throw(ThreadStateException())
+    end
+    this.joinThread = currentThread  
+    if timeout == nil then
+      cyield()
+    else
+      timeout = checkTimeout(timeout)
+      local f
+      if timeout ~= -1 then
+        f = function ()
+          addTimer(function ()
+            this.co = false
+            run(currentThread, false)
+          end, timeout)
+        end
+      end
+      return cyield(f)
+    end
   end,
   Start = function (this, parameter)
     if this.co ~= nil then throw(ThreadStateException()) end
