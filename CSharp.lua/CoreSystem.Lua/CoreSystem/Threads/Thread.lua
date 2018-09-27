@@ -163,7 +163,16 @@ local Thread =  System.define("System.Thread", {
     this.co = co
     this.start = nil
     run(this, parameter)
-  end
+  end,
+  waitTask = function (taskContinueActions)
+    if currentThread == mainThread then
+      throw(NotSupportedException("mainThread not support"))
+    end
+    taskContinueActions[#taskContinueActions + 1] = function ()
+      run(currentThread)
+    end
+    cyield()
+  end,
 })
 
 local mainThread = setmetatable({ id = getThreadId() }, Thread)

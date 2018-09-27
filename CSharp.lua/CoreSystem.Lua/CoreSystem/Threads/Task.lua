@@ -21,10 +21,12 @@ local trunc = System.trunc
 local post = System.post
 local addTimer = System.addTimer
 local removeTimer = System.removeTimer
+local waitTask = System.Thread.waitTask
 local Exception = System.Exception
 local NotImplementedException = System.NotImplementedException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
+local InvalidOperationException = System.InvalidOperationException
 
 local type = type
 local table = table
@@ -160,15 +162,26 @@ local function isCompleted(this)
   return status == TaskStatusRanToCompletion or status == TaskStatusFaulted or status == TaskStatusCanceled
 end
 
+local function newTask(status, data)
+  return setmetatable({ status = status, data = data }, Task)
+end
+
 local function fromResult(result)
-  return setmetatable({ status = TaskStatusRanToCompletion, data = result }, Task)
+  return newTask(TaskStatusRanToCompletion, result)
 end
 
 local function fromCanceled(cancellationToken)
   if cancellationToken and cancellationToken:getIsCancellationRequested() then 
     throw(ArgumentOutOfRangeException("cancellationToken"))
   end
-  return setmetatable({ status = TaskStatusCanceled, data = cancellationToken }, Task)
+  return newTask(TaskStatusCanceled, cancellationToken)
+end
+
+local function fromException(exception)
+  local data = newTaskExceptionHolder(false, exception)
+  local t = newTask(TaskStatusFaulted, data) 
+  data.task = t
+  return t
 end
 
 local function getCompletedTask()
@@ -203,7 +216,7 @@ local function trySetResult(this, result)
 end
 
 local function trySetException(this, exception)
-  if this.isVoid then
+  if this.data == true then
     throw(exception)
   end
   return trySetComplete(this, TaskStatusFaulted, newTaskExceptionHolder(this, exception))
@@ -214,7 +227,7 @@ local function trySetCanceled(this, cancellationToken)
 end
 
 local function newWaitingTask(isVoid)
-  return setmetatable({ status = TaskStatusWaitingForActivation, isVoid = isVoid }, Task)
+  return newTask(TaskStatusWaitingForActivation, isVoid)
 end
 
 local function getContinueActions(task) 
@@ -224,6 +237,19 @@ local function getContinueActions(task)
     task.continueActions = continueActions
   end
   return continueActions
+end
+
+local waitToken = {}
+local function getResult(this)
+  local status = this.status
+  if status == TaskStatusRanToCompletion then
+    return this.data
+  elseif status == TaskStatusFaulted then
+    throw(createExceptionObject(this.data))
+  elseif status == TaskStatusCanceled then
+    throw(TaskCanceledException(this))
+  end
+  return waitToken
 end
 
 local function await(t, task)
@@ -254,6 +280,20 @@ local function await(t, task)
   end
 end
 
+local factory = {
+  StartNew = function (f, state)
+    local t = newWaitingTask()
+    post(function ()
+      try(function ()
+        assert(trySetResult(t, f(state)))
+      end, function (e)
+        assert(trySetException(t, e))
+      end)
+    end)
+    return t
+  end
+}
+
 Task = System.define("System.Task", {
   __ctor__ = function (this, action, state)
     if action == nil then throw(ArgumentNullException("action")) end
@@ -269,6 +309,9 @@ Task = System.define("System.Task", {
       return getId(t)
     end
   end,
+  getFactory = function ()
+    return factory
+  end,
   getStatus = function (this)
     return this.status
   end,
@@ -277,6 +320,15 @@ Task = System.define("System.Task", {
       return createExceptionObject(this.data)
     end
     return nil
+  end,
+  getResult = function (this)
+    local result = getResult(this)
+    if result == waitToken then
+      waitTask(getContinueActions(this))
+      result = getResult(this)
+      assert(result ~= waitToken)
+    end
+    return result
   end,
   getIsCompleted = isCompleted,
   getIsCanceled = function (this)
@@ -287,6 +339,7 @@ Task = System.define("System.Task", {
   end,
   FromResult = fromResult,
   FromCanceled = fromCanceled,
+  FromException = fromException,
   getCompletedTask = getCompletedTask,
   Delay = function (delay, cancellationToken)
     if type(delay) == "table" then
@@ -344,6 +397,19 @@ Task = System.define("System.Task", {
       tinsert(continueActions, f)
     end
     return t
+  end,
+  Start = function (this)
+    if this.status ~= TaskStatusCreated then throw(InvalidOperationException("Task was already started.")) end
+    post(function ()
+      try(function ()
+        assert(trySetResult(t, this.data()))
+      end, function (e)
+        assert(trySetException(t, e))
+      end)
+    end)
+  end,
+  Wait = function (this)
+    waitTask(getContinueActions(this))
   end,
   await = function (this, task)
     local status = task.status
