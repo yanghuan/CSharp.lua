@@ -170,7 +170,7 @@ local function removeTimer(id)
 	timerQueue:Erase(id)
 	if isNext then
 		clearTimeout(driverTimer)
-		local delay = timerQueue:getNextExpiration() - time()
+		local delay = timerQueue:getNextExpiration() - currentTimeMillis()
 		driverTimer = setTimeout(runTimerQueue, delay)
 	end
 end
