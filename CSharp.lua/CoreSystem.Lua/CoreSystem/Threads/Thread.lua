@@ -60,29 +60,31 @@ local function checkTimeout(timeout)
   return timeout
 end
 
-local function run(t, obj)
-  if t.co then
-    post(function ()
-      currentThread = t
-      local co = t.co
-      local ok, v = cresume(co, obj)
-      currentThread = mainThread
-      if ok then
-        if type(v) == "function" then
-          v()
-        elseif cstatus(co) == "dead" then
-          local joinThread = t.joinThread
-          if joinThread then
-            run(joinThread, true)
-          end
-          t.co = false
-        end
-      else
-        t.co = false
-        print("Warning: Thread.run" , v)
+local function resume(t, obj)
+  currentThread = t
+  local co = assert(t.co)
+  local ok, v = cresume(co, obj)
+  currentThread = mainThread
+  if ok then
+    if type(v) == "function" then
+      v()
+    elseif cstatus(co) == "dead" then
+      local joinThread = t.joinThread
+      if joinThread then
+        resume(joinThread, true)
       end
-    end)
+      t.co = false
+    end
+  else
+    t.co = false
+    print("Warning: Thread.run" , v)
   end
+end
+
+local function run(t, obj)
+  post(function ()
+    resume(t, obj)
+  end)
 end
 
 local Thread =  System.define("System.Thread", {
@@ -118,7 +120,7 @@ local Thread =  System.define("System.Thread", {
     if timeout ~= -1 then
       f = function ()
         addTimer(function () 
-          run(currentThread) 
+          resume(currentThread) 
         end, timeout)
       end
     end
@@ -149,8 +151,7 @@ local Thread =  System.define("System.Thread", {
       if timeout ~= -1 then
         f = function ()
           addTimer(function ()
-            this.co = false
-            run(currentThread, false)
+            resume(currentThread, false)
           end, timeout)
         end
       end
@@ -169,7 +170,7 @@ local Thread =  System.define("System.Thread", {
       throw(NotSupportedException("mainThread not support"))
     end
     taskContinueActions[#taskContinueActions + 1] = function ()
-      run(currentThread)
+      resume(currentThread)
     end
     cyield()
   end,

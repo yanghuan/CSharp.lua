@@ -21,9 +21,7 @@ local ArgumentNullException = System.ArgumentNullException
 local FormatException = System.FormatException
 
 local type = type
-
-local Boolean = {}
-debug.setmetatable(false, Boolean)
+local tostring = tostring
 
 local function compare(this, v)
   if this == v then
@@ -34,8 +32,19 @@ local function compare(this, v)
   return 1
 end
 
-Boolean.GetHashCode = System.identityFn
-Boolean.CompareTo = compare
+local FalseString = "False"
+local TrueString = "True"
+
+local Boolean = {
+  __default__ = System.falseFn,
+  GetHashCode = System.identityFn,
+  Equals = System.equals,
+  CompareTo = compare,
+  ToString = tostring,
+  FalseString = FalseString,
+  TrueString = TrueString
+}
+debug.setmetatable(false, Boolean)
 
 function Boolean.CompareToObj(this, v)
   if v == null then return 1 end
@@ -43,10 +52,6 @@ function Boolean.CompareToObj(this, v)
     throw(ArgumentException("Arg_MustBeBoolean"))
   end
   return compare(this, v)
-end
-
-function Boolean.Equals(this, v)
-  return this == v
 end
 
 function Boolean.EqualsObj(this, v)
@@ -64,7 +69,12 @@ function Boolean.__concat(a, b)
   end
 end
 
-Boolean.ToString = tostring
+function Boolean.__tostring(this)
+  if this then
+    return TrueString
+  end
+  return FalseString
+end
 
 local function parse(s)
   if s == nil then
@@ -97,10 +107,6 @@ function Boolean.TryParse(s)
     return true, v
   end
   return false, false
-end
-
-function Boolean.__default__()
-  return false
 end
 
 function Boolean.__inherits__()

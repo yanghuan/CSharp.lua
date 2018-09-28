@@ -1,6 +1,5 @@
 require("strict")
-pcall(require, "socket")
-
+local socket = require("socket")
 local timeout
 local conf = { 
   time = socket and socket.gettime or os.time,
@@ -372,7 +371,6 @@ test(testType, "Type")
 --test(testStringBuilder, "StringBuilder")
 --test(testConsole, "Console")
 --test(testIO, "IO")
-test(testAsync, "Async")
-
+--test(testAsync, "Async")
 
 

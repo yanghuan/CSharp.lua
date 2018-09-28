@@ -252,7 +252,7 @@ local function getResult(this)
   return waitToken
 end
 
-local function await(t, task)
+local function awaitTask(t, task)
   assert(t.co)
   local continueActions = getContinueActions(task)
   tinsert(continueActions, function (task)
@@ -412,18 +412,11 @@ Task = System.define("System.Task", {
     waitTask(getContinueActions(this))
   end,
   await = function (this, task)
-    local status = task.status
-    if status == TaskStatusWaitingForActivation then
-      return await(this, task)
-    elseif status == TaskStatusRanToCompletion then
-      return task.data
-    elseif status == TaskStatusFaulted then
-      throw(createExceptionObject(task.data))
-    elseif status ==  TaskStatusCanceled then
-      throw(TaskCanceledException(task))
-    else
-      return await(this, task)
+    local result = getResult(task)
+    if result ~= waitToken then
+      return result
     end
+    return awaitTask(this, task)
   end
 })
 

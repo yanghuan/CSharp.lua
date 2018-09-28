@@ -25,25 +25,17 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSharpLua {
   public sealed class Compiler {
-    private static readonly string[] SystemDlls = new string[] {
-      "System.dll",
-      "System.Core.dll",
-      "System.Runtime.dll",
-      "System.Linq.dll",
-      "Microsoft.CSharp.dll",
-    };
     private const string kDllSuffix = ".dll";
     private const string kSystemMeta = "~/System.xml";
 
-    private string folder_;
-    private string output_;
-    private string[] libs_;
-    private string[] metas_;
-    private string[] cscArguments_;
-    private bool isNewest_;
-    private int indent_;
-    private bool hasSemicolon_;
-    private string[] attributes_;
+    private readonly string folder_;
+    private readonly string output_;
+    private readonly string[] libs_;
+    private readonly string[] metas_;
+    private readonly string[] cscArguments_;
+    private readonly bool isNewest_;
+    private readonly int indent_;
+    private readonly string[] attributes_;
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string indent, string atts) {
       folder_ = folder;
@@ -52,7 +44,6 @@ namespace CSharpLua {
       metas_ = Utility.Split(meta);
       cscArguments_ = string.IsNullOrEmpty(csc) ? Array.Empty<string>() : csc.Trim().Split(' ', '\t');
       isNewest_ = !isClassic;
-      hasSemicolon_ = false;
       int.TryParse(indent, out indent_);
       if (atts != null) {
         attributes_ = Utility.Split(atts, false);
@@ -115,7 +106,7 @@ namespace CSharpLua {
       var references = Libs.Select(i => MetadataReference.CreateFromFile(i));
       LuaSyntaxGenerator.SettingInfo setting = new LuaSyntaxGenerator.SettingInfo() {
         IsNewest = isNewest_,
-        HasSemicolon = hasSemicolon_,
+        HasSemicolon = false,
         Indent = indent_,
       };
       LuaSyntaxGenerator generator = new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, Metas, setting, attributes_, folder_);
