@@ -188,7 +188,6 @@ local function setBase(cls, kind)
         cls.__interfaces__ = extends
         setmetatable(cls, Object)
       else
-        cls.__base__ = base
         setmetatable(cls, base)
         if #extends > 1 then
           tremove(extends, 1)
@@ -233,7 +232,7 @@ local staticCtorMetatable = {
   __call = function(cls, ...)
     staticCtorSetBase(cls)
     return new(cls, ...)
-  end,
+  end
 }
 
 local function setHasStaticCtor(cls, kind)
@@ -248,8 +247,9 @@ local function setHasStaticCtor(cls, kind)
   cls.__name__ = name
   cls.__kind__ = kind
   cls.__call = new
+  cls.__index = cls
   setmetatable(cls, staticCtorMetatable)
-end  
+end
 
 local function def(name, kind, cls, generic)
   if type(cls) == "function" then
@@ -883,6 +883,10 @@ local function multiNew(cls, inx, ...)
   return this
 end
 
+local function base(this)
+  return getmetatable(getmetatable(this))
+end
+
 local function equalsStatic(x, y)
   if x == y then
     return true
@@ -899,6 +903,7 @@ Object = defCls("System.Object", {
   __ctor__ = emptyFn,
   __kind__ = "C",
   new = multiNew,
+  base = base,
   EqualsObj = equals,
   ReferenceEquals = equals,
   GetHashCode = identityFn,

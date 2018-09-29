@@ -117,7 +117,10 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaBlankLinesStatement One = new LuaBlankLinesStatement(1);
   }
 
-  public sealed class LuaShortCommentStatement : LuaStatementSyntax {
+  public abstract class LuaCommentStatement : LuaStatementSyntax {
+  }
+
+  public sealed class LuaShortCommentStatement : LuaCommentStatement {
     public string SingleCommentToken => Tokens.ShortComment;
     public string Comment { get; }
 
@@ -130,7 +133,7 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public class LuaShortCommentExpressionStatement : LuaStatementSyntax {
+  public class LuaShortCommentExpressionStatement : LuaCommentStatement {
     public string SingleCommentToken => Tokens.ShortComment;
     public LuaExpressionSyntax Expression { get; }
 

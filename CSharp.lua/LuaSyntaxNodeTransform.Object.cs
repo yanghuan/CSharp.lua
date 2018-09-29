@@ -260,8 +260,12 @@ namespace CSharpLua {
       return BuildArrayTypeFromInitializer(arrayType, node.Initializer);
     }
 
+    private LuaInvocationExpressionSyntax BuildBaseFromThis() {
+      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, LuaIdentifierNameSyntax.Base, true));
+    }
+
     private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol type, ITypeSymbol baseType, int ctroCounter) {
-      var typeName = !generator_.IsSealed(type) ? GetTypeName(baseType) : new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, LuaIdentifierNameSyntax.Base);
+      var typeName = !generator_.IsSealed(type) ? GetTypeName(baseType) : BuildBaseFromThis();
       LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
       LuaInvocationExpressionSyntax otherCtorInvoke;
       if (ctroCounter > 0) {
@@ -340,6 +344,23 @@ namespace CSharpLua {
         CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0);
       }
 
+      methodInfos_.Pop();
+      return function;
+    }
+
+    public override LuaSyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node) {
+      IMethodSymbol ctorSymbol = semanticModel_.GetDeclaredSymbol(node);
+      methodInfos_.Push(new MethodInfo(ctorSymbol));
+
+      LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
+      PushFunction(function);
+
+      function.AddParameter(LuaIdentifierNameSyntax.This);
+      var block = (LuaBlockSyntax)node.Body.Accept(this);
+      function.Body.Statements.AddRange(block.Statements);
+      CurType.AddMethod(LuaIdentifierNameSyntax.__GC, function, false);
+
+      PopFunction();
       methodInfos_.Pop();
       return function;
     }
@@ -710,7 +731,7 @@ namespace CSharpLua {
           return GetTypeName(symbol.ContainingType);
 
         case BaseVisitType.UseBase:
-          return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, LuaIdentifierNameSyntax.Base);
+          return BuildBaseFromThis();
 
         default:
           Contract.Assert(false);

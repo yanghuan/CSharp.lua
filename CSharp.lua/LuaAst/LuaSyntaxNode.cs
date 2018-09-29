@@ -119,7 +119,7 @@ namespace CSharpLua.LuaAst {
       "internal", "virtual",
     };
 
-    public readonly static HashSet<string> ReservedWords = new HashSet<string>() {
+    public static readonly HashSet<string> ReservedWords = new HashSet<string>() {
       //  lua reserved words
       Keyword.And, Keyword.Break, Keyword.Do, Keyword.Else, Keyword.ElseIf, Keyword.End,
       Keyword.False, Keyword.For, Keyword.Function, Keyword.Goto, Keyword.If, Keyword.In,
@@ -130,14 +130,14 @@ namespace CSharpLua.LuaAst {
       "System", "Linq",
     };
 
-    public readonly static HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
+    public static readonly HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
       // lua metatable methods
       "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
       "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",
-      "__eq", "__lt", "__le", "__index", "__newindex", "__call",
+      "__eq", "__lt", "__le", "__index", "__newindex", "__call", "__gc",
 
       // adapter special methods 
-      "__name__", "__kind__", "__base__", "__ctor__", "__inherits__",
+      "__name__", "__kind__", "__ctor__", "__inherits__",
       "__interfaces__", "__default__", "__attributes__", "__clone__",
     };
 

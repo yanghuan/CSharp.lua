@@ -84,7 +84,7 @@ namespace CSharpLua.LuaAst {
       typeParameters_.AddRange(typeParameters);
     }
 
-    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument = null) {
+    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument, List<LuaIdentifierNameSyntax> baseCopyFields) {
       bool hasLazyGenericArgument = false;
       if (genericArgument != null) {
         if (genericArgument.IsLazy) {
@@ -94,15 +94,34 @@ namespace CSharpLua.LuaAst {
         }
       }
 
-      LuaTableInitializerExpression table = new LuaTableInitializerExpression();
-      table.Items.AddRange(baseTypes.Select(i => new LuaSingleTableItemSyntax(i)));
+      bool hasBaseCopyField = baseCopyFields != null && baseCopyFields.Count > 0;
       LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
       functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
-      if (hasLazyGenericArgument) {
+      if (hasLazyGenericArgument || hasBaseCopyField) {
         functionExpression.AddParameter(LuaIdentifierNameSyntax.This);
+      }
+
+      if (hasLazyGenericArgument) {
         var assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, genericArgument.Name), genericArgument.Value);
         functionExpression.AddStatement(assignment);
       }
+
+      LuaTableInitializerExpression table = new LuaTableInitializerExpression();
+      if (hasBaseCopyField) {
+        var baseIdentifier = LuaIdentifierNameSyntax.Base;
+        functionExpression.AddStatement(new LuaLocalVariableDeclaratorSyntax(baseIdentifier, baseTypes.First()));
+        foreach (var field in baseCopyFields) {
+          var left = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, field);
+          var right = new LuaMemberAccessExpressionSyntax(baseIdentifier, field);
+          functionExpression.AddStatement(new LuaAssignmentExpressionSyntax(left, right));
+
+          table.Items.Add(new LuaSingleTableItemSyntax(baseIdentifier));
+          table.Items.AddRange(baseTypes.Skip(1).Select(i => new LuaSingleTableItemSyntax(i)));
+        }
+      } else {
+        table.Items.AddRange(baseTypes.Select(i => new LuaSingleTableItemSyntax(i)));
+      }
+
       functionExpression.AddStatement(new LuaReturnStatementSyntax(table));
       AddResultTable(LuaIdentifierNameSyntax.Inherits, functionExpression);
     }

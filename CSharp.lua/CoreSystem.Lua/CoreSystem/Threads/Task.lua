@@ -444,20 +444,12 @@ local function taskCoroutineCreate(t, f)
   return co
 end
 
-local function async(f, isVoid, ...)
-  local t = newWaitingTask(isVoid)
+function System.async(f, void, ...)
+  local t = newWaitingTask(void)
   local co = taskCoroutineCreate(t, f)
   local ok, v = cresume(co, ...)
   if not ok then
     assert(trySetException(t, v))
   end
   return t
-end
-
-function System.asyncVoid(f, ...)
-  async(f, true, ...)
-end
-
-function System.async(f, ...)
-  return async(f, nil, ...)
 end

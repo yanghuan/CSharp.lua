@@ -106,7 +106,7 @@ end
 local function getBaseType(this)
   local baseType = this.baseType
   if baseType == nil then
-    local baseCls = this.c.__base__
+    local baseCls = getmetatable(this.c)
     if baseCls ~= nil then
       baseType = typeof(baseCls)
       this.baseType = baseType
@@ -157,7 +157,7 @@ local function getInterfaces(this)
           tinsert(interfaces, typeof(i))
         end
       end
-      p = p.__base__
+      p = getmetatable(p)
     until p == nil
     this.interfaces = interfaces
   end
@@ -250,7 +250,7 @@ local function isInterfaceOf(t, ifaceType)
         end
       end 
     end
-    t = t.__base__
+    t = getmetatable(t)
   until t == nil
   return false
 end
@@ -272,12 +272,12 @@ function isTypeOf(obj, cls)
     if cls.__kind__ == "I" then
       return isInterfaceOf(t, cls)
     else
-      local base = t.__base__
+      local base = getmetatable(t)
       while base ~= nil do
         if base == cls then
           return true
         end
-        base = base.__base__
+        base = getmetatable(base)
       end
       return false
     end

@@ -251,6 +251,18 @@ namespace CSharpLua {
       return null;
     }
 
+    private List<LuaIdentifierNameSyntax> GetBaseCopyFields(BaseTypeSyntax baseType) {
+      if (baseType != null) {
+        var baseTypeSymbol = semanticModel_.GetTypeInfo(baseType.Type).Type;
+        if (baseTypeSymbol.TypeKind == TypeKind.Class && baseTypeSymbol.SpecialType != SpecialType.System_Object) {
+          if(!baseTypeSymbol.GetMembers("Finalize").IsEmpty) {
+            return new List<LuaIdentifierNameSyntax>() { LuaIdentifierNameSyntax.__GC };
+          }
+        }
+      }
+      return null;
+    }
+
     private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
       typeDeclarations_.Push(new TypeDeclarationInfo(typeSymbol, typeDeclaration));
 
@@ -263,14 +275,16 @@ namespace CSharpLua {
       BuildTypeParameters(typeSymbol, node, typeDeclaration);
       if (node.BaseList != null) {
         bool hasExtendSelf = false;
-        List<LuaExpressionSyntax> baseTypes = new List<LuaExpressionSyntax>();
+        var baseTypes = new List<LuaExpressionSyntax>();
         foreach (var baseType in node.BaseList.Types) {
           var baseTypeName = BuildInheritTypeName(baseType);
           baseTypes.Add(baseTypeName);
           CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
         }
+
         var genericArgument = CheckSpeaicalGenericArgument(typeSymbol);
-        typeDeclaration.AddBaseTypes(baseTypes, genericArgument);
+        var baseCopyFields = GetBaseCopyFields(node.BaseList.Types.FirstOrDefault());
+        typeDeclaration.AddBaseTypes(baseTypes, genericArgument, baseCopyFields);
         if (hasExtendSelf && !typeSymbol.HasStaticCtor()) {
           typeDeclaration.SetStaticCtorEmpty();
         }
@@ -381,7 +395,8 @@ namespace CSharpLua {
           CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
         }
         var genericArgument = CheckSpeaicalGenericArgument(major.Symbol);
-        major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, genericArgument);
+        var baseCopyFields = GetBaseCopyFields(baseTypes.FirstOrDefault());
+        major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, genericArgument, baseCopyFields);
         if (hasExtendSelf && !major.Symbol.HasStaticCtor()) {
           major.TypeDeclaration.SetStaticCtorEmpty();
         }
@@ -474,7 +489,7 @@ namespace CSharpLua {
     }
 
     private void VisitAsync(bool returnsVoid,TypeSyntax returnType, LuaFunctionExpressionSyntax function) {
-      var memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, returnsVoid ? LuaIdentifierNameSyntax.AsyncVoid : LuaIdentifierNameSyntax.Async);
+      var memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.Async);
       var invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
       var wrapFunction = new LuaFunctionExpressionSyntax();
 
@@ -483,6 +498,7 @@ namespace CSharpLua {
       wrapFunction.ParameterList.Parameters.AddRange(parameters);
       wrapFunction.AddStatements(function.Body.Statements);
       invokeExpression.AddArgument(wrapFunction);
+      invokeExpression.AddArgument(returnsVoid ? LuaIdentifierNameSyntax.True : LuaIdentifierNameSyntax.Nil);
       invokeExpression.ArgumentList.Arguments.AddRange(parameters.Select(i => new LuaArgumentSyntax(i.Identifier)));
 
       function.Body.Statements.Clear();
@@ -1665,12 +1681,22 @@ namespace CSharpLua {
       CheckInvocationDeafultArguments(symbol, parameters, arguments, argumentNodeInfos, node.Parent, true);
     }
 
-    private void CheckPrevIsInvokeStatement() {
+    private void CheckPrevIsInvokeStatement(ExpressionSyntax node) {
+      var parent = node.Parent;
+      while (parent != null) {
+        if (parent.IsKind(SyntaxKind.Argument)) {
+          return;
+        } else if (parent.IsKind(SyntaxKind.ExpressionStatement)) {
+          break;
+        }
+        parent = parent.Parent;
+      }
+
       var curBlock = CurBlockOrNull;
       if (curBlock != null) {
         for (int i = curBlock.Statements.Count - 1; i >= 0; --i) {
           var statement = curBlock.Statements[i];
-          if (!(statement is LuaBlankLinesStatement)) {
+          if (!(statement is LuaBlankLinesStatement) && !(statement is LuaCommentStatement)) {
             if (statement is LuaExpressionStatementSyntax expressionStatement) {
               if (expressionStatement.Expression is LuaInvocationExpressionSyntax) {
                 curBlock.Statements.Add(LuaStatementSyntax.Colon);
@@ -1687,7 +1713,7 @@ namespace CSharpLua {
       SyntaxKind kind = targetExpression.Kind();
       if ((kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.NullLiteralExpression)
           || (expression is LuaLiteralExpressionSyntax)) {
-        CheckPrevIsInvokeStatement();
+        CheckPrevIsInvokeStatement(targetExpression);
         expression = new LuaParenthesizedExpressionSyntax(expression);
       }
       return expression;
@@ -2843,7 +2869,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-      CheckPrevIsInvokeStatement();
+      CheckPrevIsInvokeStatement(node);
       return new LuaParenthesizedExpressionSyntax(expression);
     }
 

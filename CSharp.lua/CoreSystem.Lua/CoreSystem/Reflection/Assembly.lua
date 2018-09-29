@@ -24,6 +24,7 @@ local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 
 local setmetatable = setmetatable
+local getmetatable = getmetatable
 local assert = assert
 local unpack = table.unpack
 local pairs = pairs
@@ -110,7 +111,7 @@ function MemberInfo.IsDefined(this, attributeType, inherit)
       if isDefined(cls, name, attributeCls) then
         return true
       end
-      cls = cls.__base__
+      cls = getmetatable(cls)
     until cls == nil  
     return false
   end
@@ -190,7 +191,7 @@ function Type.GetMethods(this)
         tinsert(t, methodInfo)
       end
     end
-    cls = cls.__base__
+    cls = getmetatable(cls)
   until cls == nil 
   return System.arrayFromTable(t, MethodInfo)  
 end
@@ -318,7 +319,7 @@ function Type.GetMembers(this)
         end
       end
     end
-    cls = cls.__base__
+    cls = getmetatable(cls)
   until cls == nil 
   return System.arrayFromTable(t, MemberInfo)  
 end
@@ -344,7 +345,7 @@ function Type.IsDefined(this, attributeType, inherit)
       if isDefined(cls, "class", attributeCls) then
         return true
       end
-      cls = cls.__base__
+      cls = getmetatable(cls)
     until cls == nil  
     return false
   end

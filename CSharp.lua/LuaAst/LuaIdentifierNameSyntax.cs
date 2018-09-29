@@ -93,14 +93,10 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax UsingDeclare = new LuaIdentifierNameSyntax("System.usingDeclare");
     public static readonly LuaIdentifierNameSyntax Global = new LuaIdentifierNameSyntax("global");
     public static readonly LuaIdentifierNameSyntax Attributes = new LuaIdentifierNameSyntax("__attributes__");
-    public static readonly LuaIdentifierNameSyntax Trunc = new LuaIdentifierNameSyntax("System.trunc");
     public static readonly LuaIdentifierNameSyntax setmetatable = new LuaIdentifierNameSyntax("setmetatable");
     public static readonly LuaIdentifierNameSyntax getmetatable = new LuaIdentifierNameSyntax("getmetatable");
     public static readonly LuaIdentifierNameSyntax Clone = new LuaIdentifierNameSyntax("__clone__");
     public static readonly LuaIdentifierNameSyntax ValueType = new LuaIdentifierNameSyntax("System.ValueType");
-    public static readonly LuaIdentifierNameSyntax Obj = new LuaIdentifierNameSyntax("obj");
-    public static readonly LuaIdentifierNameSyntax EqualsStatic = new LuaIdentifierNameSyntax("equalsStatic");
-    public static readonly LuaIdentifierNameSyntax SystemObjectEqualsStatic = new LuaIdentifierNameSyntax("System.Object.EqualsStatic");
     public static readonly LuaIdentifierNameSyntax DateTime = new LuaIdentifierNameSyntax("System.DateTime");
     public static readonly LuaIdentifierNameSyntax TimeSpan = new LuaIdentifierNameSyntax("System.TimeSpan");
     public static readonly LuaIdentifierNameSyntax AnonymousTypeCreate = new LuaIdentifierNameSyntax("System.anonymousType");
@@ -108,13 +104,13 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax SystemNew = new LuaIdentifierNameSyntax("System.new");
     public static readonly LuaIdentifierNameSyntax StackAlloc = new LuaIdentifierNameSyntax("System.stackalloc");
     public static readonly LuaIdentifierNameSyntax GenericT = new LuaIdentifierNameSyntax("__genericT__");
-    public static readonly LuaIdentifierNameSyntax Base = new LuaIdentifierNameSyntax("__base__");
+    public static readonly LuaIdentifierNameSyntax Base = new LuaIdentifierNameSyntax("base");
     public static readonly LuaIdentifierNameSyntax TupleType = new LuaIdentifierNameSyntax("System.Tuple");
     public static readonly LuaIdentifierNameSyntax ValueTupleType = new LuaIdentifierNameSyntax("System.ValueTuple");
     public static readonly LuaIdentifierNameSyntax ValueTupleTypeCreate = new LuaIdentifierNameSyntax("System.valueTuple");
+    public static readonly LuaIdentifierNameSyntax __GC = new LuaIdentifierNameSyntax("__gc");
     public static readonly LuaIdentifierNameSyntax Await = new LuaIdentifierNameSyntax("await");
     public static readonly LuaIdentifierNameSyntax Async = new LuaIdentifierNameSyntax("async");
-    public static readonly LuaIdentifierNameSyntax AsyncVoid = new LuaIdentifierNameSyntax("asyncVoid");
 
     #region QueryExpression
     public static readonly LuaIdentifierNameSyntax LinqCast = new LuaIdentifierNameSyntax("Linq.Cast");
