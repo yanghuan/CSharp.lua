@@ -255,12 +255,16 @@ namespace CSharpLua {
       if (baseType != null) {
         var baseTypeSymbol = semanticModel_.GetTypeInfo(baseType.Type).Type;
         if (baseTypeSymbol.TypeKind == TypeKind.Class && baseTypeSymbol.SpecialType != SpecialType.System_Object) {
-          if(!baseTypeSymbol.GetMembers("Finalize").IsEmpty) {
+          if (baseTypeSymbol.IsMemberExists("Finalize", true)) {
             return new List<LuaIdentifierNameSyntax>() { LuaIdentifierNameSyntax.__GC };
           }
         }
       }
       return null;
+    }
+
+    private bool IsBaseTypeNotSystemObject(LuaExpressionSyntax baseTypeExpression) {
+      return !(baseTypeExpression is LuaIdentifierNameSyntax name && name.ValueText == LuaIdentifierNameSyntax.Object.ValueText);
     }
 
     private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
@@ -278,15 +282,19 @@ namespace CSharpLua {
         var baseTypes = new List<LuaExpressionSyntax>();
         foreach (var baseType in node.BaseList.Types) {
           var baseTypeName = BuildInheritTypeName(baseType);
-          baseTypes.Add(baseTypeName);
-          CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
+          if (IsBaseTypeNotSystemObject(baseTypeName)) {
+            baseTypes.Add(baseTypeName);
+            CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
+          }
         }
 
-        var genericArgument = CheckSpeaicalGenericArgument(typeSymbol);
-        var baseCopyFields = GetBaseCopyFields(node.BaseList.Types.FirstOrDefault());
-        typeDeclaration.AddBaseTypes(baseTypes, genericArgument, baseCopyFields);
-        if (hasExtendSelf && !typeSymbol.HasStaticCtor()) {
-          typeDeclaration.SetStaticCtorEmpty();
+        if (baseTypes.Count > 0) {
+          var genericArgument = CheckSpeaicalGenericArgument(typeSymbol);
+          var baseCopyFields = GetBaseCopyFields(node.BaseList.Types.FirstOrDefault());
+          typeDeclaration.AddBaseTypes(baseTypes, genericArgument, baseCopyFields);
+          if (hasExtendSelf && !typeSymbol.HasStaticCtor()) {
+            typeDeclaration.SetStaticCtorEmpty();
+          }
         }
       }
 
@@ -391,14 +399,19 @@ namespace CSharpLua {
         foreach (var baseType in baseTypes) {
           semanticModel_ = generator_.GetSemanticModel(baseType.SyntaxTree);
           var baseTypeName = BuildInheritTypeName(baseType);
-          baseTypeExpressions.Add(baseTypeName);
-          CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
+          if (IsBaseTypeNotSystemObject(baseTypeName)) {
+            baseTypeExpressions.Add(baseTypeName);
+            CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
+          }
         }
-        var genericArgument = CheckSpeaicalGenericArgument(major.Symbol);
-        var baseCopyFields = GetBaseCopyFields(baseTypes.FirstOrDefault());
-        major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, genericArgument, baseCopyFields);
-        if (hasExtendSelf && !major.Symbol.HasStaticCtor()) {
-          major.TypeDeclaration.SetStaticCtorEmpty();
+
+        if (baseTypeExpressions.Count > 0) {
+          var genericArgument = CheckSpeaicalGenericArgument(major.Symbol);
+          var baseCopyFields = GetBaseCopyFields(baseTypes.FirstOrDefault());
+          major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, genericArgument, baseCopyFields);
+          if (hasExtendSelf && !major.Symbol.HasStaticCtor()) {
+            major.TypeDeclaration.SetStaticCtorEmpty();
+          }
         }
       }
 

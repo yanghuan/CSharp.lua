@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -893,6 +893,23 @@ namespace CSharpLua {
       }
 
       return false;
+    }
+
+    public static bool IsMemberExists(this ITypeSymbol symbol, string memberName, bool inherit = false) {
+      if (inherit) {
+        while (true) {
+          if (!symbol.GetMembers(memberName).IsEmpty) {
+            return true;
+          }
+
+          symbol = symbol.BaseType;
+          if (symbol == null || symbol.SpecialType == SpecialType.System_Object) {
+            return false;
+          }
+        }
+      } else {
+        return !symbol.GetMembers(memberName).IsEmpty;
+      }
     }
 
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {

@@ -24,19 +24,26 @@ namespace CSharpLua.LuaAst {
   public class LuaBlockSyntax : LuaStatementSyntax {
     public string OpenBraceToken { get; set; }
     public string CloseBraceToken { get; set; }
-    public LuaSyntaxList<LuaStatementSyntax> Statements { get; } = new LuaSyntaxList<LuaStatementSyntax>();
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
 
     internal void AddLocalArea(LuaIdentifierNameSyntax name) {
-      var localArea = Statements.FirstOrDefault() as LuaLocalAreaSyntax;
-      if (localArea == null) {
+      if (!(Statements.FirstOrDefault() is LuaLocalAreaSyntax localArea)) {
         localArea = new LuaLocalAreaSyntax();
         Statements.Insert(0, localArea);
       }
       localArea.Variables.Add(name);
+    }
+
+    internal void AddStatement(LuaStatementSyntax statement) {
+      Statements.Add(statement);
+    }
+
+    internal void AddStatement(LuaExpressionSyntax expression) {
+      Statements.Add(expression.ToStatement());
     }
   }
 

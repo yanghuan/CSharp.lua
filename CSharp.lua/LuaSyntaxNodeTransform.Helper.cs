@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -744,7 +744,7 @@ namespace CSharpLua {
           }
 
           PopFunction();
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Create, invocation, function);
+          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Apply, invocation, function);
         }
       } else {
         return invocation;

@@ -327,7 +327,7 @@ local function testAsync()
 					async:await(t)
 					async:await(t)
 					System.Console.WriteLine(("Delay {0}"):Format(t:getStatus():ToEnumString(System.TaskStatus)))
-				end, this)
+				end, nil, this)
 			end
 			return {
 				f = f,

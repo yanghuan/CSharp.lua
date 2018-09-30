@@ -163,6 +163,13 @@ enumMetatable.__index = enumMetatable
 local interfaceMetatable = { __kind__ = "I", __default__ = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
+local function applyAttributes(cls)
+  local attributes = rawget(cls, "__attributes__")
+  if attributes ~= nil then
+    cls.__attributes__ = attributes(global)
+  end
+end
+
 local function setBase(cls, kind)
   cls.__index = cls 
   cls.__call = new
@@ -199,11 +206,7 @@ local function setBase(cls, kind)
       setmetatable(cls, Object)
     end  
   end
-
-  local attributes = rawget(cls, "__attributes__")
-  if attributes ~= nil then
-    cls.__attributes__ = attributes(global)
-  end
+  applyAttributes(cls)
 end
 
 local function staticCtorSetBase(cls)
@@ -291,17 +294,11 @@ local function def(name, kind, cls, generic)
       cls.__interfaces__ = extends
       cls.__inherits__ = nil
     end
-    local attributes = cls.__attributes__
-    if attributes ~= nil then
-      cls.__attributes__ = attributes(global)
-    end
     setmetatable(cls, interfaceMetatable)
+    applyAttributes(cls)
   elseif kind == "E" then
-    local attributes = cls.__attributes__
-    if attributes ~= nil then
-      cls.__attributes__ = attributes(global)
-    end
     setmetatable(cls, enumMetatable)
+    applyAttributes(cls)
   else
     assert(false, kind)
   end
@@ -844,7 +841,7 @@ function System.usingX(f, ...)
   return status, ret
 end
 
-function System.create(t, f)
+function System.apply(t, f)
   f(t)
   return t
 end

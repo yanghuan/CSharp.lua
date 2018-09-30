@@ -40,10 +40,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Expression { get; }
 
     public LuaSingleTableItemSyntax(LuaExpressionSyntax expression) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      Expression = expression;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -102,14 +99,8 @@ namespace CSharpLua.LuaAst {
     public string CloseBracketToken => Tokens.CloseBracket;
 
     public LuaTableIndexAccessExpressionSyntax(LuaExpressionSyntax expression, LuaExpressionSyntax index) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      if (index == null) {
-        throw new ArgumentNullException(nameof(index));
-      }
-      Expression = expression;
-      Index = index;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+      Index = index ?? throw new ArgumentNullException(nameof(index));
     }
 
     internal override void Render(LuaRenderer renderer) {
