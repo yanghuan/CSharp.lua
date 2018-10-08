@@ -159,7 +159,7 @@ namespace CSharpLua.LuaAst {
       initStatements_.Add(new LuaExpressionStatementSyntax(assignment));
     }
 
-    public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly) {
+    public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaStatementSyntax> statements) {
       if (isStatic) {
         if (isPrivate) {
           local_.Variables.Add(name);
@@ -168,6 +168,9 @@ namespace CSharpLua.LuaAst {
             if (isImmutable) {
               methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
             } else {
+              if (statements != null) {
+                staticInitStatements_.AddRange(statements);
+              }
               staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
             }
           }
@@ -180,9 +183,11 @@ namespace CSharpLua.LuaAst {
                 methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
                 AddResultTable(name);
               } else {
+                if (statements != null) {
+                  staticInitStatements_.AddRange(statements);
+                }
                 LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
                 staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
-                staticAssignmentNames_.Add(name);
               }
             }
           } else {
@@ -190,6 +195,9 @@ namespace CSharpLua.LuaAst {
               if (isImmutable) {
                 AddResultTable(name, value);
               } else {
+                if (statements != null) {
+                  staticInitStatements_.AddRange(statements);
+                }
                 LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), value);
                 staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
               }
@@ -201,13 +209,16 @@ namespace CSharpLua.LuaAst {
           if (isImmutable) {
             AddResultTable(name, value);
           } else {
+            if (statements  != null) {
+              initStatements_.AddRange(statements);
+            }
             AddInitFiled(name, value);
           }
         }
       }
     }
 
-    private void AddPropertyOrEvent(bool isProperty, LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression) {
+    private void AddPropertyOrEvent(bool isProperty, LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
       LuaPropertyOrEventIdentifierNameSyntax get, set;
       if (isProperty) {
         get = new LuaPropertyOrEventIdentifierNameSyntax(true, true, name);
@@ -254,6 +265,9 @@ namespace CSharpLua.LuaAst {
           if (isImmutable) {
             AddResultTable(innerName, value);
           } else {
+            if (statements != null) {
+              staticInitStatements_.AddRange(statements);
+            }
             LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, innerName), value);
             staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
           }
@@ -261,6 +275,9 @@ namespace CSharpLua.LuaAst {
           if (isImmutable) {
             AddResultTable(innerName, value);
           } else {
+            if (statements != null) {
+              initStatements_.AddRange(statements);
+            }
             AddInitFiled(innerName, value);
           }
         }
@@ -272,12 +289,12 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public void AddProperty(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression) {
-      AddPropertyOrEvent(true, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression);
+    public void AddProperty(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
+      AddPropertyOrEvent(true, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
     }
 
-    public void AddEvent(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression) {
-      AddPropertyOrEvent(false, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression);
+    public void AddEvent(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
+      AddPropertyOrEvent(false, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
     }
 
     public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function) {

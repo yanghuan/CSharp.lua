@@ -77,22 +77,10 @@ namespace CSharpLua {
       if (node.Initializer == null) {
         return creationExpression;
       } else {
-        if (CurBlockOrNull != null) {
-          var temp = GetTempIdentifier(node);
-          CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
-          FillObjectInitializerExpression(temp, node.Initializer);
-          return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
-        } else {
-          LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
-          PushFunction(function);
-          blocks_.Push(function.Body);
-          var temp = GetTempIdentifier(node);
-          function.AddParameter(temp);
-          FillObjectInitializerExpression(temp, node.Initializer);
-          blocks_.Pop();
-          PopFunction();
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Apply, creationExpression, function);
-        }
+        var temp = GetTempIdentifier(node);
+        CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
+        FillObjectInitializerExpression(temp, node.Initializer);
+        return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
       }
     }
 
