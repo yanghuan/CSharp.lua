@@ -47,7 +47,7 @@ local Boolean = {
 debug.setmetatable(false, Boolean)
 
 function Boolean.CompareToObj(this, v)
-  if v == null then return 1 end
+  if v == nil then return 1 end
   if type(v) ~= "boolean" then
     throw(ArgumentException("Arg_MustBeBoolean"))
   end

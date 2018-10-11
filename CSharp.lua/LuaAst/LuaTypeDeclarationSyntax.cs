@@ -43,12 +43,11 @@ namespace CSharpLua.LuaAst {
     private List<LuaConstructorAdapterExpressionSyntax> ctors_ = new List<LuaConstructorAdapterExpressionSyntax>();
 
     private List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
+    private List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
+
     private LuaTableInitializerExpression attributes_ = new LuaTableInitializerExpression();
     private LuaDocumentStatement document_ = new LuaDocumentStatement();
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
-
-    public LuaTypeDeclarationSyntax() {
-    }
 
     internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name) {
       if (!staticAssignmentNames_.Contains(name)) {
@@ -82,6 +81,17 @@ namespace CSharpLua.LuaAst {
 
     internal void AddTypeParameters(IEnumerable<LuaParameterSyntax> typeParameters) {
       typeParameters_.AddRange(typeParameters);
+    }
+
+    internal void AddImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
+      if (!genericUsingDeclares_.Exists(i => i.NewName == name)) {
+        genericUsingDeclares_.Add(new GenericUsingDeclare() {
+          InvocationExpression = invocationExpression,
+          NewName = name,
+          ArgumentTypeNames = argumentTypeNames,
+          IsFromCode = isFromCode,
+        });
+      }
     }
 
     internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument, List<LuaIdentifierNameSyntax> baseCopyFields) {
@@ -188,6 +198,7 @@ namespace CSharpLua.LuaAst {
                 }
                 LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
                 staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
+                staticAssignmentNames_.Add(name);
               }
             }
           } else {
@@ -198,7 +209,7 @@ namespace CSharpLua.LuaAst {
                 if (statements != null) {
                   staticInitStatements_.AddRange(statements);
                 }
-                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), value);
+                var assignment = new LuaAssignmentExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name), value);
                 staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
               }
             }
@@ -413,8 +424,18 @@ namespace CSharpLua.LuaAst {
       }
     }
 
+    private void CheckGenericUsingDeclares(LuaBlockSyntax body) {
+      if (genericUsingDeclares_.Count > 0) {
+        genericUsingDeclares_.Sort();
+        foreach (var import in genericUsingDeclares_) {
+          body.AddStatement(new LuaLocalVariableDeclaratorSyntax(new LuaIdentifierNameSyntax(import.NewName), import.InvocationExpression));
+        }
+      }
+    }
+
     private void AddAllStatementsTo(LuaBlockSyntax body) {
       body.Statements.Add(local_);
+      CheckGenericUsingDeclares(body);
       CheckStaticCtorFunction(body);
       CheckCtorsFunction(body);
       body.Statements.Add(methodList_);

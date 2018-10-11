@@ -1440,7 +1440,7 @@ namespace CSharpLua {
             name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
           }
         } else {
-          transfor.ImportTypeName(ref name, symbol);
+          transfor.ImportTypeName(ref name, typeSymbol);
         }
       }
       return new LuaIdentifierNameSyntax(name);

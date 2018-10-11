@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,23 @@ using System.Reflection;
 using System.Text;
 
 namespace CSharpLua.LuaAst {
+  public sealed class GenericUsingDeclare : IComparable<GenericUsingDeclare> {
+    public LuaInvocationExpressionSyntax InvocationExpression;
+    public string NewName;
+    public List<string> ArgumentTypeNames;
+    public bool IsFromCode;
+
+    public int CompareTo(GenericUsingDeclare other) {
+      if (other.ArgumentTypeNames.Contains(NewName)) {
+        return -1;
+      }
+      if (ArgumentTypeNames.Contains(other.NewName)) {
+        return 1;
+      }
+      return NewName.CompareTo(other.NewName);
+    }
+  }
+
   public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
     private sealed class UsingDeclare : IComparable<UsingDeclare> {
       public string Prefix;
@@ -31,23 +48,6 @@ namespace CSharpLua.LuaAst {
 
       public int CompareTo(UsingDeclare other) {
         return Prefix.CompareTo(other.Prefix);
-      }
-    }
-
-    private sealed class GenericUsingDeclare : IComparable<GenericUsingDeclare> {
-      public LuaInvocationExpressionSyntax InvocationExpression;
-      public string NewName;
-      public List<string> ArgumentTypeNames;
-      public bool IsFromCode;
-
-      public int CompareTo(GenericUsingDeclare other) {
-        if (other.ArgumentTypeNames.Contains(NewName)) {
-          return -1;
-        }
-        if (ArgumentTypeNames.Contains(other.NewName)) {
-          return 1;
-        }
-        return NewName.CompareTo(other.NewName);
       }
     }
 

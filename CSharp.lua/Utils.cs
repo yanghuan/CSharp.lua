@@ -837,11 +837,11 @@ namespace CSharpLua {
       return false;
     }
 
-    public static bool IsTypeParameterExists(this ITypeSymbol symbol) {
+    public static bool IsTypeParameterExists(this ITypeSymbol symbol, ITypeSymbol matchType = null) {
       switch (symbol.Kind) {
         case SymbolKind.ArrayType: {
             var arrayType = (IArrayTypeSymbol)symbol;
-            if (arrayType.ElementType.IsTypeParameterExists()) {
+            if (arrayType.ElementType.IsTypeParameterExists(matchType)) {
               return true;
             }
             break;
@@ -849,19 +849,19 @@ namespace CSharpLua {
         case SymbolKind.NamedType: {
             var nameTypeSymbol = (INamedTypeSymbol)symbol;
             foreach (var typeArgument in nameTypeSymbol.TypeArguments) {
-              if (typeArgument.IsTypeParameterExists()) {
+              if (typeArgument.IsTypeParameterExists(matchType)) {
                 return true;
               }
             }
             if (symbol.ContainingType != null) {
-              if (symbol.ContainingType.IsTypeParameterExists()) {
+              if (symbol.ContainingType.IsTypeParameterExists(matchType)) {
                 return true;
               }
             }
             break;
           }
         case SymbolKind.TypeParameter: {
-            return true;
+            return matchType == null || symbol == matchType;
           }
       }
 
