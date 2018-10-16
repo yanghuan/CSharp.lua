@@ -196,9 +196,11 @@ namespace CSharpLua.LuaAst {
                 if (statements != null) {
                   staticInitStatements_.AddRange(statements);
                 }
-                LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, value);
+                var assignment = new LuaAssignmentExpressionSyntax(name, value);
                 staticInitStatements_.Add(new LuaExpressionStatementSyntax(assignment));
-                staticAssignmentNames_.Add(name);
+
+                var memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, name);
+                staticInitStatements_.Add(new LuaAssignmentExpressionSyntax(memberAccess, name).ToStatement());
               }
             }
           } else {
