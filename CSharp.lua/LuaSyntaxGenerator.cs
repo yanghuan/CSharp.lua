@@ -783,6 +783,10 @@ namespace CSharpLua {
         if (countOfA == 1) {
           var implementationOfA = a.InterfaceImplementations().First();
           var implementationOfB = b.InterfaceImplementations().First();
+          if (implementationOfA == implementationOfB) {
+            throw new CompilationErrorException($"{a} is conflict with {b}");
+          }
+
           if (MemberSymbolBoolComparison(implementationOfA, implementationOfB, i => !i.IsExplicitInterfaceImplementation(), out int result)) {
             return result;
           }

@@ -1047,14 +1047,14 @@ namespace CSharpLua {
             }
             return node;
           } catch (CompilationErrorException e) {
-            if (e.SyntaxNode == null) {
-              throw new CompilationErrorException(SyntaxNode, e.Message);
-            }
-            throw e;
+            throw e.With(SyntaxNode);
           } catch (BugErrorException) {
             throw;
           } 
           catch (Exception e) {
+            if (e.InnerException is CompilationErrorException ex) {
+              throw ex.With(SyntaxNode);
+            }
             throw new BugErrorException(SyntaxNode, e);
           }
         } else {

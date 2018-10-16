@@ -45,6 +45,13 @@ namespace CSharpLua {
       : base($"{node.GetLocationString()}: {message}, please refactor your code.") {
       SyntaxNode = node;
     }
+
+    public CompilationErrorException With(SyntaxNode node) {
+      if (SyntaxNode == null) {
+        return new CompilationErrorException(node, Message);
+      }
+      return this;
+    }
   }
 
   public sealed class BugErrorException : Exception {
