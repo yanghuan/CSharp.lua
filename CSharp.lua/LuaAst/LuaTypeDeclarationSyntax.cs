@@ -386,18 +386,25 @@ namespace CSharpLua.LuaAst {
 
       if (hasCtors) {
         if (hasInit) {
-          var initIdentifier = LuaIdentifierNameSyntax.Init;
-          AddInitFunction(body, initIdentifier, GetInitFunction(), false);
-          foreach (var ctor in ctors_) {
-            if (!ctor.IsInvokeThisCtor) {
-              LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier, LuaIdentifierNameSyntax.This);
-              ctor.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
+          if (ctors_.Count == 1) {
+            ctors_.First().Body.Statements.InsertRange(0, initStatements_);
+          } else {
+            var initIdentifier = LuaIdentifierNameSyntax.Init;
+            AddInitFunction(body, initIdentifier, GetInitFunction(), false);
+            foreach (var ctor in ctors_) {
+              if (!ctor.IsInvokeThisCtor) {
+                LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier, LuaIdentifierNameSyntax.This);
+                ctor.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
+              }
             }
           }
         }
 
         if (ctors_.Count == 1) {
-          AddInitFunction(body, LuaIdentifierNameSyntax.Ctor, ctors_.First());
+          var ctor = ctors_.First();
+          if (ctor.Body.Statements.Count > 0) {
+            AddInitFunction(body, LuaIdentifierNameSyntax.Ctor, ctor);
+          }
         } else {
           LuaTableInitializerExpression ctrosTable = new LuaTableInitializerExpression();
           int index = 1;

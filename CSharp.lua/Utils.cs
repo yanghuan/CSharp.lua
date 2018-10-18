@@ -919,6 +919,19 @@ namespace CSharpLua {
       }
     }
 
+    public static bool IsExplicitCtorExists(this INamedTypeSymbol baseType) {
+      while (baseType != null 
+        && baseType.SpecialType != SpecialType.System_Object 
+        && baseType.SpecialType != SpecialType.System_ValueType) {
+        if (baseType.Constructors.Any(i => !i.IsStatic && !i.IsImplicitlyDeclared)) {
+          return true;
+        }
+
+        baseType = baseType.BaseType;
+      }
+      return false;
+    }
+
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
       return new LuaExpressionStatementSyntax(expression);
     }

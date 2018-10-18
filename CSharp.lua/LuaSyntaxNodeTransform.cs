@@ -311,7 +311,7 @@ namespace CSharpLua {
         if (bseTypeSymbol != null) {
           bool isNeedCallBase;
           if (typeDeclaration.IsInitStatementExists) {
-            isNeedCallBase = !bseTypeSymbol.Constructors.IsEmpty;
+            isNeedCallBase = bseTypeSymbol.IsExplicitCtorExists();
           } else {
             isNeedCallBase = generator_.HasStaticCtor(bseTypeSymbol) || bseTypeSymbol.Constructors.Count() > 1;
           }
