@@ -825,6 +825,13 @@ namespace CSharpLua {
       }
 
       var type = semanticModel_.GetTypeInfo(node.Type).Type;
+      if (type.IsKeyValuePairType()) {
+        var nameType = (INamedTypeSymbol)type;
+        var keyType = nameType.TypeArguments[0];
+        var valueType = nameType.TypeArguments[1];
+        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.KeyValuePair, GetDefaultValueExpression(keyType), GetDefaultValueExpression(valueType));
+      }
+
       return GetDefaultValueExpression(type);
     }
 

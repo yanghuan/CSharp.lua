@@ -84,12 +84,7 @@ function Type.getName(this)
 end
 
 function Type.getFullName(this)
-  local fullName = this.fullName
-  if fullName == nil then
-    fullName = this.c.__name__
-    this.fullName = fullName
-  end
-  return fullName
+  return this.c.__name__
 end
 
 function Type.getNamespace(this)

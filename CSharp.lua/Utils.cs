@@ -611,7 +611,11 @@ namespace CSharpLua {
     }
 
     public static bool IsTimeSpanType(this ITypeSymbol typeSymbol) {
-      return typeSymbol.ContainingNamespace.Name == "System" && typeSymbol.Name == "TimeSpan";
+      return typeSymbol.IsValueType && typeSymbol.ContainingNamespace.Name == "System" && typeSymbol.Name == "TimeSpan";
+    }
+
+    public static bool IsKeyValuePairType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.IsValueType && typeSymbol.Name == "KeyValuePair" && typeSymbol.ContainingNamespace.Name == "Generic";
     }
 
     public static bool IsGenericIEnumerableType(this ITypeSymbol typeSymbol) {

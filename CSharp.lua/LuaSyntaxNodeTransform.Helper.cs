@@ -854,19 +854,21 @@ namespace CSharpLua {
             }
           case SyntaxKind.SimpleMemberAccessExpression: {
               var memberAccess = (MemberAccessExpressionSyntax)node.Parent;
-              switch (memberAccess.Parent.Kind()) {
-                case SyntaxKind.EqualsValueClause: {
-                    need = true;
-                    break;
-                  }
- 
-                case SyntaxKind.SimpleAssignmentExpression: {
-                    var assignment = (AssignmentExpressionSyntax)memberAccess.Parent;
-                    if (assignment.Right == memberAccess && memberAccess.Name == node) {
+              if (memberAccess.Name == node) {
+                switch (memberAccess.Parent.Kind()) {
+                  case SyntaxKind.EqualsValueClause: {
                       need = true;
+                      break;
                     }
-                    break;
-                  }
+
+                  case SyntaxKind.SimpleAssignmentExpression: {
+                      var assignment = (AssignmentExpressionSyntax)memberAccess.Parent;
+                      if (assignment.Right == memberAccess) {
+                        need = true;
+                      }
+                      break;
+                    }
+                }
               }
               break;
             }
