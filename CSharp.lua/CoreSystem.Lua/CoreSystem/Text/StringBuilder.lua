@@ -25,7 +25,6 @@ local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
 local table = table
-local tinsert = table.insert
 local tconcat = table.concat
 local schar = string.char
 local ssub = string.sub
@@ -36,7 +35,7 @@ local function build(this, value, startIndex, length)
   value = value:Substring(startIndex, length)
   local len = #value
   if len > 0 then
-    tinsert(this, value)
+    this[#this + 1] = value
     addCount(this, len) 
   end
 end
@@ -95,7 +94,7 @@ function StringBuilder.Append(this, ...)
     local value = ...
     if value ~= nil then
       value = value:ToString()
-      tinsert(this, value)
+      this[#this + 1] = value
       addCount(this, #value) 
     end
   else
@@ -104,7 +103,7 @@ function StringBuilder.Append(this, ...)
       throw(ArgumentNullException("value"))
     end
     value = value:Substring(startIndex, length)
-    tinsert(this, value)
+    this[#this + 1] = value
     addCount(this, #value) 
   end
   return this
@@ -112,7 +111,7 @@ end
 
 function StringBuilder.AppendChar(this, v) 
   v = schar(v)
-  tinsert(this, v)
+  this[#this + 1] = v
   addCount(this, 1) 
   return this
 end
@@ -122,7 +121,7 @@ function StringBuilder.AppendCharRepeat(this, v, repeatCount)
   if repeatCount == 0 then return this end
   v = schar(v)
   for i = 1, repeatCount do
-    tinsert(this, v) 
+    this[#this + 1] = v
   end
   addCount(this, repeatCount) 
   return this
@@ -130,7 +129,7 @@ end
 
 function StringBuilder.AppendFormat(this, format, ...)
   local value = format:Format(...)
-  tinsert(this, this)
+  this[#this + 1] = value
   addCount(this, #value) 
   return this
 end
@@ -138,10 +137,10 @@ end
 function StringBuilder.AppendLine(this, value)
   local count = 1;
   if value ~= nil then
-    tinsert(this, value)
+    this[#this + 1] = value
     count = count + #value
   end
-  tinsert(this, "\n")
+  this[#this + 1] = "\n"
   addCount(this, count) 
   return this
 end

@@ -42,7 +42,6 @@ else
   clearTimeout = notset
 end
 
--- https://github.com/facebook/folly/blob/master/folly/TimeoutQueue.cpp
 local maxExpiration = 9223372036854775807  --[[Int64.MaxValue]]
 local LinkedListEvent =  System.LinkedList(System.Object) 
 local TimeoutQueue = System.define("System.TimeoutQueue", (function ()

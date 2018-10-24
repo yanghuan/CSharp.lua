@@ -24,7 +24,6 @@ local ArgumentException = System.ArgumentException
 
 local pairs = pairs
 local tostring = tostring
-local tinsert = table.insert
 
 local Enum = {}
 
@@ -70,7 +69,7 @@ function Enum.GetNames(enumType)
   if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
   local t = {}
   for k, v in pairs(enumType.c) do
-    tinsert(t, k)
+    t[#t + 1] = k
   end
   return System.arrayFromTable(t, System.String)
 end
@@ -80,7 +79,7 @@ function Enum.GetValues(enumType)
   if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
   local t = {}
   for k, v in pairs(enumType.c) do
-    tinsert(t, v)
+    t[#t + 1] = v
   end
   return System.arrayFromTable(t, Int)
 end

@@ -30,7 +30,6 @@ local TypeLoadException = System.TypeLoadException
 
 local type = type
 local getmetatable = getmetatable
-local tinsert = table.insert
 local ipairs = ipairs
 local select = select
 local unpack = table.unpack
@@ -149,7 +148,7 @@ local function getInterfaces(this)
       local interfacesCls = p.__interfaces__
       if interfacesCls ~= nil then
         for _, i in ipairs(interfacesCls) do
-          tinsert(interfaces, typeof(i))
+          interfaces[#interfaces + 1] = typeof(i)
         end
       end
       p = getmetatable(p)
@@ -163,7 +162,7 @@ function Type.getInterfaces(this)
   local interfaces = getInterfaces(this)
   local array = {}
   for _, i in ipairs(interfaces) do
-    tinsert(array, i)
+    array[#array + 1] = i
   end    
   return System.arrayFromTable(array, Type)
 end

@@ -20,7 +20,6 @@ local each = System.each
 
 local io = io
 local open = io.open
-local tinsert = table.insert
 
 local IOException = System.define("System.IO.IOException", {
   __tostring = System.Exception.ToString,
@@ -58,7 +57,7 @@ end
 function File.ReadAllLines(path)
   local t = {}
   for line in io.lines(path) do
-    tinsert(t, line)
+    t[#t + 1] = line
   end
   return System.arrayFromTable(t, System.String)
 end

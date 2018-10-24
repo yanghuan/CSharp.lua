@@ -30,7 +30,7 @@ local InvalidOperationException = System.InvalidOperationException
 
 local type = type
 local table = table
-local tinsert = table.insert
+
 local tremove = table.remove
 local setmetatable = setmetatable
 local assert = assert
@@ -255,7 +255,7 @@ end
 local function awaitTask(t, task)
   assert(t.co)
   local continueActions = getContinueActions(task)
-  tinsert(continueActions, function (task)
+  continueActions[#continueActions + 1] = function (task)
     local status = task.status
     local ok, v
     if status == TaskStatusRanToCompletion then
@@ -271,7 +271,7 @@ local function awaitTask(t, task)
     if not ok then
       assert(trySetException(t, v))
     end
-  end)
+  end
   local ok, v = cyield()
   if ok then
     return v
@@ -394,7 +394,7 @@ Task = System.define("System.Task", {
       post(f)
     else
       local continueActions = getContinueActions(task)
-      tinsert(continueActions, f)
+      continueActions[#continueActions + 1] = f
     end
     return t
   end,
@@ -430,7 +430,7 @@ local function taskCoroutineCreate(t, f)
       while true do
         t = nil
         f = nil
-        tinsert(taskCoroutinePool, co)
+        taskCoroutinePool[#taskCoroutinePool + 1] = co
         t, f = cyield()
         r = f(t, cyield())
         assert(trySetResult(t, r))

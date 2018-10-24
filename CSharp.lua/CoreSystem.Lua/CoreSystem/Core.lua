@@ -21,7 +21,6 @@ local ipairs = ipairs
 local pairs  = pairs
 local assert = assert
 local table = table
-local tinsert = table.insert
 local tremove = table.remove
 local tconcat = table.concat
 local tunpack = table.unpack
@@ -139,21 +138,18 @@ local function genericKey(t, k, ...)
 end
 
 local function genericName(name, ...)
-  local t = {}
-  tinsert(t, name)
-  tinsert(t, "[")
-  
+  local t = { name, "[" }  
   local hascomma
   for i = 1, select("#", ...) do
-      local cls = select(i, ...)
-      if hascomma then
-        tinsert(t, ",")
-      else
-        hascomma = true
-      end
-      tinsert(t, cls.__name__)
+    local cls = select(i, ...)
+    if hascomma then
+      t[#t + 1] = ","
+    else
+      hascomma = true
+    end
+    t[#t + 1] = cls.__name__
   end
-  tinsert(t, "]")
+  t[#t + 1] = "]"
   return tconcat(t)
 end
 
@@ -1095,14 +1091,14 @@ function System.stackalloc(arrayType, len)
 end
 
 function System.usingDeclare(f)
-  tinsert(usings, f)
+  usings[#usings + 1] = f
 end
 
 function System.init(namelist, conf)
   local classes = {}
   for _, name in ipairs(namelist) do
     local cls = assert(modules[name], name)()
-    tinsert(classes, cls)
+    classes[#classes + 1] = cls
   end
   for _, f in ipairs(usings) do
     f(global)

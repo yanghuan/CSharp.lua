@@ -29,7 +29,6 @@ local assert = assert
 local unpack = table.unpack
 local pairs = pairs
 local ipairs = ipairs
-local tinsert = table.insert
 
 local Assembly = {}
 
@@ -60,7 +59,7 @@ function Assembly.GetExportedTypes(this)
   for _, cls in ipairs(System.classes) do
     local type_ = type(cls)
     if type_  == "table" then
-      tinsert(t, typeof(cls))
+      t[#t + 1] = typeof(cls)
     else
       assert(type_ == "function");
     end
@@ -188,7 +187,7 @@ function Type.GetMethods(this)
     for k, v in pairs(cls) do
       if type(v) == "function" then
         local methodInfo = buildMethodInfo(cls, k, v)
-        tinsert(t, methodInfo)
+        t[#t + 1] = methodInfo
       end
     end
     cls = getmetatable(cls)
@@ -301,11 +300,11 @@ function Type.GetMembers(this)
     for k, v in pairs(cls) do
       if type(v) == "function" then
         local methodInfo = buildMethodInfo(cls, k, v)
-        tinsert(t, methodInfo)
+        t[#t + 1] = methodInfo
         names[k] = true;
       else
         local fieldInfo = buildFieldInfo(cls, k)
-        tinsert(t, fieldInfo)
+        t[#t + 1] = fieldInfo
         names[k] = true;
       end
     end
@@ -314,7 +313,7 @@ function Type.GetMembers(this)
       for k , v in pairs(attributes) do
         if not names[k] then
             local fieldInfo = buildFieldInfo(cls, k)
-            tinsert(t, fieldInfo)
+            t[#t + 1] = fieldInfo
             names[k] = true;
         end
       end
