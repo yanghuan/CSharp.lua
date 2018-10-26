@@ -51,11 +51,18 @@ namespace CSharpLua {
           var expression = (LuaExpressionSyntax)node.Type.Accept(this);
           var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
           if (node.ArgumentList != null) {
-            var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+            var refOrOutArguments = new List<LuaExpressionSyntax>();
+            var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
             TryRemoveNilArgumentsAtTail(symbol, arguments);
             invokeExpression.AddArguments(arguments);
+            if (refOrOutArguments.Count > 0) {
+              creationExpression = BuildInvokeRefOrOut(node, invokeExpression, refOrOutArguments);
+            } else {
+              creationExpression = invokeExpression;
+            }
+          }else {
+            creationExpression = invokeExpression;
           }
-          creationExpression = invokeExpression;
         }
       } else {
         var type = semanticModel_.GetSymbolInfo(node.Type).Symbol;
@@ -294,14 +301,21 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
       IMethodSymbol ctorSymbol = semanticModel_.GetDeclaredSymbol(node);
       methodInfos_.Push(new MethodInfo(ctorSymbol));
+      List<LuaExpressionSyntax> refOrOutParameters = new List<LuaExpressionSyntax>();
 
       LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
       PushFunction(function);
       bool isStatic = node.Modifiers.IsStatic();
       function.IsStatic = isStatic;
       function.AddParameter(LuaIdentifierNameSyntax.This);
-      var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
-      function.ParameterList.Parameters.AddRange(parameterList.Parameters);
+      foreach (var parameterNode in node.ParameterList.Parameters) {
+        var parameter = (LuaParameterSyntax)parameterNode.Accept(this);
+        function.AddParameter(parameter);
+        if (parameterNode.Modifiers.IsOutOrRef()) {
+          refOrOutParameters.Add(parameter.Identifier);
+        }
+      }
+      blocks_.Push(function.Body);
 
       bool isEmptyCtor = false;
       if (node.Initializer != null) {
@@ -317,9 +331,16 @@ namespace CSharpLua {
           otherCtorInvoke = BuildCallBaseConstructor(ctorSymbol.ContainingType, symbol.ReceiverType, ctroCounter);
         }
         otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
-        var arguments = BuildArgumentList(symbol, symbol.Parameters, node.Initializer.ArgumentList);
+        var refOrOutArguments = new List<LuaExpressionSyntax>();
+        var arguments = BuildArgumentList(symbol, symbol.Parameters, node.Initializer.ArgumentList, refOrOutArguments);
+        TryRemoveNilArgumentsAtTail(symbol, arguments);
         otherCtorInvoke.AddArguments(arguments);
-        function.AddStatement(otherCtorInvoke);
+        if (refOrOutArguments.Count == 0) {
+          function.AddStatement(otherCtorInvoke);
+        } else {
+          var newExpression = BuildInvokeRefOrOut(node.Initializer, otherCtorInvoke, refOrOutArguments);
+          function.AddStatement(newExpression);
+        }
       } else if (!isStatic && ctorSymbol.ContainingType.BaseType.IsExplicitCtorExists()) {
         var baseCtorInvoke = BuildCallBaseConstructor(ctorSymbol.ContainingType, out int ctroCounter);
         Contract.Assert(baseCtorInvoke != null);
@@ -331,12 +352,17 @@ namespace CSharpLua {
         LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
         function.AddStatements(block.Statements);
       } else {
-        blocks_.Push(function.Body);
         var bodyExpression = (LuaExpressionSyntax)node.ExpressionBody.Accept(this);
         function.AddStatement(bodyExpression);
-        blocks_.Pop();
       }
 
+      if (refOrOutParameters.Count > 0) {
+        var returnStatement = new LuaMultipleReturnStatementSyntax();
+        returnStatement.Expressions.AddRange(refOrOutParameters);
+        function.AddStatement(returnStatement);
+      }
+
+      blocks_.Pop();
       PopFunction();
       if (isStatic) {
         CurType.SetStaticCtor(function);

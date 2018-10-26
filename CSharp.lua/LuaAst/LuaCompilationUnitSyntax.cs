@@ -38,6 +38,22 @@ namespace CSharpLua.LuaAst {
       }
       return NewName.CompareTo(other.NewName);
     }
+
+    public static void AddImportTo(
+      List<GenericUsingDeclare> genericUsingDeclares,
+      LuaInvocationExpressionSyntax invocationExpression, 
+      string name, 
+      List<string> argumentTypeNames, 
+      bool isFromCode) {
+      if (!genericUsingDeclares.Exists(i => i.NewName == name)) {
+        genericUsingDeclares.Add(new GenericUsingDeclare() {
+          InvocationExpression = invocationExpression,
+          NewName = name,
+          ArgumentTypeNames = argumentTypeNames,
+          IsFromCode = isFromCode,
+        });
+      }
+    }
   }
 
   public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
@@ -109,14 +125,7 @@ namespace CSharpLua.LuaAst {
     }
 
     internal void AddImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
-      if (!genericUsingDeclares_.Exists(i => i.NewName == name)) {
-        genericUsingDeclares_.Add(new GenericUsingDeclare() {
-          InvocationExpression = invocationExpression,
-          NewName = name,
-          ArgumentTypeNames = argumentTypeNames,
-          IsFromCode = isFromCode,
-        });
-      }
+      GenericUsingDeclare.AddImportTo(genericUsingDeclares_, invocationExpression, name, argumentTypeNames, isFromCode);
     }
 
     private void CheckUsingDeclares() {

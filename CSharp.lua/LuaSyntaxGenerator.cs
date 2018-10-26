@@ -990,14 +990,7 @@ namespace CSharpLua {
       }
 
       if (!isPrivate) {
-        var childrens = extends_.GetOrDefault(typeSymbol);
-        if (childrens != null) {
-          foreach (INamedTypeSymbol children in childrens) {
-            if (!IsNameEnableOfCurAndChildrens(children, newName, isPrivate)) {
-              return false;
-            }
-          }
-        }
+        return IsInnerNameEnableOfChildrens(typeSymbol, newName, isPrivate);
       }
 
       return true;

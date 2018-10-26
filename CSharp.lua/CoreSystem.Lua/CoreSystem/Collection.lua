@@ -149,7 +149,7 @@ function Collection.buildArray(t, size, ...)
       default = null
     end
     for i = len + 1, size do
-      t[#t +1] = default
+      t[#t + 1] = default
     end
   end
 end

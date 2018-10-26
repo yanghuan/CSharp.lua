@@ -740,8 +740,8 @@ namespace CSharpLua {
 
       if (node.ArgumentList != null) {
         List<LuaExpressionSyntax> arguments = new List<LuaExpressionSyntax>();
-        List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>> initializers = new List<Tuple<LuaExpressionSyntax, LuaExpressionSyntax>>();
-        List<Tuple<NameColonSyntax, ExpressionSyntax>> argumentNodeInfos = new List<Tuple<NameColonSyntax, ExpressionSyntax>>();
+        var initializers = new List<(LuaExpressionSyntax Name, LuaExpressionSyntax Expression)>();
+        var argumentNodeInfos = new List<(NameColonSyntax, ExpressionSyntax)>();
 
         foreach (var argumentNode in node.ArgumentList.Arguments) {
           var argumentExpression = (LuaExpressionSyntax)argumentNode.Expression.Accept(this);
@@ -756,7 +756,7 @@ namespace CSharpLua {
             }
           } else {
             var name = (LuaExpressionSyntax)argumentNode.NameEquals.Accept(this);
-            initializers.Add(Tuple.Create(name, argumentExpression));
+            initializers.Add((name, argumentExpression));
           }
         }
 
@@ -772,8 +772,8 @@ namespace CSharpLua {
           function.AddParameter(temp);
 
           foreach (var initializer in initializers) {
-            var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, initializer.Item1, false);
-            var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, initializer.Item2);
+            var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, initializer.Name, false);
+            var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, initializer.Expression);
             function.AddStatement(assignmentExpression);
           }
 
@@ -819,14 +819,34 @@ namespace CSharpLua {
         switch (node.Parent.Kind()) {
           case SyntaxKind.Argument: {
               var argument = (ArgumentSyntax)node.Parent;
-              if (argument.RefKindKeyword.IsKind(SyntaxKind.RefKeyword)  || argument.RefKindKeyword.IsKind(SyntaxKind.OutKeyword)) {
-                break;
+              switch (argument.RefKindKeyword.Kind()) {
+                case SyntaxKind.RefKeyword:
+                case SyntaxKind.OutKeyword:
+                case SyntaxKind.InKeyword: {
+                    return;
+                  }
               }
 
-              var symbol = semanticModel_.GetSymbolInfo(node.Parent.Parent.Parent).Symbol;
-              if (symbol != null && symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
-                break;
+              var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Parent.Parent.Parent).Symbol;
+              if (symbol != null) {
+                if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
+                  break;
+                }
+
+                IParameterSymbol parameter;
+                if (argument.NameColon != null) {
+                  parameter = symbol.Parameters.First(i => i.Name == argument.NameColon.Name.Identifier.ValueText);
+                } else {
+                  var argumentList = (ArgumentListSyntax)node.Parent.Parent;
+                  int index = argumentList.Arguments.IndexOf(argument);
+                  parameter = symbol.Parameters[index];
+                }
+
+                if (parameter.RefKind == RefKind.In) {
+                  break;
+                }
               }
+
               need = true;
               break;
             }

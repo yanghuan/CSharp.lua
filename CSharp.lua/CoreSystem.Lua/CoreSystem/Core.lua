@@ -46,8 +46,7 @@ local Object, ValueType
 
 local function new(cls, ...)
   local this = setmetatable({}, cls)
-  cls.__ctor__(this, ...)
-  return this
+  return this, cls.__ctor__(this, ...)
 end
 
 local function throw(e, lv)
@@ -619,7 +618,7 @@ else
   function System.xor(x, y) return x ~ y end
   function System.sl(x, y) return x << y end
   function System.sr(x, y) return x >> y end
-  function System.div (x, y) return x // y end
+  function System.div(x, y) return x // y end
   function System.mod(x, y) return x % y end
   
   local function toUInt (v, max, mask, checked)  
@@ -872,8 +871,7 @@ end
 
 local function multiNew(cls, inx, ...) 
   local this = setmetatable({}, cls)
-  cls.__ctor__[inx](this, ...)
-  return this
+  return this, cls.__ctor__[inx](this, ...)
 end
 
 local function base(this)
