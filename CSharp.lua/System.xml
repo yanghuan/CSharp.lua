@@ -91,6 +91,7 @@ limitations under the License.
           <get Template="#{this}" />
         </property>
         <method name="Exists" IgnoreGeneric="true" />
+        <method name="Fill" IgnoreGeneric="true" />
         <method name="Find" IgnoreGeneric="true" />
         <method name="FindAll" IgnoreGeneric="true" />
         <method name="FindIndex" IgnoreGeneric="true" />
@@ -99,6 +100,8 @@ limitations under the License.
         <method name="ForEach" IgnoreGeneric="true" />
         <method name="IndexOf" IgnoreGeneric="true" />
         <method name="LastIndexOf" IgnoreGeneric="true" />
+        <method name="Reverse" IgnoreGeneric="true" />
+        <method name="Sort" IgnoreGeneric="true" />
         <method name="TrueForAll" IgnoreGeneric="true" />
       </class>
       <class name="IComparable">

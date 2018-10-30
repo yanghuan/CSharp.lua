@@ -77,6 +77,7 @@ Array.FindLast = Collection.findLastOfArray
 Array.FindLastIndex = Collection.findLastIndexOfArray
 Array.IndexOf = Collection.indexOfArray
 Array.LastIndexOf = Collection.lastIndexOfArray
+Array.Resize = Collection.resizeArray
 Array.Reverse = Collection.reverseArray
 Array.Sort = Collection.sortArray
 Array.TrueForAll = Collection.trueForAllOfArray

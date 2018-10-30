@@ -421,6 +421,19 @@ function Collection.lastIndexOfArray(t, ...)
   return lastIndexOfArray(t, v, index, count)
 end
 
+function Collection.resizeArray(t, newSize, T)
+  if newSize < 0 then throw(ArgumentOutOfRangeException("newSize")) end
+  if t == nil then
+    return System.Array(T):new(newSize)
+  end
+  local arr = t
+  if #arr ~= newSize then
+    arr = setmetatable({}, System.Array(T))
+    tmove(t, 1, #t, 1, arr)
+  end
+  return arr
+end
+
 function Collection.reverseArray(t, index, count)
   if not index then
     index = 0
