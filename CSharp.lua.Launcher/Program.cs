@@ -23,13 +23,13 @@ using System.Threading.Tasks;
 
 namespace CSharpLua {
   class Program {
-    private const string HelpCmdString = @"Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
+    private const string kHelpCmdString = @"Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
 Arguments 
 -s              : source directory, all *.cs files whill be compiled
 -d              : destination  directory, will put the out lua files
 
 Options
--h              : show the help message    
+-h              : show the help message and exit   
 -l              : libraries referenced, use ';' to separate      
 -m              : meta files, like System.xml, use ';' to separate     
 -csc            : csc.exe command argumnets, use ' ' or '\t' to separate
@@ -82,7 +82,7 @@ Options
     }
 
     private static void ShowHelpInfo() {
-      Console.Error.WriteLine(HelpCmdString);
+      Console.Error.WriteLine(kHelpCmdString);
     }
 
     private static bool IsArgumentKey(string key) {

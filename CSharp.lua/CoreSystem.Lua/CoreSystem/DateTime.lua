@@ -230,8 +230,7 @@ local function addMonths(this, months)
       throw(ArgumentOutOfRangeException("months"))
   end
   local ticks = this.ticks
-  local y, m, d
-  y, m, d = getDatePart(ticks)
+  local y, m, d = getDatePart(ticks)
   local i = m - 1 + months
   if i >= 0 then
     m = i % 12 + 1
