@@ -1443,6 +1443,22 @@ namespace CSharpLua {
       return new LuaIdentifierNameSyntax(name);
     }
 
+    internal bool IsReadOnlyStruct(ITypeSymbol symbol) {
+      if (symbol.IsValueType) {
+        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+        if (syntaxReference != null) {
+          var node = syntaxReference.GetSyntax();
+          var declaration = (StructDeclarationSyntax)node;
+          if (declaration.Modifiers.IsReadOnly()) {
+            return true;
+          }
+        } else {
+          return XmlMetaProvider.IsTypeReadOnly((INamedTypeSymbol)symbol);
+        }
+      }
+      return false;
+    }
+
     #endregion
   }
 }

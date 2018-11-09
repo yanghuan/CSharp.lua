@@ -936,20 +936,6 @@ namespace CSharpLua {
       return false;
     }
 
-    public static bool IsReadOnlyStruct(this ITypeSymbol symbol) {
-      if (symbol.IsValueType) {
-        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-        if (syntaxReference != null) {
-          var node = syntaxReference.GetSyntax();
-          var declaration = (StructDeclarationSyntax)node;
-          if (declaration.Modifiers.IsReadOnly()) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
       return new LuaExpressionStatementSyntax(expression);
     }

@@ -114,6 +114,8 @@ namespace CSharpLua {
         public bool IgnoreGeneric;
         [XmlAttribute]
         public bool Baned;
+        [XmlAttribute]
+        public bool Readonly;
       }
 
       public sealed class NamespaceModel {
@@ -526,6 +528,14 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(typeSymbol)) {
         var info = GetTypeMetaInfo(typeSymbol);
         return info != null && info.Model.IgnoreGeneric;
+      }
+      return false;
+    }
+
+    internal bool IsTypeReadOnly(INamedTypeSymbol typeSymbol) {
+      if (MayHaveCodeMeta(typeSymbol)) {
+        var info = GetTypeMetaInfo(typeSymbol);
+        return info != null && info.Model.Readonly;
       }
       return false;
     }
