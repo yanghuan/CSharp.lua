@@ -39,6 +39,7 @@ local global = _G
 local emptyFn = function() end
 local falseFn = function() return false end
 local identityFn = function(x) return x end
+local zeroFn = function() return 0 end
 local equals = function(x, y) return x == y end
 local modules = {}
 local usings = {}
@@ -119,10 +120,6 @@ local function set(className, cls)
   end
 end
 
-local function defaultValOfZero()
-  return 0
-end
-
 local function genericKey(t, k, ...) 
   for i = 1, select("#", ...) do
     local tk = t[k]
@@ -152,7 +149,7 @@ local function genericName(name, ...)
   return tconcat(t)
 end
 
-local enumMetatable = { __kind__ = "E", __default__ = defaultValOfZero, __index = false }
+local enumMetatable = { __kind__ = "E", __default__ = zeroFn, __index = false }
 enumMetatable.__index = enumMetatable
 
 local interfaceMetatable = { __kind__ = "I", __default__ = emptyFn, __index = false }
@@ -320,6 +317,7 @@ System = {
   emptyFn = emptyFn,
   falseFn = falseFn,
   identityFn = identityFn,
+  zeroFn = zeroFn,
   equals = equals,
   try = try,
   throw = throw,

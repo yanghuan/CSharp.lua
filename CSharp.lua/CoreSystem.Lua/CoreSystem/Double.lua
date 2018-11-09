@@ -147,7 +147,7 @@ function Double.TryParseSingle(s)
 end
 
 function Double.__default__()
-  return 0
+  return 0.0
 end
 
 function Double.__inherits__()

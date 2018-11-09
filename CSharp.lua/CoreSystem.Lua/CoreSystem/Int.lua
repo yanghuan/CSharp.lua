@@ -35,6 +35,7 @@ end
 
 Int.GetHashCode = System.identityFn
 Int.CompareTo = compare
+Int.__default__ = System.zeroFn
 
 function Int.CompareToObj(this, v)
   if v == null then return 1 end
@@ -154,10 +155,6 @@ end
 function Int.TryParseUInt64(s)
   return tryParse(s, 0, 18446744073709551615)
 end
-
-function Int.__default__()
-  return 0
-end 
 
 function Int.__inherits__()
   return { System.IComparable, System.IFormattable, System.IComparable_1(Int), System.IEquatable_1(Int) }
