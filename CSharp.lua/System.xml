@@ -336,7 +336,10 @@ limitations under the License.
       <class name="KeyValuePair^2" Name="System.KeyValuePair" IgnoreGeneric="true">
         <property name="Key" IsField="true" />
         <property name="Value" IsField="true" />
-      </class>  
+      </class>
+      <class name="KeyValuePair">
+        <method name="Create" IgnoreGeneric="true" />
+      </class>
     </namespace>
     <namespace name="System.Linq">
       <class name="Enumerable">

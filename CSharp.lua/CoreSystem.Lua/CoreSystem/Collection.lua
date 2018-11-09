@@ -658,6 +658,9 @@ KeyValuePair = System.defStc("System.KeyValuePair", {
   __default__ = function (T)
     throw(System.NotSupportedException("KeyValuePair not support default(T)"))
   end,
+  Create = function (key, value)
+    return setmetatable({ Key = key, Value = value }, KeyValuePair)
+  end,
   Deconstruct = function (this)
     return this.Key, this.Value
   end,

@@ -1285,7 +1285,7 @@ namespace CSharpLua {
         case SyntaxKind.SimpleAssignmentExpression: {
             var left = (LuaExpressionSyntax)leftNode.Accept(this);
             var right = (LuaExpressionSyntax)rightNode.Accept(this);
-            if (leftNode.IsKind(SyntaxKind.DeclarationExpression) || leftNode.IsKind(SyntaxKind.TupleExpression)) {
+            if (leftNode.Kind().IsTupleDeclaration()) {
               if (!rightNode.IsKind(SyntaxKind.TupleExpression)) {
                 right = BuildDeconstructExpression(rightNode, right);
               }
@@ -2846,8 +2846,9 @@ namespace CSharpLua {
       var temp = GetTempIdentifier(node);
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       LuaForInStatementSyntax forInStatement = new LuaForInStatementSyntax(temp, expression);
-      var left = (LuatLocalTupleVariableExpression)node.Variable.Accept(this);
-      var elementType = semanticModel_.GetTypeInfo(node.Expression).Type;
+      var left = (LuaLocalTupleVariableExpression)node.Variable.Accept(this);
+      var sourceType = semanticModel_.GetTypeInfo(node.Expression).Type;
+      var elementType = sourceType.GetIEnumerableElementType();
       var right = BuildDeconstructExpression(elementType, temp, node.Expression);
       forInStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(left, right)));
       VisitLoopBody(node.Statement, forInStatement.Body);

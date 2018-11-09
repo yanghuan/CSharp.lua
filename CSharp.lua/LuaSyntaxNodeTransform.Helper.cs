@@ -861,6 +861,11 @@ namespace CSharpLua {
                 if (symbol != null && symbol.IsFromAssembly()) {
                   break;
                 }
+
+                if (assignment.Left.Kind().IsTupleDeclaration()) {
+                  break;
+                }
+
                 need = true;
               }
               break;

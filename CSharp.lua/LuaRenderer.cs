@@ -407,7 +407,7 @@ namespace CSharpLua {
     }
 
 
-    internal void Render(LuatLocalTupleVariableExpression node) {
+    internal void Render(LuaLocalTupleVariableExpression node) {
       Write(node.LocalKeyword);
       WriteSpace();
       WriteSeparatedSyntaxList(node.Variables);

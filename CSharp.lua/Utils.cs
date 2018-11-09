@@ -434,6 +434,10 @@ namespace CSharpLua {
       return kind >= SyntaxKind.SimpleAssignmentExpression && kind <= SyntaxKind.RightShiftAssignmentExpression;
     }
 
+    public static bool IsTupleDeclaration(this SyntaxKind kind) {
+      return kind == SyntaxKind.DeclarationExpression || kind == SyntaxKind.TupleExpression;
+    }
+
     private static INamedTypeSymbol systemLinqEnumerableType_;
 
     public static bool IsSystemLinqEnumerable(this INamedTypeSymbol symbol) {

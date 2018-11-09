@@ -1110,7 +1110,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitParenthesizedVariableDesignation(ParenthesizedVariableDesignationSyntax node) {
-      LuatLocalTupleVariableExpression expression = new LuatLocalTupleVariableExpression();
+      LuaLocalTupleVariableExpression expression = new LuaLocalTupleVariableExpression();
       expression.Variables.AddRange(node.Variables.Select(i => (LuaIdentifierNameSyntax)i.Accept(this)));
       return expression;
     }

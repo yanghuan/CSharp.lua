@@ -137,7 +137,7 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuatLocalTupleVariableExpression : LuaExpressionSyntax {
+  public sealed class LuaLocalTupleVariableExpression : LuaExpressionSyntax {
     public string LocalKeyword => Tokens.Local;
     public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
 
