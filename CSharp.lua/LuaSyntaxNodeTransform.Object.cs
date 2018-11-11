@@ -46,7 +46,7 @@ namespace CSharpLua {
           return argument.Expression.Accept(this);
         } else if (symbol.ContainingType.IsTupleType) {
           var expressions = node.ArgumentList.Arguments.Select(i => (LuaExpressionSyntax)i.Expression.Accept(this));
-          return BuildValueTupleCreateExpression(expressions);
+          creationExpression = BuildValueTupleCreateExpression(expressions);
         } else {
           var expression = (LuaExpressionSyntax)node.Type.Accept(this);
           var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
