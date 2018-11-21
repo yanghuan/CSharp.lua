@@ -53,8 +53,10 @@ end
 function Console.WriteLine(v, ...)
   if select("#", ...) ~= 0 then
     v = v:Format(...)
-  else
+  elseif v ~= nil then 
     v = v:ToString()      
+  else
+    v = ""
   end
   write(stdout, v, "\n")     
 end

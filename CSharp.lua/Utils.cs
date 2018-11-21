@@ -627,7 +627,10 @@ namespace CSharpLua {
     }
 
     public static bool IsCustomValueType(this ITypeSymbol typeSymbol) {
-      return typeSymbol.IsValueType && typeSymbol.TypeKind != TypeKind.Enum && (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType());
+      return typeSymbol.IsValueType
+        && typeSymbol.TypeKind != TypeKind.Enum
+        && typeSymbol.TypeKind != TypeKind.Pointer
+        && (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType());
     }
 
     public static bool IsExplicitInterfaceImplementation(this ISymbol symbol) {
@@ -877,6 +880,13 @@ namespace CSharpLua {
           }
         case SymbolKind.TypeParameter: {
             return matchType == null || symbol == matchType;
+          }
+        case SymbolKind.PointerType: {
+            var pointType = (IPointerTypeSymbol)symbol;
+            if (pointType.PointedAtType.IsTypeParameterExists(matchType)) {
+              return true;
+            }
+            break;
           }
       }
 

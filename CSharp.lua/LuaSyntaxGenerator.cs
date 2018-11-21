@@ -1318,22 +1318,32 @@ namespace CSharpLua {
     }
 
     internal LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
-      if (symbol.Kind == SymbolKind.TypeParameter) {
-        return new LuaIdentifierNameSyntax(symbol.Name);
-      }
-
-      if (symbol.Kind == SymbolKind.ArrayType) {
-        var arrayType = (IArrayTypeSymbol)symbol;
-        ++genericTypeCounter_;
-        var elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
-        --genericTypeCounter_;
-        var arrayTypeExpression = arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
-        LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(arrayTypeExpression, elementTypeExpression);
-        if (transfor != null) {
-          transfor.ImportTypeName(ref luaExpression, arrayType);
-        }
-        return luaExpression;
-      }
+      switch (symbol.Kind) {
+        case SymbolKind.TypeParameter: {
+            return new LuaIdentifierNameSyntax(symbol.Name);
+          }
+        case SymbolKind.ArrayType: {
+            var arrayType = (IArrayTypeSymbol)symbol;
+            ++genericTypeCounter_;
+            var elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
+            --genericTypeCounter_;
+            var arrayTypeExpression = arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
+            LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(arrayTypeExpression, elementTypeExpression);
+            if (transfor != null) {
+              transfor.ImportTypeName(ref luaExpression, arrayType);
+            }
+            return luaExpression;
+          }
+        case SymbolKind.PointerType: {
+            var pointType = (IPointerTypeSymbol)symbol;
+            var elementTypeExpression = GetTypeName(pointType.PointedAtType, transfor);
+            LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExpression);
+            if (transfor != null) {
+              transfor.ImportTypeName(ref luaExpression, pointType);
+            }
+            return luaExpression;
+          }
+      } 
 
       var namedTypeSymbol = (INamedTypeSymbol)symbol;
       if (namedTypeSymbol.TypeKind == TypeKind.Enum) {
@@ -1444,7 +1454,7 @@ namespace CSharpLua {
     }
 
     internal bool IsReadOnlyStruct(ITypeSymbol symbol) {
-      if (symbol.IsValueType) {
+      if (symbol.IsValueType && !symbol.IsValueType) {
         var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
         if (syntaxReference != null) {
           var node = syntaxReference.GetSyntax();

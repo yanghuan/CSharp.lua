@@ -982,8 +982,8 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitStackAllocArrayCreationExpression(StackAllocArrayCreationExpressionSyntax node) {
       var arrayType = (LuaArrayTypeAdapterExpressionSyntax)node.Type.Accept(this);
-      Contract.Assert(arrayType.IsSimapleArray);
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StackAlloc, arrayType, arrayType.RankSpecifier.Sizes[0]);
+      var array = BuildArrayCreationExpression(arrayType, node.Initializer);
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StackAlloc, array);
     }
 
     public override LuaSyntaxNode VisitUnsafeStatement(UnsafeStatementSyntax node) {

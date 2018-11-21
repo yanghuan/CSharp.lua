@@ -962,7 +962,15 @@ local ValueTuple = {
   __default__ = function()
     throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
   end,
-  Deconstruct = tupleDeconstruct
+  Deconstruct = tupleDeconstruct,
+  __eq = function (this, other)
+    for k, v in ipairs(this) do
+     if not equalsStatic(v, other[k]) then
+        return false
+      end
+    end
+    return true
+  end
 }
 defStc("System.ValueTuple", ValueTuple)
 
@@ -1040,50 +1048,47 @@ function System.GetValueOrDefault(this, defaultValue)
   return this
 end
 
-local function ptrAccess(p)
-  local arr = p.arr
-  if arr == nil then
-    throw(System.NullReferenceException)
+local function pointerAddress(p)
+  local address = p[3]
+  if address == nil then
+    address = tostring(p):sub(7)
+    p[3] = address
   end
-  return arr 
+  return address + p[2]
 end
 
-local function ptrAddress(p)
-  return tostring(p):sub(7) + p.offset
+local Pointer
+local function newPointer(t, i)
+  return setmetatable({ t, i }, Pointer)
 end
 
-local ptr = {
+Pointer = {
   __index = false,
-  offset = 0,
   get = function(this)
-    return ptrAccess(this):get(this.offset)
+    local t, i = this[1], this[2]
+    return t[i]
   end,
   set = function(this, value)
-    return ptrAccess(this):set(this.offset, value)
+    local t, i = this[1], this[2]
+    t[i] = value
   end,
-  __add = function(this, num)
-    return setmetatable({ arr = this.arr, offset = this.offset + num }, ptr)
+  __add = function(this, count)
+    return newPointer(this[1], this[2] + count)
   end,
-  __sub = function(this, num)
-    return setmetatable({ arr = this.arr, offset = this.offset - num }, ptr)
+  __sub = function(this, count)
+    return newPointer(this[1], this[2] - count)
   end,
   __lt = function(t1, t2)
-    return ptrAddress(t1) < ptrAddress(t2)
+    return pointerAddress(t1) < pointerAddress(t2)
   end,
   __le = function(t1, t2)
-    return ptrAddress(t1) <= ptrAddress(t2)
+    return pointerAddress(t1) <= pointerAddress(t2)
   end
 }
-ptr.__index = ptr
+Pointer.__index = Pointer
 
-function System.stackalloc(arrayType, len)
-  if len < 0 then
-    throw(System.OverflowException)
-  end
-  if len == 0 then
-    return setmetatable({}, ptr)
-  end
-  return setmetatable({ arr = arrayType:new(len) }, ptr)
+function System.stackalloc(t)
+  return newPointer(t, 1)
 end
 
 function System.usingDeclare(f)
