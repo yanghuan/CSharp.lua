@@ -91,7 +91,7 @@ end
 
 local function timeToTicks(hour, minute, second)
   if hour >= 0 and hour < 24 and minute >= 0 and minute < 60 and second >=0 and second < 60 then 
-      return (((hour * 60 + minute) * 60) + second) * 1e7
+    return (((hour * 60 + minute) * 60) + second) * 1e7
   end
   throw(ArgumentOutOfRangeException("ArgumentOutOfRange_BadHourMinuteSecond"))
 end

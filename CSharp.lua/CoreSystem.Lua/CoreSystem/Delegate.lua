@@ -20,7 +20,6 @@ local ArgumentNullException = System.ArgumentNullException
 
 local setmetatable = setmetatable
 local getmetatable = getmetatable
-local insert = table.insert
 local ipairs = ipairs
 local assert = assert
 
@@ -48,10 +47,10 @@ end
 local function appendFn(t, f)
   if getmetatable(f) == multicast then
     for _, i in ipairs(f) do
-      insert(t, i)
+      t[#t + 1] = i
     end
   else
-    insert(t, f)
+    t[#t + 1] = f
   end
 end
 
@@ -123,10 +122,10 @@ local function delete(fn, count, deleteIndex, deleteCount)
   local t = {}
   setmetatable(t, multicast)
   for i = 1, deleteIndex - 1 do
-    insert(t, fn[i])
+    t[#t + 1] = fn[i]
   end
   for i = deleteIndex + deleteCount, count do
-    insert(t, fn[i])
+    t[#t + 1] = fn[i]
   end
   return t
 end
