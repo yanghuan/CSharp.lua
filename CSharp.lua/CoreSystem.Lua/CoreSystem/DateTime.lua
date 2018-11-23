@@ -410,7 +410,7 @@ local function parse(s)
         milliseconds = tonumber(milliseconds)
         local n = floor(log10(milliseconds) + 1)
         if n > 3 then
-          if n < 7 then
+          if n <= 7 then
             milliseconds = milliseconds / (10 ^ (n - 3))
           else
             local ticks = milliseconds / (10 ^ (n - 7))
