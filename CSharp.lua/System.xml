@@ -147,6 +147,7 @@ limitations under the License.
           <arg type="System.Char" />
         </method>
       </class>
+      <class name="Math" Name="math" />
       <class name="Activator" >
         <method name="CreateInstance" ArgCount="0" Template="System.new({^0})" />
         <method name="CreateInstance" ArgCount="1" Template="System.new({0}.c)" />

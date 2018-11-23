@@ -440,6 +440,27 @@ function String.Trim(this, chars)
   return (sgsub(this, chars, "%1"))
 end
 
+local CharEnumerator = {}
+CharEnumerator.__index = CharEnumerator
+
+function CharEnumerator.MoveNext(this)
+  local index, s = this.index, this.s
+  if index <= #s then
+    this.current = sbyte(s, index)
+    this.index = index + 1
+    return true
+  end
+  return false
+end
+
+function CharEnumerator.getCurrent(this)
+  return this.current
+end
+
+function String.GetEnumerator(this)
+  return setmetatable({ s = this, index = 1 }, CharEnumerator)
+end
+
 function String.__inherits__()
   return { System.IComparable, System.IEnumerable, System.IComparable_1(String), System.IEnumerable_1(String), System.IEquatable_1(String) }
 end
