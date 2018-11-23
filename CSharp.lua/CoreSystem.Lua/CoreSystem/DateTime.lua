@@ -22,14 +22,20 @@ local trunc = System.trunc
 local TimeSpan = System.TimeSpan
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local ArgumentException = System.ArgumentException
+local ArgumentNullException = System.ArgumentNullException
+local FormatException = System.FormatException
 
 local getmetatable = getmetatable
 local select = select
-local format = string.format
+local sformat = string.format
+local sfind = string.find
 local os = os
 local ostime = os.time
 local osdifftime = os.difftime
 local osdate = os.date
+local tonumber = tonumber
+local floor = math.floor
+local log10 = math.log10
 
 --http://referencesource.microsoft.com/#mscorlib/system/datetime.cs
 local DateTime = {}
@@ -103,14 +109,18 @@ local function checkTicks(ticks)
 end
 
 local function checkKind(kind) 
-  if kind and (kind < 0 or kind > 2) then
+  if kind < 0 or kind > 2 then
     throw(ArgumentOutOfRangeException("kind"))
   end
 end
 
 function DateTime.__ctor__(this, ...)
   local len = select("#", ...)
-  if len == 1 or len == 2 then
+  if len == 1 then
+    local ticks = ...
+    checkTicks(ticks)
+    this.ticks = ticks
+  elseif len == 2 then
     local ticks, kind = ...
     checkTicks(ticks)
     checkKind(kind)
@@ -118,11 +128,12 @@ function DateTime.__ctor__(this, ...)
     this.kind = kind
   elseif len == 3 then
     this.ticks = dateToTicks(...)
-  elseif len == 6 or len == 7 then
-    local year, month, day, hour, minute, second, kind = ...
-    checkKind(kind)
+  elseif len == 6 then
+    local year, month, day, hour, minute, second = ...
     this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second)
-    this.kind = kind
+  elseif len == 7 then
+    local year, month, day, hour, minute, second, millisecond = ...
+    this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
   elseif len == 8 then
     local year, month, day, hour, minute, second, millisecond, kind = ...
     checkKind(kind)
@@ -354,9 +365,81 @@ function DateTime.ToUniversalTime(this)
 end
 
 function DateTime.ToString(this)
-  return format("%d/%d/%d %02d:%02d:%02d.%03d", 
-    this:getYear(), this:getMonth(), this:getDay(), 
-    this:getHour(), this:getMinute(), this:getSecond(), this:getMillisecond())
+  local year, month, day = getDatePart(this.ticks)
+  return sformat("%d/%d/%d %02d:%02d:%02d", year, month, day, this:getHour(), this:getMinute(), this:getSecond())
+end
+
+local function parse(s)
+  if s == nil then
+    return nil, 1
+  end
+  local i, j, year, month, day, hour, minute, second, milliseconds
+  i, j, year, month, day = sfind(s, "^%s*(%d+)%s*/%s*(%d+)%s*/%s*(%d+)%s*")
+  if i == nil then
+    return nil, 2
+  else
+    year, month, day = tonumber(year), tonumber(month), tonumber(day)
+  end
+  if j < #s then
+    i, j, hour, minute = sfind(s, "^(%d+)%s*:%s*(%d+)", j + 1)
+    if i == nil then
+      return nil, 2
+    else
+      hour, minute = tonumber(hour), tonumber(minute)
+    end
+    local next = j + 1
+    i, j, second = sfind(s, "^:%s*(%d+)", next)
+    if i == nil then
+      if sfind(s, "^%s*$", next) == nil then
+        return nil, 2
+      else
+        second = 0
+        milliseconds = 0
+      end
+    else
+      second = tonumber(second)
+      next = j + 1
+      i, j, milliseconds = sfind(s, "^%.(%d+)%s*$", next)
+      if i == nil then
+        if sfind(s, "^%s*$", next) == nil then
+          return nil, 2
+        else
+          milliseconds = 0
+        end
+      else
+        milliseconds = tonumber(milliseconds)
+        local n = floor(log10(milliseconds) + 1)
+        if n > 3 then
+          if n < 7 then
+            milliseconds = milliseconds / (10 ^ (n - 3))
+          else
+            local ticks = milliseconds / (10 ^ (n - 7))
+            local _, decimal = math.modf(ticks)
+            if decimal > 0.5 then
+              ticks = ticks + 1
+            end
+            milliseconds = floor(ticks) / 1e4
+          end
+        end
+      end
+    end
+  end
+  if hour == nil then
+     return DateTime(year, month, day)
+  end
+  return DateTime(year, month, day, hour, minute, second, milliseconds)
+end
+
+function DateTime.Parse(s)
+  local v, err = parse(s)
+  if v then
+    return v
+  end
+  if err == 1 then
+    throw(ArgumentNullException())
+  else
+    throw(FormatException())
+  end
 end
 
 DateTime.__add = DateTime.Add
@@ -387,3 +470,11 @@ DateTime.MaxValue = DateTime(3155378975999999999)
 function DateTime.__default__()
   return minValue
 end  
+
+function DateTime.TryParse(s)
+  local v = parse(s)
+  if v then
+    return true, v
+  end
+  return false, minValue
+end

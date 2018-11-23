@@ -20,11 +20,17 @@ local div = System.div
 local trunc = System.trunc
 local ArgumentException = System.ArgumentException
 local OverflowException = System.OverflowException
+local ArgumentNullException = System.ArgumentNullException
+local FormatException = System.FormatException
 
 local getmetatable = getmetatable
 local select = select
-local format = string.format
+local sformat = string.format
+local sfind = string.find
 local tostring = tostring
+local tonumber = tonumber
+local floor = math.floor
+local log10 = math.log10
 
 local TimeSpan = {}
 
@@ -148,9 +154,84 @@ function TimeSpan.Negate(this)
 end
 
 function TimeSpan.ToString(this) 
-  local day = this:getDays()
-  local daysStr = day == 0 and "" or (tostring(day) .. ".")
-  return format("%s%02d:%02d:%02d.%03d", daysStr, this:getHours(), this:getMinutes(), this:getSeconds(), this:getMilliseconds())
+  local day, milliseconds = this:getDays(), this.ticks % 1e7
+  local daysStr = day == 0 and "" or (day .. ".")
+  local millisecondsStr = milliseconds == 0 and "" or "." .. milliseconds
+  return sformat("%s%02d:%02d:%02d%s", daysStr, this:getHours(), this:getMinutes(), this:getSeconds(), millisecondsStr)
+end
+
+local function parse(s)
+  if s == nil then
+    return nil, 1
+  end
+  local v = tonumber(s)
+  if v ~= nil then
+    if v ~= floor(v) then
+      return nil, 2
+    end
+    return TimeSpan.FromDays(v)
+  end
+  local i, j, day,  hour, minute, second, milliseconds
+  i, j, day, hour, minute = sfind(s, "^%s*(%d+)%.(%d+):(%d+)")
+  if i == nil then
+    i, j, hour, minute = sfind(s, "^%s*(%d+):(%d+)")
+    if i == nil then
+      return nil, 2
+    else
+      hour, minute = tonumber(hour), tonumber(minute)
+    end
+    day = 0
+  else
+    day, hour, minute = tonumber(day), tonumber(hour), tonumber(minute)
+  end
+  if j < #s then
+    local next = j + 1
+    i, j, second = sfind(s, "^:(%d+)", next)
+    if i == nil then
+      if sfind(s, "^%s*$", next) == nil then
+        return nil, 2
+      else
+        second = 0
+        milliseconds = 0
+      end
+    else
+      second = tonumber(second)
+      next = j + 1
+      i, j, milliseconds = sfind(s, "^%.(%d+)%s*$", next)
+      if i == nil then
+        if sfind(s, "^%s*$", next) == nil then
+          return nil, 2
+        else
+          milliseconds = 0
+        end
+      else
+        milliseconds = tonumber(milliseconds)
+        local n = floor(log10(milliseconds) + 1)
+        if n > 3 then
+          if n > 7 then
+            return nil, 2
+          end
+          milliseconds = milliseconds / (10 ^ (n - 3))
+        end
+      end
+    end
+  else
+    second = 0
+    milliseconds = 0
+  end
+  return TimeSpan(day, hour, minute, second, milliseconds)
+end
+
+function TimeSpan.Parse(s)
+  local v, err = parse(s)
+  if v then
+    return v
+  end
+  if err == 1 then
+    throw(ArgumentNullException())
+  else
+    throw(FormatException())
+  end
 end
 
 TimeSpan.__add = TimeSpan.Add
@@ -217,4 +298,12 @@ TimeSpan.MinValue = TimeSpan(-9223372036854775808)
 
 function TimeSpan.__default__()
   return zero
+end
+
+function TimeSpan.TryParse(s)
+  local v = parse(s)
+  if v then
+    return true, v
+  end
+  return false, zero
 end

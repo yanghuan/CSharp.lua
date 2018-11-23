@@ -70,6 +70,38 @@ limitations under the License.
         <method name="TryParse" ArgCount="3" Template="System.Enum.TryParse({^0}, {0}, {1})" />
         <method name="ToString" Template="{this}:ToEnumString({class})" />
       </class>
+      <class name="DateTime">
+        <method name=".ctor" ArgCount="4" Baned="true" />
+        <method name=".ctor" Baned="true">
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Globalization.Calendar" />
+        </method>
+        <method name=".ctor" Baned="true">
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Globalization.Calendar" />
+        </method>
+        <method name=".ctor" ArgCount="9" Baned="true" />
+        <method name=".ctor" Template="System.DateTime({0}, {1}, {2}, {3}, {4}, {5}, 0, {6})">
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
+          <arg type="System.DateTimeKind" />
+        </method>  
+      </class>
       <class name="Object">
         <method name="Equals" Name="EqualsObj" >
           <arg type="System.Object" />
@@ -115,7 +147,6 @@ limitations under the License.
           <arg type="System.Char" />
         </method>
       </class>
-      <class name="Math" Name="math" />
       <class name="Activator" >
         <method name="CreateInstance" ArgCount="0" Template="System.new({^0})" />
         <method name="CreateInstance" ArgCount="1" Template="System.new({0}.c)" />
