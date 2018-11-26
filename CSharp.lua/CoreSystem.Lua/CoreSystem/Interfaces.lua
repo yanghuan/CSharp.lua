@@ -22,6 +22,7 @@ defInf("System.IFormattable")
 defInf("System.IComparable")
 defInf("System.IFormatProvider")
 defInf("System.ICloneable")
+defInf("System.IConvertible")
 
 defInf("System.IComparable_1", emptyFn)
 defInf("System.IEquatable_1", emptyFn)

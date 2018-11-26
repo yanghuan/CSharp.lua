@@ -18,41 +18,10 @@ limitations under the License.
 <meta>
   <assembly>
     <namespace name="System">
-      <class name="Byte" Name="System.Int">
-        <method name="Parse" Name="ParseByte" />
-        <method name="TryParse" Name="TryParseByte" />
-      </class>
-      <class name="Int16" Name="System.Int" >
-        <method name="Parse" Name="ParseInt16" />
-        <method name="TryParse" Name="TryParseInt16" />
-      </class>
-      <class name="Int32" Name="System.Int" />
-      <class name="Int64" Name="System.Int" >
-        <method name="Parse" Name="ParseInt64" />
-        <method name="TryParse" Name="TryParseInt64" />
-      </class>
-      <class name="SByte" Name="System.Int" >
-        <method name="Parse" Name="ParseSByte" />
-        <method name="TryParse" Name="TryParseSByte" />
-      </class>
-      <class name="UInt16" Name="System.Int" >
-        <method name="Parse" Name="ParseUInt16" />
-        <method name="TryParse" Name="TryParseUInt16" />
-      </class>
-      <class name="UInt32" Name="System.Int" >
-        <method name="Parse" Name="ParseUInt32" />
-        <method name="TryParse" Name="TryParseUInt32" />
-      </class>
-      <class name="UInt64" Name="System.Int" >
-        <method name="Parse" Name="ParseUInt64" />
-        <method name="TryParse" Name="TryParseUInt64" />
-      </class>
-      <class name="Single" Name="System.Double" >
-        <field name="NaN" Template="System.Double.NaN" />
-        <field name="PositiveInfinity" Template="System.Double.PositiveInfinity" />
-        <field name="NegativeInfinity" Template="System.Double.NegativeInfinity" />
-        <method name="Parse" Name="ParseSingle" />
-        <method name="TryParse" Name="TryParseSingle" />
+      <class name="Single">
+        <field name="NaN" Template="System.Single.NaN" />
+        <field name="PositiveInfinity" Template="System.Single.PositiveInfinity" />
+        <field name="NegativeInfinity" Template="System.Single.NegativeInfinity" />
       </class>
       <class name="Double">
         <field name="NaN" Template="System.Double.NaN" />

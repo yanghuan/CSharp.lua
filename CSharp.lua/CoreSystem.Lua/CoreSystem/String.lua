@@ -462,7 +462,7 @@ function String.GetEnumerator(this)
 end
 
 function String.__inherits__()
-  return { System.IComparable, System.IEnumerable, System.IComparable_1(String), System.IEnumerable_1(String), System.IEquatable_1(String) }
+  return { System.IEnumerable_1(System.Char), System.IEnumerable, System.IComparable, System.IComparable_1(String), System.IConvertible, System.IEquatable_1(String) }
 end
 
 System.define("System.String", String)

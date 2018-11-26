@@ -109,7 +109,7 @@ local function checkTicks(ticks)
 end
 
 local function checkKind(kind) 
-  if kind < 0 or kind > 2 then
+  if kind and (kind < 0 or kind > 2) then
     throw(ArgumentOutOfRangeException("kind"))
   end
 end

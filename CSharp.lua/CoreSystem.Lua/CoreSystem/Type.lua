@@ -24,6 +24,7 @@ local String = System.String
 local Boolean = System.Boolean
 local Delegate = System.Delegate
 local getClass = System.getClass
+
 local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
 local TypeLoadException = System.TypeLoadException
@@ -33,6 +34,7 @@ local getmetatable = getmetatable
 local ipairs = ipairs
 local select = select
 local unpack = table.unpack
+local floor = math.floor
 
 local Type = {}
 local numberType = setmetatable({ c = Double, name = "Number", fullName = "System.Number" }, Type)
@@ -216,7 +218,7 @@ function Type.GetTypeFrom(typeName, throwOnError, ignoreCase)
   end
   if #typeName == 0 then
     if throwOnError then
-        throw(TypeLoadException("Arg_TypeLoadNullStr"))
+      throw(TypeLoadException("Arg_TypeLoadNullStr"))
     end
     return nil
   end
@@ -224,7 +226,7 @@ function Type.GetTypeFrom(typeName, throwOnError, ignoreCase)
   local cls = getClass(typeName)
   if cls ~= nil then
     return typeof(cls)
-  end 
+  end
   if throwOnError then
     throw(TypeLoadException(typeName .. ": failed to load."))
   end
@@ -250,14 +252,56 @@ local function isInterfaceOf(t, ifaceType)
 end
 
 local isUserdataTypeOf = System.config.isUserdataTypeOf
+local numbers = {
+  [System.Char] = { 0, 65535 },
+  [System.SByte] = { -128, 127 },
+  [System.Byte] = { 0, 255 },
+  [System.Int16] = { -32768, 32767 },
+  [System.UInt16] = { 0, 65535 },
+  [System.Int32] = { -2147483648, 2147483647 },
+  [System.UInt32] = { 0, 4294967295 },
+  [System.Int64] = { -9223372036854775808, 9223372036854775807 },
+  [System.UInt64] = { 0, 18446744073709551615 },
+  [System.Single] = { -3.40282347E+38, 3.40282347E+38, 1 },
+  [System.Double] = { nil, nil, 2 }
+}
+
+local function isStringOrBoolean(cls, StringOrBoolean)
+  if cls == StringOrBoolean then
+    return true
+  end
+  if cls.__kind__ == "I" then
+    return isInterfaceOf(StringOrBoolean, cls)
+  end
+  return false 
+end
 
 function isTypeOf(obj, cls)    
   if cls == Object then return true end
   local typename = type(obj)
   if typename == "number" then
-    return cls == Int or cls == Double or cls == Char
+    local info = numbers[cls]
+    if info ~= nil then
+      local min, max, sign = info[1], info[2], info[3]
+      if sign == nil then
+        if obj < min or obj > max then
+          return false
+        end
+        if floor(obj) ~= obj then
+          return false
+        end
+      elseif sign == 1 then
+        if obj < min or obj > max then
+          return false
+        end
+      end
+      return true
+    elseif cls.__kind__ == "I" then
+      return isInterfaceOf(t, cls)
+    end
+    return false
   elseif typename == "string" then
-    return cls == String
+    return isStringOrBoolean(cls, String)
   elseif typename == "table" then   
     local t = getmetatable(obj)
     if t == cls then
@@ -276,7 +320,7 @@ function isTypeOf(obj, cls)
       return false
     end
   elseif typename == "boolean" then
-    return cls == Boolean
+    return isStringOrBoolean(cls, Boolean)
   elseif typename == "function" then 
     return cls == Delegate
   elseif typename == "userdata" then
@@ -314,7 +358,7 @@ function System.cast(cls, obj)
 end
 
 function System.new(cls)
-  if cls == Int or cls == Double then
+  if numbers[cls] then
     return 0
   end
   if cls == Boolean then
