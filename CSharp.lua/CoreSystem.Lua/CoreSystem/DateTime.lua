@@ -458,7 +458,7 @@ function DateTime.__le(t1, t2)
 end
 
 function DateTime.__inherits__()
-  return { System.IComparable, System.IComparable_1(DateTime), System.IEquatable_1(DateTime) }
+  return { System.IComparable, System.IComparable_1(DateTime), System.IConvertible, System.IEquatable_1(DateTime) }
 end
 
 System.defStc("System.DateTime", DateTime)

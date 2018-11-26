@@ -288,22 +288,6 @@ local function throwInvalidCastException()
   throw(InvalidCastException())
 end
 
-local Int = System.Int
-Int.ToBoolean = toBoolean
-Int.ToChar = toChar
-Int.ToSByte = toSByte
-Int.ToByte = toByte
-Int.ToInt16 = toInt16
-Int.ToUInt16 = toUInt16
-Int.ToInt32 = toInt32
-Int.ToUInt32 = toUInt32
-Int.ToInt64 = toInt64
-Int.ToUInt64 = toUInt64
-Int.ToSingle = toSingle
-Int.ToDouble = toDouble
-Int.ToDateTime = throwInvalidCastException
-Int.ToType = defaultToType
-
 local Number = System.Number
 Number.ToBoolean = toBoolean
 Number.ToChar = toChar
@@ -334,3 +318,18 @@ Boolean.ToSingle = toSingle
 Boolean.ToDouble = toDouble
 Boolean.ToDateTime = throwInvalidCastException
 Boolean.ToType = defaultToType
+
+DateTime.ToBoolean = throwInvalidCastException
+DateTime.ToChar = throwInvalidCastException
+DateTime.ToSByte = throwInvalidCastException
+DateTime.ToByte = throwInvalidCastException
+DateTime.ToInt16 = throwInvalidCastException
+DateTime.ToUInt16 = throwInvalidCastException
+DateTime.ToInt32 = throwInvalidCastException
+DateTime.ToUInt32 = throwInvalidCastException
+DateTime.ToInt64 = throwInvalidCastException
+DateTime.ToUInt64 = throwInvalidCastException
+DateTime.ToSingle = throwInvalidCastException
+DateTime.ToDouble = throwInvalidCastException
+DateTime.ToDateTime = identityFn
+DateTime.ToType = defaultToType
