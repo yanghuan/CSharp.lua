@@ -94,7 +94,7 @@ local function toChar(value)
     end
     return sbyte(value)
   else
-    return cast(IConvertible, value):ToChar()  
+    return cast(IConvertible, value):ToChar()
   end
 end
 

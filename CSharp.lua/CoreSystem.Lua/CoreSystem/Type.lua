@@ -29,6 +29,20 @@ local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
 local TypeLoadException = System.TypeLoadException
 
+local Char = System.Char
+local SByte = System.SByte
+local Byte = System.Byte
+local Int16 = System.Int16
+local UInt16 = System.UInt16
+local Int32 = System.Int32
+local UInt32 = System.UInt32
+local Int64 = System.Int64
+local UInt64 = System.UInt64
+local Single = System.Single
+local Double = System.Double
+local Int = System.Int
+local Number = System.Number
+
 local type = type
 local getmetatable = getmetatable
 local ipairs = ipairs
@@ -37,11 +51,21 @@ local unpack = table.unpack
 local floor = math.floor
 
 local Type = {}
-local numberType = setmetatable({ c = Double, name = "Number", fullName = "System.Number" }, Type)
+local numberType = setmetatable({ c = Number }, Type)
 local types = {
   [Char] = numberType,
-  [Int] = numberType,
+  [SByte] = numberType,
+  [Byte] = numberType,
+  [Int16] = numberType,
+  [UInt16] = numberType,
+  [Int32] = numberType,
+  [UInt32] = numberType,
+  [Int64] = numberType,
+  [UInt64] = numberType,
+  [Single] = numberType,
   [Double] = numberType,
+  [Int] = numberType,
+  [Number] = numberType
 }
 
 local function typeof(cls)
@@ -253,18 +277,19 @@ end
 
 local isUserdataTypeOf = System.config.isUserdataTypeOf
 local numbers = {
-  [System.Char] = { 0, 65535 },
-  [System.SByte] = { -128, 127 },
-  [System.Byte] = { 0, 255 },
-  [System.Int16] = { -32768, 32767 },
-  [System.UInt16] = { 0, 65535 },
-  [System.Int32] = { -2147483648, 2147483647 },
-  [System.UInt32] = { 0, 4294967295 },
-  [System.Int64] = { -9223372036854775808, 9223372036854775807 },
-  [System.UInt64] = { 0, 18446744073709551615 },
-  [System.Single] = { -3.40282347E+38, 3.40282347E+38, 1 },
-  [System.Double] = { nil, nil, 2 }
+  [Char] = { 0, 65535 },
+  [SByte] = { -128, 127 },
+  [Byte] = { 0, 255 },
+  [Int16] = { -32768, 32767 },
+  [UInt16] = { 0, 65535 },
+  [Int32] = { -2147483648, 2147483647 },
+  [UInt32] = { 0, 4294967295 },
+  [Int64] = { -9223372036854775808, 9223372036854775807 },
+  [UInt64] = { 0, 18446744073709551615 },
+  [Single] = { -3.40282347E+38, 3.40282347E+38, 1 },
+  [Double] = { nil, nil, 2 }
 }
+numbers[Int] = numbers[Int32]
 
 local function isStringOrBoolean(cls, StringOrBoolean)
   if cls == StringOrBoolean then
@@ -297,7 +322,7 @@ function isTypeOf(obj, cls)
       end
       return true
     elseif cls.__kind__ == "I" then
-      return isInterfaceOf(t, cls)
+      return isInterfaceOf(Number, cls)
     end
     return false
   elseif typename == "string" then
