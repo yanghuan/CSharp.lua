@@ -114,7 +114,7 @@ function Dictionary.ContainsValue(this, value)
   else    
     local equals = EqualityComparer_1(this.__genericTValue__).getDefault().Equals
       for _, v in pairs(this) do
-        if equals(nil, value, unWrap(v)) then
+        if equals(value, unWrap(v)) then
           return true
         end
     end
@@ -134,7 +134,7 @@ function Dictionary.Remove(this, key)
 end
 
 local function getValueDefault(this)
-  return this.__genericTValue__.__default__()
+  return this.__genericTValue__:__default__()
 end
 
 function Dictionary.TryGetValue(this, key)

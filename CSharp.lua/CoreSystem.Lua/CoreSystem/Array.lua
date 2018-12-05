@@ -21,9 +21,11 @@ local getArray = Collection.getArray
 local setArray = Collection.setArray
 local checkIndex = Collection.checkIndex 
 local arrayEnumerator = Collection.arrayEnumerator
+local findAll = Collection.findAllOfArray
 
 local assert = assert
 local select = select
+local setmetatable = setmetatable
 
 local Array = {}
 local emptys = {}
@@ -67,9 +69,8 @@ end
 Array.Exists = Collection.existsOfArray
 Array.Find = Collection.findOfArray
 
-local findAll = Collection.findAllOfArray
 function Array.FindAll(t, match)
-  return findAll(t, match):toArray()
+  return setmetatable(findAll(t, match), Array(t.__genericT__))
 end
 
 Array.FindIndex = Collection.findIndexOfArray
@@ -82,17 +83,14 @@ Array.Reverse = Collection.reverseArray
 Array.Sort = Collection.sortArray
 Array.TrueForAll = Collection.trueForAllOfArray
 Array.Copy = Collection.copyArray
+Array.GetValue = getArray
 
 function Array.CreateInstance(elementType, length)
   return Array(elementType.c):new(length)
 end
 
-function Array.GetValue(this, index)
-  return this:get(index)
-end
-
 function Array.SetValue(this, value, index)
-  this:set(index, value)
+  setArray(this, index, value)
 end
 
 System.define("System.Array", function(T) 

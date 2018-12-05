@@ -23,7 +23,7 @@ local FormatException = System.FormatException
 local type = type
 local tostring = tostring
 
-local function compare(this, v)
+local function compareTo(this, v)
   if this == v then
     return 0
   elseif this == false then
@@ -32,55 +32,14 @@ local function compare(this, v)
   return 1
 end
 
-local FalseString = "False"
-local TrueString = "True"
-
-local Boolean = {
-  __default__ = System.falseFn,
-  GetHashCode = System.identityFn,
-  Equals = System.equals,
-  CompareTo = compare,
-  ToString = tostring,
-  FalseString = FalseString,
-  TrueString = TrueString
-}
-debug.setmetatable(false, Boolean)
-
-function Boolean.CompareToObj(this, v)
-  if v == nil then return 1 end
-  if type(v) ~= "boolean" then
-    throw(ArgumentException("Arg_MustBeBoolean"))
-  end
-  return compare(this, v)
-end
-
-function Boolean.EqualsObj(this, v)
-  if type(v) ~= "boolean" then
-    return false
-  end
-  return this == v
-end
-
-function Boolean.__concat(a, b)
-  if type(a) == "boolean" then
-    return tostring(a) .. b
-  else 
-    return a .. tostring(b)
-  end
-end
-
-function Boolean.__tostring(this)
-  if this then
-    return TrueString
-  end
-  return FalseString
-end
+local falseString = "False"
+local trueString = "True"
 
 local function parse(s)
   if s == nil then
     return nil, 1
   end
-  s = s:lower()
+  s = s:Trim():lower()
   if s == "true" then
     return true
   elseif s == "false" then
@@ -89,28 +48,67 @@ local function parse(s)
   return nil, 2
 end
 
-function Boolean.Parse(s)
-  local v, err = parse(s)
-  if v == nil then
-    if err == 1 then
-      throw(ArgumentNullException()) 
-    else
-      throw(FormatException())
+local Boolean = System.defStc("System.Boolean", {
+  __default__ = System.falseFn,
+  GetHashCode = System.identityFn,
+  Equals = System.equals,
+  CompareTo = compareTo,
+  ToString = tostring,
+  FalseString = falseString,
+  TrueString = trueString,
+
+  CompareToObj = function (this, v)
+    if v == nil then return 1 end
+    if type(v) ~= "boolean" then
+      throw(ArgumentException("Arg_MustBeBoolean"))
     end
+    return compareTo(this, v)
+  end,
+  
+  EqualsObj = function (this, v)
+    if type(v) ~= "boolean" then
+      return false
+    end
+    return this == v
+  end,
+  
+  __concat = function (a, b)
+    if type(a) == "boolean" then
+      return tostring(a) .. b
+    else 
+      return a .. tostring(b)
+    end
+  end,
+  
+  __tostring = function (this)
+    if this then
+      return trueString
+    end
+    return falseString
+  end,
+  
+  Parse = function (s)
+    local v, err = parse(s)
+    if v == nil then
+      if err == 1 then
+        throw(ArgumentNullException()) 
+      else
+        throw(FormatException())
+      end
+    end
+    return v
+  end,
+  
+  TryParse = function (s)
+    local v = parse(s)
+    if v ~= nil then
+      return true, v
+    end
+    return false, false
+  end,
+  
+  __inherits__ = function (_, T)
+    return { System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T) }
   end
-  return v
-end
-
-function Boolean.TryParse(s)
-  local v = parse(s)
-  if v ~= nil then
-    return true, v
-  end
-  return false, false
-end
-
-function Boolean.__inherits__()
-  return { System.IComparable, System.IComparable_1(Boolean), System.IEquatable_1(Boolean) }
-end
-
-System.defStc("System.Boolean", Boolean)
+})
+debug.setmetatable(false, Boolean)
