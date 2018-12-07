@@ -34,8 +34,10 @@ local ostime = os.time
 local osdifftime = os.difftime
 local osdate = os.date
 local tonumber = tonumber
+local math = math
 local floor = math.floor
 local log10 = math.log10
+local modf = math.modf
 
 --http://referencesource.microsoft.com/#mscorlib/system/datetime.cs
 local DateTime = {}
@@ -414,7 +416,7 @@ local function parse(s)
             milliseconds = milliseconds / (10 ^ (n - 3))
           else
             local ticks = milliseconds / (10 ^ (n - 7))
-            local _, decimal = math.modf(ticks)
+            local _, decimal = modf(ticks)
             if decimal > 0.5 then
               ticks = ticks + 1
             end

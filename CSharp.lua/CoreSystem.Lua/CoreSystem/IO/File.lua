@@ -20,6 +20,7 @@ local each = System.each
 
 local io = io
 local open = io.open
+local remove = os.remove
 
 local IOException = System.define("System.IO.IOException", {
   __tostring = System.Exception.ToString,
@@ -92,6 +93,13 @@ function File.Exists(path)
   local file = io.open(path, "rb")
   if file then file:close() end
   return file ~= nil
+end
+
+function File.Delete(path)
+  local ok, err = remove(path)
+  if not ok then
+    throw(IOException(err))
+  end
 end
 
 System.define("System.IO.File", File)

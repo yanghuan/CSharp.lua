@@ -17,9 +17,6 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local Object = System.Object
-local Char = System.Char
-local Int = System.Int
-local Double = System.Double
 local String = System.String
 local Boolean = System.Boolean
 local Delegate = System.Delegate
