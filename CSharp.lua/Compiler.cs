@@ -50,15 +50,17 @@ namespace CSharpLua {
       }
     }
 
-    private IEnumerable<string> Metas {
-      get {
-        List<string> metas = new List<string>() { Utility.GetCurrentDirectory(kSystemMeta) };
-        metas.AddRange(metas_);
-        return metas;
+    private static IEnumerable<string> GetMetas(IEnumerable<string> additionalMetas) {
+      List<string> metas = new List<string>() { Utility.GetCurrentDirectory(kSystemMeta) };
+      if (additionalMetas != null) {
+        metas.AddRange(additionalMetas);
       }
+      return metas;
     }
 
-    private bool IsCorrectSystemDll(string path) {
+    private IEnumerable<string> Metas => GetMetas(metas_);
+
+    private static bool IsCorrectSystemDll(string path) {
       try {
         Assembly.LoadFile(path);
         return true;
@@ -67,19 +69,19 @@ namespace CSharpLua {
       }
     }
 
-    private IEnumerable<string> Libs {
-      get {
-        string privateCorePath = typeof(object).Assembly.Location;
-        List<string> libs = new List<string>() { privateCorePath };
+    private static IEnumerable<string> GetLibs(IEnumerable<string> additionalLibs) {
+      string privateCorePath = typeof(object).Assembly.Location;
+      List<string> libs = new List<string>() { privateCorePath };
 
-        string systemDir = Path.GetDirectoryName(privateCorePath);
-        foreach (string path in Directory.EnumerateFiles(systemDir, "*.dll")) {
-          if (IsCorrectSystemDll(path)) {
-            libs.Add(path);
-          }
+      string systemDir = Path.GetDirectoryName(privateCorePath);
+      foreach (string path in Directory.EnumerateFiles(systemDir, "*.dll")) {
+        if (IsCorrectSystemDll(path)) {
+          libs.Add(path);
         }
+      }
 
-        foreach (string lib in libs_) {
+      if (additionalLibs != null) {
+        foreach (string lib in additionalLibs) {
           string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
           if (File.Exists(path)) {
             libs.Add(path);
@@ -90,27 +92,50 @@ namespace CSharpLua {
             }
           }
         }
-        return libs;
       }
+
+      return libs;
     }
+
+    private IEnumerable<string> Libs => GetLibs(libs_);
 
     public void Do() {
       Compile();
     }
 
-    private void Compile() {
-      var commandLineArguments = CSharpCommandLineParser.Default.Parse(cscArguments_.Concat(new string[] { "-define:__CSharpLua__" }), null, null);
+    private static LuaSyntaxGenerator Build(
+      IEnumerable<string> cscArguments,
+      IEnumerable<(string Text, string Path)> codes, 
+      IEnumerable<string> libs,
+      IEnumerable<string> metas,
+      bool isNewest,
+      int indent,
+      string[] attributes,
+      string folder
+      ) {
+      var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.Latest).WithDocumentationMode(DocumentationMode.Parse);
-      var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
-      var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), parseOptions, file));
-      var references = Libs.Select(i => MetadataReference.CreateFromFile(i));
-      LuaSyntaxGenerator.SettingInfo setting = new LuaSyntaxGenerator.SettingInfo() {
-        IsNewest = isNewest_,
+      var syntaxTrees = codes.Select(code => CSharpSyntaxTree.ParseText(code.Text, parseOptions, code.Path));
+      var references = libs.Select(i => MetadataReference.CreateFromFile(i));
+      var setting = new LuaSyntaxGenerator.SettingInfo() {
+        IsNewest = isNewest,
         HasSemicolon = false,
-        Indent = indent_,
+        Indent = indent,
       };
-      LuaSyntaxGenerator generator = new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, Metas, setting, attributes_, folder_);
+      return new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, metas, setting, attributes, folder);
+    }
+
+    private void Compile() {
+      var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
+      var codes = files.Select(i => (File.ReadAllText(i), i));
+      var generator = Build(cscArguments_, codes, Libs, Metas, isNewest_, indent_, attributes_, folder_);
       generator.Generate(output_);
+    }
+
+    public static string CompileSingleCode(string code) {
+      var codes = new (string, string)[] { (code, "") };
+      var generator = Build(null, codes, GetLibs(null), GetMetas(null), true, 2, null, "");
+      return generator.GenerateSingle();
     }
   }
 }

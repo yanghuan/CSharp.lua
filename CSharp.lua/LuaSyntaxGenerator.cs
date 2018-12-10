@@ -142,10 +142,14 @@ namespace CSharpLua {
       return luaCompilationUnits.Where(i => !i.IsEmpty);
     }
 
+    private void Write(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer) {
+      LuaRenderer rener = new LuaRenderer(this, writer);
+      luaCompilationUnit.Render(rener);
+    }
+
     private void Write(LuaCompilationUnitSyntax luaCompilationUnit, string outFile) {
       using (var writer = new StreamWriter(outFile, false, Encoding)) {
-        LuaRenderer rener = new LuaRenderer(this, writer);
-        luaCompilationUnit.Render(rener);
+        Write(luaCompilationUnit, writer);
       }
     }
 
@@ -157,6 +161,17 @@ namespace CSharpLua {
         modules.Add(module);
       }
       ExportManifestFile(modules, outFolder);
+    }
+
+    public string GenerateSingle() {
+      foreach (var luaCompilationUnit in Create()) {
+        StringBuilder sb = new StringBuilder();
+        using (var writer = new StringWriter(sb)) {
+          Write(luaCompilationUnit, writer);
+        }
+        return sb.ToString();
+      }
+      throw new InvalidProgramException();
     }
 
     internal string RemoveBaseFolder(string patrh) {
