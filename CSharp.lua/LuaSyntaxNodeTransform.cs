@@ -2377,22 +2377,30 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitSwitchSection(SwitchSectionSyntax node) {
+      void FillStatements(LuaBlockSyntax block) {
+        if (node.Statements.Count == 1 && node.Statements.First().IsKind(SyntaxKind.Block)) {
+          var luaBlock = (LuaBlockSyntax)node.Statements.First().Accept(this);
+          block.Statements.AddRange(luaBlock.Statements);
+        } else {
+          blocks_.Push(block);
+          foreach (var statement in node.Statements) {
+            var luaStatement = (LuaStatementSyntax)statement.Accept(this);
+            block.Statements.Add(luaStatement);
+          }
+          blocks_.Pop();
+        }
+      }
+
       bool isDefault = node.Labels.Any(i => i.Kind() == SyntaxKind.DefaultSwitchLabel);
       if (isDefault) {
         LuaBlockSyntax block = new LuaBlockSyntax();
-        foreach (var statement in node.Statements) {
-          var luaStatement = (LuaStatementSyntax)statement.Accept(this);
-          block.Statements.Add(luaStatement);
-        }
+        FillStatements(block);
         return block;
       } else {
         var expressions = node.Labels.Select(i => (LuaExpressionSyntax)i.Accept(this));
         var condition = expressions.Aggregate((x, y) => new LuaBinaryExpressionSyntax(x, LuaSyntaxNode.Tokens.Or, y));
         LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
-        foreach (var statement in node.Statements) {
-          var luaStatement = (LuaStatementSyntax)statement.Accept(this);
-          ifStatement.Body.Statements.Add(luaStatement);
-        }
+        FillStatements(ifStatement.Body);
         return ifStatement;
       }
     }

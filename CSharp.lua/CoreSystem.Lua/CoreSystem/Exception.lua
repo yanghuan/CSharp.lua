@@ -236,7 +236,7 @@ define("System.NullReferenceException", {
   __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
-    Exception.__ctor__(this, message or "Object is null.", innerException)
+    Exception.__ctor__(this, message or "Object reference not set to an instance of an object.", innerException)
   end
 })
 

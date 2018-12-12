@@ -51,6 +51,9 @@ local function new(cls, ...)
 end
 
 local function throw(e, lv)
+  if e == nil then
+    e = System.NullReferenceException()
+  end
   e:traceback(lv)
   error(e)
 end
