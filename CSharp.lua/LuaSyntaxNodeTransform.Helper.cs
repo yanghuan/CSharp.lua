@@ -452,17 +452,28 @@ namespace CSharpLua {
       FilePath,
     }
 
-    private CallerAttributeKind GetCallerAttributeKind(INamedTypeSymbol typeSymbol) {
-      switch (typeSymbol.ToString()) {
-        case "System.Runtime.CompilerServices.CallerLineNumberAttribute":
-          return CallerAttributeKind.Line;
-        case "System.Runtime.CompilerServices.CallerMemberNameAttribute":
-          return CallerAttributeKind.Member;
-        case "System.Runtime.CompilerServices.CallerFilePathAttribute":
-          return CallerAttributeKind.FilePath;
-        default:
-          return CallerAttributeKind.None;
+    private CallerAttributeKind GetCallerAttributeKind(INamedTypeSymbol symbol) {
+      switch (symbol.Name) {
+        case "CallerLineNumberAttribute": {
+            if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
+              return CallerAttributeKind.Line;
+            }
+            break;
+          }
+        case "CallerMemberNameAttribute": {
+            if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
+              return CallerAttributeKind.Member;
+            }
+            break;
+          }
+        case "CallerFilePathAttribute": {
+            if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
+              return CallerAttributeKind.FilePath;
+            }
+            break;
+          }
       }
+      return CallerAttributeKind.None;
     }
 
     private CallerAttributeKind GetCallerAttributeKind(IParameterSymbol parameter) {

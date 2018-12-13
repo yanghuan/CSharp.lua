@@ -958,12 +958,19 @@ namespace CSharpLua {
       return expression == null || expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
     }
 
+    public static bool IsRuntimeCompilerServices(this INamespaceSymbol symbol) {
+      return symbol.Name == "CompilerServices"  && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
+    }
+
     #region hard code for protobuf-net
 
     public static bool IsProtobufNetDeclaration(this INamedTypeSymbol type) {
       var attr = type.GetAttributes().FirstOrDefault();
-      if (attr != null && attr.AttributeClass.ToString() == "ProtoBuf.ProtoContractAttribute") {
-        return true;
+      if (attr != null) {
+        var attribute = attr.AttributeClass;
+        if (attribute.Name == "ProtoContractAttribute" && attribute.ContainingNamespace.Name == "ProtoBuf") {
+          return true;
+        }
       }
       return false;
     }
@@ -971,7 +978,8 @@ namespace CSharpLua {
     public static bool IsProtobufNetField(this IFieldSymbol symbol) {
       var containingType = symbol.ContainingType;
       if (!containingType.Interfaces.IsEmpty) {
-        if (containingType.Interfaces.First().ToString() == "ProtoBuf.IExtensible") {
+        var interfaceSymbol = containingType.Interfaces.First();
+        if (interfaceSymbol.Name == "IExtensible" && interfaceSymbol.ContainingNamespace.Name == "ProtoBuf") {
           return true;
         }
       }
@@ -980,8 +988,11 @@ namespace CSharpLua {
 
     public static bool IsProtobufNetProperty(this IPropertySymbol symbol) {
       var attr = symbol.GetAttributes().FirstOrDefault();
-      if (attr != null && attr.AttributeClass.ToString() == "ProtoBuf.ProtoMemberAttribute") {
-        return true;
+      if (attr != null) {
+        var attribute = attr.AttributeClass;
+        if (attribute.Name == "ProtoMemberAttribute" && attribute.ContainingNamespace.Name == "ProtoBuf") {
+          return true;
+        }
       }
       return false;
     }
