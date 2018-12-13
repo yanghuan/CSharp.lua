@@ -356,8 +356,11 @@ function isTypeOf(obj, cls)
 end
 
 function System.is(obj, cls)
-  return obj ~= nil and isTypeOf(obj, cls)
-end 
+  if obj ~= nil then
+    return isTypeOf(obj, cls)
+  end
+  return cls == nil
+end
 
 function System.as(obj, cls)
   if obj ~= nil and isTypeOf(obj, cls) then
