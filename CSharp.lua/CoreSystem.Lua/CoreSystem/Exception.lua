@@ -118,7 +118,16 @@ define("System.ArgumentOutOfRangeException", {
   end,
 
   getActualValue = function(this) 
-      return this.actualValue
+    return this.actualValue
+  end
+})
+
+define("System.IndexOutOfRangeException", {
+   __tostring = toString,
+   __inherits__ = { Exception },
+
+   __ctor__ = function (this, message, innerException)
+    Exception.__ctor__(this, message or "Index was outside the bounds of the array.", innerException)
   end
 })
 

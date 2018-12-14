@@ -142,7 +142,7 @@ String.ToString = tostring
 
 function String.get(this, index)
   if index < 0 or index >= #this then
-      throw(IndexOutOfRangeException())
+    throw(IndexOutOfRangeException())
   end
   return sbyte(this, index + 1)
 end

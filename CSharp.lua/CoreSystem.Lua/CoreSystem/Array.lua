@@ -15,13 +15,15 @@ limitations under the License.
 --]]
 
 local System = System
+local throw = System.throw
 local Collection = System.Collection
 local buildArray = Collection.buildArray
 local getArray = Collection.getArray
 local setArray = Collection.setArray
-local checkIndex = Collection.checkIndex 
 local arrayEnumerator = Collection.arrayEnumerator
 local findAll = Collection.findAllOfArray
+
+local IndexOutOfRangeException = System.IndexOutOfRangeException
 
 local assert = assert
 local select = select
@@ -46,6 +48,13 @@ Array.get = getArray
 Array.GetEnumerator = arrayEnumerator
 
 function Array.getLength(this)
+  return #this
+end
+
+function Array.GetLength(this, dimension)
+  if dimension ~= 0 then
+    throw(IndexOutOfRangeException())
+  end
   return #this
 end
 
@@ -141,13 +150,16 @@ function MultiArray.get(this, ...)
   return getArray(this, index)
 end
 
-function MultiArray.getLength(this, dimension)
-  if dimension == nil then
-    return #this
-  end
+function MultiArray.getLength(this)
+	return #this
+end
+
+function MultiArray.GetLength(this, dimension)
   local rank = this.__rank__
-  checkIndex(rank, dimension)
-  return this.__rank__[dimension + 1]
+  if dimension < 0 or dimension >= #rank then
+    throw(IndexOutOfRangeException())
+  end
+  return rank[dimension + 1]
 end
 
 function MultiArray.getRank(this)
