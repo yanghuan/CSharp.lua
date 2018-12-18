@@ -242,7 +242,7 @@ local Number = define("System.Number", {
     return compareDouble(this, v)
   end,
   
-  EqualsObj = function (this, c)
+  EqualsObj = function (this, v)
     if type(v) ~= "number" then
       return false
     end
