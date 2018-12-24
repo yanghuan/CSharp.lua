@@ -703,15 +703,6 @@ namespace CSharpLua {
               CurType.AddEvent(eventName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, typeExpression, statements);
               continue;
             }
-          } else {
-            if (!isStatic && isPrivate) {
-              var fieldSymbol = (IFieldSymbol)variableSymbol;
-              if (fieldSymbol.IsProtobufNetField()) {
-                string name = variable.Identifier.ValueText.TrimStart('_');
-                AddField(new LuaIdentifierNameSyntax(name), typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
-                continue;
-              }
-            }
           }
           LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
           AddField(fieldName, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
@@ -784,10 +775,6 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
       if (!node.Modifiers.IsAbstract()) {
         var symbol = semanticModel_.GetDeclaredSymbol(node);
-        if (symbol.IsProtobufNetProperty()) {
-          return null;
-        }
-
         bool isStatic = symbol.IsStatic;
         bool isPrivate = symbol.IsPrivate();
         bool hasGet = false;
@@ -2042,12 +2029,6 @@ namespace CSharpLua {
         return BuildStaticFieldName(symbol, symbol.IsReadOnly, node);
       } else {
         if (IsInternalNode(node)) {
-          if (symbol.IsPrivate() && symbol.IsFromCode()) {
-            if (symbol.IsProtobufNetField()) {
-              string symbolName = symbol.Name.TrimStart('_');
-              return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, new LuaIdentifierNameSyntax(symbolName));
-            }
-          }
           return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, GetMemberName(symbol));
         } else {
           return GetMemberName(symbol);

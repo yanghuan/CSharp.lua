@@ -349,10 +349,6 @@ namespace CSharpLua {
         return false;
       }
 
-      if (symbol.IsProtobufNetProperty()) {
-        return true;
-      }
-
       var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
       if (syntaxReference != null) {
         var node = syntaxReference.GetSyntax();
@@ -969,28 +965,6 @@ namespace CSharpLua {
       if (attr != null) {
         var attribute = attr.AttributeClass;
         if (attribute.Name == "ProtoContractAttribute" && attribute.ContainingNamespace.Name == "ProtoBuf") {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    public static bool IsProtobufNetField(this IFieldSymbol symbol) {
-      var containingType = symbol.ContainingType;
-      if (!containingType.Interfaces.IsEmpty) {
-        var interfaceSymbol = containingType.Interfaces.First();
-        if (interfaceSymbol.Name == "IExtensible" && interfaceSymbol.ContainingNamespace.Name == "ProtoBuf") {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    public static bool IsProtobufNetProperty(this IPropertySymbol symbol) {
-      var attr = symbol.GetAttributes().FirstOrDefault();
-      if (attr != null) {
-        var attribute = attr.AttributeClass;
-        if (attribute.Name == "ProtoMemberAttribute" && attribute.ContainingNamespace.Name == "ProtoBuf") {
           return true;
         }
       }
