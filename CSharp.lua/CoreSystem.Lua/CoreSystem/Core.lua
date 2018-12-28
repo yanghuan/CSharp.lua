@@ -62,7 +62,6 @@ local function xpcallErr(e)
   if type(e) == "string" then
     e = System.Exception(e)
     e:traceback()
-    return e
   end
   return e
 end
@@ -621,6 +620,62 @@ else
   function System.sr(x, y) return x >> y end
   function System.div(x, y) return x // y end
   function System.mod(x, y) return x % y end
+  
+  function System.bnotOfNull(x) 
+    if x == nil 
+      then return nil 
+    end 
+    return ~v 
+  end
+  
+  function System.bandOfNull(x, y) 
+    if x == nil or y == nil then
+      return nil
+    end
+    return x & y
+  end
+
+  function System.borOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x | y
+  end
+  
+  function System.xorOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x ~ y
+  end
+  
+  function System.slOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x << y
+  end
+  
+  function System.srOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x >> y
+  end
+  
+  function System.divOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x // y
+  end
+  
+  function System.modOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x % y
+  end
   
   local function toUInt (v, max, mask, checked)  
     if v >= 0 and v <= max then
