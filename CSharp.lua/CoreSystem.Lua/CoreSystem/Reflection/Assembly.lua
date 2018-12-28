@@ -87,13 +87,16 @@ function MemberInfo.getDeclaringType(this)
 end
 
 local function isDefined(cls, name, attributeCls)
-  local attributes = cls.__attributes__
-  if attributes ~= nil then
-    local attrTable = attributes[name]
-    if attrTable ~= nil then
-      for _, v in ipairs(attrTable) do
-        if System.is(v, attributeCls) then
-          return true
+  local metadata = cls.__metadata__
+  if metadata then
+    local attributes = metadata.attributes
+    if attributes ~= nil then
+      local attrTable = attributes[name]
+      if attrTable ~= nil then
+        for _, v in ipairs(attrTable) do
+          if System.is(v, attributeCls) then
+            return true
+          end
         end
       end
     end
@@ -308,13 +311,16 @@ function Type.GetMembers(this)
         names[k] = true;
       end
     end
-    local attributes = cls.__attributes__;
-    if attributes then
-      for k , v in pairs(attributes) do
-        if not names[k] then
-            local fieldInfo = buildFieldInfo(cls, k)
-            t[#t + 1] = fieldInfo
-            names[k] = true;
+    local metadata = cls.__metadata__
+    if metadata then
+      local attributes = metadata.attributes
+      if attributes then
+        for k , v in pairs(attributes) do
+          if not names[k] then
+              local fieldInfo = buildFieldInfo(cls, k)
+              t[#t + 1] = fieldInfo
+              names[k] = true;
+          end
         end
       end
     end

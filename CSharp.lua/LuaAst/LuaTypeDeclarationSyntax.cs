@@ -419,10 +419,12 @@ namespace CSharpLua.LuaAst {
 
     private void CheckAttributes() {
       if (attributes_.Items.Count > 0) {
+        LuaTableInitializerExpression metaDataTable = new LuaTableInitializerExpression();
+        metaDataTable.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(LuaIdentifierNameSyntax.Attributes), attributes_));
         LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
         functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
-        functionExpression.AddStatement(new LuaReturnStatementSyntax(attributes_));
-        AddResultTable(LuaIdentifierNameSyntax.Attributes, functionExpression);
+        functionExpression.AddStatement(new LuaReturnStatementSyntax(metaDataTable));
+        AddResultTable(LuaIdentifierNameSyntax.Metadata, functionExpression);
       }
     }
 

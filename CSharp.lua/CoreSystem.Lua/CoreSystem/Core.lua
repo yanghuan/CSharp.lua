@@ -157,10 +157,10 @@ enumMetatable.__index = enumMetatable
 local interfaceMetatable = { __kind__ = "I", __default__ = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
-local function applyAttributes(cls)
-  local attributes = rawget(cls, "__attributes__")
-  if attributes ~= nil then
-    cls.__attributes__ = attributes(global)
+local function applyMetadata(cls)
+  local metadata = rawget(cls, "__metadata__")
+  if metadata then
+    cls.__metadata__ = metadata(global)
   end
 end
 
@@ -200,7 +200,7 @@ local function setBase(cls, kind)
       setmetatable(cls, Object)
     end  
   end
-  applyAttributes(cls)
+  applyMetadata(cls)
 end
 
 local function staticCtorSetBase(cls)
@@ -289,10 +289,10 @@ local function def(name, kind, cls, generic)
       cls.__inherits__ = nil
     end
     setmetatable(cls, interfaceMetatable)
-    applyAttributes(cls)
+    applyMetadata(cls)
   elseif kind == "E" then
     setmetatable(cls, enumMetatable)
-    applyAttributes(cls)
+    applyMetadata(cls)
   else
     assert(false, kind)
   end

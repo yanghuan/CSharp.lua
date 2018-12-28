@@ -92,7 +92,8 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax Int = new LuaIdentifierNameSyntax("System.Int");
     public static readonly LuaIdentifierNameSyntax UsingDeclare = new LuaIdentifierNameSyntax("System.usingDeclare");
     public static readonly LuaIdentifierNameSyntax Global = new LuaIdentifierNameSyntax("global");
-    public static readonly LuaIdentifierNameSyntax Attributes = new LuaIdentifierNameSyntax("__attributes__");
+    public static readonly LuaIdentifierNameSyntax Attributes = new LuaIdentifierNameSyntax("attributes");
+    public static readonly LuaIdentifierNameSyntax Metadata = new LuaIdentifierNameSyntax("__metadata__");
     public static readonly LuaIdentifierNameSyntax setmetatable = new LuaIdentifierNameSyntax("setmetatable");
     public static readonly LuaIdentifierNameSyntax Clone = new LuaIdentifierNameSyntax("__clone__");
     public static readonly LuaIdentifierNameSyntax ValueType = new LuaIdentifierNameSyntax("System.ValueType");
