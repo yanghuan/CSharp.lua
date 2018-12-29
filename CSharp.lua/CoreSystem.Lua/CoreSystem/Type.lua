@@ -25,6 +25,7 @@ local getClass = System.getClass
 local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
 local TypeLoadException = System.TypeLoadException
+local NullReferenceException = System.NullReferenceException
 
 local Char = System.Char
 local SByte = System.SByte
@@ -48,21 +49,39 @@ local unpack = table.unpack
 local floor = math.floor
 
 local Type = {}
-local numberType = setmetatable({ c = Number }, Type)
+
+local NumberType = {
+  __index = Type,
+  __eq = function (a, b)
+    local c1, c2 = a.c, b.c
+    if c1 == c2 then
+      return true
+    end
+    if c1 == Number or c2 == Number then
+      return true
+    end
+    return false
+  end
+}
+
+local function newNumberType(c)
+  return setmetatable({ c = c }, NumberType)
+end
+
 local types = {
-  [Char] = numberType,
-  [SByte] = numberType,
-  [Byte] = numberType,
-  [Int16] = numberType,
-  [UInt16] = numberType,
-  [Int32] = numberType,
-  [UInt32] = numberType,
-  [Int64] = numberType,
-  [UInt64] = numberType,
-  [Single] = numberType,
-  [Double] = numberType,
-  [Int] = numberType,
-  [Number] = numberType
+  [Char] = newNumberType(Char),
+  [SByte] = newNumberType(SByte),
+  [Byte] = newNumberType(Byte),
+  [Int16] = newNumberType(Int16),
+  [UInt16] = newNumberType(UInt16),
+  [Int32] = newNumberType(Int32),
+  [UInt32] = newNumberType(UInt32),
+  [Int64] = newNumberType(Int64),
+  [UInt64] = newNumberType(UInt64),
+  [Single] = newNumberType(Single),
+  [Double] = newNumberType(Double),
+  [Int] = newNumberType(Int),
+  [Number] = newNumberType(Number),
 }
 
 local function typeof(cls)
@@ -374,12 +393,13 @@ function System.cast(cls, obj)
     if cls.__kind__ ~= "S" then
       return nil
     end
+    throw(NullReferenceException(), 1)
   else 
     if isTypeOf(obj, cls) then
       return obj
     end
+    throw(InvalidCastException(), 1)
   end
-  throw(InvalidCastException(), 1)
 end
 
 function System.new(cls)
