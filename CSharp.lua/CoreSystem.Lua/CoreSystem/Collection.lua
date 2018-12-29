@@ -58,8 +58,8 @@ end
 
 local function checkVersion(t, verson)
   if verson ~= getVersion(t) then
-    throw(InvalidOperationException("has change when iterator"))
-  end 
+    throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))
+  end
 end
 
 Collection.getVersion = getVersion
@@ -76,7 +76,7 @@ local function addCount(t, inc)
   if inc ~= 0 then
     local v = (counts[t] or 0) + inc
     assert(v >= 0)
-    counts[t] = v 
+    counts[t] = v
   end
 end
 
@@ -480,13 +480,9 @@ local function sortArray(t, index, count, comparer)
     else
       checkIndexAndCount(t, index, count)
       local arr = {}
-      for i = index + 1, index + count do
-        arr[#arr + 1] = t[i]
-      end
+      tmove(t, index + 1, index + count, 1, arr)
       tsort(arr, comp)
-      for i = index + 1, index + count do
-        t[i] = arr[i - index]
-      end
+      tmove(arr, 1, count, index + 1, t)
     end
     changeVersion(t)
   end
@@ -500,7 +496,7 @@ function Collection.sortArray(t, ...)
     local comparer = ...
     sort(t, comparer)
   else
-    index, count, comparer = ...
+    local index, count, comparer = ...
     sortArray(t, index, count, comparer)
   end
 end
@@ -628,9 +624,7 @@ end
 function Collection.toArray(t)
   local array = {}    
   if isArrayLike(t) then
-    for _, v in ipairs(t) do
-      array[#array + 1] = v
-    end   
+    tmove(t, 1, #t, 1, array)
   else
     for _, v in each(t) do
       array[#array + 1] = wrap(v)
