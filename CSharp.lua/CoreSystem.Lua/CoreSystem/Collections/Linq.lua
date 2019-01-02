@@ -301,13 +301,13 @@ local function addToLookup(this, key, value)
   local groupIndex = this.indexs[hashCode]
   local group
   if groupIndex == nil then
-	groupIndex = #this.groups + 1
-	this.indexs[hashCode] = groupIndex
-	group = setmetatable({ key = key, __genericT__ = this.__genericTElement__ }, Grouping)
-	this.groups[groupIndex] = group
+	  groupIndex = #this.groups + 1
+	  this.indexs[hashCode] = groupIndex
+	  group = setmetatable({ key = key, __genericT__ = this.__genericTElement__ }, Grouping)
+	  this.groups[groupIndex] = group
   else
-	group = this.groups[groupIndex]
-	assert(group)
+	  group = this.groups[groupIndex]
+	  assert(group)
   end
   group[#group + 1] = wrap(value)
 end
@@ -375,7 +375,6 @@ function Enumerable.GroupJoin(outer, inner, outerKeySelector, innerKeySelector, 
     end)
   end)
 end
-
 
 local function ordered(source, compare)
   local orderedEnumerable = create(source, function()

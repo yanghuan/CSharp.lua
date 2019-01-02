@@ -1106,6 +1106,8 @@ function System.GetValueOrDefault(this, defaultValue)
   return this
 end
 
+defCls("System.Nullable", emptyFn)
+
 local function pointerAddress(p)
   local address = p[3]
   if address == nil then

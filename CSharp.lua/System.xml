@@ -287,7 +287,7 @@ limitations under the License.
         <method name="Create" ArgCount="7" Template="System.valueTuple({0}, {1}, {2}, {3}, {4}, {5}, {6})" />
         <method name="Create" ArgCount="8" Template="System.valueTuple({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})" />
       </class>
-      <class name="Nullable^1">
+      <class name="Nullable^1" Name="System.Nullable">
         <property name="HasValue">
           <get Template="System.HasValueOfNull({this})" />
         </property>

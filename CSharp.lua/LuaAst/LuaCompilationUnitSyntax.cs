@@ -33,9 +33,15 @@ namespace CSharpLua.LuaAst {
       if (other.ArgumentTypeNames.Contains(NewName)) {
         return -1;
       }
+
       if (ArgumentTypeNames.Contains(other.NewName)) {
         return 1;
       }
+
+      if (NewName.Length != other.NewName.Length) {
+        return NewName.Length.CompareTo(other.NewName.Length);
+      }
+
       return NewName.CompareTo(other.NewName);
     }
 
