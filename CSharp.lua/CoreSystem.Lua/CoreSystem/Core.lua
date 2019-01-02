@@ -1106,7 +1106,7 @@ function System.GetValueOrDefault(this, defaultValue)
   return this
 end
 
-defCls("System.Nullable", emptyFn)
+defStc("System.Nullable", emptyFn)
 
 local function pointerAddress(p)
   local address = p[3]

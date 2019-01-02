@@ -294,11 +294,12 @@ limitations under the License.
         <property name="Value">
           <get Template="System.getValueOfNull({this})" />
         </property>
-        <method name="Equals" Template="Object.EqualsStatic({this}, {0})" />
+        <method name="Equals" Template="System.Object.EqualsStatic({this}, {0})" />
         <method name="GetHashCode" Template="System.GetHashCodeOfNull({this})" />
         <method name="GetValueOrDefault" ArgCount="0" Template="System.GetValueOrDefaultT({this}, {^0})" />
         <method name="GetValueOrDefault" ArgCount="1" Template="System.GetValueOrDefault({this}, {0})" />
         <method name="ToString" Template="System.toString({this})" />
+        <method name="op_Explicit" Template="System.getValueOfNull({0})" />
       </class>
     </namespace>
     <namespace name="System.Collections" Name="System" />

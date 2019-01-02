@@ -125,13 +125,13 @@ namespace CSharpLua {
       }
     }
 
-    private INamedTypeSymbol CurTypeSymbol  {
-     get {
+    private INamedTypeSymbol CurTypeSymbol {
+      get {
         return typeDeclarations_.Peek().TypeSymbol;
       }
     }
 
-    internal TypeDeclarationInfo CurTypeDeclaration{
+    internal TypeDeclarationInfo CurTypeDeclaration {
       get {
         return typeDeclarations_.Count > 0 ? typeDeclarations_.Peek() : null;
       }
@@ -501,7 +501,7 @@ namespace CSharpLua {
       function.AddStatement(returnStatement);
     }
 
-    private void VisitAsync(bool returnsVoid,TypeSyntax returnType, LuaFunctionExpressionSyntax function) {
+    private void VisitAsync(bool returnsVoid, TypeSyntax returnType, LuaFunctionExpressionSyntax function) {
       var memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.Async);
       var invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
       var wrapFunction = new LuaFunctionExpressionSyntax();
@@ -519,7 +519,7 @@ namespace CSharpLua {
         function.AddStatement(invokeExpression);
       } else {
         function.AddStatement(new LuaReturnStatementSyntax(invokeExpression));
-      }     
+      }
     }
 
     private sealed class MethodDeclarationResult {
@@ -531,12 +531,12 @@ namespace CSharpLua {
     }
 
     private MethodDeclarationResult BuildMethodDeclaration(
-      CSharpSyntaxNode node, 
-      SyntaxList<AttributeListSyntax> attributeLists, 
+      CSharpSyntaxNode node,
+      SyntaxList<AttributeListSyntax> attributeLists,
       ParameterListSyntax parameterList,
       TypeParameterListSyntax typeParameterList,
-      BlockSyntax body, 
-      ArrowExpressionClauseSyntax expressionBody, 
+      BlockSyntax body,
+      ArrowExpressionClauseSyntax expressionBody,
       TypeSyntax returnType) {
       IMethodSymbol symbol = (IMethodSymbol)semanticModel_.GetDeclaredSymbol(node);
       List<LuaExpressionSyntax> refOrOutParameters = new List<LuaExpressionSyntax>();
@@ -557,7 +557,7 @@ namespace CSharpLua {
       bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
       if (!symbol.IsStatic) {
         function.AddParameter(LuaIdentifierNameSyntax.This);
-        if (isPrivate &&  generator_.IsMonoBehaviourSpeicalMethod(symbol)) {
+        if (isPrivate && generator_.IsMonoBehaviourSpeicalMethod(symbol)) {
           isPrivate = false;
         }
       } else if (symbol.IsMainEntryPoint()) {
@@ -1044,8 +1044,7 @@ namespace CSharpLua {
             throw e.With(SyntaxNode);
           } catch (BugErrorException) {
             throw;
-          } 
-          catch (Exception e) {
+          } catch (Exception e) {
             if (e.InnerException is CompilationErrorException ex) {
               throw ex.With(SyntaxNode);
             }
@@ -1459,8 +1458,7 @@ namespace CSharpLua {
             setPropertyAdapter.IsGetOrAdd = false;
             setPropertyAdapter.ArgumentList.AddArgument(propertyTemp);
             propertyStatements.Statements.Add(setPropertyAdapter.ToStatement());
-          }
-          else {
+          } else {
             multipleAssignment.Lefts.Add(refOrOutArgument);
           }
         }
@@ -1564,7 +1562,7 @@ namespace CSharpLua {
       return arguments;
     }
 
-    private LuaInvocationExpressionSyntax CheckInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node,  LuaExpressionSyntax expression) {
+    private LuaInvocationExpressionSyntax CheckInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node, LuaExpressionSyntax expression) {
       LuaInvocationExpressionSyntax invocation;
       if (symbol != null && symbol.IsExtensionMethod) {
         if (expression is LuaMemberAccessExpressionSyntax memberAccess) {
@@ -1646,11 +1644,11 @@ namespace CSharpLua {
     }
 
     private void CheckInvocationDeafultArguments(
-      ISymbol symbol, 
+      ISymbol symbol,
       ImmutableArray<IParameterSymbol> parameters,
-      List<LuaExpressionSyntax> arguments, 
+      List<LuaExpressionSyntax> arguments,
       List<(NameColonSyntax Name, ExpressionSyntax Expression)> argumentNodeInfos,
-      SyntaxNode node, 
+      SyntaxNode node,
       bool isCheckCallerAttribute) {
       if (parameters.Length > arguments.Count) {
         var optionalParameters = parameters.Skip(arguments.Count);
@@ -1867,7 +1865,7 @@ namespace CSharpLua {
       if (symbol.Kind == SymbolKind.NamedType) {
         var expressionSymbol = semanticModel_.GetSymbolInfo(node.Expression).Symbol;
         if (expressionSymbol.Kind == SymbolKind.Namespace) {
-          return node.Name.Accept(this); 
+          return node.Name.Accept(this);
         }
       }
 
@@ -3004,6 +3002,15 @@ namespace CSharpLua {
         }
 
         if (originalType.IsIntegerType()) {
+          if (originalType.IsNullableType()) {
+            var explicitMethod = (IMethodSymbol)originalType.GetMembers("op_Explicit").First();
+            return BuildConversionExpression(explicitMethod, expression);
+          }
+
+          if (targetType.IsNullableType()) {
+            return expression;
+          }
+
           return GetCastToNumberExpression(expression, targetType, false);
         }
 

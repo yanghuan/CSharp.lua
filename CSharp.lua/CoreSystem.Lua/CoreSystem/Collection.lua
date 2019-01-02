@@ -746,6 +746,25 @@ function Collection.linkedListEnumerator(t)
   return en
 end
 
+local Nullable = System.Nullable
+function Nullable.Compare(n1, n2, T)
+  if n1 then
+    if n2 then return Comparer_1(T).getDefault().Compare(n1, n2) end
+    return 1
+  end
+  if n2 then return -1 end
+  return 0
+end
+
+function Nullable.Equals(n1, n2, T)
+  if n1 then
+    if n2 then return EqualityComparer_1(t.__genericT__).getDefault().Equals(n1, n2) end
+    return false
+  end
+  if n2 then return false end
+  return true
+end
+
 local yieldCoroutinePool = {}
 local yieldCoroutineExit = {}
 

@@ -825,7 +825,7 @@ namespace CSharpLua {
     }
 
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {
-      if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol)) {
+      if (typeSymbol.IsCustomValueType() && !typeSymbol.IsNullableType() && !generator_.IsReadOnlyStruct(typeSymbol)) {
         bool need = false;
         switch (node.Parent.Kind()) {
           case SyntaxKind.Argument: {

@@ -528,7 +528,7 @@ namespace CSharpLua {
     }
 
     public static bool IsAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
-      if (left == right) {
+      if (left.Equals(right)) {
         return true;
       }
 
