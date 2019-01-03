@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local ArgumentException = System.ArgumentException
 
@@ -40,7 +41,8 @@ function EqualityComparer.__ctor__(this)
   end
 end
 
-System.define("System.EqualityComparer_1", function(T)
+local EqualityComparer_1
+EqualityComparer_1 = define("System.EqualityComparer_1", function(T)
   local cls = {
     __inherits__ = { System.IEqualityComparer_1(T) }, 
     __genericT__ = T,
@@ -49,7 +51,7 @@ System.define("System.EqualityComparer_1", function(T)
   function cls.getDefault()
     local comparer = defaultComparer 
     if comparer == nil then
-      comparer = System.EqualityComparer_1(T)()
+      comparer = EqualityComparer_1(T)()
       defaultComparer = comparer
     end
     return comparer
@@ -105,9 +107,10 @@ function Comparer.__ctor__(this)
   end
 end
 
-System.define("System.Comparer", Comparer)
+define("System.Comparer", Comparer)
 
-System.define("System.Comparer_1", function(T)
+local Comparer_1
+Comparer_1 = define("System.Comparer_1", function(T)
   local cls = {
     __inherits__ = { System.IComparer_1(T) }, 
     __genericT__ = T,
@@ -116,7 +119,7 @@ System.define("System.Comparer_1", function(T)
   function cls.getDefault()
     local comparer = defaultComparer 
     if comparer == nil then
-      comparer = System.Comparer_1(T)()
+      comparer = Comparer_1(T)()
       defaultComparer = comparer
     end
     return comparer

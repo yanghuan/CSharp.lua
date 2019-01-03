@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local each = System.each
 local identityFn = System.identityFn
@@ -24,6 +25,7 @@ local unWrap = Collection.unWrap
 local sort = Collection.sort
 local is = System.is
 local cast = System.cast
+
 local NullReferenceException = System.NullReferenceException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -37,7 +39,7 @@ local assert = assert
 local select = select
 local getmetatable = getmetatable
 
-local InternalEnumerable = System.define("System.Linq.InternalEnumerable", {
+local InternalEnumerable = define("System.Linq.InternalEnumerable", {
   __inherits__ = { System.IEnumerable }
 })
 
@@ -50,7 +52,7 @@ local function create(source, GetEnumerator)
   return createInternal(source.__genericT__, GetEnumerator)
 end 
 
-local InternalEnumerator = System.define("System.Linq.InternalEnumerator", {
+local InternalEnumerator = define("System.Linq.InternalEnumerator", {
   __inherits__ = { System.IEnumerator }
 })
 
@@ -90,7 +92,7 @@ local function IEnumerator(source, tryGetNext, init)
 end
 
 local Enumerable = {}
-System.define("System.Linq.Enumerable", Enumerable)
+define("System.Linq.Enumerable", Enumerable)
 
 function Enumerable.Where(source, predicate)
   if source == nil then throw(ArgumentNullException("source")) end
@@ -272,7 +274,7 @@ function Lookup.GetEnumerator(this)
   return Collection.arrayEnumerator(this.groups)
 end
 
-local LookupFn = System.define("System.Linq.Lookup", function(TKey, TElement)
+local LookupFn = define("System.Linq.Lookup", function(TKey, TElement)
   local cls = {
     __genericTKey__ = TKey,
     __genericTElement__ = TElement,
@@ -294,7 +296,7 @@ function Grouping.getCount(this)
 end
 
 Grouping.__inherits__ = { IGrouping }
-System.define("System.Linq.Grouping", Grouping)
+define("System.Linq.Grouping", Grouping)
 
 local function addToLookup(this, key, value)
   local hashCode = this.comparer.GetHashCode(key)

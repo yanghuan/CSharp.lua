@@ -1037,6 +1037,7 @@ function System.valueTuple(t)
 end
 
 defCls("System.Attribute", {})
+defStc("System.Nullable", emptyFn)
 
 debug.setmetatable(nil, {
   __concat = function(a, b)
@@ -1105,8 +1106,6 @@ function System.GetValueOrDefault(this, defaultValue)
   end
   return this
 end
-
-defStc("System.Nullable", emptyFn)
 
 local function pointerAddress(p)
   local address = p[3]
