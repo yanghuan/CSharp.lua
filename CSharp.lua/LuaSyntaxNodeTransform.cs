@@ -2215,7 +2215,7 @@ namespace CSharpLua {
         case SyntaxKind.NumericLiteralExpression: {
             string value = node.Token.ValueText;
             if (node.Token.Value is float || node.Token.Value is double) {
-              if (!value.Contains('.')) {
+              if (!value.Contains('.') && !value.Contains('E')) {
                 value += ".0";
               }
             }
