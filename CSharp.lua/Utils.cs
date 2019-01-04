@@ -41,7 +41,7 @@ namespace CSharpLua {
     public CompilationErrorException(string message) : base(message) {
     }
 
-    public CompilationErrorException(SyntaxNode node, string message) 
+    public CompilationErrorException(SyntaxNode node, string message)
       : base($"{node.GetLocationString()}: {message}, please refactor your code.") {
       SyntaxNode = node;
     }
@@ -55,7 +55,7 @@ namespace CSharpLua {
   }
 
   public sealed class BugErrorException : Exception {
-    public BugErrorException(SyntaxNode node, Exception e) 
+    public BugErrorException(SyntaxNode node, Exception e)
       : base($"{node.GetLocationString()}: Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue", e) {
     }
   }
@@ -442,6 +442,10 @@ namespace CSharpLua {
       return kind == SyntaxKind.DeclarationExpression || kind == SyntaxKind.TupleExpression;
     }
 
+    public static bool IsTypeDeclaration(this SyntaxKind kind) {
+      return kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration;
+    }
+
     private static INamedTypeSymbol systemLinqEnumerableType_;
 
     public static bool IsSystemLinqEnumerable(this INamedTypeSymbol symbol) {
@@ -681,10 +685,6 @@ namespace CSharpLua {
       }
     }
 
-    public static bool IsTypeDeclaration(this SyntaxKind kind) {
-      return kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration;
-    }
-
     public static ITypeSymbol GetIEnumerableElementType(this ITypeSymbol symbol) {
       var interfaceType = symbol.IsGenericIEnumerableType() ? (INamedTypeSymbol)symbol : symbol.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
       return interfaceType?.TypeArguments.First();
@@ -774,10 +774,10 @@ namespace CSharpLua {
     }
 
     private static void FillExternalTypeName(
-      StringBuilder sb, 
-      INamedTypeSymbol typeSymbol, 
-      Func<INamespaceSymbol, string, string> funcOfNamespace, 
-      Func<INamedTypeSymbol, string> funcOfTypeName, 
+      StringBuilder sb,
+      INamedTypeSymbol typeSymbol,
+      Func<INamespaceSymbol, string, string> funcOfNamespace,
+      Func<INamedTypeSymbol, string> funcOfTypeName,
       LuaSyntaxNodeTransform transfor = null) {
       var externalType = typeSymbol.ContainingType;
       if (externalType != null) {
@@ -942,8 +942,8 @@ namespace CSharpLua {
     }
 
     public static bool IsExplicitCtorExists(this INamedTypeSymbol baseType) {
-      while (baseType != null 
-        && baseType.SpecialType != SpecialType.System_Object 
+      while (baseType != null
+        && baseType.SpecialType != SpecialType.System_Object
         && baseType.SpecialType != SpecialType.System_ValueType) {
         if (baseType.Constructors.Any(i => !i.IsStatic && !i.IsImplicitlyDeclared)) {
           return true;
@@ -976,7 +976,7 @@ namespace CSharpLua {
     }
 
     public static bool IsRuntimeCompilerServices(this INamespaceSymbol symbol) {
-      return symbol.Name == "CompilerServices"  && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
+      return symbol.Name == "CompilerServices" && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
     }
 
     #region hard code for protobuf-net

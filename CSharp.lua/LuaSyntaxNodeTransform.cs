@@ -211,12 +211,13 @@ namespace CSharpLua {
 
     private void BuildTypeMembers(LuaTypeDeclarationSyntax typeDeclaration, TypeDeclarationSyntax node) {
       if (!node.IsKind(SyntaxKind.InterfaceDeclaration)) {
-        foreach (var member in node.Members) {
-          var newMember = member.Accept(this);
-          SyntaxKind kind = member.Kind();
-          if (kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration) {
-            typeDeclaration.AddNestedTypeDeclaration((LuaTypeDeclarationSyntax)newMember);
-          }
+        foreach (var nestedTypeDeclaration in node.Members.Where(i => i.Kind().IsTypeDeclaration())) {
+          var luaNestedTypeDeclaration = (LuaTypeDeclarationSyntax)nestedTypeDeclaration.Accept(this);
+          typeDeclaration.AddNestedTypeDeclaration(luaNestedTypeDeclaration);
+        }
+
+        foreach (var member in node.Members.Where(i => !i.Kind().IsTypeDeclaration())) {
+          member.Accept(this);
         }
       }
     }
@@ -593,7 +594,11 @@ namespace CSharpLua {
         blocks_.Push(function.Body);
         var expression = (LuaExpressionSyntax)expressionBody.Accept(this);
         blocks_.Pop();
-        function.AddStatement(new LuaReturnStatementSyntax(expression));
+        if (symbol.ReturnsVoid) {
+          function.AddStatement(expression.ToStatement());
+        } else {
+          function.AddStatement(new LuaReturnStatementSyntax(expression));
+        }
       }
 
       if (function.HasYield) {
@@ -710,6 +715,11 @@ namespace CSharpLua {
                 AddField(new LuaIdentifierNameSyntax(name), typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
                 continue;
               }
+            }
+          }
+          if (isPrivate && isStatic) {
+            if (generator_.IsForcePublicSymbol(variableSymbol)) {
+              isPrivate = false;
             }
           }
           LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
@@ -1890,7 +1900,11 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildStaticFieldName(ISymbol symbol, bool isReadOnly, IdentifierNameSyntax node) {
       Contract.Assert(symbol.IsStatic);
       LuaIdentifierNameSyntax name = GetMemberName(symbol);
-      if (!symbol.IsPrivate()) {
+      bool isPrivate = symbol.IsPrivate();
+      if (isPrivate && generator_.IsForcePublicSymbol(symbol)) {
+        isPrivate = false;
+      }
+      if (!isPrivate) {
         if (isReadOnly) {
           if (node.Parent.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
             AssignmentExpressionSyntax assignmentExpression = (AssignmentExpressionSyntax)node.Parent;
@@ -1914,6 +1928,14 @@ namespace CSharpLua {
               return newExpression;
             }
           }
+        }
+      } else {
+        if (!CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
+          if (symbol.IsPrivate()) {
+            generator_.AddForcePublicSymbol(symbol);
+          }
+          var typeName = GetTypeName(symbol.ContainingType);
+          return new LuaMemberAccessExpressionSyntax(typeName, name);
         }
       }
       return name;
@@ -2798,9 +2820,10 @@ namespace CSharpLua {
         block.Statements.Add(new LuaLocalVariableDeclaratorSyntax(continueIdentifier));
         LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
         WriteStatementOrBlock(bodyStatement, repeatStatement.Body);
-        if (repeatStatement.Body.Statements.Last() is LuaReturnStatementSyntax returnStatement) {
+        var lastStatement = repeatStatement.Body.Statements.Last();
+        if (lastStatement is LuaBaseReturnStatementSyntax) {
           LuaBlockStatementSyntax returnBlock = new LuaBlockStatementSyntax();
-          returnBlock.Statements.Add(returnStatement);
+          returnBlock.Statements.Add(lastStatement);
           repeatStatement.Body.Statements[repeatStatement.Body.Statements.Count - 1] = returnBlock;
         }
         LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(continueIdentifier, LuaIdentifierNameSyntax.True);

@@ -53,10 +53,13 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
   }
-
-  public sealed class LuaReturnStatementSyntax : LuaStatementSyntax {
-    public LuaExpressionSyntax Expression { get; }
+  
+  public abstract class LuaBaseReturnStatementSyntax : LuaStatementSyntax {
     public string ReturnKeyword => Tokens.Return;
+  }
+
+  public sealed class LuaReturnStatementSyntax : LuaBaseReturnStatementSyntax {
+    public LuaExpressionSyntax Expression { get; }
 
     public LuaReturnStatementSyntax(LuaExpressionSyntax expression = null) {
       Expression = expression;
@@ -67,9 +70,8 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaMultipleReturnStatementSyntax : LuaStatementSyntax {
+  public sealed class LuaMultipleReturnStatementSyntax : LuaBaseReturnStatementSyntax {
     public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
-    public string ReturnKeyword => Tokens.Return;
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);

@@ -81,7 +81,8 @@ namespace CSharpLua {
     public XmlMetaProvider XmlMetaProvider { get; }
     public SettingInfo Setting { get; set; }
     private HashSet<string> exportEnums_ = new HashSet<string>();
-    public HashSet<INamedTypeSymbol> ignoreExportTypes_ = new HashSet<INamedTypeSymbol>();
+    private HashSet<INamedTypeSymbol> ignoreExportTypes_ = new HashSet<INamedTypeSymbol>();
+    private HashSet<ISymbol> forcePublicSymbols_ = new HashSet<ISymbol>();
     private readonly bool isExportAttributesAll_;
     private HashSet<string> exportAttributes_;
     private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
@@ -219,6 +220,14 @@ namespace CSharpLua {
 
     internal void AddIgnoreExportType(INamedTypeSymbol type) {
       ignoreExportTypes_.Add(type);
+    }
+
+    internal void AddForcePublicSymbol(ISymbol symbol) {
+      forcePublicSymbols_.Add(symbol);
+    }
+
+    internal bool IsForcePublicSymbol(ISymbol symbol) {
+      return forcePublicSymbols_.Contains(symbol);
     }
 
     internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
