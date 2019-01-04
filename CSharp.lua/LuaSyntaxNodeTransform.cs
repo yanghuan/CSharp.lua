@@ -1428,6 +1428,7 @@ namespace CSharpLua {
         switch (kind) {
           case SyntaxKind.ExpressionStatement:
           case SyntaxKind.ArrowExpressionClause:
+          case SyntaxKind.ForStatement:
             break;
           default:
             isInlineAssignment = true;
