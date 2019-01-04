@@ -1429,21 +1429,42 @@ namespace CSharpLua {
       }
     }
 
-    private static bool IsInlineAssignment(AssignmentExpressionSyntax node) {
+    private bool IsInlineAssignment(AssignmentExpressionSyntax node) {
       bool isInlineAssignment = false;
       SyntaxKind kind = node.Parent.Kind();
-      if (kind == SyntaxKind.ParenthesizedExpression) {
-        isInlineAssignment = true;
-      } else {
-        switch (kind) {
-          case SyntaxKind.ExpressionStatement:
-          case SyntaxKind.ArrowExpressionClause:
-          case SyntaxKind.ForStatement:
+      switch (kind) {
+        case SyntaxKind.ExpressionStatement:
+        case SyntaxKind.ForStatement:
+          break;
+        case SyntaxKind.ArrowExpressionClause:  {
+            var symbol = semanticModel_.GetDeclaredSymbol(node.Parent.Parent);
+            switch (symbol.Kind) {
+              case SymbolKind.Method:
+                var method = (IMethodSymbol)symbol;
+                if (!method.ReturnsVoid) {
+                  isInlineAssignment = true;
+                }
+                break;
+              case SymbolKind.Property: {
+                  var property = (IPropertySymbol)symbol;
+                  if (!property.GetMethod.ReturnsVoid) {
+                    isInlineAssignment = true;
+                  }
+                  break;
+                }
+            }
             break;
-          default:
-            isInlineAssignment = true;
+          }
+        case SyntaxKind.ParenthesizedLambdaExpression: {
+            var method = CurMethodInfoOrNull.Symbol;
+            if (!method.ReturnsVoid) {
+              isInlineAssignment = true;
+            }
             break;
-        }
+          }
+        default:
+          isInlineAssignment = true;
+          break;
       }
       return isInlineAssignment;
     }
