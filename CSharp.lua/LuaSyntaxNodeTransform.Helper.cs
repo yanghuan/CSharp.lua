@@ -352,7 +352,7 @@ namespace CSharpLua {
       bool isVirtual = symbol.IsOverridable() && !generator_.IsSealed(symbol.ContainingType);
       if (!isVirtual) {
         var typeSymbol = CurTypeSymbol;
-        if (typeSymbol.Equals(symbol.ContainingType)) {
+        if (typeSymbol.IsContainsInternalSymbol(symbol)) {
           return true;
         }
       }
@@ -507,7 +507,7 @@ namespace CSharpLua {
 
     private bool CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node, LuaExpressionSyntax expression, out LuaMemberAccessExpressionSyntax outExpression) {
       if (!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-        if (symbol.ContainingType != CurTypeSymbol) {           //using static
+        if (!CurTypeSymbol.IsContainsInternalSymbol(symbol)) {           //using static
           var usingStaticType = GetTypeName(symbol.ContainingType);
           outExpression = new LuaMemberAccessExpressionSyntax(usingStaticType, expression);
           return true;

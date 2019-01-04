@@ -31,9 +31,11 @@ namespace CSharpLua.LuaAst {
   public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
     public bool IsPartialMark { get; set; }
     public bool IsClassUsed { get; set; }
+
     private LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
+    private List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new List<LuaTypeDeclarationSyntax>();
     private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
-    protected LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
+    private LuaTableInitializerExpression resultTable_ = new LuaTableInitializerExpression();
 
     private List<LuaStatementSyntax> staticInitStatements_ = new List<LuaStatementSyntax>();
     private List<LuaStatementSyntax> staticcCtorStatements_ = new List<LuaStatementSyntax>();
@@ -59,6 +61,10 @@ namespace CSharpLua.LuaAst {
       if (document != null) {
         document_.Add(document);
       }
+    }
+
+    internal void AddNestedTypeDeclaration(LuaTypeDeclarationSyntax typeDeclaration) {
+      nestedTypeDeclarations_.Add(typeDeclaration);
     }
 
     internal void AddClassAttributes(List<LuaExpressionSyntax> attributes) {
@@ -135,7 +141,10 @@ namespace CSharpLua.LuaAst {
     }
 
     private void AddResultTable(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
-      LuaKeyValueTableItemSyntax item = new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), value);
+      AddResultTable(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(name), value));
+    }
+
+    protected void AddResultTable(LuaKeyValueTableItemSyntax item) {
       resultTable_.Items.Add(item);
     }
 
@@ -439,6 +448,7 @@ namespace CSharpLua.LuaAst {
 
     private void AddAllStatementsTo(LuaBlockSyntax body) {
       body.Statements.Add(local_);
+      body.Statements.AddRange(nestedTypeDeclarations_);
       CheckGenericUsingDeclares(body);
       CheckStaticCtorFunction(body);
       CheckCtorsFunction(body);
@@ -467,6 +477,8 @@ namespace CSharpLua.LuaAst {
 
       document_.Render(renderer);
       if (typeParameters_.Count > 0) {
+        AddStatements(nestedTypeDeclarations_);
+        nestedTypeDeclarations_.Clear();
         LuaFunctionExpressionSyntax wrapFunction = new LuaFunctionExpressionSyntax();
         foreach (var type in typeParameters_) {
           wrapFunction.AddParameter(type);
@@ -510,7 +522,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public void Add(LuaKeyValueTableItemSyntax statement) {
-      resultTable_.Items.Add(statement);
+      AddResultTable(statement);
     }
 
     internal override void Render(LuaRenderer renderer) {

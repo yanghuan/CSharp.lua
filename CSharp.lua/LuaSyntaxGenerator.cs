@@ -93,6 +93,7 @@ namespace CSharpLua {
 
     static LuaSyntaxGenerator() {
       Contract.ContractFailed += (_, e) => {
+        e.SetHandled();
         throw new ApplicationException(e.Message, e.OriginalException);
       };
     }

@@ -229,22 +229,26 @@ namespace CSharpLua.LuaAst {
         if (beginIndex != -1) {
           AddLineText(items, curIndex, beginIndex);
           int endIndex = items.FindIndex(beginIndex + 1, it => it == Tokens.CloseSummary);
-          Contract.Assert(endIndex != -1);
-          LuaSummaryDocumentStatement summary = new LuaSummaryDocumentStatement();
-          bool hasAttr = false;
-          for (int i = beginIndex + 1; i < endIndex; ++i) {
-            string text = items[i];
-            if (IsAttribute(text, out AttributeFlags arrt)) {
-              attr_ |= arrt;
-              hasAttr = true;
-            } else {
-              summary.Texts.Add(text);
+          if (endIndex != -1) {
+            LuaSummaryDocumentStatement summary = new LuaSummaryDocumentStatement();
+            bool hasAttr = false;
+            for (int i = beginIndex + 1; i < endIndex; ++i) {
+              string text = items[i];
+              if (IsAttribute(text, out AttributeFlags arrt)) {
+                attr_ |= arrt;
+                hasAttr = true;
+              } else {
+                summary.Texts.Add(text);
+              }
             }
+            if (summary.Texts.Count > 0 || !hasAttr) {
+              Statements.Add(summary);
+            }
+            curIndex = endIndex + 1;
+          } else {
+            AddLineText(items, curIndex, items.Count);
+            curIndex = items.Count;
           }
-          if (summary.Texts.Count > 0 || !hasAttr) {
-            Statements.Add(summary);
-          }
-          curIndex = endIndex + 1;
         } else {
           AddLineText(items, curIndex, items.Count);
           curIndex = items.Count;

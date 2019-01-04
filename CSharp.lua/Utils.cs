@@ -201,6 +201,10 @@ namespace CSharpLua {
       return symbol.DeclaredAccessibility == Accessibility.Private;
     }
 
+    public static bool IsPublic(this ISymbol symbol) {
+      return symbol.DeclaredAccessibility == Accessibility.Public;
+    }
+
     public static bool IsPrivate(this SyntaxTokenList modifiers) {
       foreach (var modifier in modifiers) {
         switch (modifier.Kind()) {
@@ -347,6 +351,10 @@ namespace CSharpLua {
     public static bool IsPropertyField(this IPropertySymbol symbol) {
       if (!symbol.IsFromCode() || symbol.IsOverridable()) {
         return false;
+      }
+
+      if (symbol.IsProtobufNetSpecialProperty()) {
+        return true;
       }
 
       var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
@@ -946,6 +954,19 @@ namespace CSharpLua {
       return false;
     }
 
+    public static bool IsContainsInternalSymbol(this INamedTypeSymbol type, ISymbol symbol) {
+      if (type.Equals(symbol.ContainingType)) {
+        return true;
+      }
+
+      var containingType = type.ContainingType;
+      if (containingType != null && !containingType.IsGenericType) {
+        return containingType.IsContainsInternalSymbol(symbol);
+      }
+
+      return false;
+    }
+
     public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
       return new LuaExpressionStatementSyntax(expression);
     }
@@ -961,11 +982,38 @@ namespace CSharpLua {
     #region hard code for protobuf-net
 
     public static bool IsProtobufNetDeclaration(this INamedTypeSymbol type) {
-      var attr = type.GetAttributes().FirstOrDefault();
-      if (attr != null) {
+      foreach (var attr in type.GetAttributes()) {
         var attribute = attr.AttributeClass;
         if (attribute.Name == "ProtoContractAttribute" && attribute.ContainingNamespace.Name == "ProtoBuf") {
           return true;
+        }
+      }
+      return false;
+    }
+
+    public static bool IsProtobufNetSpecialField(this IFieldSymbol symbol, out string name) {
+      name = null;
+      if (!symbol.IsStatic && symbol.IsPrivate() && symbol.IsFromCode()) {
+        if (symbol.Name.StartsWith("_")) {
+          var containingType = symbol.ContainingType;
+          if (containingType.IsProtobufNetDeclaration()) {
+            name = symbol.Name.TrimStart('_');
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    public static bool IsProtobufNetSpecialProperty(this IPropertySymbol symbol) {
+      if (!symbol.IsStatic && symbol.IsPublic() && symbol.IsFromCode()) {
+        var containingType = symbol.ContainingType;
+        if (containingType.IsProtobufNetDeclaration()) {
+          string fieldName = "_" + symbol.Name;
+          var field = symbol.ContainingType.GetMembers(fieldName).OfType<IFieldSymbol>().FirstOrDefault();
+          if (field != null && !field.IsStatic && field.IsPrivate()) {
+            return true;
+          }
         }
       }
       return false;

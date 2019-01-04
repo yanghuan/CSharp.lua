@@ -186,9 +186,9 @@ namespace CSharpLua {
 
       var statements = VisitTriviaAndNode(node, node.Members, false);
       foreach (var statement in statements) {
-        if (statement is LuaTypeDeclarationSyntax typeeDeclaration) {
+        if (statement is LuaTypeDeclarationSyntax typeDeclaration) {
           var ns = new LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax.Empty);
-          ns.AddStatement(typeeDeclaration);
+          ns.AddStatement(typeDeclaration);
           compilationUnit.AddStatement(ns);
         } else {
           compilationUnit.AddStatement(statement);
@@ -215,7 +215,7 @@ namespace CSharpLua {
           var newMember = member.Accept(this);
           SyntaxKind kind = member.Kind();
           if (kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration) {
-            typeDeclaration.AddStatement((LuaTypeDeclarationSyntax)newMember);
+            typeDeclaration.AddNestedTypeDeclaration((LuaTypeDeclarationSyntax)newMember);
           }
         }
       }
@@ -703,6 +703,14 @@ namespace CSharpLua {
               CurType.AddEvent(eventName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, typeExpression, statements);
               continue;
             }
+          } else {
+            if (!isStatic && isPrivate) {
+              var fieldSymbol = (IFieldSymbol)variableSymbol;
+              if (fieldSymbol.IsProtobufNetSpecialField(out string name)) {
+                AddField(new LuaIdentifierNameSyntax(name), typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
+                continue;
+              }
+            }
           }
           LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
           AddField(fieldName, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
@@ -775,6 +783,10 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
       if (!node.Modifiers.IsAbstract()) {
         var symbol = semanticModel_.GetDeclaredSymbol(node);
+        if (symbol.IsProtobufNetSpecialProperty()) {
+          return null;
+        }
+
         bool isStatic = symbol.IsStatic;
         bool isPrivate = symbol.IsPrivate();
         bool hasGet = false;
@@ -1816,7 +1828,7 @@ namespace CSharpLua {
         }
       }
 
-      if (symbol.IsStatic && node.Expression.IsKind(SyntaxKind.IdentifierName) && CurTypeSymbol == symbol.ContainingSymbol) {
+      if (symbol.IsStatic && node.Expression.IsKind(SyntaxKind.IdentifierName) && CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
         bool isOnlyName = false;
         if (symbol.Kind == SymbolKind.Method) {
           isOnlyName = true;
@@ -2027,6 +2039,9 @@ namespace CSharpLua {
         return BuildStaticFieldName(symbol, symbol.IsReadOnly, node);
       } else {
         if (IsInternalNode(node)) {
+          if (symbol.IsProtobufNetSpecialField(out string name)) {
+            return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, new LuaIdentifierNameSyntax(name));
+          }
           return new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, GetMemberName(symbol));
         } else {
           return GetMemberName(symbol);
