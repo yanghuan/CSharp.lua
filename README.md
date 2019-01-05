@@ -80,11 +80,6 @@ https://github.com/yanghuan/CSharp.lua/releases
 ## Documentation
 https://github.com/yanghuan/CSharp.lua/wiki
 
-## Communication
-- [Issues](https://github.com/yanghuan/CSharp.lua/issues)
-- Mail：sy.yanghuan@gmail.com
-- QQ Group: 715350749 (Chinese Only)
-
 ## *License*
 [Apache 2.0 license](https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE).
 
@@ -92,4 +87,9 @@ https://github.com/yanghuan/CSharp.lua/wiki
 - [Bridge.NET](http://bridge.net/)
 - [WootzJs](https://github.com/kswoll/WootzJs)
 - [.NET referencesource](http://referencesource.microsoft.com/)
+
+## Communication
+- [Issues](https://github.com/yanghuan/CSharp.lua/issues)
+- Mail：sy.yanghuan@gmail.com
+- QQ Group: 715350749 (Chinese Only)
 
