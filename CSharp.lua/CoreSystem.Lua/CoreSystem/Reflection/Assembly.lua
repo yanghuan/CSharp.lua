@@ -29,6 +29,7 @@ local assert = assert
 local unpack = table.unpack
 local pairs = pairs
 local ipairs = ipairs
+local tinsert = table.insert
 
 local Assembly = {}
 
@@ -118,6 +119,40 @@ function MemberInfo.IsDefined(this, attributeType, inherit)
     return false
   end
 end
+
+local function getCustomAttributes(cls, name, attributeCls, results)
+  local metadata = cls.__metadata__
+  if metadata then
+    local attributes = metadata.attributes
+    if attributes ~= nil then
+      local attrTable = attributes[name]
+      if attrTable ~= nil then
+        for _, v in ipairs(attrTable) do
+          if System.is(v, attributeCls) then
+            tinsert(results, v);
+          end
+        end
+      end
+    end
+  end
+end
+
+function MemberInfo.GetCustomAttributes(this, attributeType, inherit)
+  local results = {}
+  if not inherit then
+    getCustomAttributes(this.c, this.name, attributeType.c, results)
+  else
+    local cls, name, attributeCls = this.c, this.name, attributeType.c
+    repeat 
+      getCustomAttributes(cls, name, attributeCls, results);
+      cls = getmetatable(cls)
+    until cls == nil
+  end
+  
+  local array = System.arrayFromTable(results, System.Attribute)
+  return array
+end
+
 
 System.define("System.Reflection.MemberInfo", MemberInfo)
 
@@ -355,3 +390,19 @@ function Type.IsDefined(this, attributeType, inherit)
     return false
   end
 end
+
+function Type.GetCustomAttributes(this, attributeType, inherit)
+  local results = {}
+  if not inherit then
+    getCustomAttributes(this.c, "class", attributeType.c, results)
+  else
+    local cls, attributeCls = this.c, attributeType.c
+    repeat 
+      getCustomAttributes(cls, "class", attributeCls, results);
+      cls = getmetatable(cls)
+    until cls == nil
+  end
+  local array = System.arrayFromTable(results, System.Attribute)
+  return array
+end
+
