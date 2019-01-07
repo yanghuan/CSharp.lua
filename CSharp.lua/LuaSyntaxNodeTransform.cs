@@ -1757,14 +1757,31 @@ namespace CSharpLua {
     }
 
     private void CheckPrevIsInvokeStatement(ExpressionSyntax node) {
-      var parent = node.Parent;
-      while (parent != null) {
-        if (parent.IsKind(SyntaxKind.Argument)) {
+      SyntaxNode current = node;
+      while (true) {
+        var parent = current.Parent;
+        if (parent == null) {
           return;
-        } else if (parent.IsKind(SyntaxKind.ExpressionStatement)) {
+        }
+
+        switch (parent.Kind()) {
+          case SyntaxKind.Argument:
+          case SyntaxKind.LocalDeclarationStatement:
+          case SyntaxKind.CastExpression:
+            return;
+
+          case SyntaxKind.SimpleAssignmentExpression:
+            var assignment = (AssignmentExpressionSyntax)parent;
+            if (assignment.Right == current) {
+              return;
+            }
+            break;
+        }
+
+        if (parent.IsKind(SyntaxKind.ExpressionStatement)) {
           break;
         }
-        parent = parent.Parent;
+        current = parent;
       }
 
       var curBlock = CurBlockOrNull;

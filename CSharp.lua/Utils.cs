@@ -945,7 +945,7 @@ namespace CSharpLua {
       while (baseType != null
         && baseType.SpecialType != SpecialType.System_Object
         && baseType.SpecialType != SpecialType.System_ValueType) {
-        if (baseType.Constructors.Any(i => !i.IsStatic && !i.IsImplicitlyDeclared)) {
+        if (baseType.Constructors.Any(i => !i.IsStatic)) {
           return true;
         }
 
