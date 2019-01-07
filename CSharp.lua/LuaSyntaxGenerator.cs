@@ -223,11 +223,11 @@ namespace CSharpLua {
     }
 
     internal void AddForcePublicSymbol(ISymbol symbol) {
-      forcePublicSymbols_.Add(symbol);
+      forcePublicSymbols_.Add(symbol.OriginalDefinition);
     }
 
     internal bool IsForcePublicSymbol(ISymbol symbol) {
-      return forcePublicSymbols_.Contains(symbol);
+      return forcePublicSymbols_.Contains(symbol.OriginalDefinition);
     }
 
     internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {

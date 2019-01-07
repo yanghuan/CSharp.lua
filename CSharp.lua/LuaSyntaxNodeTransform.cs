@@ -558,8 +558,10 @@ namespace CSharpLua {
       bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
       if (!symbol.IsStatic) {
         function.AddParameter(LuaIdentifierNameSyntax.This);
-        if (isPrivate && generator_.IsMonoBehaviourSpeicalMethod(symbol)) {
-          isPrivate = false;
+        if (isPrivate) {
+          if (generator_.IsForcePublicSymbol(symbol) || generator_.IsMonoBehaviourSpeicalMethod(symbol)) {
+            isPrivate = false;
+          }
         }
       } else if (symbol.IsMainEntryPoint()) {
         isPrivate = false;
@@ -567,6 +569,8 @@ namespace CSharpLua {
         if (!success) {
           throw new CompilationErrorException(node, "has more than one entry point");
         }
+      } else if (isPrivate && generator_.IsForcePublicSymbol(symbol)) {
+        isPrivate = false;
       }
 
       if (!symbol.IsPrivate()) {
@@ -717,10 +721,8 @@ namespace CSharpLua {
               }
             }
           }
-          if (isPrivate && isStatic) {
-            if (generator_.IsForcePublicSymbol(variableSymbol)) {
-              isPrivate = false;
-            }
+          if (isPrivate && generator_.IsForcePublicSymbol(variableSymbol)) {
+            isPrivate = false;
           }
           LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
           AddField(fieldName, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
@@ -736,6 +738,9 @@ namespace CSharpLua {
             string v = (string)constValue.Value;
             if (v.Length > kStringConstInlineCount) {
               var variableSymbol = semanticModel_.GetDeclaredSymbol(variable);
+              if (isPrivate && generator_.IsForcePublicSymbol(variableSymbol)) {
+                isPrivate = false;
+              }
               LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
               AddField(fieldName, typeSymbol, type, variable.Initializer.Value, true, true, isPrivate, true, node.AttributeLists);
             }
@@ -801,6 +806,9 @@ namespace CSharpLua {
         bool isPrivate = symbol.IsPrivate();
         bool hasGet = false;
         bool hasSet = false;
+        if (isPrivate && generator_.IsForcePublicSymbol(symbol)) {
+          isPrivate = false;
+        }
         LuaIdentifierNameSyntax propertyName = GetMemberName(symbol);
         if (node.AccessorList != null) {
           foreach (var accessor in node.AccessorList.Accessors) {
@@ -1991,7 +1999,7 @@ namespace CSharpLua {
       return true;
     }
 
-    private LuaExpressionSyntax VisitFieldOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty) {
+    private LuaExpressionSyntax VisitPropertyOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty) {
       bool isField, isReadOnly;
       if (isProperty) {
         var propertySymbol = (IPropertySymbol)symbol;
@@ -2020,7 +2028,14 @@ namespace CSharpLua {
         if (symbol.IsStatic) {
           var identifierExpression = new LuaPropertyAdapterExpressionSyntax(identifierName);
           if (CheckUsingStaticNameSyntax(symbol, node, identifierExpression, out var newExpression)) {
+            if (symbol.IsPrivate()) {
+              generator_.AddForcePublicSymbol(symbol);
+            }
             return newExpression;
+          } else if (symbol.IsPrivate() && !CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
+            generator_.AddForcePublicSymbol(symbol);
+            var usingStaticType = GetTypeName(symbol.ContainingType);
+            return new LuaMemberAccessExpressionSyntax(usingStaticType, identifierName);
           }
           return identifierExpression;
         } else {
@@ -2032,6 +2047,9 @@ namespace CSharpLua {
             if (IsInternalNode(node)) {
               return new LuaPropertyAdapterExpressionSyntax(LuaIdentifierNameSyntax.This, identifierName, true);
             } else {
+              if (symbol.IsPrivate() && !CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
+                generator_.AddForcePublicSymbol(symbol);
+              }
               return new LuaPropertyAdapterExpressionSyntax(identifierName);
             }
           }
@@ -2043,6 +2061,9 @@ namespace CSharpLua {
       LuaIdentifierNameSyntax methodName = GetMemberName(symbol);
       if (symbol.IsStatic) {
         if (CheckUsingStaticNameSyntax(symbol, node, methodName, out var outExpression)) {
+          if (symbol.IsPrivate()) {
+            generator_.AddForcePublicSymbol(symbol);
+          }
           return outExpression;
         }
         if (IsInternalMember(node, symbol)) {
@@ -2063,6 +2084,8 @@ namespace CSharpLua {
 
             LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, methodName, true);
             return memberAccess;
+          } else if (symbol.IsPrivate() && !CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
+            generator_.AddForcePublicSymbol(symbol);
           }
         }
       }
@@ -2160,11 +2183,11 @@ namespace CSharpLua {
             break;
           }
         case SymbolKind.Property: {
-            identifier = VisitFieldOrEventIdentifierName(node, symbol, true);
+            identifier = VisitPropertyOrEventIdentifierName(node, symbol, true);
             break;
           }
         case SymbolKind.Event: {
-            identifier = VisitFieldOrEventIdentifierName(node, symbol, false);
+            identifier = VisitPropertyOrEventIdentifierName(node, symbol, false);
             break;
           }
         default: {
