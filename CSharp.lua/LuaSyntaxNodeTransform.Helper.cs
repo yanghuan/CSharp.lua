@@ -606,21 +606,11 @@ namespace CSharpLua {
 
     private bool IsImportTypeNameEnale(INamedTypeSymbol symbol) {
       if (symbol.IsGenericType) {
-        if (symbol.IsTypeParameterExists()) {
+        if (symbol.IsTypeParameterExists() && !IsCurMethodTypeArgument(symbol)) {
           return false;
         }
-
-        if (generator_.IsSealed(CurTypeSymbol)) {
-          return true;
-        }
-
-        if (IsCurMethodTypeArgument(symbol)) {
-          return true;
-        }
-
-        return false;
+        return true;
       }
-
       return true;
     }
 
@@ -640,17 +630,14 @@ namespace CSharpLua {
       }
     }
 
-    internal void ImportTypeName(ref LuaExpressionSyntax luaExpression, ITypeSymbol symbol) {
-      if (!IsGetInheritTypeName) {
+    internal void ImportGenericTypeName(ref LuaExpressionSyntax luaExpression, ITypeSymbol symbol) {
+      if (!IsGetInheritTypeName && !CurTypeSymbol.Equals(symbol) && !IsCurMethodTypeArgument(symbol)) {
         var invocationExpression = (LuaInvocationExpressionSyntax)luaExpression;
         string newName = GetGenericTypeImportName(invocationExpression, out var argumentTypeNames);
         if (!IsLocalVarExistsInCurMethod(newName)) {
           if (!symbol.IsTypeParameterExists()) {
             CurCompilationUnit.AddImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode());
           } else {
-            if (IsCurMethodTypeArgument(symbol)) {
-              return;
-            }
             CurTypeDeclaration.TypeDeclaration.AddImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode());
           }
           luaExpression = new LuaIdentifierNameSyntax(newName);

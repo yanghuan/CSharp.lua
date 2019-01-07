@@ -1355,7 +1355,7 @@ namespace CSharpLua {
             var arrayTypeExpression = arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
             LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(arrayTypeExpression, elementTypeExpression);
             if (transfor != null) {
-              transfor.ImportTypeName(ref luaExpression, arrayType);
+              transfor.ImportGenericTypeName(ref luaExpression, arrayType);
             }
             return luaExpression;
           }
@@ -1364,7 +1364,7 @@ namespace CSharpLua {
             var elementTypeExpression = GetTypeName(pointType.PointedAtType, transfor);
             LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExpression);
             if (transfor != null) {
-              transfor.ImportTypeName(ref luaExpression, pointType);
+              transfor.ImportGenericTypeName(ref luaExpression, pointType);
             }
             return luaExpression;
           }
@@ -1391,7 +1391,7 @@ namespace CSharpLua {
         return LuaIdentifierNameSyntax.TupleType;
       }
 
-      if (transfor != null && transfor.IsNoneGenericTypeCounter) {
+      if (transfor != null && transfor.IsNoneGenericTypeCounter && !namedTypeSymbol.IsGenericType) {
         var curTypeDeclaration = transfor.CurTypeDeclaration;
         if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(namedTypeSymbol, out var classIdentifier)) {
           return classIdentifier;
@@ -1415,7 +1415,7 @@ namespace CSharpLua {
         invocationExpression.AddArguments(typeArguments);
         LuaExpressionSyntax luaExpression = invocationExpression;
         if (transfor != null) {
-          transfor.ImportTypeName(ref luaExpression, namedTypeSymbol);
+          transfor.ImportGenericTypeName(ref luaExpression, namedTypeSymbol);
         }
         return luaExpression;
       }
@@ -1472,7 +1472,7 @@ namespace CSharpLua {
             name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
           }
         } else {
-          transfor.ImportTypeName(ref name, typeSymbol);
+          transfor.ImportTypeName(ref name, (INamedTypeSymbol)symbol);
         }
       }
       return new LuaIdentifierNameSyntax(name);
