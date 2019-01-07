@@ -1621,8 +1621,10 @@ namespace CSharpLua {
           if (memberAccess.Name is LuaInternalMethodExpressionSyntax) {
             invocation = new LuaInvocationExpressionSyntax(memberAccess.Name);
             invocation.AddArgument(memberAccess.Expression);
-          } else {
+          } else if (symbol.ReducedFrom != null) {
             invocation = BuildExtensionMethodInvocation(symbol.ReducedFrom, memberAccess.Expression, node);
+          } else {
+            invocation = new LuaInvocationExpressionSyntax(expression);
           }
         } else {
           invocation = new LuaInvocationExpressionSyntax(expression);
