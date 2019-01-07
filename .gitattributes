@@ -63,4 +63,4 @@
 #*.RTF   diff=astextplain
 
 
-test/* linguist-vendored
+test/**/*.lua linguist-vendored

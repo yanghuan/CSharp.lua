@@ -1772,10 +1772,27 @@ namespace CSharpLua {
         for (int i = curBlock.Statements.Count - 1; i >= 0; --i) {
           var statement = curBlock.Statements[i];
           if (!(statement is LuaBlankLinesStatement) && !(statement is LuaCommentStatement)) {
+            bool hasInsertColon = false;
             if (statement is LuaExpressionStatementSyntax expressionStatement) {
               if (expressionStatement.Expression is LuaInvocationExpressionSyntax) {
-                curBlock.Statements.Add(LuaStatementSyntax.Colon);
+                hasInsertColon = true;
               }
+              else if (expressionStatement.Expression is LuaAssignmentExpressionSyntax assignmentExpression) {
+                if (assignmentExpression.Right is LuaInvocationExpressionSyntax) {
+                  hasInsertColon = true;
+                }
+              }
+            }
+            else if (statement is LuaLocalDeclarationStatementSyntax declarationStatement) {
+              if (declarationStatement.Declaration is LuaVariableListDeclarationSyntax variableList) {
+                var last = variableList.Variables.Last();
+                if (last.Initializer != null && last.Initializer.Value is LuaInvocationExpressionSyntax) {
+                  hasInsertColon = true;
+                }
+              }
+            }
+            if (hasInsertColon) {
+              curBlock.Statements.Add(LuaStatementSyntax.Colon);
             }
             break;
           }

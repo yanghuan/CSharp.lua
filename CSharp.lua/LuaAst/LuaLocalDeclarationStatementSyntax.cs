@@ -44,7 +44,7 @@ namespace CSharpLua.LuaAst {
     public LuaVariableDeclarationSyntax Declaration { get; }
 
     public LuaLocalDeclarationStatementSyntax(LuaVariableDeclarationSyntax declaration) {
-      Declaration = declaration;
+      Declaration = declaration ?? throw new ArgumentNullException(nameof(declaration));
     }
 
     internal override void Render(LuaRenderer renderer) {
