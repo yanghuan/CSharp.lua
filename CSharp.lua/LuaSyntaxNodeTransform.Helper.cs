@@ -606,6 +606,10 @@ namespace CSharpLua {
 
     private bool IsImportTypeNameEnale(INamedTypeSymbol symbol) {
       if (symbol.IsGenericType) {
+        if (symbol.IsTypeParameterExists()) {
+          return false;
+        }
+
         if (generator_.IsSealed(CurTypeSymbol)) {
           return true;
         }
