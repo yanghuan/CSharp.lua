@@ -548,7 +548,7 @@ namespace CSharpLua {
         }
       }
 
-      if (!symbol.IsFromCode() || symbol.ContainingType.TypeKind == TypeKind.Interface) {
+      if (!symbol.IsFromCode()) {
         return new LuaIdentifierNameSyntax(GetSymbolBaseName(symbol));
       }
 
@@ -854,13 +854,17 @@ namespace CSharpLua {
     private void CheckRefactorNames() {
       HashSet<ISymbol> alreadyRefactorSymbols = new HashSet<ISymbol>();
       foreach (ISymbol symbol in refactorNames_) {
-        bool hasImplementation = false;
-        foreach (ISymbol implementation in AllInterfaceImplementations(symbol)) {
-          hasImplementation = RefactorInterfaceSymbol(implementation, alreadyRefactorSymbols);
-        }
+        if (symbol.ContainingType.TypeKind == TypeKind.Interface) {
+          RefactorInterfaceSymbol(symbol, alreadyRefactorSymbols);
+        } else {
+          bool hasImplementation = false;
+          foreach (ISymbol implementation in AllInterfaceImplementations(symbol)) {
+            hasImplementation = RefactorInterfaceSymbol(implementation, alreadyRefactorSymbols);
+          }
 
-        if (!hasImplementation) {
-          RefactorCurTypeSymbol(symbol, alreadyRefactorSymbols);
+          if (!hasImplementation) {
+            RefactorCurTypeSymbol(symbol, alreadyRefactorSymbols);
+          }
         }
       }
 
@@ -878,16 +882,19 @@ namespace CSharpLua {
       if (symbol.IsFromCode()) {
         INamedTypeSymbol typeSymbol = symbol.ContainingType;
         Contract.Assert(typeSymbol.TypeKind == TypeKind.Interface);
-        var childrens = extends_[typeSymbol];
+        var childrens = extends_.GetOrDefault(typeSymbol);
         string newName = GetRefactorName(null, childrens, symbol);
-        foreach (INamedTypeSymbol children in childrens) {
-          ISymbol childrenSymbol = children.FindImplementationForInterfaceMember(symbol);
-          if (childrenSymbol == null) {
-            childrenSymbol = FindImplicitImplementationForInterfaceMember(children, symbol);
+        if (childrens != null) {
+          foreach (INamedTypeSymbol children in childrens) {
+            ISymbol childrenSymbol = children.FindImplementationForInterfaceMember(symbol);
+            if (childrenSymbol == null) {
+              childrenSymbol = FindImplicitImplementationForInterfaceMember(children, symbol);
+            }
+            Contract.Assert(childrenSymbol != null);
+            RefactorName(childrenSymbol, newName, alreadyRefactorSymbols);
           }
-          Contract.Assert(childrenSymbol != null);
-          RefactorName(childrenSymbol, newName, alreadyRefactorSymbols);
         }
+        RefactorName(symbol, newName, alreadyRefactorSymbols);
         return true;
       }
       return false;
