@@ -861,7 +861,16 @@ namespace CSharpLua {
       return GetDefaultValueExpression(type);
     }
 
-    private LuaPropertyAdapterExpressionSyntax InternalVisitElementAccessExpression(IPropertySymbol symbol, ElementAccessExpressionSyntax node) {
+    private LuaExpressionSyntax InternalVisitElementAccessExpression(IPropertySymbol symbol, ElementAccessExpressionSyntax node) {
+      if (symbol != null) {
+        bool isGet = !node.Parent.Kind().IsAssignment();
+        string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(symbol, isGet);
+        if (codeTemplate != null) {
+          List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+          return BuildCodeTemplateExpression(codeTemplate, node.Expression, arguments, null);
+        }
+      }
+
       var expression = BuildMemberAccessTargetExpression(node.Expression);
       LuaIdentifierNameSyntax baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
       LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);
