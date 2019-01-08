@@ -894,7 +894,9 @@ namespace CSharpLua {
             RefactorName(childrenSymbol, newName, alreadyRefactorSymbols);
           }
         }
-        RefactorName(symbol, newName, alreadyRefactorSymbols);
+        if (memberNames_.ContainsKey(symbol)) {
+          RefactorName(symbol, newName, alreadyRefactorSymbols);
+        }
         return true;
       }
       return false;
