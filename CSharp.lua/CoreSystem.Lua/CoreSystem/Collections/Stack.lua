@@ -51,7 +51,7 @@ Stack.Peek = peek
 
 function Stack.Pop(this)
   local v = peek(this)
-  removeAtArray(t, #this -1)
+  removeAtArray(this, #this -1)
   return v
 end
 
