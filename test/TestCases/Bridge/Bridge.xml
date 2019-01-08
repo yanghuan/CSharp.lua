@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<meta>
+  <assembly>
+
+    <namespace name="">
+      <class name="PropValue^1" Name="PropValue">
+        <method name="op_Implicit" Template="{0}:Get()" />
+      </class>
+      <class name="ObservableList^1" Name="ObservableList"/>
+    </namespace>
+
+    <namespace name="CSLua">
+      <class name="Lua">
+          <method name="Require" Template="require({0})" />
+		</class>
+
+      <class name="LuaTable^2">
+        <method name=".ctor" Template="{}" />
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+        <method name="ContainsKey" Template="({this}[{0}] ~= nil)" />
+        <method name="GetValue" Template="{this}[{0}]" />
+        <method name="SetValue" Template="{this}[{0}] = {1}" />
+        <method name="TryGetValue" Template="({this}[{0}] ~= nil), {this}[{0}]" />
+        <method name="ForEach" Template="do local each = {0}; for i, v in pairs({this}) do each(i, v) end end" />
+        <method name="ForArrayEach" Template="do local each = {0}; for i, v in ipairs({this}) do each(i - 1, v) end end" />
+		<method name="Remove" Template="{this}[{0}] = nil" />
+      </class>
+
+      <class name="LuaArray^1">
+        <method name=".ctor" Template="{}" />
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+        <method name="GetValue" Template="{this}[{0} + 1]" />
+        <method name="SetValue" Template="{this}[{0} + 1] = {1}" />
+        <method name="Add" Template="table.insert({this}, {0})" />
+        <method name="ForEach" Template="do local each = {0}; for i, v in ipairs({this}) do each(v) end end" />
+		<method name="Remove" Template="table.remove({this}, {0} + 1)" />
+		<method name="Clear" Template="{this} = {}" />
+
+		<property name="this[]">
+          <get Template="{this}[{0} + 1]" />
+          <set Template="{this}[{0} + 1]" />
+        </property>
+      </class>
+
+
+      <class name="LuaData">
+        <method name=".ctor" Template="''" />
+      </class>
+    </namespace>
+  </assembly>
+</meta>
