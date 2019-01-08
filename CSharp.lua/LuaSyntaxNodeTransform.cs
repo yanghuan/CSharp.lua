@@ -2962,8 +2962,21 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitWhileStatement(WhileStatementSyntax node) {
+      LuaBlockSyntax conditionBody = new LuaBlockSyntax();
+      blocks_.Push(conditionBody);
       var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
-      LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
+      blocks_.Pop();
+
+      LuaWhileStatementSyntax whileStatement;
+      if (conditionBody.Statements.Count == 0) {
+        whileStatement = new LuaWhileStatementSyntax(condition);
+      } else {
+        whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
+        ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
+        whileStatement.Body.Statements.AddRange(conditionBody.Statements);
+        whileStatement.Body.Statements.Add(ifStatement);
+      }
       VisitLoopBody(node.Statement, whileStatement.Body);
       return whileStatement;
     }
@@ -2974,34 +2987,50 @@ namespace CSharpLua {
         return numericalForStatement;
       }
 
-      LuaBlockSyntax block = new LuaBlockStatementSyntax();
-      blocks_.Push(block);
+      LuaBlockSyntax forBlock = new LuaBlockStatementSyntax();
+      blocks_.Push(forBlock);
 
       if (node.Declaration != null) {
-        block.Statements.Add((LuaVariableDeclarationSyntax)node.Declaration.Accept(this));
+        forBlock.Statements.Add((LuaVariableDeclarationSyntax)node.Declaration.Accept(this));
       }
       var initializers = node.Initializers.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
-      block.Statements.AddRange(initializers);
+      forBlock.Statements.AddRange(initializers);
 
+      LuaBlockSyntax conditionBody = new LuaBlockSyntax();
+      blocks_.Push(conditionBody);
       LuaExpressionSyntax condition = node.Condition != null ? (LuaExpressionSyntax)node.Condition.Accept(this) : LuaIdentifierNameSyntax.True;
-      LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
+      blocks_.Pop();
+
+      LuaWhileStatementSyntax whileStatement;
+      if (conditionBody.Statements.Count == 0) {
+        whileStatement = new LuaWhileStatementSyntax(condition);
+      } else {
+        whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
+        ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
+        whileStatement.Body.Statements.AddRange(conditionBody.Statements);
+        whileStatement.Body.Statements.Add(ifStatement);
+      }
       blocks_.Push(whileStatement.Body);
       VisitLoopBody(node.Statement, whileStatement.Body);
       var incrementors = node.Incrementors.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
       whileStatement.Body.Statements.AddRange(incrementors);
       blocks_.Pop();
-      block.Statements.Add(whileStatement);
+
+      forBlock.Statements.Add(whileStatement);
       blocks_.Pop();
 
-      return block;
+      return forBlock;
     }
 
     public override LuaSyntaxNode VisitDoStatement(DoStatementSyntax node) {
+      LuaBlockSyntax body = new LuaBlockSyntax();
+      blocks_.Push(body);
+      VisitLoopBody(node.Statement, body);
       var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
       var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not);
-      LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(newCondition);
-      VisitLoopBody(node.Statement, repeatStatement.Body);
-      return repeatStatement;
+      blocks_.Pop();
+      return new LuaRepeatStatementSyntax(newCondition, body);
     }
 
     public override LuaSyntaxNode VisitYieldStatement(YieldStatementSyntax node) {
