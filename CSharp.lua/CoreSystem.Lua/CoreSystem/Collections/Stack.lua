@@ -44,7 +44,7 @@ local function peek(t)
   if #t == 0 then
     throw(InvalidOperationException())
   end
-  return getArray(t, #this - 1)
+  return getArray(t, #t - 1)
 end
 
 Stack.Peek = peek
