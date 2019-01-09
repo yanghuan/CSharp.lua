@@ -54,6 +54,7 @@
     <Compile Include="src\Tests\DelegateTest.cs" />
     <Compile Include="src\Tests\EnumTest.cs" />
     <Compile Include="src\Tests\InterfaceGenericMethodTest.cs" />
+    <Compile Include="src\Tests\JsonManager.cs" />
     <Compile Include="src\Tests\LuaArrayTest.cs" />
     <Compile Include="src\Tests\WhileAndOutTest.cs" />
     <Compile Include="src\Tests\ExternionsMethodTest.cs" />
