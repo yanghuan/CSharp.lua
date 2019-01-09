@@ -7,11 +7,13 @@
         <method name="op_Implicit" Template="{0}:Get()" />
       </class>
       <class name="ObservableList^1" Name="ObservableList"/>
-    </namespace>
 
-    <namespace name="CSLua">
-      <class name="Lua">
-          <method name="Require" Template="require({0})" />
+      <class name="LuaArrayExternions">
+			<method name="DOLocalMove" GenericArgCount="0" Template="LuaArrayExternions.DOLocalMove({0}, {1}, {2})">
+				<arg type="LuaObject"/>
+				<arg type="System.Single"/>
+				<arg type="System.Boolean"/>
+			</method>
 		</class>
 
       <class name="LuaTable^2">

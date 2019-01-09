@@ -5,12 +5,12 @@ using System.Text;
 
 namespace TestCases {
   public class LuaArrayTest {
-    [TestCase]
-    public static void ExternionsMethodTest1() {
-      var arr = new CSLua.LuaArray<object>();
+    public static void LuaArrayTest01() {
+      var arr = new LuaArray<int>();
       arr.Add(123);
       var indexValue = arr[123];
       arr[456] = indexValue;
     }
+
   }
 }
