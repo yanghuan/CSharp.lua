@@ -92,6 +92,7 @@ Array.Reverse = Collection.reverseArray
 Array.Sort = Collection.sortArray
 Array.TrueForAll = Collection.trueForAllOfArray
 Array.Copy = Collection.copyArray
+Array.ForEach = Collection.forEachArray
 Array.GetValue = getArray
 
 function Array.CreateInstance(elementType, length)
