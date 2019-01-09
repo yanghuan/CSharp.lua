@@ -1562,7 +1562,9 @@ namespace CSharpLua {
           var argumentExpressions = new List<Func<LuaExpressionSyntax>>();
           var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
           if (symbol.IsExtensionMethod) {
-            argumentExpressions.Add(() => (LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
+            if (symbol.ReducedFrom != null) {
+              argumentExpressions.Add(() => (LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
+            }
             if (symbol.ContainingType.IsSystemLinqEnumerable()) {
               CurCompilationUnit.ImportLinq();
             }
@@ -1572,7 +1574,7 @@ namespace CSharpLua {
             return func;
           }));
           if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
-            argumentExpressions.AddRange(symbol.Parameters.Skip(argumentExpressions.Count).Where(i => !i.IsParams).Select(i => {
+            argumentExpressions.AddRange(symbol.Parameters.Skip(node.ArgumentList.Arguments.Count).Where(i => !i.IsParams).Select(i => {
               Func<LuaExpressionSyntax> func = () => GetDeafultParameterValue(i, node, true);
               return func;
             }));
