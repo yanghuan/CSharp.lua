@@ -59,7 +59,10 @@ local function throw(e, lv)
 end
 
 local function xpcallErr(e)
-  if type(e) == "string" then
+  if e == nil then
+    e = System.Exception("script error")
+    e:traceback()
+  elseif type(e) == "string" then
     e = System.Exception(e)
     e:traceback()
   end
