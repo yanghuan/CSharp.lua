@@ -440,6 +440,26 @@ function String.Trim(this, chars)
   return (sgsub(this, chars, "%1"))
 end
 
+function String.PadLeft(this, totalWidth, paddingChar) 
+  local len = #this;
+  if len <= totalWidth then
+    return this
+  else
+    paddingChar = paddingChar or ' ';
+    return string.rep(' ', totalWidth - len) .. this
+  end
+end
+
+function String.PadRight(this, totalWidth, paddingChar) 
+  local len = #this;
+  if len <= totalWidth then
+    return this
+  else
+    paddingChar = paddingChar or ' ';
+    return this .. string.rep(' ', totalWidth - len)
+  end
+end
+
 local CharEnumerator = {}
 CharEnumerator.__index = CharEnumerator
 
