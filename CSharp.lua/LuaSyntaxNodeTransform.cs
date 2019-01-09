@@ -2037,6 +2037,33 @@ namespace CSharpLua {
       return true;
     }
 
+    private bool IsEventAddOrRemoveIdentifierName(IdentifierNameSyntax node) {
+      SyntaxNode current = node;
+      while (true) {
+        var parent = current.Parent;
+        if (parent == null) {
+          break;
+        }
+
+        var kind = parent.Kind();
+        if (kind == SyntaxKind.AddAssignmentExpression || kind == SyntaxKind.SubtractAssignmentExpression) {
+          var assignment = (AssignmentExpressionSyntax)parent;
+          return assignment.Left == current;
+        } else if (kind == SyntaxKind.SimpleMemberAccessExpression) {
+          var memberAccessExpression = (MemberAccessExpressionSyntax)parent;
+          if (memberAccessExpression.Name != current) {
+            break;
+          }
+        } else {
+          break;
+        }
+
+        current = parent;
+      }
+
+      return false;
+    }
+
     private LuaExpressionSyntax VisitPropertyOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty) {
       bool isField, isReadOnly;
       if (isProperty) {
@@ -2047,6 +2074,11 @@ namespace CSharpLua {
         var eventSymbol = (IEventSymbol)symbol;
         isField = IsEventFiled(eventSymbol);
         isReadOnly = false;
+        if (!isField) {
+          if (!IsEventAddOrRemoveIdentifierName(node)) {
+            isField = true;
+          }
+        }
       }
 
       if (isField) {
