@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -276,6 +276,10 @@ namespace TestCases
         {
             public T data;
 
+            public virtual void CreateModal<TSIMGR, TVIEW>()
+            {
+              Console.WriteLine("BaseCreateModal");
+            }
 
             public T Data
             {
@@ -294,7 +298,13 @@ namespace TestCases
 
         public class SubBind : TestBind<int>
         {
+          public override void CreateModal<TSIMGR, TVIEW>()
+        {
+            Console.WriteLine("SubBind1");
+            base.CreateModal<TSIMGR, TVIEW>();
 
+            Console.WriteLine("SubBind2");
+          }
         }
         [TestCase]
         public static void GenericMethodTest11()
@@ -313,6 +323,11 @@ namespace TestCases
             });
         }
 
+        [TestCase]
+        public static void GenericMethodTest13() {
+          SubBind test = new SubBind();
+          test.CreateModal<int, string>();
+        }
         static void GenericMethodTest12Sub<T>(T[] a, Action<T> func)
         {
             func(a[0]);
