@@ -714,7 +714,7 @@ namespace CSharpLua {
         if (generator_.IsSealed(curTypeSymbol)) {
           bool exists = curTypeSymbol.GetMembers().OfType<T>().Any(i => {
             var overriddenSymbol = overriddenFunc(i);
-            return overriddenSymbol != null && overriddenSymbol.Equals(symbol);
+            return overriddenSymbol != null && overriddenSymbol.OriginalDefinition.Equals(symbol.OriginalDefinition);
           });
           return exists ? BaseVisitType.UseBase : BaseVisitType.UseThis;
         } else {
