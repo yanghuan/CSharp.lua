@@ -2591,11 +2591,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildStringConcatExpression(BinaryExpressionSyntax node) {
-      var expression = BuildStringConcatExpression(node.Left, node.Right);
-      if (node.Parent.IsKind(SyntaxKind.AddExpression)) {
-        expression = new LuaParenthesizedExpressionSyntax(expression);
-      }
-      return expression;
+      return BuildStringConcatExpression(node.Left, node.Right);
     }
 
     private LuaExpressionSyntax BuildStringConcatExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode) {
