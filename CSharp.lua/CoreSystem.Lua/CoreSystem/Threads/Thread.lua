@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local trunc = System.trunc
 local post = System.post
@@ -32,7 +33,7 @@ local cresume = coroutine.resume
 local cstatus = coroutine.status
 local cyield = coroutine.yield
 
-local ThreadStateException = System.define("System.ThreadStateException", {
+local ThreadStateException = define("System.ThreadStateException", {
   __tostring = Exception.ToString,
   __inherits__ = { Exception },
 
@@ -87,7 +88,7 @@ local function run(t, obj)
   end)
 end
 
-local Thread =  System.define("System.Thread", {
+local Thread =  define("System.Thread", {
   IsBackground = false,
   IsThreadPoolThread = false,
   Priority = 2,

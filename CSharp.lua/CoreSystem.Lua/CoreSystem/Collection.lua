@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local div = System.div
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -824,7 +825,7 @@ function YieldEnumerator.getCurrent(this)
   return this.current
 end
 
-System.define("System.YieldEnumerator", YieldEnumerator)
+define("System.YieldEnumerator", YieldEnumerator)
 
 local function yieldIEnumerator(f, T, ...)
   return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerator)
@@ -837,7 +838,7 @@ function YieldEnumerable.GetEnumerator(this)
   return setmetatable({ f = this.f, __genericT__ = this.__genericT__, args = this.args }, YieldEnumerator)
 end
 
-System.define("System.YieldEnumerable", YieldEnumerable)
+define("System.YieldEnumerable", YieldEnumerable)
 
 local function yieldIEnumerable(f, T, ...)
   return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerable)

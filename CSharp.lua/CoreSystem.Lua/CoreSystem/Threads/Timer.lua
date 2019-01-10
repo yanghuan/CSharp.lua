@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local currentTimeMillis = System.currentTimeMillis
 local ArgumentNullException = System.ArgumentNullException
@@ -44,7 +45,7 @@ end
 
 local maxExpiration = 9223372036854775807  --[[Int64.MaxValue]]
 local LinkedListEvent =  System.LinkedList(System.Object) 
-local TimeoutQueue = System.define("System.TimeoutQueue", (function ()
+local TimeoutQueue = define("System.TimeoutQueue", (function ()
   local getNextId, Insert, Add, AddRepeating, AddRepeating1, getNextExpiration, Erase, RunLoop, 
   getCount, Contains, IsNext, __ctor__
   __ctor__ = function (this)
@@ -202,7 +203,7 @@ local function change(this, dueTime, period)
   return true
 end
 
-System.define("System.Timer", {
+define("System.Timer", {
   __ctor__ =  function (this, callback, state,  dueTime, period)
     if callback == nil then throw(ArgumentNullException("callback")) end
     this.callback = function () callback(state) end
