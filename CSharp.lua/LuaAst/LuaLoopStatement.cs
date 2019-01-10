@@ -97,10 +97,7 @@ namespace CSharpLua.LuaAst {
     };
 
     public LuaWhileStatementSyntax(LuaExpressionSyntax condition) {
-      if (condition == null) {
-        throw new ArgumentNullException(nameof(condition));
-      }
-      Condition = condition;
+      Condition = condition ?? throw new ArgumentNullException(nameof(condition));
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -112,13 +109,11 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Condition { get; }
     public string RepeatKeyword => Tokens.Repeat;
     public string UntilKeyword => Tokens.Until;
-    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax();
+    public LuaBlockSyntax Body { get; }
 
-    public LuaRepeatStatementSyntax(LuaExpressionSyntax condition) {
-      if (condition == null) {
-        throw new ArgumentNullException(nameof(condition));
-      }
-      Condition = condition;
+    public LuaRepeatStatementSyntax(LuaExpressionSyntax condition, LuaBlockSyntax body = null) {
+      Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+      Body = body ?? new LuaBlockSyntax();
     }
 
     internal override void Render(LuaRenderer renderer) {

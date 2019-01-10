@@ -11,6 +11,12 @@ namespace TestCases {
       instance.TestMethod(123);
       ExternionClassLinq.TestMethod(instance, 456);
     }
+
+
+    public static void ExternionsMethodInDllWithTemplateCall() {
+      var arr = new LuaObject();
+      arr.DOLocalMove(123);
+    }
   }
 
   class ExternionClass {

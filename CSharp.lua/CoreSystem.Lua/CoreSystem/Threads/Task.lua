@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local try = System.try
 local trunc = System.trunc
@@ -40,7 +41,7 @@ local ccreate = coroutine.create
 local cresume = coroutine.resume
 local cyield = coroutine.yield
 
-local TaskCanceledException = System.define("System.TaskCanceledException", {
+local TaskCanceledException = define("System.TaskCanceledException", {
   __tostring = Exception.ToString,
   __inherits__ = { Exception },
 
@@ -74,7 +75,7 @@ System.defEnum("System.TaskStatus", {
   Faulted = TaskStatusFaulted,
 })
 
-local UnobservedTaskExceptionEventArgs = System.define("System.UnobservedTaskExceptionEventArgs", {
+local UnobservedTaskExceptionEventArgs = define("System.UnobservedTaskExceptionEventArgs", {
   __ctor__ = function (this, exception)
     this.exception = exception
   end,
@@ -100,7 +101,7 @@ local function publishUnobservedTaskException(sender, ueea)
   end
 end
 
-local TaskScheduler = System.define("System.TaskScheduler", {
+local TaskScheduler = define("System.TaskScheduler", {
   addUnobservedTaskException = function (value)
     unobservedTaskException = unobservedTaskException + value
   end,
@@ -294,7 +295,7 @@ local factory = {
   end
 }
 
-Task = System.define("System.Task", {
+Task = define("System.Task", {
   __ctor__ = function (this, action, state)
     if action == nil then throw(ArgumentNullException("action")) end
     this.status = TaskStatusCreated

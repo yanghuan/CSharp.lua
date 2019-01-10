@@ -345,7 +345,7 @@ function isTypeOf(obj, cls)
     return isStringOrBoolean(cls, String)
   elseif typename == "table" then   
     local t = getmetatable(obj)
-    if t == cls then
+    if t == cls or t == nil then
       return true
     end
     if cls.__kind__ == "I" then

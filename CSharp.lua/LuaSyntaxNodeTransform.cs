@@ -1562,7 +1562,9 @@ namespace CSharpLua {
           var argumentExpressions = new List<Func<LuaExpressionSyntax>>();
           var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
           if (symbol.IsExtensionMethod) {
-            argumentExpressions.Add(() => (LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
+            if (symbol.ReducedFrom != null) {
+              argumentExpressions.Add(() => (LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
+            }
             if (symbol.ContainingType.IsSystemLinqEnumerable()) {
               CurCompilationUnit.ImportLinq();
             }
@@ -1572,7 +1574,7 @@ namespace CSharpLua {
             return func;
           }));
           if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
-            argumentExpressions.AddRange(symbol.Parameters.Skip(argumentExpressions.Count).Where(i => !i.IsParams).Select(i => {
+            argumentExpressions.AddRange(symbol.Parameters.Skip(node.ArgumentList.Arguments.Count).Where(i => !i.IsParams).Select(i => {
               Func<LuaExpressionSyntax> func = () => GetDeafultParameterValue(i, node, true);
               return func;
             }));
@@ -2035,6 +2037,33 @@ namespace CSharpLua {
       return true;
     }
 
+    private bool IsEventAddOrRemoveIdentifierName(IdentifierNameSyntax node) {
+      SyntaxNode current = node;
+      while (true) {
+        var parent = current.Parent;
+        if (parent == null) {
+          break;
+        }
+
+        var kind = parent.Kind();
+        if (kind == SyntaxKind.AddAssignmentExpression || kind == SyntaxKind.SubtractAssignmentExpression) {
+          var assignment = (AssignmentExpressionSyntax)parent;
+          return assignment.Left == current;
+        } else if (kind == SyntaxKind.SimpleMemberAccessExpression) {
+          var memberAccessExpression = (MemberAccessExpressionSyntax)parent;
+          if (memberAccessExpression.Name != current) {
+            break;
+          }
+        } else {
+          break;
+        }
+
+        current = parent;
+      }
+
+      return false;
+    }
+
     private LuaExpressionSyntax VisitPropertyOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty) {
       bool isField, isReadOnly;
       if (isProperty) {
@@ -2045,6 +2074,11 @@ namespace CSharpLua {
         var eventSymbol = (IEventSymbol)symbol;
         isField = IsEventFiled(eventSymbol);
         isReadOnly = false;
+        if (!isField) {
+          if (!IsEventAddOrRemoveIdentifierName(node)) {
+            isField = true;
+          }
+        }
       }
 
       if (isField) {
@@ -2591,11 +2625,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildStringConcatExpression(BinaryExpressionSyntax node) {
-      var expression = BuildStringConcatExpression(node.Left, node.Right);
-      if (node.Parent.IsKind(SyntaxKind.AddExpression)) {
-        expression = new LuaParenthesizedExpressionSyntax(expression);
-      }
-      return expression;
+      return BuildStringConcatExpression(node.Left, node.Right);
     }
 
     private LuaExpressionSyntax BuildStringConcatExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode) {
@@ -2962,8 +2992,21 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitWhileStatement(WhileStatementSyntax node) {
+      LuaBlockSyntax conditionBody = new LuaBlockSyntax();
+      blocks_.Push(conditionBody);
       var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
-      LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
+      blocks_.Pop();
+
+      LuaWhileStatementSyntax whileStatement;
+      if (conditionBody.Statements.Count == 0) {
+        whileStatement = new LuaWhileStatementSyntax(condition);
+      } else {
+        whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
+        ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
+        whileStatement.Body.Statements.AddRange(conditionBody.Statements);
+        whileStatement.Body.Statements.Add(ifStatement);
+      }
       VisitLoopBody(node.Statement, whileStatement.Body);
       return whileStatement;
     }
@@ -2974,34 +3017,50 @@ namespace CSharpLua {
         return numericalForStatement;
       }
 
-      LuaBlockSyntax block = new LuaBlockStatementSyntax();
-      blocks_.Push(block);
+      LuaBlockSyntax forBlock = new LuaBlockStatementSyntax();
+      blocks_.Push(forBlock);
 
       if (node.Declaration != null) {
-        block.Statements.Add((LuaVariableDeclarationSyntax)node.Declaration.Accept(this));
+        forBlock.Statements.Add((LuaVariableDeclarationSyntax)node.Declaration.Accept(this));
       }
       var initializers = node.Initializers.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
-      block.Statements.AddRange(initializers);
+      forBlock.Statements.AddRange(initializers);
 
+      LuaBlockSyntax conditionBody = new LuaBlockSyntax();
+      blocks_.Push(conditionBody);
       LuaExpressionSyntax condition = node.Condition != null ? (LuaExpressionSyntax)node.Condition.Accept(this) : LuaIdentifierNameSyntax.True;
-      LuaWhileStatementSyntax whileStatement = new LuaWhileStatementSyntax(condition);
+      blocks_.Pop();
+
+      LuaWhileStatementSyntax whileStatement;
+      if (conditionBody.Statements.Count == 0) {
+        whileStatement = new LuaWhileStatementSyntax(condition);
+      } else {
+        whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
+        ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
+        whileStatement.Body.Statements.AddRange(conditionBody.Statements);
+        whileStatement.Body.Statements.Add(ifStatement);
+      }
       blocks_.Push(whileStatement.Body);
       VisitLoopBody(node.Statement, whileStatement.Body);
       var incrementors = node.Incrementors.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
       whileStatement.Body.Statements.AddRange(incrementors);
       blocks_.Pop();
-      block.Statements.Add(whileStatement);
+
+      forBlock.Statements.Add(whileStatement);
       blocks_.Pop();
 
-      return block;
+      return forBlock;
     }
 
     public override LuaSyntaxNode VisitDoStatement(DoStatementSyntax node) {
+      LuaBlockSyntax body = new LuaBlockSyntax();
+      blocks_.Push(body);
+      VisitLoopBody(node.Statement, body);
       var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
       var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not);
-      LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(newCondition);
-      VisitLoopBody(node.Statement, repeatStatement.Body);
-      return repeatStatement;
+      blocks_.Pop();
+      return new LuaRepeatStatementSyntax(newCondition, body);
     }
 
     public override LuaSyntaxNode VisitYieldStatement(YieldStatementSyntax node) {

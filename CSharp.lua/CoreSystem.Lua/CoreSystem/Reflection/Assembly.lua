@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local Type = System.Type
 local getClass = System.getClass
@@ -70,7 +71,7 @@ function Assembly.GetExportedTypes(this)
   return array
 end
 
-System.define("System.Reflection.Assembly", Assembly)
+define("System.Reflection.Assembly", Assembly)
 
 assembly = Assembly()
 assembly.name = System.config.assemblyName or "CSharp.lua, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
@@ -154,7 +155,7 @@ function MemberInfo.GetCustomAttributes(this, attributeType, inherit)
 end
 
 
-System.define("System.Reflection.MemberInfo", MemberInfo)
+define("System.Reflection.MemberInfo", MemberInfo)
 
 local MethodInfo = { memberType = 8 }
 
@@ -191,7 +192,7 @@ end
 MethodInfo.__eq = eq
 MethodInfo.__inherits__ = { MemberInfo }
 
-System.define("System.Reflection.MethodInfo", MethodInfo)
+define("System.Reflection.MethodInfo", MethodInfo)
 
 local function buildMethodInfo(cls, name, f) 
    return setmetatable({ c = cls, name = name, f = f }, MethodInfo)
@@ -261,7 +262,7 @@ end
 FieldInfo.__eq = eq
 FieldInfo.__inherits__ = { MemberInfo }
 
-System.define("System.Reflection.FieldInfo", FieldInfo)
+define("System.Reflection.FieldInfo", FieldInfo)
 
 function Type.GetField(this, name)
   if name == nil then
@@ -328,7 +329,7 @@ end
 PropertyInfo.__eq = eq
 PropertyInfo.__inherits__ = { MemberInfo }
 
-System.define("System.Reflection.PropertyInfo", PropertyInfo)
+define("System.Reflection.PropertyInfo", PropertyInfo)
 
 function Type.GetMembers(this)
   local t = {}
@@ -405,4 +406,3 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
   local array = System.arrayFromTable(results, System.Attribute)
   return array
 end
-

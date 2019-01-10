@@ -67,6 +67,8 @@ Options
 -i              : indent number, default is 2
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 ```
+Make sure that the. NET core 2.0+ is installed.  
+https://dotnet.microsoft.com/download
 
 ### Download
 https://github.com/yanghuan/CSharp.lua/releases

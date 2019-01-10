@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local Collection = System.Collection
 local buildArray = Collection.buildArray
@@ -92,6 +93,7 @@ Array.Reverse = Collection.reverseArray
 Array.Sort = Collection.sortArray
 Array.TrueForAll = Collection.trueForAllOfArray
 Array.Copy = Collection.copyArray
+Array.ForEach = Collection.forEachArray
 Array.GetValue = getArray
 
 function Array.CreateInstance(elementType, length)
@@ -102,7 +104,7 @@ function Array.SetValue(this, value, index)
   setArray(this, index, value)
 end
 
-System.define("System.Array", function(T) 
+define("System.Array", function(T) 
   local cls = { 
     __inherits__ = { System.IList_1(T), System.IList }, 
     __genericT__ = T
@@ -168,7 +170,7 @@ end
 
 MultiArray.GetEnumerator = arrayEnumerator
 
-System.define("System.MultiArray", function(T) 
+define("System.MultiArray", function(T) 
   local cls = { 
     __inherits__ = { System.IList_1(T), System.IList }, 
     __genericT__ = T

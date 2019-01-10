@@ -335,7 +335,7 @@ function String.Insert(this, startIndex, value)
 end
 
 function String.Remove(this, startIndex, count) 
-  startIndex, count = stringCheck(this, startIndex, count)
+  startIndex, count = check(this, startIndex, count)
   return ssub(this, 1, startIndex) .. ssub(this, startIndex + 1 + count)
 end
 
@@ -438,6 +438,26 @@ function String.Trim(this, chars)
     chars = "^%s*(.-)%s*$"
   end
   return (sgsub(this, chars, "%1"))
+end
+
+function String.PadLeft(this, totalWidth, paddingChar) 
+  local len = #this
+  if len <= totalWidth then
+    return this
+  else
+    paddingChar = paddingChar or ' '
+    return srep(' ', totalWidth - len) .. this
+  end
+end
+
+function String.PadRight(this, totalWidth, paddingChar) 
+  local len = #this
+  if len <= totalWidth then
+    return this
+  else
+    paddingChar = paddingChar or ' '
+    return this .. srep(' ', totalWidth - len)
+  end
 end
 
 local CharEnumerator = {}
