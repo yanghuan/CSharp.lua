@@ -335,7 +335,7 @@ function String.Insert(this, startIndex, value)
 end
 
 function String.Remove(this, startIndex, count) 
-  startIndex, count = stringCheck(this, startIndex, count)
+  startIndex, count = check(this, startIndex, count)
   return ssub(this, 1, startIndex) .. ssub(this, startIndex + 1 + count)
 end
 
