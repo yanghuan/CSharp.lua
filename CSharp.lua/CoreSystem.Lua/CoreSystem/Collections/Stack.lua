@@ -55,6 +55,11 @@ function Stack.Pop(this)
   return v
 end
 
+function System.stackFromTable(t, T)
+  assert(T)
+  return setmetatable(t, Stack(T))
+end
+
 System.define("System.Stack", function(T) 
   local cls = {
     __inherits__ = { System.IEnumerable_1(T), System.ICollection },

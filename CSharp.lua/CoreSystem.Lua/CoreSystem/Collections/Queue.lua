@@ -60,6 +60,11 @@ function Queue.Dequeue(t)
   return v
 end
 
+function System.queueFromTable(t, T)
+  assert(T)
+  return setmetatable(t, Queue(T))
+end
+
 System.define("System.Queue", function(T) 
   local cls = {
     __inherits__ = { System.IEnumerable_1(T), System.ICollection },

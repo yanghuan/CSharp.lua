@@ -308,6 +308,13 @@ end
 
 HashSet.TrimExcess = System.emptyFn
 
+
+function System.hashSetFromTable(t, T)
+  assert(T)
+  return setmetatable(t, HashSet(T))
+end
+
+
 System.define("System.HashSet", function(T) 
   local cls = { 
     __inherits__ = { System.ICollection_1(T), System.ISet_1(T) }, 

@@ -170,6 +170,11 @@ end
 
 MultiArray.GetEnumerator = arrayEnumerator
 
+function System.multiArrayFromTable(t, T)
+  assert(T)
+  return setmetatable(t, MultiArray(T))
+end
+
 define("System.MultiArray", function(T) 
   local cls = { 
     __inherits__ = { System.IList_1(T), System.IList }, 

@@ -477,6 +477,8 @@ function CharEnumerator.getCurrent(this)
   return this.current
 end
 
+CharEnumerator.Dispose = System.emptyFn
+
 function String.GetEnumerator(this)
   return setmetatable({ s = this, index = 1 }, CharEnumerator)
 end
