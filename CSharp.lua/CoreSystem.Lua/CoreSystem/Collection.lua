@@ -571,6 +571,8 @@ function ArrayEnumerator.Reset(this)
   this.current = nil
 end
 
+ArrayEnumerator.Dispose = System.emptyFn
+
 local function arrayEnumerator(t)
   local en = {
     list = t,
@@ -703,6 +705,8 @@ function DictionaryEnumerator.getCurrent(this)
   return this.current
 end
 
+DictionaryEnumerator.Dispose = System.emptyFn
+
 function Collection.dictionaryEnumerator(t, kind)
   local en = {
     dict = t,
@@ -736,6 +740,8 @@ end
 function LinkedListEnumerator.getCurrent(this)
   return this.current
 end
+
+LinkedListEnumerator.Dispose = System.emptyFn
 
 function Collection.linkedListEnumerator(t)
   local en = {
@@ -824,6 +830,8 @@ end
 function YieldEnumerator.getCurrent(this)
   return this.current
 end
+
+YieldEnumerator.Dispose = System.emptyFn
 
 define("System.YieldEnumerator", YieldEnumerator)
 

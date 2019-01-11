@@ -142,6 +142,11 @@ List.TrimExcess = System.emptyFn
 List.ToArray = Collection.toArray
 List.TrueForAll = Collection.trueForAllOfArray
 
+function System.listFromTable(t, T)
+  assert(T)
+  return setmetatable(t, List(T))
+end
+
 System.define("System.List", function(T) 
   local cls = { 
     __inherits__ = { System.IList_1(T), System.IList }, 

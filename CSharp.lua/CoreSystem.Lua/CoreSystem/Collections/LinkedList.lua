@@ -299,6 +299,11 @@ end
 
 LinkedList.GetEnumerator = Collection.linkedListEnumerator
 
+function System.linkedListFromTable(t, T)
+  assert(T)
+  return setmetatable(t, LinkedList(T))
+end
+
 System.define("System.LinkedList", function(T) 
   local cls = { 
   __inherits__ = { System.ICollection_1(T), System.ICollection }, 
