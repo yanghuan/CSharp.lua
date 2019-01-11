@@ -606,37 +606,37 @@ namespace CSharpLua {
     private string GetSymbolBaseName(ISymbol symbol) {
       switch (symbol.Kind) {
         case SymbolKind.Method: {
-            IMethodSymbol method = (IMethodSymbol)symbol;
-            string name = XmlMetaProvider.GetMethodMapName(method);
-            if (name != null) {
-              return name;
-            }
-            var implementation = method.ExplicitInterfaceImplementations.FirstOrDefault();
-            if (implementation != null) {
-              return implementation.Name;
-            }
-            break;
+          IMethodSymbol method = (IMethodSymbol)symbol;
+          string name = XmlMetaProvider.GetMethodMapName(method);
+          if (name != null) {
+            return name;
           }
+          var implementation = method.ExplicitInterfaceImplementations.FirstOrDefault();
+          if (implementation != null) {
+            return implementation.Name;
+          }
+          break;
+        }
         case SymbolKind.Property: {
-            IPropertySymbol property = (IPropertySymbol)symbol;
-            if (property.IsIndexer) {
-              return string.Empty;
-            } else {
-              var implementation = property.ExplicitInterfaceImplementations.FirstOrDefault();
-              if (implementation != null) {
-                return implementation.Name;
-              }
-            }
-            break;
-          }
-        case SymbolKind.Event: {
-            IEventSymbol eventSymbol = (IEventSymbol)symbol;
-            var implementation = eventSymbol.ExplicitInterfaceImplementations.FirstOrDefault();
+          IPropertySymbol property = (IPropertySymbol)symbol;
+          if (property.IsIndexer) {
+            return string.Empty;
+          } else {
+            var implementation = property.ExplicitInterfaceImplementations.FirstOrDefault();
             if (implementation != null) {
               return implementation.Name;
             }
-            break;
           }
+          break;
+        }
+        case SymbolKind.Event: {
+          IEventSymbol eventSymbol = (IEventSymbol)symbol;
+          var implementation = eventSymbol.ExplicitInterfaceImplementations.FirstOrDefault();
+          if (implementation != null) {
+            return implementation.Name;
+          }
+          break;
+        }
       }
       return symbol.Name;
     }
@@ -1354,30 +1354,30 @@ namespace CSharpLua {
     internal LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
       switch (symbol.Kind) {
         case SymbolKind.TypeParameter: {
-            return new LuaIdentifierNameSyntax(symbol.Name);
-          }
+          return new LuaIdentifierNameSyntax(symbol.Name);
+        }
         case SymbolKind.ArrayType: {
-            var arrayType = (IArrayTypeSymbol)symbol;
-            ++genericTypeCounter_;
-            var elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
-            --genericTypeCounter_;
-            var arrayTypeExpression = arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
-            LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(arrayTypeExpression, elementTypeExpression);
-            if (transfor != null) {
-              transfor.ImportGenericTypeName(ref luaExpression, arrayType);
-            }
-            return luaExpression;
+          var arrayType = (IArrayTypeSymbol)symbol;
+          ++genericTypeCounter_;
+          var elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
+          --genericTypeCounter_;
+          var arrayTypeExpression = arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
+          LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(arrayTypeExpression, elementTypeExpression);
+          if (transfor != null) {
+            transfor.ImportGenericTypeName(ref luaExpression, arrayType);
           }
+          return luaExpression;
+        }
         case SymbolKind.PointerType: {
-            var pointType = (IPointerTypeSymbol)symbol;
-            var elementTypeExpression = GetTypeName(pointType.PointedAtType, transfor);
-            LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExpression);
-            if (transfor != null) {
-              transfor.ImportGenericTypeName(ref luaExpression, pointType);
-            }
-            return luaExpression;
+          var pointType = (IPointerTypeSymbol)symbol;
+          var elementTypeExpression = GetTypeName(pointType.PointedAtType, transfor);
+          LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExpression);
+          if (transfor != null) {
+            transfor.ImportGenericTypeName(ref luaExpression, pointType);
           }
-      } 
+          return luaExpression;
+        }
+      }
 
       var namedTypeSymbol = (INamedTypeSymbol)symbol;
       if (namedTypeSymbol.TypeKind == TypeKind.Enum) {
@@ -1459,13 +1459,37 @@ namespace CSharpLua {
       }
     }
 
+    private string GetNamespaceNames(IEnumerable<INamespaceSymbol> symbols) {
+      var names = symbols.Select(i => namespaceRefactorNames_.GetOrDefault(i, i.Name));
+      return string.Join(".", names);
+    }
+
     private string GetNamespaceMapName(INamespaceSymbol symbol, string original) {
       if (symbol.IsFromCode()) {
-        var names = symbol.GetAllNamespaces().Select(i => namespaceRefactorNames_.GetOrDefault(i, i.Name));
-        return string.Join(".", names);
+        return GetNamespaceNames(symbol.GetAllNamespaces());
       } else {
         return XmlMetaProvider.GetNamespaceMapName(symbol, original);
       }
+    }
+
+    internal string GetNamespaceDefineName(INamespaceSymbol symbol, NamespaceDeclarationSyntax node) {
+      string original = node.Name.ToString();
+      if (original == symbol.Name) {
+        return namespaceRefactorNames_.GetOrDefault(symbol, original);
+      } else {
+        var namespaces = new List<INamespaceSymbol>() { symbol };
+        do {
+          symbol = symbol.ContainingNamespace;
+          namespaces.Add(symbol);
+          IEnumerable<INamespaceSymbol> symbols = namespaces;
+          symbols = symbols.Reverse();
+          string symbolsName = string.Join(".", symbols.Select(i => i.Name));
+          if (symbolsName == original) {
+            return GetNamespaceNames(symbols);
+          }
+        } while (!symbol.IsGlobalNamespace);
+      }
+      throw new InvalidOperationException();
     }
 
     internal LuaIdentifierNameSyntax GetTypeShortName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {

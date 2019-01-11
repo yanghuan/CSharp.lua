@@ -308,12 +308,10 @@ end
 
 HashSet.TrimExcess = System.emptyFn
 
-
 function System.hashSetFromTable(t, T)
   assert(T)
   return setmetatable(t, HashSet(T))
 end
-
 
 System.define("System.HashSet", function(T) 
   local cls = { 

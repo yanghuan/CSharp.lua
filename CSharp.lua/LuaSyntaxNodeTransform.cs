@@ -202,8 +202,8 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
       var symbol = semanticModel_.GetDeclaredSymbol(node);
       bool isContained = node.Parent.IsKind(SyntaxKind.NamespaceDeclaration);
-      LuaIdentifierNameSyntax name = new LuaIdentifierNameSyntax(node.Name.ToString());
-      LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name, isContained);
+      string name = generator_.GetNamespaceDefineName(symbol, node);
+      LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(new LuaIdentifierNameSyntax(name), isContained);
       var statements = VisitTriviaAndNode(node, node.Members);
       namespaceDeclaration.AddStatements(statements);
       return namespaceDeclaration;

@@ -944,12 +944,15 @@ local function equalsStatic(x, y)
   if x == nil or y == nil then
     return false
   end
-  local EqualsObj = x.EqualsObj;
-  if EqualsObj == nil then
-    return false
-  else
-    return EqualsObj(x, y)
+  local ix = x.EqualsObj
+  if ix ~= nil then
+    return ix(x, y)
   end
+  local iy = y.EqualsObj
+  if iy ~= nil then
+    return iy(y, x)
+  end
+  return false
 end
 
 Object = defCls("System.Object", {

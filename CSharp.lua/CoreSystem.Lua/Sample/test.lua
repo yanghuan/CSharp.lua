@@ -180,8 +180,7 @@ local function testDelegate()
   f()
   assertExt("d1d2")
   print("--")
-    
-   
+  
   f = d1 + d2 + d3 - (d1 + d2) 
   f()
   assertExt("d3")
