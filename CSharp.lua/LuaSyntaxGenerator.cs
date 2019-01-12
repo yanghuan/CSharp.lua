@@ -163,6 +163,7 @@ namespace CSharpLua {
         modules.Add(module);
       }
       ExportManifestFile(modules, outFolder);
+      ExportReflectionFile(modules, outFolder);
     }
 
     public string GenerateSingle() {
@@ -423,7 +424,15 @@ namespace CSharpLua {
         }
       }
     }
+    private void ExportReflectionFile(List<string> modules, string outFolder) {
+      if (modules.Count > 0) {
+        modules.Sort();
+        var types = GetExportTypes();
 
+        var generator = new LuaReflectionGenerator();
+        generator.GenerateReflectionFile(types.Select(v=>v as ITypeSymbol).ToList(), outFolder);
+      }
+    }
     private void FillManifestInitConf(LuaInvocationExpressionSyntax invocation) {
       LuaTableInitializerExpression confTable = new LuaTableInitializerExpression();
       if (mainEntryPoint_ != null) {
