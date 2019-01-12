@@ -924,10 +924,6 @@ function System.event(name)
   return add, remove
 end
 
-function System.CreateInstance(type, ...)
-  return type.c(...)
-end
-
 local function multiNew(cls, inx, ...) 
   local this = setmetatable({}, cls)
   return this, cls.__ctor__[inx](this, ...)
