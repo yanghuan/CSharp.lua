@@ -332,5 +332,13 @@ namespace TestCases
         {
             func(a[0]);
         }
-    }
+        public bool StartAirHiked { get; private set; }
+        void TestMethod03<T>(Action<T> func) {
+        }
+
+        public void GenericMethodTest14() {
+          TestMethod03<int>( k => StartAirHiked = true);
+        }
+
+  }
 }
