@@ -265,12 +265,15 @@ namespace CSharpLua {
       WriteTypeBase(type);
       // generic
       WriteTypeGeneric(type);
-      // all fields
-      WriteFields(type);
-      // all fields
-      WriteProperties(type);
-      // all fields
-      WriteMethods(type);
+      // only gen when code
+      if (type.IsFromCode()) {
+        // all fields
+        WriteFields(type);
+        // all fields
+        WriteProperties(type);
+        // all fields
+        WriteMethods(type);
+      }
 
       CloseBranch();
     }
