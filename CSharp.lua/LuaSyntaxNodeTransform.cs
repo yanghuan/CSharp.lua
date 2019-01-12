@@ -1463,6 +1463,7 @@ namespace CSharpLua {
             }
             break;
           }
+        case SyntaxKind.SimpleLambdaExpression:
         case SyntaxKind.ParenthesizedLambdaExpression: {
             var method = CurMethodInfoOrNull.Symbol;
             if (!method.ReturnsVoid) {
@@ -2760,7 +2761,22 @@ namespace CSharpLua {
     }
 
     private bool IsSingleLineUnary(ExpressionSyntax node) {
-      return node.Parent.IsKind(SyntaxKind.ExpressionStatement) || node.Parent.IsKind(SyntaxKind.ForStatement);
+      switch (node.Parent.Kind()) {
+        case SyntaxKind.ExpressionStatement:
+        case SyntaxKind.ForStatement: {
+          return true;
+        }
+        case SyntaxKind.SimpleLambdaExpression:
+        case SyntaxKind.ParenthesizedLambdaExpression:  {
+          var method = CurMethodInfoOrNull.Symbol;
+          if (method.ReturnsVoid) {
+            return true;
+          }
+          break;
+        }
+      }
+
+      return false;
     }
 
     private LuaSyntaxNode BuildPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, SyntaxNode node, bool isLocalVar = false) {
