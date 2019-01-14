@@ -1,3 +1,4 @@
+using CSharpLua.LuaAst;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace CSharpLua {
   public class LuaReflectionGenerator {
     int depth;
     TextWriter writer;
+    LuaSyntaxGenerator luaSyntaxGenerator_;
 
     private readonly static SymbolDisplayFormat FullSymbolDisplayFormat = new SymbolDisplayFormat(
         typeQualificationStyle:
@@ -77,6 +79,45 @@ namespace CSharpLua {
       //      SymbolDisplayMiscellaneousOptions.UseSpecialTypes
       );
 
+    string RenderText(LuaExpressionSyntax exp) {
+      var memoryStream = new MemoryStream(_textBuffer);
+      var textWriter = new StreamWriter(memoryStream);
+      var luaRenderer = new LuaRenderer(luaSyntaxGenerator_, textWriter);
+      exp.Render(luaRenderer);
+      textWriter.Flush();
+      var size = memoryStream.Position;
+      textWriter.Close();
+
+      memoryStream = new MemoryStream(_textBuffer,0, (int)size);
+      var textReader = new StreamReader(memoryStream);
+      var ret = textReader.ReadToEnd();
+      textReader.Close();
+      return ret;
+    }
+    string GetTypeName(ISymbol symbol) {
+      try {
+        var typeName = luaSyntaxGenerator_.GetTypeName(symbol);
+        return typeName != null ? RenderText(typeName) : string.Empty;
+      }
+      catch(CompilationErrorException) {
+        return symbol.ToDisplayString(FullTypeDisplayFormat);
+      }
+    }
+
+    string GetTypeShortName(ISymbol symbol) {
+      try {
+        var typeName = luaSyntaxGenerator_.GetTypeShortName(symbol);
+        return typeName != null ? typeName.ValueText : string.Empty;
+      } catch (CompilationErrorException) {
+        return symbol.ToDisplayString(FullTypeDisplayFormat);
+      }
+    }
+    byte[] _textBuffer = new byte[1024 * 1024];
+    public LuaReflectionGenerator(LuaSyntaxGenerator luaSyntaxGenerator) {
+      luaSyntaxGenerator_ = luaSyntaxGenerator;
+      
+    }
+
     void WriteIntent() {
       writer.Write(new string('\t', depth));
     }
@@ -108,7 +149,7 @@ namespace CSharpLua {
 
 
     private void WriteTypeDecl(ITypeSymbol type) {
-      WriteLine($"[\"{type.ToDisplayString(FullTypeDisplayFormat)}\"] = ");
+      WriteLine($"[\"{GetTypeName(type)}\"] = ");
       WriteReflectionType(type);
       WriteLine(",");
     }
@@ -116,7 +157,6 @@ namespace CSharpLua {
     public void GenerateReflectionFile(List<ITypeSymbol> types, string outFolder) {
       depth = 0;
       const string kReflectionFile = "reflection.lua";
-      var generator = new LuaReflectionGenerator();
       string outFile = Path.Combine(outFolder, kReflectionFile);
       reflectedTypes = types.ToDictionary(v => v.ToDisplayString(FullTypeDisplayFormat), v => new KeyValuePair<ITypeSymbol, bool>(v,true));
       using (writer = new StreamWriter(outFile, false, new UTF8Encoding(false))) {
@@ -142,8 +182,9 @@ namespace CSharpLua {
     }
 
     void AddRefType(ITypeSymbol type) {
-      if (!reflectedTypes.ContainsKey(type.ToDisplayString(FullTypeDisplayFormat)))
-        reflectedTypes.Add(type.ToDisplayString(FullTypeDisplayFormat), new KeyValuePair<ITypeSymbol, bool>(type,false));
+      var key = type.ToDisplayString(FullTypeDisplayFormat);
+      if (!reflectedTypes.ContainsKey(key))
+        reflectedTypes.Add(key, new KeyValuePair<ITypeSymbol, bool>(type,false));
     }
 
 
@@ -152,7 +193,7 @@ namespace CSharpLua {
       WriteLine($"name = \"{symbol.Name}\",");
       WriteLine($"isStatic = {symbol.IsStatic.ToString().ToLower()},");
 
-      WriteLine($"fieldType = \"{symbol.Type.ToDisplayString(FullTypeDisplayFormat)}\",");
+      WriteLine($"fieldType = \"{GetTypeName(symbol.Type)}\",");
       AddRefType(symbol.Type);
       CloseBranch();
     }
@@ -180,7 +221,7 @@ namespace CSharpLua {
       WriteLine($"isStatic = {symbol.IsStatic.ToString().ToLower()},");
 
       if (symbol.ReturnType != null) {
-        WriteLine($"returnType = \"{symbol.ReturnType.ToDisplayString(FullTypeDisplayFormat)}\",");
+        WriteLine($"returnType = \"{GetTypeName(symbol.ReturnType)}\",");
         AddRefType(symbol.ReturnType);
       }
       if (symbol.Parameters.Length > 0) {
@@ -189,7 +230,7 @@ namespace CSharpLua {
         foreach (var arg in symbol.Parameters) {
           OpenBranch();
           WriteLine($"name = \"{arg.Name}\",");
-          WriteLine($"type = \"{arg.Type.ToDisplayString(FullTypeDisplayFormat)}\",");
+          WriteLine($"type = \"{GetTypeName(arg.Type)}\",");
           AddRefType(arg.Type);
           CloseBranch();
           WriteLine(",");
@@ -223,7 +264,7 @@ namespace CSharpLua {
       WriteLine($"name = \"{symbol.Name}\",");
       WriteLine($"isStatic = {symbol.IsStatic.ToString().ToLower()},");
 
-      WriteLine($"propertyType = \"{symbol.Type.ToDisplayString(FullTypeDisplayFormat)}\",");
+      WriteLine($"propertyType = \"{GetTypeName(symbol.Type)}\",");
       AddRefType(symbol.Type);
       CloseBranch();
     }
@@ -246,9 +287,9 @@ namespace CSharpLua {
     private void WriteTypeBase(ITypeSymbol type) {
       WriteLine($"kind = \"{type.Kind}\",");
       WriteLine($"typeKind = \"{type.TypeKind}\",");
-      WriteLine($"name = \"{type.ToDisplayString(FullTypeDisplayFormat)}\",");
+      WriteLine($"name = \"{GetTypeName(type)}\",");
       if (type.BaseType != null) {
-        WriteLine($"baseType = \"{type.BaseType.ToDisplayString(FullTypeDisplayFormat)}\",");
+        WriteLine($"baseType = \"{GetTypeName(type.BaseType)}\",");
         AddRefType(type.BaseType);
       }
     }
@@ -259,7 +300,7 @@ namespace CSharpLua {
         WriteLine($"typeArguments = ");
         OpenBranch();
         foreach (var arg in TypeArguments) {
-          WriteLine($"\"{arg.ToDisplayString(FullTypeDisplayFormat)}\",");
+          WriteLine($"\"{GetTypeName(arg)}\",");
           AddRefType(arg);
         }
         CloseBranch();
@@ -272,7 +313,7 @@ namespace CSharpLua {
         WriteLine($"typeParameters = ");
         OpenBranch();
         foreach (var arg in TypeParameters) {
-          WriteLine($"\"{arg.ToDisplayString(FullTypeDisplayFormat)}\",");
+          WriteLine($"\"{GetTypeName(arg)}\",");
           AddRefType(arg);
         }
         CloseBranch();
@@ -285,7 +326,7 @@ namespace CSharpLua {
       if (namedType == null)
         return;
       if(namedType.ConstructedFrom != namedType) {
-        WriteLine($"constructedFrom = \"{namedType.ConstructedFrom.ToDisplayString(FullTypeDisplayFormat)}\",");
+        WriteLine($"constructedFrom = \"{GetTypeShortName(namedType.ConstructedFrom)}\",");
         AddRefType(namedType.ConstructedFrom);
       }
       WriteTypeArguments(namedType.TypeArguments);
@@ -297,7 +338,7 @@ namespace CSharpLua {
       if (arrayType == null)
         return;
       var elementType = arrayType.ElementType;
-      WriteLine($"elementType = \"{elementType.ToDisplayString(FullTypeDisplayFormat)}\",");
+      WriteLine($"elementType = \"{GetTypeName(elementType)}\",");
       AddRefType(elementType);
     }
     private void WriteReflectionType(ITypeSymbol type) {

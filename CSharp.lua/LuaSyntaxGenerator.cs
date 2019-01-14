@@ -429,7 +429,7 @@ namespace CSharpLua {
         modules.Sort();
         var types = GetExportTypes();
 
-        var generator = new LuaReflectionGenerator();
+        var generator = new LuaReflectionGenerator(this);
         generator.GenerateReflectionFile(types.Select(v=>v as ITypeSymbol).ToList(), outFolder);
       }
     }
