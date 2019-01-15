@@ -8,7 +8,9 @@ namespace TestCases
 {
     class DelegateInnerTest {
 
-	    static bool testValue;
+
+
+    static bool testValue;
 
 	    [TestCase]
 	    public static void TestRun00() {
@@ -28,7 +30,7 @@ namespace TestCases
 	      Console.WriteLine("--------TestRunOK{0}", a);
 	    }
 
-	    [TestCase]
+        [TestCase]
         public static void TestRun01()
         {
             //var dc = new DelegateContainer();
@@ -55,8 +57,16 @@ namespace TestCases
             var result = from num in list where num < 8 select num;
             Console.WriteLine("result:{0}", result.Count());
         }
+      [TestCase]
+      public static void TestRun02() {
+        Dictionary<int, int> dict = null;
+        int outValue;
+        if (dict != null && dict.TryGetValue(1, out outValue)) {
 
-        private static int OnFuncNameXiaQi(int arg)
+        }
+
+      }
+    private static int OnFuncNameXiaQi(int arg)
         {
             Console.WriteLine("--------OnFuncNameXiaQi{0}", arg);
             return arg;
