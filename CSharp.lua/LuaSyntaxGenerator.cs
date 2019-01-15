@@ -54,6 +54,7 @@ namespace CSharpLua {
       private int indent_;
       public string IndentString { get; private set; }
       public bool IsNewest { get; set; }
+      public bool IsExportReflectionFile { get; set; }
 
       public SettingInfo() {
         Indent = 2;
@@ -163,7 +164,9 @@ namespace CSharpLua {
         modules.Add(module);
       }
       ExportManifestFile(modules, outFolder);
-      ExportReflectionFile(modules, outFolder);
+      if (Setting.IsExportReflectionFile) {
+        ExportReflectionFile(modules, outFolder);
+      }
     }
 
     public string GenerateSingle() {

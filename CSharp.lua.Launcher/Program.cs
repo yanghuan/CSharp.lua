@@ -24,19 +24,20 @@ using System.Threading.Tasks;
 namespace CSharpLua {
   class Program {
     private const string kHelpCmdString = @"Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
-Arguments 
+Arguments
 -s              : source directory, all *.cs files whill be compiled
 -d              : destination  directory, will put the out lua files
 
 Options
--h              : show the help message and exit   
--l              : libraries referenced, use ';' to separate      
--m              : meta files, like System.xml, use ';' to separate     
+-h              : show the help message and exit
+-l              : libraries referenced, use ';' to separate
+-m              : meta files, like System.xml, use ';' to separate
 -csc            : csc.exe command argumnets, use ' ' or '\t' to separate
 
--c              : support classic lua version(5.1), default support 5.3 
+-c              : support classic lua version(5.1), default support 5.3
 -i              : indent number, default is 2
--a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported    
+-a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
+-f              : export some class metadatas to reflection.lua, could change in the future
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -60,7 +61,8 @@ Options
             atts = string.Empty;
           }
           string csc = GetCSCArgument(cmds);
-          Compiler w = new Compiler(folder, output, lib, meta, csc, isClassic, indent, atts);
+          bool isExportReflectionFile = cmds.ContainsKey("-f");
+          Compiler w = new Compiler(folder, output, lib, meta, csc, isClassic, indent, atts, isExportReflectionFile);
           w.Do();
           Console.WriteLine("all operator success");
           Console.WriteLine($"end {DateTime.Now}");
@@ -85,18 +87,20 @@ Options
       Console.Error.WriteLine(kHelpCmdString);
     }
 
+    private static HashSet<string> argumnets_; 
+
     private static bool IsArgumentKey(string key) {
-      switch (key) {
-        case "-s":
-        case "-d":
-        case "-l":
-        case "-m":
-        case "-c":
-        case "-i":
-        case "-a":
-          return true;
+      if (argumnets_ == null) {
+        argumnets_ = new HashSet<string>();
+        string[] lines = kHelpCmdString.Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string line in lines) {
+          if (line.StartsWith('-')) {
+            char[] chars = line.TakeWhile(i => !char.IsWhiteSpace(i)).ToArray();
+            argumnets_.Add(new string(chars));
+          }
+        }
       }
-      return false;
+      return argumnets_.Contains(key);
     }
 
     private static string GetCSCArgument(Dictionary<string, string[]> cmds) {
