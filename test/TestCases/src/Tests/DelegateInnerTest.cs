@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -6,10 +6,32 @@ using System.Text;
 
 namespace TestCases
 {
-    class DelegateInnerTest
-    {
+    class DelegateInnerTest {
+
+
+
+    static bool testValue;
+
+	    [TestCase]
+	    public static void TestRun00() {
+	      testValue = false;
+	      // 初始化1
+	      int a = 1;
+	      // 1 + 2 = 3
+	      a += testValue ? 1 : 2;
+	      if (a != 3) {
+	        throw new Exception("error result:" + a.ToString());
+	      }
+	      // 3 + 1 = 4
+	      a += !testValue ? 1 : 2;
+	      if (a != 4) {
+	        throw new Exception("error result:" + a.ToString());
+	      }
+	      Console.WriteLine("--------TestRunOK{0}", a);
+	    }
+
         [TestCase]
-        public static void TestRun()
+        public static void TestRun01()
         {
             //var dc = new DelegateContainer();
             //dc.OnAction += () => { Console.WriteLine("----------OnAction"); };
@@ -35,8 +57,16 @@ namespace TestCases
             var result = from num in list where num < 8 select num;
             Console.WriteLine("result:{0}", result.Count());
         }
+      [TestCase]
+      public static void TestRun02() {
+        Dictionary<int, int> dict = null;
+        int outValue;
+        if (dict != null && dict.TryGetValue(1, out outValue)) {
 
-        private static int OnFuncNameXiaQi(int arg)
+        }
+
+      }
+    private static int OnFuncNameXiaQi(int arg)
         {
             Console.WriteLine("--------OnFuncNameXiaQi{0}", arg);
             return arg;
