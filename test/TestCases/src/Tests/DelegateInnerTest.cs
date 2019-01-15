@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -6,10 +6,30 @@ using System.Text;
 
 namespace TestCases
 {
-    class DelegateInnerTest
-    {
-        [TestCase]
-        public static void TestRun()
+    class DelegateInnerTest {
+
+	    static bool testValue;
+
+	    [TestCase]
+	    public static void TestRun00() {
+	      testValue = false;
+	      // 初始化1
+	      int a = 1;
+	      // 1 + 2 = 3
+	      a += testValue ? 1 : 2;
+	      if (a != 3) {
+	        throw new Exception("error result:" + a.ToString());
+	      }
+	      // 3 + 1 = 4
+	      a += !testValue ? 1 : 2;
+	      if (a != 4) {
+	        throw new Exception("error result:" + a.ToString());
+	      }
+	      Console.WriteLine("--------TestRunOK{0}", a);
+	    }
+
+	    [TestCase]
+        public static void TestRun01()
         {
             //var dc = new DelegateContainer();
             //dc.OnAction += () => { Console.WriteLine("----------OnAction"); };
