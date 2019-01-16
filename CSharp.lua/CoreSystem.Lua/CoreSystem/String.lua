@@ -441,22 +441,22 @@ function String.Trim(this, chars)
 end
 
 function String.PadLeft(this, totalWidth, paddingChar) 
-  local len = #this
-  if len <= totalWidth then
+  local len = #this;
+  if len >= totalWidth then
     return this
   else
-    paddingChar = paddingChar or ' '
-    return srep(' ', totalWidth - len) .. this
+    paddingChar = paddingChar or 0x20;
+    return srep(schar(paddingChar), totalWidth - len) .. this
   end
 end
 
 function String.PadRight(this, totalWidth, paddingChar) 
-  local len = #this
-  if len <= totalWidth then
+  local len = #this;
+  if len >= totalWidth then
     return this
   else
-    paddingChar = paddingChar or ' '
-    return this .. srep(' ', totalWidth - len)
+    paddingChar = paddingChar or 0x20;
+    return this .. srep(schar(paddingChar), totalWidth - len)
   end
 end
 
