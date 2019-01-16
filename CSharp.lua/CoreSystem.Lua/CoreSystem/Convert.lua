@@ -83,9 +83,7 @@ local function toChar(value)
       throw(OverflowException("Overflow_Char")) 
     end
     if value ~= floor(value) then
-      return value
-    else
-      return cast(IConvertible, value):ToChar()  
+      throw(InvalidCastException("InvalidCast_FromTo_Single_Char"))
     end
     return value
   elseif typename == "string" then
