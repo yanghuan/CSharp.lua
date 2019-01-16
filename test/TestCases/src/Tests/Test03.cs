@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -128,5 +128,11 @@ namespace TestCases
             Console.WriteLine("contains int:" + l.Contains(1));
             Console.WriteLine("contains byte:" + l.Contains((byte)1));
         }
-    }
+        [TestCase]
+        public static void Test_05() {
+          Console.WriteLine("ToChar Converting");
+          Convert.ToChar(128);
+          Console.WriteLine("ToChar Convert finish");
+       }
+  }
 }
