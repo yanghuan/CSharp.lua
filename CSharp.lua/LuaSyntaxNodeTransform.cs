@@ -1227,7 +1227,8 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken, bool isRightParenthesized) {
+    private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken, ExpressionSyntax rightNode) {
+      bool isRightParenthesized = rightNode is BinaryExpressionSyntax || rightNode.IsKind(SyntaxKind.ConditionalExpression);
       if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
         propertyAdapter.ArgumentList.AddArgument(new LuaBinaryExpressionSyntax(propertyAdapter.GetCloneOfGet(), operatorToken, right));
         return propertyAdapter;
@@ -1242,7 +1243,7 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildCommonAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string operatorToken) {
       var left = (LuaExpressionSyntax)leftNode.Accept(this);
       var right = (LuaExpressionSyntax)rightNode.Accept(this);
-      return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode is BinaryExpressionSyntax);
+      return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode);
     }
 
     private LuaExpressionSyntax BuildDelegateAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, bool isPlus) {
@@ -1313,7 +1314,7 @@ namespace CSharpLua {
             if (leftType.IsStringType()) {
               var left = (LuaExpressionSyntax)leftNode.Accept(this);
               var right = WrapStringConcatExpression(rightNode);
-              return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation, rightNode is BinaryExpressionSyntax);
+              return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation, rightNode);
             } else {
               var left = (LuaExpressionSyntax)leftNode.Accept(this);
               var right = (LuaExpressionSyntax)rightNode.Accept(this);
@@ -1321,7 +1322,7 @@ namespace CSharpLua {
               if (leftType.IsDelegateType()) {
                 return BuildDelegateAssignmentExpression(left, right, true);
               } else {
-                return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus, rightNode is BinaryExpressionSyntax);
+                return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus, rightNode);
               }
             }
           }
@@ -1333,7 +1334,7 @@ namespace CSharpLua {
             if (leftType.IsDelegateType()) {
               return BuildDelegateAssignmentExpression(left, right, false);
             } else {
-              return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Sub, rightNode is BinaryExpressionSyntax);
+              return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Sub, rightNode);
             }
           }
         case SyntaxKind.MultiplyAssignmentExpression: {
