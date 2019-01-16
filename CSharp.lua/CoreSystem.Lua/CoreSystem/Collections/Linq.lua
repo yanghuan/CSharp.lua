@@ -379,7 +379,7 @@ function Enumerable.GroupJoin(outer, inner, outerKeySelector, innerKeySelector, 
   if resultSelector == nil then throw(ArgumentNullException("resultSelector")) end
   local lookup = createLookupForJoin(inner, innerKeySelector, comparer, TKey, inner.__genericT__)
   return createEnumerable(TResult, function ()
-    return createEnumerable(TResult, outer, function (en)
+    return createEnumerator(TResult, outer, function (en)
       if en:MoveNext() then
         local item = en:getCurrent()
         return true, resultSelector(item, lookup:get(outerKeySelector(item)))
@@ -559,7 +559,7 @@ end
 function Enumerable.Concat(first, second)
   if first == nil then throw(ArgumentNullException("first")) end
   if second == nil then throw(ArgumentNullException("second")) end
-  local T = source.__genericT__
+  local T = first.__genericT__
   return createEnumerable(T, function()
     local secondEn
     return createEnumerator(T, first, function(en)
