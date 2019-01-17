@@ -811,12 +811,17 @@ namespace CSharpLua {
       LuaSyntaxNodeTransform transfor = null) {
       StringBuilder sb = new StringBuilder();
       FillExternalTypeName(sb, typeSymbol, funcOfNamespace, funcOfTypeName, transfor);
-      string typeName = funcOfTypeName?.Invoke(typeSymbol) ?? typeSymbol.Name;
-      sb.Append(typeName);
-      int typeParametersCount = typeSymbol.TypeParameters.Length;
-      if (typeParametersCount > 0) {
-        sb.Append('_');
-        sb.Append(typeParametersCount);
+      string typeName = funcOfTypeName?.Invoke(typeSymbol);
+      if (typeName != null) {
+        sb.Append(typeName);
+      } else {
+        typeName = typeSymbol.Name;
+        sb.Append(typeName);
+        int typeParametersCount = typeSymbol.TypeParameters.Length;
+        if (typeParametersCount > 0) {
+          sb.Append('_');
+          sb.Append(typeParametersCount);
+        }
       }
       return sb.ToString();
     }

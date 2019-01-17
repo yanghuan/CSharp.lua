@@ -83,7 +83,7 @@ local function toChar(value)
       throw(OverflowException("Overflow_Char")) 
     end
     if value ~= floor(value) then
-      throw(InvalidCastException("InvalidCast_FromTo_Single_Char"))
+      throw(InvalidCastException("InvalidCast_FromTo_Char"))
     end
     return value
   elseif typename == "string" then

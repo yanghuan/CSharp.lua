@@ -1207,7 +1207,13 @@ namespace CSharpLua {
         string name = type.Name;
         if (type.TypeParameters.IsEmpty) {
           if (LuaSyntaxNode.IsReservedWord(name)) {
-            RefactorTypeName(type, type.Name, 1);
+            RefactorTypeName(type, name, 1);
+            return;
+          }
+        } else {
+          string newName = name + '_' + type.TypeParameters.Length;
+          if (CheckTypeNameExists(classTypes_, type, newName)) {
+            RefactorTypeName(type, name, 3);
             return;
           }
         }
@@ -1355,12 +1361,15 @@ namespace CSharpLua {
     }
 
     internal LuaIdentifierNameSyntax GetTypeDeclarationName(INamedTypeSymbol typeSymbol) {
-      string name = typeSymbol.Name;
-      int typeParametersCount = typeSymbol.TypeParameters.Length;
-      if (typeParametersCount > 0) {
-        name += "_" + typeParametersCount;
+      string name = GetTypeRefactorName(typeSymbol);
+      if (name == null) {
+        name = typeSymbol.Name;
+        int typeParametersCount = typeSymbol.TypeParameters.Length;
+        if (typeParametersCount > 0) {
+          name += "_" + typeParametersCount;
+        }
       }
-      return new LuaIdentifierNameSyntax(GetTypeRefactorName(typeSymbol) ?? name);
+      return new LuaIdentifierNameSyntax(name);
     }
 
     internal LuaExpressionSyntax GetTypeName(ISymbol symbol, LuaSyntaxNodeTransform transfor = null) {
