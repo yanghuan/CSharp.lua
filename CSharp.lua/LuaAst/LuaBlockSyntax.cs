@@ -41,10 +41,6 @@ namespace CSharpLua.LuaAst {
     internal void AddStatement(LuaStatementSyntax statement) {
       Statements.Add(statement);
     }
-
-    internal void AddStatement(LuaExpressionSyntax expression) {
-      Statements.Add(expression.ToStatement());
-    }
   }
 
   public sealed class LuaBlockStatementSyntax : LuaBlockSyntax {

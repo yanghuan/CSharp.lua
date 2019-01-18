@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,11 @@ namespace CSharpLua.LuaAst {
     private sealed class EmptyLuaExpressionSyntax : LuaExpressionSyntax {
       internal override void Render(LuaRenderer renderer) {
       }
+    }
+
+    public static implicit operator LuaExpressionSyntax(string valueText) {
+      LuaIdentifierNameSyntax identifierName = valueText;
+      return identifierName;
     }
 
     public static readonly LuaExpressionSyntax EmptyExpression = new EmptyLuaExpressionSyntax();

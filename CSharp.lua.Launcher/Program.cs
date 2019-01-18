@@ -38,6 +38,7 @@ Options
 -i              : indent number, default is 2
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -f              : export some class metadatas to reflection.lua, could change in the future
+-fs             : all metadatas need to export 
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -62,7 +63,11 @@ Options
           }
           string csc = GetCSCArgument(cmds);
           bool isExportReflectionFile = cmds.ContainsKey("-f");
-          Compiler w = new Compiler(folder, output, lib, meta, csc, isClassic, indent, atts, isExportReflectionFile);
+          bool isExportReflectionData = cmds.ContainsKey("-fs");
+          Compiler w = new Compiler(folder, output, lib, meta, csc, isClassic, indent, atts) {
+            IsExportReflectionFile = isExportReflectionFile,
+            IsExportReflectionData = isExportReflectionData,
+          };
           w.Do();
           Console.WriteLine("all operator success");
           Console.WriteLine($"end {DateTime.Now}");

@@ -139,7 +139,7 @@ namespace CSharpLua.LuaAst {
       if (imports.Count > 0) {
         imports.Sort();
         foreach (var import in imports) {
-          AddImport(new LuaIdentifierNameSyntax(import.NewPrefix), new LuaIdentifierNameSyntax(import.Prefix));
+          AddImport(import.NewPrefix, import.Prefix);
         }
       }
 
@@ -147,7 +147,7 @@ namespace CSharpLua.LuaAst {
       if (genericImports.Count > 0) {
         genericImports.Sort();
         foreach (var import in genericImports) {
-          AddImport(new LuaIdentifierNameSyntax(import.NewName), import.InvocationExpression);
+          AddImport(import.NewName, import.InvocationExpression);
         }
       }
 
@@ -158,11 +158,11 @@ namespace CSharpLua.LuaAst {
         genericDeclares.Sort();
 
         foreach (var usingDeclare in usingDeclares) {
-          AddImport(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), null);
+          AddImport(usingDeclare.NewPrefix, null);
         }
 
         foreach (var usingDeclare in genericDeclares) {
-          AddImport(new LuaIdentifierNameSyntax(usingDeclare.NewName), null);
+          AddImport(usingDeclare.NewName, null);
         }
 
         var global = LuaIdentifierNameSyntax.Global;
@@ -170,17 +170,17 @@ namespace CSharpLua.LuaAst {
         functionExpression.AddParameter(global);
         foreach (var usingDeclare in usingDeclares) {
           if (usingDeclare.Prefix != usingDeclare.NewPrefix) {
-            var assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), new LuaIdentifierNameSyntax(usingDeclare.Prefix));
+            var assignment = new LuaAssignmentExpressionSyntax(usingDeclare.NewPrefix, usingDeclare.Prefix);
             functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
           } else {
-            var right = new LuaMemberAccessExpressionSyntax(global, new LuaIdentifierNameSyntax(usingDeclare.Prefix));
-            var assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewPrefix), right);
+            var right = new LuaMemberAccessExpressionSyntax(global, usingDeclare.Prefix);
+            var assignment = new LuaAssignmentExpressionSyntax(usingDeclare.NewPrefix, right);
             functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
           }
         }
 
         foreach (var usingDeclare in genericDeclares) {
-          var assignment = new LuaAssignmentExpressionSyntax(new LuaIdentifierNameSyntax(usingDeclare.NewName), usingDeclare.InvocationExpression);
+          var assignment = new LuaAssignmentExpressionSyntax(usingDeclare.NewName, usingDeclare.InvocationExpression);
           functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
         }
 

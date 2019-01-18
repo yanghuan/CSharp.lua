@@ -387,7 +387,7 @@ namespace CSharpLua {
                   isField = false;
                 } else {
                   var documentTrivia = property.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
-                  if (documentTrivia != null && documentTrivia.HasIgnoreAttribute()) {
+                  if (documentTrivia != null && documentTrivia.HasNoFiledAttribute()) {
                     isField = false;
                   }
                 }
@@ -408,7 +408,7 @@ namespace CSharpLua {
       return false;
     }
 
-    private static bool HasIgnoreAttribute(this SyntaxTrivia trivia) {
+    private static bool HasNoFiledAttribute(this SyntaxTrivia trivia) {
       return trivia.ToString().Contains(LuaDocumentStatement.kNoField);
     }
 
@@ -972,16 +972,19 @@ namespace CSharpLua {
       return false;
     }
 
-    public static LuaExpressionStatementSyntax ToStatement(this LuaExpressionSyntax expression) {
-      return new LuaExpressionStatementSyntax(expression);
+    public static bool IsRuntimeCompilerServices(this INamespaceSymbol symbol) {
+      return symbol.Name == "CompilerServices" && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
+    }
+
+    public static string GetMetaDataAttributeFlags(this ISymbol symbol) {
+      int accessibility = (int)symbol.DeclaredAccessibility;
+      int isStatic = symbol.IsStatic ? 1 : 0;
+      int flags = accessibility | (isStatic << 3);
+      return $"0x{flags:X}";
     }
 
     public static bool IsNil(this LuaExpressionSyntax expression) {
       return expression == null || expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
-    }
-
-    public static bool IsRuntimeCompilerServices(this INamespaceSymbol symbol) {
-      return symbol.Name == "CompilerServices" && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
     }
 
     #region hard code for protobuf-net

@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 YANG Huan (sy.yanghuan@gmail.com).
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,7 +95,7 @@ namespace CSharpLua {
       } else {
         CheckLocalBadWord(ref name, identifier.Parent);
       }
-      var queryIdentifier = new QueryIdentifier(identifier, new LuaIdentifierNameSyntax(name));
+      var queryIdentifier = new QueryIdentifier(identifier, name);
       queryIdentifiers_.Add(queryIdentifier);
       return queryIdentifier;
     }
@@ -229,9 +229,9 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax CreateQueryAnonymousType(LuaIdentifierNameSyntax key1, LuaExpressionSyntax value1, LuaIdentifierNameSyntax key2, LuaExpressionSyntax value2) {
-      LuaTableInitializerExpression table = new LuaTableInitializerExpression();
-      table.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(key1), value1));
-      table.Items.Add(new LuaKeyValueTableItemSyntax(new LuaTableLiteralKeySyntax(key2), value2));
+      LuaTableExpression table = new LuaTableExpression();
+      table.Add(key1, value1);
+      table.Add(key2, value2);
       return table;
     }
 

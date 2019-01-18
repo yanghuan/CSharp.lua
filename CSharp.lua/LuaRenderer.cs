@@ -283,23 +283,37 @@ namespace CSharpLua {
       WriteNewLine();
     }
 
-    internal void Render(LuaTableInitializerExpression node) {
+    internal void Render(LuaTableExpression node) {
       Write(node.OpenBraceToken);
       if (node.Items.Count > 0) {
-        WriteNewLine();
-        AddIndent();
+        if (!node.IsSingleLine) {
+          WriteNewLine();
+          AddIndent();
+        } else {
+          WriteSpace();
+        }
+
         bool isFirst = true;
         foreach (var itemNode in node.Items) {
           if (isFirst) {
             isFirst = false;
           } else {
-            WriteCommaOnly();
-            WriteNewLine();
+            if (!node.IsSingleLine) {
+              WriteCommaOnly();
+              WriteNewLine();
+            } else {
+              WriteComma();
+            }
           }
           itemNode.Render(this);
         }
-        Outdent();
-        WriteNewLine();
+
+        if (!node.IsSingleLine) {
+          Outdent();
+          WriteNewLine();
+        } else {
+          WriteSpace();
+        }
       }
       Write(node.CloseBraceToken);
     }

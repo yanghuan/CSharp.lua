@@ -30,8 +30,12 @@ namespace CSharpLua.LuaAst {
       }
     }
 
+    public static implicit operator LuaStatementSyntax(LuaExpressionSyntax expression) {
+      return new LuaExpressionStatementSyntax(expression);
+    }
+
     public static readonly LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
-    public static readonly LuaStatementSyntax Colon = new LuaIdentifierNameSyntax(Semicolon.kSemicolon).ToStatement();
+    public static readonly LuaStatementSyntax Colon = (LuaIdentifierNameSyntax)Semicolon.kSemicolon;
   }
 
   public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {
@@ -204,18 +208,21 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaDocumentStatement : LuaStatementSyntax {
     private const string kAttributePrefix = "@CSharpLua.";
     public const string kNoField = kAttributePrefix + nameof(AttributeFlags.NoField);
+    public const string kReflection = kAttributePrefix + nameof(AttributeFlags.Reflection);
 
     [Flags]
     public enum AttributeFlags {
       None = 0,
       Ignore = 1 << 0,
       NoField = 1 << 1,
+      Reflection = 1 << 2,
     }
 
     public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();
     public bool IsEmpty => Statements.Count == 0;
     private AttributeFlags attr_;
-    public bool HasIgnoreAttribute => attr_.HasFlag(AttributeFlags.Ignore);
+    public bool HasIgnoreAttribute => HasAttribute(AttributeFlags.Ignore);
+    public bool HasReflectionAttribute => HasAttribute(AttributeFlags.Reflection);
 
     public LuaDocumentStatement() {
     }
@@ -282,6 +289,10 @@ namespace CSharpLua.LuaAst {
     public void Add(LuaDocumentStatement document) {
       Statements.AddRange(document.Statements);
       attr_ |= document.attr_;
+    }
+
+    public bool HasAttribute(AttributeFlags type) {
+      return attr_.HasFlag(type);
     }
 
     internal override void Render(LuaRenderer renderer) {
