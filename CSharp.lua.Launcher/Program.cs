@@ -38,7 +38,7 @@ Options
 -i              : indent number, default is 2
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -f              : export some class metadatas to reflection.lua, could change in the future
--fs             : all metadatas need to export 
+-fs             : all metadatas need to export, under development, not yet available
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {

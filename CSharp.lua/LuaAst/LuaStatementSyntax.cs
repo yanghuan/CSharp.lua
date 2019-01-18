@@ -295,6 +295,14 @@ namespace CSharpLua.LuaAst {
       return attr_.HasFlag(type);
     }
 
+    private void UnAttribute(AttributeFlags type) {
+      attr_ &= ~type;
+    }
+
+    public void UnIgnore() {
+      UnAttribute(AttributeFlags.Ignore);
+    }
+
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }

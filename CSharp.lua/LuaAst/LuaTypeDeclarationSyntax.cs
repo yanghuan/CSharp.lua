@@ -28,6 +28,11 @@ namespace CSharpLua.LuaAst {
     public bool IsLazy;
   }
 
+  public sealed class LuaConstructorDeclaration {
+    public LuaConstructorAdapterExpressionSyntax Function;
+    public LuaDocumentStatement Document;
+  }
+
   public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
     public bool IsPartialMark { get; set; }
     public bool IsClassUsed { get; set; }
@@ -38,17 +43,19 @@ namespace CSharpLua.LuaAst {
     private LuaTableExpression resultTable_ = new LuaTableExpression();
 
     private List<LuaStatementSyntax> staticInitStatements_ = new List<LuaStatementSyntax>();
-    private List<LuaStatementSyntax> staticcCtorStatements_ = new List<LuaStatementSyntax>();
     private List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new List<LuaIdentifierNameSyntax>();
+    private LuaConstructorDeclaration staticCtor_;
 
     private List<LuaStatementSyntax> initStatements_ = new List<LuaStatementSyntax>();
-    private List<LuaConstructorAdapterExpressionSyntax> ctors_ = new List<LuaConstructorAdapterExpressionSyntax>();
+    private List<LuaConstructorDeclaration> ctors_ = new List<LuaConstructorDeclaration>();
 
     private List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
     private List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
 
     private LuaTableExpression metadata_;
     private LuaTableExpression attributes_;
+    private LuaTableExpression metaProperties_;
+    private LuaTableExpression metaFields_;
     private LuaTableExpression metaMethods_;
     private LuaDocumentStatement document_ = new LuaDocumentStatement();
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
@@ -94,6 +101,14 @@ namespace CSharpLua.LuaAst {
         var table = new LuaTableExpression(attributes) { IsSingleLine = true };
         AddMetadata(ref attributes_, LuaIdentifierNameSyntax.Attributes, new LuaKeyValueTableItemSyntax(name, table));
       }
+    }
+
+    internal void AddFieldMetaData(LuaTableExpression data) {
+      AddMetadata(ref metaFields_, LuaIdentifierNameSyntax.Fields, new LuaSingleTableItemSyntax(data));
+    }
+
+    internal void AddPropertyMetaData(LuaTableExpression data) {
+      AddMetadata(ref metaProperties_, LuaIdentifierNameSyntax.Properties, new LuaSingleTableItemSyntax(data));
     }
 
     internal void AddMethodMetaData(LuaTableExpression data) {
@@ -247,7 +262,7 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private void AddPropertyOrEvent(bool isProperty, LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
+    private (LuaPropertyOrEventIdentifierNameSyntax, LuaPropertyOrEventIdentifierNameSyntax) AddPropertyOrEvent(bool isProperty, LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
       LuaPropertyOrEventIdentifierNameSyntax get, set;
       if (isProperty) {
         get = new LuaPropertyOrEventIdentifierNameSyntax(true, true, name);
@@ -316,24 +331,31 @@ namespace CSharpLua.LuaAst {
         AddResultTable(get);
         AddResultTable(set);
       }
+
+      return (get, set);
     }
 
-    public void AddProperty(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
-      AddPropertyOrEvent(true, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
+    public (LuaPropertyOrEventIdentifierNameSyntax, LuaPropertyOrEventIdentifierNameSyntax) AddProperty(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
+      return AddPropertyOrEvent(true, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
     }
 
     public void AddEvent(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
       AddPropertyOrEvent(false, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
     }
 
-    public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function) {
-      Contract.Assert(staticcCtorStatements_.Count == 0);
-      staticcCtorStatements_.AddRange(function.Body.Statements);
+    public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function, LuaDocumentStatement document) {
+      Contract.Assert(staticCtor_ == null);
+      staticCtor_ = new LuaConstructorDeclaration() {
+        Function = function,
+        Document = document,
+      };
     }
 
     public void SetStaticCtorEmpty() {
-      Contract.Assert(staticcCtorStatements_.Count == 0);
-      staticcCtorStatements_.Add(Empty);
+      Contract.Assert(staticCtor_ == null);
+      var ctor = new LuaConstructorAdapterExpressionSyntax();
+      ctor.AddStatement(Empty);
+      staticCtor_ = new LuaConstructorDeclaration() { Function = ctor };
     }
 
     public bool IsNoneCtros {
@@ -348,11 +370,17 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool isZeroParameters) {
+    public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool isZeroParameters, LuaDocumentStatement document = null) {
       if (isZeroParameters) {
-        ctors_.Insert(0, function);
+        ctors_.Insert(0, new LuaConstructorDeclaration() {
+          Function = function,
+          Document = document,
+        });
       } else {
-        ctors_.Add(function);
+        ctors_.Add(new LuaConstructorDeclaration() {
+          Function = function,
+          Document = document,
+        });
       }
     }
 
@@ -379,12 +407,17 @@ namespace CSharpLua.LuaAst {
     private void CheckStaticCtorFunction(LuaBlockSyntax body) {
       List<LuaStatementSyntax> statements = new List<LuaStatementSyntax>();
       statements.AddRange(staticInitStatements_);
-      statements.AddRange(staticcCtorStatements_);
+      if (staticCtor_ != null) {
+        statements.AddRange(staticCtor_.Function.Body.Statements);
+      }
       if (statements.Count > 0) {
         LuaFunctionExpressionSyntax staticCtor = new LuaFunctionExpressionSyntax();
         staticCtor.AddParameter(LuaIdentifierNameSyntax.This);
         staticCtor.Body.Statements.AddRange(statements);
         AddStaticAssignmentNames(staticCtor.Body);
+        if (staticCtor_ != null && staticCtor_.Document != null) {
+          body.AddStatement(staticCtor_.Document);
+        }
         AddInitFunction(body, LuaIdentifierNameSyntax.StaticCtor, staticCtor);
       }
     }
@@ -403,14 +436,14 @@ namespace CSharpLua.LuaAst {
       if (hasCtors) {
         if (hasInit) {
           if (ctors_.Count == 1) {
-            ctors_.First().Body.Statements.InsertRange(0, initStatements_);
+            ctors_.First().Function.Body.Statements.InsertRange(0, initStatements_);
           } else {
             var initIdentifier = LuaIdentifierNameSyntax.Init;
             AddInitFunction(body, initIdentifier, GetInitFunction(), false);
             foreach (var ctor in ctors_) {
-              if (!ctor.IsInvokeThisCtor) {
-                LuaInvocationExpressionSyntax invocationInit = new LuaInvocationExpressionSyntax(initIdentifier, LuaIdentifierNameSyntax.This);
-                ctor.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
+              if (!ctor.Function.IsInvokeThisCtor) {
+                var invocationInit = new LuaInvocationExpressionSyntax(initIdentifier, LuaIdentifierNameSyntax.This);
+                ctor.Function.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
               }
             }
           }
@@ -418,16 +451,21 @@ namespace CSharpLua.LuaAst {
 
         if (ctors_.Count == 1) {
           var ctor = ctors_.First();
-          if (ctor.Body.Statements.Count > 0) {
-            AddInitFunction(body, LuaIdentifierNameSyntax.Ctor, ctor);
+          if (ctor.Function.Body.Statements.Count > 0) {
+            if (ctor.Document != null) {
+              body.AddStatement(ctor.Document);
+            }
+            AddInitFunction(body, LuaIdentifierNameSyntax.Ctor, ctor.Function);
           }
         } else {
           LuaTableExpression ctrosTable = new LuaTableExpression();
           int index = 1;
           foreach (var ctor in ctors_) {
-            string name = SpecailWord(Tokens.Ctor + index);
-            LuaIdentifierNameSyntax nameIdentifier = name;
-            AddInitFunction(body, nameIdentifier, ctor, false);
+            if (ctor.Document != null) {
+              body.AddStatement(ctor.Document);
+            }
+            LuaIdentifierNameSyntax nameIdentifier = GetCtorNameString(index);
+            AddInitFunction(body, nameIdentifier, ctor.Function, false);
             ctrosTable.Add(nameIdentifier);
             ++index;
           }
@@ -446,12 +484,17 @@ namespace CSharpLua.LuaAst {
       return name.Text;
     }
 
+    private static void SortMetaData(LuaTableExpression metaData) {
+      if (metaData != null) {
+        metaData.Items.Sort((x, y) => MetaDataName(x).CompareTo(MetaDataName(y)));
+      }
+    }
+
     private void CheckMetadata() {
       if (metadata_ != null) {
-        if (metaMethods_ != null) {
-          metaMethods_.Items.Sort((x, y) => MetaDataName(x).CompareTo(MetaDataName(y)));
-        }
-
+        SortMetaData(metaFields_);
+        SortMetaData(metaProperties_);
+        SortMetaData(metaMethods_);
         LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
         functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
         functionExpression.AddParameter(LuaSyntaxNode.Tokens.Ref);

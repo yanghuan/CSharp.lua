@@ -94,6 +94,8 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax Global = "global";
     public static readonly LuaIdentifierNameSyntax Metadata = "__metadata__";
     public static readonly LuaIdentifierNameSyntax Attributes = "attributes";
+    public static readonly LuaIdentifierNameSyntax Fields = "fields";
+    public static readonly LuaIdentifierNameSyntax Properties = "properties";
     public static readonly LuaIdentifierNameSyntax Methods = "methods";
     public static readonly LuaIdentifierNameSyntax setmetatable = "setmetatable";
     public static readonly LuaIdentifierNameSyntax Clone = "__clone__";

@@ -299,10 +299,16 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node) {
-      IMethodSymbol ctorSymbol = semanticModel_.GetDeclaredSymbol(node);
-      methodInfos_.Push(new MethodInfo(ctorSymbol));
-      List<LuaExpressionSyntax> refOrOutParameters = new List<LuaExpressionSyntax>();
+      IMethodSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
+      methodInfos_.Push(new MethodInfo(symbol));
 
+      var document = BuildDocumentationComment(node);
+      var attributes = BuildAttributes(node.AttributeLists);
+      if (document != null) {
+        document.UnIgnore();
+      }
+
+      List<LuaExpressionSyntax> refOrOutParameters = new List<LuaExpressionSyntax>();
       LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
       PushFunction(function);
       bool isStatic = node.Modifiers.IsStatic();
@@ -319,21 +325,21 @@ namespace CSharpLua {
 
       bool isEmptyCtor = false;
       if (node.Initializer != null) {
-        var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
-        int ctroCounter = GetConstructorIndex(symbol);
+        var initializerSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
+        int ctroIndex = initializerSymbol.GetConstructorIndex();
         LuaInvocationExpressionSyntax otherCtorInvoke;
         if (node.Initializer.IsKind(SyntaxKind.ThisConstructorInitializer)) {
-          Contract.Assert(ctroCounter != 0);
-          LuaIdentifierNameSyntax thisCtor = LuaSyntaxNode.SpecailWord(LuaSyntaxNode.Tokens.Ctor + ctroCounter);
+          Contract.Assert(ctroIndex != 0);
+          LuaIdentifierNameSyntax thisCtor = LuaSyntaxNode.GetCtorNameString(ctroIndex);
           otherCtorInvoke = new LuaInvocationExpressionSyntax(thisCtor);
           function.IsInvokeThisCtor = true;
         } else {
-          otherCtorInvoke = BuildCallBaseConstructor(ctorSymbol.ContainingType, symbol.ReceiverType, ctroCounter);
+          otherCtorInvoke = BuildCallBaseConstructor(symbol.ContainingType, initializerSymbol.ReceiverType, ctroIndex);
         }
         otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
         var refOrOutArguments = new List<LuaExpressionSyntax>();
-        var arguments = BuildArgumentList(symbol, symbol.Parameters, node.Initializer.ArgumentList, refOrOutArguments);
-        TryRemoveNilArgumentsAtTail(symbol, arguments);
+        var arguments = BuildArgumentList(initializerSymbol, initializerSymbol.Parameters, node.Initializer.ArgumentList, refOrOutArguments);
+        TryRemoveNilArgumentsAtTail(initializerSymbol, arguments);
         otherCtorInvoke.AddArguments(arguments);
         if (refOrOutArguments.Count == 0) {
           function.AddStatement(otherCtorInvoke);
@@ -341,8 +347,8 @@ namespace CSharpLua {
           var newExpression = BuildInvokeRefOrOut(node.Initializer, otherCtorInvoke, refOrOutArguments);
           function.AddStatement(newExpression);
         }
-      } else if (!isStatic && ctorSymbol.ContainingType.BaseType.IsExplicitCtorExists()) {
-        var baseCtorInvoke = BuildCallBaseConstructor(ctorSymbol.ContainingType, out int ctroCounter);
+      } else if (!isStatic && symbol.ContainingType.BaseType.IsExplicitCtorExists()) {
+        var baseCtorInvoke = BuildCallBaseConstructor(symbol.ContainingType, out int ctroCounter);
         Contract.Assert(baseCtorInvoke != null);
         function.AddStatement(baseCtorInvoke);
         isEmptyCtor = ctroCounter == 0 && !node.Body.Statements.Any();
@@ -364,10 +370,25 @@ namespace CSharpLua {
 
       blocks_.Pop();
       PopFunction();
+
       if (isStatic) {
-        CurType.SetStaticCtor(function);
-      } else if (!isEmptyCtor) {
-        CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0);
+        CurType.SetStaticCtor(function, document);
+      } else {
+        if (!isEmptyCtor) {
+          CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0, document);
+        }
+
+        if (IsRootOrTypeReflection || symbol.HasReflectionAttribute()) {
+          int ctorIndex = symbol.GetConstructorIndex();
+          LuaIdentifierNameSyntax name = ctorIndex == 0 ? LuaIdentifierNameSyntax.Nil : LuaSyntaxNode.GetCtorNameString(ctorIndex);
+          AddMethodMetaData(new MethodDeclarationResult() {
+            Symbol = symbol,
+            Name = name,
+            Function = function,
+            Document = document,
+            Attributes = attributes,
+          });
+        }
       }
 
       methodInfos_.Pop();

@@ -81,6 +81,10 @@ namespace CSharpLua {
       return list[list.Count - 1];
     }
 
+    public static bool IsNullOrEmpty<T>(this IList<T> list) {
+      return list == null || list.Count == 0;
+    }
+
     public static T GetOrDefault<T>(this IList<T> list, int index, T v = default(T)) {
       return index >= 0 && index < list.Count ? list[index] : v;
     }
@@ -412,6 +416,21 @@ namespace CSharpLua {
       return trivia.ToString().Contains(LuaDocumentStatement.kNoField);
     }
 
+    private static bool HasReflectionAttribute(this SyntaxTrivia trivia) {
+      return trivia.ToString().Contains(LuaDocumentStatement.kReflection);
+    }
+
+    public static bool HasReflectionAttribute(this ISymbol symbol) {
+      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+      if (syntaxReference != null) {
+        var documentTrivia = syntaxReference.GetSyntax().GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
+        if (documentTrivia != null && documentTrivia.HasReflectionAttribute()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     public static bool IsEventFiled(this IEventSymbol symbol) {
       if (!symbol.IsFromCode() || symbol.IsOverridable()) {
         return false;
@@ -606,6 +625,28 @@ namespace CSharpLua {
       }
       return false;
     }
+
+    public static int GetConstructorIndex(this IMethodSymbol symbool) {
+      Contract.Assert(symbool.MethodKind == MethodKind.Constructor);
+      if (symbool.ContainingType.IsFromCode()) {
+        var typeSymbol = (INamedTypeSymbol)symbool.ReceiverType;
+        var ctors = typeSymbol.Constructors.Where(i => !i.IsStatic).ToList();
+        if (ctors.Count > 1) {
+          int firstCtorIndex = ctors.IndexOf(i => i.Parameters.IsEmpty);
+          if (firstCtorIndex != -1 && firstCtorIndex != 0) {
+            var firstCtor = ctors[firstCtorIndex];
+            ctors.Remove(firstCtor);
+            ctors.Insert(0, firstCtor);
+          }
+          int index = ctors.IndexOf(symbool);
+          Contract.Assert(index != -1);
+          int ctroCounter = index + 1;
+          return ctroCounter;
+        }
+      }
+      return 0;
+    }
+
 
     public static bool IsExtendSelf(INamedTypeSymbol typeSymbol, INamedTypeSymbol baseTypeSymbol) {
       if (baseTypeSymbol.IsGenericType) {
@@ -985,6 +1026,15 @@ namespace CSharpLua {
 
     public static bool IsNil(this LuaExpressionSyntax expression) {
       return expression == null || expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;
+    }
+
+    public static void RemoveNilAtTail(this List<LuaExpressionSyntax> expressions) {
+      int pos = expressions.FindLastIndex(i => !i.IsNil());
+      int nilStartIndex = pos + 1;
+      int nilArgumentCount = expressions.Count - nilStartIndex;
+      if (nilArgumentCount > 0) {
+        expressions.RemoveRange(nilStartIndex, nilArgumentCount);
+      }
     }
 
     #region hard code for protobuf-net

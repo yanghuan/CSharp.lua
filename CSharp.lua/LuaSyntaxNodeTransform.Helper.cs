@@ -36,6 +36,7 @@ namespace CSharpLua {
     private abstract class LuaSyntaxSearcher : CSharpSyntaxWalker {
       private sealed class FoundException : Exception {
       }
+
       protected void Found() {
         throw new FoundException();
       }
@@ -180,26 +181,6 @@ namespace CSharpLua {
       if (newName != null) {
         name = newName;
       }
-    }
-
-    private int GetConstructorIndex(IMethodSymbol constructorSymbol) {
-      if (constructorSymbol.ContainingType.IsFromCode()) {
-        var typeSymbol = (INamedTypeSymbol)constructorSymbol.ReceiverType;
-        var ctors = typeSymbol.Constructors.Where(i => !i.IsStatic).ToList();
-        if (ctors.Count > 1) {
-          int firstCtorIndex = ctors.IndexOf(i => i.Parameters.IsEmpty);
-          if (firstCtorIndex != -1 && firstCtorIndex != 0) {
-            var firstCtor = ctors[firstCtorIndex];
-            ctors.Remove(firstCtor);
-            ctors.Insert(0, firstCtor);
-          }
-          int index = ctors.IndexOf(constructorSymbol);
-          Contract.Assert(index != -1);
-          int ctroCounter = index + 1;
-          return ctroCounter;
-        }
-      }
-      return 0;
     }
 
     private sealed class ContinueSearcher : LuaSyntaxSearcher {
@@ -714,7 +695,7 @@ namespace CSharpLua {
     }
 
     private LuaInvocationExpressionSyntax BuildObjectCreationInvocation(IMethodSymbol symbol, LuaExpressionSyntax expression) {
-      int constructorIndex = GetConstructorIndex(symbol);
+      int constructorIndex = symbol.GetConstructorIndex();
       if (constructorIndex > 0) {
         expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
       }
@@ -804,10 +785,10 @@ namespace CSharpLua {
       if (declaration.IsInitStatementExists) {
         LuaIdentifierNameSyntax className = symbol.Name;
         var thisIdentifier = LuaIdentifierNameSyntax.This;
-        LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+        var functionExpression = new LuaFunctionExpressionSyntax();
         functionExpression.AddParameter(className);
         var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.setmetatable, LuaTableExpression.Empty, className);
-        LuaLocalVariableDeclaratorSyntax local = new LuaLocalVariableDeclaratorSyntax(thisIdentifier, invocation);
+        var local = new LuaLocalVariableDeclaratorSyntax(thisIdentifier, invocation);
         functionExpression.AddStatement(local);
         functionExpression.AddStatement(new LuaExpressionStatementSyntax(new LuaInvocationExpressionSyntax(declaration.IsNoneCtros ? LuaIdentifierNameSyntax.Ctor : LuaIdentifierNameSyntax.Init, thisIdentifier)));
         functionExpression.AddStatement(new LuaReturnStatementSyntax(thisIdentifier));
@@ -965,19 +946,10 @@ namespace CSharpLua {
       return generator_.AddInnerName(symbol);
     }
 
-    private void RemoveNilExpressionsAtTail(List<LuaExpressionSyntax> arguments) {
-      int pos = arguments.FindLastIndex(i => !i.IsNil());
-      int nilStartIndex = pos + 1;
-      int nilArgumentCount = arguments.Count - nilStartIndex;
-      if (nilArgumentCount > 0) {
-        arguments.RemoveRange(nilStartIndex, nilArgumentCount);
-      }
-    }
-
     private void TryRemoveNilArgumentsAtTail(ISymbol symbol, List<LuaExpressionSyntax> arguments) {
       if (arguments.Count > 0) {
         if (symbol.IsFromCode() || symbol.ContainingType.GetMembers(symbol.Name).Length == 1) {
-          RemoveNilExpressionsAtTail(arguments);
+          arguments.RemoveNilAtTail();
         }
       }
     }
