@@ -2695,6 +2695,9 @@ namespace CSharpLua {
         if (kind <= SyntaxKind.ForEachStatement && kind >= SyntaxKind.WhileStatement) {
           return true;
         }
+        if (kind == SyntaxKind.SwitchStatement) {
+          return true;
+        }
         if (kind <= SyntaxKind.FinallyClause && kind >= SyntaxKind.TryStatement) {
           isTry = true;
           return true;
