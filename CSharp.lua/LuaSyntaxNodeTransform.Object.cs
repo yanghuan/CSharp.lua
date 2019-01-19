@@ -487,7 +487,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitThrowStatement(ThrowStatementSyntax node) {
-      LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Throw);
+      var invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Throw);
       if (node.Expression != null) {
         var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
         invocationExpression.AddArgument(expression);
@@ -500,7 +500,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitThrowExpression(ThrowExpressionSyntax node) {
-      LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Throw);
+      var invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Throw);
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       invocationExpression.AddArgument(expression);
       return invocationExpression;

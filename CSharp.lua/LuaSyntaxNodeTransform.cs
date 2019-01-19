@@ -2423,7 +2423,7 @@ namespace CSharpLua {
       return new LuaArgumentSyntax(expression);
     }
 
-    public override LuaSyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node) {
+    private LuaExpressionSyntax InternalVisitLiteralExpression(LiteralExpressionSyntax node) {
       switch (node.Kind()) {
         case SyntaxKind.NumericLiteralExpression: {
           string value = node.Token.ValueText;
@@ -2451,6 +2451,12 @@ namespace CSharpLua {
           return new LuaIdentifierLiteralExpressionSyntax(node.Token.ValueText);
         }
       }
+    }
+
+    public override LuaSyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node) {
+      var expression = InternalVisitLiteralExpression(node);
+      CheckConversion(node, ref expression);
+      return expression;
     }
 
     public override LuaSyntaxNode VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {
@@ -2682,7 +2688,26 @@ namespace CSharpLua {
 
     #endregion
 
+    private bool IsParnetTryStatement(SyntaxNode node) {
+      bool isTry = false;
+      FindParent(node, i => {
+        var kind = i.Kind();
+        if (kind <= SyntaxKind.ForEachStatement && kind >= SyntaxKind.WhileStatement) {
+          return true;
+        }
+        if (kind <= SyntaxKind.FinallyClause && kind >= SyntaxKind.TryStatement) {
+          isTry = true;
+          return true;
+        }
+        return false;
+      });
+      return isTry;
+    }
+
     public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {
+      if (IsParnetTryStatement(node)) {
+        return new LuaReturnStatementSyntax();
+      }
       return LuaBreakStatementSyntax.Statement;
     }
 
@@ -3098,7 +3123,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitContinueStatement(ContinueStatementSyntax node) {
-      return LuaContinueAdapterStatementSyntax.Statement;
+      return new LuaContinueAdapterStatementSyntax(IsParnetTryStatement(node));
     }
 
     private void VisitLoopBody(StatementSyntax bodyStatement, LuaBlockSyntax block) {

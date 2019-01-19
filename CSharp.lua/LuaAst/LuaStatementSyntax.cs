@@ -96,17 +96,20 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
     public LuaExpressionStatementSyntax Assignment { get; }
-    public LuaBreakStatementSyntax Break => LuaBreakStatementSyntax.Statement;
+    public LuaStatementSyntax Statement { get; }
 
-    private LuaContinueAdapterStatementSyntax() {
+    public LuaContinueAdapterStatementSyntax(bool isWithinTry) {
       Assignment = new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Continue, LuaIdentifierNameSyntax.True));
+      if (isWithinTry) {
+        Statement = new LuaReturnStatementSyntax();
+      } else {
+        Statement = LuaBreakStatementSyntax.Statement;
+      }
     }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
-
-    public static readonly LuaContinueAdapterStatementSyntax Statement = new LuaContinueAdapterStatementSyntax();
   }
 
   public sealed class LuaBlankLinesStatement : LuaStatementSyntax {

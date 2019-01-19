@@ -25,17 +25,18 @@ namespace CSharpLua.LuaAst {
     public string OpenBraceToken { get; set; }
     public string CloseBraceToken { get; set; }
     public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
+    private LuaLocalAreaSyntax localArea_;
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
 
     internal void AddLocalArea(LuaIdentifierNameSyntax name) {
-      if (!(Statements.FirstOrDefault() is LuaLocalAreaSyntax localArea)) {
-        localArea = new LuaLocalAreaSyntax();
-        Statements.Insert(0, localArea);
+      if (localArea_ == null) {
+        localArea_ = new LuaLocalAreaSyntax();
+        Statements.Insert(0, localArea_);
       }
-      localArea.Variables.Add(name);
+      localArea_.Variables.Add(name);
     }
 
     internal void AddStatement(LuaStatementSyntax statement) {

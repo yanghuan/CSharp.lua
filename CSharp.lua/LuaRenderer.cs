@@ -533,7 +533,7 @@ namespace CSharpLua {
 
     internal void Render(LuaContinueAdapterStatementSyntax node) {
       node.Assignment.Render(this);
-      node.Break.Render(this);
+      node.Statement.Render(this);
     }
 
     internal void Render(LuaBlankLinesStatement node) {

@@ -978,9 +978,19 @@ namespace CSharpLua {
       }
     }
 
-    private LuaMemberAccessExpressionSyntax GetOperatorMemberAccessExpression(IMethodSymbol methodSymbol) {
-      var typeName = GetTypeName(methodSymbol.ContainingType);
+    private LuaExpressionSyntax GetOperatorMemberAccessExpression(IMethodSymbol methodSymbol) {
       var methodName = GetMemberName(methodSymbol);
+      if (CurTypeSymbol.Equals(methodSymbol.ContainingType)) {
+        return methodName;
+      }
+
+      if (CurTypeSymbol.IsContainsInternalSymbol(methodSymbol)) {
+        if (CurTypeSymbol.GetMembers(methodSymbol.Name).IsEmpty) {
+          return methodName;
+        }
+      }
+
+      var typeName = GetTypeName(methodSymbol.ContainingType);
       return new LuaMemberAccessExpressionSyntax(typeName, methodName);
     }
 

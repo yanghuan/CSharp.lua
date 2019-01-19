@@ -25,10 +25,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Expression { get; }
 
     public LuaArgumentSyntax(LuaExpressionSyntax expression) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      Expression = expression;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
     internal override void Render(LuaRenderer renderer) {
