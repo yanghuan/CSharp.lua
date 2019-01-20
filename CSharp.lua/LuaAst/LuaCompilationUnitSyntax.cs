@@ -184,7 +184,7 @@ namespace CSharpLua.LuaAst {
           functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
         }
 
-        var invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.UsingDeclare, functionExpression);
+        var invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Import, functionExpression);
         importAreaStatements.Statements.Add(new LuaExpressionStatementSyntax(invocationExpression));
       }
 

@@ -612,7 +612,7 @@ namespace CSharpLua {
     }
 
     internal void ImportGenericTypeName(ref LuaExpressionSyntax luaExpression, ITypeSymbol symbol) {
-      if (!IsGetInheritTypeName && !CurTypeSymbol.Equals(symbol) && !IsCurMethodTypeArgument(symbol)) {
+      if (!IsNoImportTypeName && !CurTypeSymbol.Equals(symbol) && !IsCurMethodTypeArgument(symbol)) {
         var invocationExpression = (LuaInvocationExpressionSyntax)luaExpression;
         string newName = GetGenericTypeImportName(invocationExpression, out var argumentTypeNames);
         if (!IsLocalVarExistsInCurMethod(newName)) {
@@ -656,6 +656,13 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax GetTypeName(ISymbol symbol) {
       return generator_.GetTypeName(symbol, this);
+    }
+
+    private LuaExpressionSyntax GetTypeNameWithoutImport(ISymbol symbol) {
+      ++noImportTypeNameCounter_;
+      var name = GetTypeName(symbol);
+      --noImportTypeNameCounter_;
+      return name;
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
@@ -713,12 +720,7 @@ namespace CSharpLua {
         return null;
       }
 
-      INamedTypeSymbol typeDeclarationSymbol = CurTypeSymbol;
-      generator_.AddTypeDeclarationAttribute(typeDeclarationSymbol, typeSymbol);
-
-      ++inheritNameNodeCounter_;
-      var expression = GetTypeName(typeSymbol);
-      --inheritNameNodeCounter_;
+      var expression = GetTypeNameWithoutImport(typeSymbol);
       LuaInvocationExpressionSyntax invocation = BuildObjectCreationInvocation(symbol, expression);
 
       if (node.ArgumentList != null) {
@@ -902,9 +904,9 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildInheritTypeName(BaseTypeSyntax baseType) {
-      ++inheritNameNodeCounter_;
+      ++noImportTypeNameCounter_;
       var baseTypeName = (LuaExpressionSyntax)baseType.Accept(this);
-      --inheritNameNodeCounter_;
+      --noImportTypeNameCounter_;
       return baseTypeName;
     }
 

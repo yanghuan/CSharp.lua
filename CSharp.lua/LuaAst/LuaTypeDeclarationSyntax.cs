@@ -59,7 +59,7 @@ namespace CSharpLua.LuaAst {
     private LuaTableExpression metaMethods_;
     private LuaDocumentStatement document_ = new LuaDocumentStatement();
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
-    public bool IsReflectionExport => document_.HasReflectionAttribute;
+    public bool IsExportMetadata => document_.HasMetadataAttribute;
 
     internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name) {
       if (!staticAssignmentNames_.Contains(name)) {
@@ -497,7 +497,6 @@ namespace CSharpLua.LuaAst {
         SortMetaData(metaMethods_);
         LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
         functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
-        functionExpression.AddParameter(LuaSyntaxNode.Tokens.Ref);
         functionExpression.AddStatement(new LuaReturnStatementSyntax(metadata_));
         AddResultTable(LuaIdentifierNameSyntax.Metadata, functionExpression);
       }

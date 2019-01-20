@@ -29,8 +29,8 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Placeholder => LuaIdentifierNameSyntax.Placeholder;
 
     public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenBraceToken = Tokens.Do,
-      CloseBraceToken = Tokens.End,
+      OpenToken = Tokens.Do,
+      CloseToken = Tokens.End,
     };
 
     public LuaForInStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression) {
@@ -58,8 +58,8 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax StepExpression { get; }
 
     public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenBraceToken = Tokens.Do,
-      CloseBraceToken = Tokens.End,
+      OpenToken = Tokens.Do,
+      CloseToken = Tokens.End,
     };
 
     public LuaNumericalForStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax startExpression, LuaExpressionSyntax limitExpression, LuaExpressionSyntax stepExpression) {
@@ -79,8 +79,8 @@ namespace CSharpLua.LuaAst {
     public string WhileKeyword => LuaSyntaxNode.Tokens.While;
 
     public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenBraceToken = Tokens.Do,
-      CloseBraceToken = Tokens.End,
+      OpenToken = Tokens.Do,
+      CloseToken = Tokens.End,
     };
 
     public LuaWhileStatementSyntax(LuaExpressionSyntax condition) {

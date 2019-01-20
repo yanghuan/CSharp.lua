@@ -43,6 +43,7 @@ local zeroFn = function() return 0 end
 local equals = function(x, y) return x == y end
 local modules = {}
 local usings = {}
+local metadatas = {}
 local Object, ValueType
 
 local function new(cls, ...)
@@ -163,7 +164,13 @@ interfaceMetatable.__index = interfaceMetatable
 local function applyMetadata(cls)
   local metadata = rawget(cls, "__metadata__")
   if metadata then
-    cls.__metadata__ = metadata(global)
+    if metadatas then
+      metadatas[#metadatas + 1] = function (global)
+				cls.__metadata__ = metadata(global)
+			end
+    else
+			cls.__metadata__ = metadata(global)
+		end
   end
 end
 
@@ -1157,25 +1164,8 @@ function System.stackalloc(t)
   return newPointer(t, 1)
 end
 
-function System.usingDeclare(f)
+function System.import(f)
   usings[#usings + 1] = f
-end
-
-function System.init(namelist, conf)
-  local classes = {}
-  for _, name in ipairs(namelist) do
-    local cls = assert(modules[name], name)()
-    classes[#classes + 1] = cls
-  end
-  for _, f in ipairs(usings) do
-    f(global)
-  end
-  if conf ~= nil then
-    System.entryPoint = conf.Main
-  end
-  modules = nil
-  usings = nil
-  System.classes = classes
 end
 
 local namespace
@@ -1213,6 +1203,34 @@ function System.namespace(name, f)
   curCacheName = name
   f(namespace)
   curCacheName = nil
+end
+
+function System.init(namelist, conf)
+  local classes = {}
+  for _, name in ipairs(namelist) do
+    local cls = assert(modules[name], name)()
+    classes[#classes + 1] = cls
+  end
+  for _, f in ipairs(usings) do
+    f(global)
+  end
+	for _, f in ipairs(metadatas) do
+		f(global)
+	end
+  if conf ~= nil then
+    System.entryPoint = conf.Main
+  end
+	System.classes = classes
+	
+  modules = nil
+  usings = nil
+	metadatas = nil
+
+	namespace = nil
+	curCacheName = nil
+	defIn = nil
+	System.import = nil
+	System.init = nil
 end
 
 System.config = {}

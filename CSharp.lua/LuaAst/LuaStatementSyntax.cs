@@ -75,7 +75,13 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaMultipleReturnStatementSyntax : LuaBaseReturnStatementSyntax {
-    public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+
+    public LuaMultipleReturnStatementSyntax(IEnumerable<LuaExpressionSyntax> expressions = null) {
+      if (expressions != null) {
+        Expressions.AddRange(expressions);
+      }
+    }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
@@ -211,21 +217,21 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaDocumentStatement : LuaStatementSyntax {
     private const string kAttributePrefix = "@CSharpLua.";
     public const string kNoField = kAttributePrefix + nameof(AttributeFlags.NoField);
-    public const string kReflection = kAttributePrefix + nameof(AttributeFlags.Reflection);
+    public const string kMetadata = kAttributePrefix + nameof(AttributeFlags.Metadata);
 
     [Flags]
     public enum AttributeFlags {
       None = 0,
       Ignore = 1 << 0,
       NoField = 1 << 1,
-      Reflection = 1 << 2,
+      Metadata = 1 << 2,
     }
 
     public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();
     public bool IsEmpty => Statements.Count == 0;
     private AttributeFlags attr_;
     public bool HasIgnoreAttribute => HasAttribute(AttributeFlags.Ignore);
-    public bool HasReflectionAttribute => HasAttribute(AttributeFlags.Reflection);
+    public bool HasMetadataAttribute => HasAttribute(AttributeFlags.Metadata);
 
     public LuaDocumentStatement() {
     }

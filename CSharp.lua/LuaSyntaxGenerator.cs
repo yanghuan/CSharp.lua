@@ -55,7 +55,7 @@ namespace CSharpLua {
       public string IndentString { get; private set; }
       public bool IsNewest { get; set; }
       public bool IsExportReflectionFile { get; set; }
-      public bool IsExportReflectionData { get; set; }
+      public bool IsExportMetadata { get; set; }
 
       public SettingInfo() {
         Indent = 2;
@@ -143,7 +143,6 @@ namespace CSharpLua {
       CheckExportEnums();
       CheckPartialTypes();
       CheckRefactorNames();
-      CheckMetaDataPool();
       return luaCompilationUnits.Where(i => !i.IsEmpty);
     }
 
@@ -349,13 +348,6 @@ namespace CSharpLua {
             foreach (var interfaceType in type.Interfaces) {
               AddSuperTypeTo(parentTypes, type, interfaceType);
             }
-
-            var attributes = typeDeclarationAttributes_.GetOrDefault(type);
-            if (attributes != null) {
-              foreach (var attribute in attributes) {
-                AddSuperTypeTo(parentTypes, type, attribute);
-              }
-            }
           }
 
           if (parentTypes.Count == 0) {
@@ -381,10 +373,10 @@ namespace CSharpLua {
     }
 
     private void ExportManifestFile(List<string> modules, string outFolder) {
-      const string kDir = "extern";
-      const string kDirInitCode = "extern = (extern and #extern > 0) and (extern .. '.') or \"\"";
+      const string kDir = "out";
+      const string kDirInitCode = "out = (out and #out > 0) and (out .. '.') or \"\"";
       const string kRequire = "require";
-      const string kLoadCode = "local load = function(module) return require(extern .. module) end";
+      const string kLoadCode = "local load = function(module) return require(out .. module) end";
       const string kLoad = "load";
       const string kLoadAllFiles = " load all files";
       const string kInit = "System.init";
@@ -459,15 +451,6 @@ namespace CSharpLua {
         confTable.Add(methodName, codeTemplate);
       }
 
-      if (metaDataNames_ != null) {
-        const string kMetaDataPool = "MetaDataPool";
-        LuaTableExpression resultTable = new LuaTableExpression(metaDataNames_);
-        LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
-        function.AddParameter(LuaIdentifierNameSyntax.System);
-        function.AddStatement(new LuaReturnStatementSyntax(resultTable));
-        confTable.Add(kMetaDataPool, function);
-      }
-
       if (confTable.Items.Count > 0) {
         invocation.AddArgument(confTable);
       }
@@ -480,9 +463,9 @@ namespace CSharpLua {
     private HashSet<ISymbol> refactorNames_ = new HashSet<ISymbol>();
     private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
     private List<INamedTypeSymbol> types_ = new List<INamedTypeSymbol>();
-    private Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> typeDeclarationAttributes_ = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>();
     private Dictionary<ISymbol, LuaSymbolNameSyntax> propertyOrEvnetInnerFieldNames_ = new Dictionary<ISymbol, LuaSymbolNameSyntax>();
     private Dictionary<ISymbol, string> memberIllegalNames_ = new Dictionary<ISymbol, string>();
+    internal bool IsNeedRefactorName(ISymbol symbol) => refactorNames_.Contains(symbol);
 
     internal void AddTypeSymbol(INamedTypeSymbol typeSymbol) {
       types_.Add(typeSymbol);
@@ -509,10 +492,6 @@ namespace CSharpLua {
         }
         extends_.TryAdd(super, children);
       }
-    }
-
-    internal void AddTypeDeclarationAttribute(INamedTypeSymbol typeDeclarationSymbol, INamedTypeSymbol attributeSymbol) {
-      typeDeclarationAttributes_.TryAdd(typeDeclarationSymbol, attributeSymbol);
     }
 
     internal LuaIdentifierNameSyntax GetMemberName(ISymbol symbol) {
@@ -1455,7 +1434,7 @@ namespace CSharpLua {
         return LuaIdentifierNameSyntax.TupleType;
       }
 
-      if (transfor != null && transfor.IsNoneGenericTypeCounter && !namedTypeSymbol.IsGenericType) {
+      if (transfor != null && IsNoneGenericTypeCounter) {
         var curTypeDeclaration = transfor.CurTypeDeclaration;
         if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(namedTypeSymbol, out var classIdentifier)) {
           return classIdentifier;
@@ -1555,8 +1534,8 @@ namespace CSharpLua {
         name = newName;
       }
       if (transfor != null) {
-        if (transfor.IsGetInheritTypeName) {
-          if (!name.StartsWith(LuaIdentifierNameSyntax.System.ValueText)) {
+        if (transfor.IsNoImportTypeName) {
+          if (!name.StartsWith(LuaIdentifierNameSyntax.System.ValueText) && !name.StartsWith(LuaIdentifierNameSyntax.Class.ValueText)) {
             name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
           }
         } else {
@@ -1567,32 +1546,5 @@ namespace CSharpLua {
     }
 
     #endregion
-
-    private Dictionary<ITypeSymbol, LuaSymbolNameSyntax> metaDataPool_ = new Dictionary<ITypeSymbol, LuaSymbolNameSyntax>();
-    private List<LuaExpressionSyntax> metaDataNames_;
-
-    private void CheckMetaDataPool() {
-      if (metaDataPool_.Count > 0) {
-        metaDataNames_ = new List<LuaExpressionSyntax>();
-        var items = metaDataPool_.ToList();
-        items.Sort((x, y) => x.Key.ToString().CompareTo(y.Key.ToString()));
-        int index = 1;
-        foreach (var item in items) {
-          var symbolName = item.Value;
-          metaDataNames_.Add(symbolName.NameExpression);
-          symbolName.Update($"{LuaSyntaxNode.Tokens.Ref}[{index}]");
-          ++index;
-        }
-      }
-    }
-
-    internal LuaIdentifierNameSyntax GetTypeNameFromMetaDataPool(ITypeSymbol symbol) {
-      LuaSymbolNameSyntax symbolName = metaDataPool_.GetOrDefault(symbol);
-      if (symbolName == null) {
-        symbolName = new LuaSymbolNameSyntax(GetTypeName(symbol));
-        metaDataPool_.Add(symbol, symbolName);
-      }
-      return symbolName;
-    }
   }
 }

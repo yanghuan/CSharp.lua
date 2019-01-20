@@ -42,6 +42,10 @@ namespace CSharpLua.LuaAst {
       Items.Add(new LuaSingleTableItemSyntax(value));
     }
 
+    internal void AddRange(IEnumerable<LuaExpressionSyntax> values) {
+      Items.AddRange(values.Select(i => new LuaSingleTableItemSyntax(i)));
+    }
+
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }

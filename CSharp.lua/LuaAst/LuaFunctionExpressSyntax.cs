@@ -28,8 +28,8 @@ namespace CSharpLua.LuaAst {
     public int TempIndex;
 
     public readonly LuaBlockSyntax Body = new LuaBlockSyntax() {
-      OpenBraceToken = Tokens.Empty,
-      CloseBraceToken = Tokens.End,
+      OpenToken = Tokens.Empty,
+      CloseToken = Tokens.End,
     };
 
     public void AddParameter(LuaParameterSyntax parameter) {

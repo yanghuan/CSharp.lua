@@ -78,7 +78,6 @@ namespace CSharpLua.LuaAst {
       public const string Remove = "remove";
       public const string Label = "::";
       public const string Concatenation = "..";
-      public const string Ref = "ref";
     }
 
     public class Keyword {

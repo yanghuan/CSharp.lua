@@ -22,14 +22,11 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public class LuaBlockSyntax : LuaStatementSyntax {
-    public string OpenBraceToken { get; set; }
-    public string CloseBraceToken { get; set; }
+    public string OpenToken { get; set; }
+    public string CloseToken { get; set; }
     public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
     private LuaLocalAreaSyntax localArea_;
-
-    internal override void Render(LuaRenderer renderer) {
-      renderer.Render(this);
-    }
+    public bool IsSingleLine { get; }
 
     internal void AddLocalArea(LuaIdentifierNameSyntax name) {
       if (localArea_ == null) {
@@ -42,12 +39,16 @@ namespace CSharpLua.LuaAst {
     internal void AddStatement(LuaStatementSyntax statement) {
       Statements.Add(statement);
     }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
   }
 
   public sealed class LuaBlockStatementSyntax : LuaBlockSyntax {
     public LuaBlockStatementSyntax() {
-      OpenBraceToken = Tokens.Do;
-      CloseBraceToken = Tokens.End;
+      OpenToken = Tokens.Do;
+      CloseToken = Tokens.End;
     }
 
     internal override void Render(LuaRenderer renderer) {
