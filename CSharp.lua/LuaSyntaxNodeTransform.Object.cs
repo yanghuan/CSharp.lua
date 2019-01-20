@@ -378,7 +378,7 @@ namespace CSharpLua {
           CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0, document);
         }
 
-        if (IsExportMetadata || symbol.HasMetadataAttribute()) {
+        if (IsCurTypeExportMetadataAll || symbol.HasMetadataAttribute()) {
           int ctorIndex = symbol.GetConstructorIndex();
           LuaIdentifierNameSyntax name = ctorIndex == 0 ? LuaIdentifierNameSyntax.Nil : LuaSyntaxNode.GetCtorNameString(ctorIndex);
           AddMethodMetaData(new MethodDeclarationResult() {

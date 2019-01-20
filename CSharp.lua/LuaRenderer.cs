@@ -182,18 +182,12 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaBlockSyntax node) {
-      if (node.IsSingleLine) {
-        ++singleLineCounter_;
-      }
       Write(node.OpenToken);
       WriteNewLine();
       AddIndent();
       WriteNodes(node.Statements);
       Outdent();
       Write(node.CloseToken);
-      if (node.IsSingleLine) {
-        --singleLineCounter_;
-      }
     }
 
     internal void Render(LuaBlockStatementSyntax node) {

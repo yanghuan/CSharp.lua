@@ -225,6 +225,7 @@ namespace CSharpLua.LuaAst {
       Ignore = 1 << 0,
       NoField = 1 << 1,
       Metadata = 1 << 2,
+      MetadataAll = 1 << 3,
     }
 
     public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();
@@ -232,6 +233,7 @@ namespace CSharpLua.LuaAst {
     private AttributeFlags attr_;
     public bool HasIgnoreAttribute => HasAttribute(AttributeFlags.Ignore);
     public bool HasMetadataAttribute => HasAttribute(AttributeFlags.Metadata);
+    public bool HasMetadataAllAttribute => HasAttribute(AttributeFlags.MetadataAll);
 
     public LuaDocumentStatement() {
     }

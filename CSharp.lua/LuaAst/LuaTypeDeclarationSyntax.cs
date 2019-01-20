@@ -60,6 +60,7 @@ namespace CSharpLua.LuaAst {
     private LuaDocumentStatement document_ = new LuaDocumentStatement();
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
     public bool IsExportMetadata => document_.HasMetadataAttribute;
+    public bool IsExportMetadataAll => document_.HasMetadataAllAttribute;
 
     internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name) {
       if (!staticAssignmentNames_.Contains(name)) {
@@ -94,6 +95,13 @@ namespace CSharpLua.LuaAst {
         metadata_.Add(name, table);
       }
       table.Items.Add(item);
+    }
+
+    internal void AddClassMetaData(LuaTableExpression data) {
+      if (metadata_ == null) {
+        metadata_ = new LuaTableExpression();
+      }
+      metadata_.Add(LuaIdentifierNameSyntax.Class, data);
     }
 
     internal void AddFieldAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
