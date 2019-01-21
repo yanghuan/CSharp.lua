@@ -295,6 +295,9 @@ local function def(name, kind, cls, generic)
   elseif kind == "I" then
     local extends = cls.__inherits__
     if extends then
+      if type(extends) == "function" then
+        extends = extends(global, cls)
+      end
       cls.__interfaces__ = extends
       cls.__inherits__ = nil
     end
