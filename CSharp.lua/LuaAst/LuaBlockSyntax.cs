@@ -22,35 +22,32 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public class LuaBlockSyntax : LuaStatementSyntax {
-    public string OpenBraceToken { get; set; }
-    public string CloseBraceToken { get; set; }
+    public string OpenToken { get; set; }
+    public string CloseToken { get; set; }
     public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
-
-    internal override void Render(LuaRenderer renderer) {
-      renderer.Render(this);
-    }
+    private LuaLocalAreaSyntax localArea_;
 
     internal void AddLocalArea(LuaIdentifierNameSyntax name) {
-      if (!(Statements.FirstOrDefault() is LuaLocalAreaSyntax localArea)) {
-        localArea = new LuaLocalAreaSyntax();
-        Statements.Insert(0, localArea);
+      if (localArea_ == null) {
+        localArea_ = new LuaLocalAreaSyntax();
+        Statements.Insert(0, localArea_);
       }
-      localArea.Variables.Add(name);
+      localArea_.Variables.Add(name);
     }
 
     internal void AddStatement(LuaStatementSyntax statement) {
       Statements.Add(statement);
     }
 
-    internal void AddStatement(LuaExpressionSyntax expression) {
-      Statements.Add(expression.ToStatement());
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
   }
 
   public sealed class LuaBlockStatementSyntax : LuaBlockSyntax {
     public LuaBlockStatementSyntax() {
-      OpenBraceToken = Tokens.Do;
-      CloseBraceToken = Tokens.End;
+      OpenToken = Tokens.Do;
+      CloseToken = Tokens.End;
     }
 
     internal override void Render(LuaRenderer renderer) {

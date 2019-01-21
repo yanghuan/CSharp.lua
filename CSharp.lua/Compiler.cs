@@ -34,22 +34,20 @@ namespace CSharpLua {
     private readonly string[] metas_;
     private readonly string[] cscArguments_;
     private readonly bool isNewest_;
-    private readonly int indent_;
     private readonly string[] attributes_;
-    private readonly bool isExportReflectionFile_;
+    public bool IsExportReflectionFile { get; set; }
+    public bool IsExportMetadata { get; set; }
 
-    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string indent, string atts, bool isExportReflectionFile) {
+    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
       folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
       cscArguments_ = string.IsNullOrEmpty(csc) ? Array.Empty<string>() : csc.Trim().Split(' ', '\t');
       isNewest_ = !isClassic;
-      int.TryParse(indent, out indent_);
       if (atts != null) {
         attributes_ = Utility.Split(atts, false);
       }
-      isExportReflectionFile_ = isExportReflectionFile;
     }
 
     private static IEnumerable<string> GetMetas(IEnumerable<string> additionalMetas) {
@@ -101,20 +99,16 @@ namespace CSharpLua {
 
     private IEnumerable<string> Libs => GetLibs(libs_);
 
-    public void Do() {
-      Compile();
-    }
-
     private static LuaSyntaxGenerator Build(
       IEnumerable<string> cscArguments,
       IEnumerable<(string Text, string Path)> codes, 
       IEnumerable<string> libs,
       IEnumerable<string> metas,
       bool isNewest,
-      int indent,
       string[] attributes,
       string folder,
-      bool isExportReflectionFile = false
+      bool isExportReflectionFile = false,
+      bool IsExportMetadata = false
       ) {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.Latest).WithDocumentationMode(DocumentationMode.Parse);
@@ -123,22 +117,22 @@ namespace CSharpLua {
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsNewest = isNewest,
         HasSemicolon = false,
-        Indent = indent,
-        IsExportReflectionFile = isExportReflectionFile
+        IsExportReflectionFile = isExportReflectionFile,
+        IsExportMetadata = IsExportMetadata
       };
       return new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, metas, setting, attributes, folder);
     }
 
-    private void Compile() {
+    public void Compile() {
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var generator = Build(cscArguments_, codes, Libs, Metas, isNewest_, indent_, attributes_, folder_, isExportReflectionFile_);
+      var generator = Build(cscArguments_, codes, Libs, Metas, isNewest_, attributes_, folder_, IsExportReflectionFile, IsExportMetadata);
       generator.Generate(output_);
     }
 
     public static string CompileSingleCode(string code) {
       var codes = new (string, string)[] { (code, "") };
-      var generator = Build(null, codes, GetLibs(null), GetMetas(null), true, 2, null, "");
+      var generator = Build(null, codes, GetLibs(null), GetMetas(null), true, null, "");
       return generator.GenerateSingle();
     }
   }

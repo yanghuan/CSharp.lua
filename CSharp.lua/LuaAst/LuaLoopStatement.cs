@@ -29,8 +29,8 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Placeholder => LuaIdentifierNameSyntax.Placeholder;
 
     public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenBraceToken = Tokens.Do,
-      CloseBraceToken = Tokens.End,
+      OpenToken = Tokens.Do,
+      CloseToken = Tokens.End,
     };
 
     public LuaForInStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression) {
@@ -58,27 +58,14 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax StepExpression { get; }
 
     public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenBraceToken = Tokens.Do,
-      CloseBraceToken = Tokens.End,
+      OpenToken = Tokens.Do,
+      CloseToken = Tokens.End,
     };
 
-    public LuaNumericalForStatementSyntax(
-      LuaIdentifierNameSyntax identifier,
-      LuaExpressionSyntax startExpression,
-      LuaExpressionSyntax limitExpression,
-      LuaExpressionSyntax stepExpression) {
-      if (identifier == null) {
-        throw new ArgumentNullException(nameof(identifier));
-      }
-      if (startExpression == null) {
-        throw new ArgumentNullException(nameof(startExpression));
-      }
-      if (limitExpression == null) {
-        throw new ArgumentNullException(nameof(limitExpression));
-      }
-      Identifier = identifier;
-      StartExpression = startExpression;
-      LimitExpression = limitExpression;
+    public LuaNumericalForStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax startExpression, LuaExpressionSyntax limitExpression, LuaExpressionSyntax stepExpression) {
+      Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
+      StartExpression = startExpression ?? throw new ArgumentNullException(nameof(startExpression));
+      LimitExpression = limitExpression ?? throw new ArgumentNullException(nameof(limitExpression));
       StepExpression = stepExpression;
     }
 
@@ -92,8 +79,8 @@ namespace CSharpLua.LuaAst {
     public string WhileKeyword => LuaSyntaxNode.Tokens.While;
 
     public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenBraceToken = Tokens.Do,
-      CloseBraceToken = Tokens.End,
+      OpenToken = Tokens.Do,
+      CloseToken = Tokens.End,
     };
 
     public LuaWhileStatementSyntax(LuaExpressionSyntax condition) {

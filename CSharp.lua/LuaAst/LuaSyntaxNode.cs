@@ -108,8 +108,13 @@ namespace CSharpLua.LuaAst {
       public const string While = "while";
     }
 
-    public static string SpecailWord(string s) {
+    private static string SpecailWord(string s) {
       return "__" + s + "__";
+    }
+
+    public static string GetCtorNameString(int ctorIndex) {
+      Contract.Assert(ctorIndex > 0);
+      return SpecailWord(Tokens.Ctor + ctorIndex);
     }
 
     public static string[] TempIdentifiers = {

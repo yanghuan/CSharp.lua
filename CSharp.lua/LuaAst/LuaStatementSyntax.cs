@@ -30,8 +30,12 @@ namespace CSharpLua.LuaAst {
       }
     }
 
+    public static implicit operator LuaStatementSyntax(LuaExpressionSyntax expression) {
+      return new LuaExpressionStatementSyntax(expression);
+    }
+
     public static readonly LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
-    public static readonly LuaStatementSyntax Colon = new LuaIdentifierNameSyntax(Semicolon.kSemicolon).ToStatement();
+    public static readonly LuaStatementSyntax Colon = (LuaIdentifierNameSyntax)Semicolon.kSemicolon;
   }
 
   public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {
@@ -71,7 +75,13 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaMultipleReturnStatementSyntax : LuaBaseReturnStatementSyntax {
-    public LuaSyntaxList<LuaExpressionSyntax> Expressions { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+
+    public LuaMultipleReturnStatementSyntax(IEnumerable<LuaExpressionSyntax> expressions = null) {
+      if (expressions != null) {
+        Expressions.AddRange(expressions);
+      }
+    }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
@@ -92,17 +102,20 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
     public LuaExpressionStatementSyntax Assignment { get; }
-    public LuaBreakStatementSyntax Break => LuaBreakStatementSyntax.Statement;
+    public LuaStatementSyntax Statement { get; }
 
-    private LuaContinueAdapterStatementSyntax() {
+    public LuaContinueAdapterStatementSyntax(bool isWithinTry) {
       Assignment = new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Continue, LuaIdentifierNameSyntax.True));
+      if (isWithinTry) {
+        Statement = new LuaReturnStatementSyntax();
+      } else {
+        Statement = LuaBreakStatementSyntax.Statement;
+      }
     }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
-
-    public static readonly LuaContinueAdapterStatementSyntax Statement = new LuaContinueAdapterStatementSyntax();
   }
 
   public sealed class LuaBlankLinesStatement : LuaStatementSyntax {
@@ -204,18 +217,23 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaDocumentStatement : LuaStatementSyntax {
     private const string kAttributePrefix = "@CSharpLua.";
     public const string kNoField = kAttributePrefix + nameof(AttributeFlags.NoField);
+    public const string kMetadata = kAttributePrefix + nameof(AttributeFlags.Metadata);
 
     [Flags]
     public enum AttributeFlags {
       None = 0,
       Ignore = 1 << 0,
       NoField = 1 << 1,
+      Metadata = 1 << 2,
+      MetadataAll = 1 << 3,
     }
 
     public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();
     public bool IsEmpty => Statements.Count == 0;
     private AttributeFlags attr_;
-    public bool HasIgnoreAttribute => attr_.HasFlag(AttributeFlags.Ignore);
+    public bool HasIgnoreAttribute => HasAttribute(AttributeFlags.Ignore);
+    public bool HasMetadataAttribute => HasAttribute(AttributeFlags.Metadata);
+    public bool HasMetadataAllAttribute => HasAttribute(AttributeFlags.MetadataAll);
 
     public LuaDocumentStatement() {
     }
@@ -282,6 +300,18 @@ namespace CSharpLua.LuaAst {
     public void Add(LuaDocumentStatement document) {
       Statements.AddRange(document.Statements);
       attr_ |= document.attr_;
+    }
+
+    public bool HasAttribute(AttributeFlags type) {
+      return attr_.HasFlag(type);
+    }
+
+    private void UnAttribute(AttributeFlags type) {
+      attr_ &= ~type;
+    }
+
+    public void UnIgnore() {
+      UnAttribute(AttributeFlags.Ignore);
     }
 
     internal override void Render(LuaRenderer renderer) {

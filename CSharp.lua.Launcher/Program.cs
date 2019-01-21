@@ -35,9 +35,9 @@ Options
 -csc            : csc.exe command argumnets, use ' ' or '\t' to separate
 
 -c              : support classic lua version(5.1), default support 5.3
--i              : indent number, default is 2
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -f              : export some class metadatas to reflection.lua, could change in the future
+-metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -55,15 +55,18 @@ Options
           string lib = cmds.GetArgument("-l", true);
           string meta = cmds.GetArgument("-m", true);
           bool isClassic = cmds.ContainsKey("-c");
-          string indent = cmds.GetArgument("-i", true);
           string atts = cmds.GetArgument("-a", true);
           if (atts == null && cmds.ContainsKey("-a")) {
             atts = string.Empty;
           }
           string csc = GetCSCArgument(cmds);
           bool isExportReflectionFile = cmds.ContainsKey("-f");
-          Compiler w = new Compiler(folder, output, lib, meta, csc, isClassic, indent, atts, isExportReflectionFile);
-          w.Do();
+          bool isExportMetadata = cmds.ContainsKey("-metadata");
+          Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts) {
+            IsExportReflectionFile = isExportReflectionFile,
+            IsExportMetadata = isExportMetadata,
+          };
+          c.Compile();
           Console.WriteLine("all operator success");
           Console.WriteLine($"end {DateTime.Now}");
         } catch (CmdArgumentException e) {

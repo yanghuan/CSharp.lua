@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
+
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSharpLua.LuaAst {
   public abstract class LuaLiteralExpressionSyntax : LuaExpressionSyntax {
@@ -29,7 +28,7 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaIdentifierLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
     public LuaIdentifierNameSyntax Identifier { get; }
 
-    public LuaIdentifierLiteralExpressionSyntax(string text) : this(new LuaIdentifierNameSyntax(text)) {
+    public LuaIdentifierLiteralExpressionSyntax(string text) : this((LuaIdentifierNameSyntax)text) {
     }
 
     public LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax identifier) {

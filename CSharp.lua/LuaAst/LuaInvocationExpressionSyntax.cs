@@ -22,14 +22,11 @@ using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public sealed class LuaInvocationExpressionSyntax : LuaExpressionSyntax {
-    public LuaArgumentListSyntax ArgumentList { get; } = new LuaArgumentListSyntax();
+    public readonly LuaArgumentListSyntax ArgumentList = new LuaArgumentListSyntax();
     public LuaExpressionSyntax Expression { get; }
 
     public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
-      Expression = expression;
+      Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
     public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, LuaExpressionSyntax argument) : this(expression) {

@@ -26,6 +26,8 @@ namespace CSharpLua {
     private TextWriter writer_;
     private bool isNewLine_;
     private int indentLevel_;
+    private int singleLineCounter_;
+    private bool IsSingleLine => singleLineCounter_ > 0;
 
     public LuaRenderer(LuaSyntaxGenerator generator, TextWriter writer) {
       generator_ = generator;
@@ -39,17 +41,29 @@ namespace CSharpLua {
     }
 
     private void AddIndent() {
-      ++indentLevel_;
+      if (IsSingleLine) {
+        WriteSpace();
+      } else {
+        ++indentLevel_;
+      }
     }
 
     private void Outdent() {
-      if (indentLevel_ == 0) {
-        throw new InvalidOperationException();
+      if (IsSingleLine) {
+        WriteSpace();
+      } else {
+        if (indentLevel_ == 0) {
+          throw new InvalidOperationException();
+        }
+        --indentLevel_;
       }
-      --indentLevel_;
     }
 
     private void WriteNewLine() {
+      if (IsSingleLine) {
+        return;
+      }
+
       writer_.Write('\n');
       isNewLine_ = true;
     }
@@ -58,8 +72,12 @@ namespace CSharpLua {
       Write(", ");
     }
 
-    private void WriteCommaOnly() {
-      Write(",");
+    private void WriteCommaWithoutSpace() {
+      if (IsSingleLine) {
+        WriteComma();
+      } else {
+        Write(",");
+      }
     }
 
     private void WriteSpace() {
@@ -164,12 +182,12 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaBlockSyntax node) {
-      Write(node.OpenBraceToken);
+      Write(node.OpenToken);
       WriteNewLine();
       AddIndent();
       WriteNodes(node.Statements);
       Outdent();
-      Write(node.CloseBraceToken);
+      Write(node.CloseToken);
     }
 
     internal void Render(LuaBlockStatementSyntax node) {
@@ -283,25 +301,35 @@ namespace CSharpLua {
       WriteNewLine();
     }
 
-    internal void Render(LuaTableInitializerExpression node) {
+    internal void Render(LuaTableExpression node) {
+      if (node.IsSingleLine) {
+        ++singleLineCounter_;
+      }
+
       Write(node.OpenBraceToken);
       if (node.Items.Count > 0) {
         WriteNewLine();
         AddIndent();
+
         bool isFirst = true;
         foreach (var itemNode in node.Items) {
           if (isFirst) {
             isFirst = false;
           } else {
-            WriteCommaOnly();
+            WriteCommaWithoutSpace();
             WriteNewLine();
           }
           itemNode.Render(this);
         }
+
         Outdent();
         WriteNewLine();
       }
       Write(node.CloseBraceToken);
+
+      if (node.IsSingleLine) {
+        --singleLineCounter_;
+      }
     }
 
     internal void Render(LuaSingleTableItemSyntax node) {
@@ -519,7 +547,7 @@ namespace CSharpLua {
 
     internal void Render(LuaContinueAdapterStatementSyntax node) {
       node.Assignment.Render(this);
-      node.Break.Render(this);
+      node.Statement.Render(this);
     }
 
     internal void Render(LuaBlankLinesStatement node) {
