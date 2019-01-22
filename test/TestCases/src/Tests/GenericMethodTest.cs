@@ -42,7 +42,7 @@ namespace TestCases
 
         }
 
-        delegate void ACallback<T>(T t);
+        public delegate void ACallback<T>(T t);
 
         class AClass
         {
@@ -276,7 +276,11 @@ namespace TestCases
         {
             public T data;
 
-            public virtual void CreateModal<TSIMGR, TVIEW>()
+          /// <summary>
+          /// 状态更改的事件回调
+          /// </summary>
+          public event ACallback<T> StateChanged;
+          public virtual void CreateModal<TSIMGR, TVIEW>()
             {
               Console.WriteLine("BaseCreateModal");
             }
