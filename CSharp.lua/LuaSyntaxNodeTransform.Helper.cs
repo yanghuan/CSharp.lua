@@ -487,8 +487,18 @@ namespace CSharpLua {
     }
 
     private bool CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node, LuaExpressionSyntax expression, out LuaMemberAccessExpressionSyntax outExpression) {
-      if (!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-        if (!CurTypeSymbol.IsContainsInternalSymbol(symbol)) {           //using static
+      bool isUsingStaticName = false;
+      if (node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+        var memberAccess = (MemberAccessExpressionSyntax)node.Parent;
+        if (memberAccess.Expression == node) {
+          isUsingStaticName = true;
+        }
+      } else {
+        isUsingStaticName = true;
+      }
+
+      if (isUsingStaticName) {
+        if (!CurTypeSymbol.IsContainsInternalSymbol(symbol)) {          
           var usingStaticType = GetTypeName(symbol.ContainingType);
           outExpression = new LuaMemberAccessExpressionSyntax(usingStaticType, expression);
           return true;
