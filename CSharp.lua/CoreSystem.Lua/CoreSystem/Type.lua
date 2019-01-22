@@ -84,7 +84,7 @@ local types = {
   [Number] = newNumberType(Number),
 }
 
-local createType = System.config.customTypeOf or function(cls)setmetatable({ c = cls }, Type)end
+local createType = System.config.customTypeOf or function(cls) return setmetatable({ c = cls }, Type) end
 
 local function typeof(cls)
   assert(cls)

@@ -785,7 +785,9 @@ namespace CSharpLua {
           var fieldName = GetMemberName(variableSymbol);
           var attributes = AddField(fieldName, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
           if (IsCurTypeSerializable || attributes.Count > 0 || variableSymbol.HasMetadataAttribute()) {
-            AddFieldMetaData((IFieldSymbol)variableSymbol, fieldName, attributes);
+            if (variableSymbol.Kind == SymbolKind.Field) {
+              AddFieldMetaData((IFieldSymbol)variableSymbol, fieldName, attributes);
+            }
           }
         }
       } else {
