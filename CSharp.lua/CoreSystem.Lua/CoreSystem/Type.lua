@@ -270,7 +270,7 @@ function Type.GetTypeFrom(typeName, throwOnError, ignoreCase)
   if throwOnError then
     throw(TypeLoadException(typeName .. ": failed to load."))
   end
-  return nil    
+  return nil
 end
 
 Type.Equals = System.equals

@@ -112,9 +112,15 @@ define("System.Array", function(T)
   return cls
 end, Array)
 
-function System.arrayFromTable(t, T)
+function System.arrayFromTable(t, T, readOnly)
   assert(T)
-  return setmetatable(t, Array(T))
+  local array = setmetatable(t, Array(T))
+  if readOnly then
+    array.set = function ()
+      throw(System.NotSupportedException("This array is readOnly"))
+    end
+  end
+  return array
 end
 
 function System.arrayFromList(t)

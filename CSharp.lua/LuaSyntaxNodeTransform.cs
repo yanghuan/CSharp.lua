@@ -341,7 +341,7 @@ namespace CSharpLua {
       }
 
       if (typeSymbol.TypeKind == TypeKind.Class) {
-        if (IsCurTypeExportMetadataAll || typeDeclaration.IsExportMetadata) {
+        if (IsCurTypeExportMetadataAll || attributes.Count > 0 || typeDeclaration.IsExportMetadata) {
           var data = new LuaTableExpression() { IsSingleLine = true };
           data.Add(typeSymbol.GetMetaDataAttributeFlags());
           data.AddRange(attributes);
@@ -674,7 +674,7 @@ namespace CSharpLua {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
         if (!result.IsIgnore) {
           CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document);
-          if (IsCurTypeExportMetadataAll || result.IsMetadata) {
+          if (IsCurTypeExportMetadataAll || result.Attributes.Count > 0 || result.IsMetadata) {
             AddMethodMetaData(result);
           }
         }
@@ -784,7 +784,7 @@ namespace CSharpLua {
           }
           var fieldName = GetMemberName(variableSymbol);
           var attributes = AddField(fieldName, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
-          if (IsCurTypeSerializable || variableSymbol.HasMetadataAttribute()) {
+          if (IsCurTypeSerializable || attributes.Count > 0 || variableSymbol.HasMetadataAttribute()) {
             AddFieldMetaData((IFieldSymbol)variableSymbol, fieldName, attributes);
           }
         }
@@ -926,7 +926,7 @@ namespace CSharpLua {
         }
 
         var propertyName = GetMemberName(symbol);
-        var nodeAttributes = BuildAttributes(node.AttributeLists);
+        var attributes = BuildAttributes(node.AttributeLists);
         PropertyMethodResult getMethod = null;
         PropertyMethodResult setMethod = null;
         if (node.AccessorList != null) {
@@ -955,21 +955,21 @@ namespace CSharpLua {
               var name = new LuaPropertyOrEventIdentifierNameSyntax(true, propertyName);
               CurType.AddMethod(name, functionExpression, isPrivate);
 
-              var attributes = BuildAttributes(accessor.AttributeLists);
+              var methodAttributes = BuildAttributes(accessor.AttributeLists);
               if (!isPrivate) {
-                CurType.AddMethodAttributes(name, attributes);
+                CurType.AddMethodAttributes(name, methodAttributes);
               }
 
               if (isGet) {
                 Contract.Assert(!hasGet);
                 hasGet = true;
-                getMethod = new PropertyMethodResult(name, attributes);
+                getMethod = new PropertyMethodResult(name, methodAttributes);
               } else {
                 Contract.Assert(!hasSet);
                 functionExpression.AddParameter(LuaIdentifierNameSyntax.Value);
                 name.IsGetOrAdd = false;
                 hasSet = true;
-                setMethod = new PropertyMethodResult(name, attributes);
+                setMethod = new PropertyMethodResult(name, methodAttributes);
               }
             }
           }
@@ -1002,7 +1002,6 @@ namespace CSharpLua {
             AddField(propertyName, typeSymbol, node.Type, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
           } else {
             if (!isPrivate) {
-              var attributes = BuildAttributes(node.AttributeLists);
               CurType.AddFieldAttributes(propertyName, attributes);
             }
             LuaIdentifierNameSyntax innerName = AddInnerName(symbol);
@@ -1017,13 +1016,12 @@ namespace CSharpLua {
           }
         } else {
           if (!isPrivate) {
-            var attributes = BuildAttributes(node.AttributeLists);
             CurType.AddFieldAttributes(propertyName, attributes);
           }
         }
 
-        if (IsCurTypeSerializable || symbol.HasMetadataAttribute()) {
-          AddPropertyMetaData(symbol, getMethod, setMethod, propertyName, nodeAttributes);
+        if (IsCurTypeSerializable || attributes.Count > 0 || symbol.HasMetadataAttribute()) {
+          AddPropertyMetaData(symbol, getMethod, setMethod, propertyName, attributes);
         }
       }
 

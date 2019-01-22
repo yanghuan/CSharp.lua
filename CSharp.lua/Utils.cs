@@ -73,10 +73,10 @@ namespace CSharpLua {
   }
 
   public enum PropertyMethodKind {
-    Field,
-    Both,
-    GetOnly,
-    SetOnly
+    Field = 0,
+    Both = 1,
+    GetOnly = 2,
+    SetOnly = 3,
   }
 
   public static class Utility {

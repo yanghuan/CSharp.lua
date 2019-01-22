@@ -240,7 +240,6 @@ local function buildFieldInfo(cls, name)
   return setmetatable({ c = cls, name = name }, FieldInfo)
 end
 
-
 function FieldInfo.GetValue(this, obj)
   if obj ~= nil then
     checkObj(obj, this.c)

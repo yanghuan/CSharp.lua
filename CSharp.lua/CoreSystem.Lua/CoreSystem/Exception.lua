@@ -20,14 +20,17 @@ local Object = System.Object
 
 local traceback = debug.traceback
 local tconcat = table.concat
+local toString = tostring
+
+local function getMessage(this)
+  return this.message or ("Exception of type '%s' was thrown."):format(this.__name__)
+end
 
 local function toString(this)
   local t = { this.__name__ }
-  local message, innerException, stackTrace = this.message, this.innerException, this.errorStack
-  if message ~= nil and #message > 0 then
-    t[#t + 1] = ": "
-    t[#t + 1] = message
-  end
+  local message, innerException, stackTrace = getMessage(this), this.innerException, this.errorStack
+  t[#t + 1] = ": "
+  t[#t + 1] = message
   if innerException then
     t[#t + 1] = "---> "
     t[#t + 1] = innerException:ToString()
@@ -41,14 +44,11 @@ end
 local Exception = define("System.Exception", {
   __tostring = toString,
   ToString = toString,
+  getMessage = getMessage,
 
   __ctor__ = function(this, message, innerException) 
     this.message = message
     this.innerException = innerException
-  end,
-
-  getMessage = function(this) 
-    return this.message
   end,
 
   getInnerException = function(this) 

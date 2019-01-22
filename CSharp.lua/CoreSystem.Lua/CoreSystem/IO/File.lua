@@ -27,7 +27,7 @@ local IOException = define("System.IO.IOException", {
   __tostring = System.Exception.ToString,
   __inherits__ = { System.Exception },
   __ctor__ = function(this, message, innerException) 
-    System.Exception.__ctor__(this, message, innerException)
+    System.Exception.__ctor__(this, message or "I/O error occurred.", innerException)
   end,
 })
 
