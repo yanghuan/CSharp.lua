@@ -212,7 +212,13 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildArrayCreationExpression(LuaArrayTypeAdapterExpressionSyntax arrayType, InitializerExpressionSyntax initializer) {
       if (initializer != null && initializer.Expressions.Count > 0) {
         if (arrayType.IsSimapleArray) {
-          return new LuaInvocationExpressionSyntax(arrayType, initializer.Expressions.Select(i => (LuaExpressionSyntax)i.Accept(this)));
+          var initializerExpressions = initializer.Expressions.Select(i => (LuaExpressionSyntax)i.Accept(this)).ToList();
+          for (int i = 0; i < initializerExpressions.Count; ++i) {
+            if (initializerExpressions[i].IsNil()) {
+              initializerExpressions[i] = LuaIdentifierNameSyntax.SyhstemNull;
+            }
+          }
+          return new LuaInvocationExpressionSyntax(arrayType, new LuaTableExpression(initializerExpressions) { IsSingleLine = true }, true);
         } else {
           LuaTableExpression rankSpecifier = new LuaTableExpression();
           LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(arrayType, rankSpecifier);

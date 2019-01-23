@@ -159,7 +159,12 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaArgumentListSyntax node) {
-      WriteArgumentList(node.OpenParenToken, node.Arguments, node.CloseParenToken);
+      if (node.IsCallSingleTable) {
+        Contract.Assert(node.Arguments.Count == 1);
+        node.Arguments.First().Render(this);
+      } else {
+        WriteArgumentList(node.OpenParenToken, node.Arguments, node.CloseParenToken);
+      }
     }
 
     internal void Render(LuaArgumentSyntax node) {

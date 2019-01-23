@@ -112,6 +112,10 @@ define("System.Array", function(T)
   return cls
 end, Array)
 
+function Array.__call(T, t)
+  return setmetatable(t or {}, T)
+end
+
 function System.arrayFromTable(t, T, readOnly)
   assert(T)
   local array = setmetatable(t, Array(T))

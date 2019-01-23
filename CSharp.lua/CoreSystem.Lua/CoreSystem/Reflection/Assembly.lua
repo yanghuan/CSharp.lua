@@ -35,7 +35,7 @@ local assert = assert
 local ipairs = ipairs
 local pairs = pairs
 local type = type
-local unpack = unpack
+local unpack = table.unpack
 
 local TargetException = define("System.Reflection.TargetException", {
   __tostring = Exception.ToString,

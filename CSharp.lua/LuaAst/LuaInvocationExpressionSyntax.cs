@@ -29,8 +29,9 @@ namespace CSharpLua.LuaAst {
       Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
-    public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, LuaExpressionSyntax argument) : this(expression) {
+    public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, LuaExpressionSyntax argument, bool isCallSingleTable) : this(expression) {
       AddArgument(argument);
+      ArgumentList.IsCallSingleTable = isCallSingleTable;
     }
 
     public LuaInvocationExpressionSyntax(LuaExpressionSyntax expression, LuaExpressionSyntax argument1, LuaExpressionSyntax argument2) : this(expression) {
