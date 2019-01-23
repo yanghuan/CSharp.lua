@@ -111,24 +111,6 @@ namespace TestCases
             return a.ToString();
         }
         [TestCase]
-        public static string Test07()
-        {
-            if (File.Exists("test.txt"))
-            {
-                File.Delete("test.txt");
-            }
-
-            using (System.IO.FileStream fs = new System.IO.FileStream("test.txt", System.IO.FileMode.Create))
-            {
-                fs.WriteByte(100);
-            }
-
-            using (System.IO.FileStream fs = new System.IO.FileStream("test.txt", System.IO.FileMode.Open))
-            {
-                return fs.ReadByte().ToString();
-            }
-        }
-        [TestCase]
         public static void Test08()
         {
             object o = TestEnum.Enum4;

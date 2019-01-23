@@ -832,7 +832,7 @@ namespace CSharpLua {
         if (function.Body.Statements.Count > 0) {
           statements = function.Body.Statements;
         }
-        valueIsLiteral = expression is LiteralExpressionSyntax;
+        valueIsLiteral = valueExpression is LuaLiteralExpressionSyntax;
       }
 
       if (valueExpression == null) {
@@ -1356,23 +1356,38 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken, ExpressionSyntax rightNode) {
-      bool isRightParenthesized = rightNode is BinaryExpressionSyntax || rightNode.IsKind(SyntaxKind.ConditionalExpression);
+    private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken, ExpressionSyntax rightNode, ExpressionSyntax parnet) {
       if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
-        propertyAdapter.ArgumentList.AddArgument(new LuaBinaryExpressionSyntax(propertyAdapter.GetCloneOfGet(), operatorToken, right));
+        LuaExpressionSyntax expression = null;
+        var geter = propertyAdapter.GetCloneOfGet();
+        if (parnet != null) {
+          expression = GetUserDefinedOperatorExpression(parnet, geter, right);
+        }
+        if (expression == null) {
+          expression = new LuaBinaryExpressionSyntax(geter, operatorToken, right);
+        }
+        propertyAdapter.ArgumentList.AddArgument(expression);
         return propertyAdapter;
       } else {
-        if (isRightParenthesized) {
-          right = new LuaParenthesizedExpressionSyntax(right);
+        LuaExpressionSyntax expression = null;
+        if (parnet != null) {
+          expression = GetUserDefinedOperatorExpression(parnet, left, right);
         }
-        return new LuaAssignmentExpressionSyntax(left, new LuaBinaryExpressionSyntax(left, operatorToken, right));
+        if (expression == null) {
+          bool isRightParenthesized = rightNode is BinaryExpressionSyntax || rightNode.IsKind(SyntaxKind.ConditionalExpression);
+          if (isRightParenthesized) {
+            right = new LuaParenthesizedExpressionSyntax(right);
+          }
+          expression = new LuaBinaryExpressionSyntax(left, operatorToken, right);
+        }
+        return new LuaAssignmentExpressionSyntax(left, expression);
       }
     }
 
-    private LuaExpressionSyntax BuildCommonAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string operatorToken) {
+    private LuaExpressionSyntax BuildCommonAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string operatorToken, ExpressionSyntax parnet) {
       var left = (LuaExpressionSyntax)leftNode.Accept(this);
       var right = (LuaExpressionSyntax)rightNode.Accept(this);
-      return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode);
+      return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode, parnet);
     }
 
     private LuaExpressionSyntax BuildDelegateAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, bool isPlus) {
@@ -1410,7 +1425,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax BuildIntegerDivAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, LuaIdentifierNameSyntax methodName) {
       if (IsLuaNewest) {
-        return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.IntegerDiv);
+        return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.IntegerDiv, null);
       } else {
         return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
       }
@@ -1426,7 +1441,7 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax BuildLuaAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, SyntaxKind kind) {
+    private LuaExpressionSyntax BuildLuaAssignmentExpression(ExpressionSyntax parnet, ExpressionSyntax leftNode, ExpressionSyntax rightNode, SyntaxKind kind) {
       switch (kind) {
         case SyntaxKind.SimpleAssignmentExpression: {
           var left = (LuaExpressionSyntax)leftNode.Accept(this);
@@ -1443,7 +1458,7 @@ namespace CSharpLua {
           if (leftType.IsStringType()) {
             var left = (LuaExpressionSyntax)leftNode.Accept(this);
             var right = WrapStringConcatExpression(rightNode);
-            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation, rightNode);
+            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Concatenation, rightNode, null);
           } else {
             var left = (LuaExpressionSyntax)leftNode.Accept(this);
             var right = (LuaExpressionSyntax)rightNode.Accept(this);
@@ -1451,7 +1466,7 @@ namespace CSharpLua {
             if (leftType.IsDelegateType()) {
               return BuildDelegateAssignmentExpression(left, right, true);
             } else {
-              return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus, rightNode);
+              return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Plus, rightNode, parnet);
             }
           }
         }
@@ -1463,11 +1478,11 @@ namespace CSharpLua {
           if (leftType.IsDelegateType()) {
             return BuildDelegateAssignmentExpression(left, right, false);
           } else {
-            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Sub, rightNode);
+            return BuildCommonAssignmentExpression(left, right, LuaSyntaxNode.Tokens.Sub, rightNode, parnet);
           }
         }
         case SyntaxKind.MultiplyAssignmentExpression: {
-          return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Multiply);
+          return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Multiply, parnet);
         }
         case SyntaxKind.DivideAssignmentExpression: {
           var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
@@ -1476,7 +1491,7 @@ namespace CSharpLua {
             var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerDivOfNull : LuaIdentifierNameSyntax.IntegerDiv;
             return BuildIntegerDivAssignmentExpression(leftNode, rightNode, methodName);
           } else {
-            return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Div);
+            return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Div, parnet);
           }
         }
         case SyntaxKind.ModuloAssignmentExpression: {
@@ -1488,20 +1503,20 @@ namespace CSharpLua {
               return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
             }
           }
-          return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Mod);
+          return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Mod, parnet);
         }
         case SyntaxKind.AndAssignmentExpression: {
-          return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.And, LuaSyntaxNode.Tokens.BitAnd, LuaIdentifierNameSyntax.BitAnd, LuaIdentifierNameSyntax.BitAndOfNull);
+          return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.And, LuaSyntaxNode.Tokens.BitAnd, LuaIdentifierNameSyntax.BitAnd, LuaIdentifierNameSyntax.BitAndOfNull, parnet);
         }
         case SyntaxKind.ExclusiveOrAssignmentExpression: {
-          return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.NotEquals, LuaSyntaxNode.Tokens.BitXor, LuaIdentifierNameSyntax.BitXor, LuaIdentifierNameSyntax.BitXorOfNull);
+          return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.NotEquals, LuaSyntaxNode.Tokens.BitXor, LuaIdentifierNameSyntax.BitXor, LuaIdentifierNameSyntax.BitXorOfNull, parnet);
         }
         case SyntaxKind.OrAssignmentExpression: {
-          return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Or, LuaSyntaxNode.Tokens.BitOr, LuaIdentifierNameSyntax.BitOr, LuaIdentifierNameSyntax.BitOrOfNull);
+          return BuildBitAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Or, LuaSyntaxNode.Tokens.BitOr, LuaIdentifierNameSyntax.BitOr, LuaIdentifierNameSyntax.BitOrOfNull, parnet);
         }
         case SyntaxKind.LeftShiftAssignmentExpression: {
           if (IsLuaNewest) {
-            return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.LeftShift);
+            return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.LeftShift, parnet);
           } else {
             var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
             var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
@@ -1511,7 +1526,7 @@ namespace CSharpLua {
         }
         case SyntaxKind.RightShiftAssignmentExpression: {
           if (IsLuaNewest) {
-            return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.RightShift);
+            return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.RightShift, parnet);
           } else {
             var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
             var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
@@ -1524,10 +1539,10 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax BuildBitAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string boolOperatorToken, string otherOperatorToken, LuaIdentifierNameSyntax methodName, LuaIdentifierNameSyntax methodNameOfNull) {
+    private LuaExpressionSyntax BuildBitAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string boolOperatorToken, string otherOperatorToken, LuaIdentifierNameSyntax methodName, LuaIdentifierNameSyntax methodNameOfNull, ExpressionSyntax parnet) {
       var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
       if (leftType.SpecialType == SpecialType.System_Boolean) {
-        return BuildCommonAssignmentExpression(leftNode, rightNode, boolOperatorToken);
+        return BuildCommonAssignmentExpression(leftNode, rightNode, boolOperatorToken, null);
       } else if (!IsLuaNewest) {
         var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
         if (leftType.IsNullableType() || rightType.IsNullableType()) {
@@ -1536,7 +1551,7 @@ namespace CSharpLua {
         return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
       } else {
         string operatorToken = GetOperatorToken(otherOperatorToken);
-        return BuildCommonAssignmentExpression(leftNode, rightNode, operatorToken);
+        return BuildCommonAssignmentExpression(leftNode, rightNode, operatorToken, parnet);
       }
     }
 
@@ -1549,10 +1564,10 @@ namespace CSharpLua {
         var kind = node.Kind();
 
         if (rightExpression is AssignmentExpressionSyntax assignmentRight) {
-          assignments.Add(BuildLuaAssignmentExpression(leftExpression, assignmentRight.Left, kind));
+          assignments.Add(BuildLuaAssignmentExpression(node, leftExpression, assignmentRight.Left, kind));
           node = assignmentRight;
         } else {
-          assignments.Add(BuildLuaAssignmentExpression(leftExpression, rightExpression, kind));
+          assignments.Add(BuildLuaAssignmentExpression(node, leftExpression, rightExpression, kind));
           break;
         }
       }
@@ -2037,11 +2052,23 @@ namespace CSharpLua {
 
       if (symbol.IsStatic && node.Expression.IsKind(SyntaxKind.IdentifierName) && CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
         bool isOnlyName = false;
-        if (symbol.Kind == SymbolKind.Method) {
-          isOnlyName = true;
-        } else if (symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Event) {
-          if (!generator_.IsPropertyFieldOrEventFiled(symbol)) {
+        switch (symbol.Kind) {
+          case SymbolKind.Method: {
             isOnlyName = true;
+            break;
+          }
+          case SymbolKind.Property:
+          case SymbolKind.Event: {
+            if (!generator_.IsPropertyFieldOrEventFiled(symbol)) {
+              isOnlyName = true;
+            }
+            break;
+          }
+          case SymbolKind.Field: {
+            if (symbol.IsPrivate()) {
+              isOnlyName = true;
+            }
+            break;
           }
         }
         if (isOnlyName) {
@@ -2968,7 +2995,7 @@ namespace CSharpLua {
         }
       }
 
-      var operatorExpression = GerUserDefinedOperatorExpression(node);
+      var operatorExpression = GetUserDefinedOperatorExpression(node, node.Left, node.Right);
       if (operatorExpression != null) {
         return operatorExpression;
       }

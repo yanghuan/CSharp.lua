@@ -1016,7 +1016,21 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(memberAccess, expression);
     }
 
-    private LuaExpressionSyntax GerUserDefinedOperatorExpression(BinaryExpressionSyntax node) {
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, ExpressionSyntax left, ExpressionSyntax right) {
+      return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
+        () => (LuaExpressionSyntax)left.Accept(this),
+        () => (LuaExpressionSyntax)right.Accept(this)
+      });
+    }
+
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, LuaExpressionSyntax left, LuaExpressionSyntax right) {
+      return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
+        () => left,
+        () => right
+      });
+    }
+
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, IEnumerable<Func<LuaExpressionSyntax>> arguments) {
       var methodSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       if (methodSymbol != null) {
         var typeSymbol = methodSymbol.ContainingType;
@@ -1027,13 +1041,10 @@ namespace CSharpLua {
             && !typeSymbol.IsTimeSpanType()) {
             var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
             if (codeTemplate != null) {
-              return BuildCodeTemplateExpression(codeTemplate, null, new ExpressionSyntax[] { node.Left, node.Right }, null);
+              return InternalBuildCodeTemplateExpression(codeTemplate, null, arguments, null);
             }
-
-            var left = (LuaExpressionSyntax)node.Left.Accept(this);
-            var right = (LuaExpressionSyntax)node.Right.Accept(this);
             var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
-            return new LuaInvocationExpressionSyntax(memberAccess, left, right);
+            return new LuaInvocationExpressionSyntax(memberAccess, arguments.Select(i => i()));
           }
         }
       }

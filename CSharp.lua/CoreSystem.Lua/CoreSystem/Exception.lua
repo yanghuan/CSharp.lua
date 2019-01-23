@@ -20,7 +20,6 @@ local Object = System.Object
 
 local traceback = debug.traceback
 local tconcat = table.concat
-local toString = tostring
 
 local function getMessage(this)
   return this.message or ("Exception of type '%s' was thrown."):format(this.__name__)

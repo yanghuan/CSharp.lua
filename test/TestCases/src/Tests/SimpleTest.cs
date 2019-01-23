@@ -55,27 +55,6 @@ namespace TestCases
             return b;
         }
         [TestCase]
-        public static int foo()
-        {
-            int b = 0;
-            for (int i = 0; i < 50; i++)
-            {
-                b += foo(b);
-            }
-            return b;
-        }
-
-        public static int foo(object init)
-        {
-            int b = (int)init;
-            for (int i = 0; i < 10000; i++)
-            {
-                b += i;
-            }
-            //SimpleTest.b = b;
-            return b;
-        }
-        [TestCase]
         public static int foo2()
         {
             int b = 0;

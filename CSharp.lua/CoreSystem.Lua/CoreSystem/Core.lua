@@ -424,7 +424,7 @@ if version < 5.3 then
       throw(System.DivideByZeroException(), 1)
     end
     return trunc(x / y)
-  end    
+  end
 
   function System.divOfNull(x, y)
     if x == nil or y == nil then

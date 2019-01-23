@@ -1415,7 +1415,7 @@ namespace CSharpLua {
 
       var namedTypeSymbol = (INamedTypeSymbol)symbol;
       if (namedTypeSymbol.TypeKind == TypeKind.Enum) {
-        return LuaIdentifierNameSyntax.Int;
+        return GetTypeName(namedTypeSymbol.EnumUnderlyingType, transfor);
       }
 
       if (namedTypeSymbol.IsDelegateType()) {
