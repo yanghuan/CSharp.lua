@@ -152,10 +152,9 @@ local function getOrSetField(this, obj, isSet, value)
 end
 
 local function isMetadataDefined(metadata, index, attributeType)
-  metadata = metadata.class
   attributeType = attributeType.c
   for i = index, #metadata do
-    if is(metadata[i].class, attributeType) then
+    if is(metadata[i], attributeType) then
       return true
     end
   end
@@ -163,7 +162,6 @@ local function isMetadataDefined(metadata, index, attributeType)
 end
 
 local function fillMetadataCustomAttributes(t, metadata, index, attributeType)
-  metadata = metadata.class
   if attributeType then
     attributeType = attributeType.c
     for i = index, #metadata do
@@ -273,7 +271,7 @@ local function getOrSetProperty(this, obj, isSet, value)
       obj = this.c
       isStatic = true
     end
-    if this.field then
+    if this.isField then
       if isSet then
         obj[this.name] = value
       else
@@ -433,12 +431,16 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
   end
 })
 
-local function buildMethodInfo(cls, name, metadata, f)
-  return setmetatable({ c = cls, name = name, metadata = metadata, f = f }, MethodInfo)
+local function buildFieldInfo(cls, name, metadata)
+  return setmetatable({ c = cls, name = name, metadata = metadata }, FieldInfo)
 end
 
-local function buildFieldInfo(cls, name, metadata, f)
-  return setmetatable({ c = cls, name = name, metadata = metadata, f = f }, FieldInfo)
+local function buildPropertyInfo(cls, name, metadata, isField)
+  return setmetatable({ c = cls, name = name, metadata = metadata, isField = isField }, PropertyInfo)
+end
+
+local function buildMethodInfo(cls, name, metadata, f)
+  return setmetatable({ c = cls, name = name, metadata = metadata, f = f }, MethodInfo)
 end
 
 -- https://en.cppreference.com/w/cpp/algorithm/lower_bound
@@ -458,6 +460,102 @@ local function lowerBound(t, first, last, value, comp)
     end
   end
   return first
+end
+
+local function binarySearchByName(metadata, name)
+  local last = #metadata + 1
+  local index = lowerBound(metadata, 1, last, name, function (item, name)
+    return item[0] < name
+  end)
+  if index ~= last then
+    return metadata[index]
+  end
+  return nil
+end
+
+function Type.GetField(this, name)
+  if name == nil then throw(ArgumentNullException()) end
+  local cls = this.c
+  local metadata = cls.__metadata__
+  if metadata then
+    local fields = metadata.fields
+    if fields then
+      local field = binarySearchByName(fields, name)
+      if field then
+        return buildFieldInfo(cls, name, field)
+      end
+      return nil
+    end
+  end
+  if type(cls[name]) ~= "function" then
+    return buildFieldInfo(cls, name)
+  end
+end
+
+function Type.GetFields(this)
+  local t = {}
+  local cls = this.c
+  repeat
+    local metadata = cls.__metadata__
+    if metadata then
+      local fields = metadata.fields
+      if fields then
+        for _, i in ipairs(fields) do
+          t[#t + 1] = buildFieldInfo(cls, i[1], i)
+        end
+      else
+        metadata = nil
+      end
+    end
+    if not metadata then
+      for k, v in pairs(cls) do
+        if type(v) ~= "function" then
+          t[#t + 1] = buildFieldInfo(cls, k)
+        end
+      end
+    end
+    cls = getmetatable(cls)
+  until cls == nil 
+  return arrayFromTable(t, FieldInfo)
+end
+
+function Type.GetProperty(this, name)
+  if name == nil then throw(ArgumentNullException()) end
+  local cls = this.c
+  local metadata = cls.__metadata__
+  if metadata then
+    local properties = metadata.properties
+    if properties then
+      local property = binarySearchByName(properties, name)
+      if property then
+        return buildPropertyInfo(cls, name, property)
+      end
+      return nil
+    end
+  end
+  if cls["get" .. name] or cls["set" .. name] then
+    return buildPropertyInfo(cls, name)
+  else
+    return buildPropertyInfo(cls, name, nil, true)
+  end
+end
+
+function Type.GetProperties()
+  local t = {}
+  local cls = this.c
+  repeat
+    local metadata = cls.__metadata__
+    if metadata then
+      local properties = metadata.properties
+      if properties then
+        for _, i in ipairs(properties) do
+          t[#t + 1] = buildPropertyInfo(cls, i[1], i)
+        end
+      end
+    end
+    cls = getmetatable(cls)
+  until cls == nil 
+  return arrayFromTable(t, PropertyInfo)
 end
 
 function Type.GetMethod(this, name)
@@ -510,63 +608,15 @@ function Type.GetMethods(this)
   return arrayFromTable(t, MethodInfo)
 end
 
-function Type.GetField(this, name)
-  if name == nil then throw(ArgumentNullException()) end
-  local cls = this.c
-  local metadata = cls.__metadata__
-  if metadata then
-    local fields = metadata.fields
-    if fields then
-      local last = #fields + 1
-      local index = lowerBound(fields, 1, last, name, function (item, name)
-        return fields[item][1] < name
-      end)
-      if index ~= last then
-        return buildFieldInfo(cls, name, fields[index])
-      end
-      return nil
-    end
-  end
-  local f = cls[name]
-  if type(f) == "function" then
-    return buildFieldInfo(cls, name, nil, f)
-  end
-end
-
-function Type.GetFields(this)
-  local t = {}
-  local cls = this.c
-  repeat
-    local metadata = cls.__metadata__
-    if metadata then
-      local fields = metadata.fields
-      if fields then
-        for _, i in ipairs(fields) do
-          t[#t + 1] = buildFieldInfo(cls, i[1], i)
-        end
-      else
-        metadata = nil
-      end
-    end
-    if not metadata then
-      for k, v in pairs(cls) do
-        if type(v) == "function" then
-          t[#t + 1] = buildFieldInfo(cls, k, nil, v)
-        end
-      end
-    end
-    cls = getmetatable(cls)
-  until cls == nil 
-  return arrayFromTable(t, FieldInfo)
-end
-
-
 function Type.IsDefined(this, attributeType, inherit)
   if attributeType == nil then throw(ArgumentNullException()) end
   if not inherit then
     local metadata = this.c.__metadata__
     if metadata then
-      return isMetadataDefined(metadata, 2, attributeType)
+      local class  = metadata.class
+      if class then
+        return isMetadataDefined(class, 2, attributeType)
+      end
     end
     return false
   else
@@ -574,8 +624,11 @@ function Type.IsDefined(this, attributeType, inherit)
     repeat
       local metadata = cls.__metadata__
       if metadata then
-        if isMetadataDefined(cls, 2, attributeType) then
-          return true
+        local class  = metadata.class
+        if class then
+          if isMetadataDefined(class, 2, attributeType) then
+            return true
+          end
         end
       end
       cls = getmetatable(cls)
@@ -594,14 +647,20 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
   if not inherit then
     local metadata = this.c.__metadata__
     if metadata then
-      fillMetadataCustomAttributes(t, metadata, 2, attributeType)
+      local class  = metadata.class
+      if class then
+        fillMetadataCustomAttributes(t, class, 2, attributeType)
+      end
     end
   else
     local cls = this.c
     repeat
       local metadata = cls.__metadata__
       if metadata then
-        fillMetadataCustomAttributes(t, metadata, 2, attributeType)
+        local class  = metadata.class
+        if class then
+          fillMetadataCustomAttributes(t, class, 2, attributeType)
+        end
       end
       cls = getmetatable(cls)
     until cls == nil
