@@ -138,21 +138,18 @@ function Collection.pushArray(t, v)
   changeVersion(t)
 end
 
-function Collection.buildArray(t, size, ...)
-  local len = select("#", ...)
-  for i = 1, len do
-    local v = select(i, ...)
-    t[#t + 1] = wrap(v)
-  end
-  if len < size then
-    local default = t.__genericT__:__default__()
+function Collection.buildArray(T, size)
+  local t = setmetatable({}, T)
+  if size > 0 then
+    local default = T.__genericT__:__default__()
     if default == nil then
       default = null
     end
-    for i = len + 1, size do
+    for i = 1, size do
       t[#t + 1] = default
     end
   end
+  return t
 end
 
 local function checkInsertIndex(t, index)   

@@ -160,15 +160,15 @@ local function selectMany(source, collectionSelector, resultSelector, T)
   end)
 end
 
-function Enumerable.SelectMany(source, ...)
-  local function identityFn(s, x)
-    return x
-  end
+local function identityFnOfSelectMany(s, x)
+  return x
+end
 
+function Enumerable.SelectMany(source, ...)
   local len = select("#", ...)
   if len == 2 then
     local collectionSelector, T = ...
-    return selectMany(source, collectionSelector, identityFn, T)
+    return selectMany(source, collectionSelector, identityFnOfSelectMany, T)
   else
     return selectMany(source, ...)
   end
@@ -1143,16 +1143,18 @@ local function minOrMax(compareFn, source, ...)
   end
 end
 
+local function minFn(compare, x, y)
+  return compare(x, y) < 0
+end
+
 function Enumerable.Min(source, ...)
-  local function minFn(compare, x, y)
-    return compare(x, y) < 0
-  end
   return minOrMax(minFn, source, ...)
 end
 
+local function maxFn(compare, x, y)
+  return compare(x, y) > 0
+end
+
 function Enumerable.Max(source, ...)
-  local function maxFn(compare, x, y)
-    return compare(x, y) > 0
-  end
   return minOrMax(maxFn, source, ...)
 end

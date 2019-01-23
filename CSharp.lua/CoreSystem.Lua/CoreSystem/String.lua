@@ -257,19 +257,23 @@ local function simpleFormat(format, args, len, getFn)
   end))
 end
 
+local function formatGetFromArray(t, n)
+  return t:get(n)
+end
+
+local function formatGetFromTable(t, n)
+  return t[n + 1]
+end
+
 function String.Format(format, ...)
   local len = select("#", ...)
   if len == 1 then
     local args = ...
     if System.isArrayLike(args) then
-      return simpleFormat(format, args, #args, function (t, n)
-        return t:get(n)
-      end)
+      return simpleFormat(format, args, #args, formatGetFromArray)
     end 
   end
-  return simpleFormat(format, { ... }, len, function (t, n)
-    return t[n + 1]
-  end)
+  return simpleFormat(format, { ... }, len, formatGetFromTable)
 end
 
 function String.StartsWith(this, prefix)
