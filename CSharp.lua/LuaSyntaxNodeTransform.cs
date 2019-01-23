@@ -2479,13 +2479,43 @@ namespace CSharpLua {
     private LuaExpressionSyntax InternalVisitLiteralExpression(LiteralExpressionSyntax node) {
       switch (node.Kind()) {
         case SyntaxKind.NumericLiteralExpression: {
-          string value = node.Token.ValueText;
-          if (node.Token.Value is float || node.Token.Value is double) {
-            if (!value.Contains('.') && !value.Contains('E')) {
-              value += ".0";
+          bool hasTransform = false;
+          string value = node.Token.Text;
+          value = value.Replace("_", "");
+          if (value.StartsWith("0b") || value.StartsWith("0B")) {
+            value = node.Token.ValueText;
+            hasTransform = true;
+          } else {
+            int len = value.Length;
+            int removeCount = 0;
+            switch (value[len - 1]) {
+              case 'f':
+              case 'F':
+              case 'd':
+              case 'D': {
+                removeCount = 1;
+                break;
+              }
+              case 'L':
+              case 'l': {
+                removeCount = 1;
+                if (len > 2) {
+                  if (value[len - 2] == 'U' || value[len - 2] == 'u') {
+                    removeCount = 2;
+                  }
+                }
+                break;
+              }
+            }
+            if (removeCount > 0) {
+              value = value.Remove(len - removeCount);
             }
           }
-          return new LuaIdentifierLiteralExpressionSyntax(value);
+          if (hasTransform) {
+            return new LuaConstLiteralExpression(value, node.Token.Text);
+          } else {
+            return new LuaIdentifierLiteralExpressionSyntax(value);
+          }
         }
         case SyntaxKind.StringLiteralExpression: {
           return BuildStringLiteralTokenExpression(node.Token);

@@ -854,6 +854,7 @@ end
 
 System.toLuaTable = toLuaTable
 System.Collection = Collection
+System.null = null
 System.each = each
 System.ipairs = ipairsArray
 System.pairs = pairsDict

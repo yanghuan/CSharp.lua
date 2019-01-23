@@ -350,9 +350,9 @@ namespace CSharpLua {
     }
 
     private LuaInvocationExpressionSyntax BuildArray(ITypeSymbol elementType, IEnumerable<LuaExpressionSyntax> elements) {
-      LuaExpressionSyntax baseType = GetTypeName(elementType);
+      var baseType = GetTypeName(elementType);
       var arrayType = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, baseType);
-      return new LuaInvocationExpressionSyntax(arrayType, elements);
+      return new LuaInvocationExpressionSyntax(arrayType, new LuaTableExpression(elements) { IsSingleLine = true }, true);
     }
 
     private LuaLiteralExpressionSyntax GetLiteralExpression(object constantValue) {
