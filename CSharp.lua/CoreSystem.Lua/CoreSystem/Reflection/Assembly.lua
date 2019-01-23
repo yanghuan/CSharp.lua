@@ -528,7 +528,7 @@ function Type.GetField(this, name)
     end
   end
   local f = cls[name]
-  if type(f) == "function" then
+  if type(f) ~= "function" then
     return buildFieldInfo(cls, name, nil, f)
   end
 end
@@ -550,7 +550,7 @@ function Type.GetFields(this)
     end
     if not metadata then
       for k, v in pairs(cls) do
-        if type(v) == "function" then
+        if type(v) ~= "function" then
           t[#t + 1] = buildFieldInfo(cls, k, nil, v)
         end
       end
