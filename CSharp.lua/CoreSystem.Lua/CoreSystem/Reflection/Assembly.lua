@@ -434,7 +434,11 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
 })
 
 local function buildMethodInfo(cls, name, metadata, f)
-  return setmetatable({ cls = cls, name = name, metadata = metadata, f = f }, MethodInfo)
+  return setmetatable({ c = cls, name = name, metadata = metadata, f = f }, MethodInfo)
+end
+
+local function buildFieldInfo(cls, name, metadata, f)
+  return setmetatable({ c = cls, name = name, metadata = metadata, f = f }, FieldInfo)
 end
 
 -- https://en.cppreference.com/w/cpp/algorithm/lower_bound
@@ -505,6 +509,57 @@ function Type.GetMethods(this)
   until cls == nil 
   return arrayFromTable(t, MethodInfo)
 end
+
+function Type.GetField(this, name)
+  if name == nil then throw(ArgumentNullException()) end
+  local cls = this.c
+  local metadata = cls.__metadata__
+  if metadata then
+    local fields = metadata.fields
+    if fields then
+      local last = #fields + 1
+      local index = lowerBound(fields, 1, last, name, function (item, name)
+        return fields[item][1] < name
+      end)
+      if index ~= last then
+        return buildFieldInfo(cls, name, fields[index])
+      end
+      return nil
+    end
+  end
+  local f = cls[name]
+  if type(f) == "function" then
+    return buildFieldInfo(cls, name, nil, f)
+  end
+end
+
+function Type.GetFields(this)
+  local t = {}
+  local cls = this.c
+  repeat
+    local metadata = cls.__metadata__
+    if metadata then
+      local fields = metadata.fields
+      if fields then
+        for _, i in ipairs(fields) do
+          t[#t + 1] = buildFieldInfo(cls, i[1], i)
+        end
+      else
+        metadata = nil
+      end
+    end
+    if not metadata then
+      for k, v in pairs(cls) do
+        if type(v) == "function" then
+          t[#t + 1] = buildFieldInfo(cls, k, nil, v)
+        end
+      end
+    end
+    cls = getmetatable(cls)
+  until cls == nil 
+  return arrayFromTable(t, FieldInfo)
+end
+
 
 function Type.IsDefined(this, attributeType, inherit)
   if attributeType == nil then throw(ArgumentNullException()) end
