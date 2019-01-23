@@ -2489,11 +2489,13 @@ namespace CSharpLua {
             int len = value.Length;
             int removeCount = 0;
             switch (value[len - 1]) {
-              case 'f':
+              case 'f': 
               case 'F':
               case 'd':
               case 'D': {
-                removeCount = 1;
+                if (!value.StartsWith("0x") && !value.StartsWith("0X")) {
+                  removeCount = 1;
+                }
                 break;
               }
               case 'L':
