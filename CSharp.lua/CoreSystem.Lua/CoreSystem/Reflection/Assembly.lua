@@ -50,11 +50,11 @@ local TargetParameterCountException = define("System.Reflection.TargetParameterC
   end,
 })
 
-local function checkMatadata(metdata)
+local function checkMatadata(metadata)
   if not metadata then
     throw(NotSupportedException("not found metadata for this"), 1)
   end
-  return metdata
+  return metadata
 end
 
 local function eq(left, right)
@@ -91,7 +91,7 @@ local MemberInfo = define("System.Reflection.MemberInfo", {
 })
 
 local function getFieldOrPropertyType(this)
-  return typeof(checkMatadata(this.metdata)[3])
+  return typeof(checkMatadata(this.metadata)[3])
 end
 
 local function checkObj(obj, cls)
@@ -123,7 +123,7 @@ local function checkValue(value, valueClass)
 end
 
 local function getOrSetField(this, obj, isSet, value)
-  local metadata = this.metdata
+  local metadata = this.metadata
   if metadata then
     if checkTarget(this, obj, metadata) then
       obj = this.c
@@ -152,9 +152,10 @@ local function getOrSetField(this, obj, isSet, value)
 end
 
 local function isMetadataDefined(metadata, index, attributeType)
+  metadata = metadata.class
   attributeType = attributeType.c
   for i = index, #metadata do
-    if is(metadata[i], attributeType) then
+    if is(metadata[i].class, attributeType) then
       return true
     end
   end
@@ -162,6 +163,7 @@ local function isMetadataDefined(metadata, index, attributeType)
 end
 
 local function fillMetadataCustomAttributes(t, metadata, index, attributeType)
+  metadata = metadata.class
   if attributeType then
     attributeType = attributeType.c
     for i = index, #metadata do
@@ -187,7 +189,7 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
   end,
   IsDefined = function (this, attributeType)
     if attributeType == nil then throw(ArgumentNullException()) end
-    local metadata = this.metdata
+    local metadata = this.metadata
     if metadata then
       return isMetadataDefined(metadata, 4, attributeType)
     end
@@ -213,7 +215,7 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
 })
 
 local function getOrSetProperty(this, obj, isSet, value)
-  local metadata = this.metdata
+  local metadata = this.metadata
   if metadata then
     local isStatic
     if checkTarget(this, obj, metadata) then
@@ -323,7 +325,7 @@ local PropertyInfo = define("System.Reflection.PropertyInfo", {
   end,
   IsDefined = function (this, attributeType)
     if attributeType == nil then throw(ArgumentNullException()) end
-    local metadata = this.metdata
+    local metadata = this.metadata
     if metadata then
       local index = getPropertyAttributesIndex(metadata)
       return isMetadataDefined(metadata, index, attributeType)
@@ -507,7 +509,7 @@ end
 function Type.IsDefined(this, attributeType, inherit)
   if attributeType == nil then throw(ArgumentNullException()) end
   if not inherit then
-    local metadata = this.c.metadata
+    local metadata = this.c.__metadata__
     if metadata then
       return isMetadataDefined(metadata, 2, attributeType)
     end
@@ -515,7 +517,7 @@ function Type.IsDefined(this, attributeType, inherit)
   else
     local cls = this.c
     repeat
-      local metadata = cls.metadata
+      local metadata = cls.__metadata__
       if metadata then
         if isMetadataDefined(cls, 2, attributeType) then
           return true
@@ -535,14 +537,14 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
   end
   local t = {}
   if not inherit then
-    local metadata = this.c.metadata
+    local metadata = this.c.__metadata__
     if metadata then
       fillMetadataCustomAttributes(t, metadata, 2, attributeType)
     end
   else
     local cls = this.c
     repeat
-      local metadata = cls.metadata
+      local metadata = cls.__metadata__
       if metadata then
         fillMetadataCustomAttributes(t, metadata, 2, attributeType)
       end
@@ -557,8 +559,8 @@ local function getAssembly()
   return assembly
 end
 
-local function newMemberInfo(cls, name, metdata, T)
-  return setmetatable({ c = cls, name = name, metdata = metdata }, T)
+local function newMemberInfo(cls, name, metadata, T)
+  return setmetatable({ c = cls, name = name, metadata = metadata }, T)
 end
 
 local Assembly = define("System.Reflection.Assembly", {
