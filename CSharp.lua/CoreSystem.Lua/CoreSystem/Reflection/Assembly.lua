@@ -271,7 +271,7 @@ local function getOrSetProperty(this, obj, isSet, value)
       obj = this.c
       isStatic = true
     end
-    if this.field then
+    if this.isField then
       if isSet then
         obj[this.name] = value
       else
@@ -431,8 +431,16 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
   end
 })
 
+local function buildFieldInfo(cls, name, metadata)
+  return setmetatable({ c = cls, name = name, metadata = metadata }, FieldInfo)
+end
+
+local function buildPropertyInfo(cls, name, metadata, isField)
+  return setmetatable({ c = cls, name = name, metadata = metadata, isField = isField }, PropertyInfo)
+end
+
 local function buildMethodInfo(cls, name, metadata, f)
-  return setmetatable({ cls = cls, name = name, metadata = metadata, f = f }, MethodInfo)
+  return setmetatable({ c = cls, name = name, metadata = metadata, f = f }, MethodInfo)
 end
 
 -- https://en.cppreference.com/w/cpp/algorithm/lower_bound
@@ -452,6 +460,57 @@ local function lowerBound(t, first, last, value, comp)
     end
   end
   return first
+end
+
+local function binarySearchByName(metadata, name)
+  local last = #metadata + 1
+  local index = lowerBound(metadata, 1, last, name, function (item, name)
+    return item[0] < name
+  end)
+  if index ~= last then
+    return metadata[index]
+  end
+  return nil
+end
+
+function Type.GetField(this, name)
+  if name == nil then throw(ArgumentNullException()) end
+  local cls = this.c
+  local metadata = cls.__metadata__
+  if metadata then
+    local fields = metadata.fields
+    if fields then
+      local field = binarySearchByName(fields, name)
+      if field then
+        return buildFieldInfo(cls, name, field)
+      end
+      return nil
+    end
+  end
+  if type(cls[name]) ~= "function" then
+    return buildFieldInfo(cls, name)
+  end
+end
+
+function Type.GetProperty(this, name)
+  if name == nil then throw(ArgumentNullException()) end
+  local cls = this.c
+  local metadata = cls.__metadata__
+  if metadata then
+    local properties = metadata.properties
+    if properties then
+      local property = binarySearchByName(properties, name)
+      if property then
+        return buildPropertyInfo(cls, name, property)
+      end
+      return nil
+    end
+  end
+  if cls["get" .. name] or cls["set" .. name] then
+    return buildPropertyInfo(cls, name)
+  else
+    return buildPropertyInfo(cls, name, nil, true)
+  end
 end
 
 function Type.GetMethod(this, name)
@@ -555,10 +614,6 @@ end
 local assembly
 local function getAssembly()
   return assembly
-end
-
-local function newMemberInfo(cls, name, metdata, T)
-  return setmetatable({ c = cls, name = name, metdata = metdata }, T)
 end
 
 local Assembly = define("System.Reflection.Assembly", {

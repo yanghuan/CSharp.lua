@@ -89,7 +89,6 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax New = "new";
     public static readonly LuaIdentifierNameSyntax Format = "Format";
     public static readonly LuaIdentifierNameSyntax Delegate = "System.Delegate";
-    public static readonly LuaIdentifierNameSyntax Int = "System.Int32";
     public static readonly LuaIdentifierNameSyntax Import = "System.import";
     public static readonly LuaIdentifierNameSyntax Global = "out";
     public static readonly LuaIdentifierNameSyntax Metadata = "__metadata__";
