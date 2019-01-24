@@ -178,7 +178,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitArrayRankSpecifier(ArrayRankSpecifierSyntax node) {
       LuaArrayRankSpecifierSyntax rankSpecifier = new LuaArrayRankSpecifierSyntax(node.Rank);
       foreach (var size in node.Sizes) {
-        var expression = (LuaLiteralExpressionSyntax)size.Accept(this);
+        var expression = (LuaExpressionSyntax)size.Accept(this);
         rankSpecifier.Sizes.Add(expression);
       }
       return rankSpecifier;
