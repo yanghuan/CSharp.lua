@@ -50,6 +50,14 @@ local TargetParameterCountException = define("System.Reflection.TargetParameterC
   end,
 })
 
+local AmbiguousMatchException = define("System.Reflection.AmbiguousMatchException", {
+  __tostring = Exception.ToString,
+  __inherits__ = { Exception },
+  __ctor__ = function(this, message, innerException) 
+    Exception.__ctor__(this, message or "Ambiguous match found.", innerException)
+  end,
+})
+
 local function checkMatadata(metadata)
   if not metadata then
     throw(NotSupportedException("not found metadata for this"), 1)
@@ -451,7 +459,7 @@ local function lowerBound(t, first, last, value, comp)
     it = first
     step = div(count, 2)
     it = it + step
-    if comp(it, value) then
+    if comp(t[it], value) then
       it = it + 1
       first = it
       count = count - (step + 1)
@@ -462,13 +470,15 @@ local function lowerBound(t, first, last, value, comp)
   return first
 end
 
+local function metadataItemCompByName(item, name)
+  return item[1] < name
+end
+
 local function binarySearchByName(metadata, name)
   local last = #metadata + 1
-  local index = lowerBound(metadata, 1, last, name, function (item, name)
-    return item[0] < name
-  end)
+  local index = lowerBound(metadata, 1, last, name, metadataItemCompByName)
   if index ~= last then
-    return metadata[index]
+    return metadata[index], index
   end
   return nil
 end
@@ -565,12 +575,13 @@ function Type.GetMethod(this, name)
   if metadata then
     local methods = metadata.methods
     if methods then
-      local last = #methods + 1
-      local index = lowerBound(methods, 1, last, name, function (item, name)
-        return item[0] < name
-      end)
-      if index ~= last then
-        return buildMethodInfo(cls, name, methods[index])
+      local item, index = binarySearchByName(methods, name)
+      if item then
+        local next = methods[index + 1]
+        if next and next[1] == name then
+          throw(AmbiguousMatchException())
+        end
+        return buildMethodInfo(cls, name, item)
       end
       return nil
     end
