@@ -1818,7 +1818,9 @@ namespace CSharpLua {
       if (refOrOutArguments.Count > 0) {
         return BuildInvokeRefOrOut(node, invocation, refOrOutArguments);
       } else {
-        return invocation;
+        LuaExpressionSyntax luaExpression = invocation;
+        CheckConversion(node, ref luaExpression);
+        return luaExpression;
       }
     }
 
