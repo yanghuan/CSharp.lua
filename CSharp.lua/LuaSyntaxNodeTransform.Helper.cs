@@ -1018,8 +1018,16 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, ExpressionSyntax left, ExpressionSyntax right) {
       return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
-        () => (LuaExpressionSyntax)left.Accept(this),
-        () => (LuaExpressionSyntax)right.Accept(this)
+        () => {
+          var expression = (LuaExpressionSyntax)left.Accept(this);
+          CheckConversion(left, ref expression);
+          return expression;
+        },
+        () => {
+          var expression = (LuaExpressionSyntax)right.Accept(this);
+          CheckConversion(right, ref expression);
+          return expression;
+        }
       });
     }
 

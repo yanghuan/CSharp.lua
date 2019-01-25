@@ -827,6 +827,7 @@ namespace CSharpLua {
         PushFunction(function);
         blocks_.Push(function.Body);
         valueExpression = (LuaExpressionSyntax)expression.Accept(this);
+        CheckConversion(expression, ref valueExpression);
         blocks_.Pop();
         PopFunction();
         if (function.Body.Statements.Count > 0) {
@@ -1314,6 +1315,7 @@ namespace CSharpLua {
         returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
         if (node.Expression != null) {
           var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+          CheckConversion(node.Expression, ref expression);
           returnStatement.Expressions.Add(expression);
         }
         result = returnStatement;
@@ -1323,12 +1325,16 @@ namespace CSharpLua {
           LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
           if (node.Expression != null) {
             var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+            CheckConversion(node.Expression, ref expression);
             returnStatement.Expressions.Add(expression);
           }
           returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
           result = returnStatement;
         } else {
           var expression = (LuaExpressionSyntax)node.Expression?.Accept(this);
+          if (node.Expression != null) {
+            CheckConversion(node.Expression, ref expression);
+          }
           result = new LuaReturnStatementSyntax(expression);
         }
       }
@@ -1357,6 +1363,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken, ExpressionSyntax rightNode, ExpressionSyntax parnet) {
+      CheckConversion(rightNode, ref right);
       if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
         LuaExpressionSyntax expression = null;
         var geter = propertyAdapter.GetCloneOfGet();
@@ -1451,6 +1458,7 @@ namespace CSharpLua {
               right = BuildDeconstructExpression(rightNode, right);
             }
           }
+          CheckConversion(rightNode, ref right);
           return BuildLuaSimpleAssignmentExpression(left, right);
         }
         case SyntaxKind.AddAssignmentExpression: {
@@ -1818,9 +1826,7 @@ namespace CSharpLua {
       if (refOrOutArguments.Count > 0) {
         return BuildInvokeRefOrOut(node, invocation, refOrOutArguments);
       } else {
-        LuaExpressionSyntax luaExpression = invocation;
-        CheckConversion(node, ref luaExpression);
-        return luaExpression;
+        return invocation;
       }
     }
 
@@ -2117,9 +2123,7 @@ namespace CSharpLua {
         }
       }
 
-      var luaExpression = InternalVisitMemberAccessExpression(symbol, node);
-      CheckConversion(node, ref luaExpression);
-      return luaExpression;
+      return InternalVisitMemberAccessExpression(symbol, node);
     }
 
     private LuaExpressionSyntax BuildStaticFieldName(ISymbol symbol, bool isReadOnly, IdentifierNameSyntax node) {
@@ -2418,9 +2422,7 @@ namespace CSharpLua {
           throw new NotSupportedException();
         }
       }
-      if (!node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-        CheckConversion(node, ref identifier);
-      }
+
       return identifier;
     }
 
@@ -2436,6 +2438,8 @@ namespace CSharpLua {
       } else if (node.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
         refOrOutArguments.Add(expression);
         expression = LuaIdentifierNameSyntax.Nil;
+      } else {
+        CheckConversion(node.Expression, ref expression);
       }
       if (node.NameColon != null) {
         string name = node.NameColon.Name.Identifier.ValueText;
@@ -2541,9 +2545,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node) {
-      var expression = InternalVisitLiteralExpression(node);
-      CheckConversion(node, ref expression);
-      return expression;
+      return InternalVisitLiteralExpression(node);
     }
 
     public override LuaSyntaxNode VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {
@@ -2640,6 +2642,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node) {
       var expression = (LuaExpressionSyntax)node.Value.Accept(this);
+      CheckConversion(node.Value, ref expression);
       return new LuaEqualsValueClauseSyntax(expression);
     }
 
@@ -2865,7 +2868,9 @@ namespace CSharpLua {
 
     private LuaBinaryExpressionSyntax BuildBinaryExpression(BinaryExpressionSyntax node, string operatorToken) {
       var left = (LuaExpressionSyntax)node.Left.Accept(this);
+      CheckConversion(node.Left, ref left);
       var right = (LuaExpressionSyntax)node.Right.Accept(this);
+      CheckConversion(node.Right, ref right);
       return new LuaBinaryExpressionSyntax(left, operatorToken, right);
     }
 
