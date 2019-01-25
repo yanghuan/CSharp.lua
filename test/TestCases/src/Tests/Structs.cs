@@ -1,7 +1,30 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
+
+namespace UnityEngine {
+
+
+  public partial struct LayerMask {
+
+    private int m_Mask;
+
+
+    public static implicit operator int(LayerMask mask) { return mask.m_Mask; }
+
+    public static implicit operator LayerMask(int intVal) { LayerMask mask; mask.m_Mask = intVal; return mask; }
+
+
+    public int value { get { return m_Mask; } set { m_Mask = value; } }
+
+
+
+  }
+
+}
+
 
 namespace TestCases
 {
@@ -148,5 +171,15 @@ namespace TestCases
             MyClass c = new MyClass();
             Console.WriteLine(c.ToString());
         }
+        static int StaticMaskValue = 123;
+        public static int GetStaticMaskValue() {
+          return StaticMaskValue;
+        }
+
+        [TestCase]
+        public static void StructTest3() {
+      UnityEngine.LayerMask maskValue = StaticMaskValue;
+      UnityEngine.LayerMask maskFuncValue = GetStaticMaskValue();
     }
+  }
 }
