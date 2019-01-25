@@ -296,7 +296,7 @@ TimeSpan.Zero = zero
 TimeSpan.MaxValue = TimeSpan(9223372036854775807)
 TimeSpan.MinValue = TimeSpan(-9223372036854775808)
 
-function TimeSpan.__default__()
+function TimeSpan.default()
   return zero
 end
 

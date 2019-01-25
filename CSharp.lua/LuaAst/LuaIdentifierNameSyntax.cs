@@ -50,7 +50,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax Init = "__init__";
     public static readonly LuaIdentifierNameSyntax Ctor = "__ctor__";
     public static readonly LuaIdentifierNameSyntax Inherits = "__inherits__";
-    public static readonly LuaIdentifierNameSyntax Default = "__default__";
+    public static readonly LuaIdentifierNameSyntax Default = "default";
     public static readonly LuaIdentifierNameSyntax SystemDefault = "System.default";
     public static readonly LuaIdentifierNameSyntax Property = "System.property";
     public static readonly LuaIdentifierNameSyntax Event = "System.event";

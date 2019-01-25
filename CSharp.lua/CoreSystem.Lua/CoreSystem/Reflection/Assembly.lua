@@ -122,7 +122,7 @@ end
 local function checkValue(value, valueClass)
   if value == nil then
     if valueClass.__kind__ == "S" then
-      value = valueClass:__default__()
+      value = valueClass:default()
     end
   else
     checkObj(value, valueClass)

@@ -29,7 +29,7 @@ local Enum = {}
 
 Enum.CompareToObj = Int.CompareToObj
 Enum.EqualsObj = Int.EqualsObj
-Enum.__default__ = Int.__default__
+Enum.default = Int.default
 
 local function toString(this, cls)
   if cls then

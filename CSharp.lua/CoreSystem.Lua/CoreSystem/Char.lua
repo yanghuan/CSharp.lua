@@ -25,7 +25,7 @@ Char.CompareToObj = Int.CompareToObj
 Char.Equals = Int.Equals
 Char.EqualsObj = Int.EqualsObj
 Char.GetHashCode = Int.GetHashCode
-Char.__default__ = Int.__default__
+Char.default = Int.default
 
 function Char.IsControl(c, index)
   if index then

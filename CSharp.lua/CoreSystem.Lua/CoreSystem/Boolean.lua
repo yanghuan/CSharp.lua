@@ -49,7 +49,7 @@ local function parse(s)
 end
 
 local Boolean = System.defStc("System.Boolean", {
-  __default__ = System.falseFn,
+  default = System.falseFn,
   GetHashCode = System.identityFn,
   Equals = System.equals,
   CompareTo = compareTo,

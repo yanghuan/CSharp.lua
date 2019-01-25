@@ -49,7 +49,7 @@ end
 
 local Int = define("System.Int", {
   __inherits__ = inherits,
-  __default__ = zeroFn,
+  default = zeroFn,
   
   CompareTo = compareInt,
   Equals = equals,
@@ -223,7 +223,7 @@ end
 
 local Number = define("System.Number", {
   __inherits__ = inherits,
-  __default__ = zeroFn,
+  default = zeroFn,
 
   CompareTo = compareDouble,
   Equals = equalsDouble,

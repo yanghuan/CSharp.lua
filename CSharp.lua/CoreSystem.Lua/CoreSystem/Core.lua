@@ -155,10 +155,10 @@ local function genericName(name, ...)
   return tconcat(t)
 end
 
-local enumMetatable = { __kind__ = "E", __default__ = zeroFn, __index = false }
+local enumMetatable = { __kind__ = "E", default = zeroFn, __index = false }
 enumMetatable.__index = enumMetatable
 
-local interfaceMetatable = { __kind__ = "I", __default__ = emptyFn, __index = false }
+local interfaceMetatable = { __kind__ = "I", default = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
 local function applyMetadata(cls)
@@ -911,7 +911,7 @@ function System.apply(t, f)
 end
 
 function System.default(T)
-  return T:__default__()
+  return T:default()
 end
 
 function System.property(name)
@@ -963,7 +963,7 @@ end
 
 Object = defCls("System.Object", {
   __call = new,
-  __default__ = emptyFn,
+  default = emptyFn,
   __ctor__ = emptyFn,
   __kind__ = "C",
   new = multiNew,
@@ -979,7 +979,7 @@ setmetatable(Object, { __call = new })
 
 ValueType = {
   __kind__ = "S",
-  __default__ = function(cls) 
+  default = function(cls) 
     return setmetatable({}, cls)
   end,
   __clone__ = function(this)
@@ -1034,7 +1034,7 @@ function System.tuple(...)
 end
 
 local ValueTuple = {
-  __default__ = function()
+  default = function()
     throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
   end,
   Deconstruct = tupleDeconstruct,
@@ -1112,7 +1112,7 @@ end
 
 function System.GetValueOrDefaultT(this, T)
   if this == nil then
-    return T:__default__()
+    return T:default()
   end
   return this
 end

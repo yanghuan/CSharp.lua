@@ -141,7 +141,7 @@ end
 function Collection.buildArray(T, size)
   local t = setmetatable({}, T)
   if size > 0 then
-    local default = T.__genericT__:__default__()
+    local default = T.__genericT__:default()
     if default == nil then
       default = null
     end
@@ -298,7 +298,7 @@ function Collection.findOfArray(t, match)
       return item
     end
   end
-  return t.__genericT__:__default__()
+  return t.__genericT__:default()
 end
 
 function Collection.findAllOfArray(t, match)
@@ -325,7 +325,7 @@ function Collection.findLastOfArray(t, match)
       return item
     end
   end
-  return t.__genericT__:__default__()
+  return t.__genericT__:default()
 end
 
 function Collection.findLastIndexOfArray(t, ...)
@@ -649,7 +649,7 @@ KeyValuePair = System.defStc("System.KeyValuePair", {
   __clone__ = function (this)
     return setmetatable({ Key = this.Key, Value = this.Value }, KeyValuePair)
   end,
-  __default__ = function (T)
+  default = function (T)
     throw(System.NotSupportedException("KeyValuePair not support default(T)"))
   end,
   Create = function (key, value)
