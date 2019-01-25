@@ -184,7 +184,7 @@ local function setBase(cls, kind)
       if type(extends) == "function" then
         extends = extends(global, cls)
       end 
-      cls.__interfaces__ = extends
+      cls.interface = extends
       cls.__inherits__ = nil
     end
     setmetatable(cls, ValueType)
@@ -196,13 +196,13 @@ local function setBase(cls, kind)
       end           
       local base = extends[1]
       if base.__kind__ == "I" then
-        cls.__interfaces__ = extends
+        cls.interface = extends
         setmetatable(cls, Object)
       else
         setmetatable(cls, base)
         if #extends > 1 then
           tremove(extends, 1)
-          cls.__interfaces__ = extends
+          cls.interface = extends
         end
       end
       cls.__inherits__ = nil
@@ -223,8 +223,8 @@ local function staticCtorSetBase(cls)
   local kind = cls.__kind__
   cls.__kind__ = nil
   setBase(cls, kind)
-  cls:__staticCtor__()
-  cls.__staticCtor__ = nil
+  cls:static()
+  cls.static = nil
 end
 
 local staticCtorMetatable = {
@@ -287,7 +287,7 @@ local function def(name, kind, cls, generic)
     cls.__name__ = generic
   end
   if kind == "C" or kind == "S" then
-    if cls.__staticCtor__ == nil then
+    if cls.static == nil then
       setBase(cls, kind)
     else
       setHasStaticCtor(cls, kind)
@@ -298,7 +298,7 @@ local function def(name, kind, cls, generic)
       if type(extends) == "function" then
         extends = extends(global, cls)
       end
-      cls.__interfaces__ = extends
+      cls.interface = extends
       cls.__inherits__ = nil
     end
     setmetatable(cls, interfaceMetatable)
