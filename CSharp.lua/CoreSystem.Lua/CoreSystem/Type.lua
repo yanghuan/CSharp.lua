@@ -189,7 +189,7 @@ local function getInterfaces(this)
     interfaces = {}
     local p = this.c
     repeat
-      local interfacesCls = p.__interfaces__
+      local interfacesCls = p.interface
       if interfacesCls ~= nil then
         for _, i in ipairs(interfacesCls) do
           interfaces[#interfaces + 1] = typeof(i)
@@ -280,7 +280,7 @@ System.define("System.Type", Type)
 
 local function isInterfaceOf(t, ifaceType)
   repeat
-    local interfaces = t.__interfaces__
+    local interfaces = t.interface
     if interfaces then
       for _, i in ipairs(interfaces) do
         if i == ifaceType or isInterfaceOf(i, ifaceType) then

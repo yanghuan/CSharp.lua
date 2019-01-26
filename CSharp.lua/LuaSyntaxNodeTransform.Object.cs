@@ -916,9 +916,7 @@ namespace CSharpLua {
         else {
           propertySymbol = (IPropertySymbol)typeSymbol.GetMembers().First(i => i.IsIndexerProperty());
         }
-        LuaExpressionSyntax resultExpression = InternalVisitElementAccessExpression(propertySymbol, node);
-        CheckConversion(node, ref resultExpression);
-        return resultExpression;
+        return InternalVisitElementAccessExpression(propertySymbol, node);
       }
       else {
         return InternalVisitElementAccessExpression((IPropertySymbol)symbol, node);
@@ -1043,7 +1041,9 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitArrowExpressionClause(ArrowExpressionClauseSyntax node) {
-      return node.Expression.Accept(this);
+      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      CheckConversion(node.Expression, ref expression);
+      return expression;
     }
 
     public override LuaSyntaxNode VisitLocalFunctionStatement(LocalFunctionStatementSyntax node) {
