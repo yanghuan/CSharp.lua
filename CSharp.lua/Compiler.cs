@@ -35,7 +35,6 @@ namespace CSharpLua {
     private readonly string[] cscArguments_;
     private readonly bool isNewest_;
     private readonly string[] attributes_;
-    public bool IsExportReflectionFile { get; set; }
     public bool IsExportMetadata { get; set; }
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
@@ -107,7 +106,6 @@ namespace CSharpLua {
       bool isNewest,
       string[] attributes,
       string folder,
-      bool isExportReflectionFile = false,
       bool IsExportMetadata = false
       ) {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
@@ -117,7 +115,6 @@ namespace CSharpLua {
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsNewest = isNewest,
         HasSemicolon = false,
-        IsExportReflectionFile = isExportReflectionFile,
         IsExportMetadata = IsExportMetadata
       };
       return new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, metas, setting, attributes, folder);
@@ -126,7 +123,7 @@ namespace CSharpLua {
     public void Compile() {
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var generator = Build(cscArguments_, codes, Libs, Metas, isNewest_, attributes_, folder_, IsExportReflectionFile, IsExportMetadata);
+      var generator = Build(cscArguments_, codes, Libs, Metas, isNewest_, attributes_, folder_, IsExportMetadata);
       generator.Generate(output_);
     }
 

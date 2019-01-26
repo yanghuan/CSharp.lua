@@ -36,7 +36,6 @@ Options
 
 -c              : support classic lua version(5.1), default support 5.3
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
--f              : export some class metadatas to reflection.lua, could change in the future
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 ";
     public static void Main(string[] args) {
@@ -60,10 +59,8 @@ Options
             atts = string.Empty;
           }
           string csc = GetCSCArgument(cmds);
-          bool isExportReflectionFile = cmds.ContainsKey("-f");
           bool isExportMetadata = cmds.ContainsKey("-metadata");
           Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts) {
-            IsExportReflectionFile = isExportReflectionFile,
             IsExportMetadata = isExportMetadata,
           };
           c.Compile();

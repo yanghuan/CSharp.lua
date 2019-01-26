@@ -54,7 +54,6 @@ namespace CSharpLua {
       private int indent_;
       public string IndentString { get; private set; }
       public bool IsNewest { get; set; }
-      public bool IsExportReflectionFile { get; set; }
       public bool IsExportMetadata { get; set; }
 
       public SettingInfo() {
@@ -165,9 +164,6 @@ namespace CSharpLua {
         modules.Add(module);
       }
       ExportManifestFile(modules, outFolder);
-      if (Setting.IsExportReflectionFile) {
-        ExportReflectionFile(modules, outFolder);
-      }
     }
 
     public string GenerateSingle() {
@@ -423,16 +419,6 @@ namespace CSharpLua {
           string outFile = Path.Combine(outFolder, kManifestFile);
           Write(luaCompilationUnit, outFile);
         }
-      }
-    }
-
-    private void ExportReflectionFile(List<string> modules, string outFolder) {
-      if (modules.Count > 0) {
-        modules.Sort();
-        var types = GetExportTypes();
-
-        var generator = new LuaReflectionGenerator(this);
-        generator.GenerateReflectionFile(types.Select(v => v as ITypeSymbol).ToList(), outFolder);
       }
     }
 

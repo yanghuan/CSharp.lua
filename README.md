@@ -66,8 +66,9 @@ Options
 -c              : support classic lua version(5.1), default support 5.3 
 -i              : indent number, default is 2
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
+-metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 ```
-Make sure that the. NET core 2.0+ is installed.  
+Make sure that the. NET core 2.0+ is installed.
 https://dotnet.microsoft.com/download
 
 ### Download
