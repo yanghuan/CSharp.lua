@@ -548,17 +548,20 @@ namespace CSharpLua {
       table.Add(new LuaStringLiteralExpressionSyntax(result.Symbol.Name));
       table.Add(result.Symbol.GetMetaDataAttributeFlags());
       table.Add(result.Name);
-      if (!result.Symbol.Parameters.IsEmpty) {
-        var parameters = result.Symbol.Parameters.Select(i => GetTypeNameWithoutImport(i.Type));
-        if (result.Symbol.IsGenericMethod) {
-          var function = new LuaFunctionExpressionSyntax();
-          function.AddParameters(result.Symbol.TypeParameters.Select(i => new LuaParameterSyntax(i.Name)));
-          function.AddStatement(new LuaMultipleReturnStatementSyntax(parameters));
-          table.Add(function);
-        } else {
-          table.AddRange(parameters);
-        }
+
+      var parameters = result.Symbol.Parameters.Select(i => GetTypeNameWithoutImport(i.Type)).ToList();
+      if (!result.Symbol.ReturnsVoid) {
+        parameters.Add(GetTypeNameWithoutImport(result.Symbol.ReturnType));
       }
+      if (result.Symbol.IsGenericMethod) {
+        var function = new LuaFunctionExpressionSyntax();
+        function.AddParameters(result.Symbol.TypeParameters.Select(i => new LuaParameterSyntax(i.Name)));
+        function.AddStatement(new LuaMultipleReturnStatementSyntax(parameters));
+        table.Add(function);
+      } else {
+        table.AddRange(parameters);
+      }
+
       table.AddRange(result.Attributes);
       CurType.AddMethodMetaData(table);
     }
@@ -2904,10 +2907,10 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildLogicAndBinaryExpression(BinaryExpressionSyntax node) {
-      var left = (LuaExpressionSyntax)node.Left.Accept(this);
+      var left = VisitExpression(node.Left);
       LuaBlockSyntax rightBody = new LuaBlockSyntax();
       blocks_.Push(rightBody);
-      var right = (LuaExpressionSyntax)node.Right.Accept(this);
+      var right = VisitExpression(node.Right);
       blocks_.Pop();
       if (rightBody.Statements.Count == 0) {
         return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.And, right);

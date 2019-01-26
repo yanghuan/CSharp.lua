@@ -1040,6 +1040,9 @@ namespace CSharpLua {
       switch (symbol.Kind) {
         case SymbolKind.Method: {
           var methodSymbol = (IMethodSymbol)symbol;
+          if (!methodSymbol.ReturnsVoid) {
+            flags |= 1 << 7;
+          }
           int parameterCount = methodSymbol.Parameters.Length;
           if (parameterCount > 0) {
             Contract.Assert(parameterCount < kParametersMaxCount);

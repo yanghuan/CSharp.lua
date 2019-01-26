@@ -88,7 +88,7 @@ local MemberInfo = define("System.Reflection.MemberInfo", {
     return typeof(this.c)
   end,
   getIsStatic = function (this)
-    return band(checkMatadata(this.metadata)[2], 0x8)
+    return band(checkMatadata(this.metadata)[2], 0x8) == 1
   end,
   getIsPublic = function (this)
     return band(checkMatadata(this.metadata)[2], 0x7) == 6
@@ -354,10 +354,39 @@ local PropertyInfo = define("System.Reflection.PropertyInfo", {
   end
 })
 
+local function getMethodAttributesIndex(metadata)
+  local flags = metadata[2]
+  local index
+  local typeParametersCount = band(flags, 0xC00)
+  if typeParametersCount == 0 then
+    local parameterCount = band(flags, 0x300)
+    if band(flags, 0x80) == 0 then
+      index = 4 + parameterCount
+    else
+      index = 5 + parameterCount
+    end
+  else 
+    index = 5
+  end
+  return index
+end
+
 local MethodInfo = define("System.Reflection.MethodInfo", {
   __eq = eq,
   __inherits__ = { MemberInfo },
   memberType = 8,
+  getReturnType = function (this)
+    local metadata = checkMatadata(this.metadata)
+    local flags = metadata[2]
+    if band(flags, 0x80) == 0 then
+      return Type.Void
+    end
+    if band(flags, 0xC00) > 0 then
+      assert(false, "not implement for generic method")
+    end
+    local parameterCount = band(flags, 0x300)
+    return typeof(metadata[4 + parameterCount])
+  end,
   Invoke = function (this, obj, parameters)
     local metadata = this.metadata
     if metadata then
@@ -418,8 +447,8 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
     if attributeType == nil then throw(ArgumentNullException()) end
     local metadata = this.metadata
     if metadata then
-      local parameterCount = band(metadata[2], 0x300)
-      return isMetadataDefined(metadata, 4 + parameterCount, attributeType)
+      local index = getMethodAttributesIndex(metadata)
+      return isMetadataDefined(metadata, index, attributeType)
     end
     return false
   end,
@@ -432,8 +461,8 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
     local t = {}
     local metadata = this.metadata
     if metadata then
-      local parameterCount = band(metadata[2], 0x300)
-      return fillMetadataCustomAttributes(t, metadata, 4 + parameterCount, attributeType)
+      local index = getMethodAttributesIndex(metadata)
+      return fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
   end
