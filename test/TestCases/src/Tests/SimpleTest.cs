@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -154,5 +154,20 @@ namespace TestCases
                 return act1.Equals(obj);
             }
         }
+
+    class PropValue<T> {
+      public T value;
+      public static implicit operator T(PropValue<T> v) {
+        return v.value;
+      }
     }
+
+    [TestCase]
+    public static void ImplicitTest01() {
+      var value = new PropValue<bool>() { value = false };
+      if(value) {
+        throw new Exception("the correct value is false");
+      }
+    }
+  }
 }
