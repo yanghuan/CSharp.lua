@@ -162,6 +162,7 @@ namespace TestCases
       }
     }
 
+
     [TestCase]
     public static void ImplicitTest01() {
       var value = new PropValue<bool>() { value = false };
@@ -169,12 +170,52 @@ namespace TestCases
         throw new Exception("the correct value is false");
       }
     }
-    private static float _lastAngle;//上次已扫描角度
+
+
+    private static float _lastAngle;
     [TestCase]
     public static void ImplicitTest02() {
-      //新角度和上次扫描过后的老角度做细分，每一度发射一次面检测,最多执行10次
       for (float tempAngle = _lastAngle, j = 0; j < 10; j++) {
       }
     }
+
+
+    static int delayCollision;
+    [TestCase]
+    public static void ImplicitTest03() {
+      var value = new PropValue<bool>() { value = false };
+      if (value && --delayCollision <= 0) {
+        throw new Exception("the correct value is false");
+      }
+    }
+
+    static bool GetOutValue(out int value) {
+      value = 123;
+      return true;
+    }
+    [TestCase]
+    public static void ImplicitTest04() {
+      var value = new PropValue<bool>() { value = false };
+      int outValue;
+      if (value && GetOutValue(out outValue)) {
+        throw new Exception("the correct value is false");
+      }
+    }
+
+
+    static bool GetRefValue(ref int value) {
+      value = 123;
+      return true;
+    }
+    [TestCase]
+    public static void ImplicitTest05() {
+      var value = new PropValue<bool>() { value = false };
+      int outValue = 0;
+      if (value && GetRefValue(ref outValue)) {
+        throw new Exception("the correct value is false");
+      }
+    }
+
+
   }
 }
