@@ -279,6 +279,13 @@ namespace CSharpLua {
       return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_UInt64;
     }
 
+    public static bool IsNumberType(this ITypeSymbol type) {
+      if (type.IsNullableType()) {
+        type = ((INamedTypeSymbol)type).TypeArguments.First();
+      }
+      return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_Double;
+    }
+
     public static bool IsNullableType(this ITypeSymbol type) {
       return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
     }

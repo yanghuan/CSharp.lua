@@ -3053,7 +3053,7 @@ namespace CSharpLua {
 
     private void ChecktIncrementExpression(ExpressionSyntax operand, ref LuaExpressionSyntax expression, bool isAddOrAssignment) {
       var symbol = semanticModel_.GetTypeInfo(operand).Type;
-      if (!symbol.IsIntegerType()) {
+      if (!symbol.IsNumberType()) {
         var op_Implicits = symbol.GetMembers("op_Implicit").OfType<IMethodSymbol>();
         var methodSymbol = op_Implicits.FirstOrDefault(i => isAddOrAssignment ? i.ReturnType.IsIntegerType() : i.ReturnType.Equals(symbol));
         if (methodSymbol != null) {
