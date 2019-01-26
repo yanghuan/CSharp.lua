@@ -155,10 +155,10 @@ local function genericName(name, ...)
   return tconcat(t)
 end
 
-local enumMetatable = { __kind__ = "E", default = zeroFn, __index = false }
+local enumMetatable = { class = "E", default = zeroFn, __index = false }
 enumMetatable.__index = enumMetatable
 
-local interfaceMetatable = { __kind__ = "I", default = emptyFn, __index = false }
+local interfaceMetatable = { class = "I", default = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
 local function applyMetadata(cls)
@@ -195,7 +195,7 @@ local function setBase(cls, kind)
         extends = extends(global, cls)
       end           
       local base = extends[1]
-      if base.__kind__ == "I" then
+      if base.class == "I" then
         cls.interface = extends
         setmetatable(cls, Object)
       else
@@ -220,8 +220,8 @@ local function staticCtorSetBase(cls)
     cls[k] = v
   end
   cls[cls] = nil
-  local kind = cls.__kind__
-  cls.__kind__ = nil
+  local kind = cls.class
+  cls.class = nil
   setBase(cls, kind)
   cls:static()
   cls.static = nil
@@ -252,7 +252,7 @@ local function setHasStaticCtor(cls, kind)
   end  
   cls[cls] = t
   cls.__name__ = name
-  cls.__kind__ = kind
+  cls.class = kind
   cls.__call = new
   cls.__index = cls
   setmetatable(cls, staticCtorMetatable)
@@ -966,7 +966,7 @@ Object = defCls("System.Object", {
   __call = new,
   default = emptyFn,
   __ctor__ = emptyFn,
-  __kind__ = "C",
+  class = "C",
   new = multiNew,
   base = base,
   EqualsObj = equals,
@@ -979,7 +979,7 @@ Object = defCls("System.Object", {
 setmetatable(Object, { __call = new })
 
 ValueType = {
-  __kind__ = "S",
+  class = "S",
   default = function(cls) 
     return setmetatable({}, cls)
   end,
@@ -991,7 +991,7 @@ ValueType = {
       local cls = getmetatable(this)
       local t = {}
       for k, v in pairs(this) do
-        if type(v) == "table" and v.__kind__ == "S" then
+        if type(v) == "table" and v.class == "S" then
           t[k] = v:__clone__()
         else
           t[k] = v

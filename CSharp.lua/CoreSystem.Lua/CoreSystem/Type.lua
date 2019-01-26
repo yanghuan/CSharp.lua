@@ -112,7 +112,7 @@ function Type.getIsGenericType(this)
 end
 
 function Type.getIsEnum(this)
-  return this.c.__kind__ == "E"
+  return this.c.class == "E"
 end
 
 function Type.getName(this)
@@ -172,13 +172,13 @@ end
 Type.IsSubclassOf = isSubclassOf
 
 local function getIsInterface(this)
-  return this.c.__kind__ == "I"
+  return this.c.class == "I"
 end
 
 Type.getIsInterface = getIsInterface
 
 local function getIsValueType(this)
-  return this.c.__kind__ == "S"
+  return this.c.class == "S"
 end
 
 Type.getIsValueType = getIsValueType
@@ -313,7 +313,7 @@ local function isStringOrBoolean(cls, StringOrBoolean)
   if cls == StringOrBoolean then
     return true
   end
-  if cls.__kind__ == "I" then
+  if cls.class == "I" then
     return isInterfaceOf(StringOrBoolean, cls)
   end
   return false 
@@ -339,7 +339,7 @@ function isTypeOf(obj, cls)
         end
       end
       return true
-    elseif cls.__kind__ == "I" then
+    elseif cls.class == "I" then
       return isInterfaceOf(Number, cls)
     end
     return false
@@ -350,7 +350,7 @@ function isTypeOf(obj, cls)
     if t == cls or t == nil then
       return true
     end
-    if cls.__kind__ == "I" then
+    if cls.class == "I" then
       return isInterfaceOf(t, cls)
     else
       local base = getmetatable(t)
@@ -392,7 +392,7 @@ end
 
 function System.cast(cls, obj)
   if obj == nil then
-    if cls.__kind__ ~= "S" then
+    if cls.class ~= "S" then
       return nil
     end
     throw(NullReferenceException(), 1)

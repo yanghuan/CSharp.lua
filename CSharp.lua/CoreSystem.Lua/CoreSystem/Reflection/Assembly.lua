@@ -121,7 +121,7 @@ end
 
 local function checkValue(value, valueClass)
   if value == nil then
-    if valueClass.__kind__ == "S" then
+    if valueClass.class == "S" then
       value = valueClass:default()
     end
   else
