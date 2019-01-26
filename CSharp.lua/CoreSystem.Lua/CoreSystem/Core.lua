@@ -337,11 +337,12 @@ System = {
   try = try,
   throw = throw,
   getClass = set,
+  genericKey = genericKey,
   define = defCls,
   defInf = defInf,
   defStc = defStc,
   defEnum = defEnum,
-  global = global,
+  global = global
 }
 
 local System = System

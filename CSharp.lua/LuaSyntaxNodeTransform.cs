@@ -77,6 +77,8 @@ namespace CSharpLua {
     private int noImportTypeNameCounter_;
     public bool IsNoImportTypeName => noImportTypeNameCounter_ > 0;
     public bool IsNoneGenericTypeCounter => generator_.IsNoneGenericTypeCounter;
+    private int metadataTypeNameCounter_;
+    public bool IsMetadataTypeName => metadataTypeNameCounter_ > 0;
 
     private static readonly Dictionary<string, string> operatorTokenMapps_ = new Dictionary<string, string>() {
       ["!="] = LuaSyntaxNode.Tokens.NotEquals,
@@ -546,9 +548,9 @@ namespace CSharpLua {
       table.Add(result.Symbol.GetMetaDataAttributeFlags());
       table.Add(result.Name);
 
-      var parameters = result.Symbol.Parameters.Select(i => GetTypeNameWithoutImport(i.Type)).ToList();
+      var parameters = result.Symbol.Parameters.Select(i => GetTypeNameOfMetadata(i.Type)).ToList();
       if (!result.Symbol.ReturnsVoid) {
-        parameters.Add(GetTypeNameWithoutImport(result.Symbol.ReturnType));
+        parameters.Add(GetTypeNameOfMetadata(result.Symbol.ReturnType));
       }
       if (result.Symbol.IsGenericMethod) {
         var function = new LuaFunctionExpressionSyntax();
@@ -736,7 +738,7 @@ namespace CSharpLua {
       var data = new LuaTableExpression() { IsSingleLine = true };
       data.Add(new LuaStringLiteralExpressionSyntax(symbol.Name));
       data.Add(symbol.GetMetaDataAttributeFlags());
-      data.Add(GetTypeNameWithoutImport(symbol.Type));
+      data.Add(GetTypeNameOfMetadata(symbol.Type));
       if (generator_.IsNeedRefactorName(symbol)) {
         data.Add(new LuaStringLiteralExpressionSyntax(fieldName));
       }
@@ -878,7 +880,7 @@ namespace CSharpLua {
       var data = new LuaTableExpression() { IsSingleLine = true };
       data.Add(new LuaStringLiteralExpressionSyntax(symol.Name));
       data.Add(symol.GetMetaDataAttributeFlags(kind));
-      data.Add(GetTypeNameWithoutImport(symol.Type));
+      data.Add(GetTypeNameOfMetadata(symol.Type));
       if (kind == PropertyMethodKind.Field) {
         if (generator_.IsNeedRefactorName(symol)) {
           data.Add(new LuaStringLiteralExpressionSyntax(name));

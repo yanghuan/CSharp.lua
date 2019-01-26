@@ -675,6 +675,13 @@ namespace CSharpLua {
       return name;
     }
 
+    private LuaExpressionSyntax GetTypeNameOfMetadata(ISymbol symbol) {
+      ++metadataTypeNameCounter_;
+      var name = GetTypeNameWithoutImport(symbol);
+      --metadataTypeNameCounter_;
+      return name;
+    }
+
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
       if (name is LuaPropertyAdapterExpressionSyntax propertyMethod) {
         var arguments = propertyMethod.ArgumentList.Arguments;

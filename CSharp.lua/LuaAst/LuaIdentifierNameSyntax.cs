@@ -55,6 +55,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax Property = "System.property";
     public static readonly LuaIdentifierNameSyntax Event = "System.event";
     public static readonly LuaIdentifierNameSyntax SystemNull = "System.null";
+    public static readonly LuaIdentifierNameSyntax SystemVoid = "System.Void";
     public static readonly LuaIdentifierNameSyntax Nil = "nil";
     public static readonly LuaIdentifierNameSyntax TypeOf = "System.typeof";
     public static readonly LuaIdentifierNameSyntax Continue = "continue";

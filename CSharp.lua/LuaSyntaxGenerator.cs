@@ -1405,6 +1405,18 @@ namespace CSharpLua {
       }
 
       if (namedTypeSymbol.IsDelegateType()) {
+        if (transfor != null && transfor.IsMetadataTypeName) {
+          var delegateMethod = namedTypeSymbol.DelegateInvokeMethod;
+          if (!delegateMethod.Parameters.IsEmpty || !delegateMethod.ReturnsVoid) {
+            var arguments = delegateMethod.Parameters.Select(i => GetTypeName(i.Type, transfor)).ToList();
+            if (delegateMethod.ReturnsVoid) {
+              arguments.Add(LuaIdentifierNameSyntax.SystemVoid);
+            } else {
+              arguments.Add(GetTypeName(delegateMethod.ReturnType, transfor));
+            }
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Delegate, arguments); ;
+          }
+        }
         return LuaIdentifierNameSyntax.Delegate;
       }
 

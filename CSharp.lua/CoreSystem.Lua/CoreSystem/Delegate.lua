@@ -251,4 +251,18 @@ function Delegate.GetType(this)
   return System.typeof(Delegate)
 end
 
+local genericKey = System.genericKey
+
+local mt = {}
+local function makeGenericTypes(...)
+  local gt, gk = genericKey(mt, ...)
+  local t = gt[gk]
+  if t == nil then
+    t = setmetatable({ ... }, Delegate)
+    gt[gk] = t
+  end
+  return t
+end
+
 System.define("System.Delegate", Delegate)
+setmetatable(Delegate, { __index = System.Object, __call = makeGenericTypes })
