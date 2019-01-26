@@ -216,6 +216,15 @@ namespace TestCases
       }
     }
 
+    [TestCase]
+    public static void ImplicitTest06() {
+      var value = new PropValue<bool>() { value = false };
+      int outValue = 0;
+      if (value && --delayCollision <= 0 && GetOutValue(out outValue) && GetRefValue(ref outValue)) {
+        throw new Exception("the correct value is false");
+      }
+    }
+
 
   }
 }
