@@ -169,5 +169,12 @@ namespace TestCases
         throw new Exception("the correct value is false");
       }
     }
+    private static float _lastAngle;//上次已扫描角度
+    [TestCase]
+    public static void ImplicitTest02() {
+      //新角度和上次扫描过后的老角度做细分，每一度发射一次面检测,最多执行10次
+      for (float tempAngle = _lastAngle, j = 0; j < 10; j++) {
+      }
+    }
   }
 }
