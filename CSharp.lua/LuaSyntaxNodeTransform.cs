@@ -826,8 +826,7 @@ namespace CSharpLua {
         var function = new LuaFunctionExpressionSyntax();
         PushFunction(function);
         blocks_.Push(function.Body);
-        valueExpression = (LuaExpressionSyntax)expression.Accept(this);
-        CheckConversion(expression, ref valueExpression);
+        valueExpression = VisitExpression(expression);
         blocks_.Pop();
         PopFunction();
         if (function.Body.Statements.Count > 0) {
@@ -1314,8 +1313,7 @@ namespace CSharpLua {
         LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
         returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
         if (node.Expression != null) {
-          var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-          CheckConversion(node.Expression, ref expression);
+          var expression = VisitExpression(node.Expression);
           returnStatement.Expressions.Add(expression);
         }
         result = returnStatement;
@@ -1324,17 +1322,13 @@ namespace CSharpLua {
         if (curMethodInfo != null && curMethodInfo.RefOrOutParameters.Count > 0) {
           LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
           if (node.Expression != null) {
-            var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-            CheckConversion(node.Expression, ref expression);
+            var expression = VisitExpression(node.Expression);
             returnStatement.Expressions.Add(expression);
           }
           returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
           result = returnStatement;
         } else {
-          var expression = (LuaExpressionSyntax)node.Expression?.Accept(this);
-          if (node.Expression != null) {
-            CheckConversion(node.Expression, ref expression);
-          }
+          var expression = node.Expression != null ? VisitExpression(node.Expression) : null;
           result = new LuaReturnStatementSyntax(expression);
         }
       }
@@ -1363,7 +1357,6 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildCommonAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, string operatorToken, ExpressionSyntax rightNode, ExpressionSyntax parnet) {
-      CheckConversion(rightNode, ref right);
       if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
         LuaExpressionSyntax expression = null;
         var geter = propertyAdapter.GetCloneOfGet();
@@ -1393,7 +1386,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax BuildCommonAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string operatorToken, ExpressionSyntax parnet) {
       var left = (LuaExpressionSyntax)leftNode.Accept(this);
-      var right = (LuaExpressionSyntax)rightNode.Accept(this);
+      var right = VisitExpression(rightNode);
       return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode, parnet);
     }
 
@@ -1452,13 +1445,12 @@ namespace CSharpLua {
       switch (kind) {
         case SyntaxKind.SimpleAssignmentExpression: {
           var left = (LuaExpressionSyntax)leftNode.Accept(this);
-          var right = (LuaExpressionSyntax)rightNode.Accept(this);
+          var right = VisitExpression(rightNode);
           if (leftNode.Kind().IsTupleDeclaration()) {
             if (!rightNode.IsKind(SyntaxKind.TupleExpression)) {
               right = BuildDeconstructExpression(rightNode, right);
             }
           }
-          CheckConversion(rightNode, ref right);
           return BuildLuaSimpleAssignmentExpression(left, right);
         }
         case SyntaxKind.AddAssignmentExpression: {
@@ -2641,8 +2633,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitEqualsValueClause(EqualsValueClauseSyntax node) {
-      var expression = (LuaExpressionSyntax)node.Value.Accept(this);
-      CheckConversion(node.Value, ref expression);
+      var expression = VisitExpression(node.Value);
       return new LuaEqualsValueClauseSyntax(expression);
     }
 
@@ -2666,7 +2657,7 @@ namespace CSharpLua {
     #region if else switch
 
     public override LuaSyntaxNode VisitIfStatement(IfStatementSyntax node) {
-      var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
+      var condition = VisitExpression(node.Condition);
       LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
       WriteStatementOrBlock(node.Statement, ifStatement.Body);
       ifStatements_.Push(ifStatement);
@@ -2678,7 +2669,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitElseClause(ElseClauseSyntax node) {
       if (node.Statement.IsKind(SyntaxKind.IfStatement)) {
         var ifStatement = (IfStatementSyntax)node.Statement;
-        var condition = (LuaExpressionSyntax)ifStatement.Condition.Accept(this);
+        var condition = VisitExpression(ifStatement.Condition);
         LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(condition);
         WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
         ifStatements_.Peek().ElseIfStatements.Add(elseIfStatement);
@@ -2867,10 +2858,8 @@ namespace CSharpLua {
     }
 
     private LuaBinaryExpressionSyntax BuildBinaryExpression(BinaryExpressionSyntax node, string operatorToken) {
-      var left = (LuaExpressionSyntax)node.Left.Accept(this);
-      CheckConversion(node.Left, ref left);
-      var right = (LuaExpressionSyntax)node.Right.Accept(this);
-      CheckConversion(node.Right, ref right);
+      var left = VisitExpression(node.Left);
+      var right = VisitExpression(node.Right);
       return new LuaBinaryExpressionSyntax(left, operatorToken, right);
     }
 
@@ -2892,10 +2881,10 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildLogicOrBinaryExpression(BinaryExpressionSyntax node) {
-      var left = (LuaExpressionSyntax)node.Left.Accept(this);
+      var left = VisitExpression(node.Left);
       LuaBlockSyntax rightBody = new LuaBlockSyntax();
       blocks_.Push(rightBody);
-      var right = (LuaExpressionSyntax)node.Right.Accept(this);
+      var right = VisitExpression(node.Right);
       blocks_.Pop();
       if (rightBody.Statements.Count == 0) {
         return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.Or, right);
@@ -3062,8 +3051,20 @@ namespace CSharpLua {
       return false;
     }
 
-    private LuaSyntaxNode BuildPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, SyntaxNode node, bool isLocalVar = false) {
-      LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(operand, operatorToken, LuaIdentifierNameSyntax.One);
+    private void ChecktIncrementExpression(ExpressionSyntax operand, ref LuaExpressionSyntax expression, bool isAddOrAssignment) {
+      var symbol = semanticModel_.GetTypeInfo(operand).Type;
+      if (!symbol.IsIntegerType()) {
+        var op_Implicits = symbol.GetMembers("op_Implicit").OfType<IMethodSymbol>();
+        var methodSymbol = op_Implicits.First(i => isAddOrAssignment ? i.ReturnType.IsIntegerType() : i.ReturnType.Equals(symbol));
+        expression = BuildConversionExpression(methodSymbol, expression);
+      }
+    }
+
+    private LuaSyntaxNode BuildPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, PrefixUnaryExpressionSyntax node, bool isLocalVar = false) {
+      var left = operand;
+      ChecktIncrementExpression(node.Operand, ref left, true);
+      LuaExpressionSyntax binary = new LuaBinaryExpressionSyntax(left, operatorToken, LuaIdentifierNameSyntax.One);
+      ChecktIncrementExpression(node.Operand, ref binary, false);
       if (isSingleLine) {
         return new LuaAssignmentExpressionSyntax(operand, binary);
       } else {
@@ -3079,9 +3080,12 @@ namespace CSharpLua {
       }
     }
 
-    private LuaSyntaxNode BuildPropertyPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaPropertyAdapterExpressionSyntax get, LuaPropertyAdapterExpressionSyntax set, SyntaxNode node) {
+    private LuaSyntaxNode BuildPropertyPrefixUnaryExpression(bool isSingleLine, string operatorToken, LuaPropertyAdapterExpressionSyntax get, LuaPropertyAdapterExpressionSyntax set, PrefixUnaryExpressionSyntax node) {
       set.IsGetOrAdd = false;
-      var binary = new LuaBinaryExpressionSyntax(get, operatorToken, LuaIdentifierNameSyntax.One);
+      LuaExpressionSyntax left = get;
+      ChecktIncrementExpression(node.Operand, ref left, true);
+      LuaExpressionSyntax binary = new LuaBinaryExpressionSyntax(left, operatorToken, LuaIdentifierNameSyntax.One);
+      ChecktIncrementExpression(node.Operand, ref binary, false);
       if (isSingleLine) {
         set.ArgumentList.AddArgument(binary);
         return set;
@@ -3159,29 +3163,41 @@ namespace CSharpLua {
       }
     }
 
-    private LuaSyntaxNode BuildPostfixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, SyntaxNode node) {
+    private LuaSyntaxNode BuildPostfixUnaryExpression(bool isSingleLine, string operatorToken, LuaExpressionSyntax operand, PostfixUnaryExpressionSyntax node) {
       if (isSingleLine) {
-        LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(operand, operatorToken, LuaIdentifierNameSyntax.One);
+        var left = operand;
+        ChecktIncrementExpression(node.Operand, ref left, true);
+        LuaExpressionSyntax binary = new LuaBinaryExpressionSyntax(left, operatorToken, LuaIdentifierNameSyntax.One);
+        ChecktIncrementExpression(node.Operand, ref binary, false);
         return new LuaAssignmentExpressionSyntax(operand, binary);
       } else {
         var temp = GetTempIdentifier(node);
         CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, operand));
-        LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(temp, operatorToken, LuaIdentifierNameSyntax.One);
+        LuaExpressionSyntax left = temp;
+        ChecktIncrementExpression(node.Operand, ref left, true);
+        LuaExpressionSyntax binary = new LuaBinaryExpressionSyntax(left, operatorToken, LuaIdentifierNameSyntax.One);
+        ChecktIncrementExpression(node.Operand, ref binary, false);
         CurBlock.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(operand, binary)));
         return temp;
       }
     }
 
-    private LuaSyntaxNode BuildPropertyPostfixUnaryExpression(bool isSingleLine, string operatorToken, LuaPropertyAdapterExpressionSyntax get, LuaPropertyAdapterExpressionSyntax set, SyntaxNode node) {
+    private LuaSyntaxNode BuildPropertyPostfixUnaryExpression(bool isSingleLine, string operatorToken, LuaPropertyAdapterExpressionSyntax get, LuaPropertyAdapterExpressionSyntax set, PostfixUnaryExpressionSyntax node) {
       set.IsGetOrAdd = false;
       if (isSingleLine) {
-        var binary = new LuaBinaryExpressionSyntax(get, operatorToken, LuaIdentifierNameSyntax.One);
+        LuaExpressionSyntax left = get;
+        ChecktIncrementExpression(node.Operand, ref left, true);
+        LuaExpressionSyntax binary = new LuaBinaryExpressionSyntax(left, operatorToken, LuaIdentifierNameSyntax.One);
+        ChecktIncrementExpression(node.Operand, ref binary, false);
         set.ArgumentList.AddArgument(binary);
         return set;
       } else {
         var temp = GetTempIdentifier(node);
         CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp, get));
-        LuaBinaryExpressionSyntax binary = new LuaBinaryExpressionSyntax(temp, operatorToken, LuaIdentifierNameSyntax.One);
+        LuaExpressionSyntax left = temp;
+        ChecktIncrementExpression(node.Operand, ref left, true);
+        LuaExpressionSyntax binary = new LuaBinaryExpressionSyntax(left, operatorToken, LuaIdentifierNameSyntax.One);
+        ChecktIncrementExpression(node.Operand, ref binary, false);
         set.ArgumentList.AddArgument(binary);
         CurBlock.Statements.Add(new LuaExpressionStatementSyntax(set));
         return temp;
@@ -3293,7 +3309,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitWhileStatement(WhileStatementSyntax node) {
       LuaBlockSyntax conditionBody = new LuaBlockSyntax();
       blocks_.Push(conditionBody);
-      var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
+      var condition = VisitExpression(node.Condition);
       blocks_.Pop();
 
       LuaWhileStatementSyntax whileStatement;
@@ -3327,7 +3343,7 @@ namespace CSharpLua {
 
       LuaBlockSyntax conditionBody = new LuaBlockSyntax();
       blocks_.Push(conditionBody);
-      LuaExpressionSyntax condition = node.Condition != null ? (LuaExpressionSyntax)node.Condition.Accept(this) : LuaIdentifierNameSyntax.True;
+      LuaExpressionSyntax condition = node.Condition != null ? VisitExpression(node.Condition) : LuaIdentifierNameSyntax.True;
       blocks_.Pop();
 
       LuaWhileStatementSyntax whileStatement;
@@ -3356,7 +3372,7 @@ namespace CSharpLua {
       LuaBlockSyntax body = new LuaBlockSyntax();
       blocks_.Push(body);
       VisitLoopBody(node.Statement, body);
-      var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
+      var condition = VisitExpression(node.Condition);
       var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not);
       blocks_.Pop();
       return new LuaRepeatStatementSyntax(newCondition, body);

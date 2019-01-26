@@ -983,6 +983,12 @@ namespace CSharpLua {
       }
     }
 
+    private LuaExpressionSyntax VisitExpression(ExpressionSyntax node) {
+      var luaExpression = (LuaExpressionSyntax)node.Accept(this);
+      CheckConversion(node, ref luaExpression);
+      return luaExpression;
+    }
+
     private void CheckConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
       var conversion = semanticModel_.GetConversion(node);
       if (conversion.IsUserDefined && conversion.IsImplicit) {
@@ -1018,16 +1024,8 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, ExpressionSyntax left, ExpressionSyntax right) {
       return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
-        () => {
-          var expression = (LuaExpressionSyntax)left.Accept(this);
-          CheckConversion(left, ref expression);
-          return expression;
-        },
-        () => {
-          var expression = (LuaExpressionSyntax)right.Accept(this);
-          CheckConversion(right, ref expression);
-          return expression;
-        }
+        () => VisitExpression(left),
+        () => VisitExpression(right)
       });
     }
 

@@ -1041,9 +1041,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitArrowExpressionClause(ArrowExpressionClauseSyntax node) {
-      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-      CheckConversion(node.Expression, ref expression);
-      return expression;
+      return VisitExpression(node.Expression);
     }
 
     public override LuaSyntaxNode VisitLocalFunctionStatement(LocalFunctionStatementSyntax node) {
