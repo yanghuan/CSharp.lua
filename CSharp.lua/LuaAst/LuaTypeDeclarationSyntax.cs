@@ -53,7 +53,6 @@ namespace CSharpLua.LuaAst {
     private List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
 
     private LuaTableExpression metadata_;
-    private LuaTableExpression attributes_;
     private LuaTableExpression metaProperties_;
     private LuaTableExpression metaFields_;
     private LuaTableExpression metaMethods_;
@@ -78,14 +77,6 @@ namespace CSharpLua.LuaAst {
       nestedTypeDeclarations_.Add(typeDeclaration);
     }
 
-    internal void AddClassAttributes(List<LuaExpressionSyntax> attributes) {
-      AddFieldAttributes(LuaIdentifierNameSyntax.Class, attributes);
-    }
-
-    internal void AddMethodAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
-      AddFieldAttributes(name, attributes);
-    }
-
     private void AddMetadata(ref LuaTableExpression table, LuaIdentifierNameSyntax name, LuaTableItemSyntax item) {
       if (metadata_ == null) {
         metadata_ = new LuaTableExpression();
@@ -102,13 +93,6 @@ namespace CSharpLua.LuaAst {
         metadata_ = new LuaTableExpression();
       }
       metadata_.Add(LuaIdentifierNameSyntax.Class, data);
-    }
-
-    internal void AddFieldAttributes(LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
-      if (attributes.Count > 0) {
-        var table = new LuaTableExpression(attributes) { IsSingleLine = true };
-        AddMetadata(ref attributes_, LuaIdentifierNameSyntax.Attributes, new LuaKeyValueTableItemSyntax(name, table));
-      }
     }
 
     internal void AddFieldMetaData(LuaTableExpression data) {

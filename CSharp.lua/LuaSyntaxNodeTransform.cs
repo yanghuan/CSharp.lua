@@ -275,8 +275,6 @@ namespace CSharpLua {
       typeDeclaration.AddDocument(comments);
 
       var attributes = BuildAttributes(node.AttributeLists);
-      typeDeclaration.AddClassAttributes(attributes);
-
       BuildTypeParameters(typeSymbol, node, typeDeclaration);
       if (node.BaseList != null) {
         bool hasExtendSelf = false;
@@ -377,7 +375,6 @@ namespace CSharpLua {
         var expressions = BuildAttributes(typeDeclaration.Node.AttributeLists);
         attributes.AddRange(expressions);
       }
-      major.TypeDeclaration.AddClassAttributes(attributes);
 
       BuildTypeParameters(major.Symbol, major.Node, major.TypeDeclaration);
       List<BaseTypeSyntax> baseTypes = new List<BaseTypeSyntax>();
@@ -609,8 +606,6 @@ namespace CSharpLua {
       }
 
       var attributes = BuildAttributes(attributeLists);
-      CurType.AddMethodAttributes(methodName, attributes);
-
       foreach (var parameterNode in parameterList.Parameters) {
         var parameter = (LuaParameterSyntax)parameterNode.Accept(this);
         function.AddParameter(parameter);
@@ -854,7 +849,6 @@ namespace CSharpLua {
 
     private List<LuaExpressionSyntax> AddField(LuaIdentifierNameSyntax name, ITypeSymbol typeSymbol, TypeSyntax type, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, SyntaxList<AttributeListSyntax> attributeLists) {
       var attributes = BuildAttributes(attributeLists);
-      CurType.AddFieldAttributes(name, attributes);
       var valueExpression = GetFieldValueExpression(type, typeSymbol, expression, out bool valueIsLiteral, out var statements);
       CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly, statements);
       return attributes;
@@ -961,10 +955,6 @@ namespace CSharpLua {
               CurType.AddMethod(name, functionExpression, isPrivate);
 
               var methodAttributes = BuildAttributes(accessor.AttributeLists);
-              if (!isPrivate) {
-                CurType.AddMethodAttributes(name, methodAttributes);
-              }
-
               if (isGet) {
                 Contract.Assert(!hasGet);
                 hasGet = true;
@@ -1006,9 +996,6 @@ namespace CSharpLua {
             bool isReadOnly = IsReadOnlyProperty(node);
             AddField(propertyName, typeSymbol, node.Type, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
           } else {
-            if (!isPrivate) {
-              CurType.AddFieldAttributes(propertyName, attributes);
-            }
             LuaIdentifierNameSyntax innerName = AddInnerName(symbol);
             LuaExpressionSyntax valueExpression = GetFieldValueExpression(node.Type, typeSymbol, node.Initializer?.Value, out bool valueIsLiteral, out var statements);
             LuaExpressionSyntax typeExpression = null;
@@ -1018,10 +1005,6 @@ namespace CSharpLua {
             var (getName, setName) =  CurType.AddProperty(propertyName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, typeExpression, statements);
             getMethod = new PropertyMethodResult(getName);
             setMethod = new PropertyMethodResult(setName);
-          }
-        } else {
-          if (!isPrivate) {
-            CurType.AddFieldAttributes(propertyName, attributes);
           }
         }
 
@@ -1057,11 +1040,6 @@ namespace CSharpLua {
           CurType.AddMethod(name, functionExpression, isPrivate);
           if (accessor.IsKind(SyntaxKind.RemoveAccessorDeclaration)) {
             name.IsGetOrAdd = false;
-          }
-
-          if (!isPrivate) {
-            var attributes = BuildAttributes(accessor.AttributeLists);
-            CurType.AddMethodAttributes(name, attributes);
           }
         }
       }
