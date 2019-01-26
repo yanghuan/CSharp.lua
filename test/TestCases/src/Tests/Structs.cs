@@ -149,9 +149,9 @@ namespace TestCases
         public static implicit operator float(Vector3 a) { return a.x; } //这是一个隐式转换
     }
 
-    public class StructTests
+    public static class StructTests
     {
-        class MyClass
+        public class MyClass
         {
             MyStruct stru = new MyStruct();
         }
@@ -176,10 +176,17 @@ namespace TestCases
           return StaticMaskValue;
         }
 
-        [TestCase]
+    public static int GetMaskValue(this MyClass self, int a) {
+      return StaticMaskValue;
+    }
+    [TestCase]
         public static void StructTest3() {
       UnityEngine.LayerMask maskValue = StaticMaskValue;
       UnityEngine.LayerMask maskFuncValue = GetStaticMaskValue();
+
+
+      var cls = new MyClass();
+      UnityEngine.LayerMask maskLinqFuncValue = cls.GetMaskValue(123);
     }
   }
 }

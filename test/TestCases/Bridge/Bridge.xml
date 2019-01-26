@@ -14,6 +14,8 @@
 				<arg type="System.Single"/>
 				<arg type="System.Boolean"/>
 			</method>
+			<method name="CreateLuaObjectWithMetaXml" GenericArgCount="0" Template="LuaArrayExternions.CreateLuaObjectWithMetaXml()">
+			</method>
 		</class>
 
       <class name="LuaTable^2">

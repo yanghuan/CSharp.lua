@@ -49,11 +49,20 @@ public class LuaArray<T> {
 
 public class LuaObject {
 
+  public static implicit operator int(LuaObject self) { return self.GetHashCode(); }
 }
 
 public static class LuaArrayExternions {
   public static void DOLocalMove(this LuaObject target, float duration, bool snapping = false) {
 
+  }
+
+  public static LuaObject CreateLuaObjectWithMetaXml() {
+    return new LuaObject();
+  }
+
+  public static LuaObject CreateLuaObject() {
+    return new LuaObject();
   }
 
 }
