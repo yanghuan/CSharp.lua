@@ -3055,8 +3055,10 @@ namespace CSharpLua {
       var symbol = semanticModel_.GetTypeInfo(operand).Type;
       if (!symbol.IsIntegerType()) {
         var op_Implicits = symbol.GetMembers("op_Implicit").OfType<IMethodSymbol>();
-        var methodSymbol = op_Implicits.First(i => isAddOrAssignment ? i.ReturnType.IsIntegerType() : i.ReturnType.Equals(symbol));
-        expression = BuildConversionExpression(methodSymbol, expression);
+        var methodSymbol = op_Implicits.FirstOrDefault(i => isAddOrAssignment ? i.ReturnType.IsIntegerType() : i.ReturnType.Equals(symbol));
+        if (methodSymbol != null) {
+          expression = BuildConversionExpression(methodSymbol, expression);
+        }
       }
     }
 
