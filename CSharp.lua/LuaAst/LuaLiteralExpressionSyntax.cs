@@ -46,8 +46,8 @@ namespace CSharpLua.LuaAst {
     }
 
     public static readonly LuaIdentifierLiteralExpressionSyntax Nil = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
-    public static readonly LuaIdentifierLiteralExpressionSyntax Zero = new LuaIdentifierLiteralExpressionSyntax("0");
-    public static readonly LuaIdentifierLiteralExpressionSyntax ZeroFloat = new LuaIdentifierLiteralExpressionSyntax("0.0");
+    public static readonly LuaIdentifierLiteralExpressionSyntax Zero = new LuaIdentifierLiteralExpressionSyntax(0.ToString());
+    public static readonly LuaIdentifierLiteralExpressionSyntax ZeroFloat = new LuaIdentifierLiteralExpressionSyntax(0.0.ToString());
     public static readonly LuaIdentifierLiteralExpressionSyntax True = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.True);
     public static readonly LuaIdentifierLiteralExpressionSyntax False = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.False);
   }
@@ -135,6 +135,24 @@ namespace CSharpLua.LuaAst {
 
     private static string GetIdentifierToken(char character) {
       return SyntaxFactory.Literal(character).Text;
+    }
+  }
+
+  public sealed class LuaNumberLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
+    public double Number { get; }
+
+    public LuaNumberLiteralExpressionSyntax(double number) {
+      Number = number;
+    }
+
+    public override string Text {
+      get {
+        return Number.ToString();
+      }
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
     }
   }
 }

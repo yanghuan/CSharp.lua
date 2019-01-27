@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -1085,6 +1087,28 @@ namespace CSharpLua {
       if (nilArgumentCount > 0) {
         expressions.RemoveRange(nilStartIndex, nilArgumentCount);
       }
+    }
+
+    public static bool IsFixedSizeCollectionCountProperty(this IPropertySymbol symbol) {
+      if (symbol.ContainingType.SpecialType == SpecialType.System_Array) {
+        if (symbol.Name == "Length") {
+          return true;
+        }
+      } else {
+        switch (symbol.ContainingType.Name) {
+          case nameof(ImmutableArray):
+          case nameof(ImmutableList):
+          case nameof(ImmutableDictionary):
+          case nameof(ImmutableHashSet):
+            if (symbol.ContainingType.ContainingNamespace.ToString() == "System.Collections.Immutable") {
+              if (symbol.Name == "Length" ||symbol.Name == "Count") {
+                return true;
+              }
+            }
+            break;
+        }
+      }
+      return false;
     }
 
     #region hard code for protobuf-net

@@ -234,6 +234,10 @@ namespace CSharpLua {
       Write(node.CloseComment);
     }
 
+    internal void Render(LuaNumberLiteralExpressionSyntax node) {
+      Write(node.Text);
+    }
+
     internal void Render(LuaStatementListSyntax node) {
       WriteNodes(node.Statements);
     }

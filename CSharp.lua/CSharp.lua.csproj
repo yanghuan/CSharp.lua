@@ -10,6 +10,7 @@
     <Authors>YANG Huan</Authors>
     <PackageProjectUrl>https://github.com/yanghuan/CSharp.lua</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE</PackageLicenseUrl>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

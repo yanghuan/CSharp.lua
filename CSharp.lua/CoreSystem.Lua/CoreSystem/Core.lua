@@ -937,7 +937,7 @@ function System.event(name)
   return add, remove
 end
 
-function System.new(index, cls, ...)
+function System.new(cls, index, ...)
   local this = setmetatable({}, cls)
   return this, cls.__ctor__[index](this, ...)
 end

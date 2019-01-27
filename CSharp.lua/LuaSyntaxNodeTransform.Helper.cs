@@ -721,7 +721,7 @@ namespace CSharpLua {
     private LuaInvocationExpressionSyntax BuildObjectCreationInvocation(IMethodSymbol symbol, LuaExpressionSyntax expression) {
       int constructorIndex = symbol.GetConstructorIndex();
       if (constructorIndex > 1) {
-        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemNew, constructorIndex.ToString(), expression);
+        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemNew, expression, constructorIndex.ToString());
       }
       return new LuaInvocationExpressionSyntax(expression);
     }
@@ -1082,6 +1082,51 @@ namespace CSharpLua {
       }
     }
 
+    private bool IsFixedValueExpression(ExpressionSyntax expression, out Optional<object> limitConst) {
+      limitConst = semanticModel_.GetConstantValue(expression);
+      if (limitConst.HasValue) {
+        return true;
+      }
+
+      if (expression is BinaryExpressionSyntax binaryExpression) {
+        Optional<object> _ = default;
+        return IsFixedValueExpression(binaryExpression.Right, out _) && IsFixedValueExpression(binaryExpression.Left, out _);
+      } else {
+        bool isReadOnly = false;
+        var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
+        if (symbol != null) {
+          if (symbol.Kind == SymbolKind.Field) {
+            isReadOnly = ((IFieldSymbol)symbol).IsReadOnly;
+          } else if (symbol.Kind == SymbolKind.Property) {
+            var propertySymbol = (IPropertySymbol)symbol;
+            if (propertySymbol.IsFixedSizeCollectionCountProperty()) {
+              isReadOnly = true;
+            } else {
+              isReadOnly = propertySymbol.IsReadOnly && IsPropertyField(propertySymbol);
+            }
+          }
+        }
+        return isReadOnly;
+      }
+    }
+
+    private LuaExpressionSyntax GetFixedValueExpression(ExpressionSyntax expression) {
+      if (IsFixedValueExpression(expression, out var constantValue)) {
+        if (constantValue.HasValue) {
+          double value;
+          if (constantValue.Value is float v) {
+            value = v;
+          } else {
+            value = Convert.ToDouble(constantValue.Value);
+          }
+          return new LuaNumberLiteralExpressionSyntax(value);
+        }
+        return (LuaExpressionSyntax)expression.Accept(this);
+      } else {
+        return null;
+      }
+    }
+
     private LuaNumericalForStatementSyntax GetNumericalForStatement(ForStatementSyntax node) {
       if (node.Declaration == null || node.Declaration.Variables.Count > 1) {
         goto Fail;
@@ -1110,67 +1155,66 @@ namespace CSharpLua {
         goto Fail;
       }
 
-      var limitConst = semanticModel_.GetConstantValue(condition.Right);
-      if (limitConst.HasValue) {
-        if (!(limitConst.Value is int)) {
-          goto Fail;
-        }
-      } else {
-        bool isReadOnly = false;
-        var symbol = semanticModel_.GetSymbolInfo(condition.Right).Symbol;
-        if (symbol != null) {
-          if (symbol.Kind == SymbolKind.Field) {
-            isReadOnly = ((IFieldSymbol)symbol).IsReadOnly;
-          } else if (symbol.Kind == SymbolKind.Property) {
-            var propertySymbol = (IPropertySymbol)symbol;
-            isReadOnly = propertySymbol.IsReadOnly && IsPropertyField(propertySymbol);
-          }
-        }
-        if (!isReadOnly) {
-          goto Fail;
-        }
+      var limitExpression = GetFixedValueExpression(condition.Right);
+      if (limitExpression == null) {
+        goto Fail;
       }
 
+      LuaExpressionSyntax stepExpression;
       bool hasNoEqual;
-      bool isPlus;
       var incrementor = node.Incrementors.First();
       switch (incrementor.Kind()) {
         case SyntaxKind.PreIncrementExpression:
         case SyntaxKind.PreDecrementExpression:
-          var prefixUnaryExpression = (PrefixUnaryExpressionSyntax)incrementor;
-          if (!IsNumericalForVariableMatch(prefixUnaryExpression.Operand, variable.Identifier)) {
-            goto Fail;
-          }
-          if (incrementor.IsKind(SyntaxKind.PreIncrementExpression)) {
-            if (!IsNumericalForLess(conditionKind, out hasNoEqual)) {
-              goto Fail;
-            }
-            isPlus = true;
-          } else {
-            if (!IsNumericalForGreater(conditionKind, out hasNoEqual)) {
-              goto Fail;
-            }
-            isPlus = false;
-          }
-          break;
         case SyntaxKind.PostIncrementExpression:
-        case SyntaxKind.PostDecrementExpression:
-          var postfixUnaryExpression = (PostfixUnaryExpressionSyntax)incrementor;
-          if (!IsNumericalForVariableMatch(postfixUnaryExpression.Operand, variable.Identifier)) {
+        case SyntaxKind.PostDecrementExpression: {
+          ExpressionSyntax operand;
+          if (incrementor is PrefixUnaryExpressionSyntax prefixUnaryExpression) {
+            operand = prefixUnaryExpression.Operand;
+          } else {
+            operand = ((PostfixUnaryExpressionSyntax)incrementor).Operand;
+          }
+          if (!IsNumericalForVariableMatch(operand, variable.Identifier)) {
             goto Fail;
           }
-          if (incrementor.IsKind(SyntaxKind.PostIncrementExpression)) {
+          if (incrementor.IsKind(SyntaxKind.PreIncrementExpression) || incrementor.IsKind(SyntaxKind.PostIncrementExpression)) {
             if (!IsNumericalForLess(conditionKind, out hasNoEqual)) {
               goto Fail;
             }
-            isPlus = true;
+            stepExpression = new LuaNumberLiteralExpressionSyntax(1);
           } else {
             if (!IsNumericalForGreater(conditionKind, out hasNoEqual)) {
               goto Fail;
             }
-            isPlus = false;
+            stepExpression = new LuaNumberLiteralExpressionSyntax(-1);
           }
           break;
+        }
+        case SyntaxKind.AddAssignmentExpression: {
+          if (!IsNumericalForLess(conditionKind, out hasNoEqual)) {
+            goto Fail;
+          }
+          var assignment = (AssignmentExpressionSyntax)incrementor;
+          stepExpression = GetFixedValueExpression(assignment.Right);
+          if (stepExpression == null) {
+            goto Fail;
+          }
+          break;
+        }
+        case SyntaxKind.SubtractAssignmentExpression: {
+          if (!IsNumericalForGreater(conditionKind, out hasNoEqual)) {
+            goto Fail;
+          }
+          var assignment = (AssignmentExpressionSyntax)incrementor;
+          stepExpression = GetFixedValueExpression(assignment.Right);
+          if (stepExpression == null) {
+            goto Fail;
+          }
+          if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
+            stepExpression = new LuaNumberLiteralExpressionSyntax(-numberLiteral.Number);
+          }
+          break;
+        }
         default:
           goto Fail;
       }
@@ -1179,32 +1223,28 @@ namespace CSharpLua {
       CheckLocalVariableName(ref identifier, variable);
 
       var startExpression = (LuaExpressionSyntax)variable.Initializer.Value.Accept(this);
-      LuaExpressionSyntax limitExpression;
-      LuaExpressionSyntax stepExpression = null;
       if (hasNoEqual) {
-        if (limitConst.Value != null) {
-          int limit = (int)limitConst.Value;
-          if (isPlus) {
-            --limit;
+        if (limitExpression is LuaNumberLiteralExpressionSyntax limitLiteral) {
+          if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
+            limitExpression = new LuaIdentifierLiteralExpressionSyntax((limitLiteral.Number - numberLiteral.Number).ToString());
           } else {
-            ++limit;
-            stepExpression = new LuaPrefixUnaryExpressionSyntax(LuaIdentifierNameSyntax.One, LuaSyntaxNode.Tokens.Sub);
+            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, stepExpression);
           }
-          limitExpression = new LuaIdentifierLiteralExpressionSyntax(limit.ToString());
         } else {
-          limitExpression = (LuaExpressionSyntax)condition.Right.Accept(this);
-          if (isPlus) {
-            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, LuaIdentifierNameSyntax.One);
+          if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
+            if (numberLiteral.Number > 0) {
+              limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, stepExpression);
+            } else {
+              limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Plus, (-numberLiteral.Number).ToString());
+            }
           } else {
-            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Plus, LuaIdentifierNameSyntax.One);
-            stepExpression = new LuaPrefixUnaryExpressionSyntax(LuaIdentifierNameSyntax.One, LuaSyntaxNode.Tokens.Sub);
+            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, stepExpression);
           }
         }
-      } else {
-        limitExpression = (LuaExpressionSyntax)condition.Right.Accept(this);
-        if (!isPlus) {
-          stepExpression = new LuaPrefixUnaryExpressionSyntax(LuaIdentifierNameSyntax.One, LuaSyntaxNode.Tokens.Sub);
-        }
+      }
+
+      if (stepExpression is LuaNumberLiteralExpressionSyntax stepNumber && stepNumber.Number == 1) {
+        stepExpression = null;
       }
 
       var numericalForStatement = new LuaNumericalForStatementSyntax(identifier, startExpression, limitExpression, stepExpression);
