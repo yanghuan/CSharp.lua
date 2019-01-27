@@ -40,6 +40,7 @@ local Single = System.Single
 local Double = System.Double
 local Int = System.Int
 local Number = System.Number
+local ValueType = System.ValueType
 
 local type = type
 local getmetatable = getmetatable
@@ -309,16 +310,6 @@ local numbers = {
 }
 numbers[Int] = numbers[Int32]
 
-local function isStringOrBoolean(cls, StringOrBoolean)
-  if cls == StringOrBoolean then
-    return true
-  end
-  if cls.class == "I" then
-    return isInterfaceOf(StringOrBoolean, cls)
-  end
-  return false 
-end
-
 function isTypeOf(obj, cls)    
   if cls == Object then return true end
   local typename = type(obj)
@@ -341,10 +332,18 @@ function isTypeOf(obj, cls)
       return true
     elseif cls.class == "I" then
       return isInterfaceOf(Number, cls)
+    elseif cls == ValueType  then
+      return true
     end
     return false
   elseif typename == "string" then
-    return isStringOrBoolean(cls, String)
+    if cls == String then
+      return true
+    end
+    if cls.class == "I" then
+      return isInterfaceOf(String, cls)
+    end
+    return false
   elseif typename == "table" then   
     local t = getmetatable(obj)
     if t == cls or t == nil then
@@ -363,7 +362,13 @@ function isTypeOf(obj, cls)
       return false
     end
   elseif typename == "boolean" then
-    return isStringOrBoolean(cls, Boolean)
+    if cls == Boolean or cls == ValueType then
+      return true
+    end
+    if cls.class == "I" then
+      return isInterfaceOf(Boolean, cls)
+    end
+    return false
   elseif typename == "function" then 
     return cls == Delegate
   elseif typename == "userdata" then
@@ -402,22 +407,6 @@ function System.cast(cls, obj)
     end
     throw(InvalidCastException(), 1)
   end
-end
-
-function System.new(cls)
-  if numbers[cls] then
-    return 0
-  end
-  if cls == Boolean then
-    return false
-  end
-  local ctor = cls.__ctor__
-  if type(ctor) == "table" then
-    ctor = ctor[1]
-  end
-  local this = setmetatable({}, cls)
-  ctor(this)
-  return this
 end
 
 function System.CreateInstance(type, ...)

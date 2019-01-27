@@ -77,8 +77,7 @@ namespace CSharpLua {
 
         Contract.Assert(!node.ArgumentList.Arguments.Any());
         var expression = (LuaExpressionSyntax)node.Type.Accept(this);
-        var invokeExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemNew, expression);
-        creationExpression = invokeExpression;
+        creationExpression = new LuaInvocationExpressionSyntax(expression);
       }
 
       if (node.Initializer == null) {
@@ -231,9 +230,7 @@ namespace CSharpLua {
           if (size is LuaLiteralExpressionSyntax constSize && constSize.Text == 0.ToString()) {
             return new LuaInvocationExpressionSyntax(arrayType);
           }
-
-          var memberAccess = new LuaMemberAccessExpressionSyntax(arrayType, LuaIdentifierNameSyntax.New, true);
-          return new LuaInvocationExpressionSyntax(memberAccess, size);
+          return new LuaInvocationExpressionSyntax(arrayType, size);
         } else {
           var rankSpecifier = new LuaTableExpression() { IsSingleLine = true };
           foreach (var size in arrayType.RankSpecifier.Sizes) {

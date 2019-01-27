@@ -70,6 +70,7 @@ local Int = define("System.Int", {
     return this == v
   end
 })
+Int.__call = zeroFn
 
 local function parseInt(s, min, max)
   if s == nil then
@@ -265,6 +266,7 @@ local Number = define("System.Number", {
     return v == posInf
   end
 })
+Number.__call = zeroFn
 debug.setmetatable(0, Number)
 
 local function parseDouble(s)

@@ -36,6 +36,7 @@ namespace CSharpLua.LuaAst {
   public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
     public bool IsPartialMark { get; set; }
     public bool IsClassUsed { get; set; }
+    protected bool isStruct_;
 
     private LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
     private List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new List<LuaTypeDeclarationSyntax>();
@@ -427,7 +428,7 @@ namespace CSharpLua.LuaAst {
 
       if (hasCtors) {
         if (hasInit) {
-          if (ctors_.Count == 1) {
+          if (ctors_.Count == 1 || isStruct_) {
             ctors_.First().Function.Body.Statements.InsertRange(0, initStatements_);
           } else {
             var initIdentifier = LuaIdentifierNameSyntax.Init;
@@ -557,6 +558,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaStructDeclarationSyntax : LuaTypeDeclarationSyntax {
     public LuaStructDeclarationSyntax(LuaIdentifierNameSyntax name) {
+      isStruct_ = true;
       UpdateIdentifiers(name, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Struct, LuaIdentifierNameSyntax.Namespace);
     }
   }

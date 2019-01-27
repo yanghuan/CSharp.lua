@@ -22,6 +22,7 @@ local FormatException = System.FormatException
 
 local type = type
 local tostring = tostring
+local setmetatable = setmetatable
 
 local function compareTo(this, v)
   if this == v then
@@ -112,3 +113,7 @@ local Boolean = System.defStc("System.Boolean", {
   end
 })
 debug.setmetatable(false, Boolean)
+
+local ValueType = System.ValueType
+local boolMetaTable = setmetatable({ __index = ValueType, __call = Boolean.default }, ValueType)
+setmetatable(Boolean, boolMetaTable)

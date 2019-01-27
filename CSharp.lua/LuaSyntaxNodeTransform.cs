@@ -332,10 +332,6 @@ namespace CSharpLua {
         typeDeclaration.AddCtor(function, true);
       }
 
-      if (typeSymbol.IsValueType) {
-        TryAddStructDefaultMethod(typeSymbol, typeDeclaration);
-      }
-
       if (typeDeclaration.IsIgnoreExport) {
         generator_.AddIgnoreExportType(typeSymbol);
       }

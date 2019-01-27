@@ -52,9 +52,7 @@ local function new(cls, ...)
 end
 
 local function throw(e, lv)
-  if e == nil then
-    e = System.NullReferenceException()
-  end
+  if e == nil then e = System.NullReferenceException() end
   e:traceback(lv)
   error(e)
 end
@@ -161,6 +159,8 @@ enumMetatable.__index = enumMetatable
 local interfaceMetatable = { class = "I", default = emptyFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
+local ctorMetatable = { __call = function (ctor, ...) return ctor[1](...) end }
+
 local function applyMetadata(cls)
   local metadata = rawget(cls, "__metadata__")
   if metadata then
@@ -178,22 +178,24 @@ local function setBase(cls, kind)
   cls.__index = cls 
   cls.__call = new
 
+  local ctor = cls.__ctor__
+  if ctor and type(ctor) == "table" then
+    setmetatable(ctor, ctorMetatable)
+  end
+
+  local extends = cls.__inherits__
+  if extends and type(extends) == "function" then
+    extends = extends(global, cls)
+  end
+
   if kind == "S" then
-    local extends = cls.__inherits__
-    if extends ~= nil then
-      if type(extends) == "function" then
-        extends = extends(global, cls)
-      end 
+    if extends then
       cls.interface = extends
       cls.__inherits__ = nil
     end
     setmetatable(cls, ValueType)
   else
-    local extends = cls.__inherits__
-    if extends ~= nil then
-      if type(extends) == "function" then
-        extends = extends(global, cls)
-      end           
+    if extends then      
       local base = extends[1]
       if base.class == "I" then
         cls.interface = extends
@@ -208,7 +210,7 @@ local function setBase(cls, kind)
       cls.__inherits__ = nil
     else
       setmetatable(cls, Object)
-    end  
+    end
   end
   applyMetadata(cls)
 end
@@ -935,9 +937,9 @@ function System.event(name)
   return add, remove
 end
 
-local function multiNew(cls, inx, ...) 
+function System.new(index, cls, ...)
   local this = setmetatable({}, cls)
-  return this, cls.__ctor__[inx](this, ...)
+  return this, cls.__ctor__[index](this, ...)
 end
 
 local function base(this)
@@ -967,7 +969,6 @@ Object = defCls("System.Object", {
   default = emptyFn,
   __ctor__ = emptyFn,
   class = "C",
-  new = multiNew,
   base = base,
   EqualsObj = equals,
   ReferenceEquals = equals,
@@ -980,8 +981,8 @@ setmetatable(Object, { __call = new })
 
 ValueType = {
   class = "S",
-  default = function(cls) 
-    return setmetatable({}, cls)
+  default = function(T) 
+    return T()
   end,
   __clone__ = function(this)
     local type_ = type(this)

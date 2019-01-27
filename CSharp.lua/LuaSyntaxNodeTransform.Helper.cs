@@ -720,14 +720,10 @@ namespace CSharpLua {
 
     private LuaInvocationExpressionSyntax BuildObjectCreationInvocation(IMethodSymbol symbol, LuaExpressionSyntax expression) {
       int constructorIndex = symbol.GetConstructorIndex();
-      if (constructorIndex > 0) {
-        expression = new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.New, true);
+      if (constructorIndex > 1) {
+        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemNew, constructorIndex.ToString(), expression);
       }
-      LuaInvocationExpressionSyntax invocationExpression = new LuaInvocationExpressionSyntax(expression);
-      if (constructorIndex > 0) {
-        invocationExpression.AddArgument(new LuaIdentifierNameSyntax(constructorIndex));
-      }
-      return invocationExpression;
+      return new LuaInvocationExpressionSyntax(expression);
     }
 
     public override LuaSyntaxNode VisitAttribute(AttributeSyntax node) {
@@ -797,22 +793,6 @@ namespace CSharpLua {
         }
       }
       return expressions;
-    }
-
-    private void TryAddStructDefaultMethod(INamedTypeSymbol symbol, LuaTypeDeclarationSyntax declaration) {
-      Contract.Assert(symbol.IsValueType);
-      if (declaration.IsInitStatementExists) {
-        LuaIdentifierNameSyntax className = symbol.Name;
-        var thisIdentifier = LuaIdentifierNameSyntax.This;
-        var functionExpression = new LuaFunctionExpressionSyntax();
-        functionExpression.AddParameter(className);
-        var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.setmetatable, LuaTableExpression.Empty, className);
-        var local = new LuaLocalVariableDeclaratorSyntax(thisIdentifier, invocation);
-        functionExpression.AddStatement(local);
-        functionExpression.AddStatement(new LuaExpressionStatementSyntax(new LuaInvocationExpressionSyntax(declaration.IsNoneCtros ? LuaIdentifierNameSyntax.Ctor : LuaIdentifierNameSyntax.Init, thisIdentifier)));
-        functionExpression.AddStatement(new LuaReturnStatementSyntax(thisIdentifier));
-        declaration.AddMethod(LuaIdentifierNameSyntax.Default, functionExpression, false);
-      }
     }
 
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {

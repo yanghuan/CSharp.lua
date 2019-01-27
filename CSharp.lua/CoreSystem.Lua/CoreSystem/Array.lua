@@ -29,17 +29,11 @@ local IndexOutOfRangeException = System.IndexOutOfRangeException
 local assert = assert
 local select = select
 local setmetatable = setmetatable
+local type = type
 
 local Array = {}
 local emptys = {}
 
-function Array.new(cls, len)
-  local this = setmetatable({}, cls)
-  buildArray(this, len)
-  return this
-end
-
-Array.new = buildArray
 Array.set = setArray
 Array.get = getArray
 Array.GetEnumerator = arrayEnumerator
@@ -109,6 +103,9 @@ define("System.Array", function(T)
 end, Array)
 
 function Array.__call(T, t)
+  if type(t) == "number" then
+    return buildArray(T, t)
+  end
   return setmetatable(t or {}, T)
 end
 
