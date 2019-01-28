@@ -1190,28 +1190,29 @@ namespace CSharpLua {
           }
           break;
         }
-        case SyntaxKind.AddAssignmentExpression: {
-          if (!IsNumericalForLess(conditionKind, out hasNoEqual)) {
-            goto Fail;
-          }
-          var assignment = (AssignmentExpressionSyntax)incrementor;
-          stepExpression = GetFixedValueExpression(assignment.Right);
-          if (stepExpression == null) {
-            goto Fail;
-          }
-          break;
-        }
+        case SyntaxKind.AddAssignmentExpression:
         case SyntaxKind.SubtractAssignmentExpression: {
-          if (!IsNumericalForGreater(conditionKind, out hasNoEqual)) {
+          var assignment = (AssignmentExpressionSyntax)incrementor;
+          if (!IsNumericalForVariableMatch(assignment.Left, variable.Identifier)) {
             goto Fail;
           }
-          var assignment = (AssignmentExpressionSyntax)incrementor;
+
           stepExpression = GetFixedValueExpression(assignment.Right);
           if (stepExpression == null) {
             goto Fail;
           }
-          if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
-            stepExpression = new LuaNumberLiteralExpressionSyntax(-numberLiteral.Number);
+
+          if (incrementor.IsKind(SyntaxKind.AddAssignmentExpression)) {
+            if (!IsNumericalForLess(conditionKind, out hasNoEqual)) {
+              goto Fail;
+            }
+          } else {
+            if (!IsNumericalForGreater(conditionKind, out hasNoEqual)) {
+              goto Fail;
+            }
+            if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
+              stepExpression = new LuaNumberLiteralExpressionSyntax(-numberLiteral.Number);
+            }
           }
           break;
         }
