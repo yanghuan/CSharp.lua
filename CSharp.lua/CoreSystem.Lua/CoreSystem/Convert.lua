@@ -120,74 +120,84 @@ local function toNumber(value, min, max, parse, objectTo, sign)
   end
 end
 
+local function objectToSByte(v)
+  return cast(IConvertible, value):ToSByte()
+end
+
 local function toSByte(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToSByte()
-  end
-  return toNumber(value, -128, 127, ParseSByte, objectTo)
+  return toNumber(value, -128, 127, ParseSByte, objectToSByte)
+end
+
+local function objectToByte(v)
+  return cast(IConvertible, value):ToByte()
 end
 
 local function toByte(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToByte()
-  end
-  return toNumber(value, 0, 255, ParseByte, objectTo) 
+  return toNumber(value, 0, 255, ParseByte, objectToByte) 
+end
+
+local function objectToInt16(v)
+  return cast(IConvertible, value):ToInt16()
 end
 
 local function toInt16(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToInt16()
-  end
-  return toNumber(value, -32768, 32767, ParseInt16, objectTo) 
+  return toNumber(value, -32768, 32767, ParseInt16, objectToInt16) 
+end
+
+local function objectToUInt16(v)
+  return cast(IConvertible, value):ToUInt16()
 end
 
 local function toUInt16(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToUInt16()
-  end
-  return toNumber(value, 0, 65535, ParseUInt16, objectTo) 
+  return toNumber(value, 0, 65535, ParseUInt16, objectToUInt16) 
+end
+
+local function objectToInt32(v)
+  return cast(IConvertible, value):ToInt32()
 end
 
 local function toInt32(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToInt32()
-  end
-  return toNumber(value, -2147483648, 2147483647, ParseUInt16, objectTo) 
+  return toNumber(value, -2147483648, 2147483647, ParseUInt16, objectToInt32) 
+end
+
+local function objectToUInt32(v)
+  return cast(IConvertible, value):ToUInt32()
 end
 
 local function toUInt32(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToUInt32()
-  end
-  return toNumber(value, 0, 4294967295, ParseUInt32, objectTo) 
+  return toNumber(value, 0, 4294967295, ParseUInt32, objectToUInt32) 
+end
+
+local function objectToInt64(v)
+  return cast(IConvertible, value):ToInt64()
 end
 
 local function toInt64(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToInt64()
-  end
-  return toNumber(value, -9223372036854775808, 9223372036854775807, ParseInt64, objectTo) 
+  return toNumber(value, -9223372036854775808, 9223372036854775807, ParseInt64, objectToInt64) 
+end
+
+local function objectToUInt64(v)
+  return cast(IConvertible, value):ToUInt64()
 end
 
 local function toUInt64(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToUInt64()
-  end
-  return toNumber(value, 0, 18446744073709551615, ParseUInt64, objectTo) 
+  return toNumber(value, 0, 18446744073709551615, ParseUInt64, objectToUInt64) 
+end
+
+local function objectToSingle(v)
+  return cast(IConvertible, value):ToSingle()
 end
 
 local function toSingle(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToSingle()
-  end
-  return toNumber(value, -3.40282347E+38, 3.40282347E+38, ParseSingle, objectTo, 1) 
+  return toNumber(value, -3.40282347E+38, 3.40282347E+38, ParseSingle, objectToSingle, 1) 
+end
+
+local function objectToDouble(v)
+  return cast(IConvertible, value):ToDouble()
 end
 
 local function toDouble(value)
-  local function objectTo(v)
-    return cast(IConvertible, value):ToDouble()
-  end
-  return toNumber(value, nil, nil, ParseDouble, objectTo, 2) 
+  return toNumber(value, nil, nil, ParseDouble, objectToDouble, 2) 
 end
 
 local function toDateTime(value)

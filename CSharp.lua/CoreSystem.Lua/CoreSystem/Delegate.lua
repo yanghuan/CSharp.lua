@@ -76,10 +76,8 @@ end
 Delegate.Combine = combine
 
 local function bind(target, method)
-  if target == nil then
-    throw(ArgumentNullException())
-  end
   assert(method)
+  if target == nil then throw(ArgumentNullException()) end
 
   local delegate = target[method]
   if delegate ~= nil then
