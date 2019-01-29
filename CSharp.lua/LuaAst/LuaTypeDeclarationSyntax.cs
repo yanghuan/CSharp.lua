@@ -405,9 +405,7 @@ namespace CSharpLua.LuaAst {
         if (staticCtor_ != null && staticCtor_.Document != null) {
           body.AddStatement(staticCtor_.Document);
         }
-        var staticCtorName = LuaIdentifierNameSyntax.StaticCtor;
-        body.AddStatement(new LuaLocalVariableDeclaratorSyntax(staticCtorName, staticCtor));
-        AddResultTable(staticCtorName);
+        AddInitFunction(body, LuaIdentifierNameSyntax.StaticCtor, staticCtor);
       }
     }
 
@@ -428,7 +426,7 @@ namespace CSharpLua.LuaAst {
             ctors_.First().Function.Body.Statements.InsertRange(0, initStatements_);
           } else {
             var init = LuaIdentifierNameSyntax.Init;
-            body.AddStatement(new LuaLocalVariableDeclaratorSyntax(init, GetInitFunction()));
+            AddInitFunction(body, init, GetInitFunction(), false);
             foreach (var ctor in ctors_) {
               if (!ctor.Function.IsInvokeThisCtor) {
                 var invocationInit = new LuaInvocationExpressionSyntax(init, LuaIdentifierNameSyntax.This);
