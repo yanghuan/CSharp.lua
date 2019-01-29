@@ -346,7 +346,7 @@ function isTypeOf(obj, cls)
     return false
   elseif typename == "table" then   
     local t = getmetatable(obj)
-    if t == cls or t == nil then
+    if t == cls then
       return true
     end
     if cls.class == "I" then
