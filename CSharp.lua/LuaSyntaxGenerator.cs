@@ -1320,7 +1320,7 @@ namespace CSharpLua {
     }
 
     internal bool HasStaticCtor(INamedTypeSymbol typeSymbol) {
-      return typeSymbol.HasStaticCtor() || typesOfExtendSelf_.Contains(typeSymbol);
+      return typesOfExtendSelf_.Contains(typeSymbol) || IsExplicitStaticCtorExists(typeSymbol);
     }
 
     internal bool IsExtendExists(INamedTypeSymbol typeSymbol) {
@@ -1345,6 +1345,79 @@ namespace CSharpLua {
           return XmlMetaProvider.IsTypeReadOnly((INamedTypeSymbol)symbol);
         }
       }
+      return false;
+    }
+
+    internal bool IsExplicitStaticCtorExists(INamedTypeSymbol typeSymbol) {
+      var constructor = typeSymbol.Constructors.FirstOrDefault(i => i.IsStatic);
+      if (constructor != null) {
+        if (!constructor.IsImplicitlyDeclared) {
+          return true;
+        }
+
+        if (IsInitFieldExists(typeSymbol, true)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    internal bool IsBaseExplicitCtorExists(INamedTypeSymbol baseType) {
+      while (baseType != null && baseType.SpecialType != SpecialType.System_Object && baseType.SpecialType != SpecialType.System_ValueType) {
+        var constructor = baseType.Constructors.FirstOrDefault(i => !i.IsStatic);
+        if (constructor != null) {
+          if (!constructor.IsImplicitlyDeclared) {
+            return true;
+          }
+
+          if (IsInitFieldExists(baseType, false)) {
+            return true;
+          }
+        }
+
+        baseType = baseType.BaseType;
+      }
+      return false;
+    }
+    
+    private static bool IsInitFieldExists<T>(IEnumerable<T> fieldSymbols, Func<T, ITypeSymbol> fieldTypeFunc, Func<SyntaxNode, ExpressionSyntax> fieldValueFunc) where T : ISymbol {
+      foreach (var field in fieldSymbols) {
+        var fieldType = fieldTypeFunc(field);
+        if (fieldType.IsCustomValueType() && !fieldType.IsNullableType()) {
+          return true;
+        }
+
+        var syntaxReference = field.DeclaringSyntaxReferences.FirstOrDefault();
+        if (syntaxReference != null) {
+          var valueExpression = fieldValueFunc(syntaxReference.GetSyntax());
+          if (valueExpression != null) {
+            var valueKind = valueExpression.Kind();
+            if (valueKind != SyntaxKind.NullLiteralExpression) {
+              bool isImmutable = fieldType.IsImmutable() && valueKind.IsLiteralExpression();
+              if (!isImmutable) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+
+      return false;
+    }
+
+    private bool IsInitFieldExists(INamedTypeSymbol symbol, bool isStatic) {
+      var members = symbol.GetMembers().Where(i => i.IsStatic == isStatic);
+      var fields = members.OfType<IFieldSymbol>();
+      if (IsInitFieldExists(fields, i => i.Type, node => ((VariableDeclaratorSyntax)node).Initializer?.Value)) {
+        return true;
+      }
+
+      var properties = members.OfType<IPropertySymbol>();
+      if (IsInitFieldExists(properties, i => i.Type, node => ((PropertyDeclarationSyntax)node).Initializer?.Value)) {
+        return true;
+      }
+
       return false;
     }
 

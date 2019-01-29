@@ -465,10 +465,6 @@ namespace CSharpLua {
       return false;
     }
 
-    public static bool HasStaticCtor(this INamedTypeSymbol typeSymbol) {
-      return typeSymbol.Constructors.Any(i => i.IsStatic);
-    }
-
     public static bool IsAssignment(this SyntaxKind kind) {
       return kind >= SyntaxKind.SimpleAssignmentExpression && kind <= SyntaxKind.RightShiftAssignmentExpression;
     }
@@ -479,6 +475,10 @@ namespace CSharpLua {
 
     public static bool IsTypeDeclaration(this SyntaxKind kind) {
       return kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration;
+    }
+
+    public static bool IsLiteralExpression(this SyntaxKind kind) {
+      return kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.DefaultLiteralExpression;
     }
 
     private static INamedTypeSymbol systemLinqEnumerableType_;
@@ -1001,19 +1001,6 @@ namespace CSharpLua {
       } else {
         return !symbol.GetMembers(memberName).IsEmpty;
       }
-    }
-
-    public static bool IsExplicitCtorExists(this INamedTypeSymbol baseType) {
-      while (baseType != null
-        && baseType.SpecialType != SpecialType.System_Object
-        && baseType.SpecialType != SpecialType.System_ValueType) {
-        if (baseType.Constructors.Any(i => !i.IsStatic)) {
-          return true;
-        }
-
-        baseType = baseType.BaseType;
-      }
-      return false;
     }
 
     public static bool IsContainsInternalSymbol(this INamedTypeSymbol type, ISymbol symbol) {

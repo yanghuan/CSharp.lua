@@ -243,11 +243,12 @@ namespace CSharpLua {
         bool isBaseImplementation = typeSymbol.BaseType != null && typeSymbol.BaseType.AllInterfaces.Any(i => i.IsGenericIEnumerableType());
         if (!isBaseImplementation) {
           var argumentType = interfaceType.TypeArguments.First();
-          var typeName = GetTypeName(argumentType);
+          bool isLazy = argumentType.Kind != SymbolKind.TypeParameter && argumentType.IsFromCode();
+          var typeName = isLazy ?  GetTypeNameWithoutImport(argumentType) : GetTypeName(argumentType);
           return new LuaSpeaicalGenericType() {
             Name = LuaIdentifierNameSyntax.GenericT,
             Value = typeName,
-            IsLazy = argumentType.Kind != SymbolKind.TypeParameter && argumentType.IsFromCode(),
+            IsLazy = isLazy
           };
         }
       }
@@ -293,8 +294,8 @@ namespace CSharpLua {
           var genericArgument = CheckSpeaicalGenericArgument(typeSymbol);
           var baseCopyFields = GetBaseCopyFields(node.BaseList.Types.FirstOrDefault());
           typeDeclaration.AddBaseTypes(baseTypes, genericArgument, baseCopyFields);
-          if (hasExtendSelf && !typeSymbol.HasStaticCtor()) {
-            typeDeclaration.SetStaticCtorEmpty();
+          if (hasExtendSelf && !generator_.IsExplicitStaticCtorExists(typeSymbol)) {
+            typeDeclaration.IsForceStaticCtor = true;
           }
         }
       }
@@ -308,13 +309,13 @@ namespace CSharpLua {
 
     private void CheckTypeDeclaration(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration, List<LuaExpressionSyntax> attributes) {
       if (typeDeclaration.IsNoneCtros) {
-        var bseTypeSymbol = typeSymbol.BaseType;
-        if (bseTypeSymbol != null) {
+        var baseTypeSymbol = typeSymbol.BaseType;
+        if (baseTypeSymbol != null) {
           bool isNeedCallBase;
           if (typeDeclaration.IsInitStatementExists) {
-            isNeedCallBase = bseTypeSymbol.IsExplicitCtorExists();
+            isNeedCallBase = generator_.IsBaseExplicitCtorExists(baseTypeSymbol);
           } else {
-            isNeedCallBase = generator_.HasStaticCtor(bseTypeSymbol) || bseTypeSymbol.Constructors.Count() > 1;
+            isNeedCallBase = generator_.HasStaticCtor(baseTypeSymbol);
           }
           if (isNeedCallBase) {
             var baseCtorInvoke = BuildCallBaseConstructor(typeSymbol);
@@ -414,8 +415,8 @@ namespace CSharpLua {
           var genericArgument = CheckSpeaicalGenericArgument(major.Symbol);
           var baseCopyFields = GetBaseCopyFields(baseTypes.FirstOrDefault());
           major.TypeDeclaration.AddBaseTypes(baseTypeExpressions, genericArgument, baseCopyFields);
-          if (hasExtendSelf && !major.Symbol.HasStaticCtor()) {
-            major.TypeDeclaration.SetStaticCtorEmpty();
+          if (hasExtendSelf && !generator_.IsExplicitStaticCtorExists(major.Symbol)) {
+            major.TypeDeclaration.IsForceStaticCtor = true;
           }
         }
       }

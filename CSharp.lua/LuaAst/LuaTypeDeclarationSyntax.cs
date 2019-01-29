@@ -37,6 +37,7 @@ namespace CSharpLua.LuaAst {
     public bool IsPartialMark { get; set; }
     public bool IsClassUsed { get; set; }
     protected bool isStruct_;
+    public bool IsForceStaticCtor { get; set; }
 
     private LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
     private List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new List<LuaTypeDeclarationSyntax>();
@@ -344,13 +345,6 @@ namespace CSharpLua.LuaAst {
       };
     }
 
-    public void SetStaticCtorEmpty() {
-      Contract.Assert(staticCtor_ == null);
-      var ctor = new LuaConstructorAdapterExpressionSyntax();
-      ctor.AddStatement(Empty);
-      staticCtor_ = new LuaConstructorDeclaration() { Function = ctor };
-    }
-
     public bool IsNoneCtros {
       get {
         return ctors_.Count == 0;
@@ -379,7 +373,7 @@ namespace CSharpLua.LuaAst {
 
     private void AddInitFunction(LuaBlockSyntax body, LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax initFunction, bool isAddItem = true) {
       local_.Variables.Add(name);
-      body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(name, initFunction)));
+      body.Statements.Add(new LuaAssignmentExpressionSyntax(name, initFunction));
       if (isAddItem) {
         AddResultTable(name);
       }
@@ -398,20 +392,22 @@ namespace CSharpLua.LuaAst {
     }
 
     private void CheckStaticCtorFunction(LuaBlockSyntax body) {
-      List<LuaStatementSyntax> statements = new List<LuaStatementSyntax>();
+      var statements = new List<LuaStatementSyntax>();
       statements.AddRange(staticInitStatements_);
       if (staticCtor_ != null) {
         statements.AddRange(staticCtor_.Function.Body.Statements);
       }
-      if (statements.Count > 0) {
-        LuaFunctionExpressionSyntax staticCtor = new LuaFunctionExpressionSyntax();
+      if (statements.Count > 0 || IsForceStaticCtor) {
+        var staticCtor = new LuaFunctionExpressionSyntax();
         staticCtor.AddParameter(LuaIdentifierNameSyntax.This);
         staticCtor.Body.Statements.AddRange(statements);
         AddStaticAssignmentNames(staticCtor.Body);
         if (staticCtor_ != null && staticCtor_.Document != null) {
           body.AddStatement(staticCtor_.Document);
         }
-        AddInitFunction(body, LuaIdentifierNameSyntax.StaticCtor, staticCtor);
+        var staticCtorName = LuaIdentifierNameSyntax.StaticCtor;
+        body.AddStatement(new LuaLocalVariableDeclaratorSyntax(staticCtorName, staticCtor));
+        AddResultTable(staticCtorName);
       }
     }
 
@@ -431,11 +427,11 @@ namespace CSharpLua.LuaAst {
           if (ctors_.Count == 1 || isStruct_) {
             ctors_.First().Function.Body.Statements.InsertRange(0, initStatements_);
           } else {
-            var initIdentifier = LuaIdentifierNameSyntax.Init;
-            AddInitFunction(body, initIdentifier, GetInitFunction(), false);
+            var init = LuaIdentifierNameSyntax.Init;
+            body.AddStatement(new LuaLocalVariableDeclaratorSyntax(init, GetInitFunction()));
             foreach (var ctor in ctors_) {
               if (!ctor.Function.IsInvokeThisCtor) {
-                var invocationInit = new LuaInvocationExpressionSyntax(initIdentifier, LuaIdentifierNameSyntax.This);
+                var invocationInit = new LuaInvocationExpressionSyntax(init, LuaIdentifierNameSyntax.This);
                 ctor.Function.Body.Statements.Insert(0, new LuaExpressionStatementSyntax(invocationInit));
               }
             }

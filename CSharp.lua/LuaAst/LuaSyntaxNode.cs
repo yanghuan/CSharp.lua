@@ -124,16 +124,17 @@ namespace CSharpLua.LuaAst {
       "internal", "virtual",
     };
 
-    public static readonly HashSet<string> ReservedWords = new HashSet<string>() {
-      //  lua reserved words
-      Keyword.And, Keyword.Break, Keyword.Do, Keyword.Else, Keyword.ElseIf, Keyword.End,
-      Keyword.False, Keyword.For, Keyword.Function, Keyword.Goto, Keyword.If, Keyword.In,
-      Keyword.Local, Keyword.Nil, Keyword.Not, Keyword.Or, Keyword.Repeat, Keyword.Return,
-      Keyword.Then, Keyword.True, Keyword.Until, Keyword.While,
-            
+    public static readonly HashSet<string> ReservedWords = new HashSet<string>() {            
       // compiler reserved words
       "System", "Linq",
     };
+
+    static LuaSyntaxNode() {
+      // lua reserved words
+      foreach (var field in typeof(Keyword).GetFields()) {
+        ReservedWords.Add(field.GetRawConstantValue().ToString());
+      }
+    }
 
     public static readonly HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
       // lua metatable methods

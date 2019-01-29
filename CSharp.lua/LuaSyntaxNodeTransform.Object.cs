@@ -342,7 +342,7 @@ namespace CSharpLua {
           var newExpression = BuildInvokeRefOrOut(node.Initializer, otherCtorInvoke, refOrOutArguments);
           function.AddStatement(newExpression);
         }
-      } else if (!isStatic && symbol.ContainingType.BaseType.IsExplicitCtorExists()) {
+      } else if (!isStatic && generator_.IsBaseExplicitCtorExists(symbol.ContainingType.BaseType)) {
         var baseCtorInvoke = BuildCallBaseConstructor(symbol.ContainingType, out int ctroCounter);
         Contract.Assert(baseCtorInvoke != null);
         function.AddStatement(baseCtorInvoke);
