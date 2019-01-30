@@ -51,4 +51,5 @@ return function(dir, conf)
   load("Threads.Timer")
   load("Threads.Thread")
   load("Threads.Task")
+  load("Utilities")
 end
