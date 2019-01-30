@@ -258,7 +258,7 @@ namespace CSharpLua {
     }
 
     private LuaInvocationExpressionSyntax BuildBaseFromThis() {
-      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.This, LuaIdentifierNameSyntax.Base, true));
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemBase, LuaIdentifierNameSyntax.This);
     }
 
     private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol type, ITypeSymbol baseType, int ctroCounter) {

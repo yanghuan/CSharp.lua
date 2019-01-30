@@ -108,6 +108,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax StackAlloc = "System.stackalloc";
     public static readonly LuaIdentifierNameSyntax GenericT = "__genericT__";
     public static readonly LuaIdentifierNameSyntax Base = "base";
+    public static readonly LuaIdentifierNameSyntax SystemBase = "System.base";
     public static readonly LuaIdentifierNameSyntax TupleType = "System.Tuple";
     public static readonly LuaIdentifierNameSyntax ValueTupleType = "System.ValueTuple";
     public static readonly LuaIdentifierNameSyntax ValueTupleTypeCreate = "System.valueTuple";

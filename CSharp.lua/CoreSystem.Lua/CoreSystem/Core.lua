@@ -942,7 +942,7 @@ function System.new(cls, index, ...)
   return this, cls.__ctor__[index](this, ...)
 end
 
-local function base(this)
+function System.base(this)
   return getmetatable(getmetatable(this))
 end
 
@@ -966,10 +966,9 @@ end
 
 Object = defCls("System.Object", {
   __call = new,
-  default = emptyFn,
   __ctor__ = emptyFn,
+  default = emptyFn,
   class = "C",
-  base = base,
   EqualsObj = equals,
   ReferenceEquals = equals,
   GetHashCode = identityFn,
