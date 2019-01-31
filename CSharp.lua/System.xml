@@ -297,7 +297,6 @@ limitations under the License.
         <method name="ToString" Template="System.toString({this})" />
         <method name="op_Explicit" Template="System.getValueOfNull({0})" />
       </class>
-      <class name="WeakReference" Baned="true" />
       <class name="WeakReference^1" IgnoreGeneric="true" />
     </namespace>
     <namespace name="System.Collections" Name="System" />

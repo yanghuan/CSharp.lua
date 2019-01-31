@@ -210,22 +210,41 @@ Stopwatch = define("System.Stopwatch", {
 local weaks = setmetatable({}, { __mode = "v" })
 local weakCounter = 1
 
-local function setWeakTarget(this, target)
+local function initWeakTarget(this, target, trackResurrection)
+  if trackResurrection then
+    this.trackResurrection = trackResurrection
+  end
   weaks[weakCounter] = target
   this.handle = weakCounter
   weakCounter = weakCounter + 1
 end
 
+local function setWeakTarget(this, target)
+  weaks[this.handle] = nil
+  initWeakTarget(this, target)
+end
+
 define("System.WeakReference", {
-  __ctor__ = setWeakTarget,
-  
-  SetTarget = function (this, target)
-    weaks[this.handle] = nil
-    setWeakTarget(this, target)
-  end,
+  __ctor__ = initWeakTarget,
+  SetTarget = setWeakTarget,
+  trackResurrection = false,
 
   TryGetTarget = function (this)
     local target = weaks[this.handle]
     return target ~= nil, target
-  end
+  end,
+
+  getIsAlive = function (this)
+    return weaks[this.handle] ~= nil
+  end,
+
+  getTrackResurrection = function (this)
+    return this.trackResurrection
+  end,
+
+  getTarget = function (this)
+    return weaks[this.handle]
+  end,
+
+  setTarget = setWeakTarget
 })

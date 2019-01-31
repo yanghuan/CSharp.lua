@@ -197,7 +197,7 @@ local function checkUniqueAndUnfoundElements(this, other, returnIfUnfound)
     local numElementsInOther = 0
     for _, item in each(other) do
       numElementsInOther = numElementsInOther + 1
-      break;
+      break
     end
     return 0, numElementsInOther
   end
