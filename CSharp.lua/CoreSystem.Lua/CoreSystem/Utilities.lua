@@ -18,8 +18,8 @@ local System = System
 local throw = System.throw
 local define = System.define
 local trunc = System.trunc
+local TimeSpan = System.TimeSpan
 local ArgumentNullException = System.ArgumentNullException
-local fromMilliseconds = System.TimeSpan.FromMilliseconds
 
 local select = select
 local type = type
@@ -130,7 +130,7 @@ else
   frequency = 10 ^ p
 end
 
-local function getRawElapsedTicks(this)
+local function getRawElapsedSeconds(this)
   local timeElapsed = this.elapsed
   if this.running then
     local currentTimeStamp = ticker()
@@ -195,15 +195,15 @@ Stopwatch = define("System.Stopwatch", {
   end,
 
   getElapsed = function (this)
-    return fromMilliseconds(getRawElapsedTicks(this))
+    return TimeSpan(getRawElapsedSeconds(this) * 1e7)
   end,
 
   getElapsedMilliseconds = function (this)
-    return trunc(getRawElapsedTicks(this) * 1000)
+    return trunc(getRawElapsedSeconds(this) * 1000)
   end,
 
   getElapsedTicks = function (this)
-    return trunc(getRawElapsedTicks(this) * frequency)
+    return trunc(getRawElapsedSeconds(this) * frequency)
   end
 })
 
