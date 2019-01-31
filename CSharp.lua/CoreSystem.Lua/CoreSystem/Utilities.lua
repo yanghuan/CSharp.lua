@@ -26,6 +26,7 @@ local type = type
 local os = os
 local clock = os.clock
 local tostring = tostring
+local collectgarbage = collectgarbage
 
 define("System.Environment", {
   Exit = os.exit,
@@ -33,6 +34,19 @@ define("System.Environment", {
 
   getTickCount = function ()
     return trunc(clock() * 1000)
+  end
+})
+
+define("System.GC", {
+  Collect = function ()
+    collectgarbage("collect")
+  end,
+
+  GetTotalMemory = function (forceFullCollection)
+    if forceFullCollection then 
+      collectgarbage("collect")
+    end
+    return collectgarbage("count") * 1024
   end
 })
 
@@ -190,5 +204,28 @@ Stopwatch = define("System.Stopwatch", {
 
   getElapsedTicks = function (this)
     return trunc(getRawElapsedTicks(this) * frequency)
+  end
+})
+
+local weaks = setmetatable({}, { __mode = "v" })
+local weakCounter = 1
+
+local function setWeakTarget(this, target)
+  weaks[weakCounter] = target
+  this.handle = weakCounter
+  weakCounter = weakCounter + 1
+end
+
+define("System.WeakReference", {
+  __ctor__ = setWeakTarget,
+  
+  SetTarget = function (this, target)
+    weaks[this.handle] = nil
+    setWeakTarget(this, target)
+  end,
+
+  TryGetTarget = function (this)
+    local target = weaks[this.handle]
+    return target ~= nil, target
   end
 })
