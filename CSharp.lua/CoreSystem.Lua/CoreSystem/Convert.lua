@@ -19,8 +19,10 @@ local throw = System.throw
 local cast = System.cast
 local as = System.as
 local trunc = System.trunc
+local define = System.define
 local identityFn = System.identityFn
 local IConvertible = System.IConvertible
+
 local OverflowException = System.OverflowException
 local FormatException = System.FormatException
 local ArgumentNullException = System.ArgumentNullException
@@ -260,7 +262,7 @@ local function changeType(value, conversionType)
   return ic.ToType(conversionType)
 end
 
-System.define("System.Convert", {
+define("System.Convert", {
   ToBoolean = toBoolean,
   ToChar = toChar,
   ToSByte = toSByte,
@@ -341,3 +343,321 @@ DateTime.ToSingle = throwInvalidCastException
 DateTime.ToDouble = throwInvalidCastException
 DateTime.ToDateTime = identityFn
 DateTime.ToType = defaultToType
+
+
+-- BitConverter
+local band = System.band
+local bor = System.bor
+local sl = System.sl
+local sr = System.sr
+local div = System.div
+local global = System.global
+local systemToInt16 = System.toInt16
+local systemToUInt16 = System.toUInt16
+local systemToInt32 = System.toInt32
+local systemToUInt32 = System.toUInt32
+local systemToUInt64 = System.toUInt64
+local arrayFromTable = System.arrayFromTable
+local checkIndexAndCount = System.Collection.checkIndexAndCount
+local NotSupportedException = System.NotSupportedException
+
+local assert = assert
+local rawget = rawget
+local unpack = table.unpack
+local schar = string.char
+
+-- https://github.com/ToxicFrog/vstruct/blob/master/io/endianness.lua#L30
+local isLittleEndian = true
+if rawget(global, "jit") then
+  if require("ffi").abi("be") then
+    isLittleEndian = false
+  end
+elseif string.dump then
+  if string.byte(string.dump(function() end), 7) == 0x00 then
+    isLittleEndian = false
+  end
+end
+
+local function bytes(t)
+  return arrayFromTable(t, Byte)    
+end
+
+local spack, sunpack, getBytesFromInt64, toInt64
+if System.luaVersion < 5.3 then
+  local struct = rawget(global, "struct")
+  if struct then
+    spack, sunpack = struct.pack, struct.upack
+  end
+  if not spack then
+    spack = function ()
+      throw(NotSupportedException("not found struct"), 1) 
+    end
+    sunpack = spack
+  end
+
+  getBytesFromInt64 = function (value)
+    if value <= -2147483647 or value >= 2147483647 then
+      local s = spack("i8", value)
+      return bytes({
+        sbyte(s, 1),
+        sbyte(s, 2),
+        sbyte(s, 3),
+        sbyte(s, 4),
+        sbyte(s, 5),
+        sbyte(s, 6),
+        sbyte(s, 7),
+        sbyte(s, 8)
+      })
+    end
+    return bytes({
+      band(value, 0xff),
+      band(sr(value, 8), 0xff),
+      band(sr(value, 16), 0xff),
+      band(sr(value, 24), 0xff),
+      0,
+      0,
+      0,
+      0
+    })
+  end
+
+  toInt64 = function (value, startIndex)
+    if value == nil then throw(ArgumentNullException("value")) end
+    checkIndexAndCount(value, startIndex, 8)
+    if value <= -2147483647 or value >= 2147483647 then
+      throw(System.NotSupportedException()) 
+    end
+    if isLittleEndian then
+      local i = value[startIndex + 1]
+      i = bor(i, sl(value[startIndex + 2], 8))
+      i = bor(i, sl(value[startIndex + 3], 16))
+      i = bor(i, sl(value[startIndex + 4], 24))
+      return i
+    else
+      local i = value[startIndex + 8]
+      i = bor(i, sl(value[startIndex + 7], 8))
+      i = bor(i, sl(value[startIndex + 6], 16))
+      i = bor(i, sl(value[startIndex + 5], 24))
+      return i
+    end
+  end
+else
+  spack, sunpack = string.pack, string.unpack
+  getBytesFromInt64 = function (value)
+    return bytes({
+      band(value, 0xff),
+      band(sr(value, 8), 0xff),
+      band(sr(value, 16), 0xff),
+      band(sr(value, 24), 0xff),
+      band(sr(value, 32), 0xff),
+      band(sr(value, 40), 0xff),
+      band(sr(value, 48), 0xff),
+      band(sr(value, 56), 0xff)
+    })
+  end
+
+  toInt64 = function (value, startIndex)
+    if value == nil then throw(ArgumentNullException("value")) end
+    checkIndexAndCount(value, startIndex, 8)
+    if isLittleEndian then
+      local i = value[startIndex + 1]
+      i = bor(i, sl(value[startIndex + 2], 8))
+      i = bor(i, sl(value[startIndex + 3], 16))
+      i = bor(i, sl(value[startIndex + 4], 24))
+      i = bor(i, sl(value[startIndex + 5], 32))
+      i = bor(i, sl(value[startIndex + 6], 40))
+      i = bor(i, sl(value[startIndex + 7], 48))
+      i = bor(i, sl(value[startIndex + 8], 56))
+      return i
+    else
+      local i = value[startIndex + 8]
+      i = bor(i, sl(value[startIndex + 7], 8))
+      i = bor(i, sl(value[startIndex + 6], 16))
+      i = bor(i, sl(value[startIndex + 5], 24))
+      i = bor(i, sl(value[startIndex + 4], 32))
+      i = bor(i, sl(value[startIndex + 3], 40))
+      i = bor(i, sl(value[startIndex + 2], 48))
+      i = bor(i, sl(value[startIndex + 1], 56))
+      return i
+    end
+  end
+end
+
+local function getBytesFromBoolean(value)
+  return bytes({ value and 1 or 0 })
+end
+
+local function getBytesFromInt16(value)
+  return bytes({
+    band(value, 0xff),
+    band(sr(value, 8), 0xff),
+  })
+end
+
+local function getBytesFromInt32(value)
+  return bytes({
+    band(value, 0xff),
+    band(sr(value, 8), 0xff),
+    band(sr(value, 16), 0xff),
+    band(sr(value, 24), 0xff)
+  })
+end
+
+local function getBytesFromFloat(value)
+  local s = spack("f", value)
+  return bytes({
+    sbyte(s, 1),
+    sbyte(s, 2),
+    sbyte(s, 3),
+    sbyte(s, 4)
+  })
+end
+
+local function getBytesFromDouble(value)
+  local s = spack("d", value)
+  return bytes({
+    sbyte(s, 1),
+    sbyte(s, 2),
+    sbyte(s, 3),
+    sbyte(s, 4),
+    sbyte(s, 5),
+    sbyte(s, 6),
+    sbyte(s, 7),
+    sbyte(s, 8)
+  })
+end
+
+local function toBoolean(value, startIndex)
+  if value == nil then throw(ArgumentNullException("value")) end
+  checkIndexAndCount(value, startIndex, 1)
+  return value[startIndex + 1] ~= 0 and true or false
+end
+
+local function getInt16(value, startIndex)
+  if value == nil then throw(ArgumentNullException("value")) end
+  checkIndexAndCount(value, startIndex, 2)
+  if isLittleEndian then
+    value = bor(value[startIndex + 1], sl(value[startIndex + 2], 8))
+  else
+    value = bor(sl(value[startIndex + 1], 8), value[startIndex + 2])
+  end
+  return value
+end
+
+local function toInt16(value, startIndex)
+  value = getInt16(value. startIndex)
+  return systemToInt16(value)
+end
+
+local function toUInt16(value, startIndex)
+  value = getInt16(value. startIndex)
+  return systemToUInt16(value)
+end
+
+local function getInt32(value, startIndex)
+  if value == nil then throw(ArgumentNullException("value")) end
+  checkIndexAndCount(value, startIndex, 4)
+  local i
+  if isLittleEndian then
+    i = value[startIndex + 1]
+    i = bor(i, sl(value[startIndex + 2], 8))
+    i = bor(i, sl(value[startIndex + 3], 16))
+    i = bor(i, sl(value[startIndex + 4], 24))
+  else
+    local i = value[startIndex + 4]
+    i = bor(i, sl(value[startIndex + 3], 8))
+    i = bor(i, sl(value[startIndex + 2], 16))
+    i = bor(i, sl(value[startIndex + 1], 24))
+  end
+  return i
+end
+
+local function toInt32(value, startIndex)
+  value = getInt32(value, startIndex)
+  return systemToInt32(value)
+end
+
+local function toUInt32(value, startIndex)
+  value = getInt32(value, startIndex)
+  return systemToUInt32(value)
+end
+
+local function toUInt64(value, startIndex)
+  value = toInt64(value, startIndex)
+  return systemToUInt64(value)
+end
+
+local function toSingle(value, startIndex)
+  if value == nil then throw(ArgumentNullException("value")) end
+  checkIndexAndCount(value, startIndex, 4)
+  return sunpack("f", schar(unpack(value)))
+end
+
+local function toDouble(value, startIndex)
+  if value == nil then throw(ArgumentNullException("value")) end
+  checkIndexAndCount(value, startIndex, 4)
+  return sunpack("d", schar(unpack(value)))
+end
+
+local function getHexValue(i)
+  assert(i >=0 and i < 16, "i is out of range.")
+  if i < 10 then
+    return i + 48
+  end
+  return i - 10 + 65
+end
+
+local function toString(value, startIndex, length)
+  if value == nil then throw(ArgumentNullException("value")) end
+  if not startIndex then
+    startIndex, length = 0, #value
+  elseif not length then
+    length = #value - startIndex
+  end
+  checkIndexAndCount(value, startIndex, length)
+  local t = {}
+  local len = 0
+  for i = startIndex + 1, length  do
+    local b = value[i]
+    t[len + 1] = getHexValue(div(b, 16))
+    t[len + 2] = getHexValue(b % 16)
+    t[len + 3] = 45
+    len = len + 3
+  end
+  t[#t] = nil
+  return schar(unpack(t))
+end
+
+local function doubleToInt64Bits(value)
+  assert(isLittleEndian, "This method is implemented assuming little endian with an ambiguous spec.")
+  local s = spack("d", value)
+  return sunpack("i8", s)
+end
+
+local function int64BitsToDouble(value)
+  assert(isLittleEndian, "This method is implemented assuming little endian with an ambiguous spec.")
+  local s = spack("i8", value)
+  return sunpack("d", s)
+end
+
+define("System.BitConverter", {
+  IsLittleEndian = isLittleEndian,
+  GetBytesFromBoolean = getBytesFromBoolean,
+  GetBytesFromInt16 = getBytesFromInt16,
+  GetBytesFromInt32 = getBytesFromInt32,
+  GetBytesFromInt64 = getBytesFromInt64,
+  GetBytesFromFloat = getBytesFromFloat,
+  GetBytesFromDouble = getBytesFromDouble,
+  ToBoolean = toBoolean,
+  ToInt16 = toInt16,
+  ToUInt16 = toUInt16,
+  ToInt32 = toInt32,
+  ToUInt32 = toUInt32,
+  ToInt64 = toInt64,
+  ToUInt64 = toUInt64,
+  ToSingle = toSingle,
+  ToDouble = toDouble,
+  ToString = toString,
+  DoubleToInt64Bits = doubleToInt64Bits,
+  Int64BitsToDouble = int64BitsToDouble
+})

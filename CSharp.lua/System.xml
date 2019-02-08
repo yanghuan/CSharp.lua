@@ -298,6 +298,35 @@ limitations under the License.
         <method name="op_Explicit" Template="System.getValueOfNull({0})" />
       </class>
       <class name="WeakReference^1" IgnoreGeneric="true" />
+      <class name="BitConverter">
+        <method name="GetBytes" Name="GetBytesFromBoolean">
+          <arg type="System.Boolean" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromInt16">
+          <arg type="System.Char" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromInt16">
+          <arg type="System.Int16" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromInt16">
+          <arg type="System.UInt16" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromInt32">
+          <arg type="System.Int32" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromInt32">
+          <arg type="System.UInt32" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromInt64">
+          <arg type="System.Int64" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromInt64">
+          <arg type="System.UInt64" />
+        </method>
+        <method name="GetBytes" Name="GetBytesFromFloat">
+          <arg type="System.Single" />
+        </method>
+      </class>
     </namespace>
     <namespace name="System.Collections" Name="System" />
     <namespace name="System.Collections.Generic" Name="System">

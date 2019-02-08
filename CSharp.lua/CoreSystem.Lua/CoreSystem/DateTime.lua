@@ -471,7 +471,7 @@ DateTime.MaxValue = DateTime(3155378975999999999)
 
 function DateTime.default()
   return minValue
-end  
+end
 
 function DateTime.TryParse(s)
   local v = parse(s)

@@ -216,6 +216,7 @@ end
 define("System.WeakReference", {
   trackResurrection = false,
   SetTarget = setWeakTarget,
+  setTarget = setWeakTarget,
 
   __ctor__ = function (this, target, trackResurrection)
     if trackResurrection then
@@ -239,7 +240,5 @@ define("System.WeakReference", {
 
   getTarget = function (this)
     return weaks[this]
-  end,
-
-  setTarget = setWeakTarget
+  end
 })
