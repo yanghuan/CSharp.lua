@@ -749,6 +749,7 @@ namespace CSharpLua {
         bool isPrivate = node.Modifiers.IsPrivate();
         bool isReadOnly = node.Modifiers.IsReadOnly();
 
+        var attributes = BuildAttributes(node.AttributeLists);
         var type = node.Declaration.Type;
         ITypeSymbol typeSymbol = (ITypeSymbol)semanticModel_.GetSymbolInfo(type).Symbol;
         bool isImmutable = typeSymbol.IsImmutable();
@@ -764,14 +765,17 @@ namespace CSharpLua {
               if (isStatic) {
                 typeExpression = GetTypeName(eventSymbol.ContainingType);
               }
-              CurType.AddEvent(eventName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, typeExpression, statements);
+              var (add, remove) = CurType.AddEvent(eventName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, typeExpression, statements);
+              if (attributes.Count > 0 || variableSymbol.HasMetadataAttribute()) {
+                AddPropertyOrEventMetaData(variableSymbol, new PropertyMethodResult(add), new PropertyMethodResult(remove), null, attributes);
+              }
               continue;
             }
           } else {
             if (!isStatic && isPrivate) {
               var fieldSymbol = (IFieldSymbol)variableSymbol;
               if (fieldSymbol.IsProtobufNetSpecialField(out string name)) {
-                AddField(name, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
+                AddField(name, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, attributes);
                 continue;
               }
             }
@@ -780,10 +784,12 @@ namespace CSharpLua {
             isPrivate = false;
           }
           var fieldName = GetMemberName(variableSymbol);
-          var attributes = AddField(fieldName, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
+          AddField(fieldName, typeSymbol, type, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, attributes);
           if (IsCurTypeSerializable || attributes.Count > 0 || variableSymbol.HasMetadataAttribute()) {
             if (variableSymbol.Kind == SymbolKind.Field) {
               AddFieldMetaData((IFieldSymbol)variableSymbol, fieldName, attributes);
+            } else {
+              AddPropertyOrEventMetaData(variableSymbol, null, null, fieldName, attributes);
             }
           }
         }
@@ -801,8 +807,9 @@ namespace CSharpLua {
               if (isPrivate && generator_.IsForcePublicSymbol(variableSymbol)) {
                 isPrivate = false;
               }
+              var attributes = BuildAttributes(node.AttributeLists);
               LuaIdentifierNameSyntax fieldName = GetMemberName(variableSymbol);
-              AddField(fieldName, typeSymbol, type, variable.Initializer.Value, true, true, isPrivate, true, node.AttributeLists);
+              AddField(fieldName, typeSymbol, type, variable.Initializer.Value, true, true, isPrivate, true, attributes);
             }
           }
         }
@@ -846,11 +853,9 @@ namespace CSharpLua {
       return valueExpression;
     }
 
-    private List<LuaExpressionSyntax> AddField(LuaIdentifierNameSyntax name, ITypeSymbol typeSymbol, TypeSyntax type, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, SyntaxList<AttributeListSyntax> attributeLists) {
-      var attributes = BuildAttributes(attributeLists);
+    private void AddField(LuaIdentifierNameSyntax name, ITypeSymbol typeSymbol, TypeSyntax type, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaExpressionSyntax> attributes) {
       var valueExpression = GetFieldValueExpression(type, typeSymbol, expression, out bool valueIsLiteral, out var statements);
       CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly, statements);
-      return attributes;
     }
 
     private sealed class PropertyMethodResult {
@@ -863,7 +868,8 @@ namespace CSharpLua {
       }
     }
 
-    private void AddPropertyMetaData(IPropertySymbol symol, PropertyMethodResult get, PropertyMethodResult set, LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
+    private void AddPropertyOrEventMetaData(ISymbol symol, PropertyMethodResult get, PropertyMethodResult set, LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
+      bool isProperty = symol.Kind == SymbolKind.Property;
       PropertyMethodKind kind;
       if (get == null && set == null) {
         kind = PropertyMethodKind.Field;
@@ -877,7 +883,8 @@ namespace CSharpLua {
       var data = new LuaTableExpression() { IsSingleLine = true };
       data.Add(new LuaStringLiteralExpressionSyntax(symol.Name));
       data.Add(symol.GetMetaDataAttributeFlags(kind));
-      data.Add(GetTypeNameOfMetadata(symol.Type));
+      var type = isProperty ? ((IPropertySymbol)symol).Type : ((IEventSymbol)symol).Type;
+      data.Add(GetTypeNameOfMetadata(type));
       if (kind == PropertyMethodKind.Field) {
         if (generator_.IsNeedRefactorName(symol)) {
           data.Add(new LuaStringLiteralExpressionSyntax(name));
@@ -905,7 +912,11 @@ namespace CSharpLua {
         }
       }
       data.AddRange(attributes);
-      CurType.AddPropertyMetaData(data);
+      if (isProperty) {
+        CurType.AddPropertyMetaData(data);
+      } else {
+        CurType.AddEventMetaData(data);
+      }
     }
 
     public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
@@ -993,7 +1004,7 @@ namespace CSharpLua {
           bool isField = IsPropertyField(semanticModel_.GetDeclaredSymbol(node));
           if (isField) {
             bool isReadOnly = IsReadOnlyProperty(node);
-            AddField(propertyName, typeSymbol, node.Type, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, node.AttributeLists);
+            AddField(propertyName, typeSymbol, node.Type, node.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, attributes);
           } else {
             LuaIdentifierNameSyntax innerName = AddInnerName(symbol);
             LuaExpressionSyntax valueExpression = GetFieldValueExpression(node.Type, typeSymbol, node.Initializer?.Value, out bool valueIsLiteral, out var statements);
@@ -1008,7 +1019,7 @@ namespace CSharpLua {
         }
 
         if (IsCurTypeSerializable || attributes.Count > 0 || symbol.HasMetadataAttribute()) {
-          AddPropertyMetaData(symbol, getMethod, setMethod, propertyName, attributes);
+          AddPropertyOrEventMetaData(symbol, getMethod, setMethod, propertyName, attributes);
         }
       }
 
@@ -1021,11 +1032,15 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitEventDeclaration(EventDeclarationSyntax node) {
       if (!node.Modifiers.IsAbstract()) {
+        var attributes = BuildAttributes(node.AttributeLists);
         var symbol = semanticModel_.GetDeclaredSymbol(node);
         bool isStatic = symbol.IsStatic;
         bool isPrivate = symbol.IsPrivate();
         LuaIdentifierNameSyntax eventName = GetMemberName(symbol);
+        PropertyMethodResult addMethod = null;
+        PropertyMethodResult removeMethod = null;
         foreach (var accessor in node.AccessorList.Accessors) {
+          var methodAttributes = BuildAttributes(accessor.AttributeLists);
           LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
           if (!isStatic) {
             functionExpression.AddParameter(LuaIdentifierNameSyntax.This);
@@ -1035,11 +1050,18 @@ namespace CSharpLua {
           var block = (LuaBlockSyntax)accessor.Body.Accept(this);
           PopFunction();
           functionExpression.AddStatements(block.Statements);
-          LuaPropertyOrEventIdentifierNameSyntax name = new LuaPropertyOrEventIdentifierNameSyntax(false, eventName);
+          var name = new LuaPropertyOrEventIdentifierNameSyntax(false, eventName);
           CurType.AddMethod(name, functionExpression, isPrivate);
           if (accessor.IsKind(SyntaxKind.RemoveAccessorDeclaration)) {
             name.IsGetOrAdd = false;
+            removeMethod = new PropertyMethodResult(name, methodAttributes);
+          } else {
+            addMethod = new PropertyMethodResult(name, methodAttributes);
           }
+        }
+        
+        if (attributes.Count > 0 || symbol.HasMetadataAttribute()) {
+          AddPropertyOrEventMetaData(symbol, addMethod, removeMethod, null, attributes);
         }
       }
       return base.VisitEventDeclaration(node);

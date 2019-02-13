@@ -56,6 +56,7 @@ namespace CSharpLua.LuaAst {
 
     private LuaTableExpression metadata_;
     private LuaTableExpression metaProperties_;
+    private LuaTableExpression metaEvents_;
     private LuaTableExpression metaFields_;
     private LuaTableExpression metaMethods_;
     private LuaDocumentStatement document_ = new LuaDocumentStatement();
@@ -103,6 +104,10 @@ namespace CSharpLua.LuaAst {
 
     internal void AddPropertyMetaData(LuaTableExpression data) {
       AddMetadata(ref metaProperties_, LuaIdentifierNameSyntax.Properties, new LuaSingleTableItemSyntax(data));
+    }
+
+    internal void AddEventMetaData(LuaTableExpression data) {
+      AddMetadata(ref metaEvents_, LuaIdentifierNameSyntax.Events, new LuaSingleTableItemSyntax(data));
     }
 
     internal void AddMethodMetaData(LuaTableExpression data) {
@@ -333,8 +338,8 @@ namespace CSharpLua.LuaAst {
       return AddPropertyOrEvent(true, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
     }
 
-    public void AddEvent(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
-      AddPropertyOrEvent(false, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
+    public (LuaPropertyOrEventIdentifierNameSyntax, LuaPropertyOrEventIdentifierNameSyntax) AddEvent(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax innerName, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, LuaExpressionSyntax typeExpression, List<LuaStatementSyntax> statements) {
+      return AddPropertyOrEvent(false, name, innerName, value, isImmutable, isStatic, isPrivate, typeExpression, statements);
     }
 
     public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function, LuaDocumentStatement document) {

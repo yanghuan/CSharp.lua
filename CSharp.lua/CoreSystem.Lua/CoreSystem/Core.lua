@@ -363,22 +363,20 @@ if version < 5.3 then
   local bnot, band, bor, xor, sl, sr
   local ok, bit = pcall(require, "bit")
   if ok then
-    bnot = bit.bnot
-    band = bit.band
-    bor = bit.bor
-    xor = bit.bxor
-    sl = bit.lshift
-    sr = bit.rshift
-
-    System.bnot = bnot
-    System.band = band
-    System.bor = bor
-    System.xor = xor
-    System.sl = sl
-    System.sr = sr
+    bnot, band, bor, xor, sl, sr = bit.bnot, bit.band, bit.bor, bit.bxor, bit.lshift, bit.rshift
   else
-    print("load bit fail, bit operation is not enabled")
+    local function disable()
+      throw(System.NotSupportedException("bit operation is not enabled."))
+    end
+    bnot, band, bor, xor, sl, sr  = disable, disable, disable, disable, disable, disable
   end
+
+  System.bnot = bnot
+  System.band = band
+  System.bor = bor
+  System.xor = xor
+  System.sl = sl
+  System.sr = sr
   
   function System.bnotOfNull(x)
     if x == nil then
@@ -443,7 +441,7 @@ if version < 5.3 then
     if y == 0 then
       throw(System.DivideByZeroException(), 1)
     end
-    return x % y;
+    return x % y
   end
 
   function System.modOfNull(x, y)
@@ -453,7 +451,7 @@ if version < 5.3 then
     if y == 0 then
       throw(System.DivideByZeroException(), 1)
     end
-    return x % y;
+    return x % y
   end
 
   function System.toUInt(v, max, mask, checked)
