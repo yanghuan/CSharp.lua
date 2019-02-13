@@ -1053,7 +1053,8 @@ namespace CSharpLua {
           }
           break;
         }
-        case SymbolKind.Property: {
+        case SymbolKind.Property: 
+        case SymbolKind.Event: {
           if (propertyMethodKind > 0) {
             flags |= (int)propertyMethodKind << 8;
           }
