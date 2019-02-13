@@ -372,8 +372,9 @@ if rawget(global, "jit") then
   if require("ffi").abi("be") then
     isLittleEndian = false
   end
-elseif string.dump then
-  if string.byte(string.dump(function() end), 7) == 0x00 then
+else 
+  local dump = string.dump
+  if dump and sbyte(dump(System.emptyFn, 7)) == 0x00 then
     isLittleEndian = false
   end
 end
@@ -600,7 +601,7 @@ local function toDouble(value, startIndex)
 end
 
 local function getHexValue(i)
-  assert(i >=0 and i < 16, "i is out of range.")
+  assert(i >= 0 and i < 16, "i is out of range.")
   if i < 10 then
     return i + 48
   end
@@ -616,12 +617,12 @@ local function toString(value, startIndex, length)
   end
   checkIndexAndCount(value, startIndex, length)
   local t = {}
-  local len = 0
+  local len = 1
   for i = startIndex + 1, length  do
     local b = value[i]
-    t[len + 1] = getHexValue(div(b, 16))
-    t[len + 2] = getHexValue(b % 16)
-    t[len + 3] = 45
+    t[len] = getHexValue(div(b, 16))
+    t[len + 1] = getHexValue(b % 16)
+    t[len + 2] = 45
     len = len + 3
   end
   t[#t] = nil
