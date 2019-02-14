@@ -501,6 +501,17 @@ namespace CSharpLua {
       return (string)methodInfo.Invoke(location, null);
     }
 
+    public static bool IsGetExpressionNode(this ExpressionSyntax node) {
+      bool isGet;
+      if (!node.Parent.Kind().IsAssignment()) {
+        isGet = true;
+      } else {
+        var assignment = (AssignmentExpressionSyntax)node.Parent;
+        isGet = assignment.Right == node;
+      }
+      return isGet;
+    }
+
     public static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
       if (parent.SpecialType == SpecialType.System_Object) {
         return true;
