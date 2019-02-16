@@ -2006,13 +2006,7 @@ namespace CSharpLua {
         }
       } else if (symbol.Kind == SymbolKind.Property) {
         var propertySymbol = (IPropertySymbol)symbol;
-        bool isGet;
-        if (!node.Parent.Kind().IsAssignment()) {
-          isGet = true;
-        } else {
-          var assignment = (AssignmentExpressionSyntax)node.Parent;
-          isGet = assignment.Right == node;
-        }
+        bool isGet = node.IsGetExpressionNode();
         string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, isGet);
         if (codeTemplate != null) {
           var result = BuildCodeTemplateExpression(codeTemplate, node.Expression);

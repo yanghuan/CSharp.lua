@@ -879,7 +879,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax InternalVisitElementAccessExpression(IPropertySymbol symbol, ElementAccessExpressionSyntax node) {
       if (symbol != null) {
-        bool isGet = !node.Parent.Kind().IsAssignment();
+        bool isGet = node.IsGetExpressionNode();
         string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(symbol, isGet);
         if (codeTemplate != null) {
           List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
