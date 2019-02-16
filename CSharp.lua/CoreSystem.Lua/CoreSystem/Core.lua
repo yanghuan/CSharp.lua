@@ -161,8 +161,19 @@ interfaceMetatable.__index = interfaceMetatable
 
 local ctorMetatable = { __call = function (ctor, ...) return ctor[1](...) end }
 
+local function applyExtends(cls)
+  local extends = cls.__inherits__
+  if extends then
+    if type(extends) == "function" then
+      extends = extends(global, cls)
+    end
+    cls.__inherits__ = nil
+  end
+  return extends
+end
+
 local function applyMetadata(cls)
-  local metadata = rawget(cls, "__metadata__")
+  local metadata = cls.__metadata__
   if metadata then
     if metadatas then
       metadatas[#metadatas + 1] = function (global)
@@ -182,16 +193,12 @@ local function setBase(cls, kind)
   if ctor and type(ctor) == "table" then
     setmetatable(ctor, ctorMetatable)
   end
-
-  local extends = cls.__inherits__
-  if extends and type(extends) == "function" then
-    extends = extends(global, cls)
-  end
+  local extends = applyExtends(cls)
+  applyMetadata(cls)
 
   if kind == "S" then
     if extends then
       cls.interface = extends
-      cls.__inherits__ = nil
     end
     setmetatable(cls, ValueType)
   else
@@ -207,12 +214,10 @@ local function setBase(cls, kind)
           cls.interface = extends
         end
       end
-      cls.__inherits__ = nil
     else
       setmetatable(cls, Object)
     end
   end
-  applyMetadata(cls)
 end
 
 local function staticCtorSetBase(cls)
@@ -271,7 +276,7 @@ local function def(name, kind, cls, generic)
       local gt, gk = genericKey(mt, ...)
       local t = gt[gk]
       if t == nil then
-        t = def(nil, kind, cls(...) or {}, genericName(name, ...))
+        t = def(genericName(name, ...), kind, cls(...) or {}, true)
         if generic then
           setmetatable(t, generic)
         end
@@ -282,11 +287,9 @@ local function def(name, kind, cls, generic)
     return set(name, setmetatable(generic or {}, { __call = fn, __index = Object }))
   end
   cls = cls or {}
-  if name ~= nil then
+  cls.__name__ = name
+  if not generic then
     set(name, cls)
-    cls.__name__ = name
-  else
-    cls.__name__ = generic
   end
   if kind == "C" or kind == "S" then
     if cls.static == nil then
@@ -295,19 +298,12 @@ local function def(name, kind, cls, generic)
       setHasStaticCtor(cls, kind)
     end
   elseif kind == "I" then
-    local extends = cls.__inherits__
-    if extends then
-      if type(extends) == "function" then
-        extends = extends(global, cls)
-      end
-      cls.interface = extends
-      cls.__inherits__ = nil
-    end
+    cls.interface = applyExtends(cls)
+    applyMetadata(cls)
     setmetatable(cls, interfaceMetatable)
-    applyMetadata(cls)
   elseif kind == "E" then
-    setmetatable(cls, enumMetatable)
     applyMetadata(cls)
+    setmetatable(cls, enumMetatable)
   else
     assert(false, kind)
   end
