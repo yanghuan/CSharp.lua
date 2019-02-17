@@ -1859,8 +1859,7 @@ namespace CSharpLua {
         foreach (IParameterSymbol parameter in optionalParameters) {
           if (parameter.IsParams) {
             var arrayType = (IArrayTypeSymbol)parameter.Type;
-            LuaExpressionSyntax baseType = GetTypeName(arrayType.ElementType);
-            LuaExpressionSyntax emptyArray = BuildEmptyArray(baseType);
+            LuaExpressionSyntax emptyArray = BuildArray(arrayType.ElementType);
             arguments.Add(emptyArray);
           } else {
             LuaExpressionSyntax defaultValue = GetDeafultParameterValue(parameter, node, isCheckCallerAttribute);
@@ -1887,7 +1886,7 @@ namespace CSharpLua {
           } else {
             int otherParameterCount = parameters.Length - 1;
             var arrayTypeSymbol = (IArrayTypeSymbol)last.Type;
-            var paramsArguments = arguments.Skip(otherParameterCount);
+            var paramsArguments = arguments.Skip(otherParameterCount).ToArray();
             var array = BuildArray(arrayTypeSymbol.ElementType, paramsArguments);
             arguments.RemoveRange(otherParameterCount, arguments.Count - otherParameterCount);
             arguments.Add(array);

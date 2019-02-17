@@ -28,6 +28,7 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform {
+    private const int kMaxArrayInitializerCount = 225;
     private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
     private Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
     private int localMappingCounter_;
@@ -340,19 +341,34 @@ namespace CSharpLua {
       return false;
     }
 
-    private LuaInvocationExpressionSyntax BuildEmptyArray(LuaExpressionSyntax baseType) {
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ArrayEmpty, baseType);
-    }
-
-    private LuaInvocationExpressionSyntax BuildArray(ITypeSymbol elementType, params LuaExpressionSyntax[] elements) {
-      IEnumerable<LuaExpressionSyntax> expressions = elements;
-      return BuildArray(elementType, expressions);
-    }
-
-    private LuaInvocationExpressionSyntax BuildArray(ITypeSymbol elementType, IEnumerable<LuaExpressionSyntax> elements) {
+    private LuaExpressionSyntax BuildArray(ITypeSymbol elementType, params LuaExpressionSyntax[] elements) {
       var baseType = GetTypeName(elementType);
       var arrayType = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, baseType);
-      return new LuaInvocationExpressionSyntax(arrayType, new LuaTableExpression(elements) { IsSingleLine = true }, true);
+      return BuildArray(arrayType, elements);
+    }
+
+    private LuaExpressionSyntax BuildArray(LuaExpressionSyntax arrayType, IList<LuaExpressionSyntax> elements) {
+      if (elements.Count > kMaxArrayInitializerCount) {
+        return new LuaInvocationExpressionSyntax(
+          new LuaMemberAccessExpressionSyntax(arrayType, LuaIdentifierNameSyntax.New, true), 
+          new LuaNumberLiteralExpressionSyntax(elements.Count),
+          new LuaTableExpression(elements) { IsSingleLine = true }
+          );
+      } else {
+        return new LuaInvocationExpressionSyntax(arrayType, elements);
+      }
+    }
+
+    private LuaExpressionSyntax BuildArray(LuaExpressionSyntax arrayType, LuaExpressionSyntax size) {
+      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(arrayType, LuaIdentifierNameSyntax.New, true), size);
+    }
+
+    private LuaExpressionSyntax BuildMultiArray(LuaExpressionSyntax arrayType, LuaExpressionSyntax rank, List<LuaExpressionSyntax> elements = null) {
+      var invocation = new LuaInvocationExpressionSyntax(arrayType, rank);
+      if (elements != null) {
+        invocation.AddArgument(new LuaTableExpression(elements) { IsSingleLine = true });
+      }
+      return invocation;
     }
 
     private LuaLiteralExpressionSyntax GetLiteralExpression(object constantValue) {

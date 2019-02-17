@@ -42,7 +42,6 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax YieldReturn = "System.yieldReturn";
     public static readonly LuaIdentifierNameSyntax Object = "System.Object";
     public static readonly LuaIdentifierNameSyntax Array = "System.Array";
-    public static readonly LuaIdentifierNameSyntax ArrayEmpty = "System.Array.Empty";
     public static readonly LuaIdentifierNameSyntax MultiArray = "System.MultiArray";
     public static readonly LuaIdentifierNameSyntax Apply = "System.apply";
     public static readonly LuaIdentifierNameSyntax Add = "Add";
@@ -54,7 +53,6 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax SystemDefault = "System.default";
     public static readonly LuaIdentifierNameSyntax Property = "System.property";
     public static readonly LuaIdentifierNameSyntax Event = "System.event";
-    public static readonly LuaIdentifierNameSyntax SystemNull = "System.null";
     public static readonly LuaIdentifierNameSyntax SystemVoid = "System.Void";
     public static readonly LuaIdentifierNameSyntax Nil = "nil";
     public static readonly LuaIdentifierNameSyntax TypeOf = "System.typeof";
@@ -105,6 +103,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax TimeSpan = "System.TimeSpan";
     public static readonly LuaIdentifierNameSyntax AnonymousTypeCreate = "System.anonymousType";
     public static readonly LuaIdentifierNameSyntax AnonymousType = "System.AnonymousType";
+    public static readonly LuaIdentifierNameSyntax New = "new";
     public static readonly LuaIdentifierNameSyntax SystemNew = "System.new";
     public static readonly LuaIdentifierNameSyntax StackAlloc = "System.stackalloc";
     public static readonly LuaIdentifierNameSyntax GenericT = "__genericT__";

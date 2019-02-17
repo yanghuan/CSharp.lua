@@ -32,6 +32,7 @@ local xpcall = xpcall
 local rawget = rawget
 local rawset = rawset
 local tostring = tostring
+local string = string
 local sfind = string.find
 local ssub = string.sub
 local global = _G
@@ -298,7 +299,10 @@ local function def(name, kind, cls, generic)
       setHasStaticCtor(cls, kind)
     end
   elseif kind == "I" then
-    cls.interface = applyExtends(cls)
+    local extends = applyExtends(cls)
+    if extends then 
+      cls.interface = extends 
+    end
     applyMetadata(cls)
     setmetatable(cls, interfaceMetatable)
   elseif kind == "E" then
@@ -1227,13 +1231,11 @@ function System.init(namelist, conf)
 	namespace = nil
 	curCacheName = nil
 	defIn = nil
-	System.import = nil
+  System.import = nil
+  System.namespace = nil
 	System.init = nil
 end
 
-System.config = {}
-return function (config) 
-  if config then
-    System.config = config
-  end
+return function (config)
+  System.config = config or {}
 end

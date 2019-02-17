@@ -161,6 +161,7 @@ namespace CSharpLua {
     internal void Render(LuaArgumentListSyntax node) {
       if (node.IsCallSingleTable) {
         Contract.Assert(node.Arguments.Count == 1);
+        WriteSpace();
         node.Arguments.First().Render(this);
       } else {
         WriteArgumentList(node.OpenParenToken, node.Arguments, node.CloseParenToken);

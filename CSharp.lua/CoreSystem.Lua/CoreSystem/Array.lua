@@ -34,6 +34,7 @@ local type = type
 local Array = {}
 local emptys = {}
 
+Array.new = buildArray
 Array.set = setArray
 Array.get = getArray
 Array.GetEnumerator = arrayEnumerator
@@ -102,11 +103,8 @@ define("System.Array", function(T)
   return cls
 end, Array)
 
-function Array.__call(T, t)
-  if type(t) == "number" then
-    return buildArray(T, t)
-  end
-  return setmetatable(t or {}, T)
+function Array.__call(T, ...)
+  return buildArray(T, select("#", ...), { ... })
 end
 
 local function unset()
@@ -180,15 +178,11 @@ define("System.MultiArray", function(T)
 end, MultiArray)
 
 function MultiArray.__call(T, rank, t)
-  if t then
-    t.__rank__ = rank
-    return setmetatable(t, T)
-  end
-  local length = 1
+  local len = 1
   for _, i in ipairs(rank) do
-    length = length * i
+    len = len * i
   end
-  local this = buildArray(T, length)
-  this.__rank__ = rank
-  return this
+  t = buildArray(T, len, t)
+  t.__rank__ = rank
+  return t
 end

@@ -191,7 +191,7 @@ namespace CSharpLua {
       return arrayTypeAdapter;
     }
 
-    private void FillMultiArrayInitializer(InitializerExpressionSyntax initializer, LuaTableExpression rankSpecifier, LuaTableExpression initializerExpressions, bool isFirst) {
+    private void FillMultiArrayInitializer(InitializerExpressionSyntax initializer, LuaTableExpression rankSpecifier, List<LuaExpressionSyntax> expressions, bool isFirst) {
       if (isFirst) {
         rankSpecifier.Add(new LuaIdentifierNameSyntax(initializer.Expressions.Count));
       }
@@ -199,10 +199,10 @@ namespace CSharpLua {
       int index = 0;
       foreach (var expression in initializer.Expressions) {
         if (expression.IsKind(SyntaxKind.ArrayInitializerExpression)) {
-          FillMultiArrayInitializer((InitializerExpressionSyntax)expression, rankSpecifier, initializerExpressions, isFirst && index == 0);
+          FillMultiArrayInitializer((InitializerExpressionSyntax)expression, rankSpecifier, expressions, isFirst && index == 0);
         } else {
           var item = (LuaExpressionSyntax)expression.Accept(this);
-          initializerExpressions.Add(item.IsNil() ? LuaIdentifierNameSyntax.SystemNull : item);
+          expressions.Add(item);
         }
         ++index;
       }
@@ -212,31 +212,23 @@ namespace CSharpLua {
       if (initializer != null && initializer.Expressions.Count > 0) {
         if (arrayType.IsSimapleArray) {
           var initializerExpressions = initializer.Expressions.Select(i => (LuaExpressionSyntax)i.Accept(this)).ToList();
-          for (int i = 0; i < initializerExpressions.Count; ++i) {
-            if (initializerExpressions[i].IsNil()) {
-              initializerExpressions[i] = LuaIdentifierNameSyntax.SystemNull;
-            }
-          }
-          return new LuaInvocationExpressionSyntax(arrayType, new LuaTableExpression(initializerExpressions) { IsSingleLine = true }, true);
+          return BuildArray(arrayType, initializerExpressions);
         } else {
-          var rankSpecifier = new LuaTableExpression() { IsSingleLine = true };
-          var initializerExpressions = new LuaTableExpression() { IsSingleLine = true };
-          FillMultiArrayInitializer(initializer, rankSpecifier, initializerExpressions, true);
-          return new LuaInvocationExpressionSyntax(arrayType, rankSpecifier, initializerExpressions);
+          var rank = new LuaTableExpression() { IsSingleLine = true };
+          var expressions = new List<LuaExpressionSyntax>();
+          FillMultiArrayInitializer(initializer, rank, expressions, true);
+          return BuildMultiArray(arrayType, rank, expressions);
         }
       } else {
         if (arrayType.IsSimapleArray) {
           var size = arrayType.RankSpecifier.Sizes[0];
-          if (size is LuaLiteralExpressionSyntax constSize && constSize.Text == 0.ToString()) {
-            return new LuaInvocationExpressionSyntax(arrayType);
-          }
-          return new LuaInvocationExpressionSyntax(arrayType, size);
+          return BuildArray(arrayType, size);
         } else {
-          var rankSpecifier = new LuaTableExpression() { IsSingleLine = true };
+          var rank = new LuaTableExpression() { IsSingleLine = true };
           foreach (var size in arrayType.RankSpecifier.Sizes) {
-            rankSpecifier.Add(size);
+            rank.Add(size);
           }
-          return new LuaInvocationExpressionSyntax(arrayType, rankSpecifier);
+          return BuildMultiArray(arrayType, rank);
         }
       }
     }
