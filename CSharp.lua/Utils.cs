@@ -94,11 +94,11 @@ namespace CSharpLua {
       return list == null || list.Count == 0;
     }
 
-    public static T GetOrDefault<T>(this IList<T> list, int index, T v = default(T)) {
+    public static T GetOrDefault<T>(this IList<T> list, int index, T v = default) {
       return index >= 0 && index < list.Count ? list[index] : v;
     }
 
-    public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T t = default(T)) {
+    public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T t = default) {
       if (dict.TryGetValue(key, out T v)) {
         return v;
       }
@@ -120,7 +120,7 @@ namespace CSharpLua {
       } else {
         int count = index - list.Count;
         for (int i = 0; i < count; ++i) {
-          list.Add(default(T));
+          list.Add(default);
         }
         list.Add(v);
       }
@@ -1086,28 +1086,6 @@ namespace CSharpLua {
       if (nilArgumentCount > 0) {
         expressions.RemoveRange(nilStartIndex, nilArgumentCount);
       }
-    }
-
-    public static bool IsFixedSizeCollectionCountProperty(this IPropertySymbol symbol) {
-      if (symbol.ContainingType.SpecialType == SpecialType.System_Array) {
-        if (symbol.Name == "Length") {
-          return true;
-        }
-      } else {
-        switch (symbol.ContainingType.Name) {
-          case nameof(ImmutableArray):
-          case nameof(ImmutableList):
-          case nameof(ImmutableDictionary):
-          case nameof(ImmutableHashSet):
-            if (symbol.ContainingType.ContainingNamespace.ToString() == "System.Collections.Immutable") {
-              if (symbol.Name == "Length" ||symbol.Name == "Count") {
-                return true;
-              }
-            }
-            break;
-        }
-      }
-      return false;
     }
 
     #region hard code for protobuf-net
