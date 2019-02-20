@@ -35,6 +35,15 @@ namespace TestCases
             return b;
         }
         [TestCase]
+        public static void foo1()
+        {
+			int count = 10;
+			while (--count >= 0 )
+			{
+				Console.WriteLine(count.ToString()); 
+			}
+        }
+        [TestCase]
         public static void UnitTest_ValueType()
         {
             string a = 11.ToString();
