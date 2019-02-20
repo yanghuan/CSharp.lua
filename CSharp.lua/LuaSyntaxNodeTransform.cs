@@ -3309,10 +3309,10 @@ namespace CSharpLua {
       return forInStatement;
     }
 
-    public override LuaSyntaxNode VisitWhileStatement(WhileStatementSyntax node) {
+    private LuaWhileStatementSyntax BuildWhileStatement(ExpressionSyntax nodeCondition, StatementSyntax nodeStatement) {
       LuaBlockSyntax conditionBody = new LuaBlockSyntax();
       blocks_.Push(conditionBody);
-      var condition = VisitExpression(node.Condition);
+      var condition = nodeCondition != null ? VisitExpression(nodeCondition) : LuaIdentifierNameSyntax.True;
       blocks_.Pop();
 
       LuaWhileStatementSyntax whileStatement;
@@ -3320,13 +3320,20 @@ namespace CSharpLua {
         whileStatement = new LuaWhileStatementSyntax(condition);
       } else {
         whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
-        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not));
+        if (condition is LuaBinaryExpressionSyntax) {
+          condition = new LuaParenthesizedExpressionSyntax(condition);
+        }
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
         ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
         whileStatement.Body.Statements.AddRange(conditionBody.Statements);
         whileStatement.Body.Statements.Add(ifStatement);
       }
-      VisitLoopBody(node.Statement, whileStatement.Body);
+      VisitLoopBody(nodeStatement, whileStatement.Body);
       return whileStatement;
+    }
+
+    public override LuaSyntaxNode VisitWhileStatement(WhileStatementSyntax node) {
+      return BuildWhileStatement(node.Condition, node.Statement);
     }
 
     public override LuaSyntaxNode VisitForStatement(ForStatementSyntax node) {
@@ -3344,23 +3351,8 @@ namespace CSharpLua {
       var initializers = node.Initializers.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
       forBlock.Statements.AddRange(initializers);
 
-      LuaBlockSyntax conditionBody = new LuaBlockSyntax();
-      blocks_.Push(conditionBody);
-      LuaExpressionSyntax condition = node.Condition != null ? VisitExpression(node.Condition) : LuaIdentifierNameSyntax.True;
-      blocks_.Pop();
-
-      LuaWhileStatementSyntax whileStatement;
-      if (conditionBody.Statements.Count == 0) {
-        whileStatement = new LuaWhileStatementSyntax(condition);
-      } else {
-        whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
-        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not));
-        ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
-        whileStatement.Body.Statements.AddRange(conditionBody.Statements);
-        whileStatement.Body.Statements.Add(ifStatement);
-      }
+      var whileStatement = BuildWhileStatement(node.Condition, node.Statement);
       blocks_.Push(whileStatement.Body);
-      VisitLoopBody(node.Statement, whileStatement.Body);
       var incrementors = node.Incrementors.Select(i => new LuaExpressionStatementSyntax((LuaExpressionSyntax)i.Accept(this)));
       whileStatement.Body.Statements.AddRange(incrementors);
       blocks_.Pop();
@@ -3376,7 +3368,10 @@ namespace CSharpLua {
       blocks_.Push(body);
       VisitLoopBody(node.Statement, body);
       var condition = VisitExpression(node.Condition);
-      var newCondition = new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not);
+      if (condition is LuaBinaryExpressionSyntax) {
+        condition = new LuaParenthesizedExpressionSyntax(condition);
+      }
+      var newCondition = new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not);
       blocks_.Pop();
       return new LuaRepeatStatementSyntax(newCondition, body);
     }
