@@ -42,6 +42,14 @@ local ThreadStateException = define("System.ThreadStateException", {
   end
 })
 
+local ThreadAbortException = System.define("System.ThreadAbortException", {
+  __tostring = Exception.ToString,
+  __inheris__ = { Exception },
+  __ctor__ = function(this, message, innerException)
+    Exception.__ctor__(this, message or "Thread aborted.", innerException)
+end
+})
+
 local nextThreadId = 1
 local currentThread
 
@@ -93,6 +101,9 @@ local Thread =  define("System.Thread", {
   IsThreadPoolThread = false,
   Priority = 2,
   ApartmentState = 2,
+  Abort = function ()
+    throw(ThreadAbortException())
+  end,
   getCurrentThread = function ()
     return currentThread
   end,
