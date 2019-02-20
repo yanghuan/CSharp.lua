@@ -47,6 +47,7 @@ local getmetatable = getmetatable
 local ipairs = ipairs
 local select = select
 local unpack = table.unpack
+local tinsert = table.insert
 local floor = math.floor
 
 local Type = {}
@@ -110,6 +111,15 @@ end
 
 function Type.getIsGenericType(this)
   return isGenericName(this.c.__name__)
+end
+
+function Type.MakeGenericType(this, ...)
+  local args = {...}
+  local typeArguments = {}
+  for i , v in ipairs(args) do
+    tinsert(typeArguments, v.c)
+  end
+  return typeof(this.c(unpack(typeArguments)))
 end
 
 function Type.getIsEnum(this)
