@@ -3320,7 +3320,7 @@ namespace CSharpLua {
         whileStatement = new LuaWhileStatementSyntax(condition);
       } else {
         whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
-        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not));
         ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
         whileStatement.Body.Statements.AddRange(conditionBody.Statements);
         whileStatement.Body.Statements.Add(ifStatement);
@@ -3354,7 +3354,7 @@ namespace CSharpLua {
         whileStatement = new LuaWhileStatementSyntax(condition);
       } else {
         whileStatement = new LuaWhileStatementSyntax(LuaIdentifierNameSyntax.True);
-        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(new LuaParenthesizedExpressionSyntax(condition), LuaSyntaxNode.Tokens.Not));
         ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
         whileStatement.Body.Statements.AddRange(conditionBody.Statements);
         whileStatement.Body.Statements.Add(ifStatement);
