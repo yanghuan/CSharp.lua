@@ -69,6 +69,8 @@ namespace CSharpLua {
         public string Template;
         [XmlAttribute]
         public bool Baned;
+        [XmlAttribute]
+        public bool IsProperty;
       }
 
       public sealed class ArgumentModel {
@@ -567,13 +569,16 @@ namespace CSharpLua {
 
     public string GetFieldCodeTemplate(IFieldSymbol symbol) {
       if (MayHaveCodeMeta(symbol)) {
-        var info = GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name);
-        if (info != null && info.Baned) {
-          throw new CompilationErrorException($"{symbol} is baned");
-        }
-        return info?.Template;
+        return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
       }
       return null;
+    }
+
+    public bool IsFieldForceProperty(IFieldSymbol symbol) {
+      if (MayHaveCodeMeta(symbol)) {
+        return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.IsProperty ?? false;
+      }
+      return false;
     }
 
     public string GetProertyCodeTemplate(IPropertySymbol symbol, bool isGet) {

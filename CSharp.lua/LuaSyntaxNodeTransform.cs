@@ -2003,6 +2003,12 @@ namespace CSharpLua {
         if (fieldSymbol.HasConstantValue) {
           return GetConstLiteralExpression(fieldSymbol);
         }
+
+        if (XmlMetaProvider.IsFieldForceProperty(fieldSymbol)) {
+          var expression = (LuaIdentifierNameSyntax)node.Expression.Accept(this);
+          var propertyIdentifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, GetMemberName(symbol));
+          return new LuaPropertyAdapterExpressionSyntax(expression, propertyIdentifierName, !fieldSymbol.IsStatic);
+        }
       } else if (symbol.Kind == SymbolKind.Property) {
         var propertySymbol = (IPropertySymbol)symbol;
         bool isGet = node.IsGetExpressionNode();
