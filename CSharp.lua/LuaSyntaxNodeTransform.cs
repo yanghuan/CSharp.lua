@@ -2005,7 +2005,7 @@ namespace CSharpLua {
         }
 
         if (XmlMetaProvider.IsFieldForceProperty(fieldSymbol)) {
-          var expression = (LuaIdentifierNameSyntax)node.Expression.Accept(this);
+          var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
           var propertyIdentifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, GetMemberName(symbol));
           return new LuaPropertyAdapterExpressionSyntax(expression, propertyIdentifierName, !fieldSymbol.IsStatic);
         }
