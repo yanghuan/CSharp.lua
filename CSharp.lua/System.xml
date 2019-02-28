@@ -298,6 +298,7 @@ limitations under the License.
         <method name="op_Explicit" Template="System.getValueOfNull({0})" />
       </class>
       <class name="WeakReference^1" IgnoreGeneric="true" />
+      <class name="Lazy^1" Name="System.Lazy" />
       <class name="BitConverter">
         <method name="GetBytes" Name="GetBytesFromBoolean">
           <arg type="System.Boolean" />
