@@ -122,7 +122,7 @@ limitations under the License.
         </method>
       </class>
       <class name="Random">
-        <method name="Next" ArgCount="0" Name="Next0" />
+        <method name="Next" ArgCount="0" Name="Next" />
         <method name="Next" ArgCount="1" Name="Next1" />
         <method name="Next" ArgCount="2" Name="Next2" />
       </class>
@@ -298,6 +298,7 @@ limitations under the License.
         <method name="op_Explicit" Template="System.getValueOfNull({0})" />
       </class>
       <class name="WeakReference^1" IgnoreGeneric="true" />
+      <class name="Lazy^1" Name="System.Lazy" />
       <class name="BitConverter">
         <method name="GetBytes" Name="GetBytesFromBoolean">
           <arg type="System.Boolean" />

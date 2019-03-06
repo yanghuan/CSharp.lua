@@ -42,9 +42,9 @@ local ThreadStateException = define("System.ThreadStateException", {
   end
 })
 
-local ThreadAbortException = System.define("System.ThreadAbortException", {
+local ThreadAbortException = define("System.ThreadAbortException", {
   __tostring = Exception.ToString,
-  __inheris__ = { Exception },
+  __inherits__ = { Exception },
   __ctor__ = function(this, message, innerException)
     Exception.__ctor__(this, message or "Thread aborted.", innerException)
 end
