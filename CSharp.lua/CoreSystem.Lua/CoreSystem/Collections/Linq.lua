@@ -26,6 +26,7 @@ local sort = Collection.sort
 local is = System.is
 local cast = System.cast
 local Int32 = System.Int32
+local isArrayLike = System.isArrayLike
 
 local NullReferenceException = System.NullReferenceException
 local ArgumentNullException = System.ArgumentNullException
@@ -822,10 +823,17 @@ end
 local function first(source, ...)
   if source == nil then throw(ArgumentNullException("source")) end
   local len = select("#", ...)
-  if len == 0 then  
-    local en = source:GetEnumerator()
-    if en:MoveNext() then 
-      return true, en:getCurrent()
+  if len == 0 then
+    if isArrayLike(source) then
+      local count = #source
+      if count > 0 then
+        return true, unWrap(source[1])
+      end
+    else
+      local en = source:GetEnumerator()
+      if en:MoveNext() then 
+        return true, en:getCurrent()
+      end
     end
     return false, 0
   else
@@ -858,13 +866,20 @@ local function last(source, ...)
   if source == nil then throw(ArgumentNullException("source")) end
   local len = select("#", ...)
   if len == 0 then
-    local en = source:GetEnumerator()
-    if en:MoveNext() then 
-      local result
-      repeat
-        result = en:getCurrent()
-      until not en:MoveNext()
-      return true, result
+    if isArrayLike(source) then
+      local count = #source
+      if count > 0 then
+        return true, unWrap(source[count])
+      end
+    else
+      local en = source:GetEnumerator()
+      if en:MoveNext() then 
+        local result
+        repeat
+          result = en:getCurrent()
+        until not en:MoveNext()
+        return true, result
+      end
     end
     return false, 0
   else
@@ -900,11 +915,20 @@ local function single(source, ...)
   if source == nil then throw(ArgumentNullException("source")) end
   local len = select("#", ...)
   if len == 0 then
-    local en = source:GetEnumerator()
-    if not en:MoveNext() then return false, 0 end
-    local result = en:getCurrent()
-    if not en:MoveNext() then
-      return true, result
+    if isArrayLike(source) then
+      local count = #source
+      if count == 0 then
+        return false, 0
+      elseif count == 1 then
+        return true, unWrap(source[1])
+      end
+    else
+      local en = source:GetEnumerator()
+      if not en:MoveNext() then return false, 0 end
+      local result = en:getCurrent()
+      if not en:MoveNext() then
+        return true, result
+      end
     end
     return false, 1
   else
@@ -941,13 +965,22 @@ end
 
 local function elementAt(source, index)
   if source == nil then throw(ArgumentNullException("source")) end
-  if index < 0 then return false end
-  local en = source:GetEnumerator()
-  while true do
-    if not en:MoveNext() then return false end
-    if index == 0 then return true, en:getCurrent() end
-    index = index - 1
+  if index >= 0 then
+    if isArrayLike(source) then
+      local count = #source
+      if index < count then
+        return unWrap(source[index + 1])
+      end
+    else
+      local en = source:GetEnumerator()
+      while true do
+        if not en:MoveNext() then break end
+        if index == 0 then return true, en:getCurrent() end
+        index = index - 1
+      end
+    end
   end
+  return false
 end
 
 function Enumerable.ElementAt(source, index)
@@ -1022,6 +1055,9 @@ function Enumerable.Count(source, ...)
   if source == nil then throw(ArgumentNullException("source")) end
   local len = select("#", ...)
   if len == 0 then
+    if isArrayLike(source) then
+      return #source
+    end
     local count = 0
     local en = source:GetEnumerator()
     while en:MoveNext() do 
