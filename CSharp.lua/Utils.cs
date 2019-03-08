@@ -481,18 +481,8 @@ namespace CSharpLua {
       return kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.DefaultLiteralExpression;
     }
 
-    private static INamedTypeSymbol systemLinqEnumerableType_;
-
     public static bool IsSystemLinqEnumerable(this INamedTypeSymbol symbol) {
-      if (systemLinqEnumerableType_ != null) {
-        return symbol == systemLinqEnumerableType_;
-      } else {
-        bool success = symbol.ToString() == LuaIdentifierNameSyntax.SystemLinqEnumerable.ValueText;
-        if (success) {
-          systemLinqEnumerableType_ = symbol;
-        }
-        return success;
-      }
+      return symbol.Name == "Enumerable" && symbol.ContainingNamespace.Name == "Linq" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
     }
 
     public static string GetLocationString(this SyntaxNode node) {
