@@ -125,15 +125,16 @@ local function set(className, cls)
   end
 end
 
-local function genericKey(t, k, ...) 
+local function genericKey(t, ...)
+  local k 
   for i = 1, select("#", ...) do
+    k = select(i, ...)
     local tk = t[k]
     if tk == nil then
       tk = {}
       t[k] = tk
     end
     t = tk
-    k = select(i, ...)
   end
   return t, k
 end
