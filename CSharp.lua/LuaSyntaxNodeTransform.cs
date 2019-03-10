@@ -3163,6 +3163,9 @@ namespace CSharpLua {
           var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
           return new LuaInvocationExpressionSyntax(type.IsNullableType() ? LuaIdentifierNameSyntax.BitNotOfNull : LuaIdentifierNameSyntax.BitNot, operand);
         }
+        case SyntaxKind.UnaryPlusExpression: {
+          return node.Operand.Accept(this);
+        }
         default: {
           var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
           string operatorToken = GetOperatorToken(node.OperatorToken);
