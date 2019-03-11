@@ -3399,6 +3399,10 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+      if (expression is LuaIdentifierNameSyntax || expression is LuaMemberAccessExpressionSyntax) {
+        return expression;
+      }
+
       CheckPrevIsInvokeStatement(node);
       return new LuaParenthesizedExpressionSyntax(expression);
     }

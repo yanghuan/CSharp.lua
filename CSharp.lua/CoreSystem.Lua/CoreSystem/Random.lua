@@ -41,7 +41,7 @@ System.define("System.Random", (function ()
     for i = 1, 54 do
       --Apparently the range [1..55] is special (Knuth) and so we're wasting the 0'th position.
       ii = ii + 21
-      if (ii) >= 55 then
+      if ii >= 55 then
         ii = ii - 55
       end
       this._seedArray:set(ii, mk)
