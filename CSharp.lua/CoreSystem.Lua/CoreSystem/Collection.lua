@@ -47,26 +47,18 @@ local ipairs = ipairs
 local Collection = {}
 local null = {}
 
-local versons = setmetatable({}, { __mode = "k" })
-
-local function getVersion(t)
-  return versons[t] or 0
-end
+local versions = setmetatable({}, { __mode = "k" })
 
 local function changeVersion(t)
-  local verson = getVersion(t)
-  versons[t] = verson + 1
+  local version = versions[t]
+  versions[t] = version and version + 1 or 0
 end
 
-local function checkVersion(t, verson)
-  if verson ~= getVersion(t) then
-    throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))
-  end
+local function throwFailedVersion()
+  throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))
 end
 
-Collection.getVersion = getVersion
 Collection.changeVersion = changeVersion
-Collection.checkVersion = checkVersion
 
 local counts = setmetatable({}, { __mode = "k" })
 
@@ -525,40 +517,50 @@ function Collection.trueForAllOfArray(t, match)
   return true
 end
 
-local version_
+local versionCache
 local ipairsFn = ipairs(null)
 
 local function iterationArray(t, i)
-  checkVersion(t, version_)
+  if versionCache ~= versions[t] then
+    throwFailedVersion()
+  end
   local k, v = ipairsFn(t, i)
-  return k, unWrap(v)
+  if v == null then
+    return k
+  end
+  return k, v
 end
 
 local function ipairsArray(t)
-  version_ = getVersion(t)
+  versionCache = versions[t]
   return iterationArray, t, 0
 end
 
 local pairsFn = pairs(null)
 
 local function iterationDict(t, i)
-  checkVersion(t, version_)
+  if versionCache ~= versions[t] then
+    throwFailedVersion()
+  end
   local k, v = pairsFn(t, i)
-  return k, unWrap(v)
+  if v == null then
+    return k
+  end
+  return k, v
 end
 
 local function pairsDict(t)
-  version_ = getVersion(t)
+  versionCache = versions[t]
   return iterationDict, t, nil
 end
 
 function Collection.forEachArray(t, action)
-  if action == null then
-    throw(ArgumentNullException("action"))
-  end
-  local verson = getVersion(t)
+  if action == null then throw(ArgumentNullException("action")) end
+  local version = versions[t]
   for _, i in ipairs(t) do
-    checkVersion(t, verson)
+    if versions ~= versions[t] then
+      throwFailedVersion()
+    end
     action(unWrap(i))
   end
 end
@@ -568,11 +570,17 @@ ArrayEnumerator.__index = ArrayEnumerator
 
 function ArrayEnumerator.MoveNext(this)
   local t = this.list
-  checkVersion(t, this.verson)
+  if this.version ~= versions[t] then
+    throwFailedVersion()
+  end
   local index = this.index
   if index < #t then
     local i, v = ipairsFn(t, index)
-    this.current = unWrap(v)
+    if v == null then
+      this.current = nil
+    else
+      this.current = v
+    end
     this.index = i
     return true
   end
@@ -595,7 +603,7 @@ local function arrayEnumerator(t)
   local en = {
     list = t,
     index = 0,
-    verson = getVersion(t),
+    version = versions[t],
   }
   setmetatable(en, ArrayEnumerator)
   return en
@@ -697,7 +705,9 @@ DictionaryEnumerator.__index = DictionaryEnumerator
 
 function DictionaryEnumerator.MoveNext(this)
   local t = this.dict
-  checkVersion(t, this.version)
+  if this.version ~= versions[t] then
+    throwFailedVersion()
+  end
   local k, v = pairsFn(t, this.index)
   if k ~= nil then
     if this.kind == 0 then
@@ -726,7 +736,7 @@ DictionaryEnumerator.Dispose = System.emptyFn
 function Collection.dictionaryEnumerator(t, kind)
   local en = {
     dict = t,
-    version = getVersion(t),
+    version = versions[t],
     kind = kind,
     pair = kind == 0 and setmetatable({ Key = false, Value = false }, KeyValuePair) or nil
   }
@@ -740,7 +750,9 @@ LinkedListEnumerator.__index = LinkedListEnumerator
 function LinkedListEnumerator.MoveNext(this)
   local list = this.list
   local node = this.node
-  checkVersion(list, this.version)
+  if this.version ~= versions[list] then
+    throwFailedVersion()
+  end
   if node == nil then
     return false
   end
@@ -762,7 +774,7 @@ LinkedListEnumerator.Dispose = System.emptyFn
 function Collection.linkedListEnumerator(t)
   local en = {
     list = t,
-    version = getVersion(t),
+    version = versions[t],
     node = t.head
   }
   setmetatable(en, LinkedListEnumerator)
