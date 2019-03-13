@@ -320,10 +320,27 @@ local numbers = {
 }
 numbers[Int] = numbers[Int32]
 
-function isTypeOf(obj, cls)    
+local function isTypeOf(obj, cls)    
   if cls == Object then return true end
   local typename = type(obj)
-  if typename == "number" then
+  if typename == "table" then
+    local t = getmetatable(obj)
+    if t == cls then
+      return true
+    end
+    if cls.class == "I" then
+      return isInterfaceOf(t, cls)
+    else
+      local base = getmetatable(t)
+      while base ~= nil do
+        if base == cls then
+          return true
+        end
+        base = getmetatable(base)
+      end
+      return false
+    end
+  elseif typename == "number" then
     local info = numbers[cls]
     if info ~= nil then
       local min, max, sign = info[1], info[2], info[3]
@@ -354,23 +371,6 @@ function isTypeOf(obj, cls)
       return isInterfaceOf(String, cls)
     end
     return false
-  elseif typename == "table" then   
-    local t = getmetatable(obj)
-    if t == cls then
-      return true
-    end
-    if cls.class == "I" then
-      return isInterfaceOf(t, cls)
-    else
-      local base = getmetatable(t)
-      while base ~= nil do
-        if base == cls then
-          return true
-        end
-        base = getmetatable(base)
-      end
-      return false
-    end
   elseif typename == "boolean" then
     if cls == Boolean or cls == ValueType then
       return true

@@ -41,6 +41,7 @@ local coroutine = coroutine
 local ccreate = coroutine.create
 local cresume = coroutine.resume
 local cyield = coroutine.yield
+local pairs = pairs
 local ipairs = ipairs
 
 local Collection = {}
@@ -524,24 +525,31 @@ function Collection.trueForAllOfArray(t, match)
   return true
 end
 
+local version_
 local ipairsFn = ipairs(null)
-local function ipairsArray(t)
-  local version = getVersion(t)
-  return function(t, inx) 
-    checkVersion(t, version)
-    local k, v = ipairsFn(t, inx)
-    return k, unWrap(v)
-  end, t, 0
+
+local function iterationArray(t, i)
+  checkVersion(t, version_)
+  local k, v = ipairsFn(t, i)
+  return k, unWrap(v)
 end
 
-local pairsFn = next
+local function ipairsArray(t)
+  version_ = getVersion(t)
+  return iterationArray, t, 0
+end
+
+local pairsFn = pairs(null)
+
+local function iterationDict(t, i)
+  checkVersion(t, version_)
+  local k, v = pairsFn(t, i)
+  return k, unWrap(v)
+end
+
 local function pairsDict(t)
-  local version = getVersion(t)
-  return function(t, inx) 
-    checkVersion(t, version)
-    local k, v = pairsFn(t, inx)
-    return k, unWrap(v)
-  end, t, nil
+  version_ = getVersion(t)
+  return iterationDict, t, nil
 end
 
 function Collection.forEachArray(t, action)
@@ -611,10 +619,8 @@ local function eachFn(en)
 end
 
 local function each(t)
-  if t == nil then
-    throw(NullReferenceException(), 1)
-  end
-  local getEnumerator = assert(t.GetEnumerator, t.__name__)
+  if t == nil then throw(NullReferenceException(), 1) end
+  local getEnumerator = t.GetEnumerator
   if getEnumerator == arrayEnumerator then
     return ipairsArray(t)
   end
