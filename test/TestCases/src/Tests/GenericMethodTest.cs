@@ -344,5 +344,36 @@ namespace TestCases
           TestMethod03<int>( k => StartAirHiked = true);
         }
 
+
+		public class Component
+		{
+		}
+		public class WeaponComponent : Component {
+      public void OnMemberStaticInvoke<T>(Component comp, T arg1) where T : Component {
+        var value = comp as T;
+        if (value != arg1) {
+          throw new Exception("error");
+        }
+      }
+
+    }
+
+    public static void Invoke<T>(Action<Component, T> action, Component comp, T arg1) where T : Component {
+      action(comp, arg1);
+
+    }
+    static void OnStaticInvoke<T>(Component comp, T arg1) where T : Component {
+      var value = comp as T;
+      if(value != arg1) {
+        throw new Exception("error");
+      }
+    }
+    [TestCase]
+        public static void GenericMethodTest15()
+		{
+      var comp = new WeaponComponent();
+      Invoke(OnStaticInvoke, comp, comp);
+      Invoke(comp.OnMemberStaticInvoke, comp, comp);
+    }
   }
 }
