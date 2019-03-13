@@ -1746,9 +1746,18 @@ namespace CSharpLua {
         arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
         bool ignoreGeneric = generator_.XmlMetaProvider.IsMethodIgnoreGeneric(symbol);
         if (!ignoreGeneric) {
-          foreach (var typeArgument in symbol.TypeArguments) {
-            LuaExpressionSyntax typeName = GetTypeName(typeArgument);
-            arguments.Add(typeName);
+          if (symbol.MethodKind == MethodKind.DelegateInvoke) {
+            foreach (var typeArgument in symbol.ContainingType.TypeArguments) {
+              if (typeArgument.TypeKind == TypeKind.TypeParameter) {
+                LuaExpressionSyntax typeName = GetTypeName(typeArgument);
+                arguments.Add(typeName);
+              }
+            }
+          } else {
+            foreach (var typeArgument in symbol.TypeArguments) {
+              LuaExpressionSyntax typeName = GetTypeName(typeArgument);
+              arguments.Add(typeName);
+            }
           }
         }
         TryRemoveNilArgumentsAtTail(symbol, arguments);
