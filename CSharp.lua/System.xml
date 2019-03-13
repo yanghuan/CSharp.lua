@@ -328,6 +328,7 @@ limitations under the License.
           <arg type="System.Single" />
         </method>
       </class>
+      <class name="Guid" Readonly="true" />
     </namespace>
     <namespace name="System.Collections" Name="System" />
     <namespace name="System.Collections.Generic" Name="System">
