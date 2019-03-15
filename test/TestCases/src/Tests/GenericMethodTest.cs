@@ -329,11 +329,24 @@ namespace TestCases {
         throw new Exception("error");
       }
     }
+    static void OnStaticInvoke2<T, T1>(T comp, T1 arg1) where T1 : Component {
+      if (typeof(T1) != typeof(WeaponComponent)) {
+        throw new Exception("type error");
+      }
+      if (typeof(T) != typeof(Component)) {
+        throw new Exception("type error");
+      }
+      var value = comp as T1;
+      if (value != arg1) {
+        throw new Exception("error");
+      }
+    }
     [TestCase]
     public static void GenericMethodTest16() {
       var comp = new WeaponComponent();
       var list = new SafeList<Component>();
       list.Invoke(OnStaticInvoke1, comp, comp);
+      list.Invoke(OnStaticInvoke2, comp, comp);
       list.Invoke(comp.OnMemberStaticInvoke, comp, comp);
     }
   }
