@@ -42,7 +42,6 @@ local ccreate = coroutine.create
 local cresume = coroutine.resume
 local cyield = coroutine.yield
 local pairs = pairs
-local ipairs = ipairs
 
 local Collection = {}
 local null = {}
@@ -298,8 +297,8 @@ function Collection.findOfArray(t, match)
   if match == nil then
     throw(ArgumentNullException("match"))
   end
-  for _, i in ipairs(t) do
-    local item = unWrap(i)
+  for i = 1, #t do
+    local item = unWrap(t[i])
     if match(item) then
       return item
     end
@@ -312,8 +311,8 @@ function Collection.findAllOfArray(t, match)
     throw(ArgumentNullException("match"))
   end
   local list = System.List(t.__genericT__)()
-  for _, i in ipairs(t) do
-    local item = unWrap(i)
+  for i = 1, #t do
+    local item = unWrap(t[i])
     if match(item) then
       list:Add(item)
     end
@@ -509,15 +508,13 @@ function Collection.trueForAllOfArray(t, match)
   if match == nil then
     throw(ArgumentNullException("match"))
   end
-  for _, i in ipairs(t) do
-    if not match(unWrap(i)) then
+  for i = 1, #t do
+    if not match(unWrap(t[i])) then
       return false
     end
   end
   return true
 end
-
-local ipairsFn = ipairs(null)
 
 local function ipairsArray(t)
   local version = versions[t]
@@ -525,12 +522,14 @@ local function ipairsArray(t)
     if version ~= versions[t] then
       throwFailedVersion()
     end
-    local k, v = ipairsFn(t, i)
-    if v == null then
-      return k
+    local v = t[i]
+    if v ~= nil then
+      if v == null then
+        v = nil
+      end
+      return i + 1, v
     end
-    return k, v
-  end, t, 0
+  end, t, 1
 end
 
 local pairsFn = pairs(null)
@@ -552,11 +551,11 @@ end
 function Collection.forEachArray(t, action)
   if action == null then throw(ArgumentNullException("action")) end
   local version = versions[t]
-  for _, i in ipairs(t) do
+  for i = 1, #t do
     if versions ~= versions[t] then
       throwFailedVersion()
     end
-    action(unWrap(i))
+    action(unWrap(t[i]))
   end
 end
 
@@ -569,14 +568,14 @@ function ArrayEnumerator.MoveNext(this)
     throwFailedVersion()
   end
   local index = this.index
-  if index < #t then
-    local i, v = ipairsFn(t, index)
+  local v = t[index]
+  if v ~= nil then
     if v == null then
       this.current = nil
     else
       this.current = v
     end
-    this.index = i
+    this.index = index + 1
     return true
   end
   this.current = nil
@@ -597,7 +596,7 @@ ArrayEnumerator.Dispose = System.emptyFn
 local function arrayEnumerator(t)
   local en = {
     list = t,
-    index = 0,
+    index = 1,
     version = versions[t],
   }
   setmetatable(en, ArrayEnumerator)
@@ -657,8 +656,8 @@ end
 
 local function toLuaTable(array)
   local t = {}
-  for i, v in ipairs(array) do
-    t[i] = unWrap(v)
+  for i = 1, #array do
+    t[i] = unWrap(array[i])
   end   
   return t
 end
@@ -682,15 +681,19 @@ KeyValuePair = System.defStc("System.KeyValuePair", {
   end,
   ToString = function (this)
     local t = { "[" }
+    local count = 2
     local k, v = this.Key, this.Value
     if k ~= nil then
-      t[#t + 1] = k:ToString()
+      t[count] = k:ToString()
+      count = count + 1
     end
-    t[#t + 1] = ", "
+    t[count] = ", "
+    count = count + 1
     if v ~= nil then
-      t[#t + 1] = v:ToString()
+      t[count] = v:ToString()
+      count = count + 1
     end
-    t[#t + 1] = "]"
+    t[count] = "]"
     return tconcat(t)
   end
 })

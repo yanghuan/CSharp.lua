@@ -35,7 +35,6 @@ local table = table
 local tremove = table.remove
 local setmetatable = setmetatable
 local assert = assert
-local ipairs = ipairs
 local coroutine = coroutine
 local ccreate = coroutine.create
 local cresume = coroutine.resume
@@ -204,8 +203,8 @@ local function trySetComplete(this, status, data)
 
   local continueActions = this.continueActions
   if continueActions then
-    for _, action in ipairs(continueActions) do
-      action(this)
+    for i = 1, #continueActions do
+      continueActions[i](this)
     end
     this.continueActions = nil
   end

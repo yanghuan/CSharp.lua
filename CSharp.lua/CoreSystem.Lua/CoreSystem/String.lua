@@ -149,12 +149,14 @@ end
 
 function String.Concat(...)
   local t = {}
+  local count = 1
   local len = select("#", ...)
   if len == 1 then
     local v = ...
     if System.isEnumerableLike(v) then
       for _, v in System.each(array) do
-        t[#t + 1] = v:ToString()
+        t[count] = v:ToString()
+        count = count + 1
       end
     else 
       return v:ToString()
@@ -162,7 +164,8 @@ function String.Concat(...)
   else
     for i = 1, len do
       local v = select(i, ...)
-      t[#t + 1] = v:ToString()
+      t[count] = v:ToString()
+      count = count + 1
     end
   end
   return tconcat(t)
@@ -170,20 +173,23 @@ end
 
 function String.Join(separator, value, startIndex, count)
   local t = {}
+  local len = 1
   if startIndex then  
     check(value, startIndex, count)
     for i = startIndex + 1, startIndex + count do
       local v = value:get(i)
       if v ~= nil then
-        t[#t + 1] = v
+        t[len] = v
+        len = len + 1
       end
     end
   else
-      for _, v in System.each(value) do
-        if v ~= nil then
-          t[#t + 1] = v
-        end
+    for _, v in System.each(value) do
+      if v ~= nil then
+        t[len] = v
+        len = len + 1
       end
+    end
   end
   return tconcat(t, separator)
 end
@@ -314,9 +320,11 @@ end
 
 function String.ToCharArray(str, startIndex, count)
   startIndex, count = check(str, startIndex, count)
-  local t = { }
+  local t = {}
+  local len = 1
   for i = startIndex + 1, startIndex + count do
-    t[#t + 1] = sbyte(str, i)
+    t[len] = sbyte(str, i)
+    len = len + 1
   end
   return System.arrayFromTable(t, System.Char)
 end
@@ -350,7 +358,8 @@ end
 
 local function findAny(s, strings, startIndex)
   local findBegin, findEnd, findStr
-  for _, str in ipairs(strings) do
+  for i = 1, #strings do
+    local str = strings[i]
     local pattern = escape(str)
     local posBegin, posEnd = sfind(s, pattern, startIndex)
     if posBegin then
@@ -386,13 +395,15 @@ function String.Split(this, strings, count, options)
     strings = escape(strings)
   end
 
+  local len = 1
   local startIndex = 1
   while true do
     local posBegin, posEnd = find(this, strings, startIndex)
     posBegin = posBegin or 0
     local subStr = ssub(this, startIndex, posBegin -1)
     if options ~= 1 or #subStr > 0 then
-      t[#t + 1] = subStr
+      t[len] = subStr
+      len = len + 1
       if count then
         count = count -1
         if count == 0 then

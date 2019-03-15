@@ -625,7 +625,7 @@ local function toString(value, startIndex, length)
     t[len + 2] = 45
     len = len + 3
   end
-  t[#t] = nil
+  t[len - 1] = nil
   return schar(unpack(t))
 end
 

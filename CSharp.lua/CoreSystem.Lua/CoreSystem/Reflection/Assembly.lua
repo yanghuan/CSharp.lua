@@ -32,7 +32,6 @@ local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 
 local assert = assert
-local ipairs = ipairs
 local pairs = pairs
 local type = type
 local unpack = table.unpack
@@ -170,16 +169,19 @@ local function isMetadataDefined(metadata, index, attributeType)
 end
 
 local function fillMetadataCustomAttributes(t, metadata, index, attributeType)
+  local count = #t + 1
   if attributeType then
     attributeType = attributeType.c
     for i = index, #metadata do
       if is(metadata[i], attributeType) then
-        t[#t + 1] = metadata[i]
+        t[count] = metadata[i]
+        count = count + 1
       end
     end
   else
     for i = index, #metadata do
-      t[#t + 1] = metadata[i]
+      t[count] = metadata[i]
+      count = count + 1
     end
   end
 end
@@ -534,13 +536,16 @@ end
 function Type.GetFields(this)
   local t = {}
   local cls = this.c
+  local count = 1
   repeat
     local metadata = cls.__metadata__
     if metadata then
       local fields = metadata.fields
       if fields then
-        for _, i in ipairs(fields) do
-          t[#t + 1] = buildFieldInfo(cls, i[1], i)
+        for i = 1, #fields do
+          local field = fields[i]
+          t[count] = buildFieldInfo(cls, field[1], field)
+          count = count + 1
         end
       else
         metadata = nil
@@ -549,7 +554,8 @@ function Type.GetFields(this)
     if not metadata then
       for k, v in pairs(cls) do
         if type(v) ~= "function" then
-          t[#t + 1] = buildFieldInfo(cls, k)
+          t[count] = buildFieldInfo(cls, k)
+          count = count + 1
         end
       end
     end
@@ -582,13 +588,16 @@ end
 function Type.GetProperties()
   local t = {}
   local cls = this.c
+  local count = 1
   repeat
     local metadata = cls.__metadata__
     if metadata then
       local properties = metadata.properties
       if properties then
-        for _, i in ipairs(properties) do
-          t[#t + 1] = buildPropertyInfo(cls, i[1], i)
+        for i = 1, #properties do
+          local property = properties[i]
+          t[count] = buildPropertyInfo(cls, property[1], property)
+          count = count + 1
         end
       end
     end
@@ -624,13 +633,16 @@ end
 function Type.GetMethods(this)
   local t = {}
   local cls = this.c
+  local count = 1
   repeat
     local metadata = cls.__metadata__
     if metadata then
       local methods = metadata.methods
       if methods then
-        for _, i in ipairs(methods) do
-          t[#t + 1] = buildMethodInfo(cls, i[1], i)
+        for i = 1, #methods do
+          local method = methods[i]
+          t[count] = buildMethodInfo(cls, method[1], method)
+          count = count + 1
         end
       else
         metadata = nil
@@ -639,7 +651,8 @@ function Type.GetMethods(this)
     if not metadata then
       for k, v in pairs(cls) do
         if type(v) == "function" then
-          t[#t + 1] = buildMethodInfo(cls, k, nil, v)
+          t[count] = buildMethodInfo(cls, k, nil, v)
+          count = count + 1
         end
       end
     end
@@ -738,9 +751,12 @@ local Assembly = define("System.Reflection.Assembly", {
     if this.exportedTypes then
       return this.exportedTypes
     end
+    local classes = System.classes
     local t = {}
-    for _, cls in ipairs(System.classes) do
-      t[#t + 1] = typeof(cls)
+    local count = 1
+    for i = 1, #classes do
+      t[count] = typeof(classes[i])
+      count = count + 1
     end
     local array = arrayFromTable(t, Type, true)
     this.exportedTypes = array

@@ -27,15 +27,18 @@ end
 
 local function toString(this)
   local t = { this.__name__ }
+  local count = 2
   local message, innerException, stackTrace = getMessage(this), this.innerException, this.errorStack
-  t[#t + 1] = ": "
-  t[#t + 1] = message
+  t[count] = ": "
+  t[count + 1] = message
+  count = count + 2
   if innerException then
-    t[#t + 1] = "---> "
-    t[#t + 1] = innerException:ToString()
+    t[count] = "---> "
+    t[count + 1] = innerException:ToString()
+    count = count + 2
   end
   if stackTrace then
-    t[#t + 1] = stackTrace
+    t[count] = stackTrace
   end
   return tconcat(t)
 end

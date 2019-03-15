@@ -41,17 +41,18 @@ Stack.Push = Collection.pushArray
 Stack.Contains = Collection.contains
 
 local function peek(t)
-  if #t == 0 then
+  local n = #t
+  if n == 0 then
     throw(InvalidOperationException())
   end
-  return getArray(t, #t - 1)
+  return getArray(t, n - 1)
 end
 
 Stack.Peek = peek
 
 function Stack.Pop(this)
   local v = peek(this)
-  removeAtArray(this, #this -1)
+  removeAtArray(this, #this - 1)
   return v
 end
 

@@ -404,9 +404,11 @@ local function ordered(source, compare)
       return false
     end, 
     function() 
+      local count = 1
       for _, v in each(source) do
-        t[#t + 1] = wrap(v)
-      end  
+        t[count] = wrap(v)
+        count = count + 1
+      end
       sort(t, compare)
     end)
   end)
@@ -725,11 +727,13 @@ function Enumerable.Reverse(source)
       end
       return false
     end, 
-    function() 
+    function()
+      local count = 1
       for _, v in each(source) do
-        t[#t + 1] = wrap(v)
+        t[count] = wrap(v)
+        count = count + 1
       end  
-      index = #t + 1
+      index = count
     end)
   end)
 end

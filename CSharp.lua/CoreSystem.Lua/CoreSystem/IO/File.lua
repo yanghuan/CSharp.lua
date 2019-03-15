@@ -58,8 +58,10 @@ end
 
 function File.ReadAllLines(path)
   local t = {}
+  local count = 1
   for line in io.lines(path) do
-    t[#t + 1] = line
+    t[count] = line
+    count = count + 1
   end
   return System.arrayFromTable(t, System.String)
 end

@@ -68,8 +68,10 @@ function Enum.GetNames(enumType)
   if enumType == nil then throw(ArgumentNullException("enumType")) end
   if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
   local t = {}
+  local count = 1
   for k, v in pairs(enumType.c) do
-    t[#t + 1] = k
+    t[count] = k
+    count = count + 1
   end
   return System.arrayFromTable(t, System.String)
 end
@@ -78,8 +80,10 @@ function Enum.GetValues(enumType)
   if enumType == nil then throw(ArgumentNullException("enumType")) end
   if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
   local t = {}
+  local count = 1
   for k, v in pairs(enumType.c) do
-    t[#t + 1] = v
+    t[count] = v
+    count = count + 1
   end
   return System.arrayFromTable(t, Int)
 end

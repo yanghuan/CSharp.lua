@@ -179,8 +179,8 @@ end, MultiArray)
 
 function MultiArray.__call(T, rank, t)
   local len = 1
-  for _, i in ipairs(rank) do
-    len = len * i
+  for i = 1, #rank do
+    len = len * rank[i]
   end
   t = buildArray(T, len, t)
   t.__rank__ = rank

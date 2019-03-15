@@ -20,7 +20,6 @@ local ArgumentNullException = System.ArgumentNullException
 
 local setmetatable = setmetatable
 local getmetatable = getmetatable
-local ipairs = ipairs
 local assert = assert
 local select = select
 local type = type
@@ -34,25 +33,26 @@ multicast.__index = multicast
 
 function multicast.__call(t, ...)
   local result
-  for _, f in ipairs(t) do
-    result = f(...)
+  for i = 1, #t do
+    result = t[i](...)
   end
   return result
 end
 
 local function appendFn(t, f)
+  local count = #t + 1
   if getmetatable(f) == multicast then
-    for _, i in ipairs(f) do
-      t[#t + 1] = i
+    for i = 1, #f do
+      t[count] = f[i]
+      count = count + 1
     end
   else
-    t[#t + 1] = f
+    t[count] = f
   end
 end
 
 local function combineImpl(fn1, fn2)    
-  local t = {}
-  setmetatable(t, multicast)
+  local t = setmetatable({}, multicast)
   appendFn(t, fn1)
   appendFn(t, fn2)
   return t
@@ -82,12 +82,15 @@ end
 
 local function delete(fn, count, deleteIndex, deleteCount)
   local t = {}
+  local count = 1
   setmetatable(t, multicast)
   for i = 1, deleteIndex - 1 do
-    t[#t + 1] = fn[i]
+    t[count] = fn[i]
+    count = count + 1
   end
   for i = deleteIndex + deleteCount, count do
-    t[#t + 1] = fn[i]
+    t[count] = fn[i]
+    count = count + 1
   end
   return t
 end
