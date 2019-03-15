@@ -811,6 +811,18 @@ namespace CSharpLua {
       return expressions;
     }
 
+    private static IParameterSymbol GetParameterSymbol(IMethodSymbol symbol, ArgumentSyntax argument) {
+      IParameterSymbol parameter;
+      if (argument.NameColon != null) {
+        parameter = symbol.Parameters.First(i => i.Name == argument.NameColon.Name.Identifier.ValueText);
+      } else {
+        var argumentList = (ArgumentListSyntax)argument.Parent;
+        int index = argumentList.Arguments.IndexOf(argument);
+        parameter = symbol.Parameters[index];
+      }
+      return parameter;
+    }
+
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {
       if (typeSymbol.IsCustomValueType() && !typeSymbol.IsNullableType() && !generator_.IsReadOnlyStruct(typeSymbol)) {
         bool need = false;
@@ -825,21 +837,13 @@ namespace CSharpLua {
                   }
               }
 
-              var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Parent.Parent.Parent).Symbol;
+              var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol;
               if (symbol != null) {
                 if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
                   break;
                 }
 
-                IParameterSymbol parameter;
-                if (argument.NameColon != null) {
-                  parameter = symbol.Parameters.First(i => i.Name == argument.NameColon.Name.Identifier.ValueText);
-                } else {
-                  var argumentList = (ArgumentListSyntax)node.Parent.Parent;
-                  int index = argumentList.Arguments.IndexOf(argument);
-                  parameter = symbol.Parameters[index];
-                }
-
+                var parameter = GetParameterSymbol(symbol, argument);
                 if (parameter.RefKind == RefKind.In) {
                   break;
                 }

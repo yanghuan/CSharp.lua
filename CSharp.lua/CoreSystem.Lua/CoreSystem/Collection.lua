@@ -517,41 +517,36 @@ function Collection.trueForAllOfArray(t, match)
   return true
 end
 
-local versionCache
 local ipairsFn = ipairs(null)
 
-local function iterationArray(t, i)
-  if versionCache ~= versions[t] then
-    throwFailedVersion()
-  end
-  local k, v = ipairsFn(t, i)
-  if v == null then
-    return k
-  end
-  return k, v
-end
-
 local function ipairsArray(t)
-  versionCache = versions[t]
-  return iterationArray, t, 0
+  local version = versions[t]
+  return function (t, i)
+    if version ~= versions[t] then
+      throwFailedVersion()
+    end
+    local k, v = ipairsFn(t, i)
+    if v == null then
+      return k
+    end
+    return k, v
+  end, t, 0
 end
 
 local pairsFn = pairs(null)
 
-local function iterationDict(t, i)
-  if versionCache ~= versions[t] then
-    throwFailedVersion()
-  end
-  local k, v = pairsFn(t, i)
-  if v == null then
-    return k
-  end
-  return k, v
-end
-
 local function pairsDict(t)
-  versionCache = versions[t]
-  return iterationDict, t, nil
+  local version = versions[t]
+  return function (t, i)
+    if version ~= versions[t] then
+      throwFailedVersion()
+    end
+    local k, v = pairsFn(t, i)
+    if v == null then
+      return k
+    end
+    return k, v
+  end, t, nil
 end
 
 function Collection.forEachArray(t, action)

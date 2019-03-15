@@ -22,6 +22,10 @@ local setmetatable = setmetatable
 local getmetatable = getmetatable
 local ipairs = ipairs
 local assert = assert
+local select = select
+local type = type
+local unpack = unpack
+local tmove = table.move
 
 local Delegate = {}
 debug.setmetatable(System.emptyFn, Delegate)
@@ -29,19 +33,12 @@ debug.setmetatable(System.emptyFn, Delegate)
 local multicast = setmetatable({}, Delegate)
 multicast.__index = multicast
 
-local memberMethod = setmetatable({}, Delegate)
-memberMethod.__index = memberMethod
-
 function multicast.__call(t, ...)
   local result
   for _, f in ipairs(t) do
     result = f(...)
   end
   return result
-end
-
-function memberMethod.__call(t, ...)
-  return t.method(t.target, ...)
 end
 
 local function appendFn(t, f)
@@ -75,41 +72,9 @@ end
 
 Delegate.Combine = combine
 
-local function bind(target, method)
-  assert(method)
-  if target == nil then throw(ArgumentNullException()) end
-
-  local delegate = target[method]
-  if delegate ~= nil then
-    return delegate
-  end
-
-  local t = {
-    target = target,
-    method = method,
-  }
-  setmetatable(t, memberMethod)
-  target[method] = t
-  return t
-end
-
-Delegate.bind = bind
-System.bind = bind
-
-local function equalsSingle(fn1, fn2)
-  if getmetatable(fn1) == memberMethod then
-    if getmetatable(fn2) == memberMethod then
-      return fn1.target == fn2.target and fn1.method == fn2.method
-    end
-    return false 
-  end
-  if getmetatable(fn2) == memberMethod then return false end
-  return fn1 == fn2
-end
-
 local function equalsMulticast(fn1, fn2, start, count)
   for i = 1, count do
-    if not equalsSingle(fn1[start + i], fn2[i]) then
+    if fn1[start + i] ~= fn2[i] then
       return false
     end
   end
@@ -131,13 +96,13 @@ end
 local function removeImpl(fn1, fn2) 
   if getmetatable(fn2) ~= multicast then
     if getmetatable(fn1) ~= multicast then
-      if equalsSingle(fn1, fn2) then
+      if fn1 == fn2 then
           return nil
       end
     else
       local count = #fn1
       for i = count, 1, -1 do
-        if equalsSingle(fn1[i], fn2) then
+        if fn1[i] == fn2 then
           if count == 2 then
             return fn1[3 - i]
           else
@@ -197,7 +162,7 @@ local function equals(fn1, fn2)
         return false         
       end
       for i = 1, len1 do
-        if not equalsSingle(fn1[i], fn2[2]) then
+        if fn1[i] ~= fn2[2] then
           return false
         end
       end
@@ -206,21 +171,18 @@ local function equals(fn1, fn2)
     return false
   end
   if getmetatable(fn2) == multicast then return false end
-  return equalsSingle(fn1, fn2)
+  return fn1 == fn2
 end
 
 Delegate.__add = combine
 multicast.__add = combine
-memberMethod.__add = combine
 
 Delegate.__sub = remove
 multicast.__sub = remove
-memberMethod.__sub = remove
 
 multicast.__eq = equals
-memberMethod.__eq = equals
  
- local metatableOfNil = debug.getmetatable(nil)
+local metatableOfNil = debug.getmetatable(nil)
  metatableOfNil.__add = function (a, b)
   if a == nil then
     if b == nil or type(b) == "number" then
@@ -238,7 +200,7 @@ function Delegate.EqualsObj(this, obj)
   end
   if typename == "table" then
     local metatable = getmetatable(obj)
-    if metatable == multicast or metatable == memberMethod then
+    if metatable == multicast then
       return equals(this, obj)
     end
   end
@@ -249,11 +211,11 @@ function Delegate.GetType(this)
   return System.typeof(Delegate)
 end
 
-local genericKey = System.genericKey
+local multiKey = System.multiKey
 
 local mt = {}
 local function makeGenericTypes(...)
-  local gt, gk = genericKey(mt, ...)
+  local gt, gk = multiKey(mt, ...)
   local t = gt[gk]
   if t == nil then
     t = setmetatable({ ... }, Delegate)
@@ -264,3 +226,107 @@ end
 
 System.define("System.Delegate", Delegate)
 setmetatable(Delegate, { __index = System.Object, __call = makeGenericTypes })
+
+function System.bind(target, method)
+  assert(method)
+  if target == nil then throw(ArgumentNullException()) end
+  local f = target[method]
+  if f == nil then
+    f = function (...)
+      return method(target, ...)
+    end
+    target[method] = f
+  end
+  return f
+end
+
+local binds = setmetatable({}, { __mode = "k" })
+
+function System.bindX(f, n, ...)
+  assert(f)
+  local gt, gk = multiKey(binds, f, ...)
+  local fn = gt[gk]
+  if fn == nil then
+    local args = { ... }
+    fn = function (...)
+      local len = select("#", ...)
+      if len == n then
+        return f(..., unpack(args))
+      else
+        assert(len > n)
+        local t = { ... }
+        for i = 1, #args do
+          local j = args[i]
+          if type(j) == "number" then
+            j = select(n + j, ...)
+            assert(j)
+          end
+          t[n + i] = j
+        end
+        return f(unpack(t, 1, n + #args))
+      end
+    end
+    gt[gk] = fn
+  end
+  return fn
+end
+
+local function bind(f, create, ...)
+  assert(f)
+  local gt, gk = multiKey(binds, f, create)
+  local fn = gt[gk]
+  if fn == nil then
+    fn = create(f, ...)
+  end
+  return fn
+end
+
+local function create1(f, a)
+  return function (...)
+    return f(..., a)
+  end
+end
+
+function System.bind1(f, a)
+  return bind(f, create1, a)
+end
+
+local function create2(f, a, b)
+  return function (...)
+    return f(..., a, b)
+  end
+end
+
+function System.bind2(f, a, b)
+  return bind(f, create2, a, b)
+end
+
+local function create3(f, a, b, c)
+  return function (...)
+    return f(..., a, b, c)
+  end
+end
+
+function System.bind3(f, a, b, c)
+ return bind(f, create3, a, b, c)
+end
+
+local function create2_1(f)
+  return function(x1, x2, T1, T2)
+    return f(x1, x2, T2, T1)
+  end
+end
+
+function System.bind2_1(f)
+  return bind(f, create2_1) 
+end
+
+local function create0_2(f)
+  return function(x1, x2, T1, T2)
+    return f(x1, x2, T2)
+  end
+end
+
+function System.bind0_2(f)
+  return bind(f, create0_2) 
+end

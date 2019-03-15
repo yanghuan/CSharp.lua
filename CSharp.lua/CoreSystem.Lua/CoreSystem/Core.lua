@@ -125,7 +125,7 @@ local function set(className, cls)
   end
 end
 
-local function genericKey(t, ...)
+local function multiKey(t, ...)
   local k 
   for i = 1, select("#", ...) do
     k = select(i, ...)
@@ -275,7 +275,7 @@ local function def(name, kind, cls, generic)
     end
     local mt = {}
     local fn = function(_, ...)
-      local gt, gk = genericKey(mt, ...)
+      local gt, gk = multiKey(mt, ...)
       local t = gt[gk]
       if t == nil then
         t = def(genericName(name, ...), kind, cls(...) or {}, true)
@@ -340,7 +340,7 @@ System = {
   try = try,
   throw = throw,
   getClass = set,
-  genericKey = genericKey,
+  multiKey = multiKey,
   define = defCls,
   defInf = defInf,
   defStc = defStc,
