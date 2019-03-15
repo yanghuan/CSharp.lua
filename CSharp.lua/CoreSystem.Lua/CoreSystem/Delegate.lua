@@ -226,7 +226,7 @@ end
 System.define("System.Delegate", Delegate)
 setmetatable(Delegate, { __index = System.Object, __call = makeGenericTypes })
 
-function System.bind(target, method)
+function System.fn(target, method)
   assert(method)
   if target == nil then throw(ArgumentNullException()) end
   local f = target[method]
@@ -241,7 +241,7 @@ end
 
 local binds = setmetatable({}, { __mode = "k" })
 
-function System.bindX(f, n, ...)
+function System.bind(f, n, ...)
   assert(f)
   local gt, gk = multiKey(binds, f, ...)
   local fn = gt[gk]
@@ -276,6 +276,7 @@ local function bind(f, create, ...)
   local fn = gt[gk]
   if fn == nil then
     fn = create(f, ...)
+    gt[gk] = fn
   end
   return fn
 end

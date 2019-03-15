@@ -2385,7 +2385,7 @@ namespace CSharpLua {
       if (symbol.IsStatic) {
         nameExpression = name;
       } else {
-        nameExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, target, name);
+        nameExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateMake, target, name);
       }
 
       if (symbol.IsGenericMethod) {
@@ -2463,7 +2463,7 @@ namespace CSharpLua {
               }
             }
 
-            var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind.ValueText + "X", nameExpression, symbol.Parameters.Length.ToString());
+            var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateBind, nameExpression, symbol.Parameters.Length.ToString());
             invocation.AddArguments(placeholders.Select(i => i.Build(this)));
             nameExpression = invocation;
           }
