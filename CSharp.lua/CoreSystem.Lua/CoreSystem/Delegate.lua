@@ -24,7 +24,7 @@ local ipairs = ipairs
 local assert = assert
 local select = select
 local type = type
-local unpack = unpack
+local unpack = table.unpack
 local tmove = table.move
 
 local Delegate = {}
