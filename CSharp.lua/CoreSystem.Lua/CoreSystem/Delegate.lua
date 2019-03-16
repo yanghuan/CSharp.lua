@@ -81,16 +81,15 @@ local function equalsMulticast(fn1, fn2, start, count)
 end
 
 local function delete(fn, count, deleteIndex, deleteCount)
-  local t = {}
-  local count = 1
-  setmetatable(t, multicast)
+  local t =  setmetatable({}, multicast)
+  local len = 1
   for i = 1, deleteIndex - 1 do
-    t[count] = fn[i]
-    count = count + 1
+    t[len] = fn[i]
+    len = len + 1
   end
   for i = deleteIndex + deleteCount, count do
-    t[count] = fn[i]
-    count = count + 1
+    t[len] = fn[i]
+    len = len + 1
   end
   return t
 end

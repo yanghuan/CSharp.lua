@@ -625,8 +625,7 @@ local function toString(value, startIndex, length)
     t[len + 2] = 45
     len = len + 3
   end
-  t[len - 1] = nil
-  return schar(unpack(t))
+  return schar(unpack(t, 1, len - 1))
 end
 
 local function doubleToInt64Bits(value)

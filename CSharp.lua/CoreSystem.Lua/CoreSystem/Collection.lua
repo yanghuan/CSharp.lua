@@ -41,7 +41,6 @@ local coroutine = coroutine
 local ccreate = coroutine.create
 local cresume = coroutine.resume
 local cyield = coroutine.yield
-local pairs = pairs
 
 local Collection = {}
 local null = {}
@@ -532,7 +531,7 @@ local function ipairsArray(t)
   end, t, 1
 end
 
-local pairsFn = pairs(null)
+local pairsFn = next
 
 local function pairsDict(t)
   local version = versions[t]
@@ -647,8 +646,10 @@ function Collection.toArray(t)
   if isArrayLike(t) then
     tmove(t, 1, #t, 1, array)
   else
+    local count = 1
     for _, v in each(t) do
-      array[#array + 1] = wrap(v)
+      array[count] = wrap(v)
+      count = count + 1
     end
   end
   return System.arrayFromTable(array, t.__genericT__)
@@ -714,7 +715,7 @@ function DictionaryEnumerator.MoveNext(this)
       pair.Value = unWrap(v)
       this.current = pair
     elseif this.kind == 1 then
-      this.current = unWrap(k)
+      this.current = k
     else
       this.current = unWrap(v)
     end

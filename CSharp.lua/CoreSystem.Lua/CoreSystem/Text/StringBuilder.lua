@@ -120,8 +120,10 @@ function StringBuilder.AppendCharRepeat(this, v, repeatCount)
   if repeatCount < 0 then throw(ArgumentOutOfRangeException("repeatCount")) end
   if repeatCount == 0 then return this end
   v = schar(v)
+  local count = #this + 1
   for i = 1, repeatCount do
-    this[#this + 1] = v
+    this[count] = v
+    count = count + 1
   end
   addCount(this, repeatCount) 
   return this
@@ -135,12 +137,14 @@ function StringBuilder.AppendFormat(this, format, ...)
 end
 
 function StringBuilder.AppendLine(this, value)
-  local count = 1;
+  local count = 1
+  local len = #this + 1
   if value ~= nil then
-    this[#this + 1] = value
+    this[len] = value
+    len = len + 1
     count = count + #value
   end
-  this[#this + 1] = "\n"
+  this[len] = "\n"
   addCount(this, count) 
   return this
 end
