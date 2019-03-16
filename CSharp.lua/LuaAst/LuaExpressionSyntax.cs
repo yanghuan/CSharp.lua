@@ -32,6 +32,11 @@ namespace CSharpLua.LuaAst {
       return identifierName;
     }
 
+    public static implicit operator LuaExpressionSyntax(double number) {
+      LuaNumberLiteralExpressionSyntax numberLiteral = number;
+      return numberLiteral;
+    }
+
     public static readonly LuaExpressionSyntax EmptyExpression = new EmptyLuaExpressionSyntax();
   }
 

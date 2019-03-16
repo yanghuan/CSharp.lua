@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -23,6 +24,10 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace CSharpLua.LuaAst {
   public abstract class LuaLiteralExpressionSyntax : LuaExpressionSyntax {
     public abstract string Text { get; }
+
+    public static implicit operator LuaLiteralExpressionSyntax(double number) {
+      return (LuaNumberLiteralExpressionSyntax)number;
+    }
   }
 
   public sealed class LuaIdentifierLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
@@ -46,8 +51,6 @@ namespace CSharpLua.LuaAst {
     }
 
     public static readonly LuaIdentifierLiteralExpressionSyntax Nil = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
-    public static readonly LuaIdentifierLiteralExpressionSyntax Zero = new LuaIdentifierLiteralExpressionSyntax(0.ToString());
-    public static readonly LuaIdentifierLiteralExpressionSyntax ZeroFloat = new LuaIdentifierLiteralExpressionSyntax(0.0.ToString());
     public static readonly LuaIdentifierLiteralExpressionSyntax True = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.True);
     public static readonly LuaIdentifierLiteralExpressionSyntax False = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.False);
   }
@@ -141,18 +144,25 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaNumberLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
     public double Number { get; }
 
-    public LuaNumberLiteralExpressionSyntax(double number) {
+    public static readonly LuaNumberLiteralExpressionSyntax Zero = 0;
+    public static readonly LuaNumberLiteralExpressionSyntax ZeroFloat = 0.0;
+
+    private LuaNumberLiteralExpressionSyntax(double number) {
       Number = number;
     }
 
     public override string Text {
       get {
-        return Number.ToString();
+        return Number.ToString(CultureInfo.InvariantCulture);
       }
     }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
+    }
+
+    public static implicit operator LuaNumberLiteralExpressionSyntax(double number) {
+      return new LuaNumberLiteralExpressionSyntax(number);
     }
   }
 }

@@ -171,7 +171,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitOmittedArraySizeExpression(OmittedArraySizeExpressionSyntax node) {
-      return LuaIdentifierLiteralExpressionSyntax.Zero;
+      return LuaNumberLiteralExpressionSyntax.Zero;
     }
 
     public override LuaSyntaxNode VisitArrayRankSpecifier(ArrayRankSpecifierSyntax node) {
@@ -193,7 +193,7 @@ namespace CSharpLua {
 
     private void FillMultiArrayInitializer(InitializerExpressionSyntax initializer, LuaTableExpression rankSpecifier, List<LuaExpressionSyntax> expressions, bool isFirst) {
       if (isFirst) {
-        rankSpecifier.Add(new LuaIdentifierNameSyntax(initializer.Expressions.Count));
+        rankSpecifier.Add(initializer.Expressions.Count);
       }
 
       int index = 0;
@@ -258,7 +258,7 @@ namespace CSharpLua {
       LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(typeName, LuaIdentifierNameSyntax.Ctor);
       LuaInvocationExpressionSyntax otherCtorInvoke;
       if (ctroCounter > 0) {
-        otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, new LuaIdentifierNameSyntax(ctroCounter)));
+        otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, ctroCounter));
       } else {
         otherCtorInvoke = new LuaInvocationExpressionSyntax(memberAccess);
       }

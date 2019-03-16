@@ -136,9 +136,6 @@ namespace CSharpLua.LuaAst {
       ValueText = valueText;
     }
 
-    public LuaIdentifierNameSyntax(int v) : this(v.ToString()) {
-    }
-
     public static implicit operator LuaIdentifierNameSyntax(string valueText) {
       return new LuaIdentifierNameSyntax(valueText);
     }

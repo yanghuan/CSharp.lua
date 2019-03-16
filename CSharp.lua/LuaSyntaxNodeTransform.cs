@@ -684,7 +684,7 @@ namespace CSharpLua {
       switch (typeSymbol.SpecialType) {
         case SpecialType.None: {
           if (typeSymbol.TypeKind == TypeKind.Enum) {
-            return LuaIdentifierLiteralExpressionSyntax.Zero;
+            return LuaNumberLiteralExpressionSyntax.Zero;
           } else if (typeSymbol.IsTimeSpanType()) {
             return BuildDefaultValue(LuaIdentifierNameSyntax.TimeSpan);
           }
@@ -704,11 +704,11 @@ namespace CSharpLua {
         case SpecialType.System_UInt32:
         case SpecialType.System_Int64:
         case SpecialType.System_UInt64: {
-          return LuaIdentifierLiteralExpressionSyntax.Zero;
+          return LuaNumberLiteralExpressionSyntax.Zero;
         }
         case SpecialType.System_Single:
         case SpecialType.System_Double: {
-          return LuaIdentifierLiteralExpressionSyntax.ZeroFloat;
+          return LuaNumberLiteralExpressionSyntax.ZeroFloat;
         }
         case SpecialType.System_DateTime: {
           return BuildDefaultValue(LuaIdentifierNameSyntax.DateTime);
@@ -2001,7 +2001,7 @@ namespace CSharpLua {
         if (fieldSymbol.ContainingType.IsTupleType) {
           int elementIndex = fieldSymbol.GetTupleElementIndex();
           var targetExpression = (LuaExpressionSyntax)node.Expression.Accept(this);
-          return new LuaTableIndexAccessExpressionSyntax(targetExpression, new LuaIdentifierNameSyntax(elementIndex));
+          return new LuaTableIndexAccessExpressionSyntax(targetExpression, elementIndex);
         }
 
         string codeTemplate = XmlMetaProvider.GetFieldCodeTemplate(fieldSymbol);
