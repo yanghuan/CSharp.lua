@@ -226,5 +226,16 @@ namespace TestCases
     }
 
 
+    [TestCase]
+    public static void ImplicitTest07() {
+
+	  var obj0 = new LuaObject();
+      var obj1 = new PropValue<int>() { value = 123 };
+
+	  var array = new LuaArray<int>();
+	  array.SetValue(0,obj0);
+	  array.SetValue(1,obj1);
+    }
+
   }
 }
