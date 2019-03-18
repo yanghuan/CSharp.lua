@@ -3360,6 +3360,11 @@ namespace CSharpLua {
           return node.Operand.Accept(this);
         }
         default: {
+          var operatorExpression = GetUserDefinedOperatorExpression(node, node.Operand);
+          if (operatorExpression != null) {
+            return operatorExpression;
+          }
+
           var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
           string operatorToken = GetOperatorToken(node.OperatorToken);
           LuaPrefixUnaryExpressionSyntax unaryExpression = new LuaPrefixUnaryExpressionSyntax(operand, operatorToken);

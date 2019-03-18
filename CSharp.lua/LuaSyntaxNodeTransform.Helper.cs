@@ -1035,6 +1035,12 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(memberAccess, expression);
     }
 
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, ExpressionSyntax arguemt) {
+      return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
+        () => VisitExpression(arguemt),
+      });
+    }
+
     private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, ExpressionSyntax left, ExpressionSyntax right) {
       return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
         () => VisitExpression(left),
