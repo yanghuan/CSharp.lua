@@ -325,7 +325,7 @@ end
 
 local function create0_2(f)
   return function(x1, x2, T1, T2)
-    return f(x1, x2, T1, T2)
+    return f(x1, x2, T2)
   end
 end
 
