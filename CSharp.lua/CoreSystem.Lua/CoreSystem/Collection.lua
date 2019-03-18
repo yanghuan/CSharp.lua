@@ -551,7 +551,7 @@ function Collection.forEachArray(t, action)
   if action == null then throw(ArgumentNullException("action")) end
   local version = versions[t]
   for i = 1, #t do
-    if versions ~= versions[t] then
+    if version ~= versions[t] then
       throwFailedVersion()
     end
     action(unWrap(t[i]))
