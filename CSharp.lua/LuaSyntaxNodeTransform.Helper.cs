@@ -235,7 +235,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<ExpressionSyntax> arguments, IList<ITypeSymbol> typeArguments) {
-      return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, arguments.Select<ExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => (LuaExpressionSyntax)i.Accept(this)), typeArguments);
+      return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, arguments.Select<ExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => VisitExpression(i)), typeArguments);
     }
 
     private void AddCodeTemplateExpression(LuaExpressionSyntax expression, string comma, LuaCodeTemplateExpressionSyntax codeTemplateExpression) {
