@@ -1927,15 +1927,16 @@ namespace CSharpLua {
         switch (parent.Kind()) {
           case SyntaxKind.Argument:
           case SyntaxKind.LocalDeclarationStatement:
-          case SyntaxKind.CastExpression:
+          case SyntaxKind.CastExpression: {
             return;
+          }
 
-          case SyntaxKind.SimpleAssignmentExpression:
-            var assignment = (AssignmentExpressionSyntax)parent;
-            if (assignment.Right == current) {
+          default: {
+            if (parent is AssignmentExpressionSyntax assignment && assignment.Right == current) {
               return;
             }
             break;
+          }
         }
 
         if (parent.IsKind(SyntaxKind.ExpressionStatement)) {
@@ -1978,8 +1979,7 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildMemberAccessTargetExpression(ExpressionSyntax targetExpression) {
       var expression = (LuaExpressionSyntax)targetExpression.Accept(this);
       SyntaxKind kind = targetExpression.Kind();
-      if ((kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.NullLiteralExpression)
-          || (expression is LuaLiteralExpressionSyntax)) {
+      if ((kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.NullLiteralExpression) || (expression is LuaLiteralExpressionSyntax)) {
         CheckPrevIsInvokeStatement(targetExpression);
         expression = new LuaParenthesizedExpressionSyntax(expression);
       }
@@ -3365,7 +3365,7 @@ namespace CSharpLua {
             return operatorExpression;
           }
 
-          var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
+          var operand = VisitExpression(node.Operand);
           string operatorToken = GetOperatorToken(node.OperatorToken);
           LuaPrefixUnaryExpressionSyntax unaryExpression = new LuaPrefixUnaryExpressionSyntax(operand, operatorToken);
           return unaryExpression;

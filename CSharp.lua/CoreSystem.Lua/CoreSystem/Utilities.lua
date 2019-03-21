@@ -268,6 +268,22 @@ define("System.Guid", {
       else
         assert(false)
       end
+    elseif n == 4 then
+      local a, b, c, d = ...
+      local get = d.get
+      this.a = a
+      this.b = b
+      this.c = c
+      this.d = get(d, 0)
+      this.e = get(d, 1)
+      this.f = get(d, 2)
+      this.g = get(d, 3)
+      this.h = get(d, 4)
+      this.i = get(d, 5)
+      this.j = get(d, 6)
+      this.k = get(d, 7)
+    else
+      this.a, this.b, this.c, this.d, this.e, this.f, this.g, this.h, this.i, this.j, this.k = ...
     end
   end
 })
