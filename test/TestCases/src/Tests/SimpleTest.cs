@@ -246,5 +246,26 @@ namespace TestCases
 		  throw new Exception("the correct value is false");
       }
     }
+	
+    
+    [TestCase]
+    public static void ImplicitTest10() {
+      var value = new PropValue<bool>() { value = false };
+	  var falseValue = value ? true : false;
+      if (falseValue)
+		{
+		  throw new Exception("the correct value is false");
+      }
+    }
+    
+    [TestCase]
+    public static void ImplicitTest11() {
+      var value = new PropValue<bool>() { value = false };
+	  var trueValue = !value ? true : false;
+      if (!trueValue)
+		{
+		  throw new Exception("the correct value is true");
+      }
+    }
   }
 }
