@@ -663,8 +663,11 @@ local function toLuaTable(array)
   return t
 end
 
-local KeyValuePair
-KeyValuePair = System.defStc("System.KeyValuePair", {
+
+local KeyValuePair_2 = System.defStc("System.KeyValuePair_2", function(TKey, TValue)
+  return {
+    __genericTKey__ = TKey,
+    __genericTValue__ = TValue,
   __ctor__ = function (this, key, value)
     this.Key, this.Value = key, value
   end,
@@ -672,7 +675,7 @@ KeyValuePair = System.defStc("System.KeyValuePair", {
     return setmetatable({ Key = this.Key, Value = this.Value }, KeyValuePair)
   end,
   default = function (T)
-    throw(System.NotSupportedException("KeyValuePair not support default(T)"))
+    return T(TKey:default(), TValue:default())
   end,
   Create = function (key, value)
     return setmetatable({ Key = key, Value = value }, KeyValuePair)
@@ -697,7 +700,11 @@ KeyValuePair = System.defStc("System.KeyValuePair", {
     t[count] = "]"
     return tconcat(t)
   end
-})
+}
+end)
+
+local KeyValuePair = KeyValuePair_2(System.Object, System.Object)
+System.KeyValuePair = KeyValuePair
 
 local DictionaryEnumerator = {}
 DictionaryEnumerator.__index = DictionaryEnumerator
