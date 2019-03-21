@@ -34,6 +34,7 @@ local tconcat = table.concat
 local pack = table.pack
 local unpack = table.unpack
 local setmetatable = setmetatable
+local getmetatable = getmetatable
 local select = select
 local type = type
 local assert = assert
@@ -663,22 +664,18 @@ local function toLuaTable(array)
   return t
 end
 
-
-local KeyValuePair_2 = System.defStc("System.KeyValuePair_2", function(TKey, TValue)
-  return {
-    __genericTKey__ = TKey,
-    __genericTValue__ = TValue,
-  __ctor__ = function (this, key, value)
-    this.Key, this.Value = key, value
+local KeyValuePairFn
+local KeyValuePair = {
+  __ctor__ = function (this, ...)
+    if select("#", ...) == 0 then
+      local T = getmetatable(this)
+      this.Key, this.Value = T.__genericTKey__:default(), T.__genericTValue__:default()
+    else
+      this.Key, this.Value = ...
+    end
   end,
-  __clone__ = function (this)
-    return setmetatable({ Key = this.Key, Value = this.Value }, KeyValuePair)
-  end,
-  default = function (T)
-    return T(TKey:default(), TValue:default())
-  end,
-  Create = function (key, value)
-    return setmetatable({ Key = key, Value = value }, KeyValuePair)
+  Create = function (key, value, TKey, TValue)
+    return setmetatable({ Key = key, Value = value }, KeyValuePairFn(TKey, TValue))
   end,
   Deconstruct = function (this)
     return this.Key, this.Value
@@ -701,10 +698,14 @@ local KeyValuePair_2 = System.defStc("System.KeyValuePair_2", function(TKey, TVa
     return tconcat(t)
   end
 }
-end)
 
-local KeyValuePair = KeyValuePair_2(System.Object, System.Object)
-System.KeyValuePair = KeyValuePair
+KeyValuePairFn = System.defStc("System.KeyValuePair", function(TKey, TValue)
+  local cls = {
+    __genericTKey__ = TKey,
+    __genericTValue__ = TValue,
+  }
+  return cls
+end, KeyValuePair)
 
 local DictionaryEnumerator = {}
 DictionaryEnumerator.__index = DictionaryEnumerator
@@ -744,7 +745,7 @@ function Collection.dictionaryEnumerator(t, kind)
     dict = t,
     version = versions[t],
     kind = kind,
-    pair = kind == 0 and setmetatable({ Key = false, Value = false }, KeyValuePair) or nil
+    pair = kind == 0 and setmetatable({ Key = false, Value = false }, KeyValuePairFn(t.__genericTKey__, t.__genericTValue__)) or nil
   }
   setmetatable(en, DictionaryEnumerator)
   return en

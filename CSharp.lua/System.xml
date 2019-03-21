@@ -363,12 +363,9 @@ limitations under the License.
       <class name="Comparer^1">
         <method name="Compare" Template="{this}.Compare({0}, {1})" />
       </class>
-      <class name="KeyValuePair^2" Name="System.KeyValuePair_2">
+      <class name="KeyValuePair^2" Name="System.KeyValuePair">
         <property name="Key" IsField="true" />
         <property name="Value" IsField="true" />
-      </class>
-      <class name="KeyValuePair">
-        <method name="Create" IgnoreGeneric="true" />
       </class>
     </namespace>
     <namespace name="System.Linq">
