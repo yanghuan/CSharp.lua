@@ -3608,16 +3608,16 @@ namespace CSharpLua {
       bool mayBeNullOrFalse = MayBeNullOrFalse(node.WhenTrue);
       if (mayBeNullOrFalse) {
         var temp = GetTempIdentifier(node);
-        var condition = (LuaExpressionSyntax)node.Condition.Accept(this);
+        var condition = VisitExpression(node.Condition);
         LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
         blocks_.Push(ifStatement.Body);
-        var whenTrue = (LuaExpressionSyntax)node.WhenTrue.Accept(this);
+        var whenTrue = VisitExpression(node.WhenTrue);
         blocks_.Pop();
         ifStatement.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, whenTrue)));
 
         LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
         blocks_.Push(elseClause.Body);
-        var whenFalse = (LuaExpressionSyntax)node.WhenFalse.Accept(this);
+        var whenFalse = VisitExpression(node.WhenFalse);
         blocks_.Pop();
         elseClause.Body.Statements.Add(new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(temp, whenFalse)));
 
@@ -3627,7 +3627,7 @@ namespace CSharpLua {
         return temp;
       } else {
         LuaExpressionSyntax Accept(ExpressionSyntax expressionNode) {
-          var expression = (LuaExpressionSyntax)expressionNode.Accept(this);
+          var expression = VisitExpression(expressionNode);
           return expressionNode.IsKind(SyntaxKind.LogicalAndExpression) || expressionNode.IsKind(SyntaxKind.LogicalOrExpression) ? new LuaParenthesizedExpressionSyntax(expression) : expression;
         }
 
