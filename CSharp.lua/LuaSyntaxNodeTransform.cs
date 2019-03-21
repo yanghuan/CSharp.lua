@@ -3313,14 +3313,18 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
+      var operatorExpression = GetUserDefinedOperatorExpression(node, node.Operand);
+      if (operatorExpression != null) {
+        return operatorExpression;
+      }
+
+      var operand = VisitExpression(node.Operand);
       SyntaxKind kind = node.Kind();
       switch (kind) {
         case SyntaxKind.PreIncrementExpression:
         case SyntaxKind.PreDecrementExpression: {
           bool isSingleLine = IsSingleLineUnary(node);
           string operatorToken = kind == SyntaxKind.PreIncrementExpression ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
-          var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
-
           if (operand is LuaMemberAccessExpressionSyntax memberAccess) {
             if (memberAccess.Expression != LuaIdentifierNameSyntax.This) {
               memberAccess = GetTempUnaryExpression(memberAccess, out var localTemp, node);
@@ -3347,25 +3351,17 @@ namespace CSharpLua {
           }
         }
         case SyntaxKind.PointerIndirectionExpression: {
-          var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
           var identifier = new LuaPropertyOrEventIdentifierNameSyntax(true, LuaIdentifierNameSyntax.Empty);
           return new LuaPropertyAdapterExpressionSyntax(operand, identifier, true);
         }
         case SyntaxKind.BitwiseNotExpression when !IsLuaNewest: {
           var type = semanticModel_.GetTypeInfo(node.Operand).Type;
-          var operand = (LuaExpressionSyntax)node.Operand.Accept(this);
           return new LuaInvocationExpressionSyntax(type.IsNullableType() ? LuaIdentifierNameSyntax.BitNotOfNull : LuaIdentifierNameSyntax.BitNot, operand);
         }
         case SyntaxKind.UnaryPlusExpression: {
-          return node.Operand.Accept(this);
+          return operand;
         }
         default: {
-          var operatorExpression = GetUserDefinedOperatorExpression(node, node.Operand);
-          if (operatorExpression != null) {
-            return operatorExpression;
-          }
-
-          var operand = VisitExpression(node.Operand);
           string operatorToken = GetOperatorToken(node.OperatorToken);
           LuaPrefixUnaryExpressionSyntax unaryExpression = new LuaPrefixUnaryExpressionSyntax(operand, operatorToken);
           return unaryExpression;
