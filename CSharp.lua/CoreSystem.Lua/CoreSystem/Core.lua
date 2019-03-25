@@ -1070,7 +1070,15 @@ debug.setmetatable(nil, {
       return a
     end
   end,
-  __add = emptyFn,
+  __add = function (a, b)
+    if a == nil then
+      if b == nil or type(b) == "number" then
+        return nil
+      end
+      return b
+    end
+    return nil
+  end,
   __sub = emptyFn,
   __mul = emptyFn,
   __div = emptyFn,

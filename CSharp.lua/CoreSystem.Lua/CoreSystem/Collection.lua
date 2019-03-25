@@ -34,7 +34,6 @@ local tconcat = table.concat
 local pack = table.pack
 local unpack = table.unpack
 local setmetatable = setmetatable
-local getmetatable = getmetatable
 local select = select
 local type = type
 local assert = assert
@@ -668,8 +667,7 @@ local KeyValuePairFn
 local KeyValuePair = {
   __ctor__ = function (this, ...)
     if select("#", ...) == 0 then
-      local T = getmetatable(this)
-      this.Key, this.Value = T.__genericTKey__:default(), T.__genericTValue__:default()
+      this.Key, this.Value = this.__genericTKey__:default(), this.__genericTValue__:default()
     else
       this.Key, this.Value = ...
     end

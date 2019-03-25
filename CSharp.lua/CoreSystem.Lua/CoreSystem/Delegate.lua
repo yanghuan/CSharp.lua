@@ -176,24 +176,12 @@ local function equals(fn1, fn2)
 end
 
 Delegate.__add = combine
-multicast.__add = combine
-
 Delegate.__sub = remove
-multicast.__sub = remove
 
+multicast.__add = combine
+multicast.__sub = remove
 multicast.__eq = equals
  
-local metatableOfNil = debug.getmetatable(nil)
- metatableOfNil.__add = function (a, b)
-  if a == nil then
-    if b == nil or type(b) == "number" then
-      return nil
-    end
-    return b
-  end
-  return nil
- end
-
 function Delegate.EqualsObj(this, obj)
   local typename = type(obj)
   if typename == "function" then
