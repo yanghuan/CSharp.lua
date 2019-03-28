@@ -37,6 +37,7 @@ Options
 -c              : support classic lua version(5.1), default support 5.3
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
+-module         : librarie file name without extension, use ';' to separate. make symbols from this librarie output is the same as code, it's useful for multiple module compiled
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -60,7 +61,8 @@ Options
           }
           string csc = GetCSCArgument(cmds);
           bool isExportMetadata = cmds.ContainsKey("-metadata");
-          Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts) {
+          string module = cmds.GetArgument("-module", true);
+          Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts, module) {
             IsExportMetadata = isExportMetadata,
           };
           c.Compile();

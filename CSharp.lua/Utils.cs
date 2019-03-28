@@ -190,7 +190,7 @@ namespace CSharpLua {
     public static string[] Split(string s, bool isPath = true) {
       HashSet<string> list = new HashSet<string>();
       if (!string.IsNullOrEmpty(s)) {
-        string[] array = s.Split(';');
+        string[] array = s.Split(';', ',');
         foreach (string i in array) {
           list.Add(isPath ? GetCurrentDirectory(i) : i);
         }
@@ -642,28 +642,6 @@ namespace CSharpLua {
       }
       return false;
     }
-
-    public static int GetConstructorIndex(this IMethodSymbol symbool) {
-      Contract.Assert(symbool.MethodKind == MethodKind.Constructor);
-      if (symbool.ContainingType.IsFromCode()) {
-        var typeSymbol = (INamedTypeSymbol)symbool.ReceiverType;
-        var ctors = typeSymbol.Constructors.Where(i => !i.IsStatic).ToList();
-        if (ctors.Count > 1) {
-          int firstCtorIndex = ctors.IndexOf(i => i.Parameters.IsEmpty);
-          if (firstCtorIndex != -1 && firstCtorIndex != 0) {
-            var firstCtor = ctors[firstCtorIndex];
-            ctors.Remove(firstCtor);
-            ctors.Insert(0, firstCtor);
-          }
-          int index = ctors.IndexOf(symbool);
-          Contract.Assert(index != -1);
-          int ctroCounter = index + 1;
-          return ctroCounter;
-        }
-      }
-      return 0;
-    }
-
 
     public static bool IsExtendSelf(INamedTypeSymbol typeSymbol, INamedTypeSymbol baseTypeSymbol) {
       if (baseTypeSymbol.IsGenericType) {

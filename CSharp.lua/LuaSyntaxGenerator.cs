@@ -53,13 +53,27 @@ namespace CSharpLua {
       public bool HasSemicolon { get; set; }
       private int indent_;
       public string IndentString { get; private set; }
-      public bool IsNewest { get; set; }
+      public bool IsClassic { get; set; }
       public bool IsExportMetadata { get; set; }
+      public string BaseFolder { get; set; } = "";
+      public bool IsExportAttributesAll { get; private set; }
+      public HashSet<string> ExportAttributes { get; private set; }
+      public HashSet<string> LuaModuleLibs;
 
       public SettingInfo() {
         Indent = 2;
-        HasSemicolon = false;
-        IsNewest = true;
+      }
+
+      public string[] Attributes {
+        set {
+          if (value != null) {
+            if (value.Length == 0) {
+              IsExportAttributesAll = true;
+            } else {
+              ExportAttributes = new HashSet<string>(value);
+            }
+          }
+        }
       }
 
       public int Indent {
@@ -84,12 +98,9 @@ namespace CSharpLua {
     private HashSet<string> exportEnums_ = new HashSet<string>();
     private HashSet<INamedTypeSymbol> ignoreExportTypes_ = new HashSet<INamedTypeSymbol>();
     private HashSet<ISymbol> forcePublicSymbols_ = new HashSet<ISymbol>();
-    private readonly bool isExportAttributesAll_;
-    private HashSet<string> exportAttributes_;
     private List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
     private Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
     private IMethodSymbol mainEntryPoint_;
-    public string BaseFolder { get; }
     private HashSet<string> monoBehaviourSpeicalMethodNames_;
     private INamedTypeSymbol monoBehaviourTypeSymbol_;
 
@@ -100,7 +111,7 @@ namespace CSharpLua {
       };
     }
 
-    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting, string[] attributes, string baseFolder = "") {
+    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting) {
       CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
@@ -111,16 +122,8 @@ namespace CSharpLua {
         }
       }
       compilation_ = compilation;
-      BaseFolder = baseFolder;
       XmlMetaProvider = new XmlMetaProvider(metas);
       Setting = setting;
-      if (attributes != null) {
-        if (attributes.Length == 0) {
-          isExportAttributesAll_ = true;
-        } else {
-          exportAttributes_ = new HashSet<string>(attributes);
-        }
-      }
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
         if (monoBehaviourTypeSymbol_ != null) {
@@ -178,7 +181,7 @@ namespace CSharpLua {
     }
 
     internal string RemoveBaseFolder(string patrh) {
-      return patrh.Remove(0, BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+      return patrh.Remove(0, Setting.BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
     }
 
     private string GetOutFilePath(string inFilePath, string output_, out string module) {
@@ -232,11 +235,11 @@ namespace CSharpLua {
     }
 
     internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
-      if (isExportAttributesAll_) {
+      if (Setting.IsExportAttributesAll) {
         return true;
       } else {
-        if (exportAttributes_ != null && exportAttributes_.Count > 0) {
-          if (exportAttributes_.Contains(attributeTypeSymbol.ToString())) {
+        if (Setting.ExportAttributes != null && Setting.ExportAttributes.Count > 0) {
+          if (Setting.ExportAttributes.Contains(attributeTypeSymbol.ToString())) {
             return true;
           }
         }
@@ -245,6 +248,15 @@ namespace CSharpLua {
         }
       }
       return false;
+    }
+
+    internal bool IsFromLuaModule(ISymbol symbol) {
+      if (symbol.IsFromCode()) {
+        return true;
+      }
+
+      var luaModuleLibs = Setting.LuaModuleLibs;
+      return luaModuleLibs != null && luaModuleLibs.Contains(symbol.ContainingAssembly.Name);
     }
 
     private void CheckExportEnums() {
@@ -543,7 +555,7 @@ namespace CSharpLua {
         }
       }
 
-      if (!symbol.IsFromCode()) {
+      if (!IsFromLuaModule(symbol)) {
         return GetSymbolBaseName(symbol);
       }
 
@@ -578,7 +590,6 @@ namespace CSharpLua {
           }
         }
         if (index > 0) {
-          Contract.Assert(member.IsFromCode());
           ISymbol refactorSymbol = member;
           Utility.CheckOriginalDefinition(ref refactorSymbol);
           refactorNames_.Add(refactorSymbol);
@@ -705,7 +716,6 @@ namespace CSharpLua {
     }
 
     private void AddSimilarNameMembers(INamedTypeSymbol typeSymbol, List<string> names, List<ISymbol> outList, bool isWithoutPrivate = false) {
-      Contract.Assert(typeSymbol.IsFromCode());
       foreach (var member in typeSymbol.GetMembers()) {
         if (member.IsOverride) {
           var overriddenSymbol = member.OverriddenSymbol();

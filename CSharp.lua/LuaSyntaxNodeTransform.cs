@@ -111,7 +111,7 @@ namespace CSharpLua {
 
     private bool IsLuaNewest {
       get {
-        return generator_.Setting.IsNewest;
+        return !generator_.Setting.IsClassic;
       }
     }
 

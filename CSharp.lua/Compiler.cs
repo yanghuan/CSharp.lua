@@ -27,26 +27,29 @@ namespace CSharpLua {
   public sealed class Compiler {
     private const string kDllSuffix = ".dll";
     private const string kSystemMeta = "~/System.xml";
+    private const char kLuaModuleSuffix = '!';
 
     private readonly string folder_;
     private readonly string output_;
     private readonly string[] libs_;
     private readonly string[] metas_;
     private readonly string[] cscArguments_;
-    private readonly bool isNewest_;
+    public readonly bool isClassic_;
     private readonly string[] attributes_;
+    private readonly string[] modules_;
     public bool IsExportMetadata { get; set; }
 
-    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
+    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string module) {
       folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
       cscArguments_ = string.IsNullOrEmpty(csc) ? Array.Empty<string>() : csc.Trim().Split(' ', '\t');
-      isNewest_ = !isClassic;
+      isClassic_ = isClassic;
       if (atts != null) {
         attributes_ = Utility.Split(atts, false);
       }
+      modules_ = Utility.Split(module, false);
     }
 
     private static IEnumerable<string> GetMetas(IEnumerable<string> additionalMetas) {
@@ -68,7 +71,7 @@ namespace CSharpLua {
       }
     }
 
-    private static IEnumerable<string> GetLibs(IEnumerable<string> additionalLibs) {
+    private static List<string> GetSystemLibs() {
       string privateCorePath = typeof(object).Assembly.Location;
       List<string> libs = new List<string>() { privateCorePath };
 
@@ -79,57 +82,68 @@ namespace CSharpLua {
         }
       }
 
-      if (additionalLibs != null) {
-        foreach (string lib in additionalLibs) {
-          string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
-          if (File.Exists(path)) {
-            libs.Add(path);
-          } else {
-            string file = Path.Combine(systemDir, Path.GetFileName(path));
-            if (!File.Exists(file)) {
-              throw new CmdArgumentException($"-l {path} is not found");
-            }
-          }
-        }
-      }
-
       return libs;
     }
 
-    private IEnumerable<string> Libs => GetLibs(libs_);
+    private static List<string> GetLibs(IEnumerable<string> additionalLibs, out List<string> luaModuleLibs) {
+      luaModuleLibs = new List<string>();
+      var libs = GetSystemLibs();
+      if (additionalLibs != null) {
+        foreach (string additionalLib in additionalLibs) {
+          string lib = additionalLib;
+          bool isLuaModule = false;
+          if (lib.Last() == kLuaModuleSuffix) {
+            lib = lib.TrimEnd(kLuaModuleSuffix);
+            isLuaModule = true;
+          }
+
+          string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
+          if (File.Exists(path)) {
+            if (isLuaModule) {
+              luaModuleLibs.Add(Path.GetFileNameWithoutExtension(path));
+            }
+
+            libs.Add(path);
+          } else {
+            throw new CmdArgumentException($"-l {path} is not found");
+          }
+        }
+      }
+      return libs;
+    }
 
     private static LuaSyntaxGenerator Build(
       IEnumerable<string> cscArguments,
       IEnumerable<(string Text, string Path)> codes, 
       IEnumerable<string> libs,
       IEnumerable<string> metas,
-      bool isNewest,
-      string[] attributes,
-      string folder,
-      bool IsExportMetadata = false
-      ) {
+      LuaSyntaxGenerator.SettingInfo setting) {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.Latest).WithDocumentationMode(DocumentationMode.Parse);
       var syntaxTrees = codes.Select(code => CSharpSyntaxTree.ParseText(code.Text, parseOptions, code.Path));
       var references = libs.Select(i => MetadataReference.CreateFromFile(i));
-      var setting = new LuaSyntaxGenerator.SettingInfo() {
-        IsNewest = isNewest,
-        HasSemicolon = false,
-        IsExportMetadata = IsExportMetadata
-      };
-      return new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, metas, setting, attributes, folder);
+      return new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments.CompilationOptions, metas, setting);
     }
 
     public void Compile() {
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var generator = Build(cscArguments_, codes, Libs, Metas, isNewest_, attributes_, folder_, IsExportMetadata);
+      var libs = GetLibs(libs_, out var luaModuleLibs);
+      luaModuleLibs.AddRange(modules_);
+      var setting = new LuaSyntaxGenerator.SettingInfo() {
+        IsClassic = isClassic_,
+        IsExportMetadata = IsExportMetadata,
+        BaseFolder = folder_,
+        Attributes = attributes_,
+        LuaModuleLibs = new HashSet<string>(luaModuleLibs),
+      };
+      var generator = Build(cscArguments_, codes, libs, Metas, setting);
       generator.Generate(output_);
     }
 
     public static string CompileSingleCode(string code) {
       var codes = new (string, string)[] { (code, "") };
-      var generator = Build(null, codes, GetLibs(null), GetMetas(null), true, null, "");
+      var generator = Build(null, codes, GetSystemLibs(), GetMetas(null), new LuaSyntaxGenerator.SettingInfo());
       return generator.GenerateSingle();
     }
   }

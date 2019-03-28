@@ -67,6 +67,7 @@ Options
 -i              : indent number, default is 2
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
+-module         : librarie file name without extension, use ';' to separate. make symbols from this librarie output is the same as code, it's useful for multiple module compiled
 ```
 Make sure that the. NET core 2.0+ is installed.
 https://dotnet.microsoft.com/download

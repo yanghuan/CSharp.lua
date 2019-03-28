@@ -313,7 +313,7 @@ namespace CSharpLua {
       bool isEmptyCtor = false;
       if (node.Initializer != null) {
         var initializerSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
-        int ctroIndex = initializerSymbol.GetConstructorIndex();
+        int ctroIndex = GetConstructorIndex(initializerSymbol);
         LuaInvocationExpressionSyntax otherCtorInvoke;
         if (node.Initializer.IsKind(SyntaxKind.ThisConstructorInitializer)) {
           Contract.Assert(ctroIndex != 0);
@@ -366,7 +366,7 @@ namespace CSharpLua {
         }
 
         if (IsCurTypeExportMetadataAll || attributes.Count > 0 || symbol.HasMetadataAttribute()) {
-          int ctorIndex = symbol.GetConstructorIndex();
+          int ctorIndex = GetConstructorIndex(symbol);
           LuaIdentifierNameSyntax name = ctorIndex == 0 ? LuaIdentifierNameSyntax.Nil : LuaSyntaxNode.GetCtorNameString(ctorIndex);
           AddMethodMetaData(new MethodDeclarationResult() {
             Symbol = symbol,
