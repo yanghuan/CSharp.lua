@@ -117,6 +117,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax __GC = "__gc";
     public static readonly LuaIdentifierNameSyntax Await = "await";
     public static readonly LuaIdentifierNameSyntax Async = "async";
+    public static readonly LuaIdentifierNameSyntax MorenManyLocalVarTempTable = "const";
 
     #region QueryExpression
     public static readonly LuaIdentifierNameSyntax LinqCast = "Linq.Cast";

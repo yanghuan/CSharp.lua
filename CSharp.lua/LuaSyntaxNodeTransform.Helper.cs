@@ -330,9 +330,13 @@ namespace CSharpLua {
       return generator_.IsEventFiled(symbol);
     }
 
+    private bool IsMoreThanLocalVariables(ISymbol symbol) {
+      return generator_.IsMoreThanLocalVariables(symbol);
+    }
+
     private bool IsInternalMember(SyntaxNode node, ISymbol symbol) {
       bool isVirtual = symbol.IsOverridable() && !generator_.IsSealed(symbol.ContainingType);
-      if (!isVirtual && !generator_.IsMoreThanLocalVariables(symbol)) {
+      if (!isVirtual && !IsMoreThanLocalVariables(symbol)) {
         var typeSymbol = CurTypeSymbol;
         if (typeSymbol.IsContainsInternalSymbol(symbol)) {
           return true;

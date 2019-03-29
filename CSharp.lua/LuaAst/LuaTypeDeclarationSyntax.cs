@@ -38,6 +38,7 @@ namespace CSharpLua.LuaAst {
     public bool IsClassUsed { get; set; }
     protected bool isStruct_;
     public bool IsForceStaticCtor { get; set; }
+    private bool hasTooManyLocalVariables_;
 
     private LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
     private List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new List<LuaTypeDeclarationSyntax>();
@@ -182,14 +183,23 @@ namespace CSharpLua.LuaAst {
       }
 
       if (isMoreThanLocalVariables) {
-        AddResultTable(name, method);
-      } else {
-        local_.Variables.Add(name);
-        LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, method);
+        if (!hasTooManyLocalVariables_) {
+          methodList_.Statements.Add(new LuaShortCommentStatement(" too many local variables (limit is 200)"));
+          methodList_.Statements.Add(new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, LuaTableExpression.Empty));
+          hasTooManyLocalVariables_ = true;
+        }
         if (document != null && !document.IsEmpty) {
           methodList_.Statements.Add(document);
         }
-        methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+        var left = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, name);
+        methodList_.Statements.Add(new LuaAssignmentExpressionSyntax(left, method));
+        AddResultTable(name, left);
+      } else {
+        local_.Variables.Add(name);
+        if (document != null && !document.IsEmpty) {
+          methodList_.Statements.Add(document);
+        }
+        methodList_.Statements.Add(new LuaAssignmentExpressionSyntax(name, method));
         if (!isPrivate) {
           AddResultTable(name);
         }

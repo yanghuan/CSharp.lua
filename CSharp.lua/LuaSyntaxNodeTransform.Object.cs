@@ -367,7 +367,7 @@ namespace CSharpLua {
 
         if (IsCurTypeExportMetadataAll || attributes.Count > 0 || symbol.HasMetadataAttribute()) {
           int ctorIndex = GetConstructorIndex(symbol);
-          LuaIdentifierNameSyntax name = ctorIndex == 0 ? LuaIdentifierNameSyntax.Nil : LuaSyntaxNode.GetCtorNameString(ctorIndex);
+          var name = ctorIndex == 0 ? LuaIdentifierNameSyntax.Nil : LuaSyntaxNode.GetCtorNameString(ctorIndex);
           AddMethodMetaData(new MethodDeclarationResult() {
             Symbol = symbol,
             Name = name,
@@ -973,7 +973,7 @@ namespace CSharpLua {
       var comments = BuildDocumentationComment(node);
       LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
       function.AddStatements(block.Statements);
-      CurType.AddMethod(name, function, isPrivate, comments, generator_.IsMoreThanLocalVariables(symbol));
+      CurType.AddMethod(name, function, isPrivate, comments, IsMoreThanLocalVariables(symbol));
       PopFunction();
       methodInfos_.Pop();
     }
