@@ -126,6 +126,11 @@ namespace CSharpLua {
       }
     }
 
+    public static int IndexOf<T>(this IEnumerable<T> source, T value) {
+      var comparer = EqualityComparer<T>.Default;
+      return source.IndexOf(i => comparer.Equals(i, value));
+    }
+
     public static int IndexOf<T>(this IEnumerable<T> source, Predicate<T> match) {
       int index = 0;
       foreach (var item in source) {

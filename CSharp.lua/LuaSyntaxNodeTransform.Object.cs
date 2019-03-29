@@ -973,8 +973,7 @@ namespace CSharpLua {
       var comments = BuildDocumentationComment(node);
       LuaBlockSyntax block = (LuaBlockSyntax)node.Body.Accept(this);
       function.AddStatements(block.Statements);
-      CurType.AddMethod(name, function, isPrivate, comments);
-
+      CurType.AddMethod(name, function, isPrivate, comments, generator_.IsMoreThanLocalVariables(symbol));
       PopFunction();
       methodInfos_.Pop();
     }

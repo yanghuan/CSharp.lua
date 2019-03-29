@@ -27,7 +27,7 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform : CSharpSyntaxVisitor<LuaSyntaxNode> {
-    private const int kStringConstInlineCount = 15;
+    public const int kStringConstInlineCount = 15;
 
     private sealed class MethodInfo {
       public IMethodSymbol Symbol { get; }
@@ -670,7 +670,7 @@ namespace CSharpLua {
       if (!node.Modifiers.IsAbstract() && !node.Modifiers.IsExtern()) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
         if (!result.IsIgnore) {
-          CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document);
+          CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, generator_.IsMoreThanLocalVariables(result.Symbol));
           if (IsCurTypeExportMetadataAll || result.Attributes.Count > 0 || result.IsMetadata) {
             AddMethodMetaData(result);
           }
@@ -941,6 +941,7 @@ namespace CSharpLua {
         if (node.AccessorList != null) {
           foreach (var accessor in node.AccessorList.Accessors) {
             if (accessor.Body != null || accessor.ExpressionBody != null) {
+              var accessorSymbol = semanticModel_.GetDeclaredSymbol(accessor);
               bool isGet = accessor.IsKind(SyntaxKind.GetAccessorDeclaration);
               var functionExpression = new LuaFunctionExpressionSyntax();
               if (!isStatic) {
@@ -962,7 +963,7 @@ namespace CSharpLua {
               }
               PopFunction();
               var name = new LuaPropertyOrEventIdentifierNameSyntax(true, propertyName);
-              CurType.AddMethod(name, functionExpression, isPrivate);
+              CurType.AddMethod(name, functionExpression, isPrivate, null, generator_.IsMoreThanLocalVariables(accessorSymbol));
 
               var methodAttributes = BuildAttributes(accessor.AttributeLists);
               if (isGet) {

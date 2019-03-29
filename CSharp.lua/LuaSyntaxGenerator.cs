@@ -1100,6 +1100,7 @@ namespace CSharpLua {
     private Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>> implicitInterfaceTypes_ = new Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>>();
     private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
     private HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
+    private Dictionary<ISymbol, bool> isMoreThanLocalVariables_ = new Dictionary<ISymbol, bool>();
 
     private sealed class PretreatmentChecker : CSharpSyntaxWalker {
       private LuaSyntaxGenerator generator_;
@@ -1308,6 +1309,54 @@ namespace CSharpLua {
         return IsEventFiled(eventSymbol);
       }
       return false;
+    }
+
+    public bool IsMoreThanLocalVariables(ISymbol symbol) {
+      if (!isMoreThanLocalVariables_.TryGetValue(symbol, out bool isMoreThanLocalVariables)) {
+        const int kMaxLocalVariablesCount = 195;
+        var methods = symbol.ContainingType.GetMembers().Where(i => {
+          switch (i.Kind) {
+            case SymbolKind.Method: {
+              var method = (IMethodSymbol)i;
+              if (method.MethodKind == MethodKind.Constructor) {
+                return false;
+              }
+
+              if (method.MethodKind == MethodKind.PropertyGet || method.MethodKind == MethodKind.PropertySet) {
+                if (IsPropertyField((IPropertySymbol)method.AssociatedSymbol)) {
+                  return false;
+                }
+              }
+              return true;
+            }
+            case SymbolKind.Field when !i.IsImplicitlyDeclared :  {
+              var field = (IFieldSymbol)i;
+              if (!field.IsConst) {
+                return field.IsStatic && (field.IsPrivate() || field.IsReadOnly);
+              }
+
+              if (field.Type.SpecialType == SpecialType.System_String) {
+                if (((string)field.ConstantValue).Length > LuaSyntaxNodeTransform.kStringConstInlineCount) {
+                  return true;
+                }
+              }
+
+              break;
+            }
+          }
+          return false;
+        }).ToList();
+
+        int index = 0;
+        if (symbol.Kind == SymbolKind.Method) {
+          index = methods.FindIndex(i => i == symbol);
+        } else if (symbol.Kind == SymbolKind.Property) {
+          index = methods.FindIndex(i => i.Kind == SymbolKind.Method && ((IMethodSymbol)i).AssociatedSymbol == symbol) + 1;
+        }
+        isMoreThanLocalVariables = index + symbol.ContainingType.Constructors.Length > kMaxLocalVariablesCount;
+        isMoreThanLocalVariables_.Add(symbol, isMoreThanLocalVariables);
+      }
+      return isMoreThanLocalVariables;
     }
 
     private IEnumerable<ISymbol> AllInterfaceImplementations(ISymbol symbol) {

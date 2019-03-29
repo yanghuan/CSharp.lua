@@ -165,8 +165,7 @@ namespace CSharpLua.LuaAst {
     }
 
     private void AddResultTable(LuaIdentifierNameSyntax name) {
-      LuaKeyValueTableItemSyntax item = new LuaKeyValueTableItemSyntax(name, name);
-      resultTable_.Items.Add(item);
+      AddResultTable(new LuaKeyValueTableItemSyntax(name, name));
     }
 
     private void AddResultTable(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
@@ -177,19 +176,23 @@ namespace CSharpLua.LuaAst {
       resultTable_.Items.Add(item);
     }
 
-    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, LuaDocumentStatement document = null) {
+    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, LuaDocumentStatement document = null, bool isMoreThanLocalVariables = false) {
       if (document != null && document.HasIgnoreAttribute) {
         return;
       }
 
-      local_.Variables.Add(name);
-      LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, method);
-      if (document != null && !document.IsEmpty) {
-        methodList_.Statements.Add(document);
-      }
-      methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
-      if (!isPrivate) {
-        AddResultTable(name);
+      if (isMoreThanLocalVariables) {
+        AddResultTable(name, method);
+      } else {
+        local_.Variables.Add(name);
+        LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(name, method);
+        if (document != null && !document.IsEmpty) {
+          methodList_.Statements.Add(document);
+        }
+        methodList_.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+        if (!isPrivate) {
+          AddResultTable(name);
+        }
       }
     }
 

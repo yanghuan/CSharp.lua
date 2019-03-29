@@ -117,14 +117,14 @@ namespace CSharpLua.LuaAst {
       return SpecailWord(Tokens.Ctor + ctorIndex);
     }
 
-    public static string[] TempIdentifiers = {
+    public static readonly string[] TempIdentifiers = {
       "default", "extern", "ref", "out", "try",
       "case", "void", "byte", "char", "uint",
       "lock",  "using", "fixed", "const", "object",
       "internal", "virtual",
     };
 
-    public static readonly HashSet<string> ReservedWords = new HashSet<string>() {            
+    private static HashSet<string> ReservedWords = new HashSet<string>() {            
       // compiler reserved words
       "System", "Linq",
     };
@@ -136,7 +136,7 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public static readonly HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
+    private static HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
       // lua metatable methods
       "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
       "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",

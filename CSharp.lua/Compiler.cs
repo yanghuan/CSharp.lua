@@ -34,7 +34,7 @@ namespace CSharpLua {
     private readonly string[] libs_;
     private readonly string[] metas_;
     private readonly string[] cscArguments_;
-    public readonly bool isClassic_;
+    private readonly bool isClassic_;
     private readonly string[] attributes_;
     private readonly string[] modules_;
     public bool IsExportMetadata { get; set; }
