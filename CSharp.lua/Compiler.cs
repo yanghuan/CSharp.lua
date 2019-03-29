@@ -129,7 +129,7 @@ namespace CSharpLua {
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
-      luaModuleLibs.AddRange(modules_);
+      luaModuleLibs.AddRange(modules_.Select(i => i.TrimEnd(kDllSuffix)));
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,

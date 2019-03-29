@@ -754,7 +754,7 @@ namespace CSharpLua {
           }
         case SymbolKind.Event: {
             var eventSymbol = (IEventSymbol)symbol;
-            if (!eventSymbol.IsEventFiled()) {
+            if (!IsEventFiled(eventSymbol)) {
               useType = CheckBaseVisitType(parent, eventSymbol, i => i.OverriddenEvent);
             }
             break;

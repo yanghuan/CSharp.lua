@@ -20,6 +20,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Reflection;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -251,10 +252,10 @@ namespace CSharpLua {
     }
 
     internal bool IsFromLuaModule(ISymbol symbol) {
-      if (symbol.IsFromCode()) {
-        return true;
-      }
+      return symbol.IsFromCode() || IsFromModuleOnly(symbol);
+    }
 
+    private bool IsFromModuleOnly(ISymbol symbol) {
       var luaModuleLibs = Setting.LuaModuleLibs;
       return luaModuleLibs != null && luaModuleLibs.Contains(symbol.ContainingAssembly.Name);
     }
@@ -1099,6 +1100,7 @@ namespace CSharpLua {
     private Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new Dictionary<ISymbol, HashSet<ISymbol>>();
     private Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>> implicitInterfaceTypes_ = new Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>>();
     private Dictionary<IPropertySymbol, bool> isFieldPropertys_ = new Dictionary<IPropertySymbol, bool>();
+    private Dictionary<IEventSymbol, bool> isFieldEvents_ = new Dictionary<IEventSymbol, bool>();
     private HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
     private Dictionary<ISymbol, bool> isMoreThanLocalVariables_ = new Dictionary<ISymbol, bool>();
 
@@ -1281,25 +1283,128 @@ namespace CSharpLua {
       return implicitInterfaceImplementations_.ContainsKey(symbol);
     }
 
-    internal bool IsPropertyField(IPropertySymbol symbol) {
-      if (!isFieldPropertys_.TryGetValue(symbol, out bool isAutoField)) {
-        bool? isMateField = XmlMetaProvider.IsPropertyField(symbol);
-        if (isMateField.HasValue) {
-          isAutoField = isMateField.Value;
-        } else {
-          if (IsImplicitInterfaceImplementation(symbol)) {
-            isAutoField = false;
-          } else {
-            isAutoField = symbol.IsPropertyField();
+    private bool IsModuleBackingFieldExists(ISymbol symbol) {
+      var module = (PortableExecutableReference)compilation_.ExternalReferences.Last(i =>
+       i is PortableExecutableReference reference && Path.GetFileNameWithoutExtension(reference.FilePath) == symbol.ContainingAssembly.Name);
+      var moduleAssembly = Assembly.LoadFile(module.FilePath);
+      var type = moduleAssembly.GetType(symbol.ContainingType.GetAssemblyQualifiedName(), true);
+      string name = symbol.Kind == SymbolKind.Property ? $"<{symbol.Name}>k__BackingField" : symbol.Name;
+      var field = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+      return field != null;
+    }
+
+    private bool IsPropertyFieldInternal(IPropertySymbol symbol) {
+      if (symbol.IsOverridable() || symbol.IsInterfaceImplementation()) {
+        return false;
+      }
+
+      if (IsFromModuleOnly(symbol)) {
+        return IsModuleBackingFieldExists(symbol);
+      }
+
+      if (symbol.IsFromAssembly()) {
+        return false;
+      }
+
+      if (symbol.IsProtobufNetSpecialProperty()) {
+        return true;
+      }
+
+      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+      if (syntaxReference != null) {
+        var node = syntaxReference.GetSyntax();
+        switch (node.Kind()) {
+          case SyntaxKind.PropertyDeclaration: {
+            var property = (PropertyDeclarationSyntax)node;
+            bool hasGet = false;
+            bool hasSet = false;
+            if (property.AccessorList != null) {
+              foreach (var accessor in property.AccessorList.Accessors) {
+                if (accessor.Body != null) {
+                  if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
+                    Contract.Assert(!hasGet);
+                    hasGet = true;
+                  } else {
+                    Contract.Assert(!hasSet);
+                    hasSet = true;
+                  }
+                }
+              }
+            } else {
+              Contract.Assert(!hasGet);
+              hasGet = true;
+            }
+            bool isField = !hasGet && !hasSet;
+            if (isField) {
+              var documentTrivia = property.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
+              if (documentTrivia != null && documentTrivia.HasNoFiledAttribute()) {
+                isField = false;
+              }
+            }
+            return isField;
+          }
+          case SyntaxKind.IndexerDeclaration: {
+            return false;
+          }
+          case SyntaxKind.AnonymousObjectMemberDeclarator: {
+            return true;
+          }
+          default: {
+            throw new InvalidOperationException();
           }
         }
-        isFieldPropertys_.Add(symbol, isAutoField);
       }
-      return isAutoField;
+      return false;
+    }
+
+    internal bool IsPropertyField(IPropertySymbol symbol) {
+      if (!isFieldPropertys_.TryGetValue(symbol, out bool isField)) {
+        bool? isMateField = XmlMetaProvider.IsPropertyField(symbol);
+        if (isMateField.HasValue) {
+          isField = isMateField.Value;
+        } else {
+          if (IsImplicitInterfaceImplementation(symbol)) {
+            isField = false;
+          } else {
+            isField = IsPropertyFieldInternal(symbol);
+          }
+        }
+        isFieldPropertys_.Add(symbol, isField);
+      }
+      return isField;
+    }
+
+    private bool IsEventFiledInternal(IEventSymbol symbol) {
+      if (symbol.IsOverridable() || symbol.IsInterfaceImplementation()) {
+        return false;
+      }
+
+      if (IsFromModuleOnly(symbol)) {
+        return IsModuleBackingFieldExists(symbol);
+      }
+
+      if (symbol.IsFromAssembly()) {
+        return false;
+      }
+
+      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+      if (syntaxReference != null) {
+        bool isField = syntaxReference.GetSyntax().IsKind(SyntaxKind.VariableDeclarator);
+        return isField;
+      }
+      return false;
     }
 
     internal bool IsEventFiled(IEventSymbol symbol) {
-      return !IsImplicitInterfaceImplementation(symbol) && symbol.IsEventFiled();
+      if (!isFieldEvents_.TryGetValue(symbol, out bool isField)) {
+        if (IsImplicitInterfaceImplementation(symbol)) {
+          isField = false;
+        } else {
+          isField = IsEventFiledInternal(symbol);
+        }
+        isFieldEvents_.Add(symbol, isField);
+      }
+      return isField;
     }
 
     internal bool IsPropertyFieldOrEventFiled(ISymbol symbol) {
@@ -1312,24 +1417,37 @@ namespace CSharpLua {
     }
 
     public bool IsMoreThanLocalVariables(ISymbol symbol) {
+      Contract.Assert(symbol.IsFromCode());
       if (!isMoreThanLocalVariables_.TryGetValue(symbol, out bool isMoreThanLocalVariables)) {
         const int kMaxLocalVariablesCount = 195;
         var methods = symbol.ContainingType.GetMembers().Where(i => {
           switch (i.Kind) {
             case SymbolKind.Method: {
               var method = (IMethodSymbol)i;
-              if (method.MethodKind == MethodKind.Constructor) {
-                return false;
-              }
-
-              if (method.MethodKind == MethodKind.PropertyGet || method.MethodKind == MethodKind.PropertySet) {
-                if (IsPropertyField((IPropertySymbol)method.AssociatedSymbol)) {
+              switch (method.MethodKind) {
+                case MethodKind.Constructor: {
                   return false;
                 }
+                case MethodKind.PropertyGet:
+                case MethodKind.PropertySet: {
+                  if (IsPropertyField((IPropertySymbol)method.AssociatedSymbol)) {
+                    return false;
+                  }
+                  break;
+                }
+                case MethodKind.EventAdd:
+                case MethodKind.EventRaise:
+                case MethodKind.EventRemove: {
+                  if (IsEventFiled((IEventSymbol)method.AssociatedSymbol)) {
+                    return false;
+                  }
+                  break;
+                }
               }
+
               return true;
             }
-            case SymbolKind.Field when !i.IsImplicitlyDeclared :  {
+            case SymbolKind.Field when !i.IsImplicitlyDeclared: {
               var field = (IFieldSymbol)i;
               if (!field.IsConst) {
                 return field.IsStatic && (field.IsPrivate() || field.IsReadOnly);
@@ -1348,11 +1466,18 @@ namespace CSharpLua {
         }).ToList();
 
         int index = 0;
-        if (symbol.Kind == SymbolKind.Method) {
-          index = methods.FindIndex(i => i == symbol);
-        } else if (symbol.Kind == SymbolKind.Property) {
-          index = methods.FindIndex(i => i.Kind == SymbolKind.Method && ((IMethodSymbol)i).AssociatedSymbol == symbol) + 1;
+        switch (symbol.Kind) {
+          case SymbolKind.Method: {
+            index = methods.FindIndex(i => i == symbol);
+            break;
+          }
+          case SymbolKind.Property:
+          case SymbolKind.Event: {
+            index = methods.FindIndex(i => i.Kind == SymbolKind.Method && ((IMethodSymbol)i).AssociatedSymbol == symbol) + 1;
+            break;
+          }
         }
+
         isMoreThanLocalVariables = index + symbol.ContainingType.Constructors.Length > kMaxLocalVariablesCount;
         isMoreThanLocalVariables_.Add(symbol, isMoreThanLocalVariables);
       }
@@ -1439,7 +1564,7 @@ namespace CSharpLua {
       }
       return false;
     }
-    
+
     private static bool IsInitFieldExists<T>(IEnumerable<T> fieldSymbols, Func<T, ITypeSymbol> fieldTypeFunc, Func<SyntaxNode, ExpressionSyntax> fieldValueFunc) where T : ISymbol {
       foreach (var field in fieldSymbols) {
         var fieldType = fieldTypeFunc(field);

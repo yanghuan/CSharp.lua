@@ -335,11 +335,13 @@ namespace CSharpLua {
     }
 
     private bool IsInternalMember(SyntaxNode node, ISymbol symbol) {
-      bool isVirtual = symbol.IsOverridable() && !generator_.IsSealed(symbol.ContainingType);
-      if (!isVirtual && !IsMoreThanLocalVariables(symbol)) {
-        var typeSymbol = CurTypeSymbol;
-        if (typeSymbol.IsContainsInternalSymbol(symbol)) {
-          return true;
+      if (symbol.IsFromCode()) {
+        bool isVirtual = symbol.IsOverridable() && !generator_.IsSealed(symbol.ContainingType);
+        if (!isVirtual) {
+          var typeSymbol = CurTypeSymbol;
+          if (typeSymbol.IsContainsInternalSymbol(symbol) && !IsMoreThanLocalVariables(symbol)) {
+            return true;
+          }
         }
       }
       return false;
