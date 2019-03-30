@@ -1283,14 +1283,19 @@ namespace CSharpLua {
       return implicitInterfaceImplementations_.ContainsKey(symbol);
     }
 
-    private bool IsModuleBackingFieldExists(ISymbol symbol) {
-      var module = (PortableExecutableReference)compilation_.ExternalReferences.Last(i =>
-       i is PortableExecutableReference reference && Path.GetFileNameWithoutExtension(reference.FilePath) == symbol.ContainingAssembly.Name);
-      var moduleAssembly = Assembly.LoadFile(module.FilePath);
-      var type = moduleAssembly.GetType(symbol.ContainingType.GetAssemblyQualifiedName(), true);
-      string name = symbol.Kind == SymbolKind.Property ? $"<{symbol.Name}>k__BackingField" : symbol.Name;
-      var field = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-      return field != null;
+    private bool IsModuleAutoField(ISymbol symbol) {
+      if (symbol.Kind == SymbolKind.Property) {
+        var property = (IPropertySymbol)symbol;
+        if (property.GetMethod != null) {
+          var attrs = property.GetMethod.GetAttributes();
+          return attrs.HasCompilerGeneratedAttribute();
+        }
+      } else {
+        var eventSymbol = (IEventSymbol)symbol;
+        var attrs = eventSymbol.AddMethod.GetAttributes();
+        return attrs.HasCompilerGeneratedAttribute();
+      }
+      return false;
     }
 
     private bool IsPropertyFieldInternal(IPropertySymbol symbol) {
@@ -1299,7 +1304,7 @@ namespace CSharpLua {
       }
 
       if (IsFromModuleOnly(symbol)) {
-        return IsModuleBackingFieldExists(symbol);
+        return IsModuleAutoField(symbol);
       }
 
       if (symbol.IsFromAssembly()) {
@@ -1380,7 +1385,7 @@ namespace CSharpLua {
       }
 
       if (IsFromModuleOnly(symbol)) {
-        return IsModuleBackingFieldExists(symbol);
+        return IsModuleAutoField(symbol);
       }
 
       if (symbol.IsFromAssembly()) {

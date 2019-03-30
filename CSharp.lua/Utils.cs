@@ -933,6 +933,14 @@ namespace CSharpLua {
       return symbol.Name == "CompilerServices" && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
     }
 
+    public static bool IsCompilerGeneratedAttribute(this INamedTypeSymbol symbol) {
+      return symbol.Name == "CompilerGeneratedAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
+    }
+
+    public static bool HasCompilerGeneratedAttribute(this ImmutableArray<AttributeData> attrs) {
+      return attrs.Any(i => i.AttributeClass.IsCompilerGeneratedAttribute());
+    }
+
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {
       const int kParametersMaxCount = 256;
 
