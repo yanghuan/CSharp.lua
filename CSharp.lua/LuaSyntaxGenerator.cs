@@ -1284,18 +1284,8 @@ namespace CSharpLua {
     }
 
     private bool IsModuleAutoField(ISymbol symbol) {
-      if (symbol.Kind == SymbolKind.Property) {
-        var property = (IPropertySymbol)symbol;
-        if (property.GetMethod != null) {
-          var attrs = property.GetMethod.GetAttributes();
-          return attrs.HasCompilerGeneratedAttribute();
-        }
-      } else {
-        var eventSymbol = (IEventSymbol)symbol;
-        var attrs = eventSymbol.AddMethod.GetAttributes();
-        return attrs.HasCompilerGeneratedAttribute();
-      }
-      return false;
+      var method = symbol.Kind == SymbolKind.Property ? ((IPropertySymbol)symbol).GetMethod : ((IEventSymbol)symbol).AddMethod;
+      return method != null && method.GetAttributes().HasCompilerGeneratedAttribute();
     }
 
     private bool IsPropertyFieldInternal(IPropertySymbol symbol) {
