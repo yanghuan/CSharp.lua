@@ -155,45 +155,23 @@ function Delegate.DynamicInvoke(this, ...)
   return this(...)
 end
 
-local function equals(fn1, fn2)
-  if getmetatable(fn1) == multicast then
-    if getmetatable(fn2) == multicast then
-      local len1, len2 = #fn1, #fn2
-      if len1 ~= len2 then
-        return false         
-      end
-      for i = 1, len1 do
-        if fn1[i] ~= fn2[2] then
-          return false
-        end
-      end
-      return true
-    end
-    return false
-  end
-  if getmetatable(fn2) == multicast then return false end
-  return fn1 == fn2
-end
-
+Delegate.EqualsObj = System.equals
 Delegate.__add = combine
 Delegate.__sub = remove
 
 multicast.__add = combine
 multicast.__sub = remove
-multicast.__eq = equals
- 
-function Delegate.EqualsObj(this, obj)
-  local typename = type(obj)
-  if typename == "function" then
-    return equals(this, obj)
+multicast.__eq = function (fn1, fn2)
+  local len1, len2 = #fn1, #fn2
+  if len1 ~= len2 then
+    return false         
   end
-  if typename == "table" then
-    local metatable = getmetatable(obj)
-    if metatable == multicast then
-      return equals(this, obj)
+  for i = 1, len1 do
+    if fn1[i] ~= fn2[i] then
+      return false
     end
   end
-  return false
+  return true
 end
 
 function Delegate.GetType(this)
