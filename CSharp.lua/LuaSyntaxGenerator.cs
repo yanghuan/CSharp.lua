@@ -796,8 +796,8 @@ namespace CSharpLua {
     }
 
     private int MemberSymbolComparison(ISymbol a, ISymbol b) {
-      bool isFromCodeOfA = a.ContainingType.IsFromCode();
-      bool isFromCodeOfB = b.ContainingType.IsFromCode();
+      bool isFromCodeOfA = IsFromLuaModule(a.ContainingType);
+      bool isFromCodeOfB = IsFromLuaModule(b.ContainingType);
 
       if (!isFromCodeOfA) {
         if (!isFromCodeOfB) {
