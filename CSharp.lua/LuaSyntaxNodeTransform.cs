@@ -2615,6 +2615,10 @@ namespace CSharpLua {
           identifier = VisitPropertyOrEventIdentifierName(node, symbol, false);
           break;
         }
+        case SymbolKind.Discard: {
+          identifier = LuaIdentifierNameSyntax.Placeholder;
+          break;
+        }
         default: {
           throw new NotSupportedException();
         }
