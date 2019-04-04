@@ -703,10 +703,17 @@ namespace CSharpLua {
       var names = GetSymbolNames(symbol);
       var rootType = symbol.ContainingType;
       var curTypeSymbol = rootType;
+      bool hasAssemblyBase = false;
       while (true) {
         AddSimilarNameMembers(curTypeSymbol, names, members, rootType != curTypeSymbol);
         var baseTypeSymbol = curTypeSymbol.BaseType;
-        if (baseTypeSymbol != null && baseTypeSymbol.IsFromCode()) {
+        if (baseTypeSymbol != null) {
+          if (baseTypeSymbol.IsFromAssembly()) {
+            if (hasAssemblyBase) {
+              break;
+            }
+            hasAssemblyBase = true;
+          }
           curTypeSymbol = baseTypeSymbol;
         } else {
           break;
