@@ -17,10 +17,7 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local Collection = System.Collection
-local addCount = Collection.addCount
-local getCount = Collection.getCount
 local removeArrayAll = Collection.removeArrayAll
-local clearCount = Collection.clearCount
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
@@ -29,14 +26,14 @@ local tconcat = table.concat
 local schar = string.char
 local ssub = string.sub
 
-local StringBuilder = {}
+local StringBuilder = { Length = 0 }
 
 local function build(this, value, startIndex, length)
   value = value:Substring(startIndex, length)
   local len = #value
   if len > 0 then
     this[#this + 1] = value
-    addCount(this, len) 
+    this.Length = len
   end
 end
 
@@ -56,7 +53,9 @@ function StringBuilder.__ctor__(this, ...)
   end
 end
 
-StringBuilder.getLength = getCount
+StringBuilder.getLength = function (this)
+	return this.Length
+end
 
 function StringBuilder.setLength(this, value) 
   if value < 0 then throw(ArgumentOutOfRangeException("value")) end
@@ -64,7 +63,7 @@ function StringBuilder.setLength(this, value)
     this:Clear()
     return
   end
-  local delta = value - getCount(this)
+  local delta = value - this.Length
   if delta > 0 then
     this:AppendCharRepeat(0, delta)
   else
@@ -84,7 +83,7 @@ function StringBuilder.setLength(this, value)
       end
       remain = remain - len
     end
-    addCount(this, delta)
+    this.Length = this.Length + delta
   end  
 end
 
@@ -95,7 +94,7 @@ function StringBuilder.Append(this, ...)
     if value ~= nil then
       value = value:ToString()
       this[#this + 1] = value
-      addCount(this, #value) 
+      this.Length =  this.Length + #value
     end
   else
     local value, startIndex, length = ...
@@ -104,7 +103,7 @@ function StringBuilder.Append(this, ...)
     end
     value = value:Substring(startIndex, length)
     this[#this + 1] = value
-    addCount(this, #value) 
+    this.Length =  this.Length + #value
   end
   return this
 end
@@ -112,7 +111,7 @@ end
 function StringBuilder.AppendChar(this, v) 
   v = schar(v)
   this[#this + 1] = v
-  addCount(this, 1) 
+  this.Length = this.Length + 1
   return this
 end
 
@@ -125,14 +124,14 @@ function StringBuilder.AppendCharRepeat(this, v, repeatCount)
     this[count] = v
     count = count + 1
   end
-  addCount(this, repeatCount) 
+  this.Length = this.Length + repeatCount
   return this
 end
 
 function StringBuilder.AppendFormat(this, format, ...)
   local value = format:Format(...)
   this[#this + 1] = value
-  addCount(this, #value) 
+  this.Length = this.Length + #value
   return this
 end
 
@@ -145,13 +144,13 @@ function StringBuilder.AppendLine(this, value)
     count = count + #value
   end
   this[len] = "\n"
-  addCount(this, count) 
+  this.Length = this.Length + count
   return this
 end
 
 function StringBuilder.Clear(this)
   removeArrayAll(this)
-  clearCount(this)
+  this.length = 0
   return this
 end
 
