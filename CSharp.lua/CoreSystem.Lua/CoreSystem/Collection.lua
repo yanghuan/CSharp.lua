@@ -113,19 +113,26 @@ Collection.wrap = wrap
 Collection.unWrap = unWrap
 
 function Collection.getArray(t, index)
-  checkIndex(t, index)
-  local item = t[index + 1] 
-  return unWrap(item)
+  if index < 0 or index >= #t then
+    throw(ArgumentOutOfRangeException("index"))
+  end
+  local v = t[index + 1]
+  if v == null then 
+    return nil 
+  end
+  return v
 end
 
 function Collection.setArray(t, index, v)
-  checkIndex(t, index)
-  t[index + 1] = wrap(v)
+  if index < 0 or index >= #t then
+    throw(ArgumentOutOfRangeException("index"))
+  end
+  t[index + 1] = v == nil and null or v
   changeVersion(t)
 end
 
 function Collection.pushArray(t, v)
-  t[#t + 1] = wrap(v)
+  t[#t + 1] = v == nil and null or v
   changeVersion(t)
 end
 

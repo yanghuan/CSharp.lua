@@ -937,6 +937,10 @@ namespace CSharpLua {
       return symbol.Name == "CompilerGeneratedAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
     }
 
+    public static bool IsSystemObjectOrValueType(this INamedTypeSymbol symbol) {
+      return symbol.SpecialType == SpecialType.System_Object || symbol.SpecialType == SpecialType.System_ValueType;
+    }
+
     public static bool HasCompilerGeneratedAttribute(this ImmutableArray<AttributeData> attrs) {
       return attrs.Any(i => i.AttributeClass.IsCompilerGeneratedAttribute());
     }
@@ -983,48 +987,6 @@ namespace CSharpLua {
         }
       }
       return $"0x{flags:X}";
-    }
-
-    private static void FillNamespaceName(StringBuilder sb, INamedTypeSymbol typeSymbol) {
-      string namespaceName;
-      var namespaceSymbol = typeSymbol.ContainingNamespace;
-      if (namespaceSymbol.IsGlobalNamespace) {
-        namespaceName = string.Empty;
-      } else {
-        namespaceName = namespaceSymbol.ToString();
-      }
-      if (namespaceName.Length > 0) {
-        sb.Append(namespaceName);
-        sb.Append('.');
-      }
-    }
-
-    private static void FillExternalTypeName(StringBuilder sb, INamedTypeSymbol symbol) {
-      var externalType = symbol.ContainingType;
-      if (externalType != null) {
-        FillExternalTypeName(sb, externalType);
-        sb.Append(externalType.Name);
-        int typeParametersCount = externalType.TypeParameters.Length;
-        if (typeParametersCount > 0) {
-          sb.Append('`');
-          sb.Append(typeParametersCount);
-        }
-        sb.Append('+');
-      } else {
-        FillNamespaceName(sb, symbol);
-      }
-    }
-
-    public static string GetAssemblyQualifiedName(this INamedTypeSymbol symbol) {
-      StringBuilder sb = new StringBuilder();
-      FillExternalTypeName(sb, symbol);
-      sb.Append(symbol.Name);
-      int typeParametersCount = symbol.TypeParameters.Length;
-      if (typeParametersCount > 0) {
-        sb.Append('`');
-        sb.Append(typeParametersCount);
-      }
-      return sb.ToString();
     }
 
     public static bool IsNil(this LuaExpressionSyntax expression) {

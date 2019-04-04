@@ -272,7 +272,7 @@ namespace CSharpLua {
     private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol typeSymbol, out int ctroCounter) {
       ctroCounter = 0;
       var baseType = typeSymbol.BaseType;
-      if (baseType != null && baseType.SpecialType != SpecialType.System_Object && baseType.SpecialType != SpecialType.System_ValueType) {
+      if (baseType != null && !baseType.IsSystemObjectOrValueType()) {
         if (baseType.IsFromCode()) {
           if (baseType.Constructors.Count(i => !i.IsStatic) > 1) {
             ctroCounter = 1;

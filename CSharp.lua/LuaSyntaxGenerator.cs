@@ -709,7 +709,7 @@ namespace CSharpLua {
         var baseTypeSymbol = curTypeSymbol.BaseType;
         if (baseTypeSymbol != null) {
           if (baseTypeSymbol.IsFromAssembly()) {
-            if (hasAssemblyBase) {
+            if (baseTypeSymbol.IsSystemObjectOrValueType() || hasAssemblyBase) {
               break;
             }
             hasAssemblyBase = true;
@@ -1550,7 +1550,7 @@ namespace CSharpLua {
     }
 
     internal bool IsBaseExplicitCtorExists(INamedTypeSymbol baseType) {
-      while (baseType != null && baseType.SpecialType != SpecialType.System_Object && baseType.SpecialType != SpecialType.System_ValueType) {
+      while (baseType != null && !baseType.IsSystemObjectOrValueType()) {
         var constructor = baseType.Constructors.FirstOrDefault(i => !i.IsStatic);
         if (constructor != null) {
           if (!constructor.IsImplicitlyDeclared) {
