@@ -16,8 +16,6 @@ limitations under the License.
 
 local System = System
 local define = System.define
-local throw = System.throw
-local ArgumentException = System.ArgumentException
 
 local EqualityComparer = {}
 
@@ -59,23 +57,8 @@ EqualityComparer_1 = define("System.EqualityComparer_1", function(T)
   return cls
 end, EqualityComparer)
 
-local function compare(a, b)
-  if a == b then return 0 end
-  if a == nil then return -1 end
-  if b == nil then return 1 end
-  local ia = a.CompareToObj
-  if ia ~= nil then
-    return ia(a, b)
-  end
-  local ib = b.CompareToObj
-  if ib ~= nil then
-    return -ib(b, a)
-  end
-  throw(ArgumentException("Argument_ImplementIComparable"))
-end
-
 local Comparer = {}
-Comparer.Compare = compare
+Comparer.Compare = System.compareObj
 
 local defaultComparerOfComparer
 
@@ -111,12 +94,8 @@ define("System.Comparer", Comparer)
 
 local Comparer_1
 Comparer_1 = define("System.Comparer_1", function(T)
-  local cls = {
-    __inherits__ = { System.IComparer_1(T) }, 
-    __genericT__ = T,
-  }
   local defaultComparer
-  function cls.getDefault()
+  local function getDefault()
     local comparer = defaultComparer 
     if comparer == nil then
       comparer = Comparer_1(T)()
@@ -124,5 +103,12 @@ Comparer_1 = define("System.Comparer_1", function(T)
     end
     return comparer
   end
+
+  local cls = {
+    __inherits__ = { System.IComparer_1(T) }, 
+    __genericT__ = T,
+    getDefault = getDefault,
+    getDefaultInvariant = getDefault,
+  }
   return cls
 end, Comparer)

@@ -1319,16 +1319,9 @@ namespace CSharpLua {
         return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, kDeconstructName, true));
       }
 
-      if (typeSymbol.IsTupleType) {
-        var invocationExpression = BuildInvocation();
-        invocationExpression.AddArgument(typeSymbol.GetTupleElementCount());
-        return invocationExpression;
-      } else if (typeSymbol.IsSystemTuple()) {
-        var nameTypeSymbol = (INamedTypeSymbol)typeSymbol;
-        var invocationExpression = BuildInvocation();
-        invocationExpression.AddArgument(nameTypeSymbol.TypeArguments.Length);
-        return invocationExpression;
-      } else {
+      if (typeSymbol.IsTupleType || typeSymbol.IsSystemTuple()) {
+        return BuildInvocation();
+      }  else {
         var methods = typeSymbol.GetMembers(kDeconstructName);
         if (methods.IsEmpty) {
           throw new CompilationErrorException(node, "current version Roslyn not public api get extension Deconstruct method symbol");

@@ -1105,7 +1105,9 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildValueTupleCreateExpression(IEnumerable<LuaExpressionSyntax> expressions) {
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ValueTupleTypeCreate, new LuaTableExpression(expressions));
+      var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ValueTupleTypeCreate);
+      invocation.AddArguments(expressions);
+      return invocation;
     }
 
     public override LuaSyntaxNode VisitTupleExpression(TupleExpressionSyntax node) {

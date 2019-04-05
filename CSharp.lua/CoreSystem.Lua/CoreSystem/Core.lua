@@ -22,7 +22,6 @@ local assert = assert
 local table = table
 local tremove = table.remove
 local tconcat = table.concat
-local tunpack = table.unpack
 local floor = math.floor
 local ceil = math.ceil
 local error = error
@@ -605,9 +604,14 @@ if version < 5.3 then
     throw(System.InvalidCastException()) 
   end
 
+  if table.pack == nil then
+    table.pack = function(...)
+      return { n = select("#", ...), ... }
+    end
+  end
+
   if table.unpack == nil then
-    table.unpack = unpack
-    tunpack = unpack
+    table.unpack = assert(unpack)
   end
 
   if table.move == nil then
@@ -619,12 +623,6 @@ if version < 5.3 then
         t = t - 1
         e = e - 1
       end
-    end
-  end
-
-  if table.pack == nil then
-    table.pack = function(...)
-      return { n = select("#", ...), ... }
     end
   end
 else  
@@ -951,7 +949,7 @@ function System.base(this)
   return getmetatable(getmetatable(this))
 end
 
-local function equalsStatic(x, y)
+local function equalsObj(x, y)
   if x == y then
     return true
   end
@@ -969,6 +967,23 @@ local function equalsStatic(x, y)
   return false
 end
 
+local function compareObj(a, b)
+  if a == b then return 0 end
+  if a == nil then return -1 end
+  if b == nil then return 1 end
+  local ia = a.CompareToObj
+  if ia ~= nil then
+    return ia(a, b)
+  end
+  local ib = b.CompareToObj
+  if ib ~= nil then
+    return -ib(b, a)
+  end
+  throw(System.ArgumentException("Argument_ImplementIComparable"))
+end
+
+System.compareObj = compareObj
+
 Object = defCls("System.Object", {
   __call = new,
   __ctor__ = emptyFn,
@@ -977,7 +992,7 @@ Object = defCls("System.Object", {
   EqualsObj = equals,
   ReferenceEquals = equals,
   GetHashCode = identityFn,
-  EqualsStatic = equalsStatic,
+  EqualsStatic = equalsObj,
   GetType = false,
   ToString = function(this) return this.__name__ end
 })
@@ -1008,7 +1023,7 @@ ValueType = {
   EqualsObj = function (this, obj)
     if getmetatable(this) ~= getmetatable(obj) then return false end
     for k, v in pairs(this) do
-      if not equalsStatic(v, obj[k]) then
+      if not equalsObj(v, obj[k]) then
         return false
       end
     end
@@ -1028,35 +1043,108 @@ function System.anonymousType(t)
   return setmetatable(t, AnonymousType)
 end
 
-local function tupleDeconstruct(tuple, count) 
-  return tunpack(tuple, 1, count)
+local pack, upack = table.pack, table.unpack
+
+local function tupleDeconstruct(t) 
+  return upack(t, 1, t.n)
 end
 
-local Tuple = { Deconstruct = tupleDeconstruct }
+local function tupleEquals(t, other)
+  for i = 1, t.n do
+    if not equalsObj(t[i], other[i]) then
+      return false
+    end
+  end
+  return true
+end
+
+local function tupleEqualsObj(t, obj)
+  if getmetatable(obj) ~= getmetatable(t) or t.n ~= obj.n then
+    return false
+  end
+  return tupleEquals(t, obj)
+end
+
+local function tupleCompareTo(t, other)
+  for i = 1, t.n do
+    local v = compareObj(t[i], other[i])
+    if v ~= 0 then
+      return v
+    end
+  end
+  return 0
+end
+
+local function tupleCompareToObj(t, obj)
+  if obj == nil then return 1 end
+  if getmetatable(obj) ~= getmetatable(t) or t.n ~= obj.n then
+    throw(System.ArgumentException())
+  end
+  return tupleCompareTo(t, obj)
+end
+
+local function tupleToString(t)
+  local a = { "(" }
+  local count = 2
+  for i = 1, t.n do
+    if i ~= 1 then
+      a[count] = ", "
+      count = count + 1
+    end
+    local v = t[i]
+    if v ~= nil then
+      a[count] = v:ToString()
+      count = count + 1
+    end
+  end
+  a[count] = ")"
+  return tconcat(a)
+end
+
+local function tupleLength(t)
+  return t.n
+end
+
+local function tupleGet(t, index)
+  if index < 0 or index >= t.n then
+    throw(System.IndexOutOfRangeException())
+  end
+  return t[index + 1]
+end
+
+local Tuple = { 
+  Deconstruct = tupleDeconstruct,
+  ToString = tupleToString,
+  EqualsObj = tupleEqualsObj,
+  CompareToObj = tupleCompareToObj,
+  getLength = tupleLength,
+  get = tupleGet
+}
+
 defCls("System.Tuple", Tuple)
 
 function System.tuple(...)
-  return setmetatable({...}, Tuple)
+  return setmetatable(pack(...), Tuple)
 end
 
 local ValueTuple = {
+  Deconstruct = tupleDeconstruct,
+  ToString = tupleToString,
+  __eq = tupleEquals,
+  Equals = tupleEquals,
+  EqualsObj = tupleEqualsObj,
+  CompareTo = tupleCompareTo,
+  CompareToObj = tupleCompareToObj,
+  getLength = tupleLength,
+  get = tupleGet,
   default = function()
     throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
-  end,
-  Deconstruct = tupleDeconstruct,
-  __eq = function (this, other)
-    for i = 1, #this do
-     if not equalsStatic(this[i], other[i]) then
-        return false
-      end
-    end
-    return true
   end
 }
 defStc("System.ValueTuple", ValueTuple)
 
-function System.valueTuple(t)
-  return setmetatable(t, ValueTuple)
+function System.valueTuple(...)
+  return setmetatable(pack(...), ValueTuple)
 end
 
 defCls("System.Attribute", {})
