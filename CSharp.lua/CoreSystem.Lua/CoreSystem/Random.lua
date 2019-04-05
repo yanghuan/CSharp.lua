@@ -22,7 +22,7 @@ limitations under the License.
 local System = System
 local ArrayInt32 = System.Array(System.Int32)
 System.define("System.Random", (function ()
-  local Sample, InternalSample, GenerateSeed, Next, GetSampleForLargeRange, Next1, Next2, NextDouble, 
+  local Sample, InternalSample, GenerateSeed, Next, GetSampleForLargeRange, NextDouble, 
   NextBytes, internal, __ctor__, rnd
   internal = function (this)
     this._seedArray = ArrayInt32:new(56)
