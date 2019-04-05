@@ -183,11 +183,11 @@ local function applyMetadata(cls)
   if metadata then
     if metadatas then
       metadatas[#metadatas + 1] = function (global)
-				cls.__metadata__ = metadata(global)
-			end
+        cls.__metadata__ = metadata(global)
+      end
     else
-			cls.__metadata__ = metadata(global)
-		end
+      cls.__metadata__ = metadata(global)
+    end
   end
 end
 
@@ -1234,9 +1234,9 @@ function System.init(namelist, conf)
   for i = 1, #usings do
     usings[i](global)
   end
-	for i = 1, #metadatas do
-		metadatas[i](global)
-	end
+  for i = 1, #metadatas do
+    metadatas[i](global)
+  end
   if conf ~= nil then
     local main = conf.Main
     if main then
@@ -1247,8 +1247,8 @@ function System.init(namelist, conf)
 
   modules = {}
   usings = {}
-	metadatas = nil
-	curCacheName = nil
+  metadatas = nil
+  curCacheName = nil
 end
 
 return function (config)
