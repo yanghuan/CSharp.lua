@@ -109,8 +109,28 @@ System.define("System.Random", (function ()
     end
     return rnd(0, 2147483647)
   end
-  Next = function (this)
-    return InternalSample(this)
+  Next = function (this, minValue, maxValue)
+    if not minValue then
+      return InternalSample(this)
+    end
+
+    if not maxValue then
+      maxValue = minValue
+      if maxValue < 0 then
+        System.throw(System.ArgumentOutOfRangeException("maxValue" --[[nameof(maxValue)]], "'maxValue' must be greater than zero."))
+      end
+      return System.ToInt32((Sample(this) * maxValue))
+    end
+
+    if minValue > maxValue then
+      System.throw(System.ArgumentOutOfRangeException("minValue" --[[nameof(minValue)]], "'minValue' cannot be greater than maxValue."))
+    end
+    local range = maxValue - minValue
+    if range <= 2147483647 --[[Int32.MaxValue]] then
+      return (System.ToInt32((Sample(this) * range)) + minValue)
+    else
+      return System.toInt32((System.ToInt64((GetSampleForLargeRange(this) * range)) + minValue))
+    end
   end
   GetSampleForLargeRange = function (this)
     -- The distribution of double value returned by Sample 
@@ -130,24 +150,6 @@ System.define("System.Random", (function ()
     -- get a number in range [0 .. 2 * Int32MaxValue - 1)
     d = d / (4294967293 --[[2 * (uint)int.MaxValue - 1]])
     return d
-  end
-  Next1 = function (this, minValue, maxValue)
-    if minValue > maxValue then
-      System.throw(System.ArgumentOutOfRangeException("minValue" --[[nameof(minValue)]], "'minValue' cannot be greater than maxValue."))
-    end
-
-    local range = maxValue - minValue
-    if range <= 2147483647 --[[Int32.MaxValue]] then
-      return (System.ToInt32((Sample(this) * range)) + minValue)
-    else
-      return System.toInt32((System.ToInt64((GetSampleForLargeRange(this) * range)) + minValue))
-    end
-  end
-  Next2 = function (this, maxValue)
-    if maxValue < 0 then
-      System.throw(System.ArgumentOutOfRangeException("maxValue" --[[nameof(maxValue)]], "'maxValue' must be greater than zero."))
-    end
-    return System.ToInt32((Sample(this) * maxValue))
   end
   NextDouble = function (this)
     return Sample(this)
@@ -169,8 +171,6 @@ System.define("System.Random", (function ()
     _inextp = 0,
     Sample = Sample,
     Next = Next,
-    Next1 = Next1,
-    Next2 = Next2,
     NextDouble = NextDouble,
     NextBytes = NextBytes,
     __ctor__ = __ctor__

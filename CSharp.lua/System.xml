@@ -121,11 +121,6 @@ limitations under the License.
           <arg type="System.Char" />
         </method>
       </class>
-      <class name="Random">
-        <method name="Next" ArgCount="0" Name="Next" />
-        <method name="Next" ArgCount="1" Name="Next1" />
-        <method name="Next" ArgCount="2" Name="Next2" />
-      </class>
       <class name="Math" Name="math" />
       <class name="Activator" >
         <method name="CreateInstance" ArgCount="0" Template="{^0}()" />
