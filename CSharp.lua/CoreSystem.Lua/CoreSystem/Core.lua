@@ -607,6 +607,7 @@ if version < 5.3 then
 
   if table.unpack == nil then
     table.unpack = unpack
+    tunpack = unpack
   end
 
   if table.move == nil then
