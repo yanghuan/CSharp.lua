@@ -82,57 +82,6 @@ end
 Collection.wrap = wrap
 Collection.unWrap = unWrap
 
-function Collection.getArray(t, index)
-  if index < 0 or index >= #t then
-    throw(ArgumentOutOfRangeException("index"))
-  end
-  local v = t[index + 1]
-  if v == null then 
-    return nil 
-  end
-  return v
-end
-
-function Collection.setArray(t, index, v)
-  if index < 0 or index >= #t then
-    throw(ArgumentOutOfRangeException("index"))
-  end
-  t[index + 1] = v == nil and null or v
-  t.version = t.version + 1
-end
-
-function Collection.pushArray(t, v)
-  t[#t + 1] = v == nil and null or v
-  t.version = t.version + 1
-end
-
-function Collection.buildArray(T, len, t)
-  if t == nil then 
-    t = {}
-    if len > 0 then
-      local default = T.__genericT__:default()
-      if default == nil then
-        default = null
-      end
-      for i = 1, len do
-        t[i] = default
-      end
-    end
-  else
-    if len > 0 then
-      local default = T.__genericT__:default()
-      if default == nil then
-        for i = 1, len do
-          if t[i] == nil then
-            t[i] = null
-          end
-        end
-      end
-    end
-  end
-  return setmetatable(t, T)
-end
-
 local function checkInsertIndex(t, index)   
   if index < 0 or index > #t then
     throw(ArgumentOutOfRangeException("index"))
@@ -143,16 +92,6 @@ function Collection.insertArray(t, index, v)
   checkInsertIndex(t, index)
   tinsert(t, index + 1, wrap(v))
   t.version = t.version + 1
-end
-
-function Collection.removeArrayAll(t)
-  local size = #t
-  if size > 0 then
-    for i = 1, size do
-      t[i] = nil
-    end
-    t.version = t.version + 1
-  end
 end
 
 local function copyArray(sourceArray, sourceIndex, destinationArray, destinationIndex, length, reliable)
@@ -187,12 +126,6 @@ function Collection.removeArray(t, index, count)
     end
     t.version = t.version + 1
   end
-end
-
-function Collection.removeAtArray(t, index)
-  checkIndex(t, index)
-  tremove(t, index + 1)
-  t.version = t.version + 1
 end
 
 local function binarySearchArray(t, index, count, v, comparer)
@@ -519,42 +452,38 @@ function Collection.forEachArray(t, action)
   end
 end
 
-local ArrayEnumerator = { getCurrent = getCurrent, Dispose = emptyFn }
+local ArrayEnumerator = {
+  __index = false,
+  getCurrent = getCurrent, 
+  Dispose = emptyFn,
+  Reset = function (this)
+    this.index = 1
+    this.current = nil
+  end,
+  MoveNext = function (this)
+    local t = this.list
+    if this.version ~= t.version then
+      throwFailedVersion()
+    end
+    local index = this.index
+    local v = t[index]
+    if v ~= nil then
+      if v == null then
+        this.current = nil
+      else
+        this.current = v
+      end
+      this.index = index + 1
+      return true
+    end
+    this.current = nil
+    return false
+  end,
+}
 ArrayEnumerator.__index = ArrayEnumerator
 
-function ArrayEnumerator.MoveNext(this)
-  local t = this.list
-  if this.version ~= t.version then
-    throwFailedVersion()
-  end
-  local index = this.index
-  local v = t[index]
-  if v ~= nil then
-    if v == null then
-      this.current = nil
-    else
-      this.current = v
-    end
-    this.index = index + 1
-    return true
-  end
-  this.current = nil
-  return false
-end
-
-function ArrayEnumerator.Reset(this)
-  this.index = 1
-  this.current = nil
-end
-
 local function arrayEnumerator(t)
-  local en = {
-    list = t,
-    index = 1,
-    version = t.version,
-  }
-  setmetatable(en, ArrayEnumerator)
-  return en
+  return setmetatable({ list = t, index = 1, version = t.version }, ArrayEnumerator)
 end
 
 Collection.arrayEnumerator = arrayEnumerator

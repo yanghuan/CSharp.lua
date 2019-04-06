@@ -16,7 +16,10 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
+local falseFn = System.falseFn
 local foreach = System.foreach
+local Array = System.Array
+local getLength = Array.getLength
 local Collection = System.Collection
 local unWrap = Collection.unWrap
 local checkIndexAndCount = Collection.checkIndexAndCount
@@ -38,32 +41,21 @@ function List.__ctor__(this, ...)
   this:AddRange(collection)
 end
 
-function List.getCapacity(this)
-  return #this
-end
+List.getCapacity = getLength
+List.getCount = getLength
+List.getIsFixedSize = falseFn
+List.getIsReadOnly = falseFn
 
-function List.getCount(this)
-  return #this
-end
-
-function List.getIsFixedSize(this)
-  return false
-end
-
-function List.getIsReadOnly(this)
-  return false
-end
-
-List.get = Collection.getArray
-List.set = Collection.setArray
-List.Add = Collection.pushArray
+List.get = Array.get
+List.set = Array.set
+List.Add = Array.push
 
 function List.AddRange(this, collection)
   this:InsertRange(#this, collection)
 end
 
 List.BinarySearch = Collection.binarySearchArray
-List.Clear = Collection.removeArrayAll
+List.Clear = Array.clear
 List.Contains = Collection.contains
 
 function List.CopyTo(this, ...)
@@ -93,7 +85,7 @@ function List.GetRange(this, index, count)
 end
 
 local indexOf = Collection.indexOfArray
-local removeAt = Collection.removeAtArray
+local removeAt = Array.removeAt
 local removeArray = Collection.removeArray
 
 List.IndexOf = indexOf

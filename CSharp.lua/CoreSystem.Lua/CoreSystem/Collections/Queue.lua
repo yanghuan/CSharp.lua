@@ -16,9 +16,10 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
+local Array = System.Array
+local get = Array.get
+local removeAt = Array.removeAt
 local Collection = System.Collection
-local removeAtArray = Collection.removeAtArray
-local getArray = Collection.getArray
 local insertRangeArray = Collection.insertRangeArray
 local InvalidOperationException = System.InvalidOperationException
 
@@ -35,12 +36,9 @@ function Queue.__ctor__(this, ...)
   insertRangeArray(this, 0, collection)
 end
 
-function Queue.getCount(this)
-  return #this
-end
-
-Queue.Clear = Collection.removeArrayAll
-Queue.Enqueue = Collection.pushArray
+Queue.getCount = Array.getLength
+Queue.Clear = Array.clear
+Queue.Enqueue = Array.push
 Queue.GetEnumerator = Collection.arrayEnumerator
 Queue.Contains = Collection.contains
 Queue.ToArray = Collection.toArray
@@ -50,14 +48,14 @@ local function peek(t)
   if #t == 0 then
     throw(InvalidOperationException())
   end
-  return getArray(t, 0)
+  return get(t, 0)
 end
 
 Queue.Peek = peek
 
 function Queue.Dequeue(t)
   local v = peek(t)
-  removeAtArray(t, 0)
+  removeAt(t, 0)
   return v
 end
 

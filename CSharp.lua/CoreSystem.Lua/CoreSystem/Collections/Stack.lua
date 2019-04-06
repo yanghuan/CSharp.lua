@@ -15,9 +15,10 @@ limitations under the License.
 --]]
 
 local System = System
+local Array = System.Array
+local get = Array.get
+local removeAt = Array.removeAt
 local Collection = System.Collection
-local removeAtArray = Collection.removeAtArray
-local getArray = Collection.getArray
 local insertRangeArray = Collection.insertRangeArray
 
 local select = select
@@ -32,12 +33,9 @@ function Stack.__ctor__(this, ...)
   insertRangeArray(this, 0, collection)
 end
 
-function Stack.getCount(this)
-  return #this
-end
-
-Stack.Clear = Collection.removeArrayAll
-Stack.Push = Collection.pushArray
+Stack.getCount = Array.getLength
+Stack.Clear = Array.clear
+Stack.Push = Array.push
 Stack.Contains = Collection.contains
 
 local function peek(t)
@@ -45,14 +43,14 @@ local function peek(t)
   if n == 0 then
     throw(InvalidOperationException())
   end
-  return getArray(t, n - 1)
+  return get(t, n - 1)
 end
 
 Stack.Peek = peek
 
 function Stack.Pop(this)
   local v = peek(this)
-  removeAtArray(this, #this - 1)
+  removeAt(this, #this - 1)
   return v
 end
 

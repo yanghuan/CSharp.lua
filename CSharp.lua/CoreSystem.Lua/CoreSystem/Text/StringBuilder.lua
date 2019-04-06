@@ -16,8 +16,7 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
-local Collection = System.Collection
-local removeArrayAll = Collection.removeArrayAll
+local clear = System.Array.clear
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
@@ -149,7 +148,7 @@ function StringBuilder.AppendLine(this, value)
 end
 
 function StringBuilder.Clear(this)
-  removeArrayAll(this)
+  clear(this)
   this.length = 0
   return this
 end
