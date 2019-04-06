@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local define = System.define
 local throw = System.throw
 local each = System.each
 local ArgumentNullException = System.ArgumentNullException
@@ -46,7 +47,7 @@ function LinkedListNode.getPrevious(this)
   return prev
 end
 
-System.define("System.LinkedListNode", LinkedListNode)
+define("System.LinkedListNode", LinkedListNode)
 
 local LinkedList = { Count = 0, version = 0 }
 
@@ -292,26 +293,29 @@ function LinkedList.RemoveLast(this)
   remvoeNode(this, head.prev)
 end
 
-local LinkedListEnumerator = { getCurrent = System.getCurrent, Dispose = System.emptyFn }
+local LinkedListEnumerator = { 
+  __index = false,
+  getCurrent = System.getCurrent, 
+  Dispose = System.emptyFn,
+  MoveNext = function (this)
+    local list = this.list
+    local node = this.node
+    if this.version ~= list.version then
+      System.throwFailedVersion()
+    end
+    if node == nil then
+      return false
+    end
+    this.current = node.Value
+    node = node.next
+    if node == list.head then
+      node = nil
+    end
+    this.node = node
+    return true
+  end
+}
 LinkedListEnumerator.__index = LinkedListEnumerator
-
-function LinkedListEnumerator.MoveNext(this)
-  local list = this.list
-  local node = this.node
-  if this.version ~= list.version then
-    System.throwFailedVersion()
-  end
-  if node == nil then
-    return false
-  end
-  this.current = node.Value
-  node = node.next
-  if node == list.head then
-    node = nil
-  end
-  this.node = node
-  return true
-end
 
 function LinkedList.GetEnumerator(this)
   return setmetatable({ list = this, version = this.version, node = this.head }, LinkedListEnumerator)
@@ -322,7 +326,7 @@ function System.linkedListFromTable(t, T)
   return setmetatable(t, LinkedList(T))
 end
 
-System.define("System.LinkedList", function(T) 
+define("System.LinkedList", function(T) 
   local cls = { 
   __inherits__ = { System.ICollection_1(T), System.ICollection }, 
   __genericT__ = T,

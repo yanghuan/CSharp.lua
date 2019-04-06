@@ -32,7 +32,6 @@ local tinsert = table.insert
 local tremove = table.remove
 local tsort = table.sort
 local tmove = table.move
-local tconcat = table.concat
 local pack = table.pack
 local unpack = table.unpack
 local setmetatable = setmetatable

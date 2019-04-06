@@ -23,6 +23,7 @@ local insertRangeArray = Collection.insertRangeArray
 local InvalidOperationException = System.InvalidOperationException
 
 local select = select
+local type = type
 
 local Queue = {}
 
