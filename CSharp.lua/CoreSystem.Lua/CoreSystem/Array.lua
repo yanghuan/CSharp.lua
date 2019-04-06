@@ -18,10 +18,13 @@ local System = System
 local define = System.define
 local throw = System.throw
 local null = System.null
+local each = System.each
 local Collection = System.Collection
 local arrayEnumerator = Collection.arrayEnumerator
 local findAll = Collection.findAllOfArray
+local throwFailedVersion = System.throwFailedVersion
 
+local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local IndexOutOfRangeException = System.IndexOutOfRangeException
 
@@ -29,7 +32,9 @@ local assert = assert
 local select = select
 local setmetatable = setmetatable
 local type = type
+local table = table
 local tremove = table.remove
+local tmove = table.move
 
 local function getLength(this)
   return #this
@@ -58,6 +63,18 @@ end
 
 local function push(t, v)
   t[#t + 1] = v == nil and null or v
+  t.version = t.version + 1
+end
+
+local function pushs(t, collection)
+  if collection == nil then
+    throw(ArgumentNullException("collection"))
+  end
+  local count = #t + 1
+  for _, v in each(collection) do
+    t[count] = v == nil and null or v
+    count = count + 1
+  end
   t.version = t.version + 1
 end
 
@@ -107,17 +124,19 @@ local function buildArray(T, len, t)
 end
 
 local Array
-Array = { 
+Array = {
   version = 0,
   new = buildArray,
   set = set,
   get = get,
   push = push,
+  pushs = pushs,
   clear = clear,
   removeAt = removeAt,
   GetEnumerator = arrayEnumerator,
   getLength = getLength,
   getCount = getLength,
+  GetValue = get,
   Exists = Collection.existsOfArray,
   Find = Collection.findOfArray,
   FindIndex = Collection.findIndexOfArray,
@@ -125,22 +144,35 @@ Array = {
   FindLastIndex = Collection.findLastIndexOfArray,
   IndexOf = Collection.indexOfArray,
   LastIndexOf = Collection.lastIndexOfArray,
-  Resize = Collection.resizeArray,
-  Reverse = Collection.reverseArray,
   Sort = Collection.sortArray,
-  TrueForAll = Collection.trueForAllOfArray,
   Copy = Collection.copyArray,
-  ForEach = Collection.forEachArray,
-  GetValue = get,
+
+  ForEach = function (t, action)
+    if action == null then throw(ArgumentNullException("action")) end
+    local version = t.version
+    for i = 1, #t do
+      if version ~= t.version then
+        throwFailedVersion()
+      end
+      local item = t[i]
+      if item == null then
+        item = nil
+      end
+      action(item)
+    end
+  end,
+
   GetLength = function (this, dimension)
     if dimension ~= 0 then
       throw(IndexOutOfRangeException())
     end
     return #this
   end,
+
   getRank = function (this)
     return 1
   end,
+
   Empty = function (T)
     local t = emptys[T]
     if t == nil then
@@ -149,14 +181,64 @@ Array = {
     end
     return t
   end,
+
   FindAll = function (t, match)
     return setmetatable(findAll(t, match), Array(t.__genericT__))
   end,
+
   CreateInstance = function (elementType, length)
     return buildArray(Array(elementType.c), length)
   end,
+
   SetValue = function (this, value, index)
     set(this, index, value)
+  end,
+
+  Resize = function (t, newSize, T)
+    if newSize < 0 then throw(ArgumentOutOfRangeException("newSize")) end
+    if t == nil then
+      return buildArray(Array(T), newSize)
+    end
+    local arr = t
+    if #arr ~= newSize then
+      arr = setmetatable({}, Array(T))
+      tmove(t, 1, #t, 1, arr)
+    end
+    return arr
+  end,
+
+  Reverse = function (t, index, count)
+    if not index then
+      index = 0
+      count = #t
+    else
+      if count < 0 or index > #t - count then
+        throw(ArgumentOutOfRangeException("index or count"))
+      end
+    end
+    local i, j = index + 1, index + count
+    while i <= j do
+      t[i], t[j] = t[j], t[i]
+      i = i + 1
+      j = j - 1
+    end
+    t.version = t.version + 1
+  end,
+
+  TrueForAll = function (t, match)
+    if match == nil then
+      throw(ArgumentNullException("match"))
+    end
+    for i = 1, #t do
+      local item = t[i]
+      if item == null then
+        item = nil
+      end
+      if not match(item) then
+        return false
+      end
+    end
+    return true
   end,
 }
 
@@ -202,24 +284,28 @@ local MultiArray = {
   version = 0,
   getLength = getLength,
   GetEnumerator = arrayEnumerator,
+
   set = function (this, ...)
     local index, len = getIndex(this, ...)
     set(this, index, select(len + 1, ...))
   end,
+
   get = function (this, ...)
     local index = getIndex(this, ...)
     return get(this, index)
   end,
+
   getRank = function (this)
     return #this.__rank__
   end,
+
   GetLength = function (this, dimension)
     local rank = this.__rank__
     if dimension < 0 or dimension >= #rank then
       throw(IndexOutOfRangeException())
     end
     return rank[dimension + 1]
-  end,
+  end
 }
 
 function System.multiArrayFromTable(t, T)

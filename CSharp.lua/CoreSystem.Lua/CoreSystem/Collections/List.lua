@@ -49,10 +49,7 @@ List.getIsReadOnly = falseFn
 List.get = Array.get
 List.set = Array.set
 List.Add = Array.push
-
-function List.AddRange(this, collection)
-  this:InsertRange(#this, collection)
-end
+List.AddRange = Array.pushs
 
 List.BinarySearch = Collection.binarySearchArray
 List.Clear = Array.clear
@@ -74,7 +71,7 @@ List.FindAll = Collection.findAllOfArray
 List.FindIndex = Collection.findIndexOfArray
 List.FindLast = Collection.findLastOfArray
 List.FindLastIndex = Collection.findLastIndexOfArray
-List.ForEach = Collection.forEachArray
+List.ForEach = Array.ForEach
 List.GetEnumerator = Collection.arrayEnumerator
 
 function List.GetRange(this, index, count)
@@ -128,11 +125,11 @@ end
 
 List.RemoveAt = removeAt
 List.RemoveRange = removeArray
-List.Reverse = Collection.reverseArray
+List.Reverse = Array.Reverse
 List.Sort = Collection.sortArray
 List.TrimExcess = System.emptyFn
 List.ToArray = Collection.toArray
-List.TrueForAll = Collection.trueForAllOfArray
+List.TrueForAll = Array.TrueForAll
 
 function System.listFromTable(t, T)
   assert(T)

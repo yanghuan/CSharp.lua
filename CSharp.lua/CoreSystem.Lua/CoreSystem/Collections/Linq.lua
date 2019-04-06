@@ -22,7 +22,6 @@ local identityFn = System.identityFn
 local Collection = System.Collection
 local wrap = Collection.wrap
 local unWrap = Collection.unWrap
-local sort = Collection.sort
 local is = System.is
 local cast = System.cast
 local Int32 = System.Int32
@@ -44,6 +43,7 @@ local IEnumerator = System.IEnumerator
 local assert = assert
 local select = select
 local getmetatable = getmetatable
+local tsort = table.sort
 
 local InternalEnumerable = define("System.Linq.InternalEnumerable", function(T) 
   return {
@@ -409,7 +409,11 @@ local function ordered(source, compare)
         t[count] = wrap(v)
         count = count + 1
       end
-      sort(t, compare)
+      if count > 1 then
+        tsort(t, function(x, y)
+          return compare(unWrap(x), unWrap(y)) < 0 
+        end)
+      end
     end)
   end)
   orderedEnumerable.source = source

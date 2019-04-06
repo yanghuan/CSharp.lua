@@ -333,34 +333,6 @@ function Collection.lastIndexOfArray(t, ...)
   return lastIndexOfArray(t, v, index, count)
 end
 
-function Collection.resizeArray(t, newSize, T)
-  if newSize < 0 then throw(ArgumentOutOfRangeException("newSize")) end
-  if t == nil then
-    return System.Array(T):new(newSize)
-  end
-  local arr = t
-  if #arr ~= newSize then
-    arr = setmetatable({}, System.Array(T))
-    tmove(t, 1, #t, 1, arr)
-  end
-  return arr
-end
-
-function Collection.reverseArray(t, index, count)
-  if not index then
-    index = 0
-    count = #t
-  end 
-  checkIndexAndCount(t, index, count)
-  local i, j = index + 1, index + count
-  while i <= j do
-    t[i], t[j] = t[j], t[i]
-    i = i + 1
-    j = j - 1
-  end
-  t.version = t.version + 1
-end
-
 local function getComp(t, comparer)
   local compare
   if comparer == nil then
@@ -381,8 +353,6 @@ local function sort(t, comparer)
     t.version = t.version + 1
   end
 end
-
-Collection.sort = sort
 
 local function sortArray(t, index, count, comparer)
   if count > 1 then
@@ -413,18 +383,6 @@ function Collection.sortArray(t, ...)
   end
 end
 
-function Collection.trueForAllOfArray(t, match)
-  if match == nil then
-    throw(ArgumentNullException("match"))
-  end
-  for i = 1, #t do
-    if not match(unWrap(t[i])) then
-      return false
-    end
-  end
-  return true
-end
-
 local function ipairsArray(t)
   local version = t.version
   return function (t, i)
@@ -439,17 +397,6 @@ local function ipairsArray(t)
       return i + 1, v
     end
   end, t, 1
-end
-
-function Collection.forEachArray(t, action)
-  if action == null then throw(ArgumentNullException("action")) end
-  local version = t.version
-  for i = 1, #t do
-    if version ~= t.version then
-      throwFailedVersion()
-    end
-    action(unWrap(t[i]))
-  end
 end
 
 local ArrayEnumerator = {

@@ -15,23 +15,16 @@ limitations under the License.
 --]]
 
 local System = System
+local throw = System.throw
 local Array = System.Array
 local get = Array.get
 local removeAt = Array.removeAt
 local Collection = System.Collection
-local insertRangeArray = Collection.insertRangeArray
+local InvalidOperationException = System.InvalidOperationException
 
-local select = select
-
-local Stack = {}
-
-function Stack.__ctor__(this, ...)
-  local len = select("#", ...)
-  if len == 0 then return end
-  local collection = ...
-  if type(collection) == "number" then return end
-  insertRangeArray(this, 0, collection)
-end
+local Stack = { 
+  __ctor__ = System.List.__ctor__ 
+}
 
 Stack.getCount = Array.getLength
 Stack.Clear = Array.clear
