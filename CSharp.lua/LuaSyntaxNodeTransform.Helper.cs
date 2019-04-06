@@ -1324,7 +1324,8 @@ namespace CSharpLua {
       }  else {
         var methods = typeSymbol.GetMembers(kDeconstructName);
         if (methods.IsEmpty) {
-          throw new CompilationErrorException(node, "current version Roslyn not public api get extension Deconstruct method symbol");
+          var info = semanticModel_.GetDeconstructionInfo((AssignmentExpressionSyntax)node.Parent);
+          return BuildExtensionMethodInvocation(info.Method, expression);
         }
         return BuildInvocation();
       }

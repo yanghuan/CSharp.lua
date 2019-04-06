@@ -1786,7 +1786,7 @@ namespace CSharpLua {
             invocation = new LuaInvocationExpressionSyntax(memberAccess.Name);
             invocation.AddArgument(memberAccess.Expression);
           } else if (symbol.ReducedFrom != null) {
-            invocation = BuildExtensionMethodInvocation(symbol.ReducedFrom, memberAccess.Expression, node);
+            invocation = BuildExtensionMethodInvocation(symbol.ReducedFrom, memberAccess.Expression);
           } else {
             invocation = new LuaInvocationExpressionSyntax(expression);
           }
@@ -1838,7 +1838,7 @@ namespace CSharpLua {
       }
     }
 
-    private LuaInvocationExpressionSyntax BuildExtensionMethodInvocation(IMethodSymbol reducedFrom, LuaExpressionSyntax expression, InvocationExpressionSyntax node) {
+    private LuaInvocationExpressionSyntax BuildExtensionMethodInvocation(IMethodSymbol reducedFrom, LuaExpressionSyntax expression) {
       LuaExpressionSyntax typeName = GetTypeName(reducedFrom.ContainingType);
       LuaIdentifierNameSyntax methodName = GetMemberName(reducedFrom);
       LuaMemberAccessExpressionSyntax typeMemberAccess = new LuaMemberAccessExpressionSyntax(typeName, methodName);
