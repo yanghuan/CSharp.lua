@@ -31,7 +31,7 @@ local select = select
 local setmetatable = setmetatable
 local type = type
 
-local Array = {}
+local Array = { version = 0 }
 local emptys = {}
 
 Array.new = buildArray
@@ -124,7 +124,7 @@ function System.arrayFromList(t)
   return setmetatable(t, Array(t.__genericT__))
 end
 
-local MultiArray = {}
+local MultiArray = { version = 0 }
 
 local function getIndex(this, ...)
   local rank = this.__rank__

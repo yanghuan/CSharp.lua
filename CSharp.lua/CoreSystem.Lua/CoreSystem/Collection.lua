@@ -130,12 +130,12 @@ function Collection.setArray(t, index, v)
     throw(ArgumentOutOfRangeException("index"))
   end
   t[index + 1] = v == nil and null or v
-  changeVersion(t)
+  t.version = t.version + 1
 end
 
 function Collection.pushArray(t, v)
   t[#t + 1] = v == nil and null or v
-  changeVersion(t)
+  t.version = t.version + 1
 end
 
 function Collection.buildArray(T, len, t)
@@ -174,7 +174,7 @@ end
 function Collection.insertArray(t, index, v)
   checkInsertIndex(t, index)
   tinsert(t, index + 1, wrap(v))
-  changeVersion(t)
+  t.version = t.version + 1
 end
 
 function Collection.removeArrayAll(t)
@@ -183,7 +183,7 @@ function Collection.removeArrayAll(t)
     for i = 1, size do
       t[i] = nil
     end
-    changeVersion(t)
+    t.version = t.version + 1
   end
 end
 
@@ -217,14 +217,14 @@ function Collection.removeArray(t, index, count)
     for i = size + 1, size + count do
       t[i] = nil
     end
-    changeVersion(t)
+    t.version = t.version + 1
   end
 end
 
 function Collection.removeAtArray(t, index)
   checkIndex(t, index)
   tremove(t, index + 1)
-  changeVersion(t)
+  t.version = t.version + 1
 end
 
 local function binarySearchArray(t, index, count, v, comparer)
@@ -457,7 +457,7 @@ function Collection.reverseArray(t, index, count)
     i = i + 1
     j = j - 1
   end
-  changeVersion(t)
+  t.version = t.version + 1
 end
 
 local function getComp(t, comparer)
@@ -477,7 +477,7 @@ end
 local function sort(t, comparer)
   if #t > 1 then
     tsort(t, getComp(t, comparer))
-    changeVersion(t)
+    t.version = t.version + 1
   end
 end
 
@@ -495,7 +495,7 @@ local function sortArray(t, index, count, comparer)
       tsort(arr, comp)
       tmove(arr, 1, count, index + 1, t)
     end
-    changeVersion(t)
+    t.version = t.version + 1
   end
 end
 
@@ -525,9 +525,9 @@ function Collection.trueForAllOfArray(t, match)
 end
 
 local function ipairsArray(t)
-  local version = versions[t]
+  local version = t.version
   return function (t, i)
-    if version ~= versions[t] then
+    if version ~= t.version then
       throwFailedVersion()
     end
     local v = t[i]
@@ -558,9 +558,9 @@ end
 
 function Collection.forEachArray(t, action)
   if action == null then throw(ArgumentNullException("action")) end
-  local version = versions[t]
+  local version = t.version
   for i = 1, #t do
-    if version ~= versions[t] then
+    if version ~= t.version then
       throwFailedVersion()
     end
     action(unWrap(t[i]))
@@ -572,7 +572,7 @@ ArrayEnumerator.__index = ArrayEnumerator
 
 function ArrayEnumerator.MoveNext(this)
   local t = this.list
-  if this.version ~= versions[t] then
+  if this.version ~= t.version then
     throwFailedVersion()
   end
   local index = this.index
@@ -599,7 +599,7 @@ local function arrayEnumerator(t)
   local en = {
     list = t,
     index = 1,
-    version = versions[t],
+    version = t.version,
   }
   setmetatable(en, ArrayEnumerator)
   return en
@@ -641,7 +641,7 @@ function Collection.insertRangeArray(t, index, collection)
     index = index + 1
     tinsert(t, index, wrap(v))
   end
-  changeVersion(t)
+  t.version = t.version + 1
 end
 
 function Collection.toArray(t)

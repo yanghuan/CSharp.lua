@@ -26,7 +26,7 @@ local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
 local select = select
 
-local List = {}
+local List = { version = 0 }
 
 function List.__ctor__(this, ...)
   local len = select("#", ...)
