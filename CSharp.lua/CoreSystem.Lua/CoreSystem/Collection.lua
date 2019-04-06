@@ -18,6 +18,8 @@ local System = System
 local define = System.define
 local throw = System.throw
 local div = System.div
+local emptyFn = System.emptyFn
+local getCurrent = System.getCurrent
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local InvalidOperationException = System.InvalidOperationException
 local ArgumentNullException = System.ArgumentNullException
@@ -565,7 +567,7 @@ function Collection.forEachArray(t, action)
   end
 end
 
-local ArrayEnumerator = {}
+local ArrayEnumerator = { getCurrent = getCurrent, Dispose = emptyFn }
 ArrayEnumerator.__index = ArrayEnumerator
 
 function ArrayEnumerator.MoveNext(this)
@@ -588,16 +590,10 @@ function ArrayEnumerator.MoveNext(this)
   return false
 end
 
-function ArrayEnumerator.getCurrent(this)
-  return this.current
-end
-
 function ArrayEnumerator.Reset(this)
-  this.index = 0
+  this.index = 1
   this.current = nil
 end
-
-ArrayEnumerator.Dispose = System.emptyFn
 
 local function arrayEnumerator(t)
   local en = {
@@ -712,7 +708,7 @@ KeyValuePairFn = System.defStc("System.KeyValuePair", function(TKey, TValue)
   return cls
 end, KeyValuePair)
 
-local DictionaryEnumerator = {}
+local DictionaryEnumerator = { getCurrent = getCurrent, Dispose = emptyFn }
 DictionaryEnumerator.__index = DictionaryEnumerator
 
 function DictionaryEnumerator.MoveNext(this)
@@ -739,12 +735,6 @@ function DictionaryEnumerator.MoveNext(this)
   return false
 end
 
-function DictionaryEnumerator.getCurrent(this)
-  return this.current
-end
-
-DictionaryEnumerator.Dispose = System.emptyFn
-
 function Collection.dictionaryEnumerator(t, kind)
   local en = {
     dict = t,
@@ -753,43 +743,6 @@ function Collection.dictionaryEnumerator(t, kind)
     pair = kind == 0 and setmetatable({ Key = false, Value = false }, KeyValuePairFn(t.__genericTKey__, t.__genericTValue__)) or nil
   }
   setmetatable(en, DictionaryEnumerator)
-  return en
-end
-
-local LinkedListEnumerator = {}
-LinkedListEnumerator.__index = LinkedListEnumerator
-
-function LinkedListEnumerator.MoveNext(this)
-  local list = this.list
-  local node = this.node
-  if this.version ~= versions[list] then
-    throwFailedVersion()
-  end
-  if node == nil then
-    return false
-  end
-  this.current = node.Value
-  node = node.next
-  if node == list.head then
-    node = nil
-  end
-  this.node = node
-  return true 
-end
-
-function LinkedListEnumerator.getCurrent(this)
-  return this.current
-end
-
-LinkedListEnumerator.Dispose = System.emptyFn
-
-function Collection.linkedListEnumerator(t)
-  local en = {
-    list = t,
-    version = versions[t],
-    node = t.head
-  }
-  setmetatable(en, LinkedListEnumerator)
   return en
 end
 
@@ -833,7 +786,7 @@ local function yieldCoroutineCreate(f)
   return co
 end
 
-local YieldEnumerator = {}
+local YieldEnumerator = { getCurrent = getCurrent, Dispose = emptyFn }
 YieldEnumerator.__inherits__ = { System.IEnumerator }
 
 function YieldEnumerator.MoveNext(this)
@@ -866,12 +819,6 @@ function YieldEnumerator.MoveNext(this)
     throw(v)
   end
 end
-
-function YieldEnumerator.getCurrent(this)
-  return this.current
-end
-
-YieldEnumerator.Dispose = System.emptyFn
 
 define("System.YieldEnumerator", YieldEnumerator)
 

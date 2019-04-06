@@ -16,9 +16,7 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
-local Collection = System.Collection
-local changeVersion = Collection.changeVersion
-local each = Collection.each
+local each = System.each
 local ArgumentNullException = System.ArgumentNullException
 local InvalidOperationException = System.InvalidOperationException
 local EqualityComparer_1 = System.EqualityComparer_1
@@ -50,20 +48,17 @@ end
 
 System.define("System.LinkedListNode", LinkedListNode)
 
-local LinkedList = {}
+local LinkedList = { Count = 0, version = 0 }
 
 function LinkedList.__ctor__(this, ...)
   local len = select("#", ...)
-  if len == 0 then
-    this.Count = 0
-  else
+  if len == 1 then
     local collection = ...
     if collection == nil then
       throw(ArgumentNullException("collection"))
     end
-    this.Count = 0
     for _, item in each(collection) do
-      this:addLast(item)
+      this:AddLast(item)
     end
   end
 end
@@ -96,7 +91,7 @@ local function insertNodeBefore(this, node, newNode)
   node.prev.next = newNode
   node.prev = newNode
   this.Count = this.Count + 1
-  changeVersion(this)
+  this.version = this.version + 1
 end
 
 local function insertNodeToEmptyList(this, newNode)
@@ -104,7 +99,7 @@ local function insertNodeToEmptyList(this, newNode)
   newNode.prev = newNode
   this.head = newNode
   this.Count = this.Count + 1
-  changeVersion(this)
+  this.version = this.version + 1
 end
 
 function LinkedList.AddAfter(this, node, newNode)    
@@ -196,7 +191,7 @@ function LinkedList.Clear(this)
   end
   this.head = nil
   this.Count = 0
-  changeVersion(this)
+  this.version = this.version + 1
 end
 
 function LinkedList.Contains(this, value)
@@ -265,7 +260,7 @@ local function remvoeNode(this, node)
   end
   invalidate(node)
   this.Count = this.Count - 1
-  changeVersion(this)
+  this.version = this.version + 1
 end
 
 function LinkedList.Remove(this, node)
@@ -297,7 +292,30 @@ function LinkedList.RemoveLast(this)
   remvoeNode(this, head.prev)
 end
 
-LinkedList.GetEnumerator = Collection.linkedListEnumerator
+local LinkedListEnumerator = { getCurrent = System.getCurrent, Dispose = System.emptyFn }
+LinkedListEnumerator.__index = LinkedListEnumerator
+
+function LinkedListEnumerator.MoveNext(this)
+  local list = this.list
+  local node = this.node
+  if this.version ~= list.version then
+    throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))
+  end
+  if node == nil then
+    return false
+  end
+  this.current = node.Value
+  node = node.next
+  if node == list.head then
+    node = nil
+  end
+  this.node = node
+  return true
+end
+
+function LinkedList.GetEnumerator(this)
+  return setmetatable({ list = this, version = this.version, node = this.head }, LinkedListEnumerator)
+end
 
 function System.linkedListFromTable(t, T)
   assert(T)

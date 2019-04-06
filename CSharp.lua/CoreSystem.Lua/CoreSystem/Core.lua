@@ -40,11 +40,11 @@ local falseFn = function() return false end
 local identityFn = function(x) return x end
 local zeroFn = function() return 0 end
 local equals = function(x, y) return x == y end
+local getCurrent = function(t) return t.current end
 local modules = {}
 local usings = {}
 local classes = {}
 local metadatas
-
 local Object, ValueType
 
 local function new(cls, ...)
@@ -340,6 +340,7 @@ System = {
   identityFn = identityFn,
   zeroFn = zeroFn,
   equals = equals,
+  getCurrent = getCurrent,
   try = try,
   throw = throw,
   getClass = set,
