@@ -47,40 +47,9 @@ local cyield = coroutine.yield
 local Collection = {}
 local null = {}
 
-local versions = setmetatable({}, { __mode = "k" })
-
-local function changeVersion(t)
-  local version = versions[t]
-  versions[t] = version and version + 1 or 0
-end
-
 local function throwFailedVersion()
   throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))
 end
-
-Collection.changeVersion = changeVersion
-
-local counts = setmetatable({}, { __mode = "k" })
-
-local function getCount(t)
-  return counts[t] or 0
-end
-
-local function addCount(t, inc)
-  if inc ~= 0 then
-    local v = (counts[t] or 0) + inc
-    assert(v >= 0)
-    counts[t] = v
-  end
-end
-
-local function clearCount(t)
-  counts[t] = nil
-end
-
-Collection.getCount = getCount
-Collection.addCount = addCount
-Collection.clearCount = clearCount
 
 local function checkIndex(t, index) 
   if index < 0 or index >= #t then
@@ -540,22 +509,6 @@ local function ipairsArray(t)
   end, t, 1
 end
 
-local pairsFn = next
-
-local function pairsDict(t)
-  local version = versions[t]
-  return function (t, i)
-    if version ~= versions[t] then
-      throwFailedVersion()
-    end
-    local k, v = pairsFn(t, i)
-    if v == null then
-      return k
-    end
-    return k, v
-  end, t, nil
-end
-
 function Collection.forEachArray(t, action)
   if action == null then throw(ArgumentNullException("action")) end
   local version = t.version
@@ -666,86 +619,6 @@ local function toLuaTable(array)
   return t
 end
 
-local KeyValuePairFn
-local KeyValuePair = {
-  __ctor__ = function (this, ...)
-    if select("#", ...) == 0 then
-      this.Key, this.Value = this.__genericTKey__:default(), this.__genericTValue__:default()
-    else
-      this.Key, this.Value = ...
-    end
-  end,
-  Create = function (key, value, TKey, TValue)
-    return setmetatable({ Key = key, Value = value }, KeyValuePairFn(TKey, TValue))
-  end,
-  Deconstruct = function (this)
-    return this.Key, this.Value
-  end,
-  ToString = function (this)
-    local t = { "[" }
-    local count = 2
-    local k, v = this.Key, this.Value
-    if k ~= nil then
-      t[count] = k:ToString()
-      count = count + 1
-    end
-    t[count] = ", "
-    count = count + 1
-    if v ~= nil then
-      t[count] = v:ToString()
-      count = count + 1
-    end
-    t[count] = "]"
-    return tconcat(t)
-  end
-}
-
-KeyValuePairFn = System.defStc("System.KeyValuePair", function(TKey, TValue)
-  local cls = {
-    __genericTKey__ = TKey,
-    __genericTValue__ = TValue,
-  }
-  return cls
-end, KeyValuePair)
-
-local DictionaryEnumerator = { getCurrent = getCurrent, Dispose = emptyFn }
-DictionaryEnumerator.__index = DictionaryEnumerator
-
-function DictionaryEnumerator.MoveNext(this)
-  local t = this.dict
-  if this.version ~= versions[t] then
-    throwFailedVersion()
-  end
-  local k, v = pairsFn(t, this.index)
-  if k ~= nil then
-    if this.kind == 0 then
-      local pair = this.pair
-      pair.Key = k
-      pair.Value = unWrap(v)
-      this.current = pair
-    elseif this.kind == 1 then
-      this.current = k
-    else
-      this.current = unWrap(v)
-    end
-    this.index = k
-    return true
-  end
-  this.current = nil
-  return false
-end
-
-function Collection.dictionaryEnumerator(t, kind)
-  local en = {
-    dict = t,
-    version = versions[t],
-    kind = kind,
-    pair = kind == 0 and setmetatable({ Key = false, Value = false }, KeyValuePairFn(t.__genericTKey__, t.__genericTValue__)) or nil
-  }
-  setmetatable(en, DictionaryEnumerator)
-  return en
-end
-
 local Nullable = System.Nullable
 function Nullable.Compare(n1, n2, T)
   if n1 then
@@ -845,9 +718,9 @@ System.null = null
 System.Void = null
 System.each = each
 System.ipairs = ipairsArray
-System.pairs = pairsDict
 System.isArrayLike = isArrayLike
 System.isEnumerableLike = isEnumerableLike
+System.throwFailedVersion = throwFailedVersion
 System.yieldIEnumerator = yieldIEnumerator
 System.yieldIEnumerable = yieldIEnumerable
 System.yieldReturn = cyield

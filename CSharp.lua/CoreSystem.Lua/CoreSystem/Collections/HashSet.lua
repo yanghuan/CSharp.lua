@@ -16,16 +16,21 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
+local each = System.each
+local Dictionary = System.Dictionary
 local Collection = System.Collection
 local wrap = Collection.wrap
 local unWrap = Collection.unWrap
-local changeVersion = Collection.changeVersion
-local addCount = Collection.addCount
-local clearCount = Collection.clearCount
-local each = Collection.each
+local getEnumerator = Dictionary.GetEnumerator 
 local ArgumentNullException = System.ArgumentNullException
 
+local assert = assert
+local pairs = pairs
+local select = select
+
 local HashSet = {}
+
+local counts = System.counts
 
 local function build(this, collection, comparer)
   if comparer ~= nil then
@@ -51,15 +56,11 @@ function HashSet.__ctor__(this, ...)
   else 
     build(this, ...)
   end
-end 
-
-function HashSet.Clear(this)
-  for k, v in pairs(this) do
-    this[k] = nil
-  end
-  clearCount(this)
-  changeVersion(this)
 end
+
+HashSet.Clear = Dictionary.Clear
+HashSet.getCount = Dictionary.getCount
+HashSet.getIsReadOnly = System.falseFn
 
 function HashSet.Contains(this, item)
   item = wrap(item)
@@ -70,29 +71,29 @@ function HashSet.Remove(this, item)
   item = wrap(item)
   if this[item] then
     this[item] = nil
-    addCount(this, -1)
-    changeVersion(this)
+    local t = counts[this]
+    t[1] = t[1] - 1
+    t[2] = t[2] + 1
     return true
   end
   return false
 end
 
-HashSet.getCount = Collection.getCount
-
-function HashSet.getIsReadOnly(this)
-  return false
-end
-
 function HashSet.GetEnumerator(this)
-  return Collection.dictionaryEnumerator(this, 1)
-end 
+  return getEnumerator(this, 1)
+end
 
 function HashSet.Add(this, v)
   v = wrap(v)
   if this[v] == nil then
     this[v] = true
-    addCount(this, 1)
-    changeVersion(this)
+    local t = counts[this]
+    if t then
+      t[1] = t[1] + 1
+      t[2] = t[2] + 1
+    else
+      counts[this] = { 1, 1 }
+    end
     return true
   end
   return false
@@ -111,8 +112,13 @@ function HashSet.UnionWith(this, other)
     end
   end
   if count > 0 then
-    addCount(this, count)
-    changeVersion(v)
+    local t = counts[this]
+    if t then
+      t[1] = t[1] + count
+      t[2] = t[2] + 1
+    else
+      counts[this] = { count, 1 }  
+    end
   end
 end  
 
@@ -135,8 +141,9 @@ function HashSet.IntersectWith(this, other)
     end
   end
   if count > 0 then
-    addCount(this, -count)
-    changeVersion(this)
+    local t = counts[this]
+    t[1] = t[1] - count
+    t[2] = t[2] + 1
   end
 end
 
@@ -145,7 +152,7 @@ function HashSet.ExceptWith(this, other)
     throw(ArgumentNullException("other"))
   end
   if other == this then
-    this:clear()
+    this:Clear()
     return
   end
   local count = 0
@@ -157,17 +164,16 @@ function HashSet.ExceptWith(this, other)
     end
   end
   if count > 0 then
-    addCount(this, -count)
-    changeVersion(this)
+    local t = counts[this]
+    t[1] = t[1] - count
+    t[2] = t[2] + 1
   end
 end
 
 function HashSet.SymmetricExceptWith(this, other)
-  if other == nil then
-    throw(ArgumentNullException("other"))
-  end
+  if other == nil then throw(ArgumentNullException("other")) end
   if other == this then
-    this:clear()
+    this:Clear()
     return
   end
   local set = {}
@@ -187,8 +193,13 @@ function HashSet.SymmetricExceptWith(this, other)
     end
   end
   if changed then
-    addCount(this, count)
-    changeVersion(this)
+    local t = counts[this]
+    if t then
+      t[1] = t[1] + count
+      t[2] = t[2] + 1
+    else
+      counts[this] = { count, 1 }
+    end
   end
 end
 
@@ -300,8 +311,9 @@ function HashSet.RemoveWhere(this, match)
     end
   end
   if numRemoved > 0 then
-    addCount(this, -numRemoved)
-    changeVersion(this)
+    local t = counts[this]
+    t[1] = t[1] - numRemoved
+    t[2] = t[2] + 1
   end
   return numRemoved
 end

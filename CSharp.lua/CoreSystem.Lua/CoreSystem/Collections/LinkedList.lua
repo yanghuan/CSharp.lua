@@ -299,7 +299,7 @@ function LinkedListEnumerator.MoveNext(this)
   local list = this.list
   local node = this.node
   if this.version ~= list.version then
-    throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))
+    System.throwFailedVersion()
   end
   if node == nil then
     return false

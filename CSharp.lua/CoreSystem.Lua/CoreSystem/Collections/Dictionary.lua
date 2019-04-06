@@ -17,18 +17,25 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local Collection = System.Collection
-local wrap = Collection.wrap
-local unWrap = Collection.unWrap
-local changeVersion = Collection.changeVersion
-local addCount = Collection.addCount
-local clearCount = Collection.clearCount
+local null = System.null
+local throwFailedVersion = System.throwFailedVersion
 local dictionaryEnumerator = Collection.dictionaryEnumerator
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentException = System.ArgumentException
 local KeyNotFoundException = System.KeyNotFoundException
 local EqualityComparer_1 = System.EqualityComparer_1
 
+local assert = assert
+local pairs = pairs
+local next = next
+local select = select
+local setmetatable = setmetatable
+local tconcat = table.concat
+
 local Dictionary = {}
+
+local counts = setmetatable({}, { __mode = "k" })
+System.counts = counts
 
 local function buildFromCapacity(this, capacity, comparer)
   if comparer ~= nil then
@@ -46,7 +53,7 @@ local function buildFromDictionary(this, dictionary, comparer)
     this[k] = v
     count = count + 1
   end
-  addCount(this, count)
+  counts[this] = { count, 0 }
 end
 
 function Dictionary.__ctor__(this, ...) 
@@ -75,46 +82,43 @@ function Dictionary.__ctor__(this, ...)
   end
 end 
 
-local function checkKey(key)
-  if key == nil then
-    throw(ArgumentNullException("key"))
-  end
-end
-
 function Dictionary.Add(this, key, value)
-  checkKey(key)
-  if this[key] then
-    throw(ArgumentException("key already exists"))
+  if key == nil then throw(ArgumentNullException("key")) end
+  if this[key] then throw(ArgumentException("key already exists")) end
+  this[key] = value == nil and null or value
+  local t = counts[this]
+  if t then
+    t[1] = t[1] + 1
+    t[2] = t[2] + 1
+  else
+    counts[this] = { 1, 1 }
   end
-  this[key] = wrap(value)
-  addCount(this, 1)
-  changeVersion(this)
 end
 
 function Dictionary.Clear(this)
   for k, v in pairs(this) do
     this[k] = nil
   end
-  clearCount(this)
-  changeVersion(this)
+  counts[this] = nil
 end
 
 function Dictionary.ContainsKey(this, key)
-  checkKey(key)
+  if key == nil then throw(ArgumentNullException("key")) end
   return this[key] ~= nil 
 end
 
 function Dictionary.ContainsValue(this, value)
   if value == nil then
     for _, v in pairs(this) do
-      if unWrap(v) == nil then
+      if v == null then
         return true
       end
-    end    
-  else    
+    end
+  else
     local equals = EqualityComparer_1(this.__genericTValue__).getDefault().Equals
       for _, v in pairs(this) do
-        if equals(value, unWrap(v)) then
+        if v == null then v = nil end
+        if equals(value, v ) then
           return true
         end
     end
@@ -123,11 +127,12 @@ function Dictionary.ContainsValue(this, value)
 end
 
 function Dictionary.Remove(this, key)
-  checkKey(key)
+  if key == nil then throw(ArgumentNullException("key")) end
   if this[key] then
     this[key] = nil
-    addCount(this, -1)
-    changeVersion(this)
+    local t = counts[this]
+    t[1] = t[1] - 1
+    t[2] = t[2] + 1
     return true
   end
   return false
@@ -138,66 +143,184 @@ local function getValueDefault(this)
 end
 
 function Dictionary.TryGetValue(this, key)
-  checkKey(key)
+  if key == nil then throw(ArgumentNullException("key")) end
   local value = this[key]
   if value == nil then
     return false, getValueDefault(this)
   end
-  return true, unWrap(value)
+  if v == null then return true end
+  return true, value
 end
 
 function Dictionary.getComparer(this)
   return EqualityComparer_1(this.__genericTKey__).getDefault()
 end
 
-Dictionary.getCount = Collection.getCount
+local function getCount(this)
+  local t = counts[this]
+  if t then
+    return t[1]
+  end
+  return 0
+end
+
+Dictionary.getCount = getCount
 
 function Dictionary.get(this, key)
-  checkKey(key)
+  if key == nil then throw(ArgumentNullException("key")) end
   local value = this[key]
-  if value == nil then
-    throw(KeyNotFoundException())
+  if value == nil then throw(KeyNotFoundException()) end
+  if value ~= null then
+    return value
   end
-  return unWrap(value) 
 end
 
 function Dictionary.set(this, key, value)
-  checkKey(key)
-  if this[key] == nil then
-    addCount(this, 1)
+  if key == nil then throw(ArgumentNullException("key")) end
+  local t = counts[this]
+  if t then
+    if this[key] == nil then
+      t[1] = t[1] + 1
+    end
+    t[2] = t[2] + 1
+  else
+    counts[this] = { 1, 1 }
   end
-  this[key] = wrap(value)
-  changeVersion(this)
+  this[key] = value == nil and null or value
 end
 
-function Dictionary.GetEnumerator(this)
-  return dictionaryEnumerator(this, 0)
-end 
+local function pairsDict(t)
+  local count = counts[t]
+  local version = count and count[2] or 0
+  return function (t, i)
+    local count =  counts[t]
+    if version ~= (count and count[2] or 0) then
+      throwFailedVersion()
+    end
+    local k, v = next(t, i)
+    if v == null then
+      return k
+    end
+    return k, v
+  end, t, nil
+end
+
+System.pairs = pairsDict
+
+local KeyValuePairFn
+local KeyValuePair = {
+  __ctor__ = function (this, ...)
+    if select("#", ...) == 0 then
+      this.Key, this.Value = this.__genericTKey__:default(), this.__genericTValue__:default()
+    else
+      this.Key, this.Value = ...
+    end
+  end,
+  Create = function (key, value, TKey, TValue)
+    return setmetatable({ Key = key, Value = value }, KeyValuePairFn(TKey, TValue))
+  end,
+  Deconstruct = function (this)
+    return this.Key, this.Value
+  end,
+  ToString = function (this)
+    local t = { "[" }
+    local count = 2
+    local k, v = this.Key, this.Value
+    if k ~= nil then
+      t[count] = k:ToString()
+      count = count + 1
+    end
+    t[count] = ", "
+    count = count + 1
+    if v ~= nil then
+      t[count] = v:ToString()
+      count = count + 1
+    end
+    t[count] = "]"
+    return tconcat(t)
+  end
+}
+
+KeyValuePairFn = System.defStc("System.KeyValuePair", function(TKey, TValue)
+  local cls = {
+    __genericTKey__ = TKey,
+    __genericTValue__ = TValue,
+  }
+  return cls
+end, KeyValuePair)
+
+local DictionaryEnumerator = { getCurrent = System.getCurrent, Dispose = System.emptyFn }
+DictionaryEnumerator.__index = DictionaryEnumerator
+
+function DictionaryEnumerator.MoveNext(this)
+  local t = this.dict
+  local count = counts[t]
+  if this.version ~= (count and count[2] or 0) then
+    throwFailedVersion()
+  end
+  local k, v = next(t, this.index)
+  if k ~= nil then
+    if not this.kind then
+      local pair = this.pair
+      pair.Key = k
+      if v == null then
+        v = nil
+      end
+      pair.Value = v
+      this.current = pair
+    elseif this.kind == 1 then
+      this.current = k
+    else
+      if v == null then
+        v = nil
+      end
+      this.current = v
+    end
+    this.index = k
+    return true
+  end
+  this.current = nil
+  return false
+end
+
+local function dictionaryEnumerator(t, kind)
+  local count = counts[t]
+  local en = {
+    dict = t,
+    version = count and count[2] or 0,
+    kind = kind,
+    pair = not kind and setmetatable({ Key = false, Value = false }, KeyValuePairFn(t.__genericTKey__, t.__genericTValue__)) or nil
+  }
+  setmetatable(en, DictionaryEnumerator)
+  return en
+end
+
+Dictionary.GetEnumerator = dictionaryEnumerator
 
 local DictionaryCollection = {}
 
-function DictionaryCollection.__ctor__(this, dict, isKey, T)
+function DictionaryCollection.__ctor__(this, dict, kind, T)
   this.dict = dict
-  this.isKey = isKey
+  this.kind = kind
   this.__genericT__ = T
 end
 
 function DictionaryCollection.getCount(this)
-  return this.dict:getCount()
+  return getCount(this.dict)
 end
 
 function DictionaryCollection.GetEnumerator(this)
-  return dictionaryEnumerator(this.dict, this.isKey and 1 or 2)
+  return dictionaryEnumerator(this.dict, this.kind)
 end
 
 System.define("System.DictionaryCollection", DictionaryCollection)
 
 function Dictionary.getKeys(this)
-  return DictionaryCollection(this, true, this.__genericTKey__)
+  return DictionaryCollection(this, 1, this.__genericTKey__)
 end
 
 function Dictionary.getValues(this)
-  return DictionaryCollection(this, false, this.__genericTValue__)
+  return DictionaryCollection(this, 2, this.__genericTValue__)
 end
 
 function System.dictionaryFromTable(t, TKey, TValue)
@@ -211,7 +334,7 @@ System.define("System.Dictionary", function(TKey, TValue)
     __inherits__ = { System.IDictionary_2(TKey, TValue), System.IDictionary }, 
     __genericTKey__ = TKey,
     __genericTValue__ = TValue,
-    __len = Dictionary.getCount
+    __len = getCount
   }
   return cls
 end, Dictionary)
