@@ -17,6 +17,8 @@ limitations under the License.
 local System = System
 local defInf = System.defInf
 local emptyFn = System.emptyFn
+local IEnumerable = System.IEnumerable
+local IEnumerator = System.IEnumerator
 
 defInf("System.IFormattable")
 defInf("System.IComparable")
@@ -29,9 +31,6 @@ defInf("System.IEquatable_1", emptyFn)
 
 defInf("System.IPromise")
 defInf("System.IDisposable")
-
-local IEnumerable = defInf("System.IEnumerable")
-local IEnumerator = defInf("System.IEnumerator")
 
 local ICollection = defInf("System.ICollection", {
   __inherits__ = { IEnumerable }

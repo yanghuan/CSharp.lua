@@ -31,8 +31,6 @@ local select = select
 local setmetatable = setmetatable
 local tconcat = table.concat
 
-local Dictionary = {}
-
 local counts = setmetatable({}, { __mode = "k" })
 System.counts = counts
 
@@ -55,133 +53,12 @@ local function buildFromDictionary(this, dictionary, comparer)
   counts[this] = { count, 0 }
 end
 
-function Dictionary.__ctor__(this, ...) 
-  local len = select("#", ...)
-  if len == 0 then
-    buildFromCapacity(this, 0)
-  elseif len == 1 then
-    local comparer = ...
-    if comparer == nil or type(comparer) == "number" then  
-      buildFromCapacity(this, comparer)
-    else
-      local getHashCode = comparer.getHashCode
-      if getHashCode == nil then
-        buildFromDictionary(this, comparer)
-      else
-        buildFromCapacity(this, 0, comparer)
-      end
-    end
-  else 
-      local dictionary, comparer = ...
-      if type(dictionary) == "number" then 
-        buildFromCapacity(this, dictionary, comparer)
-      else
-        buildFromDictionary(this, dictionary, comparer)
-      end
-  end
-end 
-
-function Dictionary.Add(this, key, value)
-  if key == nil then throw(ArgumentNullException("key")) end
-  if this[key] then throw(ArgumentException("key already exists")) end
-  this[key] = value == nil and null or value
-  local t = counts[this]
-  if t then
-    t[1] = t[1] + 1
-    t[2] = t[2] + 1
-  else
-    counts[this] = { 1, 1 }
-  end
-end
-
-function Dictionary.Clear(this)
-  for k, v in pairs(this) do
-    this[k] = nil
-  end
-  counts[this] = nil
-end
-
-function Dictionary.ContainsKey(this, key)
-  if key == nil then throw(ArgumentNullException("key")) end
-  return this[key] ~= nil 
-end
-
-function Dictionary.ContainsValue(this, value)
-  if value == nil then
-    for _, v in pairs(this) do
-      if v == null then
-        return true
-      end
-    end
-  else
-    local equals = EqualityComparer_1(this.__genericTValue__).getDefault().Equals
-      for _, v in pairs(this) do
-        if v == null then v = nil end
-        if equals(value, v ) then
-          return true
-        end
-    end
-  end
-  return false
-end
-
-function Dictionary.Remove(this, key)
-  if key == nil then throw(ArgumentNullException("key")) end
-  if this[key] then
-    this[key] = nil
-    local t = counts[this]
-    t[1] = t[1] - 1
-    t[2] = t[2] + 1
-    return true
-  end
-  return false
-end
-
-function Dictionary.TryGetValue(this, key)
-  if key == nil then throw(ArgumentNullException("key")) end
-  local value = this[key]
-  if value == nil then
-    return false, this.__genericTValue__:default()
-  end
-  if value == null then return true end
-  return true, value
-end
-
-function Dictionary.getComparer(this)
-  return EqualityComparer_1(this.__genericTKey__).getDefault()
-end
-
 local function getCount(this)
   local t = counts[this]
   if t then
     return t[1]
   end
   return 0
-end
-
-Dictionary.getCount = getCount
-
-function Dictionary.get(this, key)
-  if key == nil then throw(ArgumentNullException("key")) end
-  local value = this[key]
-  if value == nil then throw(KeyNotFoundException()) end
-  if value ~= null then
-    return value
-  end
-end
-
-function Dictionary.set(this, key, value)
-  if key == nil then throw(ArgumentNullException("key")) end
-  local t = counts[this]
-  if t then
-    if this[key] == nil then
-      t[1] = t[1] + 1
-    end
-    t[2] = t[2] + 1
-  else
-    counts[this] = { 1, 1 }
-  end
-  this[key] = value == nil and null or value
 end
 
 local function pairsFn(t, i)
@@ -296,8 +173,6 @@ local function dictionaryEnumerator(t, kind)
   return setmetatable(en, DictionaryEnumerator)
 end
 
-Dictionary.GetEnumerator = dictionaryEnumerator
-
 local DictionaryCollection = define("System.DictionaryCollection", {
   __ctor__ = function (this, dict, kind, T)
     this.dict = dict
@@ -312,24 +187,135 @@ local DictionaryCollection = define("System.DictionaryCollection", {
   end
 })
 
-function Dictionary.getKeys(this)
-  return DictionaryCollection(this, 1, this.__genericTKey__)
-end
-
-function Dictionary.getValues(this)
-  return DictionaryCollection(this, 2, this.__genericTValue__)
-end
+local Dictionary = {
+  __ctor__ = function (this, ...) 
+    local len = select("#", ...)
+    if len == 0 then
+      buildFromCapacity(this, 0)
+    elseif len == 1 then
+      local comparer = ...
+      if comparer == nil or type(comparer) == "number" then  
+        buildFromCapacity(this, comparer)
+      else
+        local getHashCode = comparer.getHashCode
+        if getHashCode == nil then
+          buildFromDictionary(this, comparer)
+        else
+          buildFromCapacity(this, 0, comparer)
+        end
+      end
+    else 
+        local dictionary, comparer = ...
+        if type(dictionary) == "number" then 
+          buildFromCapacity(this, dictionary, comparer)
+        else
+          buildFromDictionary(this, dictionary, comparer)
+        end
+    end
+  end,
+  Add = function (this, key, value)
+    if key == nil then throw(ArgumentNullException("key")) end
+    if this[key] then throw(ArgumentException("key already exists")) end
+    this[key] = value == nil and null or value
+    local t = counts[this]
+    if t then
+      t[1] = t[1] + 1
+      t[2] = t[2] + 1
+    else
+      counts[this] = { 1, 1 }
+    end
+  end,
+  Clear = function (this)
+    for k, v in pairs(this) do
+      this[k] = nil
+    end
+    counts[this] = nil
+  end,
+  ContainsKey = function (this, key)
+    if key == nil then throw(ArgumentNullException("key")) end
+    return this[key] ~= nil 
+  end,
+  ContainsValue = function (this, value)
+    if value == nil then
+      for _, v in pairs(this) do
+        if v == null then
+          return true
+        end
+      end
+    else
+      local equals = EqualityComparer_1(this.__genericTValue__).getDefault().Equals
+        for _, v in pairs(this) do
+          if v == null then v = nil end
+          if equals(value, v ) then
+            return true
+          end
+      end
+    end
+    return false
+  end,
+  Remove = function (this, key)
+    if key == nil then throw(ArgumentNullException("key")) end
+    if this[key] then
+      this[key] = nil
+      local t = counts[this]
+      t[1] = t[1] - 1
+      t[2] = t[2] + 1
+      return true
+    end
+    return false
+  end,
+  TryGetValue = function (this, key)
+    if key == nil then throw(ArgumentNullException("key")) end
+    local value = this[key]
+    if value == nil then
+      return false, this.__genericTValue__:default()
+    end
+    if value == null then return true end
+    return true, value
+  end,
+  getComparer = function (this)
+    return EqualityComparer_1(this.__genericTKey__).getDefault()
+  end,
+  getCount = getCount,
+  get = function (this, key)
+    if key == nil then throw(ArgumentNullException("key")) end
+    local value = this[key]
+    if value == nil then throw(KeyNotFoundException()) end
+    if value ~= null then
+      return value
+    end
+  end,
+  set = function (this, key, value)
+    if key == nil then throw(ArgumentNullException("key")) end
+    local t = counts[this]
+    if t then
+      if this[key] == nil then
+        t[1] = t[1] + 1
+      end
+      t[2] = t[2] + 1
+    else
+      counts[this] = { 1, 1 }
+    end
+    this[key] = value == nil and null or value
+  end,
+  GetEnumerator = dictionaryEnumerator,
+  getKeys = function (this)
+    return DictionaryCollection(this, 1, this.__genericTKey__)
+  end,
+  getValues = function (this)
+    return DictionaryCollection(this, 2, this.__genericTValue__)
+  end
+}
 
 function System.dictionaryFromTable(t, TKey, TValue)
   return setmetatable(t, Dictionary(TKey, TValue))
 end
 
 define("System.Dictionary", function(TKey, TValue) 
-  local cls = { 
+  return { 
     __inherits__ = { System.IDictionary_2(TKey, TValue), System.IDictionary }, 
     __genericTKey__ = TKey,
     __genericTValue__ = TValue,
     __len = getCount
   }
-  return cls
 end, Dictionary)

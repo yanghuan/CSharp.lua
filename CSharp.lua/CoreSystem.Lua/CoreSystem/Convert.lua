@@ -358,7 +358,7 @@ local systemToInt32 = System.toInt32
 local systemToUInt32 = System.toUInt32
 local systemToUInt64 = System.toUInt64
 local arrayFromTable = System.arrayFromTable
-local checkIndexAndCount = System.Collection.checkIndexAndCount
+local checkIndexAndCount = System.checkIndexAndCount
 local NotSupportedException = System.NotSupportedException
 
 local assert = assert

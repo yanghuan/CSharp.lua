@@ -15,47 +15,26 @@ limitations under the License.
 --]]
 
 local System = System
-local throw = System.throw
 local Array = System.Array
-local get = Array.get
-local removeAt = Array.removeAt
-local Collection = System.Collection
-local InvalidOperationException = System.InvalidOperationException
 
-local Stack = { 
-  __ctor__ = System.List.__ctor__ 
+local Stack = {
+  version = 0,
+  __ctor__ = Array.ctorList,
+  getCount = Array.getLength,
+  Clear = Array.clear,
+  Contains = Array.contains,
+  Push = Array.add,
+  Peek = Array.last,
+  Pop = Array.popLast
 }
 
-Stack.getCount = Array.getLength
-Stack.Clear = Array.clear
-Stack.Push = Array.push
-Stack.Contains = Collection.contains
-
-local function peek(t)
-  local n = #t
-  if n == 0 then
-    throw(InvalidOperationException())
-  end
-  return get(t, n - 1)
-end
-
-Stack.Peek = peek
-
-function Stack.Pop(this)
-  local v = peek(this)
-  removeAt(this, #this - 1)
-  return v
-end
-
 function System.stackFromTable(t, T)
-  assert(T)
   return setmetatable(t, Stack(T))
 end
 
 System.define("System.Stack", function(T) 
-  local cls = {
+  return {
     __inherits__ = { System.IEnumerable_1(T), System.ICollection },
     __genericT__ = T,
   }
-  return cls
 end, Stack)

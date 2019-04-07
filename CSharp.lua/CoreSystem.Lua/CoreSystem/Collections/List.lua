@@ -15,131 +15,56 @@ limitations under the License.
 --]]
 
 local System = System
-local throw = System.throw
 local falseFn = System.falseFn
-local foreach = System.foreach
+local lengthFn = System.lengthFn
 local Array = System.Array
-local getLength = Array.getLength
-local Collection = System.Collection
-local unWrap = Collection.unWrap
-local checkIndexAndCount = Collection.checkIndexAndCount
-local copyArray = Collection.copyArray
-local ArgumentNullException = System.ArgumentNullException
-local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
-local select = select
-
-local List = { version = 0 }
-
-function List.__ctor__(this, ...)
-  local len = select("#", ...)
-  if len == 0 then return end
-  local collection = ...
-  if type(collection) == "number" then 
-    return 
-  end
-  this:AddRange(collection)
-end
-
-List.getCapacity = getLength
-List.getCount = getLength
-List.getIsFixedSize = falseFn
-List.getIsReadOnly = falseFn
-
-List.get = Array.get
-List.set = Array.set
-List.Add = Array.push
-List.AddRange = Array.pushs
-
-List.BinarySearch = Collection.binarySearchArray
-List.Clear = Array.clear
-List.Contains = Collection.contains
-
-function List.CopyTo(this, ...)
-  local len = select("#", ...)
-  if len == 1 then
-    local array = ...
-    copyArray(this, array, #this)
-  else
-    copyArray(this, ...)
-  end
-end 
-
-List.Exists = Collection.existsOfArray
-List.Find = Collection.findOfArray
-List.FindAll = Collection.findAllOfArray
-List.FindIndex = Collection.findIndexOfArray
-List.FindLast = Collection.findLastOfArray
-List.FindLastIndex = Collection.findLastIndexOfArray
-List.ForEach = Array.ForEach
-List.GetEnumerator = Collection.arrayEnumerator
-
-function List.GetRange(this, index, count)
-  checkIndexAndCount(this, index, count)
-  local list = System.List(this.__genericT__)()
-  copyArray(this, index, list, 0, count, true)
-  return list
-end
-
-local indexOf = Collection.indexOfArray
-local removeAt = Array.removeAt
-local removeArray = Collection.removeArray
-
-List.IndexOf = indexOf
-List.Insert = Collection.insertArray
-List.InsertRange = Collection.insertRangeArray
-List.LastIndexOf = Collection.lastIndexOfArray
-
-function List.Remove(this, item)
-  local index = indexOf(this, item)
-  if index >= 0 then
-    removeAt(this, index)
-    return true
-  end
-  return false
-end
-
-function List.RemoveAll(this, match)
-  if match == nil then
-    throw(ArgumentNullException("match"))
-  end
-  local size = #this
-  local freeIndex = 1
-  while freeIndex <= size and (not match(unWrap(this[freeIndex]))) do freeIndex = freeIndex + 1 end
-  if freeIndex > size then return 0 end
-
-  local current = freeIndex + 1
-  while current <= size do 
-    while current <= size and match(unWrap(this[current])) do current = current + 1 end
-    if current <= size then
-      this[freeIndex] = this[current]
-      freeIndex = freeIndex + 1
-      current = current + 1
-    end
-  end
-  freeIndex = freeIndex -1
-  local count = size - freeIndex
-  removeArray(this, freeIndex, count)
-  return count
-end
-
-List.RemoveAt = removeAt
-List.RemoveRange = removeArray
-List.Reverse = Array.Reverse
-List.Sort = Collection.sortArray
-List.TrimExcess = System.emptyFn
-List.ToArray = Collection.toArray
-List.TrueForAll = Array.TrueForAll
+local List = { 
+  version = 0,
+  __ctor__ = Array.ctorList,
+  getCapacity = lengthFn,
+  getCount = lengthFn,
+  getIsFixedSize = falseFn,
+  getIsReadOnly = falseFn,
+  get = Array.get,
+  set = Array.set,
+  Add = Array.add,
+  AddRange = Array.addRange,
+  BinarySearch = Array.BinarySearch,
+  Clear = Array.clear,
+  Contains = Array.contains,
+  CopyTo = Array.CopyTo,
+  Exists = Array.Exists,
+  Find = Array.Find,
+  FindAll = Array.findAll,
+  FindIndex = Array.FindIndex,
+  FindLast = Array.FindLast,
+  FindLastIndex = Array.FindLastIndex,
+  ForEach = Array.ForEach,
+  GetEnumerator = Array.GetEnumerator,
+  GetRange = Array.getRange,
+  IndexOf = Array.IndexOf,
+  Insert = Array.insert,
+  InsertRange = Array.insertRange,
+  LastIndexOf = Array.LastIndexOf,
+  Remove = Array.remove,
+  RemoveAll = Array.removeAll,
+  RemoveAt = Array.removeAt,
+  RemoveRange = Array.removeRange,
+  Reverse = Array.Reverse,
+  Sort = Array.Sort,
+  TrimExcess = System.emptyFn,
+  ToArray = Array.toArray,
+  TrueForAll = Array.TrueForAll
+}
 
 function System.listFromTable(t, T)
-  assert(T)
   return setmetatable(t, List(T))
 end
 
 System.define("System.List", function(T) 
-  local cls = { 
+  return { 
     __inherits__ = { System.IList_1(T), System.IList }, 
     __genericT__ = T,
   }
-  return cls
 end, List)

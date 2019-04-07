@@ -19,13 +19,14 @@ local define = System.define
 local throw = System.throw
 local each = System.each
 local identityFn = System.identityFn
-local Collection = System.Collection
-local wrap = Collection.wrap
-local unWrap = Collection.unWrap
+local wrap = System.wrap
+local unWrap = System.unWrap
 local is = System.is
 local cast = System.cast
 local Int32 = System.Int32
 local isArrayLike = System.isArrayLike
+local Array = System.Array
+local arrayEnumerator = Array.GetEnumerator
 
 local NullReferenceException = System.NullReferenceException
 local ArgumentNullException = System.ArgumentNullException
@@ -283,7 +284,7 @@ function Lookup.Contains(this, key)
 end
 
 function Lookup.GetEnumerator(this)
-  return Collection.arrayEnumerator(this.groups)
+  return arrayEnumerator(this.groups)
 end
 
 local LookupFn = define("System.Linq.Lookup", function(TKey, TElement)
@@ -297,7 +298,7 @@ end, Lookup)
 local IGrouping = System.defInf("System.Linq.IGrouping")
 
 local Grouping = {}
-Grouping.GetEnumerator = Collection.arrayEnumerator 
+Grouping.GetEnumerator = arrayEnumerator 
 
 function Grouping.getKey(this)
   return this.key
@@ -759,7 +760,7 @@ function Enumerable.SequenceEqual(first, second, comparer)
   return true
 end
 
-Enumerable.ToArray = Collection.toArray
+Enumerable.ToArray = Array.toArray
 
 function Enumerable.ToList(source)
   return System.List(source.__genericT__)(source)

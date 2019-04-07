@@ -44,10 +44,7 @@ local tonumber = tonumber
 
 local String = string
 String.traceback = emptyFn  -- make throw(str) not fail
-
-function String.getLength(this)
-  return #this
-end
+String.getLength = System.lengthFn
 
 local function check(s, startIndex, count)
   local len = #s

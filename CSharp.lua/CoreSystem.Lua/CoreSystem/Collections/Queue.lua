@@ -15,49 +15,30 @@ limitations under the License.
 --]]
 
 local System = System
-local throw = System.throw
 local Array = System.Array
-local get = Array.get
-local removeAt = Array.removeAt
-local Collection = System.Collection
-local InvalidOperationException = System.InvalidOperationException
 
 local Queue = {
-  __ctor__ = System.List.__ctor__
+  version = 0,
+  __ctor__ = Array.ctorList,
+  getCount = Array.getLength,
+  Clear = Array.clear,
+  Contains = Array.contains,
+  CopyTo = Array.CopyTo,
+  Dequeue = Array.popFirst,
+  Enqueue = Array.add,
+  GetEnumerator = Array.GetEnumerator,
+  Peek = Array.first,
+  ToArray = Array.toArray,
+  TrimExcess = System.emptyFn
 }
 
-Queue.getCount = Array.getLength
-Queue.Clear = Array.clear
-Queue.Enqueue = Array.push
-Queue.GetEnumerator = Collection.arrayEnumerator
-Queue.Contains = Collection.contains
-Queue.ToArray = Collection.toArray
-Queue.TrimExcess = System.emptyFn
-
-local function peek(t)
-  if #t == 0 then
-    throw(InvalidOperationException())
-  end
-  return get(t, 0)
-end
-
-Queue.Peek = peek
-
-function Queue.Dequeue(t)
-  local v = peek(t)
-  removeAt(t, 0)
-  return v
-end
-
 function System.queueFromTable(t, T)
-  assert(T)
   return setmetatable(t, Queue(T))
 end
 
 System.define("System.Queue", function(T) 
-  local cls = {
+  return {
     __inherits__ = { System.IEnumerable_1(T), System.ICollection },
     __genericT__ = T,
   }
-  return cls
 end, Queue)

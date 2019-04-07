@@ -34,11 +34,18 @@ local string = string
 local sfind = string.find
 local ssub = string.sub
 local global = _G
+local coroutine = coroutine
+local ccreate = coroutine.create
+local cresume = coroutine.resume
+local cyield = coroutine.yield
 
 local emptyFn = function() end
 local falseFn = function() return false end
+local trueFn = function() return true end
 local identityFn = function(x) return x end
+local lengthFn = function (t) return #t end
 local zeroFn = function() return 0 end
+local oneFn = function() return 1 end
 local equals = function(x, y) return x == y end
 local getCurrent = function(t) return t.current end
 local modules = {}
@@ -129,6 +136,7 @@ local function multiKey(t, ...)
   local k 
   for i = 1, select("#", ...) do
     k = select(i, ...)
+    assert(k)
     local tk = t[k]
     if tk == nil then
       tk = {}
@@ -337,8 +345,11 @@ end
 System = {
   emptyFn = emptyFn,
   falseFn = falseFn,
+  trueFn = trueFn,
   identityFn = identityFn,
+  lengthFn = lengthFn,
   zeroFn = zeroFn,
+  oneFn = oneFn,
   equals = equals,
   getCurrent = getCurrent,
   try = try,
@@ -350,6 +361,7 @@ System = {
   defStc = defStc,
   defEnum = defEnum,
   global = global,
+  yieldReturn = cyield,
   classes = classes
 }
 
@@ -1044,10 +1056,10 @@ function System.anonymousType(t)
   return setmetatable(t, AnonymousType)
 end
 
-local pack, upack = table.pack, table.unpack
+local pack, unpack = table.pack, table.unpack
 
 local function tupleDeconstruct(t) 
-  return upack(t, 1, t.n)
+  return unpack(t, 1, t.n)
 end
 
 local function tupleEquals(t, other)
@@ -1149,7 +1161,10 @@ function System.valueTuple(...)
 end
 
 defCls("System.Attribute", {})
-defStc("System.Nullable", emptyFn)
+defStc("System.Nullable", {
+  Compare = compareObj,
+  Equals = equalsObj,
+})
 
 debug.setmetatable(nil, {
   __concat = function(a, b)
@@ -1225,6 +1240,81 @@ function System.GetValueOrDefault(this, defaultValue)
     return defaultValue
   end
   return this
+end
+
+local IEnumerable = defInf("System.IEnumerable")
+local IEnumerator = defInf("System.IEnumerator")
+
+local yieldCoroutinePool = {}
+local yieldCoroutineExit = {}
+
+local function yieldCoroutineCreate(f)
+  local co = tremove(yieldCoroutinePool)
+  if co == nil then
+    co = ccreate(function (...)
+      f(...)
+      while true do
+        f = nil
+        yieldCoroutinePool[#yieldCoroutinePool + 1] = co
+        f = cyield(yieldCoroutineExit)
+        f(cyield())
+      end
+    end)
+  else
+    cresume(co, f)
+  end
+  return co
+end
+
+local YieldEnumerator = defCls("System.YieldEnumerator", {
+  __inherits__ =  { IEnumerator },
+  getCurrent = getCurrent, 
+  Dispose = emptyFn,
+  MoveNext = function (this)
+    local co = this.co
+    if co == "exit" then
+      return false
+    end
+  
+    local ok, v
+    if co == nil then
+      co = yieldCoroutineCreate(this.f)
+      this.co = co
+      local args = this.args
+      ok, v = cresume(co, unpack(args, 1, args.n))
+      this.args = nil
+    else
+      ok, v = cresume(co)
+    end
+  
+    if ok then
+      if v == yieldCoroutineExit then
+        this.co = "exit"
+        this.current = nil
+        return false
+      else
+        this.current = v
+        return true
+      end
+    else
+      throw(v)
+    end
+  end
+})
+
+function System.yieldIEnumerator(f, T, ...)
+  return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerator)
+end
+
+local YieldEnumerable = defCls("System.YieldEnumerable", {
+  __inherits__ = { IEnumerable },
+  GetEnumerator = function (this)
+    return setmetatable({ f = this.f, __genericT__ = this.__genericT__, args = this.args }, YieldEnumerator)
+  end,
+})
+
+function System.yieldIEnumerable(f, T, ...)
+  return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerable)
 end
 
 local function pointerAddress(p)

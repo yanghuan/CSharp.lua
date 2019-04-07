@@ -22,59 +22,29 @@ local ArgumentNullException = System.ArgumentNullException
 local InvalidOperationException = System.InvalidOperationException
 local EqualityComparer_1 = System.EqualityComparer_1
 
-local setmetatable = setmetatable
 local getmetatable = getmetatable
+local setmetatable = setmetatable
+local select = select
 
-local LinkedListNode = {}
+local LinkedListNode = define("System.LinkedListNode", {
+  getNext = function (this)
+    local next = this.next
+    if next == nil or next == this.List.head then
+      return nil
+    end
+    return next
+  end,
+  getPrevious = function (this)
+    local prev = this.prev
+    if prev == nil or prev == this.List.head then
+      return nil
+    end
+    return prev
+  end
+})
 
 local function newLinkedListNode(list, value)
   return setmetatable({ List = list, Value = value }, LinkedListNode)
-end
-
-function LinkedListNode.getNext(this)
-  local next = this.next
-  if next == nil or next == this.List.head then
-    return nil
-  end
-  return next
-end
-
-function LinkedListNode.getPrevious(this)
-  local prev = this.prev
-  if prev == nil or prev == this.List.head then
-    return nil
-  end
-  return prev
-end
-
-define("System.LinkedListNode", LinkedListNode)
-
-local LinkedList = { Count = 0, version = 0 }
-
-function LinkedList.__ctor__(this, ...)
-  local len = select("#", ...)
-  if len == 1 then
-    local collection = ...
-    if collection == nil then
-      throw(ArgumentNullException("collection"))
-    end
-    for _, item in each(collection) do
-      this:AddLast(item)
-    end
-  end
-end
-
-function LinkedList.getCount(this)
-  return this.Count
-end
-
-function LinkedList.getFirst(this)    
-  return this.head
-end
-
-function LinkedList.getLast(this)
-  local head = this.head
-  return head ~= nil and head.prev or nil
 end
 
 local function vaildateNode(this, node)
@@ -103,150 +73,10 @@ local function insertNodeToEmptyList(this, newNode)
   this.version = this.version + 1
 end
 
-function LinkedList.AddAfter(this, node, newNode)    
-  vaildateNode(this, node)
-  if getmetatable(newNode) == LinkedListNode then
-    vaildateNode(this, newNode)
-    insertNodeBefore(this, node.next, newNode)
-    newNode.List = this
-  else
-    local result = newLinkedListNode(node.List, newNode)
-    insertNodeBefore(this, node.next, result)
-    return result
-  end
-end
-
-function LinkedList.AddBefore(this, node, newNode)
-  vaildateNode(this, node)
-  if getmetatable(newNode) == LinkedListNode then
-    vaildateNode(this, newNode)
-    insertNodeBefore(this, node, newNode)
-    newNode.List = this
-    if node == this.head then
-      this.head = newNode
-    end
-  else
-    local result = newLinkedListNode(node.List, newNode)
-    insertNodeBefore(this, node, result)
-    if node == this.head then
-      this.head = result
-    end
-    return result
-  end
-end
-
-function LinkedList.AddFirst(this, node)
-  if getmetatable(node) == LinkedListNode then
-    vaildateNode(this, node)
-    if this.head == nil then
-      insertNodeToEmptyList(this, node)
-    else
-      insertNodeBefore(this, this.head, node)
-        this.head = node
-      end
-      node.List = this
-  else
-    local result = newLinkedListNode(this, node)
-    if this.head == nil then
-      insertNodeToEmptyList(this, result)
-    else
-      insertNodeBefore(this, this.head, result)
-      this.head = result
-    end
-    return result
-  end
-end
-
-function LinkedList.AddLast(this, node)
-  if getmetatable(node) == LinkedListNode then
-    vaildateNode(this, node)
-    if this.head == nil then
-      insertNodeToEmptyList(this, node)
-    else
-      insertNodeBefore(this, this.head, node)
-    end
-    node.List = this
-  else
-    local result = newLinkedListNode(this, node)
-    if this.head == nil then
-      insertNodeToEmptyList(this, result)
-    else
-      insertNodeBefore(this, this.head, result)
-    end
-    return result
-  end
-end
-
 local function invalidate(this)
   this.List = nil
   this.next = nil
   this.prev = nil
-end
-
-function LinkedList.Clear(this)
-  local current = this.head
-  while current ~= nil do
-    local temp = current
-    current = current.next
-    invalidate(temp)
-  end
-  this.head = nil
-  this.Count = 0
-  this.version = this.version + 1
-end
-
-function LinkedList.Contains(this, value)
-  return this:Find(value) ~= nil
-end
-
-function LinkedList.Find(this, value)     
-  local head = this.head
-  local node = head
-  local equals = EqualityComparer_1(this.__genericT__).getDefault().Equals
-  if node ~= nil then
-    if value ~= nil then
-      repeat
-        if equals(node.Value, value) then
-          return node
-        end
-        node = node.next
-      until node == head
-    else
-      repeat 
-        if node.Value == nil then
-          return node
-        end
-        node = node.next
-      until node == head
-    end
-  end
-  return nil
-end
-
-function LinkedList.FindLast(this, value)
-  local head = this.head
-  if head == nil then return nil end
-  local last = head.prev
-  local node = last
-  local equals = EqualityComparer_1(this.__genericT__).getDefault().Equals
-  if node ~= nil then
-    if value ~= nil then
-      repeat
-        if equals(node.Value, value) then
-          return node
-        end
-        node = node.prev
-      until node == head
-    else
-      repeat 
-        if node.Value == nil then
-          return node
-        end
-        node = node.prev
-       until node == head
-    end
-  end
-  return nil
 end
 
 local function remvoeNode(this, node)
@@ -262,35 +92,6 @@ local function remvoeNode(this, node)
   invalidate(node)
   this.Count = this.Count - 1
   this.version = this.version + 1
-end
-
-function LinkedList.Remove(this, node)
-  if getmetatable(node) == LinkedListNode then
-    vaildateNode(this, node)
-    remvoeNode(this, node)
-  else
-    node = this:Find(node)
-    if node ~= nil then
-      remvoeNode(this, node)
-    end
-    return false
-  end
-end
-
-function LinkedList.RemoveFirst(this)
-  local head = this.head
-  if head == nil then
-    throw(InvalidOperationException("LinkedListEmpty"))
-  end
-  remvoeNode(this, head)
-end
-
-function LinkedList.RemoveLast(this)
-  local head = this.head
-  if head == nil then
-    throw(InvalidOperationException("LinkedListEmpty"))
-  end
-  remvoeNode(this, head.prev)
 end
 
 local LinkedListEnumerator = { 
@@ -317,9 +118,193 @@ local LinkedListEnumerator = {
 }
 LinkedListEnumerator.__index = LinkedListEnumerator
 
-function LinkedList.GetEnumerator(this)
-  return setmetatable({ list = this, version = this.version, node = this.head }, LinkedListEnumerator)
-end
+local LinkedList = { 
+  Count = 0, 
+  version = 0,
+  __ctor__ = function (this, ...)
+    local len = select("#", ...)
+    if len == 1 then
+      local collection = ...
+      if collection == nil then
+        throw(ArgumentNullException("collection"))
+      end
+      for _, item in each(collection) do
+        this:AddLast(item)
+      end
+    end
+  end,
+  getCount = function (this)
+    return this.Count
+  end,
+  getFirst = function(this)    
+    return this.head
+  end,
+  getLast = function (this)
+    local head = this.head
+    return head ~= nil and head.prev or nil
+  end,
+  AddAfter = function (this, node, newNode)    
+    vaildateNode(this, node)
+    if getmetatable(newNode) == LinkedListNode then
+      vaildateNode(this, newNode)
+      insertNodeBefore(this, node.next, newNode)
+      newNode.List = this
+    else
+      local result = newLinkedListNode(node.List, newNode)
+      insertNodeBefore(this, node.next, result)
+      return result
+    end
+  end,
+  AddBefore = function (this, node, newNode)
+    vaildateNode(this, node)
+    if getmetatable(newNode) == LinkedListNode then
+      vaildateNode(this, newNode)
+      insertNodeBefore(this, node, newNode)
+      newNode.List = this
+      if node == this.head then
+        this.head = newNode
+      end
+    else
+      local result = newLinkedListNode(node.List, newNode)
+      insertNodeBefore(this, node, result)
+      if node == this.head then
+        this.head = result
+      end
+      return result
+    end
+  end,
+  AddFirst = function (this, node)
+    if getmetatable(node) == LinkedListNode then
+      vaildateNode(this, node)
+      if this.head == nil then
+        insertNodeToEmptyList(this, node)
+      else
+        insertNodeBefore(this, this.head, node)
+          this.head = node
+        end
+        node.List = this
+    else
+      local result = newLinkedListNode(this, node)
+      if this.head == nil then
+        insertNodeToEmptyList(this, result)
+      else
+        insertNodeBefore(this, this.head, result)
+        this.head = result
+      end
+      return result
+    end
+  end,
+  AddLast = function (this, node)
+    if getmetatable(node) == LinkedListNode then
+      vaildateNode(this, node)
+      if this.head == nil then
+        insertNodeToEmptyList(this, node)
+      else
+        insertNodeBefore(this, this.head, node)
+      end
+      node.List = this
+    else
+      local result = newLinkedListNode(this, node)
+      if this.head == nil then
+        insertNodeToEmptyList(this, result)
+      else
+        insertNodeBefore(this, this.head, result)
+      end
+      return result
+    end
+  end,
+  Clear = function (this)
+    local current = this.head
+    while current ~= nil do
+      local temp = current
+      current = current.next
+      invalidate(temp)
+    end
+    this.head = nil
+    this.Count = 0
+    this.version = this.version + 1
+  end,
+  Contains = function (this, value)
+    return this:Find(value) ~= nil
+  end,
+  Find = function (this, value)     
+    local head = this.head
+    local node = head
+    local equals = EqualityComparer_1(this.__genericT__).getDefault().Equals
+    if node ~= nil then
+      if value ~= nil then
+        repeat
+          if equals(node.Value, value) then
+            return node
+          end
+          node = node.next
+        until node == head
+      else
+        repeat 
+          if node.Value == nil then
+            return node
+          end
+          node = node.next
+        until node == head
+      end
+    end
+    return nil
+  end,
+  FindLast = function (this, value)
+    local head = this.head
+    if head == nil then return nil end
+    local last = head.prev
+    local node = last
+    local equals = EqualityComparer_1(this.__genericT__).getDefault().Equals
+    if node ~= nil then
+      if value ~= nil then
+        repeat
+          if equals(node.Value, value) then
+            return node
+          end
+          node = node.prev
+        until node == head
+      else
+        repeat 
+          if node.Value == nil then
+            return node
+          end
+          node = node.prev
+         until node == head
+      end
+    end
+    return nil
+  end,
+  Remove = function (this, node)
+    if getmetatable(node) == LinkedListNode then
+      vaildateNode(this, node)
+      remvoeNode(this, node)
+    else
+      node = this:Find(node)
+      if node ~= nil then
+        remvoeNode(this, node)
+      end
+      return false
+    end
+  end,
+  RemoveFirst = function (this)
+    local head = this.head
+    if head == nil then
+      throw(InvalidOperationException("LinkedListEmpty"))
+    end
+    remvoeNode(this, head)
+  end,
+  RemoveLast = function (this)
+    local head = this.head
+    if head == nil then
+      throw(InvalidOperationException("LinkedListEmpty"))
+    end
+    remvoeNode(this, head.prev)
+  end,
+  GetEnumerator = function (this)
+    return setmetatable({ list = this, version = this.version, node = this.head }, LinkedListEnumerator)
+  end
+}
 
 function System.linkedListFromTable(t, T)
   assert(T)
@@ -327,10 +312,9 @@ function System.linkedListFromTable(t, T)
 end
 
 define("System.LinkedList", function(T) 
-  local cls = { 
+  return { 
   __inherits__ = { System.ICollection_1(T), System.ICollection }, 
   __genericT__ = T,
   __len = LinkedList.getCount
   }
-  return cls
 end, LinkedList)
