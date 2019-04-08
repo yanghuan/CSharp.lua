@@ -53,21 +53,22 @@ https://yanghuan.github.io/external/bridgelua-editor/index.html
 ```cmd
 D:\>dotnet CSharp.Lua.Launcher.dll -h
 Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
-Arguments 
+Arguments
 -s              : source directory, all *.cs files whill be compiled
 -d              : destination  directory, will put the out lua files
 
 Options
--h              : show the help message    
--l              : libraries referenced, use ';' to separate      
--m              : meta files, like System.xml, use ';' to separate     
+-h              : show the help message and exit
+-l              : libraries referenced, use ';' to separate
+                  if the librarie is a module, whitch is compield by CSharp.lua with -module arguemnt, the last character needs to be '!' in order to mark  
+
+-m              : meta files, like System.xml, use ';' to separate
 -csc            : csc.exe command argumnets, use ' ' or '\t' to separate
 
--c              : support classic lua version(5.1), default support 5.3 
--i              : indent number, default is 2
+-c              : support classic lua version(5.1), default support 5.3
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
--module         : librarie file name without extension, use ';' to separate. make symbols from this librarie output is the same as code, it's useful for multiple module compiled
+-module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
 ```
 Make sure that the. NET core 2.0+ is installed.
 https://dotnet.microsoft.com/download

@@ -36,10 +36,11 @@ namespace CSharpLua {
     private readonly string[] cscArguments_;
     private readonly bool isClassic_;
     private readonly string[] attributes_;
-    private readonly string[] modules_;
-    public bool IsExportMetadata { get; set; }
 
-    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string module) {
+    public bool IsExportMetadata { get; set; }
+    public bool IsModule { get; set; }
+
+    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
       folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
@@ -49,7 +50,6 @@ namespace CSharpLua {
       if (atts != null) {
         attributes_ = Utility.Split(atts, false);
       }
-      modules_ = Utility.Split(module, false);
     }
 
     private static IEnumerable<string> GetMetas(IEnumerable<string> additionalMetas) {
@@ -129,13 +129,13 @@ namespace CSharpLua {
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
-      luaModuleLibs.AddRange(modules_.Select(i => i.TrimEnd(kDllSuffix)));
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
         BaseFolder = folder_,
         Attributes = attributes_,
         LuaModuleLibs = new HashSet<string>(luaModuleLibs),
+        IsModule = IsModule,
       };
       var generator = Build(cscArguments_, codes, libs, Metas, setting);
       generator.Generate(output_);

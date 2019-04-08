@@ -31,13 +31,15 @@ Arguments
 Options
 -h              : show the help message and exit
 -l              : libraries referenced, use ';' to separate
+                  if the librarie is a module, whitch is compield by CSharp.lua with -module arguemnt, the last character needs to be '!' in order to mark  
+
 -m              : meta files, like System.xml, use ';' to separate
 -csc            : csc.exe command argumnets, use ' ' or '\t' to separate
 
 -c              : support classic lua version(5.1), default support 5.3
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
--module         : librarie file name without extension, use ';' to separate. make symbols from this librarie output is the same as code, it's useful for multiple module compiled
+-module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -61,9 +63,10 @@ Options
           }
           string csc = GetCSCArgument(cmds);
           bool isExportMetadata = cmds.ContainsKey("-metadata");
-          string module = cmds.GetArgument("-module", true);
-          Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts, module) {
+          bool isModule = cmds.ContainsKey("-module");
+          Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts) {
             IsExportMetadata = isExportMetadata,
+            IsModule = isModule,
           };
           c.Compile();
           Console.WriteLine("all operator success");

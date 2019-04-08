@@ -58,6 +58,7 @@ namespace CSharpLua {
       public bool IsExportMetadata { get; set; }
       public string BaseFolder { get; set; } = "";
       public bool IsExportAttributesAll { get; private set; }
+      public bool IsModule { get; set; }
       public HashSet<string> ExportAttributes { get; private set; }
       public HashSet<string> LuaModuleLibs;
 
@@ -1515,7 +1516,7 @@ namespace CSharpLua {
     }
 
     internal bool IsSealed(INamedTypeSymbol typeSymbol) {
-      return typeSymbol.IsSealed || !IsExtendExists(typeSymbol);
+      return typeSymbol.IsSealed || (!Setting.IsModule && !IsExtendExists(typeSymbol));
     }
 
     internal bool IsReadOnlyStruct(ITypeSymbol symbol) {
