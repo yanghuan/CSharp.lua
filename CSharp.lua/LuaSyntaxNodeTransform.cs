@@ -1733,7 +1733,7 @@ namespace CSharpLua {
             }));
           }
           var invocationExpression = InternalBuildCodeTemplateExpression(codeTemplate, memberAccessExpression.Expression, argumentExpressions, symbol.TypeArguments);
-          var refOrOuts = node.ArgumentList.Arguments.Where(i => i.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword) || i.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword));
+          var refOrOuts = node.ArgumentList.Arguments.Where(i => i.RefKindKeyword.IsOutOrRef());
           if (refOrOuts.Any()) {
             return BuildInvokeRefOrOut(node, invocationExpression, refOrOuts.Select(i => ((LuaArgumentSyntax)i.Accept(this)).Expression));
           } else {
@@ -2634,9 +2634,9 @@ namespace CSharpLua {
     private void FillInvocationArgument(List<LuaExpressionSyntax> arguments, ArgumentSyntax node, ImmutableArray<IParameterSymbol> parameters, List<LuaExpressionSyntax> refOrOutArguments) {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       Contract.Assert(expression != null);
-      if (node.RefOrOutKeyword.IsKind(SyntaxKind.RefKeyword)) {
+      if (node.RefKindKeyword.IsKind(SyntaxKind.RefKeyword)) {
         refOrOutArguments.Add(expression);
-      } else if (node.RefOrOutKeyword.IsKind(SyntaxKind.OutKeyword)) {
+      } else if (node.RefKindKeyword.IsKind(SyntaxKind.OutKeyword)) {
         refOrOutArguments.Add(expression);
         expression = LuaIdentifierNameSyntax.Nil;
       } else {

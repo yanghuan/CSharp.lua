@@ -20,11 +20,13 @@ local div = System.div
 local trunc = System.trunc
 
 local TimeSpan = System.TimeSpan
+local compare = TimeSpan.Compare
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 local FormatException = System.FormatException
 
+local assert = assert
 local getmetatable = getmetatable
 local select = select
 local sformat = string.format
@@ -40,39 +42,8 @@ local log10 = math.log10
 local modf = math.modf
 
 --http://referencesource.microsoft.com/#mscorlib/system/datetime.cs
-local DateTime = {}
-
-local function compare(t1, t2)
-  if t1.ticks > t2.ticks then return 1 end
-  if t1.ticks < t2.ticks then return -1 end
-  return 0
-end
-
-DateTime.Compare = compare
-DateTime.CompareTo = compare
-
-function DateTime.CompareToObj(this, t)
-  if t == null then return 1 end
-  if getmetatable(t) ~= DateTime then
-    throw(ArgumentException("Arg_MustBeDateTime"))
-  end
-  return compare(this, t)
-end
-
-function DateTime.Equals(t1, t2)
-  return t1.ticks == t2.ticks
-end
-
-function DateTime.EqualsObj(this, t)
-  if getmetatable(t) == DateTime then
-    return this.ticks == t.ticks
-  end
-  return false
-end
-
-function DateTime.GetHashCode(this)
-  return this.ticks
-end
+local DateTime
+local minValue
 
 local daysToMonth365 = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 }
 local daysToMonth366 = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
@@ -83,8 +54,6 @@ local function isLeapYear(year)
   end
   return year % 4 == 0 and (year % 100 ~= 0 or year % 400 == 0)
 end
-
-DateTime.IsLeapYear = isLeapYear
 
 local function dateToTicks(year, month, day) 
   if year >= 1 and year <= 9999 and month >= 1 and month <= 12 then
@@ -116,38 +85,12 @@ local function checkKind(kind)
   end
 end
 
-function DateTime.__ctor__(this, ...)
-  local len = select("#", ...)
-  if len == 1 then
-    local ticks = ...
-    checkTicks(ticks)
-    this.ticks = ticks
-  elseif len == 2 then
-    local ticks, kind = ...
-    checkTicks(ticks)
-    checkKind(kind)
-    this.ticks = ticks
-    this.kind = kind
-  elseif len == 3 then
-    this.ticks = dateToTicks(...)
-  elseif len == 6 then
-    local year, month, day, hour, minute, second = ...
-    this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second)
-  elseif len == 7 then
-    local year, month, day, hour, minute, second, millisecond = ...
-    this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
-  elseif len == 8 then
-    local year, month, day, hour, minute, second, millisecond, kind = ...
-    checkKind(kind)
-    this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
-    this.kind = kind
-  else
-    assert(false)
-  end
-end
-
 local function addTicks(this, value)
   return DateTime(this.ticks + value, this.kind)
+end
+
+local function addTimeSpan(this, ts)
+  return addTicks(this, ts.ticks)
 end
 
 local function add(this, value, scale)
@@ -155,30 +98,11 @@ local function add(this, value, scale)
   return addTicks(this, millis * 10000)
 end
 
-DateTime.AddTicks = addTicks
-
-function DateTime.Add(this, ts)
-  return addTicks(this, ts.ticks)
-end
-
-function DateTime.AddDays(this, days)
-  return add(this, days, 86400000)
-end
-
-function DateTime.AddHours(this, hours)
-  return add(this, hours, 3600000)
-end
-
-function DateTime.AddMinutes(this, minutes) 
-  return add(this, minutes, 60000);
-end
-
-function DateTime.AddSeconds(this, seconds)
-  return add(this, seconds, 1000)
-end
-
-function DateTime.AddMilliseconds(this, milliseconds)
-  return add(this, milliseconds, 1)
+local function subtract(this, v) 
+  if getmetatable(v) == DateTime then
+    return TimeSpan(this.ticks - v.ticks)
+  end
+  return DateTime(this.ticks - v.ticks, this.kind) 
 end
 
 local function getDataPart(ticks, part)
@@ -236,8 +160,6 @@ local function daysInMonth(year, month)
   return days[month + 1] - days[month]
 end
 
-DateTime.DaysInMonth = daysInMonth
-
 local function addMonths(this, months)
   if months < -120000 or months > 12000 then
       throw(ArgumentOutOfRangeException("months"))
@@ -260,115 +182,21 @@ local function addMonths(this, months)
   return DateTime(dateToTicks(y, m, d) + ticks % 864e9, this.kind)
 end
 
-DateTime.AddMonths = addMonths
-
-function DateTime.AddYears(this, years)
-  if years < - 10000 or years > 10000 then
-    throw(ArgumentOutOfRangeException("years")) 
-  end
-  return addMonths(this, years * 12)
-end
-
-function DateTime.SpecifyKind(this, kind)
-  return DateTime(this.ticks, kind)
-end
-
-function DateTime.Subtract(this, v) 
-  if getmetatable(v) == DateTime then
-    return TimeSpan(this.ticks - v.ticks)
-  end
-  return DateTime(this.ticks - v.ticks, this.kind) 
-end
-
-function DateTime.getDay(this)
-  return getDataPart(this.ticks, 3)
-end
-
-function DateTime.getDate(this)
-  local ticks = this.ticks
-  return DateTime(ticks - ticks % 864e9)
-end
-
-function DateTime.getDayOfWeek(this)
-  return (div(this.ticks, 864e9) + 1) % 7
-end
-
-function DateTime.getDayOfYear(this)
-  return getDataPart(this.ticks, 1)
-end
-
-function DateTime.getKind(this)
-  return this.kind or 0
-end
-
-DateTime.getHour = TimeSpan.getHours
-DateTime.getMinute = TimeSpan.getMinutes
-DateTime.getSecond = TimeSpan.getSeconds
-DateTime.getMillisecond = TimeSpan.getMilliseconds
-
-function DateTime.getMonth(this)
-  return getDataPart(this.ticks, 2)
-end
-
-function DateTime.getYear(this)
-  return getDataPart(this.ticks, 0)
-end
-
-function DateTime.getTimeOfDay(this)
-  return TimeSpan(this.ticks % 864e9)
-end
-
-function DateTime.getTicks(this)
-  return this.ticks
-end
-
 local function getTimeZone()
   local now = ostime()
   return osdifftime(now, ostime(osdate("!*t", now)))
 end
 
 local timeZoneTicks = getTimeZone() * 1e7
-DateTime.BaseUtcOffset = TimeSpan(timeZoneTicks)
 
 local time = System.config.time or ostime
 System.time = time
 System.currentTimeMillis = function () return trunc(time() * 1000) end
 
-function DateTime.getUtcNow()
-  local seconds = time()
-  local ticks = seconds * 1e7 + 621355968000000000
-  return DateTime(ticks, 1)
-end
-
-function DateTime.getNow()
+local function now()
   local seconds = time()
   local ticks = seconds * 1e7 + timeZoneTicks + 621355968000000000
   return DateTime(ticks, 2)
-end
-
-function DateTime.getToday()
-  return DateTime.getNow():getDate()
-end
-
-function DateTime.ToLocalTime(this)
-  if this.kind == 2 then 
-    return this
-  end
-  local ticks = this.ticks + timeZoneTicks
-  return DateTime(ticks, 2)
-end
-
-function DateTime.ToUniversalTime(this)
-  if this.kind == 1 then
-    return this
-  end
-  local ticks = this.ticks - timeZoneTicks
-  return DateTime(ticks, 1)
-end
-
-function DateTime.ToString(this)
-  local year, month, day = getDatePart(this.ticks)
-  return sformat("%d/%d/%d %02d:%02d:%02d", year, month, day, this:getHour(), this:getMinute(), this:getSecond())
 end
 
 local function parse(s)
@@ -427,56 +255,185 @@ local function parse(s)
     end
   end
   if hour == nil then
-     return DateTime(year, month, day)
+    return DateTime(year, month, day)
   end
   return DateTime(year, month, day, hour, minute, second, milliseconds)
 end
 
-function DateTime.Parse(s)
-  local v, err = parse(s)
-  if v then
-    return v
+DateTime = System.defStc("System.DateTime", {
+  MinValue = false,
+  MaxValue = false,
+  Compare = compare,
+  CompareTo = compare,
+  CompareToObj = function (this, t)
+    if t == nil then return 1 end
+    if getmetatable(t) ~= DateTime then
+      throw(ArgumentException("Arg_MustBeDateTime"))
+    end
+    return compare(this, t)
+  end,
+  Equals = function (t1, t2)
+    return t1.ticks == t2.ticks
+  end,
+  EqualsObj = function (this, t)
+    if getmetatable(t) == DateTime then
+      return this.ticks == t.ticks
+    end
+    return false
+  end,
+  GetHashCode = function (this)
+    return this.ticks
+  end,
+  IsLeapYear = isLeapYear,
+  __ctor__ = function (this, ...)
+    local len = select("#", ...)
+    if len == 1 then
+      local ticks = ...
+      checkTicks(ticks)
+      this.ticks = ticks
+    elseif len == 2 then
+      local ticks, kind = ...
+      checkTicks(ticks)
+      checkKind(kind)
+      this.ticks = ticks
+      this.kind = kind
+    elseif len == 3 then
+      this.ticks = dateToTicks(...)
+    elseif len == 6 then
+      local year, month, day, hour, minute, second = ...
+      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second)
+    elseif len == 7 then
+      local year, month, day, hour, minute, second, millisecond = ...
+      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
+    elseif len == 8 then
+      local year, month, day, hour, minute, second, millisecond, kind = ...
+      checkKind(kind)
+      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
+      this.kind = kind
+    else
+      assert(false)
+    end
+  end,
+  AddTicks = addTicks,
+  Add = addTimeSpan,
+  AddDays = function (this, days)
+    return add(this, days, 86400000)
+  end,
+  AddHours = function (this, hours)
+    return add(this, hours, 3600000)
+  end,
+  AddMinutes = function (this, minutes) 
+    return add(this, minutes, 60000);
+  end,
+  AddSeconds = function (this, seconds)
+    return add(this, seconds, 1000)
+  end,
+  AddMilliseconds = function (this, milliseconds)
+    return add(this, milliseconds, 1)
+  end,
+  DaysInMonth = daysInMonth,
+  AddMonths = addMonths,
+  AddYears = function (this, years)
+    if years < - 10000 or years > 10000 then
+      throw(ArgumentOutOfRangeException("years")) 
+    end
+    return addMonths(this, years * 12)
+  end,
+  SpecifyKind = function (this, kind)
+    return DateTime(this.ticks, kind)
+  end,
+  Subtract = subtract,
+  getDay = function (this)
+    return getDataPart(this.ticks, 3)
+  end,
+  getDate = function (this)
+    local ticks = this.ticks
+    return DateTime(ticks - ticks % 864e9)
+  end,
+  getDayOfWeek = function (this)
+    return (div(this.ticks, 864e9) + 1) % 7
+  end,
+  getDayOfYear = function (this)
+    return getDataPart(this.ticks, 1)
+  end,
+  getKind = function (this)
+    return this.kind or 0
+  end,
+  getHour = TimeSpan.getHours,
+  getMinute = TimeSpan.getMinutes,
+  getSecond = TimeSpan.getSeconds,
+  getMillisecond = TimeSpan.getMilliseconds,
+  getMonth = function (this)
+    return getDataPart(this.ticks, 2)
+  end,
+  getYear = function (this)
+    return getDataPart(this.ticks, 0)
+  end,
+  getTimeOfDay = function (this)
+    return TimeSpan(this.ticks % 864e9)
+  end,
+  getTicks = function (this)
+    return this.ticks
+  end,
+  BaseUtcOffset = TimeSpan(timeZoneTicks),
+  getUtcNow = function ()
+    local seconds = time()
+    local ticks = seconds * 1e7 + 621355968000000000
+    return DateTime(ticks, 1)
+  end,
+  getNow = now,
+  getToday = function ()
+    return now():getDate()
+  end,
+  ToLocalTime = function (this)
+    if this.kind == 2 then 
+      return this
+    end
+    local ticks = this.ticks + timeZoneTicks
+    return DateTime(ticks, 2)
+  end,
+  ToUniversalTime = function (this)
+    if this.kind == 1 then
+      return this
+    end
+    local ticks = this.ticks - timeZoneTicks
+    return DateTime(ticks, 1)
+  end,
+  ToString = function (this)
+    local year, month, day = getDatePart(this.ticks)
+    return sformat("%d/%d/%d %02d:%02d:%02d", year, month, day, this:getHour(), this:getMinute(), this:getSecond())
+  end,
+  Parse = function (s)
+    local v, err = parse(s)
+    if v then
+      return v
+    end
+    if err == 1 then
+      throw(ArgumentNullException())
+    else
+      throw(FormatException())
+    end
+  end,
+  TryParse = function(s)
+    local v = parse(s)
+    if v then
+      return true, v
+    end
+    return false, minValue
+  end,
+  __add = addTimeSpan,
+  __sub = subtract,
+  __eq = TimeSpan.__eq,
+  __lt = TimeSpan.__lt,
+  __le = TimeSpan.__le,
+  __inherits__ =  function(_, T)
+    return { System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T) }
+  end,
+  default = function ()
+    return minValue
   end
-  if err == 1 then
-    throw(ArgumentNullException())
-  else
-    throw(FormatException())
-  end
-end
+})
 
-DateTime.__add = DateTime.Add
-DateTime.__sub = DateTime.Subtract
-
-function DateTime.__eq(t1, t2)
-  return t1.ticks == t2.ticks
-end
-
-function DateTime.__lt(t1, t2)
-  return t1.ticks < t2.ticks
-end
-
-function DateTime.__le(t1, t2)
-  return t1.ticks <= t2.ticks
-end
-
-function DateTime.__inherits__()
-  return { System.IComparable, System.IComparable_1(DateTime), System.IConvertible, System.IEquatable_1(DateTime) }
-end
-
-System.defStc("System.DateTime", DateTime)
-
-local minValue = DateTime(0)
+minValue = DateTime(0)
 DateTime.MinValue = minValue
 DateTime.MaxValue = DateTime(3155378975999999999)
-
-function DateTime.default()
-  return minValue
-end
-
-function DateTime.TryParse(s)
-  local v = parse(s)
-  if v then
-    return true, v
-  end
-  return false, minValue
-end

@@ -31,8 +31,6 @@ local IOException = define("System.IO.IOException", {
   end,
 })
 
-local File = {}
-
 local function openFile(path, mode)
   local f, err = open(path, mode)
   if f == nil then
@@ -48,61 +46,54 @@ local function readAll(path, mode)
   return bytes
 end
 
-function File.ReadAllBytes(path)
-  return readAll(path, "rb")
-end
-
-function File.ReadAllText(path)
-  return readAll(path, "r")
-end
-
-function File.ReadAllLines(path)
-  local t = {}
-  local count = 1
-  for line in io.lines(path) do
-    t[count] = line
-    count = count + 1
-  end
-  return System.arrayFromTable(t, System.String)
-end
-
 local function writeAll(path, contents, mode)
   local f = openFile(path, mode)
   f:write(contents)
   f:close()
 end
 
-function File.WriteWriteAllBytes(path, contents)
-  writeAll(path, contents, "wb")
-end
-
-function File.WriteAllText(path, contents)
-  writeAll(path, contents, "w")
-end
-
-function File.WriteAllLines(path, contents)
-  local f = openFile(path, "w")
-  for _, line in each(contents) do
-    if line == nil then
-      f:write("\n")
-    else
-      f:write(line, "\n")
+define("System.IO.File", {
+  ReadAllBytes = function (path)
+    return readAll(path, "rb")
+  end,
+  ReadAllText = function (path)
+    return readAll(path, "r")
+  end,
+  ReadAllLines = function (path)
+    local t = {}
+    local count = 1
+    for line in io.lines(path) do
+      t[count] = line
+      count = count + 1
+    end
+    return System.arrayFromTable(t, System.String)
+  end,  
+  WriteWriteAllBytes = function (path, contents)
+    writeAll(path, contents, "wb")
+  end,
+  WriteAllText = function (path, contents)
+    writeAll(path, contents, "w")
+  end,
+  WriteAllLines = function (path, contents)
+    local f = openFile(path, "w")
+    for _, line in each(contents) do
+      if line == nil then
+        f:write("\n")
+      else
+        f:write(line, "\n")
+      end
+    end
+    f:close()
+  end,
+  Exists = function (path)
+    local file = io.open(path, "rb")
+    if file then file:close() end
+    return file ~= nil
+  end,
+  Delete = function (path)
+    local ok, err = remove(path)
+    if not ok then
+      throw(IOException(err))
     end
   end
-  f:close()
-end
-
-function File.Exists(path)
-  local file = io.open(path, "rb")
-  if file then file:close() end
-  return file ~= nil
-end
-
-function File.Delete(path)
-  local ok, err = remove(path)
-  if not ok then
-    throw(IOException(err))
-  end
-end
-
-define("System.IO.File", File)
+})

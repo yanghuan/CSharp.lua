@@ -25,12 +25,6 @@ local ArgumentException = System.ArgumentException
 local pairs = pairs
 local tostring = tostring
 
-local Enum = {}
-
-Enum.CompareToObj = Int.CompareToObj
-Enum.EqualsObj = Int.EqualsObj
-Enum.default = Int.default
-
 local function toString(this, cls)
   if cls then
     for k, v in pairs(cls) do
@@ -42,51 +36,12 @@ local function toString(this, cls)
   return tostring(this)
 end
 
-Enum.ToString = toString
-Number.ToEnumString = toString
-
 local function hasFlag(this, flag)
   return band(this, flag) ~= 0
 end
 
-Enum.HasFlag = hasFlag
+Number.ToEnumString = toString
 Number.HasFlag = hasFlag
-
-function Enum.GetName(enumType, value)
-  if enumType == nil then throw(ArgumentNullException("enumType")) end
-  if value == nil then throw(ArgumentNullException("value")) end
-  if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
-  for k, v in pairs(enumType.c) do
-    if v == value then
-      return k
-    end
-  end
-  throw(ArgumentException())
-end
-
-function Enum.GetNames(enumType)
-  if enumType == nil then throw(ArgumentNullException("enumType")) end
-  if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
-  local t = {}
-  local count = 1
-  for k, v in pairs(enumType.c) do
-    t[count] = k
-    count = count + 1
-  end
-  return System.arrayFromTable(t, System.String)
-end
-
-function Enum.GetValues(enumType)
-  if enumType == nil then throw(ArgumentNullException("enumType")) end
-  if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
-  local t = {}
-  local count = 1
-  for k, v in pairs(enumType.c) do
-    t[count] = v
-    count = count + 1
-  end
-  return System.arrayFromTable(t, Int)
-end
 
 local function tryParseEnum(enumType, value, ignoreCase)
   if enumType == nil then throw(ArgumentNullException("enumType")) end
@@ -101,7 +56,7 @@ local function tryParseEnum(enumType, value, ignoreCase)
   if ignoreCase then
     value = value:lower()
   end
-  for k, v in pairs(enumType.c) do
+  for k, v in pairs(enumType[1]) do
     if ignoreCase then
       k = k:lower()
     end
@@ -111,20 +66,58 @@ local function tryParseEnum(enumType, value, ignoreCase)
   end
 end
 
-function Enum.Parse(enumType, value, ignoreCase)
-  local result = tryParseEnum(enumType, value, ignoreCase)
-  if result == nil then
-    throw(ArgumentException("parse enum fail: ".. value))
+System.define("System.Enum", {
+  CompareToObj = Int.CompareToObj,
+  EqualsObj = Int.EqualsObj,
+  default = Int.default,
+  ToString = toString,
+  ToEnumString = toString,
+  HasFlag = hasFlag,
+  GetName = function (enumType, value)
+    if enumType == nil then throw(ArgumentNullException("enumType")) end
+    if value == nil then throw(ArgumentNullException("value")) end
+    if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
+    for k, v in pairs(enumType[1]) do
+      if v == value then
+        return k
+      end
+    end
+    throw(ArgumentException())
+  end,
+  GetNames = function (enumType)
+    if enumType == nil then throw(ArgumentNullException("enumType")) end
+    if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
+    local t = {}
+    local count = 1
+    for k, v in pairs(enumType[1]) do
+      t[count] = k
+      count = count + 1
+    end
+    return System.arrayFromTable(t, System.String)
+  end,
+  GetValues = function (enumType)
+    if enumType == nil then throw(ArgumentNullException("enumType")) end
+    if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
+    local t = {}
+    local count = 1
+    for k, v in pairs(enumType[1]) do
+      t[count] = v
+      count = count + 1
+    end
+    return System.arrayFromTable(t, Int)
+  end,
+  Parse = function (enumType, value, ignoreCase)
+    local result = tryParseEnum(enumType, value, ignoreCase)
+    if result == nil then
+      throw(ArgumentException("parse enum fail: ".. value))
+    end
+    return result
+  end,
+  TryParse = function (TEnum, value, ignoreCase)
+    local result = tryParseEnum(System.typeof(TEnum), value, ignoreCase)
+    if result == nil then
+      return false, 0
+    end
+    return true, result
   end
-  return result
-end
-
-function Enum.TryParse(TEnum, value, ignoreCase)
-  local result = tryParseEnum(System.typeof(TEnum), value, ignoreCase)
-  if result == nil then
-    return false, 0
-  end
-  return true, result
-end
-
-System.define("System.Enum", Enum)
+})

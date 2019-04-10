@@ -20,85 +20,6 @@ local Int = System.Int
 
 local setmetatable = setmetatable
 
-local Char = {}
-
-Char.CompareTo = Int.CompareTo
-Char.CompareToObj = Int.CompareToObj
-Char.Equals = Int.Equals
-Char.EqualsObj = Int.EqualsObj
-Char.GetHashCode = Int.GetHashCode
-Char.default = Int.default
-
-function Char.IsControl(c, index)
-  if index then
-    c = c:get(index)
-  end
-  return (c >=0 and c <= 31) or (c >= 127 and c <= 159)
-end
-
-function Char.IsDigit(c, index)
-  if index then
-    c = c:get(index)
-  end
-  return (c >= 48 and c <= 57)
-end
-
--- https://msdn.microsoft.com/zh-cn/library/yyxz6h5w(v=vs.110).aspx
-function Char.IsLetter(c, index)    
-  if index then
-    c = c:get(index) 
-  end
-  if c < 256 then
-    return (c >= 65 and c <= 90) or (c >= 97 and c <= 122)
-  else  
-    return (c >= 0x0400 and c <= 0x042F) 
-      or (c >= 0x03AC and c <= 0x03CE) 
-      or (c == 0x01C5 or c == 0x1FFC) 
-      or (c >= 0x02B0 and c <= 0x02C1) 
-      or (c >= 0x1D2C and c <= 0x1D61) 
-      or (c >= 0x05D0 and c <= 0x05EA)
-      or (c >= 0x0621 and c <= 0x063A)
-      or (c >= 0x4E00 and c <= 0x9FC3) 
-  end
-end
-
-function Char.IsLetterOrDigit(c, index)
-  if index then
-    c = c:get(index)
-  end
-  return Char.isDigit(c) or Char.isLetter(c)
-end
-
-function Char.IsLower(c, index)
-  if index then
-    c = c:get(index)
-  end
-  return (c >= 97 and c <= 122) or (c >= 945 and c <= 969)
-end
-
-function Char.IsNumber(c, index)
-  if index then
-    c = c:get(index)
-  end
-  return (c >= 48 and c <= 57) or c == 178 or c == 179 or c == 185 or c == 188 or c == 189 or c == 190
-end
-
-function Char.IsPunctuation(c, index)
-  if index then
-    c = c:get(index)
-  end
-  if c < 256 then
-    return (c >= 0x0021 and c <= 0x0023) 
-      or (c >= 0x0025 and c <= 0x002A) 
-      or (c >= 0x002C and c <= 0x002F) 
-      or (c >= 0x003A and c <= 0x003B) 
-      or (c >= 0x003F and c <= 0x0040)  
-      or (c >= 0x005B and c <= 0x005D)
-      or c == 0x5F or c == 0x7B or c == 0x007D or c == 0x00A1 or c == 0x00AB or c == 0x00AD or c == 0x00B7 or c == 0x00BB or c == 0x00BF
-  end
-  return false
-end
-
 local isSeparatorTable = {
   [32] = true,
   [160] = true,
@@ -112,13 +33,6 @@ local isSeparatorTable = {
   [0x205F] = true,
   [0x3000] = true,
 }
-
-function Char.IsSeparator(c, index)
-  if index then
-    c = c:get(index)
-  end
-  return (c >= 0x2000 and c <= 0x200A) or isSeparatorTable[c] == true
-end
 
 local isSymbolTable = {
   [36] = true,
@@ -138,23 +52,6 @@ local isSymbolTable = {
   [247] = true,
 }
 
-function Char.IsSymbol(c, index)
-  if index then
-    c = c:get(index)
-  end
-  if c < 256 then
-    return (c >= 162 and c <= 169) or (c >= 174 and c <= 177) or isSymbolTable(c) == true
-  end
-  return false
-end 
-
-function Char.IsUpper(c, index)
-  if index then
-    c = c:get(index)
-  end
-  return (c >= 65 and c <= 90) or (c >= 913 and c <= 937)
-end
-
 --https://msdn.microsoft.com/zh-cn/library/t809ektx(v=vs.110).aspx
 local isWhiteSpace = {
   [0x0020] = true,
@@ -168,70 +65,152 @@ local isWhiteSpace = {
   [0x0085] = true,
 }
 
-function Char.IsWhiteSpace(c, index)
-  if index then
-    c = c:get(index)
+local Char = System.defStc("System.Char", {
+  CompareTo = Int.CompareTo,
+  CompareToObj = Int.CompareToObj,
+  Equals = Int.Equals,
+  EqualsObj = Int.EqualsObj,
+  GetHashCode = Int.GetHashCode,
+  default = Int.default,
+  IsControl = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return (c >=0 and c <= 31) or (c >= 127 and c <= 159)
+  end,
+  IsDigit = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return (c >= 48 and c <= 57)
+  end,
+  -- https://msdn.microsoft.com/zh-cn/library/yyxz6h5w(v=vs.110).aspx
+  IsLetter = function (c, index)    
+    if index then
+      c = c:get(index) 
+    end
+    if c < 256 then
+      return (c >= 65 and c <= 90) or (c >= 97 and c <= 122)
+    else  
+      return (c >= 0x0400 and c <= 0x042F) 
+        or (c >= 0x03AC and c <= 0x03CE) 
+        or (c == 0x01C5 or c == 0x1FFC) 
+        or (c >= 0x02B0 and c <= 0x02C1) 
+        or (c >= 0x1D2C and c <= 0x1D61) 
+        or (c >= 0x05D0 and c <= 0x05EA)
+        or (c >= 0x0621 and c <= 0x063A)
+        or (c >= 0x4E00 and c <= 0x9FC3) 
+    end
+  end,
+  IsLetterOrDigit = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return isDigit(c) or isLetter(c)
+  end,
+  IsLower = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return (c >= 97 and c <= 122) or (c >= 945 and c <= 969)
+  end,
+  IsNumber = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return (c >= 48 and c <= 57) or c == 178 or c == 179 or c == 185 or c == 188 or c == 189 or c == 190
+  end,
+  IsPunctuation = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    if c < 256 then
+      return (c >= 0x0021 and c <= 0x0023) 
+        or (c >= 0x0025 and c <= 0x002A) 
+        or (c >= 0x002C and c <= 0x002F) 
+        or (c >= 0x003A and c <= 0x003B) 
+        or (c >= 0x003F and c <= 0x0040)  
+        or (c >= 0x005B and c <= 0x005D)
+        or c == 0x5F or c == 0x7B or c == 0x007D or c == 0x00A1 or c == 0x00AB or c == 0x00AD or c == 0x00B7 or c == 0x00BB or c == 0x00BF
+    end
+    return false
+  end,
+  IsSeparator = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return (c >= 0x2000 and c <= 0x200A) or isSeparatorTable[c] == true
+  end,
+  IsSymbol = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    if c < 256 then
+      return (c >= 162 and c <= 169) or (c >= 174 and c <= 177) or isSymbolTable(c) == true
+    end
+    return false
+  end,
+  IsUpper = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return (c >= 65 and c <= 90) or (c >= 913 and c <= 937)
+  end,
+  IsWhiteSpace = function (c, index)
+    if index then
+      c = c:get(index)
+    end
+    return (c >= 0x2000 and c <= 0x200A) or (c >= 0x0009 and c <= 0x000d) or isWhiteSpace[c] == true
+  end,
+  Parse = function (s)
+    if s == nil then
+      throw(System.ArgumentNullException())
+    end
+    if #s ~= 1 then
+      throw(System.FormatException())
+    end
+    return s:byte()
+  end,
+  TryParse = function (s)
+    if s == nil or #s ~= 1 then
+      return false, 0
+    end 
+    return true, s:byte()
+  end,
+  ToLower = function (c)
+    if (c >= 65 and c <= 90) or (c >= 913 and c <= 937) then
+      return c + 32
+    end
+    return c
+  end,
+  ToUpper = function (c)
+    if (c >= 97 and c <= 122) or (c >= 945 and c <= 969) then
+      return c - 32
+    end
+    return c
+  end,
+  IsHighSurrogate = function (c, index) 
+    if index then
+      c = c:get(index)
+    end
+    return c >= 0xD800 and c <= 0xDBFF
+  end,
+  IsLowSurrogate = function (c, index) 
+    if index then
+      c = c:get(index)
+    end
+    return c >= 0xDC00 and c <= 0xDFFF
+  end,
+  IsSurrogate = function (c, index) 
+    if index then
+      c = c:get(index)
+    end
+    return c >= 0xD800 and c <= 0xDFFF
+  end,
+  __inherits__ = function (_, T)
+    return { System.IComparable, System.IComparable_1(T), System.IEquatable_1(T) }
   end
-  return (c >= 0x2000 and c <= 0x200A) or (c >= 0x0009 and c <= 0x000d) or isWhiteSpace[c] == true
-end
-
-function Char.Parse(s)
-  if s == nil then
-    throw(System.ArgumentNullException())
-  end
-  if #s ~= 1 then
-    throw(System.FormatException())
-  end
-  return s:byte()
-end
-
-function Char.TryParse(s)
-  if s == nil or #s ~= 1 then
-    return false, 0
-  end 
-  return true, s:byte()
-end
-
-function Char.ToLower(c)
-  if (c >= 65 and c <= 90) or (c >= 913 and c <= 937) then
-    return c + 32
-  end
-  return c
-end
-
-function Char.ToUpper(c)
-  if (c >= 97 and c <= 122) or (c >= 945 and c <= 969) then
-    return c - 32
-  end
-  return c
-end
-
-function Char.IsHighSurrogate(c, index) 
-  if index then
-    c = c:get(index)
-  end
-  return c >= 0xD800 and c <= 0xDBFF
-end
-        
-function Char.IsLowSurrogate(c, index) 
-  if index then
-    c = c:get(index)
-  end
-  return c >= 0xDC00 and c <= 0xDFFF
-end
-
-function Char.IsSurrogate(c, index) 
-  if index then
-    c = c:get(index)
-  end
-  return c >= 0xD800 and c <= 0xDFFF
-end
-
-function Char.__inherits__()
-  return { System.IComparable, System.IComparable_1(Char), System.IEquatable_1(Char) }
-end
-
-System.defStc("System.Char", Char)
+})
 
 local ValueType = System.ValueType
 local charMetaTable = setmetatable({ __index = ValueType, __call = Char.default }, ValueType)

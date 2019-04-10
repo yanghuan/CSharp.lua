@@ -245,9 +245,10 @@ local Dictionary = {
     else
       local equals = EqualityComparer_1(this.__genericTValue__).getDefault().Equals
         for _, v in pairs(this) do
-          if v == null then v = nil end
-          if equals(value, v ) then
-            return true
+          if v ~= null then
+            if equals(value, v ) then
+              return true
+            end
           end
       end
     end

@@ -516,7 +516,7 @@ Array = {
     end
   end,
   CreateInstance = function (elementType, length)
-    return buildArray(Array(elementType.c), length)
+    return buildArray(Array(elementType[1]), length)
   end,
   Empty = function (T)
     local t = emptys[T]
@@ -632,7 +632,7 @@ Array = {
     return -1
   end,
   ForEach = function (t, action)
-    if action == null then throw(ArgumentNullException("action")) end
+    if action == nil then throw(ArgumentNullException("action")) end
     local version = t.version
     for i = 1, #t do
       if version ~= t.version then

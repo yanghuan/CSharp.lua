@@ -56,7 +56,7 @@ local Int = define("System.Int", {
   GetHashCode = identityFn,
   
   CompareToObj = function (this, v)
-    if v == null then return 1 end
+    if v == nil then return 1 end
     if type(v) ~= "number" then
       throw(ArgumentException("Arg_MustBeInt"))
     end

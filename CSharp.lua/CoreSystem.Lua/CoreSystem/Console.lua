@@ -26,43 +26,35 @@ local string = string
 local byte = string.byte
 local char = string.char
 
-local Console = {}
-
-function Console.Read()
-  local ch = read(stdin, 1)
-  return byte(ch)
-end
-
-function Console.ReadLine()
-  return read(stdin)
-end
-
-function Console.Write(v, ...)
+local function getWriteValue(v, ...)
   if select("#", ...) ~= 0 then
     v = v:Format(...)
-  else
-    v = v:ToString()      
-  end
-  write(stdout, v)     
-end
-
-function Console.WriteChar(v)
-  write(stdout, char(v))     
-end
-
-function Console.WriteLine(v, ...)
-  if select("#", ...) ~= 0 then
-    v = v:Format(...)
-  elseif v ~= nil then 
+  elseif v ~= nil then
     v = v:ToString()      
   else
     v = ""
   end
-  write(stdout, v, "\n")     
+  return v
 end
 
-function Console.WriteLineChar(v)
-  write(stdout, char(v), "\n")     
-end
-
-System.define("System.Console", Console)
+System.define("System.Console", {
+  Read = function ()
+    local ch = read(stdin, 1)
+    return byte(ch)
+  end,
+  ReadLine = function ()
+    return read(stdin)
+  end,
+  Write = function (v, ...)
+    write(stdout, getWriteValue(v, ...))     
+  end,
+  WriteChar = function (v)
+    write(stdout, char(v))     
+  end,
+  WriteLine = function (v, ...)
+    write(stdout, getWriteValue(v, ...), "\n")     
+  end,
+  WriteLineChar = function (v)
+    write(stdout, char(v), "\n")     
+  end
+})

@@ -43,126 +43,30 @@ local Int = System.Int
 local Number = System.Number
 local ValueType = System.ValueType
 
+local assert = assert
 local type = type
+local setmetatable = setmetatable
 local getmetatable = getmetatable
 local select = select
 local unpack = table.unpack
 local floor = math.floor
 
-local Type = {}
-
-local NumberType = {
-  __index = Type,
-  __eq = function (a, b)
-    local c1, c2 = a.c, b.c
-    if c1 == c2 then
-      return true
-    end
-    if c1 == Number or c2 == Number then
-      return true
-    end
-    return false
-  end
-}
-
-local function newNumberType(c)
-  return setmetatable({ c = c }, NumberType)
-end
-
-local types = {
-  [Char] = newNumberType(Char),
-  [SByte] = newNumberType(SByte),
-  [Byte] = newNumberType(Byte),
-  [Int16] = newNumberType(Int16),
-  [UInt16] = newNumberType(UInt16),
-  [Int32] = newNumberType(Int32),
-  [UInt32] = newNumberType(UInt32),
-  [Int64] = newNumberType(Int64),
-  [UInt64] = newNumberType(UInt64),
-  [Single] = newNumberType(Single),
-  [Double] = newNumberType(Double),
-  [Int] = newNumberType(Int),
-  [Number] = newNumberType(Number),
-}
-
-local createType = System.config.customTypeOf or function(cls) return setmetatable({ c = cls }, Type) end
-
-local function typeof(cls)
-  assert(cls)
-  local type = types[cls]
-  if type == nil then
-    type = createType(cls)
-    types[cls] = type
-  end
-  return type
-end
-
-local function getType(obj)
-  return typeof(getmetatable(obj))
-end
-
-System.Object.GetType = getType
-System.typeof = typeof
-
+local typeof
 local function isGenericName(name)
   return name:byte(#name) == 93
-end
-
-function Type.getIsGenericType(this)
-  return isGenericName(this.c.__name__)
-end
-
-function Type.MakeGenericType(this, ...)
-  local args = { ... }
-  for i = 1, #args do
-    args[i] = args[i].c
-  end
-  return typeof(this.c(unpack(args)))
-end
-
-function Type.getIsEnum(this)
-  return this.c.class == "E"
-end
-
-function Type.getName(this)
-  local name = this.name
-  if name == nil then
-    local clsName = this.c.__name__
-    local pattern = isGenericName(clsName) and "^.*()%.(.*)%[.+%]$" or "^.*()%.(.*)$"
-    name = clsName:gsub(pattern, "%2")
-    this.name = name
-  end
-  return name
-end
-
-function Type.getFullName(this)
-  return this.c.__name__
-end
-
-function Type.getNamespace(this)
-  local namespace = this.namespace
-  if namespace == nil then
-    local clsName = this.c.__name__
-    local pattern = isGenericName(clsName) and "^(.*)()%..*%[.+%]$" or "^(.*)()%..*$"
-    namespace = clsName:gsub(pattern, "%1")
-    this.namespace = namespace
-  end
-  return namespace
 end
 
 local function getBaseType(this)
   local baseType = this.baseType
   if baseType == nil then
-    local baseCls = getmetatable(this.c)
+    local baseCls = getmetatable(this[1])
     if baseCls ~= nil then
       baseType = typeof(baseCls)
       this.baseType = baseType
     end
-  end 
+  end
   return baseType
 end
-
-Type.getBaseType = getBaseType
 
 local function isSubclassOf(this, c)
   local p = this
@@ -178,26 +82,20 @@ local function isSubclassOf(this, c)
   return false
 end
 
-Type.IsSubclassOf = isSubclassOf
-
 local function getIsInterface(this)
-  return this.c.class == "I"
+  return this[1].class == "I"
 end
-
-Type.getIsInterface = getIsInterface
 
 local function getIsValueType(this)
-  return this.c.class == "S"
+  return this[1].class == "S"
 end
-
-Type.getIsValueType = getIsValueType
 
 local function getInterfaces(this)
   local interfaces = this.interfaces
   if interfaces == nil then
     interfaces = arrayFromTable({}, Type, true)
     local count = 1
-    local p = this.c
+    local p = this[1]
     repeat
       local interfacesCls = p.interface
       if interfacesCls ~= nil then
@@ -212,8 +110,6 @@ local function getInterfaces(this)
   end
   return interfaces
 end
-
-Type.getInterfaces = getInterfaces
 
 local function implementInterface(this, ifaceType)
   local t = this
@@ -246,42 +142,137 @@ local function isAssignableFrom(this, c)
   end
 end 
 
-Type.IsAssignableFrom = isAssignableFrom
-
-function Type.IsInstanceOfType(this, obj)
-  if obj == nil then
-    return false 
-  end
-  return isAssignableFrom(this, obj:GetType())
-end
-
-function Type.ToString(this)
-  return this.c.__name__
-end
-
-function Type.GetTypeFrom(typeName, throwOnError, ignoreCase)
-  if typeName == nil then
-    throw(ArgumentNullException("typeName"))
-  end
-  if #typeName == 0 then
+local Type = System.define("System.Type", {
+  Equals = System.equals,
+  getIsGenericType = function (this)
+    return isGenericName(this[1].__name__)
+  end,
+  MakeGenericType = function (this, ...)
+    local args = { ... }
+    for i = 1, #args do
+      args[i] = args[i][1]
+    end
+    return typeof(this[1](unpack(args)))
+  end,
+  getIsEnum = function (this)
+    return this[1].class == "E"
+  end,
+  getName = function (this)
+    local name = this.name
+    if name == nil then
+      local clsName = this[1].__name__
+      local pattern = isGenericName(clsName) and "^.*()%.(.*)%[.+%]$" or "^.*()%.(.*)$"
+      name = clsName:gsub(pattern, "%2")
+      this.name = name
+    end
+    return name
+  end,
+  getFullName = function (this)
+    return this[1].__name__
+  end,
+  getNamespace = function (this)
+    local namespace = this.namespace
+    if namespace == nil then
+      local clsName = this[1].__name__
+      local pattern = isGenericName(clsName) and "^(.*)()%..*%[.+%]$" or "^(.*)()%..*$"
+      namespace = clsName:gsub(pattern, "%1")
+      this.namespace = namespace
+    end
+    return namespace
+  end,
+  getBaseType = getBaseType,
+  IsSubclassOf = isSubclassOf,
+  getIsInterface = getIsInterface,
+  getIsValueType = getIsValueType,
+  getInterfaces = getInterfaces,
+  IsAssignableFrom = isAssignableFrom,
+  IsInstanceOfType = function (this, obj)
+    if obj == nil then
+      return false 
+    end
+    return isAssignableFrom(this, obj:GetType())
+  end,
+  ToString = function (this)
+    return this[1].__name__
+  end,
+  GetTypeFrom = function (typeName, throwOnError, ignoreCase)
+    if typeName == nil then
+      throw(ArgumentNullException("typeName"))
+    end
+    if #typeName == 0 then
+      if throwOnError then
+        throw(TypeLoadException("Arg_TypeLoadNullStr"))
+      end
+      return nil
+    end
+    assert(not ignoreCase, "ignoreCase is not support")
+    local cls = getClass(typeName)
+    if cls ~= nil then
+      return typeof(cls)
+    end
     if throwOnError then
-      throw(TypeLoadException("Arg_TypeLoadNullStr"))
+      throw(TypeLoadException(typeName .. ": failed to load."))
     end
     return nil
   end
-  assert(not ignoreCase, "ignoreCase is not support")
-  local cls = getClass(typeName)
-  if cls ~= nil then
-    return typeof(cls)
+})
+
+local NumberType = {
+  __index = Type,
+  __eq = function (a, b)
+    local c1, c2 = a[1], b[1]
+    if c1 == c2 then
+      return true
+    end
+    if c1 == Number or c2 == Number then
+      return true
+    end
+    return false
   end
-  if throwOnError then
-    throw(TypeLoadException(typeName .. ": failed to load."))
-  end
-  return nil
+}
+
+local function newNumberType(c)
+  return setmetatable({ c }, NumberType)
 end
 
-Type.Equals = System.equals
-System.define("System.Type", Type)
+local types = {
+  [Char] = newNumberType(Char),
+  [SByte] = newNumberType(SByte),
+  [Byte] = newNumberType(Byte),
+  [Int16] = newNumberType(Int16),
+  [UInt16] = newNumberType(UInt16),
+  [Int32] = newNumberType(Int32),
+  [UInt32] = newNumberType(UInt32),
+  [Int64] = newNumberType(Int64),
+  [UInt64] = newNumberType(UInt64),
+  [Single] = newNumberType(Single),
+  [Double] = newNumberType(Double),
+  [Int] = newNumberType(Int),
+  [Number] = newNumberType(Number),
+}
+
+local customTypeOf = System.config.customTypeOf
+
+function typeof(cls)
+  assert(cls)
+  local type = types[cls]
+  if type == nil then
+    if customTypeOf then
+      type = customTypeOf(cls)
+    else
+      type = setmetatable({ cls }, Type)
+    end
+    types[cls] = type
+  end
+  return type
+end
+
+local function getType(obj)
+  return typeof(getmetatable(obj))
+end
+
+System.typeof = typeof
+System.Object.GetType = getType
 
 local function isInterfaceOf(t, ifaceType)
   repeat
@@ -425,8 +416,8 @@ function System.CreateInstance(type, ...)
   if len == 1 then
     local args = ...
     if System.isArrayLike(args) then
-      return type.c(unpack(args))
+      return type[1](unpack(args))
     end
   end
-  return type.c(...)
+  return type[1](...)
 end

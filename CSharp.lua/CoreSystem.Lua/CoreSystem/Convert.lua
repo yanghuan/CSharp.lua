@@ -210,7 +210,7 @@ local function toDateTime(value)
 end
 
 local function toBaseType(ic, targetType)
-  local cls = targetType.c
+  local cls = targetType[1]
   if cls == Boolean then return ic:ToBoolean() end
   if cls == Char then return ic:ToChar() end
   if cls == SByte then return ic:ToSByte() end

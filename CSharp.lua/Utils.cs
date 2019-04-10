@@ -278,6 +278,10 @@ namespace CSharpLua {
       return modifiers.Any(i => i.IsKind(SyntaxKind.OutKeyword) || i.IsKind(SyntaxKind.RefKeyword));
     }
 
+    public static bool IsOutOrRef(this SyntaxToken token) {
+      return token.IsKind(SyntaxKind.OutKeyword) || token.IsKind(SyntaxKind.RefKeyword);
+    }
+
     public static bool IsStringType(this ITypeSymbol type) {
       return type.SpecialType == SpecialType.System_String;
     }

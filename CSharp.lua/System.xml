@@ -124,7 +124,7 @@ limitations under the License.
       <class name="Math" Name="math" />
       <class name="Activator" >
         <method name="CreateInstance" ArgCount="0" Template="{^0}()" />
-        <method name="CreateInstance" ArgCount="1" Template="{0}.c()" />
+        <method name="CreateInstance" ArgCount="1" Template="{0}[1]()" />
         <method name="CreateInstance" ArgCount="2" Template="System.CreateInstance({0}, {*1})" />
       </class>
       <class name="Tuple">

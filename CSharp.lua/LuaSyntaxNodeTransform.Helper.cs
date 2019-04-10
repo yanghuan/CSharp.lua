@@ -1120,7 +1120,89 @@ namespace CSharpLua {
       }
     }
 
-    private bool IsFixedValueExpression(ExpressionSyntax expression, out Optional<object> limitConst) {
+    private sealed class SymbolAssignmentSearcher : LuaSyntaxSearcher {
+      private readonly LuaSyntaxGenerator generator_;
+      private readonly ISymbol symbol_;
+
+      public SymbolAssignmentSearcher(LuaSyntaxGenerator generator, ISymbol symbol) {
+        generator_ = generator;
+        symbol_ = symbol;
+      }
+
+      public override void VisitAssignmentExpression(AssignmentExpressionSyntax node) {
+        var semanticModel = generator_.GetSemanticModel(node.SyntaxTree);
+        var symbol = semanticModel.GetSymbolInfo(node.Left).Symbol;
+        if (symbol == symbol_) {
+          Found();
+        }
+
+        if (node.Right is AssignmentExpressionSyntax) {
+          Visit(node.Right);
+        }
+      }
+
+      public override void VisitInvocationExpression(InvocationExpressionSyntax node) {
+        var semanticModel = generator_.GetSemanticModel(node.SyntaxTree);
+
+        switch (symbol_.Kind) {
+          case SymbolKind.Local:
+          case SymbolKind.Parameter:
+          case SymbolKind.Field: {
+            foreach (var argument in node.ArgumentList.Arguments) {
+              if (argument.RefKindKeyword.IsOutOrRef()) {
+                var symbol = semanticModel.GetSymbolInfo(argument.Expression).Symbol;
+                if (symbol == symbol_) {
+                  Found();
+                }
+              }
+            }
+            break;
+          }
+        }
+
+        if (symbol_.Kind != SymbolKind.Local && symbol_.Kind != SymbolKind.Parameter) {
+          var methodSymbol = (IMethodSymbol)semanticModel.GetSymbolInfo(node).Symbol;
+          if (methodSymbol != null) {
+            var syntaxReference = methodSymbol.DeclaringSyntaxReferences.FirstOrDefault();
+            if (syntaxReference != null) {
+              Visit(syntaxReference.GetSyntax());
+            }
+          }
+        }
+      }
+    }
+
+    private bool IsSymbolAssignmentExists(ISymbol symbol, SyntaxNode root) {
+      return new SymbolAssignmentSearcher(generator_, symbol).Find(root);
+    }
+
+    private bool IsMemberAccessExpressionAssignmentExists(MemberAccessExpressionSyntax memberAccess, SyntaxNode node) {
+      bool isExists = false;
+      ExpressionSyntax expression = memberAccess.Expression;
+      var expressionSymbol = semanticModel_.GetSymbolInfo(expression).Symbol;
+      if (expressionSymbol != null) {
+        isExists = IsSymbolAssignmentExists(expressionSymbol, node);
+        if (!isExists && expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+          isExists = IsMemberAccessExpressionAssignmentExists((MemberAccessExpressionSyntax)expression, node);
+        }
+      }
+      return isExists;
+    }
+
+    private bool IsFixedValueSymbol(ISymbol symbol, ExpressionSyntax expression, ForStatementSyntax node) {
+      bool isReadOnly;
+      if (IsSymbolAssignmentExists(symbol, node)) {
+        isReadOnly = false;
+      } else if (expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+        var memberAccess = (MemberAccessExpressionSyntax)expression;
+        isReadOnly = !IsMemberAccessExpressionAssignmentExists(memberAccess, node);
+      } else {
+        isReadOnly = false;
+      }
+      return isReadOnly;
+    }
+
+    private bool IsFixedValueExpression(ExpressionSyntax expression, ForStatementSyntax node, out Optional<object> limitConst) {
       limitConst = semanticModel_.GetConstantValue(expression);
       if (limitConst.HasValue) {
         return true;
@@ -1128,24 +1210,35 @@ namespace CSharpLua {
 
       if (expression is BinaryExpressionSyntax binaryExpression) {
         Optional<object> _ = default;
-        return IsFixedValueExpression(binaryExpression.Right, out _) && IsFixedValueExpression(binaryExpression.Left, out _);
+        return IsFixedValueExpression(binaryExpression.Right, node, out _) && IsFixedValueExpression(binaryExpression.Left, node, out _);
       } else {
         bool isReadOnly = false;
         var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
         if (symbol != null) {
-          if (symbol.Kind == SymbolKind.Field) {
-            isReadOnly = ((IFieldSymbol)symbol).IsReadOnly;
-          } else if (symbol.Kind == SymbolKind.Property) {
-            var propertySymbol = (IPropertySymbol)symbol;
-            isReadOnly = propertySymbol.IsReadOnly && IsPropertyField(propertySymbol);
+          switch (symbol.Kind) {
+            case SymbolKind.Local:
+            case SymbolKind.Parameter: {
+              isReadOnly = !IsSymbolAssignmentExists(symbol, node);
+              break;
+            }
+            case SymbolKind.Field: {
+              var fieldSymbol = (IFieldSymbol)symbol;
+              isReadOnly = fieldSymbol.IsReadOnly || IsFixedValueSymbol(symbol, expression, node);
+              break;
+            }
+            case SymbolKind.Property: {
+              var propertySymbol = (IPropertySymbol)symbol;
+              isReadOnly = (propertySymbol.IsReadOnly && IsPropertyField(propertySymbol)) || IsFixedValueSymbol(symbol, expression, node);
+              break;
+            }
           }
         }
         return isReadOnly;
       }
     }
 
-    private LuaExpressionSyntax GetFixedValueExpression(ExpressionSyntax expression) {
-      if (IsFixedValueExpression(expression, out var constantValue)) {
+    private LuaExpressionSyntax GetFixedValueExpression(ExpressionSyntax expression, ForStatementSyntax node) {
+      if (IsFixedValueExpression(expression, node, out var constantValue)) {
         if (constantValue.HasValue) {
           return Convert.ToDouble(constantValue.Value);
         }
@@ -1183,7 +1276,7 @@ namespace CSharpLua {
         goto Fail;
       }
 
-      var limitExpression = GetFixedValueExpression(condition.Right);
+      var limitExpression = GetFixedValueExpression(condition.Right, node);
       if (limitExpression == null) {
         goto Fail;
       }
@@ -1225,7 +1318,7 @@ namespace CSharpLua {
             goto Fail;
           }
 
-          stepExpression = GetFixedValueExpression(assignment.Right);
+          stepExpression = GetFixedValueExpression(assignment.Right, node);
           if (stepExpression == null) {
             goto Fail;
           }
