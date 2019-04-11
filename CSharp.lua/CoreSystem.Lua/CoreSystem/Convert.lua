@@ -159,7 +159,7 @@ local function objectToInt32(v)
 end
 
 local function toInt32(value)
-  return toNumber(value, -2147483648, 2147483647, ParseUInt16, objectToInt32) 
+  return toNumber(value, -2147483648, 2147483647, ParseInt32, objectToInt32) 
 end
 
 local function objectToUInt32(v)

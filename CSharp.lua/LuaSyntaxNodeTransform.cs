@@ -2131,7 +2131,7 @@ namespace CSharpLua {
 
       if (symbol.Kind == SymbolKind.NamedType) {
         var expressionSymbol = semanticModel_.GetSymbolInfo(node.Expression).Symbol;
-        if (expressionSymbol.Kind == SymbolKind.Namespace) {
+        if (expressionSymbol.Kind == SymbolKind.Namespace || expressionSymbol.Kind == SymbolKind.NamedType) {
           return node.Name.Accept(this);
         }
       }
