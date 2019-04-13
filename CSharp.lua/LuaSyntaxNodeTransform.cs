@@ -1821,6 +1821,10 @@ namespace CSharpLua {
 
       var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       if (symbol != null) {
+        if (generator_.IsConditionalAttributeIgnore(symbol)) {
+          return LuaExpressionSyntax.EmptyExpression;
+        }
+
         var codeTemplateExpression = CheckCodeTemplateInvocationExpression(symbol, node);
         if (codeTemplateExpression != null) {
           return codeTemplateExpression;

@@ -61,7 +61,7 @@ Options
           if (atts == null && cmds.ContainsKey("-a")) {
             atts = string.Empty;
           }
-          string csc = GetCSCArgument(cmds);
+          string csc = GetCSCArgument(args);
           bool isExportMetadata = cmds.ContainsKey("-metadata");
           bool isModule = cmds.ContainsKey("-module");
           Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts) {
@@ -108,11 +108,10 @@ Options
       return argumnets_.Contains(key);
     }
 
-    private static string GetCSCArgument(Dictionary<string, string[]> cmds) {
-      if (cmds.ContainsKey("-csc")) {
-        int index = cmds.Keys.IndexOf(i => i == "-csc");
-        Contract.Assert(index != -1);
-        var remains = cmds.Keys.Skip(index + 1);
+    private static string GetCSCArgument(string[] args) {
+      int index = args.IndexOf("-csc");
+      if (index != -1) {
+        var remains = args.Skip(index + 1);
         int end = remains.IndexOf(IsArgumentKey);
         if (end != -1) {
           remains = remains.Take(end);

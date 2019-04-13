@@ -931,16 +931,24 @@ namespace CSharpLua {
       return symbol.Name == "CompilerServices" && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
     }
 
+    public static bool HasCompilerGeneratedAttribute(this ImmutableArray<AttributeData> attrs) {
+      return attrs.Any(i => i.AttributeClass.IsCompilerGeneratedAttribute());
+    }
+
     public static bool IsCompilerGeneratedAttribute(this INamedTypeSymbol symbol) {
       return symbol.Name == "CompilerGeneratedAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
     }
 
-    public static bool IsSystemObjectOrValueType(this INamedTypeSymbol symbol) {
-      return symbol.SpecialType == SpecialType.System_Object || symbol.SpecialType == SpecialType.System_ValueType;
+    private static bool IsSystemDiagnostics(this INamespaceSymbol symbol) {
+      return symbol.Name == "Diagnostics" && symbol.ContainingNamespace.Name == "System";
     }
 
-    public static bool HasCompilerGeneratedAttribute(this ImmutableArray<AttributeData> attrs) {
-      return attrs.Any(i => i.AttributeClass.IsCompilerGeneratedAttribute());
+    public static bool IsConditionalAttribute(this INamedTypeSymbol symbol) {
+      return symbol.Name == "ConditionalAttribute" && symbol.ContainingNamespace.IsSystemDiagnostics();
+    }
+
+    public static bool IsSystemObjectOrValueType(this INamedTypeSymbol symbol) {
+      return symbol.SpecialType == SpecialType.System_Object || symbol.SpecialType == SpecialType.System_ValueType;
     }
 
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {

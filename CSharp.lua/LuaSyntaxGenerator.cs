@@ -96,6 +96,7 @@ namespace CSharpLua {
 
     private CSharpCompilation compilation_;
     public XmlMetaProvider XmlMetaProvider { get; }
+    public CSharpCommandLineArguments CommandLineArguments { get; }
     public SettingInfo Setting { get; set; }
     private HashSet<string> exportEnums_ = new HashSet<string>();
     private HashSet<INamedTypeSymbol> ignoreExportTypes_ = new HashSet<INamedTypeSymbol>();
@@ -113,8 +114,8 @@ namespace CSharpLua {
       };
     }
 
-    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCompilationOptions options, IEnumerable<string> metas, SettingInfo setting) {
-      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, options.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
+    public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCommandLineArguments arguments, IEnumerable<string> metas, SettingInfo setting) {
+      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, arguments.CompilationOptions.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
         if (!result.Success) {
@@ -125,6 +126,7 @@ namespace CSharpLua {
       }
       compilation_ = compilation;
       XmlMetaProvider = new XmlMetaProvider(metas);
+      CommandLineArguments = arguments;
       Setting = setting;
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
@@ -259,6 +261,22 @@ namespace CSharpLua {
     private bool IsFromModuleOnly(ISymbol symbol) {
       var luaModuleLibs = Setting.LuaModuleLibs;
       return luaModuleLibs != null && luaModuleLibs.Contains(symbol.ContainingAssembly.Name);
+    }
+
+    internal bool IsConditionalAttributeIgnore(IMethodSymbol symbol) {
+      if (symbol.ReturnsVoid) {
+        foreach (var attrbute in symbol.GetAttributes()) {
+          var attributeSymbol = attrbute.AttributeClass;
+          if (attributeSymbol.IsConditionalAttribute()) {
+            string conditionString = (string)attrbute.ConstructorArguments.First().Value;
+            bool has = CommandLineArguments.ParseOptions.PreprocessorSymbolNames.Contains(conditionString);
+            if (has) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
     }
 
     private void CheckExportEnums() {
