@@ -384,23 +384,17 @@ namespace CSharpLua {
       }
     }
 
-    public static bool HasNoFiledAttribute(this SyntaxTrivia trivia) {
-      return trivia.ToString().Contains(LuaDocumentStatement.kNoField);
-    }
-
-    private static bool HasMetadataAttribute(this SyntaxTrivia trivia) {
-      return trivia.ToString().Contains(LuaDocumentStatement.kMetadata);
-    }
-
     public static bool HasMetadataAttribute(this ISymbol symbol) {
       var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
       if (syntaxReference != null) {
-        var documentTrivia = syntaxReference.GetSyntax().GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
-        if (documentTrivia != null && documentTrivia.HasMetadataAttribute()) {
-          return true;
-        }
+        return syntaxReference.GetSyntax().HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Metadata);
       }
       return false;
+    }
+
+    public static bool HasCSharpLuaAttribute(this SyntaxNode node, LuaDocumentStatement.AttributeFlags attribute) {
+      var documentTrivia = node.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
+      return documentTrivia != null && documentTrivia.ToString().Contains(LuaDocumentStatement.ToString(attribute));
     }
 
     public static bool IsAssignment(this SyntaxKind kind) {

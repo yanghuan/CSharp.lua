@@ -216,8 +216,6 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaDocumentStatement : LuaStatementSyntax {
     private const string kAttributePrefix = "@CSharpLua.";
-    public const string kNoField = kAttributePrefix + nameof(AttributeFlags.NoField);
-    public const string kMetadata = kAttributePrefix + nameof(AttributeFlags.Metadata);
 
     [Flags]
     public enum AttributeFlags {
@@ -312,6 +310,10 @@ namespace CSharpLua.LuaAst {
 
     public void UnIgnore() {
       UnAttribute(AttributeFlags.Ignore);
+    }
+
+    public static string ToString(AttributeFlags attribute) {
+      return kAttributePrefix + attribute.ToString();
     }
 
     internal override void Render(LuaRenderer renderer) {

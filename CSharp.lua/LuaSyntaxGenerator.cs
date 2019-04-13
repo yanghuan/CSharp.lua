@@ -1339,8 +1339,7 @@ namespace CSharpLua {
             }
             bool isField = !hasGet && !hasSet;
             if (isField) {
-              var documentTrivia = property.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
-              if (documentTrivia != null && documentTrivia.HasNoFiledAttribute()) {
+              if (property.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.NoField)) {
                 isField = false;
               }
             }
