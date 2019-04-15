@@ -459,6 +459,9 @@ if version < 5.3 then
     if y == 0 then
       throw(System.DivideByZeroException(), 1)
     end
+    if x < 0 and y > 0 then
+      y = -y
+    end
     return x % y
   end
 
@@ -651,7 +654,7 @@ else
   function System.sl(x, y) return x << y end
   function System.sr(x, y) return x >> y end
   function System.div(x, y) return x // y end
-  function System.mod(x, y) return x % y end
+  function System.mod(x, y) if x < 0 and y > 0 then y = -y end return x % y end
   
   function System.bnotOfNull(x) 
     if x == nil 
