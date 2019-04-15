@@ -960,8 +960,6 @@ namespace CSharpLua {
     private void BuildOperatorMethodDeclaration(BaseMethodDeclarationSyntax node) {
       var symbol = semanticModel_.GetDeclaredSymbol(node);
       methodInfos_.Push(new MethodInfo(symbol));
-
-      bool isStatic = symbol.IsStatic;
       bool isPrivate = symbol.IsPrivate();
 
       LuaIdentifierNameSyntax name = GetMemberName(symbol);
@@ -1033,7 +1031,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitLocalFunctionStatement(LocalFunctionStatementSyntax node) {
-      var result = BuildMethodDeclaration(node, default(SyntaxList<AttributeListSyntax>), node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
+      var result = BuildMethodDeclaration(node, default, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
       var body = FindParentMethodBody(node);
       bool isOnlyOne = body == null || body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
       if (isOnlyOne) {

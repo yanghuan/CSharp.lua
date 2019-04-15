@@ -455,8 +455,8 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node) {
       GetTypeDeclarationName(node, out var name, out var typeSymbol);
-      LuaInterfaceDeclarationSyntax interfaceDeclaration = new LuaInterfaceDeclarationSyntax(name);
-      var symbol = VisitTypeDeclaration(typeSymbol, node, interfaceDeclaration);
+      var interfaceDeclaration = new LuaInterfaceDeclarationSyntax(name);
+      VisitTypeDeclaration(typeSymbol, node, interfaceDeclaration);
       return interfaceDeclaration;
     }
 
@@ -698,7 +698,7 @@ namespace CSharpLua {
           return new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.False);
         }
         case SpecialType.System_Char: {
-          return new LuaCharacterLiteralExpression(default(char));
+          return new LuaCharacterLiteralExpression(default);
         }
         case SpecialType.System_SByte:
         case SpecialType.System_Byte:
@@ -1835,11 +1835,16 @@ namespace CSharpLua {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       var invocation = CheckInvocationExpression(symbol, node, expression);
       invocation.AddArguments(arguments);
-      if (refOrOutArguments.Count > 0) {
-        return BuildInvokeRefOrOut(node, invocation, refOrOutArguments);
-      } else {
-        return invocation;
+      LuaExpressionSyntax resultExpression = invocation;
+      if (symbol != null && symbol.GetAttributes().HasAggressiveInliningAttribute()) {
+        if (TryInliningInvocationExpression(symbol, invocation, refOrOutArguments, out var newExpression)) {
+          resultExpression = newExpression;
+        }
       }
+      if (refOrOutArguments.Count > 0) {
+        resultExpression = BuildInvokeRefOrOut(node, resultExpression, refOrOutArguments);
+      }
+      return resultExpression;
     }
 
     private LuaInvocationExpressionSyntax BuildExtensionMethodInvocation(IMethodSymbol reducedFrom, LuaExpressionSyntax expression) {

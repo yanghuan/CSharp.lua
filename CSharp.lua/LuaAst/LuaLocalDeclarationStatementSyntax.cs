@@ -26,6 +26,14 @@ namespace CSharpLua.LuaAst {
     public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new LuaSyntaxList<LuaIdentifierNameSyntax>();
     public LuaEqualsValueClauseListSyntax Initializer { get; set; }
 
+    public LuaLocalVariablesStatementSyntax() {
+    }
+
+    public LuaLocalVariablesStatementSyntax(IEnumerable<LuaIdentifierNameSyntax> variables, IEnumerable<LuaExpressionSyntax> valuse) {
+      Variables.AddRange(variables);
+      Initializer = new LuaEqualsValueClauseListSyntax(valuse);
+    }
+
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
@@ -34,6 +42,14 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaEqualsValueClauseListSyntax : LuaSyntaxNode {
     public string EqualsToken => Tokens.Equals;
     public readonly LuaSyntaxList<LuaExpressionSyntax> Values = new LuaSyntaxList<LuaExpressionSyntax>();
+
+    public LuaEqualsValueClauseListSyntax() {
+
+    }
+
+    public LuaEqualsValueClauseListSyntax(IEnumerable<LuaExpressionSyntax> values) {
+      Values.AddRange(values);
+    }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);

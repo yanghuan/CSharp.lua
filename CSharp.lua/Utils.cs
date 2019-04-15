@@ -17,11 +17,11 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -937,6 +937,26 @@ namespace CSharpLua {
 
     public static bool IsCompilerGeneratedAttribute(this INamedTypeSymbol symbol) {
       return symbol.Name == "CompilerGeneratedAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
+    }
+
+    public static bool HasAggressiveInliningAttribute(this ImmutableArray<AttributeData> attrs) {
+      return attrs.Any(IsAggressiveInliningAttribute);
+    }
+
+    private static bool IsAggressiveInliningAttribute(this AttributeData attributeData) {
+      if (attributeData.AttributeClass.IsMethodImplAttribute()) {
+        foreach (var constructorArgument in attributeData.ConstructorArguments) {
+          if (constructorArgument.Value is int v) {
+            var options = (MethodImplOptions)v;
+            return options.HasFlag(MethodImplOptions.AggressiveInlining);
+          }
+        }
+      }
+      return false;
+    }
+
+    private static bool IsMethodImplAttribute(this INamedTypeSymbol symbol) {
+      return symbol.Name == "MethodImplAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
     }
 
     private static bool IsSystemDiagnostics(this INamespaceSymbol symbol) {
