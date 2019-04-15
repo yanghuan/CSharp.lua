@@ -29,9 +29,11 @@ namespace CSharpLua.LuaAst {
     public LuaLocalVariablesStatementSyntax() {
     }
 
-    public LuaLocalVariablesStatementSyntax(IEnumerable<LuaIdentifierNameSyntax> variables, IEnumerable<LuaExpressionSyntax> valuse) {
+    public LuaLocalVariablesStatementSyntax(IEnumerable<LuaIdentifierNameSyntax> variables, IEnumerable<LuaExpressionSyntax> valuse = null) {
       Variables.AddRange(variables);
-      Initializer = new LuaEqualsValueClauseListSyntax(valuse);
+      if (valuse != null) {
+        Initializer = new LuaEqualsValueClauseListSyntax(valuse);
+      }
     }
 
     internal override void Render(LuaRenderer renderer) {

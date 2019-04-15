@@ -169,6 +169,13 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaSequenceListExpressionSyntax : LuaExpressionSyntax {
     public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
 
+    public LuaSequenceListExpressionSyntax() {
+    }
+
+    public LuaSequenceListExpressionSyntax(IEnumerable<LuaExpressionSyntax> expressions) {
+      Expressions.AddRange(expressions);
+    }
+
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }

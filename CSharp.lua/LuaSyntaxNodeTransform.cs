@@ -32,6 +32,8 @@ namespace CSharpLua {
     private sealed class MethodInfo {
       public IMethodSymbol Symbol { get; }
       public IList<LuaExpressionSyntax> RefOrOutParameters { get; }
+      public bool IsInlining { get; set; }
+      public List<LuaIdentifierNameSyntax> InliningReturnVars { get; set; }
 
       public MethodInfo(IMethodSymbol symbol) {
         Symbol = symbol;
@@ -64,16 +66,16 @@ namespace CSharpLua {
       }
     }
 
-    private LuaSyntaxGenerator generator_;
+    private readonly LuaSyntaxGenerator generator_;
     private SemanticModel semanticModel_;
 
-    private Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
-    private Stack<TypeDeclarationInfo> typeDeclarations_ = new Stack<TypeDeclarationInfo>();
-    private Stack<LuaFunctionExpressionSyntax> functions_ = new Stack<LuaFunctionExpressionSyntax>();
-    private Stack<MethodInfo> methodInfos_ = new Stack<MethodInfo>();
-    private Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
-    private Stack<LuaIfStatementSyntax> ifStatements_ = new Stack<LuaIfStatementSyntax>();
-    private Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
+    private readonly Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
+    private readonly Stack<TypeDeclarationInfo> typeDeclarations_ = new Stack<TypeDeclarationInfo>();
+    private readonly Stack<LuaFunctionExpressionSyntax> functions_ = new Stack<LuaFunctionExpressionSyntax>();
+    private readonly Stack<MethodInfo> methodInfos_ = new Stack<MethodInfo>();
+    private readonly Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
+    private readonly Stack<LuaIfStatementSyntax> ifStatements_ = new Stack<LuaIfStatementSyntax>();
+    private readonly Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
     private int noImportTypeNameCounter_;
     public bool IsNoImportTypeName => noImportTypeNameCounter_ > 0;
     public bool IsNoneGenericTypeCounter => generator_.IsNoneGenericTypeCounter;
@@ -1314,36 +1316,53 @@ namespace CSharpLua {
       return block;
     }
 
-    public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
+    private LuaStatementSyntax InternalVisitReturnStatement(LuaExpressionSyntax expression) {
       LuaStatementSyntax result;
       if (CurFunction is LuaCheckReturnFunctionExpressionSyntax) {
-        LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
+        var returnStatement = new LuaMultipleReturnStatementSyntax();
         returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
-        if (node.Expression != null) {
-          var expression = VisitExpression(node.Expression);
+        if (expression != null) {
           returnStatement.Expressions.Add(expression);
         }
         result = returnStatement;
       } else {
         var curMethodInfo = CurMethodInfoOrNull;
         if (curMethodInfo != null && curMethodInfo.RefOrOutParameters.Count > 0) {
-          LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
-          if (node.Expression != null) {
-            var expression = VisitExpression(node.Expression);
-            returnStatement.Expressions.Add(expression);
+          if (curMethodInfo.IsInlining) {
+            var multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
+            multipleAssignment.Lefts.AddRange(curMethodInfo.InliningReturnVars);
+            if (expression != null) {
+              multipleAssignment.Rights.Add(expression);
+            }
+            multipleAssignment.Rights.AddRange(curMethodInfo.RefOrOutParameters);
+            result = multipleAssignment;
+          } else {
+            var returnStatement = new LuaMultipleReturnStatementSyntax();
+            if (expression != null) {
+              returnStatement.Expressions.Add(expression);
+            }
+            returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
+            result = returnStatement;
           }
-          returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
-          result = returnStatement;
         } else {
-          var expression = node.Expression != null ? VisitExpression(node.Expression) : null;
-          result = new LuaReturnStatementSyntax(expression);
+          if (curMethodInfo != null && curMethodInfo.IsInlining) {
+            Contract.Assert(curMethodInfo.InliningReturnVars.Count == 1);
+            result = new LuaAssignmentExpressionSyntax(curMethodInfo.InliningReturnVars.First(), expression);
+          } else {
+            result = new LuaReturnStatementSyntax(expression);
+          }
         }
       }
+      return result;
+    }
 
+    public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
+      var expression = node.Expression != null ? VisitExpression(node.Expression) : null;
+      var result = InternalVisitReturnStatement(expression);
       if (node.Parent.IsKind(SyntaxKind.Block) && node.Parent.Parent is MemberDeclarationSyntax) {
         var block = (BlockSyntax)node.Parent;
         if (block.Statements.Last() != node) {
-          LuaBlockStatementSyntax blockStatement = new LuaBlockStatementSyntax();
+          var blockStatement = new LuaBlockStatementSyntax();
           blockStatement.Statements.Add(result);
           result = blockStatement;
         }
@@ -1837,7 +1856,7 @@ namespace CSharpLua {
       invocation.AddArguments(arguments);
       LuaExpressionSyntax resultExpression = invocation;
       if (symbol != null && symbol.GetAttributes().HasAggressiveInliningAttribute()) {
-        if (TryInliningInvocationExpression(symbol, invocation, refOrOutArguments, out var newExpression)) {
+        if (TryInliningInvocationExpression(node, symbol, invocation, refOrOutArguments, out var newExpression)) {
           resultExpression = newExpression;
         }
       }
@@ -2317,7 +2336,7 @@ namespace CSharpLua {
 
     private sealed class GenericPlaceholder {
       public ITypeSymbol Symbol { get; }
-      private int index_;
+      private readonly int index_;
       public int TypeParameterIndex => index_ + 1;
       public bool IsTypeParameter => index_ != -1;
       public bool IsSwaped { get; private set; }

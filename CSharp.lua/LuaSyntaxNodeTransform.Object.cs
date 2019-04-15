@@ -600,37 +600,19 @@ namespace CSharpLua {
 
         var temp1 = GetTempIdentifier(node);
         var temp2 = isReturnVoid ? null : GetTempIdentifier(node);
-        LuaLocalVariablesStatementSyntax localVariables = new LuaLocalVariablesStatementSyntax();
+        var localVariables = new LuaLocalVariablesStatementSyntax();
         localVariables.Variables.Add(temp1);
         if (temp2 != null) {
           localVariables.Variables.Add(temp2);
         }
-        LuaEqualsValueClauseListSyntax initializer = new LuaEqualsValueClauseListSyntax();
+        var initializer = new LuaEqualsValueClauseListSyntax();
         initializer.Values.Add(invocationExpression);
         localVariables.Initializer = initializer;
 
-        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(temp1);
-        if (CurFunction is LuaCheckReturnFunctionExpressionSyntax) {
-          LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
-          returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
-          if (temp2 != null) {
-            returnStatement.Expressions.Add(temp2);
-          }
-          ifStatement.Body.Statements.Add(returnStatement);
-        } else {
-          if (curMethodInfo != null && curMethodInfo.RefOrOutParameters.Count > 0) {
-            LuaMultipleReturnStatementSyntax returnStatement = new LuaMultipleReturnStatementSyntax();
-            if (temp2 != null) {
-              returnStatement.Expressions.Add(temp2);
-            }
-            returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
-            ifStatement.Body.Statements.Add(returnStatement);
-          } else {
-            ifStatement.Body.Statements.Add(new LuaReturnStatementSyntax(temp2));
-          }
-        }
-
-        LuaStatementListSyntax statements = new LuaStatementListSyntax();
+        var ifStatement = new LuaIfStatementSyntax(temp1);
+        var statement = InternalVisitReturnStatement(temp2);
+        ifStatement.Body.Statements.Add(statement);
+        var statements = new LuaStatementListSyntax();
         statements.Statements.Add(localVariables);
         statements.Statements.Add(ifStatement);
         return statements;

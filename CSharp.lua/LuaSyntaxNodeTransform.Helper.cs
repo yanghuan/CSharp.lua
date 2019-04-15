@@ -30,7 +30,7 @@ namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform {
     private const int kMaxArrayInitializerCount = 225;
     private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
-    private Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
+    private readonly Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
     private int localMappingCounter_;
     private Stack<bool> checkeds_ = new Stack<bool>();
 
@@ -1123,7 +1123,7 @@ namespace CSharpLua {
     private sealed class SymbolAssignmentSearcher : LuaSyntaxSearcher {
       private readonly LuaSyntaxGenerator generator_;
       private readonly ISymbol symbol_;
-      private HashSet<IMethodSymbol> methods_ = new HashSet<IMethodSymbol>();
+      private readonly HashSet<IMethodSymbol> methods_ = new HashSet<IMethodSymbol>();
 
       public SymbolAssignmentSearcher(LuaSyntaxGenerator generator, ISymbol symbol) {
         generator_ = generator;
@@ -1487,15 +1487,12 @@ namespace CSharpLua {
       return new RecursionCallSearcher(generator_, symbol).Find(root);
     }
 
-    public bool TryInliningInvocationExpression(IMethodSymbol symbol, LuaInvocationExpressionSyntax invocation, List<LuaExpressionSyntax> refOrOutArguments, out LuaExpressionSyntax result) {
-      if (refOrOutArguments.Count > 0) {
-        goto Fail;
-      }
-
-      if (!symbol.ReturnsVoid) {
-        goto Fail;
-      }
-
+    public bool TryInliningInvocationExpression(
+      InvocationExpressionSyntax root,
+      IMethodSymbol symbol,
+      LuaInvocationExpressionSyntax invocation,
+      List<LuaExpressionSyntax> refOrOutArguments,
+      out LuaExpressionSyntax result) {
       if (symbol.IsOverridable()) {
         goto Fail;
       }
@@ -1523,11 +1520,16 @@ namespace CSharpLua {
       }
 
       List<LuaExpressionSyntax> refOrOutParameters = new List<LuaExpressionSyntax>();
-      MethodInfo methodInfo = new MethodInfo(symbol, refOrOutParameters);
+      MethodInfo methodInfo = new MethodInfo(symbol, refOrOutParameters) {
+        IsInlining = true,
+        InliningReturnVars = new List<LuaIdentifierNameSyntax>(),
+      };
+      if (!symbol.ReturnsVoid) {
+        methodInfo.InliningReturnVars.Add(GetTempIdentifier(root));
+      }
       methodInfos_.Push(methodInfo);
 
       var block = new LuaBlockStatementSyntax();
-      block.AddStatement(new LuaShortCommentStatement($" Inlining {symbol}"));
       blocks_.Push(block);
       if (invocation.Expression is LuaMemberAccessExpressionSyntax memberAccess) {
         if (memberAccess.IsObjectColon) {
@@ -1541,16 +1543,24 @@ namespace CSharpLua {
         var parameter = (LuaParameterSyntax)parameterNode.Accept(this);
         if (parameter.Identifier != LuaIdentifierNameSyntax.This) {
           parameters.Add(parameter.Identifier);
-        }
+          if (parameterNode.Modifiers.IsOutOrRef()) {
+            refOrOutParameters.Add(parameter.Identifier);
+            methodInfo.InliningReturnVars.Add(GetTempIdentifier(root));
+          }
+        } 
       }
       var parameterValues = invocation.ArgumentList.Arguments.Select(i => i.Expression).Where(i => i != LuaIdentifierNameSyntax.This);
       block.AddStatement(new LuaLocalVariablesStatementSyntax(parameters, parameterValues));
       var body = (LuaBlockSyntax)Visit(node.Body);
       block.Statements.AddRange(body.Statements);
       blocks_.Pop();
+      CurBlock.AddStatement(new LuaShortCommentStatement($" Inlining {symbol}"));
+      if (methodInfo.InliningReturnVars.Count > 0) {
+        CurBlock.AddStatement(new LuaLocalVariablesStatementSyntax(methodInfo.InliningReturnVars));
+      }
       CurBlock.AddStatement(block);
       methodInfos_.Pop();
-      result = LuaExpressionSyntax.EmptyExpression;
+      result = methodInfo.InliningReturnVars.Count > 0 ? new LuaSequenceListExpressionSyntax(methodInfo.InliningReturnVars) : LuaExpressionSyntax.EmptyExpression;
       return true;
 
     Fail:
