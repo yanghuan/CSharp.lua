@@ -32,8 +32,9 @@ namespace CSharpLua {
     private sealed class MethodInfo {
       public IMethodSymbol Symbol { get; }
       public IList<LuaExpressionSyntax> RefOrOutParameters { get; }
-      public bool IsInlining { get; set; }
+
       public List<LuaIdentifierNameSyntax> InliningReturnVars { get; set; }
+      public bool IsInlining => InliningReturnVars != null;
 
       public MethodInfo(IMethodSymbol symbol) {
         Symbol = symbol;
@@ -557,7 +558,7 @@ namespace CSharpLua {
       if (result.Symbol.IsGenericMethod) {
         var function = new LuaFunctionExpressionSyntax();
         function.AddParameters(result.Symbol.TypeParameters.Select(i => new LuaParameterSyntax(i.Name)));
-        function.AddStatement(new LuaMultipleReturnStatementSyntax(parameters));
+        function.AddStatement(new LuaReturnStatementSyntax(parameters));
         table.Add(function);
       } else {
         table.AddRange(parameters);
@@ -633,7 +634,9 @@ namespace CSharpLua {
         if (symbol.ReturnsVoid) {
           function.AddStatement(expression);
         } else {
-          function.AddStatement(new LuaReturnStatementSyntax(expression));
+          var returnStatement = new LuaReturnStatementSyntax(expression);
+          returnStatement.Expressions.AddRange(refOrOutParameters);
+          function.AddStatement(returnStatement);
         }
       }
 
@@ -643,7 +646,7 @@ namespace CSharpLua {
         VisitAsync(symbol.ReturnsVoid, returnType, function);
       } else {
         if (symbol.ReturnsVoid && refOrOutParameters.Count > 0) {
-          function.AddStatement(new LuaMultipleReturnStatementSyntax(refOrOutParameters));
+          function.AddStatement(new LuaReturnStatementSyntax(refOrOutParameters));
         }
       }
 
@@ -1319,7 +1322,7 @@ namespace CSharpLua {
     private LuaStatementSyntax InternalVisitReturnStatement(LuaExpressionSyntax expression) {
       LuaStatementSyntax result;
       if (CurFunction is LuaCheckReturnFunctionExpressionSyntax) {
-        var returnStatement = new LuaMultipleReturnStatementSyntax();
+        var returnStatement = new LuaReturnStatementSyntax();
         returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
         if (expression != null) {
           returnStatement.Expressions.Add(expression);
@@ -1337,7 +1340,7 @@ namespace CSharpLua {
             multipleAssignment.Rights.AddRange(curMethodInfo.RefOrOutParameters);
             result = multipleAssignment;
           } else {
-            var returnStatement = new LuaMultipleReturnStatementSyntax();
+            var returnStatement = new LuaReturnStatementSyntax();
             if (expression != null) {
               returnStatement.Expressions.Add(expression);
             }
@@ -1855,9 +1858,9 @@ namespace CSharpLua {
       var invocation = CheckInvocationExpression(symbol, node, expression);
       invocation.AddArguments(arguments);
       LuaExpressionSyntax resultExpression = invocation;
-      if (symbol != null && symbol.GetAttributes().HasAggressiveInliningAttribute()) {
-        if (TryInliningInvocationExpression(node, symbol, invocation, refOrOutArguments, out var newExpression)) {
-          resultExpression = newExpression;
+      if (symbol != null && symbol.HasAggressiveInliningAttribute()) {
+        if (TryInliningInvocationExpression(node, symbol, invocation, out var inlineExpression)) {
+          resultExpression = inlineExpression;
         }
       }
       if (refOrOutArguments.Count > 0) {
@@ -2125,8 +2128,12 @@ namespace CSharpLua {
         }
       }
 
-      var expression = BuildMemberAccessExpression(symbol, node.Expression);
       var name = (LuaExpressionSyntax)node.Name.Accept(this);
+      if (generator_.IsInlineSymbol(symbol)) {
+        return name;
+      }
+
+      var expression = BuildMemberAccessExpression(symbol, node.Expression);
       if (symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Event) {
         return BuildFieldOrPropertyMemberAccessExpression(expression, name, symbol.IsStatic);
       }
@@ -2296,6 +2303,15 @@ namespace CSharpLua {
           }
         }
       } else {
+        if (isProperty) {
+          var propertySymbol = (IPropertySymbol)symbol;
+          if (propertySymbol.GetMethod != null && propertySymbol.SetMethod == null && propertySymbol.GetMethod.HasAggressiveInliningAttribute()) {
+            if (TryInliningPropertyGetExpression(node, propertySymbol.GetMethod, out var inlineExpression)) {
+              return inlineExpression;
+            }
+          }
+        }
+
         var name = GetMemberName(symbol);
         var identifierName = new LuaPropertyOrEventIdentifierNameSyntax(isProperty, name);
         if (symbol.IsStatic) {

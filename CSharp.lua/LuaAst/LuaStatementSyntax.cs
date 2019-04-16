@@ -63,21 +63,18 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaReturnStatementSyntax : LuaBaseReturnStatementSyntax {
-    public LuaExpressionSyntax Expression { get; }
-
-    public LuaReturnStatementSyntax(LuaExpressionSyntax expression = null) {
-      Expression = expression;
-    }
-
-    internal override void Render(LuaRenderer renderer) {
-      renderer.Render(this);
-    }
-  }
-
-  public sealed class LuaMultipleReturnStatementSyntax : LuaBaseReturnStatementSyntax {
     public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
 
-    public LuaMultipleReturnStatementSyntax(IEnumerable<LuaExpressionSyntax> expressions = null) {
+    public LuaReturnStatementSyntax() {
+    }
+
+    public LuaReturnStatementSyntax(LuaExpressionSyntax expression) {
+      if (expression != null) {
+        Expressions.Add(expression);
+      }
+    }
+
+    public LuaReturnStatementSyntax(IEnumerable<LuaExpressionSyntax> expressions) {
       if (expressions != null) {
         Expressions.AddRange(expressions);
       }

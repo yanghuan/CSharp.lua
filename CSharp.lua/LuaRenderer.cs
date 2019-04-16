@@ -22,8 +22,8 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed class LuaRenderer {
-    private LuaSyntaxGenerator generator_;
-    private TextWriter writer_;
+    private readonly LuaSyntaxGenerator generator_;
+    private readonly TextWriter writer_;
     private bool isNewLine_;
     private int indentLevel_;
     private int singleLineCounter_;
@@ -291,21 +291,11 @@ namespace CSharpLua {
       }
     }
 
-    internal void Render(LuaMultipleReturnStatementSyntax node) {
+    internal void Render(LuaReturnStatementSyntax node) {
       Write(node.ReturnKeyword);
       if (node.Expressions.Count > 0) {
         WriteSpace();
         WriteSeparatedSyntaxList(node.Expressions);
-      }
-      Write(node.SemicolonToken);
-      WriteNewLine();
-    }
-
-    internal void Render(LuaReturnStatementSyntax node) {
-      Write(node.ReturnKeyword);
-      if (node.Expression != null) {
-        WriteSpace();
-        node.Expression.Render(this);
       }
       Write(node.SemicolonToken);
       WriteNewLine();

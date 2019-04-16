@@ -1487,12 +1487,7 @@ namespace CSharpLua {
       return new RecursionCallSearcher(generator_, symbol).Find(root);
     }
 
-    public bool TryInliningInvocationExpression(
-      InvocationExpressionSyntax root,
-      IMethodSymbol symbol,
-      LuaInvocationExpressionSyntax invocation,
-      List<LuaExpressionSyntax> refOrOutArguments,
-      out LuaExpressionSyntax result) {
+    private bool TryInliningInvocationExpression(SyntaxNode root, IMethodSymbol symbol, Func<LuaInvocationExpressionSyntax> invocationFn, out LuaExpressionSyntax inlineExpression) {
       if (symbol.IsOverridable()) {
         goto Fail;
       }
@@ -1501,27 +1496,54 @@ namespace CSharpLua {
         goto Fail;
       }
 
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      if (syntaxReference == null) {
+      SyntaxNode declarationNode;
+      ParameterListSyntax parameterList;
+      BlockSyntax bodyNode;
+      ArrowExpressionClauseSyntax expressionBodyNode;
+      if (symbol.MethodKind == MethodKind.PropertyGet) {
+        var syntaxReference = symbol.AssociatedSymbol.DeclaringSyntaxReferences.FirstOrDefault();
+        if (syntaxReference == null) {
+          goto Fail;
+        }
+
+        var propertyDeclaration = syntaxReference.GetSyntax() as PropertyDeclarationSyntax;
+        if (propertyDeclaration == null) {
+          goto Fail;
+        }
+
+        var accessor = propertyDeclaration.AccessorList.Accessors.First(i => i.IsKind(SyntaxKind.GetAccessorDeclaration));
+        declarationNode = accessor;
+        bodyNode = accessor.Body;
+        expressionBodyNode = accessor.ExpressionBody;
+        parameterList = null;
+      } else {
+        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+        if (syntaxReference == null) {
+          goto Fail;
+        }
+
+        var methodDeclaration = syntaxReference.GetSyntax() as MethodDeclarationSyntax;
+        if (methodDeclaration == null) {
+          goto Fail;
+        }
+
+        declarationNode = methodDeclaration;
+        bodyNode = methodDeclaration.Body;
+        expressionBodyNode = methodDeclaration.ExpressionBody;
+        parameterList = methodDeclaration.ParameterList;
+      }
+
+      if (IsYieldStatementExists(declarationNode)) {
         goto Fail;
       }
 
-      var node = syntaxReference.GetSyntax() as MethodDeclarationSyntax;
-      if (node == null) {
+      if (IsRecursionExists(symbol, declarationNode)) {
         goto Fail;
       }
 
-      if (IsYieldStatementExists(node)) {
-        goto Fail;
-      }
-
-      if (IsRecursionExists(symbol, node)) {
-        goto Fail;
-      }
-
+      var invocation = invocationFn();
       List<LuaExpressionSyntax> refOrOutParameters = new List<LuaExpressionSyntax>();
       MethodInfo methodInfo = new MethodInfo(symbol, refOrOutParameters) {
-        IsInlining = true,
         InliningReturnVars = new List<LuaIdentifierNameSyntax>(),
       };
       if (!symbol.ReturnsVoid) {
@@ -1538,34 +1560,82 @@ namespace CSharpLua {
         }
       }
 
-      var parameters = new List<LuaIdentifierNameSyntax>();
-      foreach (var parameterNode in node.ParameterList.Parameters) {
-        var parameter = (LuaParameterSyntax)parameterNode.Accept(this);
-        if (parameter.Identifier != LuaIdentifierNameSyntax.This) {
-          parameters.Add(parameter.Identifier);
-          if (parameterNode.Modifiers.IsOutOrRef()) {
-            refOrOutParameters.Add(parameter.Identifier);
-            methodInfo.InliningReturnVars.Add(GetTempIdentifier(root));
+      if (parameterList != null) {
+        var parameters = new List<LuaIdentifierNameSyntax>();
+        foreach (var parameterNode in parameterList.Parameters) {
+          var parameter = (LuaParameterSyntax)parameterNode.Accept(this);
+          if (parameter.Identifier != LuaIdentifierNameSyntax.This) {
+            parameters.Add(parameter.Identifier);
+            if (parameterNode.Modifiers.IsOutOrRef()) {
+              refOrOutParameters.Add(parameter.Identifier);
+              methodInfo.InliningReturnVars.Add(GetTempIdentifier(root));
+            }
           }
-        } 
+        }
+        var parameterValues = invocation.ArgumentList.Arguments.Select(i => i.Expression).Where(i => i != LuaIdentifierNameSyntax.This);
+        block.AddStatement(new LuaLocalVariablesStatementSyntax(parameters, parameterValues));
       }
-      var parameterValues = invocation.ArgumentList.Arguments.Select(i => i.Expression).Where(i => i != LuaIdentifierNameSyntax.This);
-      block.AddStatement(new LuaLocalVariablesStatementSyntax(parameters, parameterValues));
-      var body = (LuaBlockSyntax)Visit(node.Body);
-      block.Statements.AddRange(body.Statements);
+      if (bodyNode != null) {
+        var body = (LuaBlockSyntax)Visit(bodyNode);
+        block.Statements.AddRange(body.Statements);
+      } else {
+        var expression = (LuaExpressionSyntax)expressionBodyNode.Accept(this);
+        if (symbol.ReturnsVoid) {
+          block.AddStatement(expression);
+          if (refOrOutParameters.Count > 0) {
+            var assignment = new LuaMultipleAssignmentExpressionSyntax();
+            assignment.Lefts.AddRange(methodInfo.InliningReturnVars);
+            assignment.Rights.AddRange(refOrOutParameters);
+            block.AddStatement(assignment);
+          }
+        } else {
+          var assignment = new LuaMultipleAssignmentExpressionSyntax();
+          assignment.Lefts.AddRange(methodInfo.InliningReturnVars);
+          assignment.Rights.Add(expression);
+          assignment.Rights.AddRange(refOrOutParameters);
+          block.AddStatement(assignment);
+        }
+      }
       blocks_.Pop();
-      CurBlock.AddStatement(new LuaShortCommentStatement($" Inlining {symbol}"));
+      CurBlock.AddStatement(new LuaShortCommentStatement($" inline {symbol}"));
       if (methodInfo.InliningReturnVars.Count > 0) {
         CurBlock.AddStatement(new LuaLocalVariablesStatementSyntax(methodInfo.InliningReturnVars));
       }
       CurBlock.AddStatement(block);
       methodInfos_.Pop();
-      result = methodInfo.InliningReturnVars.Count > 0 ? new LuaSequenceListExpressionSyntax(methodInfo.InliningReturnVars) : LuaExpressionSyntax.EmptyExpression;
+      if (methodInfo.InliningReturnVars.Count > 0) {
+        inlineExpression = new LuaSequenceListExpressionSyntax(methodInfo.InliningReturnVars);
+        if (refOrOutParameters.Count == 0 && root.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
+          inlineExpression = LuaExpressionSyntax.EmptyExpression;
+        }
+      } else {
+        inlineExpression = LuaExpressionSyntax.EmptyExpression;
+      }
+      generator_.AddInlineSymbol(symbol);
       return true;
 
     Fail:
-      result = null;
+      inlineExpression = null;
       return false;
+    }
+
+    private bool TryInliningInvocationExpression(SyntaxNode root, IMethodSymbol symbol, LuaInvocationExpressionSyntax invocation, out LuaExpressionSyntax inlineExpression) {
+      return TryInliningInvocationExpression(root, symbol, () => invocation, out inlineExpression);
+    }
+
+    private bool TryInliningPropertyGetExpression(IdentifierNameSyntax root, IMethodSymbol symbol, out LuaExpressionSyntax inlineExpression) {
+      return TryInliningInvocationExpression(root, symbol, () => {
+        LuaExpressionSyntax expression = symbol.Name;
+        if (root.Parent.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
+          var memberAccess = (MemberAccessExpressionSyntax)root.Parent;
+          if (memberAccess.Name == root) {
+            var target = (LuaIdentifierNameSyntax)memberAccess.Expression.Accept(this);
+            expression = new LuaMemberAccessExpressionSyntax(target, symbol.Name, !symbol.IsStatic);
+          }
+        }
+        var invocation = new LuaInvocationExpressionSyntax(expression);
+        return invocation;
+      }, out inlineExpression);
     }
   }
 }

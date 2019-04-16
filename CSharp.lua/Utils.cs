@@ -939,7 +939,11 @@ namespace CSharpLua {
       return symbol.Name == "CompilerGeneratedAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
     }
 
-    public static bool HasAggressiveInliningAttribute(this ImmutableArray<AttributeData> attrs) {
+    public static bool HasAggressiveInliningAttribute(this ISymbol symbol) {
+      return symbol.GetAttributes().HasAggressiveInliningAttribute();
+    }
+
+    private static bool HasAggressiveInliningAttribute(this ImmutableArray<AttributeData> attrs) {
       return attrs.Any(IsAggressiveInliningAttribute);
     }
 

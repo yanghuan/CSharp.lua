@@ -350,7 +350,7 @@ namespace CSharpLua {
       }
 
       if (refOrOutParameters.Count > 0) {
-        var returnStatement = new LuaMultipleReturnStatementSyntax();
+        var returnStatement = new LuaReturnStatementSyntax();
         returnStatement.Expressions.AddRange(refOrOutParameters);
         function.AddStatement(returnStatement);
       }
@@ -577,7 +577,7 @@ namespace CSharpLua {
       if (ifStatement != null) {
         if (!hasCatchRoot) {
           Contract.Assert(ifStatement.Else == null);
-          LuaMultipleReturnStatementSyntax rethrowStatement = new LuaMultipleReturnStatementSyntax();
+          var rethrowStatement = new LuaReturnStatementSyntax();
           rethrowStatement.Expressions.Add(LuaIdentifierNameSyntax.One);
           rethrowStatement.Expressions.Add(temp);
           LuaBlockSyntax block = new LuaBlockSyntax();

@@ -1129,6 +1129,7 @@ namespace CSharpLua {
     private readonly Dictionary<IEventSymbol, bool> isFieldEvents_ = new Dictionary<IEventSymbol, bool>();
     private readonly HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new HashSet<INamedTypeSymbol>();
     private readonly Dictionary<ISymbol, bool> isMoreThanLocalVariables_ = new Dictionary<ISymbol, bool>();
+    private readonly HashSet<ISymbol> inlineSymbols_ = new HashSet<ISymbol>();
 
     private sealed class PretreatmentChecker : CSharpSyntaxWalker {
       private readonly LuaSyntaxGenerator generator_;
@@ -1502,6 +1503,18 @@ namespace CSharpLua {
         isMoreThanLocalVariables_.Add(symbol, isMoreThanLocalVariables);
       }
       return isMoreThanLocalVariables;
+    }
+
+    internal void AddInlineSymbol(IMethodSymbol symbol) {
+      if (symbol.MethodKind == MethodKind.PropertyGet) {
+        inlineSymbols_.Add(symbol.AssociatedSymbol);
+      } else {
+        inlineSymbols_.Add(symbol);
+      }
+    }
+
+    internal bool IsInlineSymbol(ISymbol symbol) {
+      return inlineSymbols_.Contains(symbol);
     }
 
     private IEnumerable<ISymbol> AllInterfaceImplementations(ISymbol symbol) {
