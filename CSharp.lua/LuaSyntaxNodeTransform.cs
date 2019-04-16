@@ -736,6 +736,11 @@ namespace CSharpLua {
       return name;
     }
 
+    private void ReleaseTempIndex() {
+      CurFunction.TempIndex--;
+      Contract.Assert(CurFunction.TempIndex >= 0);
+    }
+
     private static LuaInvocationExpressionSyntax BuildDefaultValue(LuaExpressionSyntax typeExpression) {
       return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, typeExpression);
     }
@@ -1859,7 +1864,7 @@ namespace CSharpLua {
       invocation.AddArguments(arguments);
       LuaExpressionSyntax resultExpression = invocation;
       if (symbol != null && symbol.HasAggressiveInliningAttribute()) {
-        if (TryInliningInvocationExpression(node, symbol, invocation, out var inlineExpression)) {
+        if (InliningInvocationExpression(node, symbol, invocation, out var inlineExpression)) {
           resultExpression = inlineExpression;
         }
       }
@@ -2305,8 +2310,8 @@ namespace CSharpLua {
       } else {
         if (isProperty) {
           var propertySymbol = (IPropertySymbol)symbol;
-          if (propertySymbol.GetMethod != null && propertySymbol.SetMethod == null && propertySymbol.GetMethod.HasAggressiveInliningAttribute()) {
-            if (TryInliningPropertyGetExpression(node, propertySymbol.GetMethod, out var inlineExpression)) {
+          if (IsWantInline(propertySymbol)) {
+            if (InliningPropertyGetExpression(node, propertySymbol.GetMethod, out var inlineExpression)) {
               return inlineExpression;
             }
           }

@@ -39,6 +39,10 @@ namespace CSharpLua.LuaAst {
       }
     }
 
+    public LuaMemberAccessExpressionSyntax WithExpression(LuaExpressionSyntax expression) {
+      return new LuaMemberAccessExpressionSyntax(expression, this.Name, IsObjectColon);
+    }
+
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }

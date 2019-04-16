@@ -940,19 +940,19 @@ namespace CSharpLua {
     }
 
     public static bool HasAggressiveInliningAttribute(this ISymbol symbol) {
-      return symbol.GetAttributes().HasAggressiveInliningAttribute();
+      return symbol.GetAttributes().Any(i => i.IsMethodImplOptions(MethodImplOptions.AggressiveInlining));
     }
 
-    private static bool HasAggressiveInliningAttribute(this ImmutableArray<AttributeData> attrs) {
-      return attrs.Any(IsAggressiveInliningAttribute);
+    public static bool HasNoInliningAttribute(this ISymbol symbol) {
+      return symbol.GetAttributes().Any(i => i.IsMethodImplOptions(MethodImplOptions.NoInlining));
     }
 
-    private static bool IsAggressiveInliningAttribute(this AttributeData attributeData) {
+    private static bool IsMethodImplOptions(this AttributeData attributeData, MethodImplOptions option) {
       if (attributeData.AttributeClass.IsMethodImplAttribute()) {
         foreach (var constructorArgument in attributeData.ConstructorArguments) {
           if (constructorArgument.Value is int v) {
             var options = (MethodImplOptions)v;
-            return options.HasFlag(MethodImplOptions.AggressiveInlining);
+            return options.HasFlag(option);
           }
         }
       }
