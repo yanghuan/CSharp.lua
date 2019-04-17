@@ -1683,11 +1683,24 @@ namespace CSharpLua {
 
       var expression = assignment.Right;
       if (isThisMemberAccess) {
-        if (expression is LuaMemberAccessExpressionSyntax memberAccess) {
-          var thisLocal = (LuaLocalVariableDeclaratorSyntax)block.Statements.First();
-          InliningMemberAccessUpdateTarget(memberAccess, thisLocal.Declarator.Initializer.Value);
+        if (expression is LuaLiteralExpressionSyntax) {
+          expression = new LuaParenthesizedExpressionSyntax(expression);
         } else {
-          return null;
+          var thisLocal = (LuaLocalVariableDeclaratorSyntax)block.Statements.First();
+          var target = thisLocal.Declarator.Initializer.Value;
+          if (expression is LuaMemberAccessExpressionSyntax memberAccess) {
+            InliningMemberAccessUpdateTarget(memberAccess, target);
+          } else if (expression is LuaPropertyAdapterExpressionSyntax propertyAdapter && propertyAdapter.IsProperty) {
+            if (propertyAdapter.Expression == LuaIdentifierNameSyntax.This) {
+              propertyAdapter.Update(target);
+            } else if (propertyAdapter.Expression is LuaMemberAccessExpressionSyntax proertyExpression) {
+              InliningMemberAccessUpdateTarget(proertyExpression, target);
+            } else {
+              return null;
+            }
+          } else {
+            return null;
+          }
         }
       } else {
         if (expression is LuaBinaryExpressionSyntax) {
@@ -1776,12 +1789,16 @@ namespace CSharpLua {
         expressionBody = accessor.ExpressionBody.Expression;
       }
 
-      switch (expressionBody.Kind()) {
+      var kind = expressionBody.Kind();
+      switch (kind) {
         case SyntaxKind.IdentifierName:
         case SyntaxKind.SimpleMemberAccessExpression: {
           break;
         }
-        default: {
+        default:  {
+          if (kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.DefaultLiteralExpression) {
+            break;
+          }
           return false;
         }
       }

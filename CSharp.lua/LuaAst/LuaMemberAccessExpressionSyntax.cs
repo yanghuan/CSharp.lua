@@ -69,6 +69,10 @@ namespace CSharpLua.LuaAst {
       OperatorToken = isObjectColon ? Tokens.ObjectColon : Tokens.Dot;
     }
 
+    public void Update(LuaExpressionSyntax expression) {
+      Expression = expression;
+    }
+
     public bool IsGetOrAdd {
       set {
         Name.IsGetOrAdd = value;
