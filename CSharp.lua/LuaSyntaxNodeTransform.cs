@@ -1918,7 +1918,7 @@ namespace CSharpLua {
         }
       } else if (!parameters.IsEmpty) {
         IParameterSymbol last = parameters.Last();
-        if (last.IsParams && symbol.IsFromCode()) {
+        if (last.IsParams && generator_.IsFromLuaModule(symbol)) {
           if (parameters.Length == arguments.Count) {
             var paramsArgument = argumentNodeInfos.Last();
             if (paramsArgument.Name != null) {
