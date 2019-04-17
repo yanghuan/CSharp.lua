@@ -1642,6 +1642,16 @@ namespace CSharpLua {
       return false;
     }
 
+    private void InliningMemberAccessUpdateTarget(LuaMemberAccessExpressionSyntax memberAccess, LuaExpressionSyntax target) {
+      if (memberAccess.Expression == LuaIdentifierNameSyntax.This) {
+        memberAccess.UpdateExpression(target);
+      } else if (memberAccess.Expression is LuaMemberAccessExpressionSyntax accessExpression) {
+        InliningMemberAccessUpdateTarget(accessExpression, target);
+      } else {
+        throw new InvalidProgramException();
+      }
+    }
+
     private LuaExpressionSyntax CompressionInliningBlock(SyntaxNode root, LuaBlockStatementSyntax block, MethodInfo methodInfo, bool isThisMemberAccess) {
       if (methodInfo.InliningReturnVars.Count != 1) {
         return null;
@@ -1675,7 +1685,7 @@ namespace CSharpLua {
       if (isThisMemberAccess) {
         if (expression is LuaMemberAccessExpressionSyntax memberAccess) {
           var thisLocal = (LuaLocalVariableDeclaratorSyntax)block.Statements.First();
-          expression = memberAccess.WithExpression(thisLocal.Declarator.Initializer.Value);
+          InliningMemberAccessUpdateTarget(memberAccess, thisLocal.Declarator.Initializer.Value);
         } else {
           return null;
         }
@@ -1731,42 +1741,48 @@ namespace CSharpLua {
         return false;
       }
 
-      if (!get.HasAggressiveInliningAttribute()) {
-        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-        if (syntaxReference == null) {
+      if (get.HasAggressiveInliningAttribute()) {
+        return true;
+      }
+
+      if (!generator_.Setting.IsInlineSimpleProperty) {
+        return false;
+      }
+
+      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+      if (syntaxReference == null) {
+        return false;
+      }
+
+      var propertyDeclaration = syntaxReference.GetSyntax() as PropertyDeclarationSyntax;
+      if (propertyDeclaration == null || propertyDeclaration.AccessorList == null) {
+        return false;
+      }
+
+      var accessor = propertyDeclaration.AccessorList.Accessors.First(i => i.IsKind(SyntaxKind.GetAccessorDeclaration));
+      ExpressionSyntax expressionBody;
+      if (accessor.Body != null) {
+        if (accessor.Body.Statements.Count > 1) {
           return false;
         }
 
-        var propertyDeclaration = syntaxReference.GetSyntax() as PropertyDeclarationSyntax;
-        if (propertyDeclaration == null || propertyDeclaration.AccessorList == null) {
+        var returnStatement = accessor.Body.Statements.First() as ReturnStatementSyntax;
+        if (returnStatement == null) {
           return false;
         }
 
-        var accessor = propertyDeclaration.AccessorList.Accessors.First(i => i.IsKind(SyntaxKind.GetAccessorDeclaration));
-        ExpressionSyntax expressionBody;
-        if (accessor.Body != null) {
-          if (accessor.Body.Statements.Count > 1) {
-            return false;
-          }
+        expressionBody = returnStatement.Expression;
+      } else {
+        expressionBody = accessor.ExpressionBody.Expression;
+      }
 
-          var returnStatement = accessor.Body.Statements.First() as ReturnStatementSyntax;
-          if (returnStatement == null) {
-            return false;
-          }
-
-          expressionBody = returnStatement.Expression;
-        } else {
-          expressionBody = accessor.ExpressionBody.Expression;
+      switch (expressionBody.Kind()) {
+        case SyntaxKind.IdentifierName:
+        case SyntaxKind.SimpleMemberAccessExpression: {
+          break;
         }
-
-        switch (expressionBody.Kind()) {
-          case SyntaxKind.IdentifierName:
-          case SyntaxKind.SimpleMemberAccessExpression: {
-            break;
-          }
-          default: {
-            return false;
-          }
+        default: {
+          return false;
         }
       }
 

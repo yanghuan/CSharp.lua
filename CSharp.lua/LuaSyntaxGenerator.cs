@@ -61,6 +61,7 @@ namespace CSharpLua {
       public bool IsModule { get; set; }
       public HashSet<string> ExportAttributes { get; private set; }
       public HashSet<string> LuaModuleLibs;
+      public bool IsInlineSimpleProperty { get; set; }
 
       public SettingInfo() {
         Indent = 2;

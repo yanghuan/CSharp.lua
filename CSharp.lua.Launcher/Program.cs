@@ -40,6 +40,7 @@ Options
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
+-inline-property: inline some single-line properties
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -64,9 +65,11 @@ Options
           string csc = GetCSCArgument(args);
           bool isExportMetadata = cmds.ContainsKey("-metadata");
           bool isModule = cmds.ContainsKey("-module");
+          bool isInlineSimpleProperty = cmds.ContainsKey("-inline-property");
           Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts) {
             IsExportMetadata = isExportMetadata,
             IsModule = isModule,
+            IsInlineSimpleProperty = isInlineSimpleProperty,
           };
           c.Compile();
           Console.WriteLine("all operator success");
