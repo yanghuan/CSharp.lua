@@ -510,7 +510,7 @@ namespace CSharpLua {
       function.AddStatement(returnStatement);
     }
 
-    private void VisitAsync(bool returnsVoid, TypeSyntax returnType, LuaFunctionExpressionSyntax function) {
+    private void VisitAsync(bool returnsVoid, LuaFunctionExpressionSyntax function) {
       var memberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.Async);
       var invokeExpression = new LuaInvocationExpressionSyntax(memberAccess);
       var wrapFunction = new LuaFunctionExpressionSyntax();
@@ -643,7 +643,7 @@ namespace CSharpLua {
       if (function.HasYield) {
         VisitYield(returnType, function);
       } else if (symbol.IsAsync) {
-        VisitAsync(symbol.ReturnsVoid, returnType, function);
+        VisitAsync(symbol.ReturnsVoid, function);
       } else {
         if (symbol.ReturnsVoid && refOrOutParameters.Count > 0) {
           function.AddStatement(new LuaReturnStatementSyntax(refOrOutParameters));

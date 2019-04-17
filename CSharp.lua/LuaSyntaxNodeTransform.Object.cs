@@ -439,6 +439,10 @@ namespace CSharpLua {
         }
       }
 
+      if (symbol.IsAsync) {
+        VisitAsync(symbol.ReturnsVoid, function);
+      }
+
       PopFunction();
       methodInfos_.Pop();
 
