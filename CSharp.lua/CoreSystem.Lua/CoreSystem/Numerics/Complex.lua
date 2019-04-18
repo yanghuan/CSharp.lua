@@ -12,8 +12,8 @@ local atan2 = math.atan2
 local exp = math.exp
 local pow = math.pow
 
-local bitXor = bitXor
-local bitNot = bitNot
+local bitXor = System.xor
+local bitNot = System.bnot
 
 local IComparable = System.IComparable
 local IComparable_1 = System.IComparable_1
@@ -195,15 +195,9 @@ end
 Complex.GetHashCode = function (this)
     local n1 = 99999997
     local hash_real, hash_imaginary, final_hashcode
-    if bixXor and bitNot then
-        hash_real = bitXor(this.m_real:GetHashCode(), n1)
-        hash_imaginary = this.m_imaginary:GetHashCode()
-        final_hashcode = hash_real * bitNot(hash_imaginary)
-    else
-        hash_real = this.m_real:GetHashCode()^^y
-        hash_imaginary = this.m_imaginary:GetHashCode()
-        final_hashcode = hash_real ~ hash_imaginary
-    end
+    hash_real = bitXor(this.m_real:GetHashCode(), n1)
+    hash_imaginary = this.m_imaginary:GetHashCode()
+    final_hashcode = hash_real * bitNot(hash_imaginary)
     return (final_hashcode)
 end
 
