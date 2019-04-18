@@ -3797,7 +3797,11 @@ namespace CSharpLua {
     private LuaExpressionSyntax GetCastToNumberExpression(LuaExpressionSyntax expression, ITypeSymbol targetType, bool isFromFloat) {
       string name = (isFromFloat ? "To" : "to") + targetType.Name;
       var methodName = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, name);
-      return new LuaInvocationExpressionSyntax(methodName, expression);
+      var invocation = new LuaInvocationExpressionSyntax(methodName, expression);
+      if (IsCurChecked) {
+        invocation.AddArgument(LuaIdentifierNameSyntax.True);
+      }
+      return invocation;
     }
 
     public override LuaSyntaxNode VisitCheckedStatement(CheckedStatementSyntax node) {
