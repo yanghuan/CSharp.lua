@@ -25,7 +25,7 @@ namespace CSharpLua.LuaAst {
     public readonly LuaParameterListSyntax ParameterList = new LuaParameterListSyntax();
     public string FunctionKeyword => Tokens.Function;
     public bool HasYield { get; set; }
-    public int TempIndex;
+    public int TempCount;
 
     public readonly LuaBlockSyntax Body = new LuaBlockSyntax() {
       OpenToken = Tokens.Empty,

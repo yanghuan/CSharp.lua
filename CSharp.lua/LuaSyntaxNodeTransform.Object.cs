@@ -308,7 +308,6 @@ namespace CSharpLua {
           refOrOutParameters.Add(parameter.Identifier);
         }
       }
-      blocks_.Push(function.Body);
 
       bool isEmptyCtor = false;
       if (node.Initializer != null) {
@@ -355,7 +354,6 @@ namespace CSharpLua {
         function.AddStatement(returnStatement);
       }
 
-      blocks_.Pop();
       PopFunction();
 
       if (isStatic) {
@@ -428,10 +426,7 @@ namespace CSharpLua {
       } else {
         var type = (INamedTypeSymbol)semanticModel_.GetTypeInfo(body.Parent).ConvertedType;
         var delegateInvokeMethod = type.DelegateInvokeMethod;
-
-        blocks_.Push(function.Body);
         var expression = (LuaExpressionSyntax)body.Accept(this);
-        blocks_.Pop();
         if (delegateInvokeMethod.ReturnsVoid) {
           function.AddStatement(expression);
         } else {
@@ -768,7 +763,6 @@ namespace CSharpLua {
       if (isEmpty) {
         LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
         PushFunction(function);
-        blocks_.Push(function.Body);
       }
 
       bool isRoot = !node.Parent.IsKind(SyntaxKind.ConditionalAccessExpression);
@@ -788,9 +782,9 @@ namespace CSharpLua {
       LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(condition);
       CurBlock.Statements.Add(ifStatement);
 
-      blocks_.Push(ifStatement.Body);
+      PushBlock(ifStatement.Body);
       var whenNotNull = (LuaExpressionSyntax)node.WhenNotNull.Accept(this);
-      blocks_.Pop();
+      PopBlock();
 
       if (isRoot) {
         conditionalTemps_.Pop();
@@ -812,7 +806,6 @@ namespace CSharpLua {
         if (isEmpty) {
           var function = CurFunction;
           function.AddStatement(new LuaReturnStatementSyntax(temp));
-          blocks_.Pop();
           PopFunction();
           return new LuaInvocationExpressionSyntax(new LuaParenthesizedExpressionSyntax(function));
         } else {
@@ -1023,8 +1016,7 @@ namespace CSharpLua {
       if (isOnlyOne) {
         return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Document);
       } else {
-        var block = blocks_.Peek();
-        block.AddLocalArea(result.Name);
+        CurBlock.AddLocalArea(result.Name);
         LuaStatementSyntax localVar = new LuaAssignmentExpressionSyntax(result.Name, result.Function);
         if (result.Document != null && !result.Document.IsEmpty) {
           LuaStatementListSyntax statementList = new LuaStatementListSyntax();
@@ -1040,7 +1032,7 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitDeclarationExpression(DeclarationExpressionSyntax node) {
       if (node.Parent.IsKind(SyntaxKind.Argument)) {      //out var 
         var name = (LuaIdentifierNameSyntax)node.Designation.Accept(this);
-        blocks_.Peek().Statements.Add(new LuaLocalVariableDeclaratorSyntax(name));
+        CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name));
         return name;
       } else {    //ValueTuple deconstruction
         return node.Designation.Accept(this);
@@ -1061,7 +1053,7 @@ namespace CSharpLua {
       var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
       var name = (LuaIdentifierNameSyntax)declarationPattern.Designation.Accept(this);
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
-      blocks_.Peek().Statements.Add(new LuaLocalVariableDeclaratorSyntax(name, expression));
+      CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, expression));
 
       var leftType = semanticModel_.GetTypeInfo(node.Expression).Type;
       var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;

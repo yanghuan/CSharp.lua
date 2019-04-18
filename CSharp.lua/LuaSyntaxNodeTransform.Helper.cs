@@ -1546,6 +1546,8 @@ namespace CSharpLua {
       MethodInfo methodInfo = new MethodInfo(symbol, refOrOutParameters) {
         InliningReturnVars = new List<LuaIdentifierNameSyntax>(),
       };
+      int prevFunctionTempCount = CurFunction.TempCount;
+      int prevBlockTempCount = CurBlock.TempCount; 
       if (!symbol.ReturnsVoid) {
         methodInfo.InliningReturnVars.Add(GetTempIdentifier(root));
       }
@@ -1553,7 +1555,7 @@ namespace CSharpLua {
 
       bool isThisMemberAccess = false;
       var block = new LuaBlockStatementSyntax();
-      blocks_.Push(block);
+      PushBlock(block);
       if (invocation.Expression is LuaMemberAccessExpressionSyntax memberAccess) {
         if (memberAccess.IsObjectColon) {
           var thisLocal = new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.This, memberAccess.Expression);
@@ -1604,15 +1606,14 @@ namespace CSharpLua {
       }
       semanticModel_ = prevSemanticModel_;
 
-      blocks_.Pop();
+      PopBlock();
       methodInfos_.Pop();
       generator_.AddInlineSymbol(symbol);
 
       inlineExpression = CompressionInliningBlock(root, block, methodInfo, isThisMemberAccess);
       if (inlineExpression != null) {
-        if (!symbol.ReturnsVoid) {
-          ReleaseTempIndex();
-        }
+        CurFunction.TempCount = prevFunctionTempCount;
+        CurBlock.TempCount = prevBlockTempCount;
         return true;
       }
 

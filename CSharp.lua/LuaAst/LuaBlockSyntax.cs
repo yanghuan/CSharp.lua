@@ -26,6 +26,7 @@ namespace CSharpLua.LuaAst {
     public string CloseToken { get; set; }
     public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
     private LuaLocalAreaSyntax localArea_;
+    public int TempCount;
 
     internal void AddLocalArea(LuaIdentifierNameSyntax name) {
       if (localArea_ == null) {
