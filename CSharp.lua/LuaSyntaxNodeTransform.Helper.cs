@@ -1435,7 +1435,7 @@ namespace CSharpLua {
       Contract.Assert(symbool.MethodKind == MethodKind.Constructor);
       if (generator_.IsFromLuaModule(symbool.ContainingType)) {
         var typeSymbol = (INamedTypeSymbol)symbool.ReceiverType;
-        var ctors = typeSymbol.Constructors.Where(i => !i.IsStatic).ToList();
+        var ctors = typeSymbol.InstanceConstructors.ToList();
         if (ctors.Count > 1) {
           int firstCtorIndex = ctors.IndexOf(i => i.Parameters.IsEmpty);
           if (firstCtorIndex != -1 && firstCtorIndex != 0) {
@@ -1445,7 +1445,12 @@ namespace CSharpLua {
           }
           int index = ctors.IndexOf(symbool);
           Contract.Assert(index != -1);
-          int ctroCounter = index + 1;
+          int ctroCounter;
+          if (index > 0 && typeSymbol.IsValueTypeCombineImplicitlyCtor()) {
+            ctroCounter = index;
+          } else {
+            ctroCounter = index + 1;
+          }
           return ctroCounter;
         }
       }

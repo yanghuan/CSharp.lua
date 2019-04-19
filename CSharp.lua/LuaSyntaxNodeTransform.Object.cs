@@ -274,7 +274,7 @@ namespace CSharpLua {
       var baseType = typeSymbol.BaseType;
       if (baseType != null && !baseType.IsSystemObjectOrValueType()) {
         if (baseType.IsFromCode()) {
-          if (baseType.Constructors.Count(i => !i.IsStatic) > 1) {
+          if (baseType.InstanceConstructors.Length > 1) {
             ctroCounter = 1;
           }
         }
@@ -338,6 +338,13 @@ namespace CSharpLua {
         Contract.Assert(baseCtorInvoke != null);
         function.AddStatement(baseCtorInvoke);
         isEmptyCtor = ctroCounter == 0 && !node.Body.Statements.Any();
+      }
+
+      if (symbol.IsValueTypeCombineImplicitlyCtor()) {
+        var first = function.ParameterList.Parameters[1].Identifier;
+        var ifStatement = new LuaIfStatementSyntax(new LuaBinaryExpressionSyntax(first, LuaSyntaxNode.Tokens.EqualsEquals, LuaIdentifierNameSyntax.Nil));
+        ifStatement.Body.AddStatement(new LuaReturnStatementSyntax());
+        function.AddStatement(ifStatement);
       }
 
       if (node.Body != null) {

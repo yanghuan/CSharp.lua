@@ -1020,10 +1020,7 @@ ValueType = {
     return T()
   end,
   __clone__ = function(this)
-    local type_ = type(this)
-    if type_ == "number" or type_ == "bool" then
-      return this
-    elseif type_ == "table" then
+    if type(this) == "table" then
       local cls = getmetatable(this)
       local t = {}
       for k, v in pairs(this) do
@@ -1035,6 +1032,7 @@ ValueType = {
       end
       return setmetatable(t, cls)
     end
+    return this
   end,
   EqualsObj = function (this, obj)
     if getmetatable(this) ~= getmetatable(obj) then return false end

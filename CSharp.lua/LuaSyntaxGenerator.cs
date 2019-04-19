@@ -1567,7 +1567,7 @@ namespace CSharpLua {
     }
 
     internal bool IsExplicitStaticCtorExists(INamedTypeSymbol typeSymbol) {
-      var constructor = typeSymbol.Constructors.FirstOrDefault(i => i.IsStatic);
+      var constructor = typeSymbol.StaticConstructors.SingleOrDefault();
       if (constructor != null) {
         if (!constructor.IsImplicitlyDeclared) {
           return true;
@@ -1583,7 +1583,7 @@ namespace CSharpLua {
 
     internal bool IsBaseExplicitCtorExists(INamedTypeSymbol baseType) {
       while (baseType != null && !baseType.IsSystemObjectOrValueType()) {
-        var constructor = baseType.Constructors.FirstOrDefault(i => !i.IsStatic);
+        var constructor = baseType.InstanceConstructors.FirstOrDefault();
         if (constructor != null) {
           if (!constructor.IsImplicitlyDeclared) {
             return true;

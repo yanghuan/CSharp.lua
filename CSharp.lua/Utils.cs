@@ -975,6 +975,20 @@ namespace CSharpLua {
       return symbol.SpecialType == SpecialType.System_Object || symbol.SpecialType == SpecialType.System_ValueType;
     }
 
+    public static bool IsValueTypeCombineImplicitlyCtor(this INamedTypeSymbol symbol) {
+      if (symbol.IsValueType) {
+        var ctor = symbol.InstanceConstructors.First(i => !i.IsImplicitlyDeclared);
+        var p = ctor.Parameters.First();
+        return p.Type.IsValueType && p.RefKind != RefKind.Out;
+      }
+      return false;
+    }
+
+    public static bool IsValueTypeCombineImplicitlyCtor(this IMethodSymbol symbol) {
+      var type = (INamedTypeSymbol)symbol.ReceiverType;
+      return type.IsValueTypeCombineImplicitlyCtor() && symbol == type.InstanceConstructors.First(i => !i.IsImplicitlyDeclared);
+    }
+
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {
       const int kParametersMaxCount = 256;
 
