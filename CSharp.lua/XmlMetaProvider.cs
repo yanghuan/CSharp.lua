@@ -596,7 +596,7 @@ namespace CSharpLua {
 
     private string GetInternalMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {
       Contract.Assert(symbol != null);
-      if (!MayHaveCodeMeta(symbol)) {
+      if (!MayHaveCodeMeta(symbol) && !symbol.IsOverride) {
         return null;
       }
 
