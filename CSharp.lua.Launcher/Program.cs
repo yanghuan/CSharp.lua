@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
@@ -51,7 +52,8 @@ Options
             return;
           }
 
-          Console.WriteLine($"start {DateTime.Now}");
+          var sw = new Stopwatch();
+          sw.Start();
 
           string folder = cmds.GetArgument("-s");
           string output = cmds.GetArgument("-d");
@@ -72,8 +74,7 @@ Options
             IsInlineSimpleProperty = isInlineSimpleProperty,
           };
           c.Compile();
-          Console.WriteLine("all operator success");
-          Console.WriteLine($"end {DateTime.Now}");
+          Console.WriteLine($"Compiled Success, cost {sw.Elapsed.TotalSeconds}s");
         } catch (CmdArgumentException e) {
           Console.Error.WriteLine(e.Message);
           ShowHelpInfo();

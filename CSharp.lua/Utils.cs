@@ -975,18 +975,34 @@ namespace CSharpLua {
       return symbol.SpecialType == SpecialType.System_Object || symbol.SpecialType == SpecialType.System_ValueType;
     }
 
-    public static bool IsValueTypeCombineImplicitlyCtor(this INamedTypeSymbol symbol) {
-      if (symbol.IsValueType) {
-        var ctor = symbol.InstanceConstructors.First(i => !i.IsImplicitlyDeclared);
-        var p = ctor.Parameters.First();
-        return p.Type.IsValueType && p.RefKind != RefKind.Out;
-      }
-      return false;
+    public static bool IsCombineImplicitlyCtor(this INamedTypeSymbol symbol) {
+      return symbol.IsValueType && symbol.InstanceConstructors.Any(i => !i.IsImplicitlyDeclared && i.IsNotNullParameterExists());
     }
 
-    public static bool IsValueTypeCombineImplicitlyCtor(this IMethodSymbol symbol) {
+    private static int FindNotNullParameterIndex(this IMethodSymbol symbol) {
+      return symbol.Parameters.IndexOf(i => i.Type.IsValueType && i.RefKind != RefKind.Out);
+    }
+
+    public static bool IsNotNullParameterExists(this IMethodSymbol symbol) {
+      return symbol.FindNotNullParameterIndex() != -1;
+    }
+
+    public static bool IsCombineImplicitlyCtorMethod(this IMethodSymbol symbol, out int notNullParameterIndex) {
+      notNullParameterIndex = -1;
+
       var type = (INamedTypeSymbol)symbol.ReceiverType;
-      return type.IsValueTypeCombineImplicitlyCtor() && symbol == type.InstanceConstructors.First(i => !i.IsImplicitlyDeclared);
+      if (type.IsValueType) {
+        foreach (var ctor in type.InstanceConstructors) {
+          if (!ctor.IsImplicitlyDeclared) {
+            int index = ctor.FindNotNullParameterIndex();
+            if (index != -1) {
+              notNullParameterIndex = index;
+              return symbol == ctor;
+            }
+          }
+        }
+      }
+      return false;
     }
 
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {

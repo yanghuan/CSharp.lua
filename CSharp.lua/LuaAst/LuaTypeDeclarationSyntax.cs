@@ -375,8 +375,8 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool isZeroParameters, LuaDocumentStatement document = null) {
-      if (isZeroParameters) {
+    public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool insertFirst, LuaDocumentStatement document = null) {
+      if (insertFirst) {
         ctors_.Insert(0, new LuaConstructorDeclaration() {
           Function = function,
           Document = document,

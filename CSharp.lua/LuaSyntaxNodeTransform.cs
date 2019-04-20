@@ -358,7 +358,7 @@ namespace CSharpLua {
             }
           }
         }
-      } else if (typeSymbol.IsValueType && !typeSymbol.IsValueTypeCombineImplicitlyCtor()) {
+      } else if (typeSymbol.IsValueType && !typeSymbol.IsCombineImplicitlyCtor()) {
         LuaConstructorAdapterExpressionSyntax function = new LuaConstructorAdapterExpressionSyntax();
         function.AddParameter(LuaIdentifierNameSyntax.This);
         typeDeclaration.AddCtor(function, true);

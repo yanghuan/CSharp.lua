@@ -340,11 +340,13 @@ namespace CSharpLua {
         isEmptyCtor = ctroCounter == 0 && !node.Body.Statements.Any();
       }
 
-      if (symbol.IsValueTypeCombineImplicitlyCtor()) {
-        var first = function.ParameterList.Parameters[1].Identifier;
-        var ifStatement = new LuaIfStatementSyntax(new LuaBinaryExpressionSyntax(first, LuaSyntaxNode.Tokens.EqualsEquals, LuaIdentifierNameSyntax.Nil));
+      bool isCombineImplicitlyCtorMethod = false;
+      if (symbol.IsCombineImplicitlyCtorMethod(out int notNullParameterIndex)) {
+        var parameter = function.ParameterList.Parameters[notNullParameterIndex + 1].Identifier;
+        var ifStatement = new LuaIfStatementSyntax(new LuaBinaryExpressionSyntax(parameter, LuaSyntaxNode.Tokens.EqualsEquals, LuaIdentifierNameSyntax.Nil));
         ifStatement.Body.AddStatement(new LuaReturnStatementSyntax());
         function.AddStatement(ifStatement);
+        isCombineImplicitlyCtorMethod = true;
       }
 
       if (node.Body != null) {
@@ -367,7 +369,7 @@ namespace CSharpLua {
         CurType.SetStaticCtor(function, document);
       } else {
         if (!isEmptyCtor) {
-          CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0, document);
+          CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0 || isCombineImplicitlyCtorMethod, document);
         }
 
         if (IsCurTypeExportMetadataAll || attributes.Count > 0 || symbol.HasMetadataAttribute()) {
