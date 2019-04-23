@@ -19,12 +19,14 @@ local define = System.define
 local throw = System.throw
 local try = System.try
 local trunc = System.trunc
+local Void = System.Void
 local post = System.post
 local addTimer = System.addTimer
 local removeTimer = System.removeTimer
 local waitTask = System.Thread.waitTask
 local Exception = System.Exception
 local NotImplementedException = System.NotImplementedException
+local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local InvalidOperationException = System.InvalidOperationException
@@ -43,12 +45,10 @@ local cyield = coroutine.yield
 local TaskCanceledException = define("System.TaskCanceledException", {
   __tostring = Exception.ToString,
   __inherits__ = { Exception },
-
   __ctor__ = function(this, task)
     this.task = task  
     Exception.__ctor__(this, "A task was canceled.")
   end,
-
   getTask = function(this) 
     return this.task
   end,
@@ -130,11 +130,12 @@ local function newTaskExceptionHolder(task, exception)
   return setmetatable({ task = task, exception = exception }, TaskExceptionHolder)
 end
 
-local function createExceptionObject(this)
-  if not this.isHandled then
-    this.isHandled = true
+local function getException(task)
+  local holder = task.data
+  if not holder.isHandled then
+    holder.isHandled = true
   end
-  return this.exception
+  return holder.exception
 end
 
 local Task
@@ -216,7 +217,7 @@ local function trySetResult(this, result)
 end
 
 local function trySetException(this, exception)
-  if this.data == true then
+  if this.data == Void then
     throw(exception)
   end
   return trySetComplete(this, TaskStatusFaulted, newTaskExceptionHolder(this, exception))
@@ -227,7 +228,7 @@ local function trySetCanceled(this, cancellationToken)
 end
 
 local function newWaitingTask(isVoid)
-  return newTask(TaskStatusWaitingForActivation, isVoid)
+  return newTask(TaskStatusWaitingForActivation, isVoid and Void)
 end
 
 local function getContinueActions(task) 
@@ -239,13 +240,31 @@ local function getContinueActions(task)
   return continueActions
 end
 
+local function addContinueAction(task, f)
+  local continueActions = getContinueActions(task)
+  continueActions[#continueActions + 1] = assert(f)
+end
+
+local function checkTasks(tasks)
+  if tasks == nil then throw(ArgumentNullException("tasks")) end
+  if not System.isArrayLike(tasks) then
+    tasks = System.Array.toArray(tasks)
+  end
+  for i = 1, #tasks do
+    if tasks[i] == System.null then
+      throw(ArgumentNullException())
+    end
+  end
+  return tasks
+end
+
 local waitToken = {}
 local function getResult(this)
   local status = this.status
   if status == TaskStatusRanToCompletion then
     return this.data
   elseif status == TaskStatusFaulted then
-    throw(createExceptionObject(this.data))
+    throw(getException(this))
   elseif status == TaskStatusCanceled then
     throw(TaskCanceledException(this))
   end
@@ -254,14 +273,13 @@ end
 
 local function awaitTask(t, task)
   assert(t.co)
-  local continueActions = getContinueActions(task)
-  continueActions[#continueActions + 1] = function (task)
+  addContinueAction(task, function (task)
     local status = task.status
     local ok, v
     if status == TaskStatusRanToCompletion then
       ok, v = true, task.data
     elseif status == TaskStatusFaulted then
-      ok, v = false, createExceptionObject(task.data)
+      ok, v = false, getException(task)
     elseif status == TaskStatusCanceled then
       ok, v = false, TaskCanceledException(task)
     else
@@ -271,7 +289,7 @@ local function awaitTask(t, task)
     if not ok then
       assert(trySetException(t, v))
     end
-  end
+  end)
   local ok, v = cyield()
   if ok then
     return v
@@ -317,7 +335,7 @@ Task = define("System.Task", {
   end,
   getException = function (this)
     if this.status == TaskStatusFaulted then
-      return createExceptionObject(this.data)
+      return getException(this)
     end
     return nil
   end,
@@ -380,21 +398,94 @@ Task = define("System.Task", {
 
     return t
   end,
+  Run = function (f, cancellationToken)
+    local t = Task(f) 
+    t:Start()
+    return t
+  end,
+  WhenAll = function (tasks)
+    tasks = checkTasks(tasks)
+    local count = #tasks
+    if count == 0 then
+      return getCompletedTask()
+    end
+    local exception, cancelled
+    local t = newWaitingTask()
+    local function f(task)
+      local status = task.status
+      if status == TaskStatusFaulted then
+        exception = getException(task)
+      elseif status == TaskStatusCanceled then
+        cancelled = true
+      end
+      count = count - 1
+      if count == 0 then
+        if exception then
+          trySetException(t, exception)
+        elseif cancelled then
+          trySetCanceled(t)
+        else
+          trySetResult(t)
+        end
+      end
+    end
+    for i = 1, count do
+      local task = tasks[i]
+      if isCompleted(task) then
+        post(function ()
+          f(task)
+        end)
+      else
+        addContinueAction(task, f)
+      end
+    end
+    return t
+  end,
+  WhenAny = function (tasks)
+    tasks = checkTasks(tasks)
+    local count = #tasks
+    if count == 0 then
+      throw(ArgumentException())
+    end
+    local t = newWaitingTask()
+    local function f(task)
+      local status = task.status
+      if status == TaskStatusRanToCompletion then
+        trySetResult(t, task)
+      elseif status == TaskStatusFaulted then
+        trySetException(t, getException(task))
+      elseif status == TaskStatusCanceled then
+        trySetCanceled(t)
+      end
+    end
+    for i = 1, count do
+      local task = tasks[i]
+      if isCompleted(task) then
+        post(function ()
+          f(task)
+        end)
+      else
+        addContinueAction(task, f)
+      end
+    end
+    return t
+  end,
   ContinueWith = function (this, continuationAction)
     if continuationAction == nil then throw(ArgumentNullException("continuationAction")) end
     local t = newWaitingTask()
-    local function f()
+    local function f(task)
       try(function ()
-        assert(trySetResult(t, continuationAction()))
+        assert(trySetResult(t, continuationAction(task)))
       end, function (e)
         assert(trySetException(t, e))
       end)
     end
     if isCompleted(this) then
-      post(f)
+      post(function ()
+        f(this)
+      end)
     else
-      local continueActions = getContinueActions(task)
-      continueActions[#continueActions + 1] = f
+      addContinueAction(this, f)
     end
     return t
   end,
@@ -418,6 +509,35 @@ Task = define("System.Task", {
     end
     return awaitTask(this, task)
   end
+})
+
+local TaskT_TransitionToFinal_AlreadyCompleted = "An attempt was made to transition a task to a final state when it had already completed."
+define("System.TaskCompletionSource", {
+  __ctor__ = function (this)
+    this.task = newWaitingTask()
+  end,
+  getTask = function (this)
+    return this.task
+  end,
+  SetCanceled = function (this)
+    if not trySetCanceled(this.task) then
+      throw(InvalidOperationException(TaskT_TransitionToFinal_AlreadyCompleted))
+    end
+  end,
+  SetException = function (this, exception)
+    if exception == nil then throw(ArgumentNullException("exception")) end
+    if not trySetException(this.task) then
+      throw(InvalidOperationException(TaskT_TransitionToFinal_AlreadyCompleted))
+    end
+  end,
+  SetResult = function (this, result)
+    if not trySetResult(this.task, result) then
+      throw(InvalidOperationException(TaskT_TransitionToFinal_AlreadyCompleted))
+    end
+  end,
+  TrySetCanceled = trySetCanceled,
+  TrySetException = trySetException,
+  TrySetResult = trySetResult
 })
 
 local taskCoroutinePool = {}

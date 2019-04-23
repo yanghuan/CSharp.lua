@@ -1551,7 +1551,7 @@ namespace CSharpLua {
     }
 
     internal bool IsReadOnlyStruct(ITypeSymbol symbol) {
-      if (symbol.IsValueType && !symbol.IsValueType) {
+      if (symbol.IsValueType) {
         var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
         if (syntaxReference != null) {
           var node = syntaxReference.GetSyntax();

@@ -701,14 +701,12 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
-      if (!node.Modifiers.IsAbstract() && !node.Modifiers.IsExtern()) {
+      if (!node.Modifiers.IsAbstract() && !node.Modifiers.IsExtern() && !node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Ignore)) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
-        if (!result.IsIgnore) {
-          bool isMoreThanLocalVariables = IsMoreThanLocalVariables(result.Symbol);
-          CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables);
-          if (IsCurTypeExportMetadataAll || result.Attributes.Count > 0 || result.IsMetadata) {
-            AddMethodMetaData(result, isMoreThanLocalVariables);
-          }
+        bool isMoreThanLocalVariables = IsMoreThanLocalVariables(result.Symbol);
+        CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables);
+        if (IsCurTypeExportMetadataAll || result.Attributes.Count > 0 || result.IsMetadata) {
+          AddMethodMetaData(result, isMoreThanLocalVariables);
         }
         return result.Function;
       }
@@ -1279,8 +1277,21 @@ namespace CSharpLua {
             int begin = index + 1;
             int end = commentContent.IndexOf(closeToken, begin);
             if (end != -1) {
-              string code = commentContent.Substring(begin, end - begin);
-              statement = (LuaIdentifierNameSyntax)code.Trim();
+              string codeString = commentContent.Substring(begin, end - begin);
+              string[] lines = codeString.Split('\n');
+              var codeLines = new LuaStatementListSyntax();
+              int indent = -1;
+              foreach (string line in lines) {
+                if (!string.IsNullOrWhiteSpace(line)) {
+                  if (indent == -1) {
+                    indent = line.IndexOf(i => !char.IsWhiteSpace(i));
+                  }
+                  int space = line.IndexOf(i => !char.IsWhiteSpace(i));
+                  string code = space >= indent && indent != -1 ? line.Substring(indent) : line;
+                  codeLines.Statements.Add((LuaIdentifierNameSyntax)code);
+                }
+              }
+              statement = codeLines;
               return true;
             }
           }

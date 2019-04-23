@@ -563,5 +563,17 @@ limitations under the License.
       <class name="Task^1" IgnoreGeneric="true" />
       <class name="TaskCompletionSource^1" IgnoreGeneric="true" />
     </namespace>
+    <namespace name="System.Numerics">
+      <class name="Complex" Readonly="true">
+        <method name="op_Addition" Template="{0} + {1}" />
+        <method name="op_Subtraction" Template="{0} - {1}" />
+        <method name="op_Multiply" Template="{0} * {1}" />
+        <method name="op_Division" Template="{0} / {1}" />
+        <method name="op_UnaryNegation" Template="- {0}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_Implicit" Name="ToComplex({0})" />
+      </class>
+    </namespace>
   </assembly>
 </meta>
