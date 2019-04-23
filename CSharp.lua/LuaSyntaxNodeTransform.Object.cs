@@ -900,7 +900,7 @@ namespace CSharpLua {
       }
     }
 
-    public override LuaSyntaxNode VisitInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {
+    private LuaExpressionSyntax VisitForamtInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {
       int index = 0;
       StringBuilder sb = new StringBuilder();
       List<LuaExpressionSyntax> expressions = new List<LuaExpressionSyntax>();
@@ -922,15 +922,46 @@ namespace CSharpLua {
           ++index;
         }
       }
-
-      LuaLiteralExpressionSyntax format;
-      if (node.StringStartToken.ValueText.Contains('@')) {
-        format = BuildVerbatimStringExpression(sb.ToString());
-      } else {
-        format = BuildStringLiteralExpression(sb.ToString());
-      }
-      LuaMemberAccessExpressionSyntax memberAccessExpression = new LuaMemberAccessExpressionSyntax(new LuaParenthesizedExpressionSyntax(format), LuaIdentifierNameSyntax.Format, true);
+      LuaLiteralExpressionSyntax format = BuildVerbatimStringExpression(sb.ToString());
+      var memberAccessExpression = new LuaMemberAccessExpressionSyntax(new LuaParenthesizedExpressionSyntax(format), LuaIdentifierNameSyntax.Format, true);
       return new LuaInvocationExpressionSyntax(memberAccessExpression, expressions);
+    }
+
+    private LuaExpressionSyntax WrapInterpolatedString(object obj) {
+      if (obj is string s) {
+        return new LuaStringLiteralExpressionSyntax(s);
+      } else if (obj is ExpressionSyntax e) {
+        return WrapStringConcatExpression(e);
+      }
+      return (LuaBinaryExpressionSyntax)obj;
+    }
+
+    private LuaBinaryExpressionSyntax ConcatInterpolatedString(object left, object right) {
+      return new LuaBinaryExpressionSyntax(WrapInterpolatedString(left), LuaSyntaxNode.Tokens.Concatenation, WrapInterpolatedString(right));
+    }
+
+    private LuaExpressionSyntax VisitConcatInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {
+      int index = 0;
+      List<object> expressions = new List<object>();
+      foreach (var content in node.Contents) {
+        if (content.IsKind(SyntaxKind.InterpolatedStringText)) {
+          var stringText = (InterpolatedStringTextSyntax)content;
+          expressions.Add(stringText.TextToken.ValueText);
+        } else {
+          var interpolation = (InterpolationSyntax)content;
+          expressions.Add(interpolation.Expression);
+          ++index;
+        }
+      }
+      var binaryExpression = (LuaBinaryExpressionSyntax)expressions.Aggregate(ConcatInterpolatedString);
+      return new LuaParenthesizedExpressionSyntax(binaryExpression);
+    }
+
+    public override LuaSyntaxNode VisitInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {
+      if (node.StringStartToken.ValueText.Contains('@')) {
+        return VisitForamtInterpolatedStringExpression(node);
+      }
+      return VisitConcatInterpolatedStringExpression(node);
     }
 
     public override LuaSyntaxNode VisitInterpolation(InterpolationSyntax node) {
