@@ -953,6 +953,11 @@ namespace CSharpLua {
           ++index;
         }
       }
+
+      if (expressions.Count == 1) {
+        expressions.Add("");
+      }
+
       var binaryExpression = (LuaBinaryExpressionSyntax)expressions.Aggregate(ConcatInterpolatedString);
       return new LuaParenthesizedExpressionSyntax(binaryExpression);
     }
