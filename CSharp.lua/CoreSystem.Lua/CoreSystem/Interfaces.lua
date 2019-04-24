@@ -80,6 +80,7 @@ defInf("System.ISet_1", function(T)
   }
 end)
 
+defInf("System.IComparer")
 defInf("System.IComparer_1", emptyFn)
 defInf("System.IEqualityComparer")
 defInf("System.IEqualityComparer_1", emptyFn)

@@ -507,7 +507,7 @@ namespace CSharpLua {
     }
 
     internal bool MayHaveCodeMeta(ISymbol symbol) {
-      return symbol.DeclaredAccessibility == Accessibility.Public && !symbol.IsFromCode();
+      return symbol.DeclaredAccessibility == Accessibility.Public && symbol.IsFromAssembly();
     }
 
     private string GetTypeShortString(ISymbol symbol) {
@@ -593,33 +593,33 @@ namespace CSharpLua {
 
     private string GetInternalMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {
       Contract.Assert(symbol != null);
-      if (!MayHaveCodeMeta(symbol) && !symbol.IsOverride) {
+      if (!symbol.IsPublic()) {
         return null;
       }
 
-      string codeTemplate = null;
-      if (!symbol.IsFromCode()) {
-        codeTemplate = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetMetaInfo(symbol, metaType);
+      string metaInfo = null;
+      if (symbol.IsFromAssembly()) {
+        metaInfo = GetTypeMetaInfo(symbol)?.GetMethodMetaInfo(symbol.Name)?.GetMetaInfo(symbol, metaType);
       }
 
-      if (codeTemplate == null) {
+      if (metaInfo == null) {
         if (symbol.IsOverride) {
           if (symbol.OverriddenMethod != null) {
-            codeTemplate = GetInternalMethodMetaInfo(symbol.OverriddenMethod, metaType);
+            metaInfo = GetInternalMethodMetaInfo(symbol.OverriddenMethod, metaType);
           }
         } else {
           var interfaceImplementations = symbol.InterfaceImplementations();
           if (interfaceImplementations != null) {
             foreach (IMethodSymbol interfaceMethod in interfaceImplementations) {
-              codeTemplate = GetInternalMethodMetaInfo(interfaceMethod, metaType);
-              if (codeTemplate != null) {
+              metaInfo = GetInternalMethodMetaInfo(interfaceMethod, metaType);
+              if (metaInfo != null) {
                 break;
               }
             }
           }
         }
       }
-      return codeTemplate;
+      return metaInfo;
     }
 
     private string GetMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {

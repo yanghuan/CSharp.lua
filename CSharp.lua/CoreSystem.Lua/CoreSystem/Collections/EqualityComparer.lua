@@ -16,94 +16,127 @@ limitations under the License.
 
 local System = System
 local define = System.define
+local throw = System.throw
+local compareObj = System.compareObj
+local ArgumentException = System.ArgumentException
+local ArgumentNullException = System.ArgumentNullException
 
-local EqualityComparer = {
-  __ctor__ = function (this)
-    local T = this.__genericT__
-    local equals = T.Equals or System.equals
-    local getHashCode = T.GetHashCode or System.identityFn
-
-    this.Equals = function(x, y)
+local EqualityComparer
+EqualityComparer = define("System.EqualityComparer", function (T)
+  local equals = T.Equals or T.EqualsObj
+  local getHashCode = T.GetHashCode
+  local defaultComparer
+  return {
+    __genericT__ = T,
+    __inherits__ = { System.IEqualityComparer_1(T), System.IEqualityComparer }, 
+    getDefault = function ()
+      local comparer = defaultComparer 
+      if comparer == nil then
+        comparer = EqualityComparer(T)()
+        defaultComparer = comparer
+      end
+      return comparer
+    end,
+    EqualsOf = function (this, x, y)
       if x ~= nil then
         if y ~= nil then return equals(x, y) end
         return false
       end                 
       if y ~= nil then return false end
       return true
-    end
-
-    this.GetHashCode = function(x)
-      if x == nil then return 0 end
-      return getHashCode(x)
-    end
-  end
-}
-
-local EqualityComparer_1
-EqualityComparer_1 = define("System.EqualityComparer_1", function(T)
-  local defaultComparer
-  return {
-    __genericT__ = T,
-    __inherits__ = { System.IEqualityComparer_1(T) }, 
-    getDefault = function ()
-      local comparer = defaultComparer 
-      if comparer == nil then
-        comparer = EqualityComparer_1(T)()
-        defaultComparer = comparer
-      end
-      return comparer
+    end,
+    GetHashCodeOf = function (this, obj)
+      if obj == nil then return 0 end
+      return getHashCode(obj)
+    end,
+    GetHashCodeObjOf = function (this, obj)
+      if obj == nil then return 0 end
+      if System.is(obj, T) then return getHashCode(obj) end
+      throw(ArgumentException("Type of argument is not compatible with the generic comparer."))
+      return false
+    end,
+    EqualsObjOf = function (this, x, y)
+      if x == y then return true end
+      if x == nil or y == nil then return false end
+      local is = System.is
+      if is(x, T) and is(y, T) then return equals(x, y) end
+      throw(ArgumentException("Type of argument is not compatible with the generic comparer."))
+      return false
     end
   }
-end, EqualityComparer)
+end)
 
-local defaultComparerOfComparer
+local function compare(this, a, b)
+  return compareObj(a, b)
+end
 
-local Comparer
-Comparer = define("System.Comparer", {
-  __ctor__ = function (this)
-    local T = this.__genericT__
-    if T then
-      local compareTo = T.CompareTo
-      if compareTo ~= nil then
-        this.Compare = function(x, y)
-          if x ~= nil then
-            if y ~= nil then 
-              return compareTo(x, y) 
-            end
-            return 1
-          end                 
-          if y ~= nil then return -1 end
-          return 0
+define("System.Comparer", (function ()
+  local Comparer
+  Comparer = {
+    __inherits__ = { System.IComparer },
+    static = function (this)
+      local default = Comparer()
+      this.Default = default
+      this.DefaultInvariant = default
+    end,
+    Compare = compare
+  }
+  return Comparer
+end)())
+
+local Comparer, ComparisonComparer
+
+ComparisonComparer = define("System.ComparisonComparer", function (T)
+  return {
+    __inherits__ = { Comparer(T) },
+    __ctor__ = function (this, comparison)
+      this.comparison = comparison
+    end,
+    Compare = function (this, x, y)
+      return this.comparison(x, y)
+    end
+  }
+end)
+
+Comparer = define("System.Comparer_1", function (T)
+  local Compare
+  local compareTo = T.CompareTo
+  if compareTo then
+    Compare = function (this, x, y)
+      if x ~= nil then
+        if y ~= nil then 
+          return compareTo(x, y) 
         end
-      end
+        return 1
+      end                 
+      if y ~= nil then return -1 end
+      return 0
     end
-  end,
-  Compare = System.compareObj,
-  getDefault = function ()
-    local comparer = defaultComparerOfComparer
-    if comparer == nil then
-      comparer = Comparer()
-      defaultComparerOfComparer = comparer;
-    end
-    return comparer
+  else
+    Compare = compare
   end
-})
 
-local Comparer_1
-Comparer_1 = define("System.Comparer_1", function(T)
   local defaultComparer
   local function getDefault()
     local comparer = defaultComparer 
     if comparer == nil then
-      comparer = Comparer_1(T)()
+      comparer = Comparer(T)()
       defaultComparer = comparer
     end
     return comparer
   end
+
+  local function Create(comparison)
+    if comparison == nil then throw(ArgumentNullException("comparison")) end
+    return ComparisonComparer(T)(comparison)
+  end
+
   return {
     __genericT__ = T,
-    __inherits__ = { System.IComparer_1(T) }, 
+    __inherits__ = { System.IComparer_1(T), System.IComparer }, 
     getDefault = getDefault,
     getDefaultInvariant = getDefault,
+    Compare = Compare,
+    Create = Create
   }
-end, Comparer)
+end)

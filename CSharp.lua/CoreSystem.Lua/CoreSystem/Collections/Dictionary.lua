@@ -22,7 +22,7 @@ local throwFailedVersion = System.throwFailedVersion
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentException = System.ArgumentException
 local KeyNotFoundException = System.KeyNotFoundException
-local EqualityComparer_1 = System.EqualityComparer_1
+local EqualityComparer = System.EqualityComparer
 
 local assert = assert
 local pairs = pairs
@@ -243,10 +243,11 @@ local Dictionary = {
         end
       end
     else
-      local equals = EqualityComparer_1(this.__genericTValue__).getDefault().Equals
+      local comparer = EqualityComparer(this.__genericTValue__).getDefault()
+      local equals = comparer.EqualsOf
         for _, v in pairs(this) do
           if v ~= null then
-            if equals(value, v ) then
+            if equals(comparer, value, v ) then
               return true
             end
           end
@@ -275,7 +276,7 @@ local Dictionary = {
     return true, value
   end,
   getComparer = function (this)
-    return EqualityComparer_1(this.__genericTKey__).getDefault()
+    return EqualityComparer(this.__genericTKey__).getDefault()
   end,
   getCount = getCount,
   get = function (this, key)

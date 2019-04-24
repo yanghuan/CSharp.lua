@@ -325,7 +325,12 @@ limitations under the License.
       </class>
       <class name="Guid" Readonly="true" />
     </namespace>
-    <namespace name="System.Collections" Name="System" />
+    <namespace name="System.Collections" Name="System" >
+      <class name="IEqualityComparer">
+        <method name="Equals" Name="EqualsObjOf" />
+        <method name="GetHashCode" Name="GetHashCodeObjOf" />
+      </class>
+    </namespace>
     <namespace name="System.Collections.Generic" Name="System">
       <class name="List^1" Name="System.List">
         <property name="Count">
@@ -351,17 +356,15 @@ limitations under the License.
         <property name="List" IsField="true" />
       </class>
       <class name="HashSet^1" Name="System.HashSet" />
-      <class name="EqualityComparer^1">
-        <method name="Equals" Template="{this}.Equals({0}, {1})" />
-        <method name="GetHashCode" Template="{this}.GetHashCode({0})" />
-      </class>
-      <class name="Comparer^1">
-        <method name="Compare" Template="{this}.Compare({0}, {1})" />
-      </class>
       <class name="KeyValuePair^2" Name="System.KeyValuePair">
         <property name="Key" IsField="true" />
         <property name="Value" IsField="true" />
       </class>
+      <class name="IEqualityComparer^1">
+        <method name="Equals" Name="EqualsOf" />
+        <method name="GetHashCode" Name="GetHashCodeOf" />
+      </class>
+      <class name="EqualityComparer^1" Name="System.EqualityComparer" />
     </namespace>
     <namespace name="System.Linq">
       <class name="Enumerable">

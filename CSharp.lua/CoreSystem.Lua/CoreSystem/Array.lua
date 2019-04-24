@@ -28,7 +28,7 @@ local NullReferenceException = System.NullReferenceException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local IndexOutOfRangeException = System.IndexOutOfRangeException
-local EqualityComparer_1 = System.EqualityComparer_1
+local EqualityComparer = System.EqualityComparer
 local Comparer_1 = System.Comparer_1
 
 local assert = assert
@@ -240,12 +240,17 @@ end
 
 local function getComp(t, comparer)
   local compare
-  if comparer == nil then
-    compare = Comparer_1(t.__genericT__).getDefault().Compare 
-  elseif comparer.Compare then    
-    compare = comparer.Compare
+  if comparer then
+    if type(comparer) == "function" then
+      compare = comparer
+    else
+      local Compare = assert(comparer.Compare)
+      compare = function (x, y) return Compare(comparer, x, y) end
+    end
   else
-    compare = comparer
+    comparer = Comparer_1(t.__genericT__).getDefault()
+    local Compare = comparer.Compare
+    compare = function (x, y) return Compare(comparer, x, y) end
   end
   return function(x, y) 
     if x == null then x = nil end
@@ -322,13 +327,14 @@ Array = {
     end
   end,
   contains = function (t, v)
-    local equals = EqualityComparer_1(t.__genericT__).getDefault().Equals
+    local comparer = EqualityComparer(t.__genericT__).getDefault()
+    local equals = comparer.EqualsOf
     for i = 1, #t do 
       local item = t[i]
       if item == null then
         item = nil
       end
-      if equals(item, v) then
+      if equals(comparer, item, v) then
         return true
       end
     end
@@ -390,13 +396,14 @@ Array = {
   end,
   removeRange = removeRange,
   remove = function (t, v)
-    local equals = EqualityComparer_1(t.__genericT__).getDefault().Equals
+    local comparer = EqualityComparer(t.__genericT__).getDefault()
+    local equals = comparer.EqualsOf
     for i = 1, #t do
       local item = t[i]
       if item == null then
         item = nil
       end
-      if equals(item, v) then
+      if equals(comparer, item, v) then
         tremove(t, i)
         t.version = t.version + 1
         return true
@@ -484,8 +491,9 @@ Array = {
     checkIndexAndCount(t, index, count)
     local compare
     if comparer == nil then
-      compare = Comparer_1(t.__genericT__).getDefault().Compare 
-    else    
+      comparer = Comparer_1(t.__genericT__).getDefault()
+      compare = comparer.Compare 
+    else
       compare = comparer.compare
     end
     local lo = index
@@ -496,7 +504,7 @@ Array = {
       if item == null then
         item = nil
       end
-      local order = compare(item, v);
+      local order = compare(comparer, item, v);
       if order == 0 then return i end
       if order < 0 then
         lo = i + 1
@@ -661,13 +669,14 @@ Array = {
       v, index, count = ...
       checkIndexAndCount(t, index, count)
     end
-    local equals = EqualityComparer_1(t.__genericT__).getDefault().Equals
+    local comparer = EqualityComparer(t.__genericT__).getDefault()
+    local equals = comparer.EqualsOf
     for i = index + 1, index + count do
       local item = t[i]
       if item == null then
         item = nil
       end
-      if equals(item, v) then
+      if equals(comparer, item, v) then
         return i - 1
       end
     end
@@ -691,13 +700,14 @@ Array = {
       throw(ArgumentOutOfRangeException("count"))
     end
     checkIndex(t, index - count)
-    local equals = EqualityComparer_1(t.__genericT__).getDefault().Equals
+    local comparer = EqualityComparer(t.__genericT__).getDefault()
+    local equals = comparer.EqualsOf
     for i = index + 1, index - count, -1 do
       local item = t[i]
       if item == null then
         item = nil
       end
-      if equals(item, v) then
+      if equals(comparer, item, v) then
         return i - 1
       end
     end
