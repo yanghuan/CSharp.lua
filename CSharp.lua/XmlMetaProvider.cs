@@ -288,9 +288,6 @@ namespace CSharpLua {
         } else {
           methodModel = models_.Find(i => IsMethodMatch(i, symbol));
         }
-        if (methodModel != null && methodModel.Baned) {
-          throw new CompilationErrorException($"{symbol} is baned");
-        }
         return methodModel?.Name;
       }
 

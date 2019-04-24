@@ -588,9 +588,6 @@ namespace CSharpLua {
 
       while (symbol.IsOverride) {
         var overriddenSymbol = symbol.OverriddenSymbol();
-        if (!overriddenSymbol.IsFromCode()) {
-          break;
-        }
         symbol = overriddenSymbol;
       }
 
@@ -723,17 +720,10 @@ namespace CSharpLua {
       var names = GetSymbolNames(symbol);
       var rootType = symbol.ContainingType;
       var curTypeSymbol = rootType;
-      bool hasAssemblyBase = false;
       while (true) {
         AddSimilarNameMembers(curTypeSymbol, names, members, rootType != curTypeSymbol);
         var baseTypeSymbol = curTypeSymbol.BaseType;
         if (baseTypeSymbol != null) {
-          if (baseTypeSymbol.IsFromAssembly()) {
-            if (baseTypeSymbol.IsSystemObjectOrValueType() || hasAssemblyBase) {
-              break;
-            }
-            hasAssemblyBase = true;
-          }
           curTypeSymbol = baseTypeSymbol;
         } else {
           break;
@@ -746,10 +736,7 @@ namespace CSharpLua {
     private void AddSimilarNameMembers(INamedTypeSymbol typeSymbol, List<string> names, List<ISymbol> outList, bool isWithoutPrivate = false) {
       foreach (var member in typeSymbol.GetMembers()) {
         if (member.IsOverride) {
-          var overriddenSymbol = member.OverriddenSymbol();
-          if (overriddenSymbol.IsFromCode()) {
-            continue;
-          }
+          continue;
         }
 
         if (!isWithoutPrivate || !member.IsPrivate()) {
@@ -1551,13 +1538,16 @@ namespace CSharpLua {
     }
 
     internal bool IsReadOnlyStruct(ITypeSymbol symbol) {
-      if (symbol.IsValueType) {
+      if (symbol.IsValueType && symbol.TypeKind != TypeKind.TypeParameter) {
         var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
         if (syntaxReference != null) {
-          var node = syntaxReference.GetSyntax();
-          var declaration = (StructDeclarationSyntax)node;
-          if (declaration.Modifiers.IsReadOnly()) {
-            return true;
+          var declaration = syntaxReference.GetSyntax() as StructDeclarationSyntax;
+          if (declaration != null) {
+            if (declaration.Modifiers.IsReadOnly()) {
+              return true;
+            }
+          } else {
+            return false;
           }
         } else {
           return XmlMetaProvider.IsTypeReadOnly((INamedTypeSymbol)symbol);

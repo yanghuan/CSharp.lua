@@ -958,8 +958,11 @@ namespace CSharpLua {
         expressions.Add("");
       }
 
-      var binaryExpression = (LuaBinaryExpressionSyntax)expressions.Aggregate(ConcatInterpolatedString);
-      return new LuaParenthesizedExpressionSyntax(binaryExpression);
+      var resultExpression = (LuaExpressionSyntax)expressions.Aggregate(ConcatInterpolatedString);
+      if (node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+        resultExpression = new LuaParenthesizedExpressionSyntax(resultExpression);
+      }
+      return resultExpression;
     }
 
     public override LuaSyntaxNode VisitInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {

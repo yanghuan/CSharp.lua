@@ -2452,6 +2452,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildDelegateNameExpression(IMethodSymbol symbol, LuaExpressionSyntax target, LuaExpressionSyntax name, CSharpSyntaxNode node) {
+      const int kReturnParameterIndex = int.MaxValue;
       LuaExpressionSyntax nameExpression;
       if (symbol.IsStatic) {
         nameExpression = name;
@@ -2467,7 +2468,10 @@ namespace CSharpLua {
           foreach (var typeArgument in targetMethodSymbol.ContainingType.TypeArguments) {
             if (typeArgument.TypeKind == TypeKind.TypeParameter) {
               int parameterIndex = targetMethodSymbol.Parameters.IndexOf(i => i.Type.IsTypeParameterExists(typeArgument));
-              Contract.Assert(parameterIndex != -1);
+              if (parameterIndex == -1) {
+                Contract.Assert(targetMethodSymbol.ReturnType != null && targetMethodSymbol.ReturnType.IsTypeParameterExists(typeArgument));
+                parameterIndex = kReturnParameterIndex;
+              }
               targetTypeParameters.Add(new TypeParameterPlaceholder() {
                 Symbol = typeArgument,
                 ParameterIndex = parameterIndex,
@@ -2486,12 +2490,19 @@ namespace CSharpLua {
                 ParameterIndex = parameterIndex,
               });
             } else {
-              var typeArgument = symbol.TypeArguments[j];
-              Contract.Assert(typeArgument.TypeKind != TypeKind.TypeParameter);
-              originalTypeParameters.Add(new TypeParameterPlaceholder() {
-                Symbol = typeArgument,
-                ParameterIndex = -1,
-              });
+              if (originalDefinition.ReturnType != null && originalDefinition.ReturnType.IsTypeParameterExists(originalTypeArgument)) {
+                originalTypeParameters.Add(new TypeParameterPlaceholder() {
+                  Symbol = originalTypeArgument,
+                  ParameterIndex = kReturnParameterIndex,
+                });
+              } else {
+                var typeArgument = symbol.TypeArguments[j];
+                Contract.Assert(typeArgument.TypeKind != TypeKind.TypeParameter);
+                originalTypeParameters.Add(new TypeParameterPlaceholder() {
+                  Symbol = typeArgument,
+                  ParameterIndex = -1,
+                });
+              }
             }
             ++j;
           }
@@ -2504,8 +2515,15 @@ namespace CSharpLua {
               if (index != -1) {
                 placeholders.Add(new GenericPlaceholder(originalTypeParameter.Symbol, index));
               } else {
-                var parameter = targetMethodSymbol.Parameters[parameterIndex];
-                placeholders.Add(new GenericPlaceholder(parameter.Type));
+                ITypeSymbol parameterType;
+                if (parameterIndex == kReturnParameterIndex) {
+                  Contract.Assert(targetMethodSymbol.ReturnType != null);
+                  parameterType = targetMethodSymbol.ReturnType;
+                } else {
+                  var parameter = targetMethodSymbol.Parameters[parameterIndex];
+                  parameterType = parameter.Type;
+                }
+                placeholders.Add(new GenericPlaceholder(parameterType));
               }
             } else {
               placeholders.Add(new GenericPlaceholder(originalTypeParameter.Symbol));
