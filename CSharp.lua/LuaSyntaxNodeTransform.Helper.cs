@@ -1408,22 +1408,23 @@ namespace CSharpLua {
       return BuildDefaultValue(typeName);
     }
 
-    private LuaExpressionSyntax BuildDeconstructExpression(ITypeSymbol typeSymbol, LuaExpressionSyntax expression, SyntaxNode node) {
-      const string kDeconstructName = "Deconstruct";
-      LuaInvocationExpressionSyntax BuildInvocation() {
-        return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, kDeconstructName, true));
-      }
+    private LuaExpressionSyntax BuildDeconstructExpression(LuaExpressionSyntax expression, LuaExpressionSyntax methodName) {
+      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, methodName, true));
+    }
 
-      if (typeSymbol.IsTupleType || typeSymbol.IsSystemTuple()) {
-        return BuildInvocation();
-      } else {
-        var methods = typeSymbol.GetMembers(kDeconstructName);
-        if (methods.IsEmpty) {
-          var info = semanticModel_.GetDeconstructionInfo((AssignmentExpressionSyntax)node.Parent);
-          return BuildExtensionMethodInvocation(info.Method, expression);
+    private LuaExpressionSyntax BuildDeconstructExpression(ITypeSymbol typeSymbol, LuaExpressionSyntax expression, SyntaxNode node) {
+      if (!typeSymbol.IsTupleType && !typeSymbol.IsSystemTuple()) {
+        if (node.Parent is AssignmentExpressionSyntax assignment) {
+          var methodSymbol = semanticModel_.GetDeconstructionInfo(assignment).Method;
+          if (methodSymbol.IsExtensionMethod) {
+            return BuildExtensionMethodInvocation(methodSymbol, expression);
+          } else {
+            var methodName = GetMemberName(methodSymbol);
+            return BuildDeconstructExpression(expression, methodName);
+          }
         }
-        return BuildInvocation();
       }
+      return BuildDeconstructExpression(expression, LuaIdentifierNameSyntax.Deconstruct);
     }
 
     private LuaExpressionSyntax BuildDeconstructExpression(ExpressionSyntax node, LuaExpressionSyntax expression) {

@@ -120,7 +120,7 @@ namespace CSharpLua {
       IEnumerable<string> metas,
       LuaSyntaxGenerator.SettingInfo setting) {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
-      var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.Latest).WithDocumentationMode(DocumentationMode.Parse);
+      var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.CSharp8).WithDocumentationMode(DocumentationMode.Parse);
       var syntaxTrees = codes.Select(code => CSharpSyntaxTree.ParseText(code.Text, parseOptions, code.Path));
       var references = libs.Select(i => MetadataReference.CreateFromFile(i));
       return new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments, metas, setting);

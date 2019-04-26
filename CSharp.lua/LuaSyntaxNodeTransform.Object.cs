@@ -1097,20 +1097,23 @@ namespace CSharpLua {
       return name;
     }
 
+    private LuaExpressionSyntax BuildIsExpression(ExpressionSyntax leftTypeExpression, ExpressionSyntax rightTypeExpression, LuaIdentifierNameSyntax leftName) {
+      var leftType = semanticModel_.GetTypeInfo(leftTypeExpression).Type;
+      var rightType = semanticModel_.GetTypeInfo(rightTypeExpression).Type;
+      if (leftType.IsSubclassOf(rightType)) {
+        return LuaIdentifierLiteralExpressionSyntax.True;
+      } else {
+        var type = (LuaExpressionSyntax)rightTypeExpression.Accept(this);
+        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, leftName, type);
+      }
+    }
+
     public override LuaSyntaxNode VisitIsPatternExpression(IsPatternExpressionSyntax node) {
       var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
       var name = (LuaIdentifierNameSyntax)declarationPattern.Designation.Accept(this);
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, expression));
-
-      var leftType = semanticModel_.GetTypeInfo(node.Expression).Type;
-      var rightType = semanticModel_.GetTypeInfo(declarationPattern.Type).Type;
-      if (leftType.IsSubclassOf(rightType)) {
-        return LuaIdentifierLiteralExpressionSyntax.True;
-      } else {
-        var type = (LuaExpressionSyntax)declarationPattern.Type.Accept(this);
-        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, name, type);
-      }
+      return BuildIsExpression(node.Expression, declarationPattern.Type, name);
     }
 
     public override LuaSyntaxNode VisitDeclarationPattern(DeclarationPatternSyntax node) {
@@ -1138,10 +1141,8 @@ namespace CSharpLua {
       var expressions = node.Arguments.Select(i => (LuaExpressionSyntax)i.Expression.Accept(this));
       if (node.Parent.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
         var assigment = (AssignmentExpressionSyntax)node.Parent;
-        if (assigment.Left == node) {
-          LuaSequenceListExpressionSyntax list = new LuaSequenceListExpressionSyntax();
-          list.Expressions.AddRange(expressions);
-          return list;
+        if (assigment.Left == node || (assigment.Right.IsKind(SyntaxKind.TupleExpression) && assigment.Left.IsKind(SyntaxKind.TupleExpression))) {
+          return new LuaSequenceListExpressionSyntax(expressions);
         }
       }
       return BuildValueTupleCreateExpression(expressions);

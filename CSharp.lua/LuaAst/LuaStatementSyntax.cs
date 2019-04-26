@@ -75,9 +75,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaReturnStatementSyntax(IEnumerable<LuaExpressionSyntax> expressions) {
-      if (expressions != null) {
-        Expressions.AddRange(expressions);
-      }
+      Expressions.AddRange(expressions);
     }
 
     internal override void Render(LuaRenderer renderer) {

@@ -575,7 +575,7 @@ limitations under the License.
         <method name="op_UnaryNegation" Template="- {0}" />
         <method name="op_Equality" Template="{0} == {1}" />
         <method name="op_Inequality" Template="{0} ~= {1}" />
-        <method name="op_Implicit" Name="ToComplex({0})" />
+        <method name="op_Implicit" Name="ToComplex" />
       </class>
     </namespace>
   </assembly>

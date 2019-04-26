@@ -113,6 +113,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax TupleType = "System.Tuple";
     public static readonly LuaIdentifierNameSyntax ValueTupleType = "System.ValueTuple";
     public static readonly LuaIdentifierNameSyntax ValueTupleTypeCreate = "System.valueTuple";
+    public static readonly LuaIdentifierNameSyntax Deconstruct = "Deconstruct";
     public static readonly LuaIdentifierNameSyntax KeyValuePair = "System.KeyValuePair";
     public static readonly LuaIdentifierNameSyntax __GC = "__gc";
     public static readonly LuaIdentifierNameSyntax Await = "await";
