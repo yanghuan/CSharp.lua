@@ -33,6 +33,12 @@ limitations under the License.
         <property name="Length">
           <get Template="#{this}" />
         </property>
+        <method name="Join" GenericArgCount="1" Name="JoinEnumerable" IgnoreGeneric="true" />
+        <method name="Join" Name="JoinEnumerable">
+          <arg type="System.String" />
+          <arg type="System.Collections.Generic.IEnumerable^1" />
+        </method>
+        <method name="Join" ArgCount="2" Name="JoinParams" />
       </class>
       <class name="Enum">
         <method name="TryParse" ArgCount="2" Template="System.Enum.TryParse({^0}, {0})" />

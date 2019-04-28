@@ -359,12 +359,28 @@ Array = {
   end,
   insertRange = function (t, index, collection) 
     if collection == nil then throw(ArgumentNullException("collection")) end
-    if index < 0 or index > #t then
+    local len = #t
+    if index < 0 or index > len then
       throw(ArgumentOutOfRangeException("index"))
     end
-    for _, v in each(collection) do
-      index = index + 1
-      tinsert(t, index, v == nil and null or v)
+    if t.GetEnumerator == arrayEnumerator then
+      local count = #collection
+      if count > 0 then
+        if index < len then
+          tmove(t, index + 1, len, index + 1 + count, t)
+        end
+        if t == collection then
+          tmove(t, 1, index, index + 1, t)
+          tmove(t, index + 1 + count, count * 2, index * 2 + 1, t)
+        else
+          tmove(collection, 1, count, index + 1, t)
+        end
+      end
+    else
+      for _, v in each(collection) do
+        index = index + 1
+        tinsert(t, index, v == nil and null or v)
+      end
     end
     t.version = t.version + 1
   end,

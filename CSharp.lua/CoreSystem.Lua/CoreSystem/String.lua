@@ -136,7 +136,7 @@ function String.GetType(this)
   return System.typeof(String)
 end
 
-String.ToString = tostring
+String.ToString = System.identityFn
 
 function String.get(this, index)
   if index < 0 or index >= #this then
@@ -152,7 +152,7 @@ function String.Concat(...)
   if len == 1 then
     local v = ...
     if System.isEnumerableLike(v) then
-      for _, v in System.each(array) do
+      for _, v in System.each(v) do
         t[count] = v:ToString()
         count = count + 1
       end
@@ -167,6 +167,52 @@ function String.Concat(...)
     end
   end
   return tconcat(t)
+end
+
+function String.JoinEnumerable(separator, values)
+  if values == nil then throw(ArgumentNullException("values")) end
+  if type(separator) == "number" then
+    separator = schar(separator)
+  end
+  local t = {}
+  local len = 1
+  for _, v in System.each(values) do
+    if v ~= nil then
+      t[len] = v:ToString()
+      len = len + 1
+    end
+  end
+  return tconcat(t, separator)
+end
+
+function String.JoinParams(separator, ...)
+  if type(separator) == "number" then
+    separator = schar(separator)
+  end
+  local t = {}
+  local len = 1
+  local n = select("#", ...)
+  if n == 1 then
+    local values = ...
+    if System.isArrayLike(values) then
+      for i = 0, #values - 1 do
+        local v = values:get(i)
+        if v ~= nil then
+          t[len] = v:ToString()
+          len = len + 1
+        end
+      end
+      return tconcat(t, separator) 
+    end
+  end
+  for i = 1, n do
+    local v = select(i, ...)
+    if v ~= nil then
+      t[len] = v:ToString()
+      len = len + 1
+    end
+  end
+  return tconcat(t, separator) 
 end
 
 function String.Join(separator, value, startIndex, count)

@@ -86,7 +86,7 @@ local MemberInfo = define("System.Reflection.MemberInfo", {
     return this.memberType
   end,
   getDeclaringType = function (this)
-    return typeof(this[1])
+    return typeof(this.c)
   end,
   getIsStatic = function (this)
     return band(checkMatadata(this.metadata)[2], 0x8) == 1
@@ -109,12 +109,12 @@ local function checkObj(obj, cls)
   end
 end
 
-local function checkTarget(this, obj, metadata)
+local function checkTarget(cls, obj, metadata)
   if band(metadata[2], 0x8) == 0 then
     if obj == nil then
       throw(TargetException())
     end
-    checkObj(obj, this[1])
+    checkObj(obj, cls)
   else
     return true
   end
@@ -132,10 +132,10 @@ local function checkValue(value, valueClass)
 end
 
 local function getOrSetField(this, obj, isSet, value)
-  local metadata = this.metadata
+  local cls, metadata = this.c, this.metadata
   if metadata then
-    if checkTarget(this, obj, metadata) then
-      obj = this[1]
+    if checkTarget(cls, obj, metadata) then
+      obj = cls
     end
     local name = metadata[4]
     if type(name) ~= "string" then
@@ -148,9 +148,9 @@ local function getOrSetField(this, obj, isSet, value)
     end
   else
     if obj ~= nil then
-      checkObj(obj, this[1])
+      checkObj(obj, cls)
     else
-      obj = this[1]
+      obj = cls
     end
     if isSet then
       obj[this.name] = value
@@ -225,11 +225,11 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
 })
 
 local function getOrSetProperty(this, obj, isSet, value)
-  local metadata = this.metadata
+  local cls, metadata = this.c, this.metadata
   if metadata then
     local isStatic
-    if checkTarget(this, obj, metadata) then
-      obj = this[1]
+    if checkTarget(cls, obj, metadata) then
+      obj = cls
       isStatic = true
     end
     if isSet then
@@ -278,9 +278,9 @@ local function getOrSetProperty(this, obj, isSet, value)
   else
     local isStatic
     if obj ~= nil then
-      checkObj(obj, this[1])
+      checkObj(obj, cls)
     else
-      obj = this[1]
+      obj = cls
       isStatic = true
     end
     if this.isField then
@@ -392,10 +392,10 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
     return typeof(metadata[4 + parameterCount])
   end,
   Invoke = function (this, obj, parameters)
-    local metadata = this.metadata
+    local cls, metadata = this.c, this.metadata
     if metadata then
       local isStatic
-      if checkTarget(this, obj, metadata) then
+      if checkTarget(cls, obj, metadata) then
         isStatic = true
       end
       local t
@@ -430,7 +430,7 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
     else
       local f = assert(this.f)
       if obj ~= nil then
-        checkObj(obj, this[1])
+        checkObj(obj, cls)
         if parameters ~= nil then
           local t = toLuaTable(parameters)
           return f(obj, unpack(t, 1, #parameters))
@@ -665,8 +665,9 @@ end
 
 function Type.IsDefined(this, attributeType, inherit)
   if attributeType == nil then throw(ArgumentNullException()) end
+  local cls = this[1]
   if not inherit then
-    local metadata = this[1].__metadata__
+    local metadata = cls.__metadata__
     if metadata then
       local class  = metadata.class
       if class then
@@ -675,7 +676,6 @@ function Type.IsDefined(this, attributeType, inherit)
     end
     return false
   else
-    local cls = this[1]
     repeat
       local metadata = cls.__metadata__
       if metadata then
@@ -698,9 +698,10 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
   else
     if attributeType == nil then throw(ArgumentNullException()) end
   end
+  local cls = this[1]
   local t = {}
   if not inherit then
-    local metadata = this[1].__metadata__
+    local metadata = cls.__metadata__
     if metadata then
       local class  = metadata.class
       if class then
@@ -708,7 +709,6 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
       end
     end
   else
-    local cls = this[1]
     repeat
       local metadata = cls.__metadata__
       if metadata then
