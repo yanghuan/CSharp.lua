@@ -708,6 +708,18 @@ namespace CSharpLua {
       return typeNameUseds_.TryAdd(type, newName);
     }
 
+    internal string GetUniqueNameInType(INamedTypeSymbol type, string name, Func<string, bool> checker) {
+      int index = 0;
+      while (true) {
+        string newName = index != 0 ? name + index : name;
+        if (IsCurTypeNameEnable(type, newName) && checker(newName)) {
+          TryAddNewUsedName(type, name);
+          return newName;
+        }
+        ++index;
+      }
+    }
+
     private List<ISymbol> GetStaticClassSameNameMembers(ISymbol symbol) {
       List<ISymbol> members = new List<ISymbol>();
       var names = GetSymbolNames(symbol);

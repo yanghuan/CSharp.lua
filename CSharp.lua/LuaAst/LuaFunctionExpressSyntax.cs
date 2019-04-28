@@ -24,7 +24,7 @@ namespace CSharpLua.LuaAst {
   public class LuaFunctionExpressionSyntax : LuaExpressionSyntax {
     public readonly LuaParameterListSyntax ParameterList = new LuaParameterListSyntax();
     public string FunctionKeyword => Tokens.Function;
-    public bool HasYield { get; set; }
+    public bool HasYield;
     public int TempCount;
 
     public readonly LuaBlockSyntax Body = new LuaBlockSyntax() {

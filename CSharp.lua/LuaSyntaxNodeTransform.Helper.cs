@@ -168,13 +168,15 @@ namespace CSharpLua {
       localReservedNames_.Add(symbol, name);
     }
 
-    private void CheckLocalVariableName(ref LuaIdentifierNameSyntax identifierName, SyntaxNode node) {
+    private bool CheckLocalVariableName(ref LuaIdentifierNameSyntax identifierName, SyntaxNode node) {
       string name = identifierName.ValueText;
       bool isReserved = CheckLocalBadWord(ref name, node);
       if (isReserved) {
         identifierName = name;
         AddLocalVariableMapping(identifierName, node);
+        return true;
       }
+      return false;
     }
 
     private void CheckLocalSymbolName(ISymbol symbol, ref LuaIdentifierNameSyntax name) {
@@ -182,6 +184,38 @@ namespace CSharpLua {
       if (newName != null) {
         name = newName;
       }
+    }
+
+    private static bool IsStaticLocalMethodEnableAddToType(IMethodSymbol symbol) {
+      const int kMaxMemberCountLimit = 150;
+      return symbol.ContainingType.GetMembers().Length < kMaxMemberCountLimit;
+    }
+
+    private LuaIdentifierNameSyntax GetLocalMethodName(IMethodSymbol symbol, SyntaxNode node) {
+      Contract.Assert(symbol.MethodKind == MethodKind.LocalFunction);
+      var identifierName = localReservedNames_.GetOrDefault(symbol);
+      if (identifierName == null) {
+        var lcoalFunctionNode = (LocalFunctionStatementSyntax)symbol.GetDeclaringSyntaxNode();
+        string name = symbol.Name;
+        if (lcoalFunctionNode.Modifiers.IsStatic() && IsStaticLocalMethodEnableAddToType(symbol)) {
+          Utility.IsIdentifierIllegal(ref name);
+          name = generator_.GetUniqueNameInType(symbol.ContainingType, name, newName => {
+            if (LuaSyntaxNode.IsMethodReservedWord(newName)) {
+              return false;
+            }
+            var body = FindParentMethodBody(node);
+            Contract.Assert(body != null);
+            return !IsLocalVarExists(newName, body);
+          });
+        } else {
+          if (LuaSyntaxNode.IsReservedWord(name)) {
+            CheckLocalBadWord(ref name, node);
+          }
+        }
+        identifierName = name;
+        localReservedNames_.Add(symbol, identifierName);
+      }
+      return identifierName;
     }
 
     private sealed class ContinueSearcher : LuaSyntaxSearcher {

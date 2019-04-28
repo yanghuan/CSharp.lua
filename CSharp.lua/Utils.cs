@@ -98,6 +98,10 @@ namespace CSharpLua {
       return index >= 0 && index < list.Count ? list[index] : v;
     }
 
+    public static void RemoveRange<T>(this List<T> list, int index) {
+      list.RemoveRange(index, list.Count - index);
+    }
+
     public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T t = default) {
       if (dict.TryGetValue(key, out T v)) {
         return v;
@@ -1047,6 +1051,11 @@ namespace CSharpLua {
         }
       }
       return $"0x{flags:X}";
+    }
+
+    public static SyntaxNode GetDeclaringSyntaxNode(this ISymbol symbol) {
+      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+      return syntaxReference?.GetSyntax();
     }
 
     public static bool IsNil(this LuaExpressionSyntax expression) {

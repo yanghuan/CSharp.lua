@@ -25,15 +25,18 @@ namespace CSharpLua.LuaAst {
     public string OpenToken { get; set; }
     public string CloseToken { get; set; }
     public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
-    private LuaLocalAreaSyntax localArea_;
-    public int TempCount;
+    private LuaLocalAreaSyntax headVariables_;
 
-    internal void AddLocalArea(LuaIdentifierNameSyntax name) {
-      if (localArea_ == null) {
-        localArea_ = new LuaLocalAreaSyntax();
-        Statements.Insert(0, localArea_);
+    public int TempCount;
+    public List<int> UsingDeclarations;
+    public bool HasUsingDeclarations => UsingDeclarations != null;
+
+    internal void AddHeadVariable(LuaIdentifierNameSyntax name) {
+      if (headVariables_ == null) {
+        headVariables_ = new LuaLocalAreaSyntax();
+        Statements.Insert(0, headVariables_);
       }
-      localArea_.Variables.Add(name);
+      headVariables_.Variables.Add(name);
     }
 
     internal void AddStatement(LuaStatementSyntax statement) {
