@@ -2103,7 +2103,13 @@ namespace CSharpLua {
       }
 
       if (node.Expression.IsKind(SyntaxKind.ThisExpression)) {
-        return (LuaExpressionSyntax)node.Name.Accept(this);
+        var nameExpression = (LuaExpressionSyntax)node.Name.Accept(this);
+        if (symbol.Kind == SymbolKind.Method) {
+          if (IsDelegateExpression((IMethodSymbol)symbol, node, nameExpression, LuaIdentifierNameSyntax.This, out var delegateExpression)) {
+            return delegateExpression;
+          }
+        }
+        return nameExpression;
       }
 
       if (node.Expression.IsKind(SyntaxKind.BaseExpression)) {
@@ -2166,17 +2172,27 @@ namespace CSharpLua {
       }
 
       if (symbol.Kind == SymbolKind.Method) {
-        if (!node.Parent.IsKind(SyntaxKind.InvocationExpression)) {
-          if (!IsInternalMember(node.Name, symbol)) {
-            name = new LuaMemberAccessExpressionSyntax(expression, name);
-          }
-          return BuildDelegateNameExpression((IMethodSymbol)symbol, expression, name, node);
-        } else if (IsDelegateInvoke(symbol, node.Name)) {
-          return expression;
+        if (IsDelegateExpression((IMethodSymbol)symbol, node, name, expression, out var delegateExpression)) {
+          return delegateExpression;
         }
       }
 
       return new LuaMemberAccessExpressionSyntax(expression, name, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
+    }
+
+    private bool IsDelegateExpression(IMethodSymbol symbol, MemberAccessExpressionSyntax node, LuaExpressionSyntax name, LuaExpressionSyntax expression, out LuaExpressionSyntax delegateExpression) {
+      if (!node.Parent.IsKind(SyntaxKind.InvocationExpression)) {
+        if (!IsInternalMember(node.Name, symbol)) {
+          name = new LuaMemberAccessExpressionSyntax(expression, name);
+        }
+        delegateExpression = BuildDelegateNameExpression(symbol, expression, name, node);
+        return true;
+      } else if (IsDelegateInvoke(symbol, node.Name)) {
+        delegateExpression = expression;
+        return true;
+      }
+      delegateExpression = null;
+      return false;
     }
 
     private static bool IsDelegateInvoke(ISymbol symbol, SimpleNameSyntax name) {
