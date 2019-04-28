@@ -863,7 +863,8 @@ namespace CSharpLua {
         return conditionalTemps_.Peek();
       }
       var nameExpression = (LuaExpressionSyntax)node.Name.Accept(this);
-      return new LuaMemberAccessExpressionSyntax(conditionalTemps_.Peek(), nameExpression, symbol.Kind == SymbolKind.Method);
+      bool isObjectColon = symbol.Kind == SymbolKind.Method || !IsPropertyFieldOrEventFiled(symbol);
+      return new LuaMemberAccessExpressionSyntax(conditionalTemps_.Peek(), nameExpression, isObjectColon);
     }
 
     public override LuaSyntaxNode VisitElementBindingExpression(ElementBindingExpressionSyntax node) {

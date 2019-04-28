@@ -364,6 +364,10 @@ namespace CSharpLua {
       return generator_.IsEventFiled(symbol);
     }
 
+    private bool IsPropertyFieldOrEventFiled(ISymbol symbol) {
+      return generator_.IsPropertyFieldOrEventFiled(symbol);
+    }
+
     private bool IsMoreThanLocalVariables(ISymbol symbol) {
       return generator_.IsMoreThanLocalVariables(symbol);
     }
