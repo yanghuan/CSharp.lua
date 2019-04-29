@@ -3371,11 +3371,12 @@ namespace CSharpLua {
       LuaBlockSyntax rightBody = new LuaBlockSyntax();
       PushBlock(rightBody);
       var right = VisitExpression(node.Right);
-      PopBlock();
       if (rightBody.Statements.Count == 0) {
+        PopBlock();
         return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.Or, right);
       } else {
         var temp = GetTempIdentifier(node);
+        PopBlock();
         CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp));
         LuaIfStatementSyntax leftIfStatement = new LuaIfStatementSyntax(left);
         CurBlock.Statements.Add(leftIfStatement);
@@ -3394,11 +3395,12 @@ namespace CSharpLua {
       LuaBlockSyntax rightBody = new LuaBlockSyntax();
       PushBlock(rightBody);
       var right = VisitExpression(node.Right);
-      PopBlock();
       if (rightBody.Statements.Count == 0) {
+        PopBlock();
         return new LuaBinaryExpressionSyntax(left, LuaSyntaxNode.Tokens.And, right);
       } else {
         var temp = GetTempIdentifier(node);
+        PopBlock();
         CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp));
         LuaIfStatementSyntax leftIfStatement = new LuaIfStatementSyntax(left);
         CurBlock.Statements.Add(leftIfStatement);
