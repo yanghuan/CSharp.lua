@@ -18,8 +18,6 @@ local System = System
 local define = System.define
 local throw = System.throw
 local div = System.div
-local null = System.null
-local each = System.each
 local falseFn = System.falseFn
 local lengthFn = System.lengthFn
 
