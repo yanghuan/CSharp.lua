@@ -142,10 +142,10 @@ local Array
 local emptys = {}
 
 local function get(t, index)
-  if index < 0 or index >= #t then
+  local v = t[index + 1]
+  if v == nil then
     throw(ArgumentOutOfRangeException("index"))
   end
-  local v = t[index + 1]
   if v == null then 
     return nil 
   end
@@ -153,10 +153,11 @@ local function get(t, index)
 end
 
 local function set(t, index, v)
-  if index < 0 or index >= #t then
+  index = index + 1
+  if t[index] == nil then
     throw(ArgumentOutOfRangeException("index"))
   end
-  t[index + 1] = v == nil and null or v
+  t[index] = v == nil and null or v
   t.version = t.version + 1
 end
 
@@ -241,11 +242,11 @@ end
 local function getComp(t, comparer)
   local compare
   if comparer then
-    if type(comparer) == "function" then
-      compare = comparer
-    else
-      local Compare = assert(comparer.Compare)
+    local Compare = comparer.Compare
+    if Compare then
       compare = function (x, y) return Compare(comparer, x, y) end
+    else
+      compare = comparer
     end
   else
     comparer = Comparer_1(t.__genericT__).getDefault()
