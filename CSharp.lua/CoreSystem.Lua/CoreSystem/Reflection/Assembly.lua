@@ -701,7 +701,7 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
   local cls = this[1]
   local t = {}
   if not inherit then
-    local metadata = cls.__metadata__
+    local metadata = rawget(cls, "__metadata__")
     if metadata then
       local class  = metadata.class
       if class then
@@ -710,7 +710,7 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
     end
   else
     repeat
-      local metadata = cls.__metadata__
+      local metadata = rawget(cls, "__metadata__")
       if metadata then
         local class  = metadata.class
         if class then
