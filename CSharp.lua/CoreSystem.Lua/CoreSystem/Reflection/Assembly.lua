@@ -219,7 +219,7 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
         index = 5
       end
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
-    endS
+    end
     return arrayFromTable(t, System.Attribute) 
   end
 })
