@@ -21,10 +21,13 @@ local String = System.String
 local Boolean = System.Boolean
 local Delegate = System.Delegate
 local getClass = System.getClass
+local try = System.try
+local new = System.new
 local arrayFromTable = System.arrayFromTable
 
 local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
+local MissingMethodException = System.MissingMethodException
 local TypeLoadException = System.TypeLoadException
 local NullReferenceException = System.NullReferenceException
 
@@ -405,6 +408,34 @@ function System.cast(cls, obj)
   end
 end
 
+local function tryCallConstructor(cls, ...)
+  if not cls.__ctor__ then
+    throw(MissingMethodException("No matching constructor was found"))
+  end
+  if type(cls.__ctor__) == "table" then
+    local ctorCount = #cls.__ctor__
+    local instance, ok
+    local args = {...}
+    for i=1,ctorCount do
+      ok = true
+      System.try(
+        function()
+          instance = new(cls, i, unpack(args))
+        end,
+        function()
+          ok = false
+        end
+      )
+      if ok then
+        return instance
+      end
+    end
+    throw(MissingMethodException("No matching constructor was found"))
+  else
+    return cls(...)
+  end
+end
+
 function System.CreateInstance(type, ...)
   if type == nil then
     throw(ArgumentNullException("type"))
@@ -415,9 +446,9 @@ function System.CreateInstance(type, ...)
   local len = select("#", ...)
   if len == 1 then
     local args = ...
-    if System.isArrayLike(args) then
-      return type[1](unpack(args))
+    if type(args) == "table" and System.isArrayLike(args) then
+      return tryCallConstructor(type[1], unpack(args))
     end
   end
-  return type[1](...)
+  return tryCallConstructor(type[1], ...)
 end
