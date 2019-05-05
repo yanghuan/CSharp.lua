@@ -219,7 +219,7 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
       if type(metadata[index]) == "string" then
         index = 5
       end
-      return fillMetadataCustomAttributes(t, metadata, index, attributeType)
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute) 
   end
@@ -353,7 +353,7 @@ local PropertyInfo = define("System.Reflection.PropertyInfo", {
     local metadata = this.metadata
     if metadata then
       local index = getPropertyAttributesIndex(metadata)
-      return fillMetadataCustomAttributes(t, metadata, index, attributeType)
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute) 
   end
@@ -467,7 +467,7 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
     local metadata = this.metadata
     if metadata then
       local index = getMethodAttributesIndex(metadata)
-      return fillMetadataCustomAttributes(t, metadata, index, attributeType)
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
   end
