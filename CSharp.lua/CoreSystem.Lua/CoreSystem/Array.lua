@@ -144,10 +144,9 @@ local function get(t, index)
   if v == nil then
     throw(ArgumentOutOfRangeException("index"))
   end
-  if v == null then 
-    return nil 
+  if v ~= null then 
+    return v
   end
-  return v
 end
 
 local function set(t, index, v)

@@ -35,6 +35,7 @@ local assert = assert
 local pairs = pairs
 local getmetatable = getmetatable
 local setmetatable = setmetatable
+local rawget = rawget
 local type = type
 local unpack = table.unpack
 
@@ -540,7 +541,7 @@ function Type.GetFields(this)
   local cls = this[1]
   local count = 1
   repeat
-    local metadata = cls.__metadata__
+    local metadata = rawget(cls, "__metadata__")
     if metadata then
       local fields = metadata.fields
       if fields then
@@ -592,7 +593,7 @@ function Type.GetProperties(this)
   local cls = this[1]
   local count = 1
   repeat
-    local metadata = cls.__metadata__
+    local metadata = rawget(cls, "__metadata__")
     if metadata then
       local properties = metadata.properties
       if properties then
@@ -637,7 +638,7 @@ function Type.GetMethods(this)
   local cls = this[1]
   local count = 1
   repeat
-    local metadata = cls.__metadata__
+    local metadata = rawget(cls, "__metadata__")
     if metadata then
       local methods = metadata.methods
       if methods then
@@ -667,7 +668,7 @@ function Type.IsDefined(this, attributeType, inherit)
   if attributeType == nil then throw(ArgumentNullException()) end
   local cls = this[1]
   if not inherit then
-    local metadata = cls.__metadata__
+    local metadata = rawget(cls, "__metadata__")
     if metadata then
       local class  = metadata.class
       if class then
@@ -677,7 +678,7 @@ function Type.IsDefined(this, attributeType, inherit)
     return false
   else
     repeat
-      local metadata = cls.__metadata__
+      local metadata = rawget(cls, "__metadata__")
       if metadata then
         local class  = metadata.class
         if class then
