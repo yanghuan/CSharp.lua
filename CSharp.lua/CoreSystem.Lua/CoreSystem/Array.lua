@@ -480,7 +480,7 @@ Array = {
       throw(ArgumentOutOfRangeException("index or count"))
     end
     local list = {}
-    copy(t, index, list, 0, count, true)
+    tmove(t, index + 1, index + count, 1, list)
     return setmetatable(list, System.List(t.__genericT__))
   end,
   getCount = lengthFn,
