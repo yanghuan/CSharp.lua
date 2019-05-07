@@ -161,9 +161,13 @@ end
 local function addRange(t, collection)
   if collection == nil then throw(ArgumentNullException("collection")) end
   local count = #t + 1
-  for _, v in each(collection) do
-    t[count] = v == nil and null or v
-    count = count + 1
+  if collection.GetEnumerator == arrayEnumerator then
+    tmove(collection, 1, #collection, count, t)
+  else
+    for _, v in each(collection) do
+      t[count] = v == nil and null or v
+      count = count + 1
+    end
   end
   t.version = t.version + 1
 end

@@ -53,7 +53,7 @@ local modules = {}
 local usings = {}
 local classes = {}
 local metadatas
-local Object, ValueType
+local System, Object, ValueType
 
 local function new(cls, ...)
   local this = setmetatable({}, cls)
@@ -343,6 +343,10 @@ local function defEnum(name, cls)
   return def(name, "E", cls)
 end
 
+local function trunc(num) 
+  return num > 0 and floor(num) or ceil(num)
+end
+
 System = {
   emptyFn = emptyFn,
   falseFn = falseFn,
@@ -361,18 +365,12 @@ System = {
   defInf = defInf,
   defStc = defStc,
   defEnum = defEnum,
+  trunc = trunc,
   global = global,
   yieldReturn = cyield,
   classes = classes
 }
-
-local System = System
-
-local function trunc(num) 
-  return num > 0 and floor(num) or ceil(num)
-end
-
-System.trunc = trunc
+global.System = System
 
 local _, _, version = sfind(_VERSION, "^Lua (.*)$")
 version = tonumber(version)

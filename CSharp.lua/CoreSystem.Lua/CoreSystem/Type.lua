@@ -51,7 +51,8 @@ local select = select
 local unpack = table.unpack
 local floor = math.floor
 
-local typeof
+local Type, typeof
+
 local function isGenericName(name)
   return name:byte(#name) == 93
 end
@@ -97,10 +98,10 @@ local function getInterfaces(this)
     local count = 1
     local p = this[1]
     repeat
-      local interfacesCls = p.interface
-      if interfacesCls ~= nil then
-        for i = 1, #interfacesCls do
-          interfaces[count] = typeof(interfacesCls[i])
+      local interface = p.interface
+      if interface ~= nil then
+        for i = 1, #interface do
+          interfaces[count] = typeof(interface[i])
           count = count + 1
         end
       end
@@ -140,9 +141,9 @@ local function isAssignableFrom(this, c)
   else 
     return isSubclassOf(c, this)
   end
-end 
+end
 
-local Type = System.define("System.Type", {
+Type = System.define("System.Type", {
   Equals = System.equals,
   getIsGenericType = function (this)
     return isGenericName(this[1].__name__)
