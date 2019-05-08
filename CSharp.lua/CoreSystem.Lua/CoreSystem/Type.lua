@@ -21,10 +21,13 @@ local String = System.String
 local Boolean = System.Boolean
 local Delegate = System.Delegate
 local getClass = System.getClass
+local try = System.try
+local new = System.new
 local arrayFromTable = System.arrayFromTable
 
 local InvalidCastException = System.InvalidCastException
 local ArgumentNullException = System.ArgumentNullException
+local MissingMethodException = System.MissingMethodException
 local TypeLoadException = System.TypeLoadException
 local NullReferenceException = System.NullReferenceException
 
@@ -406,6 +409,52 @@ function System.cast(cls, obj)
   end
 end
 
+local function tryMatchParameters(parameter, argument)
+  if type(argument) == "table" then
+      return typeof(parameter) == typeof(argument)
+  end
+  -- If userdata or nil is handled then the parameter type can be ignored
+  if type(argument) == "userdata" then 
+    return true 
+  end
+  return type(argument) == type(parameter)
+end
+
+local function tryCallConstructor(cls, ...)
+  if not cls.__ctor__ then
+    throw(MissingMethodException("No matching constructor was found"))
+  end
+  if type(cls.__ctor__) == "table" then
+    if cls.__metadata__ and cls.__metadata__.methods then
+      local methods = cls.__metadata__.methods
+      local args = {...}
+      for i=1, #methods do
+        if methods[i][1] == ".ctor" then 
+          local index = 4
+          local matched = true
+          -- Use pairs as arguments can be nil
+          for _,arg in pairs(args) do
+            if not tryMatchParameters(methods[i][index]) then
+              matched = false
+            end
+            index = index + 1
+          end
+          if matched then
+            return new(cls, i, ...)
+          end
+        end
+      end
+      throw(MissingMethodException("No matching constructor was found"))
+    else
+      -- For backward compability we use the first constructor if no metadata is present, this can later be changed to throwing the exception below
+      return new(cls, 1, ...)
+      -- throw(MissingMethodException("CSharp.lua can't find a constructor out of multiple constructors in class ".. typeof(cls):getName() .." without defined metadata, use @CSharpLua.Metadata at constructors"))
+    end    
+  else
+    return cls(...)
+  end
+end
+
 function System.CreateInstance(type, ...)
   if type == nil then
     throw(ArgumentNullException("type"))
@@ -413,12 +462,5 @@ function System.CreateInstance(type, ...)
   if getmetatable(type) ~= Type then   -- is T
     return type()
   end
-  local len = select("#", ...)
-  if len == 1 then
-    local args = ...
-    if System.isArrayLike(args) then
-      return type[1](unpack(args))
-    end
-  end
-  return type[1](...)
+  return tryCallConstructor(type[1], ...)
 end

@@ -269,3 +269,12 @@ define("System.TypeLoadException", {
     ctorOfException(this, message or "Failed when load type.", innerException)
   end
 })
+
+define("System.MissingMethodException", {
+  __tostring = toString,
+  __inherits__ = { Exception },
+
+  __ctor__ = function(this, message, innerException) 
+    ctorOfException(this, message or "Specified method could not be found.", innerException)
+  end
+})
