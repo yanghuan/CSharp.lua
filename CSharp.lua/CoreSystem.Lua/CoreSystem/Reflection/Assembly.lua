@@ -362,15 +362,18 @@ local PropertyInfo = define("System.Reflection.PropertyInfo", {
 local function getMethodAttributesIndex(metadata)
   local flags = metadata[2]
   local index
-  local typeParametersCount = band(flags, 0xC00)
+  local typeParametersCount = band(flags, 0xFF0000)
   if typeParametersCount == 0 then
-    local parameterCount = band(flags, 0x300)
+    local parameterCount = band(flags, 0xFF00)
+    if parameterCount ~= 0 then
+      parameterCount = parameterCount / 256
+    end
     if band(flags, 0x80) == 0 then
       index = 4 + parameterCount
     else
       index = 5 + parameterCount
     end
-  else 
+  else
     index = 5
   end
   return index
