@@ -51,7 +51,7 @@ namespace CSharpLua {
           var expression = (LuaExpressionSyntax)node.Type.Accept(this);
           var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
           if (node.ArgumentList != null) {
-            var refOrOutArguments = new List<LuaExpressionSyntax>();
+            var refOrOutArguments = new List<RefOrOutArgument>();
             var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
             TryRemoveNilArgumentsAtTail(symbol, arguments);
             invokeExpression.AddArguments(arguments);
@@ -323,7 +323,7 @@ namespace CSharpLua {
           otherCtorInvoke = BuildCallBaseConstructor(symbol.ContainingType, initializerSymbol.ReceiverType, ctroIndex);
         }
         otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
-        var refOrOutArguments = new List<LuaExpressionSyntax>();
+        var refOrOutArguments = new List<RefOrOutArgument>();
         var arguments = BuildArgumentList(initializerSymbol, initializerSymbol.Parameters, node.Initializer.ArgumentList, refOrOutArguments);
         TryRemoveNilArgumentsAtTail(initializerSymbol, arguments);
         otherCtorInvoke.AddArguments(arguments);
@@ -1118,13 +1118,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitDeclarationExpression(DeclarationExpressionSyntax node) {
-      if (node.Parent.IsKind(SyntaxKind.Argument)) {      //out var 
-        var name = (LuaIdentifierNameSyntax)node.Designation.Accept(this);
-        CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name));
-        return name;
-      } else {    //ValueTuple deconstruction
-        return node.Designation.Accept(this);
-      }
+      return node.Designation.Accept(this);
     }
 
     public override LuaSyntaxNode VisitDiscardDesignation(DiscardDesignationSyntax node) {

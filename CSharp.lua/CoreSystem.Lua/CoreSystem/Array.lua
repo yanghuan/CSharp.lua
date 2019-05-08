@@ -532,6 +532,21 @@ Array = {
     end
     return -1
   end,
+  Clear = function (t, index, length)
+    if t == nil then throw(ArgumentNullException("array")) end
+    if not index then
+      index, length = 0, #t
+    else
+      checkIndexAndCount(t, index, length)
+    end
+    local default = t.__genericT__:default()
+    if default == nil then
+      default = null
+    end
+    for i = index + 1, index + length do
+      t[i] = default
+    end
+  end,
   Copy = function (t, ...)
     local len = select("#", ...)     
     if len == 2 then
@@ -565,6 +580,18 @@ Array = {
       end
     end
     return false
+  end,
+  Fill = function (t, value, startIndex, count)
+    if t == nil then throw(ArgumentNullException("array")) end
+    if not startIndex then
+      startIndex = 0
+      count = #t
+    else
+      checkIndexAndCount(t, startIndex, count)
+    end
+    for i = startIndex + 1, startIndex + count do
+      t[i] = value
+    end
   end,
   Find = function (t, match)
     if t == nil then throw(ArgumentNullException("array")) end
