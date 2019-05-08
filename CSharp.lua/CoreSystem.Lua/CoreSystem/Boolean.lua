@@ -57,7 +57,6 @@ local Boolean = System.defStc("System.Boolean", {
   ToString = tostring,
   FalseString = falseString,
   TrueString = trueString,
-
   CompareToObj = function (this, v)
     if v == nil then return 1 end
     if type(v) ~= "boolean" then
@@ -65,14 +64,12 @@ local Boolean = System.defStc("System.Boolean", {
     end
     return compareTo(this, v)
   end,
-  
   EqualsObj = function (this, v)
     if type(v) ~= "boolean" then
       return false
     end
     return this == v
   end,
-  
   __concat = function (a, b)
     if type(a) == "boolean" then
       return tostring(a) .. b
@@ -80,14 +77,12 @@ local Boolean = System.defStc("System.Boolean", {
       return a .. tostring(b)
     end
   end,
-  
   __tostring = function (this)
     if this then
       return trueString
     end
     return falseString
   end,
-  
   Parse = function (s)
     local v, err = parse(s)
     if v == nil then
@@ -99,7 +94,6 @@ local Boolean = System.defStc("System.Boolean", {
     end
     return v
   end,
-  
   TryParse = function (s)
     local v = parse(s)
     if v ~= nil then
@@ -107,7 +101,6 @@ local Boolean = System.defStc("System.Boolean", {
     end
     return false, false
   end,
-  
   __inherits__ = function (_, T)
     return { System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T) }
   end

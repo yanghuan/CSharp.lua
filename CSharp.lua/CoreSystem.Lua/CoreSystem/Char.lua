@@ -65,6 +65,32 @@ local isWhiteSpace = {
   [0x0085] = true,
 }
 
+local function isDigit(c, index)
+  if index then
+    c = c:get(index)
+  end
+  return (c >= 48 and c <= 57)
+end
+
+-- https://msdn.microsoft.com/zh-cn/library/yyxz6h5w(v=vs.110).aspx
+local function isLetter(c, index)    
+  if index then
+    c = c:get(index) 
+  end
+  if c < 256 then
+    return (c >= 65 and c <= 90) or (c >= 97 and c <= 122)
+  else  
+    return (c >= 0x0400 and c <= 0x042F) 
+      or (c >= 0x03AC and c <= 0x03CE) 
+      or (c == 0x01C5 or c == 0x1FFC) 
+      or (c >= 0x02B0 and c <= 0x02C1) 
+      or (c >= 0x1D2C and c <= 0x1D61) 
+      or (c >= 0x05D0 and c <= 0x05EA)
+      or (c >= 0x0621 and c <= 0x063A)
+      or (c >= 0x4E00 and c <= 0x9FC3) 
+  end
+end
+
 local Char = System.defStc("System.Char", {
   CompareTo = Int.CompareTo,
   CompareToObj = Int.CompareToObj,
@@ -78,30 +104,8 @@ local Char = System.defStc("System.Char", {
     end
     return (c >=0 and c <= 31) or (c >= 127 and c <= 159)
   end,
-  IsDigit = function (c, index)
-    if index then
-      c = c:get(index)
-    end
-    return (c >= 48 and c <= 57)
-  end,
-  -- https://msdn.microsoft.com/zh-cn/library/yyxz6h5w(v=vs.110).aspx
-  IsLetter = function (c, index)    
-    if index then
-      c = c:get(index) 
-    end
-    if c < 256 then
-      return (c >= 65 and c <= 90) or (c >= 97 and c <= 122)
-    else  
-      return (c >= 0x0400 and c <= 0x042F) 
-        or (c >= 0x03AC and c <= 0x03CE) 
-        or (c == 0x01C5 or c == 0x1FFC) 
-        or (c >= 0x02B0 and c <= 0x02C1) 
-        or (c >= 0x1D2C and c <= 0x1D61) 
-        or (c >= 0x05D0 and c <= 0x05EA)
-        or (c >= 0x0621 and c <= 0x063A)
-        or (c >= 0x4E00 and c <= 0x9FC3) 
-    end
-  end,
+  IsDigit = isDigit,
+  IsLetter = isLetter,
   IsLetterOrDigit = function (c, index)
     if index then
       c = c:get(index)
