@@ -1690,6 +1690,9 @@ namespace CSharpLua {
           }
           return luaExpression;
         }
+        case SymbolKind.DynamicType: {
+          return LuaIdentifierNameSyntax.Object;
+        }
       }
 
       var namedTypeSymbol = (INamedTypeSymbol)symbol;
