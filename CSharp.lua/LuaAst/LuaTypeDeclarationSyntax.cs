@@ -40,27 +40,28 @@ namespace CSharpLua.LuaAst {
     public bool IsForceStaticCtor { get; set; }
     private bool hasTooManyLocalVariables_;
 
-    private LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
-    private List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new List<LuaTypeDeclarationSyntax>();
-    private LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
-    private LuaTableExpression resultTable_ = new LuaTableExpression();
+    private readonly LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
+    private readonly List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new List<LuaTypeDeclarationSyntax>();
+    private readonly LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
+    private readonly LuaTableExpression resultTable_ = new LuaTableExpression();
 
-    private List<LuaStatementSyntax> staticInitStatements_ = new List<LuaStatementSyntax>();
-    private List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new List<LuaIdentifierNameSyntax>();
+    private readonly List<LuaStatementSyntax> staticInitStatements_ = new List<LuaStatementSyntax>();
+    private readonly List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new List<LuaIdentifierNameSyntax>();
     private LuaConstructorDeclaration staticCtor_;
 
-    private List<LuaStatementSyntax> initStatements_ = new List<LuaStatementSyntax>();
-    private List<LuaConstructorDeclaration> ctors_ = new List<LuaConstructorDeclaration>();
+    private readonly List<LuaStatementSyntax> initStatements_ = new List<LuaStatementSyntax>();
+    private readonly List<LuaConstructorDeclaration> ctors_ = new List<LuaConstructorDeclaration>();
 
-    private List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
-    private List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
+    private readonly List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
+    private readonly List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
+    private readonly LuaDocumentStatement document_ = new LuaDocumentStatement();
 
     private LuaTableExpression metadata_;
     private LuaTableExpression metaProperties_;
     private LuaTableExpression metaEvents_;
     private LuaTableExpression metaFields_;
     private LuaTableExpression metaMethods_;
-    private LuaDocumentStatement document_ = new LuaDocumentStatement();
+
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
     public bool IsExportMetadata => document_.HasMetadataAttribute;
     public bool IsExportMetadataAll => document_.HasMetadataAllAttribute;
@@ -119,8 +120,18 @@ namespace CSharpLua.LuaAst {
       typeParameters_.AddRange(typeParameters);
     }
 
-    internal void AddImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
-      GenericUsingDeclare.AddImportTo(genericUsingDeclares_, invocationExpression, name, argumentTypeNames, isFromCode);
+    internal bool AddGenericImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
+      if (genericUsingDeclares_.Exists(i => i.NewName == name)) {
+        return true;
+      }
+
+      genericUsingDeclares_.Add(new GenericUsingDeclare() {
+        InvocationExpression = invocationExpression,
+        ArgumentTypeNames = argumentTypeNames,
+        NewName = name,
+        IsFromCode = isFromCode
+      });
+      return true;
     }
 
     internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument, List<LuaIdentifierNameSyntax> baseCopyFields) {
@@ -177,17 +188,21 @@ namespace CSharpLua.LuaAst {
       resultTable_.Items.Add(item);
     }
 
+    private void CheckTooManyVariables(bool isLocalOrUpvalues) {
+      if (!hasTooManyLocalVariables_) {
+        methodList_.Statements.Add(new LuaShortCommentStatement(isLocalOrUpvalues ? " too many local variables (limit is 200)" : "too many upvalues (limit is 60)"));
+        methodList_.Statements.Add(new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, LuaTableExpression.Empty));
+        hasTooManyLocalVariables_ = true;
+      }
+    }
+
     public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, LuaDocumentStatement document = null, bool isMoreThanLocalVariables = false) {
       if (document != null && document.HasIgnoreAttribute) {
         return;
       }
 
       if (isMoreThanLocalVariables) {
-        if (!hasTooManyLocalVariables_) {
-          methodList_.Statements.Add(new LuaShortCommentStatement(" too many local variables (limit is 200)"));
-          methodList_.Statements.Add(new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, LuaTableExpression.Empty));
-          hasTooManyLocalVariables_ = true;
-        }
+        CheckTooManyVariables(true);
         if (document != null && !document.IsEmpty) {
           methodList_.Statements.Add(document);
         }
@@ -495,12 +510,37 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private void CheckMetadata() {
+    private void CheckMetadataMoreThanUpvalues() {
+      const int kMaxUpvalueCount = kUpvaluesMaxCount - 2;
+      const int kNameIndex = 2;
+      if (metaMethods_ != null) {
+        int upvalueCount = 0;
+        foreach (LuaSingleTableItemSyntax item in metaMethods_.Items) {
+          var table = (LuaTableExpression)item.Expression;
+          var expression = (LuaSingleTableItemSyntax)table.Items[kNameIndex];
+          if (expression.Expression is LuaIdentifierNameSyntax name) {
+            if (upvalueCount >= kMaxUpvalueCount) {
+              CheckTooManyVariables(false);
+              var left = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, name);
+              methodList_.Statements.Add(new LuaAssignmentExpressionSyntax(left, name));
+              table.Items[kNameIndex] = new LuaSingleTableItemSyntax(left);
+            } else {
+              ++upvalueCount;
+            }
+          }
+        }
+      }
+    }
+
+    private void CheckMetadata(LuaRenderer renderer) {
       if (metadata_ != null) {
         SortMetaData(metaFields_);
         SortMetaData(metaProperties_);
         SortMetaData(metaMethods_);
-        LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
+        if (renderer.Setting.IsClassic) {
+          CheckMetadataMoreThanUpvalues();
+        }
+        var functionExpression = new LuaFunctionExpressionSyntax();
         functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
         functionExpression.AddStatement(new LuaReturnStatementSyntax(metadata_));
         AddResultTable(LuaIdentifierNameSyntax.Metadata, functionExpression);
@@ -516,14 +556,14 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private void AddAllStatementsTo(LuaBlockSyntax body) {
+    private void AddAllStatementsTo(LuaBlockSyntax body, LuaRenderer renderer) {
       body.Statements.Add(local_);
       body.Statements.AddRange(nestedTypeDeclarations_);
       CheckGenericUsingDeclares(body);
       CheckStaticCtorFunction(body);
       CheckCtorsFunction(body);
       body.Statements.Add(methodList_);
-      CheckMetadata();
+      CheckMetadata(renderer);
       if (IsClassUsed) {
         body.Statements.Add(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Class, resultTable_));
         body.Statements.Add(new LuaReturnStatementSyntax(LuaIdentifierNameSyntax.Class));
@@ -553,10 +593,10 @@ namespace CSharpLua.LuaAst {
         foreach (var type in typeParameters_) {
           wrapFunction.AddParameter(type);
         }
-        AddAllStatementsTo(wrapFunction.Body);
+        AddAllStatementsTo(wrapFunction.Body, renderer);
         Body.Statements.Add(new LuaReturnStatementSyntax(wrapFunction));
       } else {
-        AddAllStatementsTo(Body);
+        AddAllStatementsTo(Body, renderer);
       }
       base.Render(renderer);
     }

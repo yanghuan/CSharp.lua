@@ -222,3 +222,5 @@ define("System.WeakReference", {
   end
 })
 
+define("System.Guid", {})
+define("System.ArraySegment", {})

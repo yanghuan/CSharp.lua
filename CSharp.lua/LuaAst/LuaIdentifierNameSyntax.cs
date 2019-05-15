@@ -79,6 +79,9 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax ShiftRightOfNull = "System.srOfNull";
     public static readonly LuaIdentifierNameSyntax ShiftLeft = "System.sl";
     public static readonly LuaIdentifierNameSyntax ShiftLeftOfNull = "System.slOfNull";
+    public static readonly LuaIdentifierNameSyntax BoolOrOfNull = "System.orOfNull";
+    public static readonly LuaIdentifierNameSyntax BoolAndOfNull = "System.andOfNull";
+    public static readonly LuaIdentifierNameSyntax BoolXorOfNull = "System.xorOfBoolNull";
     public static readonly LuaIdentifierNameSyntax Try = "System.try";
     public static readonly LuaIdentifierNameSyntax Is = "System.is";
     public static readonly LuaIdentifierNameSyntax As = "System.as";

@@ -395,9 +395,9 @@ function System.as(obj, cls)
   return nil
 end
 
-function System.cast(cls, obj)
+function System.cast(cls, obj, nullable)
   if obj == nil then
-    if cls.class ~= "S" then
+    if nullable or cls.class ~= "S" then
       return nil
     end
     throw(NullReferenceException(), 1)

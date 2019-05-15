@@ -1,0 +1,26 @@
+{
+  "output": "..\\..\\Runner\\TypeScript\\App1",
+  "cleanOutputFolderBeforeBuild": true,
+  "outputBy": "Namespace",
+  "generateTypeScript": "true",
+  "outputFormatting": "Formatted",
+  "html": {
+    "disabled": true
+  },
+  "reflection": {
+    "disabled": true,
+    "target":  "Inline"
+  },
+  "resources": [
+    {
+      "name": "bridge.js",
+      "extract": false
+    }, {
+      "name": "bridge.meta.js",
+      "extract": false
+    }, {
+      "name": "bridge.console.js",
+      "extract": false
+    }
+  ]
+}

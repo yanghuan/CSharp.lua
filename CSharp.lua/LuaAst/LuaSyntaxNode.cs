@@ -108,6 +108,9 @@ namespace CSharpLua.LuaAst {
       public const string While = "while";
     }
 
+    public const int kUpvaluesMaxCount = 60;
+    public const int kLocalVariablesMaxCount = 200;
+
     private static string SpecailWord(string s) {
       return "__" + s + "__";
     }
@@ -124,7 +127,7 @@ namespace CSharpLua.LuaAst {
       "internal", "virtual",
     };
 
-    private static HashSet<string> ReservedWords = new HashSet<string>() {            
+    private static readonly HashSet<string> ReservedWords = new HashSet<string>() {            
       // compiler reserved words
       "System", "Linq",
     };
@@ -136,7 +139,7 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private static HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
+    private static readonly HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
       // lua metatable methods
       "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
       "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",

@@ -474,6 +474,27 @@ if version < 5.3 then
     return x % y
   end
 
+  function System.orOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x or y
+  end
+
+  function System.andOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x and y
+  end
+
+  function System.xorOfBoolNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x ~= y
+  end
+  
   function System.toUInt(v, max, mask, checked)
     if v >= 0 and v <= max then
       return v

@@ -1,0 +1,33 @@
+﻿{
+  "output": "..\\Runner\\Batch2",
+  "cleanOutputFolderBeforeBuildPattern": "*.*",
+  "outputFormatting": "Formatted",
+  "fileName": "code.js",
+  "outputBy": "Project",
+  "fileNameCasing": "CamelCase",
+  "logging": {
+    "level": "None"
+  },
+  "html": {
+    "disabled": true
+  },
+  // Required for test #3075
+  "sourceMap": true,
+  "resources": [
+    {
+      "extract": false
+    }
+  ],
+  "reflection": {
+    "disabled": true,
+    "target":  "Inline"
+  },
+  "useTypedArrays": true,
+  "overflowMode": "Javascript",
+  "strictNullChecks": true,
+
+  "test": {
+    "skipResources": true,
+    "skipAuxiliary": true
+  }
+}

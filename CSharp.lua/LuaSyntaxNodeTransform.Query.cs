@@ -312,7 +312,7 @@ namespace CSharpLua {
 
       var right = (LuaExpressionSyntax)node.RightExpression.Accept(this);
       var innerKeySelector = new LuaFunctionExpressionSyntax();
-      innerKeySelector.AddStatement(rangeVariable2.Name);
+      innerKeySelector.AddParameter(rangeVariable2.Name);
       innerKeySelector.AddStatement(new LuaReturnStatementSyntax(right));
 
       LuaFunctionExpressionSyntax resultSelector = new LuaFunctionExpressionSyntax();
@@ -333,7 +333,7 @@ namespace CSharpLua {
         resultSelector.AddParameter(rangeVariableOfInto.Name);
         isOver = BuildQueryJoin(node, out resultSelectorExpression, out resultSelectorType, ref rangeVariable, rangeVariableOfInto);
       }
-
+      resultSelector.AddStatement(new LuaReturnStatementSyntax(resultSelectorExpression));
       return new LuaInvocationExpressionSyntax(methodName, collection, inner, outerKeySelector, innerKeySelector, resultSelector, LuaIdentifierLiteralExpressionSyntax.Nil, keyType, resultSelectorType);
     }
 

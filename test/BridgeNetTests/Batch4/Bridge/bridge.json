@@ -1,0 +1,27 @@
+﻿{
+  "output": "..\\Runner\\Batch4",
+  "cleanOutputFolderBeforeBuildPattern": "*.*",
+  "outputFormatting": "Formatted",
+  "fileName": "code.js",
+  "outputBy": "Project",
+  "fileNameCasing": "CamelCase",
+  "logging": {
+    "level": "None"
+  },
+  "html": {
+    "disabled": true
+  },
+  "resources": [
+    {
+      "extract": false
+    }
+  ],
+  "reflection": {
+    "disabled": true,
+    "target":  "Inline"
+  },
+  "test": {
+    "skipResources": true,
+    "skipAuxiliary": true
+  }
+}

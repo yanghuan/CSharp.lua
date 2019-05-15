@@ -118,6 +118,11 @@ namespace CSharpLua {
       return set.Add(value);
     }
 
+    public static bool Contains<K, V>(this Dictionary<K, HashSet<V>> dict, K key, V value) {
+      var set = dict.GetOrDefault(key);
+      return set != null && set.Contains(value);
+    }
+
     public static void AddAt<T>(this IList<T> list, int index, T v) {
       if (index < list.Count) {
         list[index] = v;
@@ -142,6 +147,15 @@ namespace CSharpLua {
           return index;
         }
         ++index;
+      }
+      return -1;
+    }
+
+    public static int FindIndex(this string s, int startIndex, Predicate<char> match) {
+      for (int i = startIndex; i < s.Length; ++i) {
+        if (match(s[i])) {
+          return i;
+        }
       }
       return -1;
     }
@@ -308,6 +322,13 @@ namespace CSharpLua {
       return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_Double;
     }
 
+    public static bool IsBoolType(this ITypeSymbol type) {
+      if (type.IsNullableType()) {
+        type = ((INamedTypeSymbol)type).TypeArguments.First();
+      }
+      return type.SpecialType == SpecialType.System_Boolean;
+    }
+
     public static bool IsNullableType(this ITypeSymbol type) {
       return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
     }
@@ -458,6 +479,8 @@ namespace CSharpLua {
     }
 
     private static bool IsImplementInterface(this ITypeSymbol implementType, ITypeSymbol interfaceType) {
+      Contract.Assert(interfaceType.TypeKind == TypeKind.Interface);
+
       ITypeSymbol t = implementType;
       while (t != null) {
         var interfaces = implementType.AllInterfaces;
@@ -511,8 +534,24 @@ namespace CSharpLua {
       return false;
     }
 
-    public static bool IsAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
+    public static bool IsImplementType(this ITypeSymbol left, ITypeSymbol right) {
       if (left.Equals(right)) {
+        return true;
+      }
+
+      if (left.IsSubclassOf(right)) {
+        return true;
+      }
+
+      if (right.TypeKind == TypeKind.Interface) {
+        return left.IsImplementInterface(right);
+      }
+
+      return false;
+    }
+
+    public static bool IsAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
+      if (left == right) {
         return true;
       }
 
@@ -520,15 +559,7 @@ namespace CSharpLua {
         return true;
       }
 
-      if (right.IsSubclassOf(left)) {
-        return true;
-      }
-
-      if (left.TypeKind == TypeKind.Interface) {
-        return right.IsImplementInterface(left);
-      }
-
-      return false;
+      return right.IsImplementType(left);
     }
 
     private static void CheckSymbolDefinition<T>(ref T symbol) where T : class, ISymbol {

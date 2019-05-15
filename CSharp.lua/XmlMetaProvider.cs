@@ -161,7 +161,7 @@ namespace CSharpLua {
     }
 
     private sealed class MethodMetaInfo {
-      private List<XmlMetaModel.MethodModel> models_ = new List<XmlMetaModel.MethodModel>();
+      private readonly List<XmlMetaModel.MethodModel> models_ = new List<XmlMetaModel.MethodModel>();
       private bool isSingleModel_;
 
       public void Add(XmlMetaModel.MethodModel model) {
@@ -340,10 +340,10 @@ namespace CSharpLua {
     }
 
     private sealed class TypeMetaInfo {
-      private XmlMetaModel.ClassModel model_;
-      private Dictionary<string, XmlMetaModel.FieldModel> fields_ = new Dictionary<string, XmlMetaModel.FieldModel>();
-      private Dictionary<string, XmlMetaModel.PropertyModel> propertys_ = new Dictionary<string, XmlMetaModel.PropertyModel>();
-      private Dictionary<string, MethodMetaInfo> methods_ = new Dictionary<string, MethodMetaInfo>();
+      private readonly XmlMetaModel.ClassModel model_;
+      private readonly Dictionary<string, XmlMetaModel.FieldModel> fields_ = new Dictionary<string, XmlMetaModel.FieldModel>();
+      private readonly Dictionary<string, XmlMetaModel.PropertyModel> propertys_ = new Dictionary<string, XmlMetaModel.PropertyModel>();
+      private readonly Dictionary<string, MethodMetaInfo> methods_ = new Dictionary<string, MethodMetaInfo>();
 
       public TypeMetaInfo(XmlMetaModel.ClassModel model) {
         model_ = model;
@@ -418,9 +418,9 @@ namespace CSharpLua {
       }
     }
 
-    private Dictionary<string, XmlMetaModel.NamespaceModel> namespaceNameMaps_ = new Dictionary<string, XmlMetaModel.NamespaceModel>();
-    private Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
-    private HashSet<string> exportAttributes_ = new HashSet<string>();
+    private readonly Dictionary<string, XmlMetaModel.NamespaceModel> namespaceNameMaps_ = new Dictionary<string, XmlMetaModel.NamespaceModel>();
+    private readonly Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
+    private readonly HashSet<string> exportAttributes_ = new HashSet<string>();
 
     public XmlMetaProvider(IEnumerable<string> files) {
       foreach (string file in files) {

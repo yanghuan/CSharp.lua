@@ -34,7 +34,7 @@ namespace CSharpLua {
       writer_ = writer;
     }
 
-    private LuaSyntaxGenerator.SettingInfo Setting {
+    public LuaSyntaxGenerator.SettingInfo Setting {
       get {
         return generator_.Setting;
       }

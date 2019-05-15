@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="$(ProjectDir)compile.bat" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BridgeTestNUnit\BridgeTestNUnit.csproj" />
+  </ItemGroup>
+
+</Project>

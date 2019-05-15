@@ -44,42 +44,26 @@ namespace CSharpLua.LuaAst {
 
       return NewName.CompareTo(other.NewName);
     }
+  }
 
-    public static void AddImportTo(
-      List<GenericUsingDeclare> genericUsingDeclares,
-      LuaInvocationExpressionSyntax invocationExpression, 
-      string name, 
-      List<string> argumentTypeNames, 
-      bool isFromCode) {
-      if (!genericUsingDeclares.Exists(i => i.NewName == name)) {
-        genericUsingDeclares.Add(new GenericUsingDeclare() {
-          InvocationExpression = invocationExpression,
-          NewName = name,
-          ArgumentTypeNames = argumentTypeNames,
-          IsFromCode = isFromCode,
-        });
-      }
+  public sealed class UsingDeclare : IComparable<UsingDeclare> {
+    public string Prefix;
+    public string NewPrefix;
+    public bool IsFromCode;
+
+    public int CompareTo(UsingDeclare other) {
+      return Prefix.CompareTo(other.Prefix);
     }
   }
 
   public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
-    private sealed class UsingDeclare : IComparable<UsingDeclare> {
-      public string Prefix;
-      public string NewPrefix;
-      public bool IsFromCode;
-
-      public int CompareTo(UsingDeclare other) {
-        return Prefix.CompareTo(other.Prefix);
-      }
-    }
-
     public string FilePath { get; }
     public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
-    private LuaStatementListSyntax importAreaStatements = new LuaStatementListSyntax();
+    private readonly LuaStatementListSyntax importAreaStatements = new LuaStatementListSyntax();
     private bool isImportLinq_;
     private int typeDeclarationCount_;
-    private List<UsingDeclare> usingDeclares_ = new List<UsingDeclare>();
-    private List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
+    internal readonly List<UsingDeclare> UsingDeclares = new List<UsingDeclare>();
+    internal readonly List<GenericUsingDeclare> GenericUsingDeclares = new List<GenericUsingDeclare>();
 
     public LuaCompilationUnitSyntax(string filePath = "") {
       FilePath = filePath;
@@ -89,10 +73,6 @@ namespace CSharpLua.LuaAst {
 
       var system = LuaIdentifierNameSyntax.System;
       AddImport(system, system);
-    }
-
-    private static string GetVersion(Version version) {
-      return $"{version.Major}.{version.Minor}.{version.Build}";
     }
 
     public void AddStatement(LuaStatementSyntax statement) {
@@ -120,22 +100,8 @@ namespace CSharpLua.LuaAst {
       ++typeDeclarationCount_;
     }
 
-    internal void AddImport(string prefix, string newPrefix, bool isFromCode) {
-      if (!usingDeclares_.Exists(i => i.Prefix == prefix)) {
-        usingDeclares_.Add(new UsingDeclare() {
-          Prefix = prefix,
-          NewPrefix = newPrefix,
-          IsFromCode = isFromCode,
-        });
-      }
-    }
-
-    internal void AddImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
-      GenericUsingDeclare.AddImportTo(genericUsingDeclares_, invocationExpression, name, argumentTypeNames, isFromCode);
-    }
-
     private void CheckUsingDeclares() {
-      var imports = usingDeclares_.Where(i => !i.IsFromCode).ToList();
+      var imports = UsingDeclares.Where(i => !i.IsFromCode).ToList();
       if (imports.Count > 0) {
         imports.Sort();
         foreach (var import in imports) {
@@ -143,7 +109,7 @@ namespace CSharpLua.LuaAst {
         }
       }
 
-      var genericImports = genericUsingDeclares_.Where(i => !i.IsFromCode).ToList();
+      var genericImports = GenericUsingDeclares.Where(i => !i.IsFromCode).ToList();
       if (genericImports.Count > 0) {
         genericImports.Sort();
         foreach (var import in genericImports) {
@@ -151,8 +117,8 @@ namespace CSharpLua.LuaAst {
         }
       }
 
-      var usingDeclares = usingDeclares_.Where(i => i.IsFromCode).ToList();
-      var genericDeclares = genericUsingDeclares_.Where(i => i.IsFromCode).ToList();
+      var usingDeclares = UsingDeclares.Where(i => i.IsFromCode).ToList();
+      var genericDeclares = GenericUsingDeclares.Where(i => i.IsFromCode).ToList();
       if (usingDeclares.Count > 0 || genericDeclares.Count > 0) {
         usingDeclares.Sort();
         genericDeclares.Sort();

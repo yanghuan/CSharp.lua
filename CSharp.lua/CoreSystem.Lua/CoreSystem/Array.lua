@@ -18,6 +18,7 @@ local System = System
 local define = System.define
 local throw = System.throw
 local div = System.div
+local trueFn = System.trueFn
 local falseFn = System.falseFn
 local lengthFn = System.lengthFn
 
@@ -489,7 +490,7 @@ Array = {
   getLength = lengthFn,
   getIsSynchronized = falseFn,
   getIsReadOnly = falseFn,
-  getIsFixedSize = System.trueFn,
+  getIsFixedSize = trueFn,
   getRank = System.oneFn,
   binarySearchArray = function (t, ...)
     local v, index, count, comparer
@@ -939,3 +940,24 @@ function MultiArray.__call(T, rank, t)
 end
 
 getmetatable(MultiArray).__index = Array
+
+local ReadOnlyCollection = {
+  version = 0,
+  __ctor__ = Array.ctorList,
+  getCount = lengthFn,
+  get = get,
+  Contains = Array.contains,
+  GetEnumerator = arrayEnumerator,
+  getIsSynchronized = falseFn,
+  getIsReadOnly = trueFn,
+  getIsFixedSize = trueFn,
+  CopyTo = Array.CopyTo,
+  IndexOf = Array.IndexOf,
+}
+
+define("System.ReadOnlyCollection", function (T)
+  return { 
+    __inherits__ = { System.IList_1(T), System.IReadOnlyCollection_1(T), System.IList }, 
+    __genericT__ = T
+  }
+end, ReadOnlyCollection)

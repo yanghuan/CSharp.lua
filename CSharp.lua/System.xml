@@ -28,6 +28,7 @@ limitations under the License.
         <field name="PositiveInfinity" Template="System.Double.PositiveInfinity" />
         <field name="NegativeInfinity" Template="System.Double.NegativeInfinity" />
       </class>
+      <class name="Decimal" Name="System.Double" />
       <class name="String">
         <field name="Empty" Template="&quot;&quot;" />
         <property name="Length">
@@ -329,6 +330,7 @@ limitations under the License.
           <arg type="System.Single" />
         </method>
       </class>
+      <class name="ArraySegment^1" Name="System.ArraySegment" />
       <class name="Guid" Readonly="true" />
     </namespace>
     <namespace name="System.Collections" Name="System" >
@@ -371,6 +373,9 @@ limitations under the License.
         <method name="GetHashCode" Name="GetHashCodeOf" />
       </class>
       <class name="EqualityComparer^1" Name="System.EqualityComparer" />
+    </namespace>
+    <namespace name="System.Collections.ObjectModel" Name="System" >
+      <class name="ReadOnlyCollection^1" Name="System.ReadOnlyCollection" />
     </namespace>
     <namespace name="System.Linq">
       <class name="Enumerable">
@@ -510,13 +515,13 @@ limitations under the License.
         <method name="ThenByDescending" ArgCount="3" Template="Linq.ThenByDescending({0}, {1}, {2}, {^1})" />
       </class>
     </namespace>
-    <namespace name="System.Diagnostics">
+    <namespace name="System.Diagnostics" Name="System">
       <class name="Debug">
         <method name="Assert" Template="assert({0}, {1})" />
+        <method name="Requires" GenericArgCount="0" Template="assert({0}, {1})" />
       </class>
-      <class name="Stopwatch" Name="System.Stopwatch" />
     </namespace>
-    <namespace name="System.Diagnostics.Contracts">
+    <namespace name="System.Diagnostics.Contracts" Name="System">
       <class name="Contract">
         <method name="Assert" Template="assert({0}, {1})" />
         <method name="Assume" Template="assert({0}, {1})" />
@@ -584,5 +589,6 @@ limitations under the License.
         <method name="op_Implicit" Name="ToComplex" />
       </class>
     </namespace>
-  </assembly>
+  
+</assembly>
 </meta>
