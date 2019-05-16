@@ -1,8 +1,9 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
+#if false
 namespace Bridge.ClientTest.Text
 {
     [Category(Constants.MODULE_ENCODING)]
@@ -30,3 +31,4 @@ namespace Bridge.ClientTest.Text
         }
     }
 }
+#endif

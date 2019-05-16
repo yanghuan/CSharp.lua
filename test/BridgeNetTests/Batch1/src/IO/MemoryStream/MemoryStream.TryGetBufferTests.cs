@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     [Category(Constants.MODULE_IO)]
@@ -475,3 +476,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

@@ -732,8 +732,22 @@ local function getAssembly()
   return assembly
 end
 
-local function newMemberInfo(cls, name, metadata, T)
-  return setmetatable({ c = cls, name = name, metadata = metadata }, T)
+Type.getAssembly = getAssembly
+
+function Type.getAssemblyQualifiedName(this)
+  return this:getName() .. ', ' .. getName(assembly)
+end
+
+function Type.getAttributes(this)
+  local cls = this[1]
+  local metadata = rawget(cls, "__metadata__")
+  if metadata then
+    local classMetadata = metadata.class
+    if classMetadata then
+      return classMetadata[1]
+    end
+  end
+  return 0
 end
 
 local Assembly = define("System.Reflection.Assembly", {

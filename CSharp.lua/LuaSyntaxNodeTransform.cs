@@ -1906,7 +1906,7 @@ namespace CSharpLua {
 
       var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       if (symbol != null) {
-        if (generator_.IsConditionalAttributeIgnore(symbol)) {
+        if (symbol.ReturnsVoid && generator_.IsConditionalAttributeIgnore(symbol)) {
           return LuaExpressionSyntax.EmptyExpression;
         }
 
@@ -2862,6 +2862,8 @@ namespace CSharpLua {
                 }
                 break;
               }
+              case 'u':
+              case 'U':
               case 'm':
               case 'M': {
                 removeCount = 1;

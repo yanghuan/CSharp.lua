@@ -4,6 +4,7 @@
 
 using System.IO;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     /// <summary>
@@ -100,3 +101,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

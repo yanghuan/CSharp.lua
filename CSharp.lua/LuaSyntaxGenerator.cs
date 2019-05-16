@@ -17,15 +17,16 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
+
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
@@ -239,20 +240,27 @@ namespace CSharpLua {
       return forcePublicSymbols_.Contains(symbol.OriginalDefinition);
     }
 
-    internal bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
+    private static readonly HashSet<string> ignoreSystemAttributes_ = new HashSet<string>() {
+      "System.AttributeUsageAttribute",
+      "System.ComponentModel.BrowsableAttribute",
+      "System.Diagnostics.ConditionalAttribute",
+      "System.Runtime.Serialization.CollectionDataContractAttribute"
+    };
+
+    internal bool IsExportAttribute(INamedTypeSymbol symbol) {
+      string name = symbol.ToString();
+      bool isExport = false;
       if (Setting.IsExportAttributesAll) {
-        return true;
-      } else {
-        if (Setting.ExportAttributes != null && Setting.ExportAttributes.Count > 0) {
-          if (Setting.ExportAttributes.Contains(attributeTypeSymbol.ToString())) {
-            return true;
-          }
-        }
-        if (XmlMetaProvider.IsExportAttribute(attributeTypeSymbol)) {
-          return true;
+        isExport = true; ;
+      } else if (Setting.ExportAttributes != null && Setting.ExportAttributes.Contains(name)) {
+        isExport = true;
+      }
+      if (isExport) {
+        if (ignoreSystemAttributes_.Contains(name) || IsConditionalAttributeIgnore(symbol)) {
+          isExport = false;
         }
       }
-      return false;
+      return isExport;
     }
 
     internal bool IsFromLuaModule(ISymbol symbol) {
@@ -264,16 +272,14 @@ namespace CSharpLua {
       return luaModuleLibs != null && luaModuleLibs.Contains(symbol.ContainingAssembly.Name);
     }
 
-    internal bool IsConditionalAttributeIgnore(IMethodSymbol symbol) {
-      if (symbol.ReturnsVoid) {
-        foreach (var attrbute in symbol.GetAttributes()) {
-          var attributeSymbol = attrbute.AttributeClass;
-          if (attributeSymbol.IsConditionalAttribute()) {
-            string conditionString = (string)attrbute.ConstructorArguments.First().Value;
-            bool has = CommandLineArguments.ParseOptions.PreprocessorSymbolNames.Contains(conditionString);
-            if (has) {
-              return true;
-            }
+    internal bool IsConditionalAttributeIgnore(ISymbol symbol) {
+      foreach (var attrbute in symbol.GetAttributes()) {
+        var attributeSymbol = attrbute.AttributeClass;
+        if (attributeSymbol.IsConditionalAttribute()) {
+          string conditionString = (string)attrbute.ConstructorArguments.First().Value;
+          bool has = CommandLineArguments.ParseOptions.PreprocessorSymbolNames.Contains(conditionString);
+          if (has) {
+            return true;
           }
         }
       }

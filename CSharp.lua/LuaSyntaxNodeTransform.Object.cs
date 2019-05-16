@@ -378,7 +378,14 @@ namespace CSharpLua {
         }
         if (isExportMetadata) {
           int ctorIndex = GetConstructorIndex(symbol);
-          var name = ctorIndex == 0 ? LuaIdentifierNameSyntax.Nil : LuaSyntaxNode.GetCtorNameString(ctorIndex);
+          LuaIdentifierNameSyntax name;
+          if (ctorIndex == 0) {
+            name = LuaIdentifierNameSyntax.Nil;
+          } else if (isCombineImplicitlyCtorMethod && symbol.ContainingType.InstanceConstructors.Length == 2) {
+            name = LuaIdentifierNameSyntax.Ctor;
+          } else {
+            name = LuaSyntaxNode.GetCtorNameString(ctorIndex);
+          }
           AddMethodMetaData(new MethodDeclarationResult() {
             Symbol = symbol,
             Name = name,

@@ -218,6 +218,7 @@ local function setBase(cls, kind)
   else
     if extends then      
       local base = extends[1]
+      if not base then error(cls.__name__ .. "'s base is nil") end
       if base.class == "I" then
         cls.interface = extends
         setmetatable(cls, Object)
@@ -1180,10 +1181,17 @@ function System.valueTuple(...)
 end
 
 defCls("System.Attribute", {})
-defStc("System.Nullable", {
-  Compare = compareObj,
-  Equals = equalsObj,
-})
+
+local Nullable = {}
+defStc("System.Nullable", function (T)
+  return { 
+    __genericT__ = T 
+  }
+end, Nullable)
+
+function System.isNullable(T)
+  return getmetatable(T) == Nullable
+end
 
 debug.setmetatable(nil, {
   __concat = function(a, b)

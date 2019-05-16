@@ -151,6 +151,9 @@ Type = System.define("System.Type", {
   getIsGenericType = function (this)
     return isGenericName(this[1].__name__)
   end,
+  getContainsGenericParameters = function (this)
+    return isGenericName(this[1].__name__)
+  end,
   MakeGenericType = function (this, ...)
     local args = { ... }
     for i = 1, #args do
@@ -188,7 +191,7 @@ Type = System.define("System.Type", {
   IsSubclassOf = isSubclassOf,
   getIsInterface = getIsInterface,
   getIsValueType = getIsValueType,
-  getInterfaces = getInterfaces,
+  GetInterfaces = getInterfaces,
   IsAssignableFrom = isAssignableFrom,
   IsInstanceOfType = function (this, obj)
     if obj == nil then
@@ -395,18 +398,27 @@ function System.as(obj, cls)
   return nil
 end
 
-function System.cast(cls, obj, nullable)
+local function cast(cls, obj, nullable)
   if obj == nil then
-    if nullable or cls.class ~= "S" then
+    if cls.class ~= "S" or nullable then
       return nil
     end
     throw(NullReferenceException(), 1)
-  else 
+  else
     if isTypeOf(obj, cls) then
       return obj
     end
     throw(InvalidCastException(), 1)
   end
+end
+
+System.cast = cast
+
+function System.castWithNullable(cls, obj)
+  if System.isNullable(cls) then
+    return cast(cls.__genericT__, obj, true)
+  end
+  return cast(cls, obj)
 end
 
 local function tryMatchParameters(parameter, argument)

@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     /// <summary>Provides a stream whose implementation is supplied by delegates.</summary>
@@ -128,3 +129,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

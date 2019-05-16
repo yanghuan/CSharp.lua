@@ -138,20 +138,8 @@ namespace CSharpLua {
         public ClassModel[] Classes;
       }
 
-      public sealed class ExportModel {
-        public sealed class AttributeModel {
-          [XmlAttribute("name")]
-          public string Name;
-        }
-        [XmlElement("attribute")]
-        public AttributeModel[] Attributes;
-      }
-
       [XmlElement("assembly")]
       public AssemblyModel Assembly;
-
-      [XmlElement("export")]
-      public ExportModel Export;
     }
 
     private enum MethodMetaType {
@@ -420,7 +408,6 @@ namespace CSharpLua {
 
     private readonly Dictionary<string, XmlMetaModel.NamespaceModel> namespaceNameMaps_ = new Dictionary<string, XmlMetaModel.NamespaceModel>();
     private readonly Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
-    private readonly HashSet<string> exportAttributes_ = new HashSet<string>();
 
     public XmlMetaProvider(IEnumerable<string> files) {
       foreach (string file in files) {
@@ -437,17 +424,6 @@ namespace CSharpLua {
               }
               if (assembly.Classes != null) {
                 LoadType(string.Empty, assembly.Classes);
-              }
-            }
-            var export = model.Export;
-            if (export != null) {
-              if (export.Attributes != null) {
-                foreach (var attribute in export.Attributes) {
-                  if (string.IsNullOrEmpty(attribute.Name)) {
-                    throw new ArgumentException("attribute's name is empty");
-                  }
-                  exportAttributes_.Add(attribute.Name);
-                }
               }
             }
           }
@@ -637,10 +613,6 @@ namespace CSharpLua {
 
     public bool IsMethodIgnoreGeneric(IMethodSymbol symbol) {
       return GetMethodMetaInfo(symbol, MethodMetaType.IgnoreGeneric) == bool.TrueString;
-    }
-
-    public bool IsExportAttribute(INamedTypeSymbol attributeTypeSymbol) {
-      return exportAttributes_.Count > 0 && exportAttributes_.Contains(attributeTypeSymbol.ToString());
     }
   }
 }

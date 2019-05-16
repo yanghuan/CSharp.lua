@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     [Category(Constants.MODULE_IO)]
@@ -79,3 +80,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

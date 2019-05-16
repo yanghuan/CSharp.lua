@@ -4,7 +4,7 @@ if not %errorlevel%==0 (
     echo please see log, has some error.
     goto:Fail 
 )
-"../__bin/lua5.1/lua" launcher.lua
+"../__bin/lua5.3/lua" launcher.lua
 
 :Fail
 pause

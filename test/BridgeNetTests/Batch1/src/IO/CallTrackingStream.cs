@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     public class CallTrackingStream : Stream
@@ -266,3 +267,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

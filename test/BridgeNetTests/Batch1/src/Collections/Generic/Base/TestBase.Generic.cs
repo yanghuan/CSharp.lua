@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -103,9 +103,10 @@ namespace Bridge.ClientTest.Collections.Generic.Base
                     return CreateHashSet(enumerableToMatchTo, count, numberOfMatchingElements);
                 case EnumerableType.List:
                     return CreateList(enumerableToMatchTo, count, numberOfMatchingElements, numberOfDuplicateElements);
+                    /*
                 case EnumerableType.SortedSet:
                     Debug.Assert(numberOfDuplicateElements == 0, "Can not create a SortedSet with duplicate elements - numberOfDuplicateElements must be zero");
-                    return CreateSortedSet(enumerableToMatchTo, count, numberOfMatchingElements);
+                    return CreateSortedSet(enumerableToMatchTo, count, numberOfMatchingElements);*/
                 case EnumerableType.Queue:
                     return CreateQueue(enumerableToMatchTo, count, numberOfMatchingElements, numberOfDuplicateElements);
                 case EnumerableType.Lazy:
@@ -300,6 +301,7 @@ namespace Bridge.ClientTest.Collections.Generic.Base
             return set;
         }
 
+#if false
         /// <summary>
         /// Helper function to create an SortedSet fulfilling the given specific parameters. The function will
         /// create an SortedSet using the Comparer constructor and then add values
@@ -352,7 +354,7 @@ namespace Bridge.ClientTest.Collections.Generic.Base
 
             return set;
         }
-
+#endif
         protected IEnumerable<T> CreateLazyEnumerable(IEnumerable<T> enumerableToMatchTo, int count, int numberOfMatchingElements, int numberOfDuplicateElements)
         {
             IEnumerable<T> list = CreateList(enumerableToMatchTo, count, numberOfMatchingElements, numberOfDuplicateElements);
@@ -360,7 +362,7 @@ namespace Bridge.ClientTest.Collections.Generic.Base
             return list.Select(item => item);
         }
 
-        #endregion
+#endregion
 
         protected virtual IEnumerable<T> InvalidValues => new T[0];
 

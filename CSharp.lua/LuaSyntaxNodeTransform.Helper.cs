@@ -790,9 +790,12 @@ namespace CSharpLua {
         if (names.Length > 2) {
           string head = names.First();
           string tail = names.Last();
-          newPrefix = head + tail;
-          if (newPrefix.Length > kMaxNameLength) {
-            ShortNewPrefix(ref newPrefix);
+          string newName = head + tail;
+          if (newName.Length > kMaxNameLength) {
+            newName = tail;
+          }
+          if (!CurCompilationUnit.UsingDeclares.Exists(i => i.Prefix == newName)) {
+            newPrefix = newName;
           }
         }
       }

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -6,6 +6,7 @@ using Bridge.Test.NUnit;
 using System;
 using System.IO;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     [Category(Constants.MODULE_IO)]
@@ -64,3 +65,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

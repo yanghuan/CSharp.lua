@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     [Category(Constants.MODULE_IO)]
@@ -25,3 +26,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

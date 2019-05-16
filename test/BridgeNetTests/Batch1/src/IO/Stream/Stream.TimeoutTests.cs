@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     public sealed class NopStream : Stream
@@ -139,3 +140,4 @@ namespace Bridge.ClientTest.IO
     }
 
 }
+#endif

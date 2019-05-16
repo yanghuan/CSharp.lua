@@ -1,7 +1,8 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Text;
 
+#if false
 namespace Bridge.ClientTest.Text
 {
     public class EncodingHelpers
@@ -223,3 +224,4 @@ namespace Bridge.ClientTest.Text
         }
     }
 }
+#endif

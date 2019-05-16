@@ -30,7 +30,7 @@ limitations under the License.
       </class>
       <class name="Decimal" Name="System.Double" />
       <class name="String">
-        <field name="Empty" Template="&quot;&quot;" />
+        <field name="Empty" Template="(&quot;&quot;)" />
         <property name="Length">
           <get Template="#{this}" />
         </property>
@@ -103,6 +103,7 @@ limitations under the License.
         <property name="Length">
           <get Template="#{this}" />
         </property>
+        <method name="Clear" Name="ClearArray" />
         <method name="Exists" IgnoreGeneric="true" />
         <method name="Fill" IgnoreGeneric="true" />
         <method name="Find" IgnoreGeneric="true" />

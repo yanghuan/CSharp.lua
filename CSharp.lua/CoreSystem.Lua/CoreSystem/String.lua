@@ -321,7 +321,7 @@ function String.Format(format, ...)
     local args = ...
     if System.isArrayLike(args) then
       return simpleFormat(format, args, #args, formatGetFromArray)
-    end 
+    end
   end
   return simpleFormat(format, { ... }, len, formatGetFromTable)
 end

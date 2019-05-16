@@ -6,6 +6,7 @@ using Bridge.Test.NUnit;
 using System;
 using System.IO;
 
+#if false
 namespace Bridge.ClientTest.IO
 {
     [Category(Constants.MODULE_IO)]
@@ -155,3 +156,4 @@ namespace Bridge.ClientTest.IO
         }
     }
 }
+#endif

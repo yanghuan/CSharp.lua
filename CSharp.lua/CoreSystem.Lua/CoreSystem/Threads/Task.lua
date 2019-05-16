@@ -540,6 +540,12 @@ define("System.TaskCompletionSource", {
   TrySetResult = trySetResult
 })
 
+System.defStc("System.CancellationTokenRegistration", {
+  __inherits__ =  function(_, T)
+    return { System.IDisposable, System.IEquatable_1(T) }
+  end,
+})
+
 local taskCoroutinePool = {}
 local function taskCoroutineCreate(t, f)
   local co = tremove(taskCoroutinePool)
