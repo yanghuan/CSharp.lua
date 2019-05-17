@@ -176,17 +176,24 @@ local function addRange(t, collection)
   t.version = t.version + 1
 end
 
+local function unset()
+  throw(NotSupportedException("Collection is read-only."))
+end
+
+local function fill(t, f, e, v)
+  while e >= f do
+    t[e] = v
+    e = e - 1
+  end
+end
+
 local function buildArray(T, len, t)
   if t == nil then 
     t = {}
     if len > 0 then
       local default = T.__genericT__:default()
-      if default == nil then
-        default = null
-      end
-      for i = 1, len do
-        t[i] = default
-      end
+      if default == nil then default = null end
+      fill(t, 1, len, default)
     end
   else
     if len > 0 then
@@ -201,17 +208,6 @@ local function buildArray(T, len, t)
     end
   end
   return setmetatable(t, T)
-end
-
-local function unset()
-  throw(NotSupportedException("Collection is read-only."))
-end
-
-local function fill(t, f, e, v)
-  while e >= f do
-    t[e] = v
-    e = e - 1
-  end
 end
 
 local function indexOf(t, v, startIndex, count)
@@ -343,8 +339,7 @@ local function sort(t, comparer)
   end
 end
 
-local ArrayEnumerator = {
-  __index = false,
+local ArrayEnumerator = define("System.ArrayEnumerator", {
   getCurrent = System.getCurrent, 
   Dispose = System.emptyFn,
   Reset = function (this)
@@ -369,13 +364,40 @@ local ArrayEnumerator = {
     end
     this.current = nil
     return false
-  end,
-}
-ArrayEnumerator.__index = ArrayEnumerator
+  end
+})
 
 arrayEnumerator = function (t)
   return setmetatable({ list = t, index = 1, version = t.version }, ArrayEnumerator)
 end
+
+local ArrayReverseEnumerator = define("System.ArrayReverseEnumerator", {
+  getCurrent = System.getCurrent, 
+  Dispose = System.emptyFn,
+  Reset = function (this)
+    this.index = #this.list
+    this.current = nil
+  end,
+  MoveNext = function (this)
+    local t = this.list
+    if this.version ~= t.version then
+      throwFailedVersion()
+    end
+    local index = this.index
+    local v = t[index]
+    if v ~= nil then
+      if v == null then
+        this.current = nil
+      else
+        this.current = v
+      end
+      this.index = index - 1
+      return true
+    end
+    this.current = nil
+    return false
+  end
+})
 
 local function checkArrayIndex(index1, index2)
   if index2 then
@@ -407,6 +429,9 @@ Array = {
     t.version = t.version + 1
   end,
   addRange = addRange,
+  AsReadOnly = function (t)
+    return System.ReadOnlyCollection(t.__genericT__)(t)
+  end,
   clear = function (t)
     local size = #t
     if size > 0 then
@@ -546,6 +571,9 @@ Array = {
     tmove(t, index + 1, index + count, 1, list)
     return setmetatable(list, System.List(t.__genericT__))
   end,
+  reverseEnumerator = function (t)
+    return setmetatable({ list = t, index = #t, version = t.version }, ArrayReverseEnumerator)
+  end,
   getCount = lengthFn,
   getSyncRoot = System.identityFn,
   getLongLength = lengthFn,
@@ -554,18 +582,13 @@ Array = {
   getIsReadOnly = falseFn,
   getIsFixedSize = trueFn,
   getRank = System.oneFn,
-  binarySearchArray = function (t, ...)
-    local v, index, count, comparer
-    local len = select("#", ...)
-    if len == 1 then
-      v = ...
-      index = 0
-      count = #t
-    elseif len == 2 then
-      v, index = ...
-      count = #t - index
-    elseif len == 3 then
-      index, count, v = ...
+  BinarySearch = function (t, ...)
+    if t == nil then throw(ArgumentNullException("array")) end
+    local len = #t
+    local index, count, v, comparer
+    local n = select("#", ...)
+    if n == 1 or n == 2 then
+      index, count, v, comparer = 0, len, ...
     else
       index, count, v, comparer = ...
     end
@@ -575,7 +598,7 @@ Array = {
       comparer = Comparer_1(t.__genericT__).getDefault()
       compare = comparer.Compare 
     else
-      compare = comparer.compare
+      compare = comparer.Compare
     end
     local lo = index
     local hi = index + count - 1
@@ -834,22 +857,28 @@ Array = {
   end,
   GetEnumerator = arrayEnumerator,
   GetLength = function (this, dimension)
-    if dimension ~= 0 then
-      throw(IndexOutOfRangeException())
-    end
+    if dimension ~= 0 then throw(IndexOutOfRangeException()) end
     return #this
+  end,
+  GetLowerBound = function (this, dimension)
+    if dimension ~= 0 then throw(IndexOutOfRangeException()) end
+    return 0
+  end,
+  GetUpperBound = function (this, dimension)
+    if dimension ~= 0 then throw(IndexOutOfRangeException()) end
+    return #this - 1
   end,
   GetValue = function (this, index1, index2)
     return get(this, checkArrayIndex(index1, index2))
   end,
   SetValue = function (this, value, index1, index2)
     set(this, checkArrayIndex(index1, index2), System.castWithNullable(this.__genericT__, value))
-  end,
+  end
 }
 
 define("System.Array", function(T) 
   return { 
-    __inherits__ = { System.IList_1(T), System.IList }, 
+    __inherits__ = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
     __genericT__ = T
   }
 end, Array)
@@ -915,17 +944,25 @@ local MultiArray = {
   end,
   GetLength = function (this, dimension)
     local rank = this.__rank__
-    if dimension < 0 or dimension >= #rank then
-      throw(IndexOutOfRangeException())
-    end
+    if dimension < 0 or dimension >= #rank then throw(IndexOutOfRangeException()) end
     return rank[dimension + 1]
+  end,
+  GetLowerBound = function (this, dimension)
+    local rank = this.__rank__
+    if dimension < 0 or dimension >= #rank then throw(IndexOutOfRangeException()) end
+    return 0
+  end,
+  GetUpperBound = function (this, dimension)
+    local rank = this.__rank__
+    if dimension < 0 or dimension >= #rank then throw(IndexOutOfRangeException()) end
+    return #rank - 1
   end,
   GetValue = function (this, ...)
     return get(this, checkMultiArrayIndex(this, ...))
   end,
   SetValue = function (this, value, ...)
     set(this, checkMultiArrayIndex(this, ...), System.castWithNullable(this.__genericT__, value))
-  end,
+  end
 }
 
 function System.multiArrayFromTable(t, T)
@@ -934,7 +971,7 @@ end
 
 define("System.MultiArray", function(T) 
   return { 
-    __inherits__ = { System.IList_1(T), System.IList }, 
+    __inherits__ = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
     __genericT__ = T
   }
 end, MultiArray)
@@ -967,7 +1004,7 @@ local ReadOnlyCollection = {
 
 define("System.ReadOnlyCollection", function (T)
   return { 
-    __inherits__ = { System.IList_1(T), System.IReadOnlyCollection_1(T), System.IList }, 
+    __inherits__ = { System.IList_1(T), System.IList, System.IReadOnlyList_1(T) }, 
     __genericT__ = T
   }
 end, ReadOnlyCollection)

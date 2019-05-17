@@ -1,4 +1,4 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -101,6 +101,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(EqualityComparer<int>.Default, d.Comparer);
         }
 
+#if false
         [Test]
         public void CapacityAndEqualityComparerWorks()
         {
@@ -110,6 +111,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
             Assert.AreStrictEqual(c, d.Comparer);
         }
+#endif
 
         // #NoSupport
         //[Test]
@@ -173,6 +175,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(c, d.Comparer);
         }
 
+#if false
         [Test]
         public void ConstructorWithBothDictionaryAndEqualityComparerWorks()
         {
@@ -189,6 +192,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreEqual(2, d2["b"]);
             Assert.AreStrictEqual(c, d2.Comparer);
         }
+#endif
 
         [Test]
         public void CountWorks()
@@ -384,6 +388,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(null, o);
         }
 
+#if false
         [Test]
         public void CanUseCustomComparer()
         {
@@ -392,6 +397,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreEqual(100, d["a3"]);
             Assert.AreEqual(2, d.Count);
         }
+#endif
 
         [Test]
         public void DictionaryAsIEnumerableWorks()

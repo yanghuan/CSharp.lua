@@ -103,6 +103,7 @@ limitations under the License.
         <property name="Length">
           <get Template="#{this}" />
         </property>
+        <method name="BinarySearch" IgnoreGeneric="true" />
         <method name="Clear" Name="ClearArray" />
         <method name="Exists" IgnoreGeneric="true" />
         <method name="Fill" IgnoreGeneric="true" />
@@ -368,6 +369,9 @@ limitations under the License.
       <class name="KeyValuePair^2" Name="System.KeyValuePair">
         <property name="Key" IsField="true" />
         <property name="Value" IsField="true" />
+      </class>
+      <class name="IDictionary^2">
+        <method name="Add" Name="AddKeyValue" />
       </class>
       <class name="IEqualityComparer^1">
         <method name="Equals" Name="EqualsOf" />

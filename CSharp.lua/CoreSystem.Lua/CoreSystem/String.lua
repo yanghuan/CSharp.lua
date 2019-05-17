@@ -17,6 +17,7 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local emptyFn = System.emptyFn
+local lengthFn = System.lengthFn
 local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -44,7 +45,8 @@ local tonumber = tonumber
 
 local String = string
 String.traceback = emptyFn  -- make throw(str) not fail
-String.getLength = System.lengthFn
+String.getLength = lengthFn
+String.getCount = lengthFn
 
 local function check(s, startIndex, count)
   local len = #s
@@ -316,6 +318,7 @@ local function formatGetFromTable(t, n)
 end
 
 function String.Format(format, ...)
+  if format == nil then throw(ArgumentNullException()) end
   local len = select("#", ...)
   if len == 1 then
     local args = ...

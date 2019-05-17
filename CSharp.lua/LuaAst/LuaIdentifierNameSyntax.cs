@@ -44,7 +44,6 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax Array = "System.Array";
     public static readonly LuaIdentifierNameSyntax MultiArray = "System.MultiArray";
     public static readonly LuaIdentifierNameSyntax Apply = "System.apply";
-    public static readonly LuaIdentifierNameSyntax Add = "Add";
     public static readonly LuaIdentifierNameSyntax StaticCtor = "static";
     public static readonly LuaIdentifierNameSyntax Init = "internal";
     public static readonly LuaIdentifierNameSyntax Ctor = "__ctor__";

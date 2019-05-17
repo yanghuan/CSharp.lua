@@ -25,10 +25,11 @@ local select = select
 local string = string
 local byte = string.byte
 local char = string.char
+local Format = string.Format
 
 local function getWriteValue(v, ...)
   if select("#", ...) ~= 0 then
-    v = v:Format(...)
+    v = Format(v, ...)
   elseif v ~= nil then
     v = v:ToString()      
   else

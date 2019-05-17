@@ -32,7 +32,7 @@ namespace Tests {
       object instance = Activator.CreateInstance(type);
       foreach (var method in methods) {
         if (method.IsDefined(typeof(TestAttribute), true)) {
-          Console.WriteLine(testFixture.TestNameFormat, method.Name);
+          Console.WriteLine(testFixture.TestNameFormat ?? "Test - {0}", method.Name);
           method.Invoke(instance, null);
         }
       }

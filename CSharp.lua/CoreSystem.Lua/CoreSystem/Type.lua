@@ -94,25 +94,32 @@ local function getIsValueType(this)
   return this[1].class == "S"
 end
 
-local function getInterfaces(this)
-  local interfaces = this.interfaces
-  if interfaces == nil then
-    interfaces = arrayFromTable({}, Type, true)
-    local count = 1
-    local p = this[1]
-    repeat
-      local interface = p.interface
-      if interface ~= nil then
-        for i = 1, #interface do
-          interfaces[count] = typeof(interface[i])
-          count = count + 1
-        end
-      end
-      p = getmetatable(p)
-    until p == nil
-    this.interfaces = interfaces
+local function fillInterfaces(t, cls, set)
+  local base = getmetatable(cls)
+  if base then
+    fillInterfaces(t, base, set)
   end
-  return interfaces
+  local interface = cls.interface
+  if interface then
+    for i = 1, #interface do
+      local it = interface[i]
+      if not set[it] then
+        t[#t + 1] = typeof(it)
+        set[it] = true
+      end
+      fillInterfaces(t, it, set)
+    end
+  end
+end
+
+local function getInterfaces(this)
+  local t = this.interfaces
+  if t == nil then
+    t = arrayFromTable({}, Type, true)
+    fillInterfaces(t, this[1], {})
+    this.interfaces = t
+  end
+  return t
 end
 
 local function implementInterface(this, ifaceType)
@@ -163,6 +170,12 @@ Type = System.define("System.Type", {
   end,
   getIsEnum = function (this)
     return this[1].class == "E"
+  end,
+  getIsClass = function (this)
+    return this[1].class == "C"
+  end,
+  getIsValueType = function (this)
+    return this[1].class == "S" 
   end,
   getName = function (this)
     local name = this.name

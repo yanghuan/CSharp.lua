@@ -65,6 +65,7 @@ namespace CSharpLua.LuaAst {
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
     public bool IsExportMetadata => document_.HasMetadataAttribute;
     public bool IsExportMetadataAll => document_.HasMetadataAllAttribute;
+    public IEnumerable<LuaExpressionSyntax> TypeParameterExpressions => typeParameters_.Select(i => i.Identifier);
 
     internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name) {
       if (!staticAssignmentNames_.Contains(name)) {

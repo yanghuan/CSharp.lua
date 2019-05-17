@@ -93,14 +93,14 @@ namespace CSharpLua {
     private void FillObjectInitializerExpression(LuaIdentifierNameSyntax temp, InitializerExpressionSyntax node) {
       foreach (var expression in node.Expressions) {
         if (expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
-          AssignmentExpressionSyntax assignment = (AssignmentExpressionSyntax)expression;
+          var assignment = (AssignmentExpressionSyntax)expression;
           var left = assignment.Left.Accept(this);
           var right = (LuaExpressionSyntax)assignment.Right.Accept(this);
           if (assignment.Left.IsKind(SyntaxKind.ImplicitElementAccess)) {
             var argumentList = (LuaArgumentListSyntax)left;
             LuaIdentifierNameSyntax methodName = LuaSyntaxNode.Tokens.Set;
-            LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(temp, methodName, true);
-            LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
+            var memberAccess = new LuaMemberAccessExpressionSyntax(temp, methodName, true);
+            var invocation = new LuaInvocationExpressionSyntax(memberAccess);
             invocation.ArgumentList.Arguments.AddRange(argumentList.Arguments);
             invocation.AddArgument(right);
             CurBlock.AddStatement(invocation);
@@ -110,8 +110,10 @@ namespace CSharpLua {
             CurBlock.AddStatement(assignmentExpression);
           }
         } else {
-          LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(temp, LuaIdentifierNameSyntax.Add, true);
-          LuaInvocationExpressionSyntax invocation = new LuaInvocationExpressionSyntax(memberAccess);
+          var symbol = semanticModel_.GetCollectionInitializerSymbolInfo(expression).Symbol;
+          var name = GetMemberName(symbol);
+          var memberAccess = new LuaMemberAccessExpressionSyntax(temp, name, true);
+          var invocation = new LuaInvocationExpressionSyntax(memberAccess);
           if (expression.IsKind(SyntaxKind.ComplexElementInitializerExpression)) {
             var initializer = (InitializerExpressionSyntax)expression;
             foreach (var expressionNode in initializer.Expressions) {

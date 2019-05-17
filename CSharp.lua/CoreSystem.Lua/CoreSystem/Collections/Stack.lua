@@ -23,9 +23,12 @@ local Stack = {
   getCount = Array.getLength,
   Clear = Array.clear,
   Contains = Array.Contains,
+  GetEnumerator = Array.reverseEnumerator,
   Push = Array.add,
   Peek = Array.last,
-  Pop = Array.popLast
+  Pop = Array.popLast,
+  ToArray = Array.toArray,
+  TrimExcess = System.emptyFn
 }
 
 function System.stackFromTable(t, T)

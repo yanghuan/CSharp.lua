@@ -60,11 +60,8 @@ local AmbiguousMatchException = define("System.Reflection.AmbiguousMatchExceptio
   end,
 })
 
-local function checkMatadata(metadata)
-  if not metadata then
-    throw(NotSupportedException("not found metadata for this"), 1)
-  end
-  return metadata
+local function throwNoMatadata(sign)
+  throw(NotSupportedException("not found metadata for " .. sign), 1)
 end
 
 local function eq(left, right)
@@ -73,6 +70,14 @@ end
 
 local function getName(this)
   return this.name
+end
+
+local function isAccessibility(memberInfo, kind)
+  local metadata = memberInfo.metadata
+  if not metadata then
+    throwNoMatadata(memberInfo.c.__name__ .. "." .. memberInfo.name)
+  end
+  return band(metadata[2], 0x7) == kind
 end
 
 local MemberInfo = define("System.Reflection.MemberInfo", {
@@ -90,18 +95,38 @@ local MemberInfo = define("System.Reflection.MemberInfo", {
     return typeof(this.c)
   end,
   getIsStatic = function (this)
-    return band(checkMatadata(this.metadata)[2], 0x8) == 1
-  end,
-  getIsPublic = function (this)
-    return band(checkMatadata(this.metadata)[2], 0x7) == 6
+    local metadata = this.metadata
+    if not metadata then
+      throwNoMatadata(this.c.__name__ .. "." .. this.name)
+    end
+    return band(metadata[2], 0x8) == 1
   end,
   getIsPrivate = function (this)
-    return band(checkMatadata(this.metadata)[2], 0x7) == 1
+    return isAccessibility(this, 1)
+  end,
+  getIsFamilyAndAssembly = function (this)
+    return isAccessibility(this, 2)
+  end,
+  getIsFamily = function (this)
+    return isAccessibility(this, 3)
+  end,
+  getIsAssembly = function (this)
+    return isAccessibility(this, 4)
+  end,
+  getIsFamilyOrAssembly = function (this)
+    return isAccessibility(this, 5)
+  end,
+  getIsPublic = function (this)
+    return isAccessibility(this, 6)
   end
 })
 
 local function getFieldOrPropertyType(this)
-  return typeof(checkMatadata(this.metadata)[3])
+  local metadata = this.metadata
+  if not metadata then
+    throwNoMatadata(this.c.__name__ .. "." .. this.name)
+  end
+  return typeof(metadata[3])
 end
 
 local function checkObj(obj, cls)
@@ -384,7 +409,10 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
   __inherits__ = { MemberInfo },
   memberType = 8,
   getReturnType = function (this)
-    local metadata = checkMatadata(this.metadata)
+    local metadata = this.metadata
+    if not metadata then
+      throwNoMatadata(this.c.__name__ .. "." .. this.name)
+    end
     local flags = metadata[2]
     if band(flags, 0x80) == 0 then
       return Type.Void
@@ -667,6 +695,14 @@ function Type.GetMethods(this)
   return arrayFromTable(t, MethodInfo)
 end
 
+function Type.GetMembers(this)
+  local t = arrayFromTable({}, MemberInfo)
+  t:addRange(this:GetFields())
+  t:addRange(this:GetProperties())
+  t:addRange(this:GetMethods())
+  return t
+end
+
 function Type.IsDefined(this, attributeType, inherit)
   if attributeType == nil then throw(ArgumentNullException()) end
   local cls = this[1]
@@ -742,12 +778,35 @@ function Type.getAttributes(this)
   local cls = this[1]
   local metadata = rawget(cls, "__metadata__")
   if metadata then
-    local classMetadata = metadata.class
-    if classMetadata then
-      return classMetadata[1]
+    metadata = metadata.class
+    if metadata then
+      return metadata[1]
     end
   end
-  return 0
+  throwNoMatadata(cls.__name__)
+end
+
+function Type.GetGenericArguments(this)
+  local cls = this[1]
+  local metadata = rawget(cls, "__metadata__")
+  if metadata then
+    metadata = metadata.class
+    if metadata then
+      local t = {}
+      local count = 1
+      local flags = metadata[1]
+      local typeParameterCount = band(flags, 0xFF00)
+      if typeParameterCount ~= 0 then
+        typeParameterCount = typeParameterCount / 256
+        for i = 2, 1 + typeParameterCount do
+          t[count] = typeof(metadata[i])
+          count = count + 1
+        end
+      end
+      return arrayFromTable(t, Type)
+    end
+  end
+  throwNoMatadata(cls.__name__)
 end
 
 local Assembly = define("System.Reflection.Assembly", {

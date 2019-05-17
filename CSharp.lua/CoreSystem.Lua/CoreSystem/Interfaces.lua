@@ -76,13 +76,13 @@ end)
 
 defInf('System.IDictionary_2', function(TKey, TValue) 
   return {
-    __inherits__ = IEnumerable
+    __inherits__ = { ICollection_1(System.KeyValuePair(TKey, TValue)) }
   }
 end)
 
 defInf("System.IReadOnlyDictionary_2", function(TKey, TValue) 
   return {
-    __inherits__ = IEnumerable
+    __inherits__ = { IReadOnlyCollection_1(System.KeyValuePair(TKey, TValue)) }
   }
 end)
 

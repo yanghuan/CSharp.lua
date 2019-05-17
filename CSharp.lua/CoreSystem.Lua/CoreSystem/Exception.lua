@@ -98,7 +98,7 @@ define("System.ArgumentNullException", {
     if not message then
       message = "Value cannot be null."
       if paramName then 
-        message = message .. "\nParameter name = " .. paramName
+        message = message .. "\nParameter name: " .. paramName
       end
     end
     ArgumentException.__ctor__(this, message, paramName, innerException)
