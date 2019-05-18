@@ -74,5 +74,9 @@ Math.Sign = function(v)
   return v == 0 and 0 or (v > 0 and 1 or -1) 
 end
 
+Math.Clamp = function(v, min, max)
+  return Math.Min(Math.Max(v, min), max)
+end
+
 Math.Truncate = System.trunc
 System.define("System.Math", Math)
