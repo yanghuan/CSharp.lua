@@ -294,134 +294,98 @@ end
 System.typeof = typeof
 System.Object.GetType = getType
 
-local function isInterfaceOf(t, ifaceType)
+local function addCheckInterface(set, cls)
+  local interface = cls.interface
+  if interface then
+    for i = 1, #interface do
+      local it = interface[i]
+      set[it] = true
+      addCheckInterface(set, it)
+    end
+  end
+end
+
+local function getCheckSet(cls)
+  local set = {}
+  local p = cls
   repeat
-    local interfaces = t.interface
-    if interfaces then
-      for i = 1, #interfaces do
-        local it = interfaces[i]
-        if it == ifaceType or isInterfaceOf(it, ifaceType) then
-          return true
-        end
-      end 
-    end
-    t = getmetatable(t)
-  until t == nil
-  return false
+    set[p] = true
+    addCheckInterface(set, p)
+    p = getmetatable(p)
+  until not p
+  return set
 end
 
-local isUserdataTypeOf = System.config.isUserdataTypeOf
-local numbers = {
-  [Char] = { 0, 65535 },
-  [SByte] = { -128, 127 },
-  [Byte] = { 0, 255 },
-  [Int16] = { -32768, 32767 },
-  [UInt16] = { 0, 65535 },
-  [Int32] = { -2147483648, 2147483647 },
-  [UInt32] = { 0, 4294967295 },
-  [Int64] = { -9223372036854775808, 9223372036854775807 },
-  [UInt64] = { 0, 18446744073709551615 },
-  [Single] = { -3.40282347E+38, 3.40282347E+38, 1 },
-  [Double] = { nil, nil, 2 }
-}
-numbers[Int] = numbers[Int32]
+local customTypeCheck = System.config.customTypeCheck
 
-local function isTypeOf(obj, cls)    
-  if cls == Object then return true end
-  local typename = type(obj)
-  if typename == "table" then
-    local t = getmetatable(obj)
-    if t == cls then
-      return true
-    end
-    if cls.class == "I" then
-      return isInterfaceOf(t, cls)
-    else
-      local base = getmetatable(t)
-      while base ~= nil do
-        if base == cls then
-          return true
-        end
-        base = getmetatable(base)
+local checks = setmetatable({}, {
+  __index = function (checks, cls)
+    if customTypeCheck then
+      local add, f = customTypeCheck(cls)
+      if add then
+        checks[cls] = f
       end
-      return false
+      return f
     end
-  elseif typename == "number" then
-    local info = numbers[cls]
-    if info ~= nil then
-      local min, max, sign = info[1], info[2], info[3]
-      if sign == nil then
-        if obj < min or obj > max then
-          return false
-        end
-        if floor(obj) ~= obj then
-          return false
-        end
-      elseif sign == 1 then
-        if obj < min or obj > max then
-          return false
-        end
-      end
-      return true
-    elseif cls.class == "I" then
-      return isInterfaceOf(Number, cls)
-    elseif cls == ValueType  then
-      return true
+
+    local set = getCheckSet(cls)
+    local function check(obj, T)
+      return set[T]
     end
-    return false
-  elseif typename == "string" then
-    if cls == String then
-      return true
-    end
-    if cls.class == "I" then
-      return isInterfaceOf(String, cls)
-    end
-    return false
-  elseif typename == "boolean" then
-    if cls == Boolean or cls == ValueType then
-      return true
-    end
-    if cls.class == "I" then
-      return isInterfaceOf(Boolean, cls)
-    end
-    return false
-  elseif typename == "function" then 
-    return cls == Delegate
-  elseif typename == "userdata" then
-    if isUserdataTypeOf then
-      return isUserdataTypeOf(obj, cls)
-    end
-    return true
-  else
-    assert(false)
+    checks[cls] = check
+    return check
   end
+})
+
+checks[Number] = function (obj, T)
+  local set = getCheckSet(Number)
+  local numbers = {
+    [Char] = function (obj) return type(obj) == "number" and obj >= 0 and obj <= 65535 and floor(obj) == obj end,
+    [SByte] = function (obj) return type(obj) == "number" and obj >= -128 and obj <= 127 and floor(obj) == obj end,
+    [Byte] = function (obj) return type(obj) == "number" and obj >= 0 and obj <= 255 and floor(obj) == obj end,
+    [Int16] = function (obj) return type(obj) == "number" and obj >= -32768 and obj <= 32767 and floor(obj) == obj end,
+    [UInt16] = function (obj) return type(obj) == "number" and obj >= 0 and obj <= 32767 and floor(obj) == obj end,
+    [Int32] = function (obj) return type(obj) == "number" and obj >= -2147483648 and obj <= 2147483647 and floor(obj) == obj end,
+    [UInt32] = function (obj) return type(obj) == "number" and obj >= 0 and obj <= 4294967295 and floor(obj) == obj end,
+    [Int64] = function (obj) return type(obj) == "number" and obj >= -9223372036854775808 and obj <= 9223372036854775807 and floor(obj) == obj end,
+    [UInt64] = function (obj) return type(obj) == "number" and obj >= 0 and obj <= 18446744073709551615 and floor(obj) == obj end,
+    [Single] = function (obj) return type(obj) == "number" and obj >= -3.40282347E+38 and obj <= 3.40282347E+38 end,
+    [Double] = function (obj) return type(obj) == "number" end
+  }
+  local function check(obj, T)
+    local number = numbers[T]
+    if number then
+      return number(obj)
+    end
+    return set[T]
+  end
+  checks[Number] = check
+  return check(obj, T)
 end
 
-function System.is(obj, cls)
-  if obj ~= nil then
-    return isTypeOf(obj, cls)
-  end
-  return cls == nil
+local function is(obj, T)
+  return checks[getmetatable(obj)](obj, T)
 end
+
+System.is = is
 
 function System.as(obj, cls)
-  if obj ~= nil and isTypeOf(obj, cls) then
+  if obj ~= nil and is(obj, cls) then
     return obj
   end
-  return nil
 end
 
 local function cast(cls, obj, nullable)
-  if obj == nil then
-    if cls.class ~= "S" or nullable then
-      return nil
-    end
-    throw(NullReferenceException(), 1)
-  else
-    if isTypeOf(obj, cls) then
+  if obj ~= nil then
+    if is(obj, cls) then
       return obj
     end
     throw(InvalidCastException(), 1)
+  else
+    if cls.class ~= "S" or nullable then
+      return
+    end
+    throw(NullReferenceException(), 1)
   end
 end
 

@@ -134,25 +134,29 @@ local function set(className, cls)
 end
 
 local function multiKey(t, ...)
-  local k 
-  for i = 1, select("#", ...) do
-    k = select(i, ...)
-    assert(k)
+  local n, i, k = select("#", ...), 1
+  while true do
+    k = assert(select(i, ...))
+    if i == n then
+      break
+    end
     local tk = t[k]
     if tk == nil then
       tk = {}
       t[k] = tk
     end
     t = tk
+    i = i + 1
   end
   return t, k
 end
 
 local function genericName(name, ...)
-  local t = { name, "[" }
-  local count = 3
+  local n = select("#", ...)
+  local t = { name, "`", n, "[" }
+  local count = 5
   local hascomma
-  for i = 1, select("#", ...) do
+  for i = 1, n do
     local cls = select(i, ...)
     if hascomma then
       t[count] = ","
@@ -280,27 +284,7 @@ local function setHasStaticCtor(cls, kind)
   setmetatable(cls, staticCtorMetatable)
 end
 
-local function def(name, kind, cls, generic)
-  if type(cls) == "function" then
-    if generic then
-      generic.__index = generic
-      generic.__call = new
-    end
-    local mt = {}
-    local fn = function(_, ...)
-      local gt, gk = multiKey(mt, ...)
-      local t = gt[gk]
-      if t == nil then
-        t = def(genericName(name, ...), kind, cls(...) or {}, true)
-        if generic then
-          setmetatable(t, generic)
-        end
-        gt[gk] = t
-      end
-      return t
-    end
-    return set(name, setmetatable(generic or {}, { __call = fn, __index = Object }))
-  end
+local function defCore(name, kind, cls, generic)
   cls = cls or {}
   cls.__name__ = name
   if not generic then
@@ -328,20 +312,86 @@ local function def(name, kind, cls, generic)
   return cls
 end
 
-local function defCls(name, cls, genericSuper)
-  return def(name, "C", cls, genericSuper) 
+local function def(name, kind, cls, generic)
+  if type(cls) == "function" then
+    if generic then
+      generic.__index = generic
+      generic.__call = new
+    end
+    local mt = {}
+    local fn = function(_, ...)
+      local gt, gk = multiKey(mt, ...)
+      local t = gt[gk]
+      if t == nil then
+        t = defCore(genericName(name, ...), kind, cls(...) or {}, true)
+        if generic then
+          setmetatable(t, generic)
+        end
+        gt[gk] = t
+      end
+      return t
+    end
+    return set(name, setmetatable(generic or {}, { __call = fn, __index = Object }))
+  else
+    return defCore(name, kind, cls, generic)
+  end
+end
+
+local function defCls(name, cls, generic)
+  return def(name, "C", cls, generic) 
 end
 
 local function defInf(name, cls)
   return def(name, "I", cls)
 end
 
-local function defStc(name, cls, genericSuper)
-  return def(name, "S", cls, genericSuper)
+local function defStc(name, cls, generic)
+  return def(name, "S", cls, generic)
 end
 
 local function defEnum(name, cls)
   return def(name, "E", cls)
+end
+
+local function defArray(name, cls, Array, MultiArray)
+  Array.__index = Array
+  MultiArray.__index =  MultiArray
+  setmetatable(MultiArray, Array)
+
+  local mt = {}
+  local function create(Array, T)
+    local ArrayT = mt[T]
+    if ArrayT == nil then
+      ArrayT = defCore(T.__name__ .. "[]", "C", cls(T), true)
+      setmetatable(ArrayT, Array)
+      mt[T] = ArrayT
+    end
+    return ArrayT
+  end
+
+  local mtMulti = {}
+  local function createMulti(MultiArray, T, dimension)
+    local gt, gk = multiKey(mtMulti, T, dimension)
+    local ArrayT = gt[gk]
+    if ArrayT == nil then
+      local name = T.__name__ .. "[" .. (","):rep(dimension - 1) .. "]"
+      ArrayT = defCore(name, "C", cls(T), true)
+      setmetatable(ArrayT, MultiArray)
+      gt[gk] = ArrayT
+    end
+    return ArrayT
+  end
+
+  return set(name, setmetatable(Array, {
+    __index = Object,
+    __call = function (Array, T, dimension)
+      if not dimension then
+        return create(Array, T)
+      else
+        return createMulti(MultiArray, T, dimension)
+      end
+    end
+  }))
 end
 
 local function trunc(num) 
@@ -366,6 +416,7 @@ System = {
   defInf = defInf,
   defStc = defStc,
   defEnum = defEnum,
+  defArray = defArray,
   trunc = trunc,
   global = global,
   yieldReturn = cyield,
@@ -379,8 +430,14 @@ System.luaVersion = version
 
 if version < 5.3 then
   local bnot, band, bor, xor, sl, sr
-  local ok, bit = pcall(require, "bit")
-  if ok then
+  local bit = rawget(global, "bit")
+  if not bit then
+    local ok, b = pcall(require, "bit")
+    if ok then
+      bit = b
+    end
+  end
+  if bit then
     bnot, band, bor, xor, sl, sr = bit.bnot, bit.band, bit.bor, bit.bxor, bit.lshift, bit.rshift
   else
     local function disable()

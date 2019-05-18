@@ -1678,10 +1678,13 @@ namespace CSharpLua {
         case SymbolKind.ArrayType: {
           var arrayType = (IArrayTypeSymbol)symbol;
           ++genericTypeCounter_;
-          var elementTypeExpression = GetTypeName(arrayType.ElementType, transfor);
+          var elementType = GetTypeName(arrayType.ElementType, transfor);
           --genericTypeCounter_;
-          var arrayTypeExpression = arrayType.Rank == 1 ? LuaIdentifierNameSyntax.Array : LuaIdentifierNameSyntax.MultiArray;
-          LuaExpressionSyntax luaExpression = new LuaInvocationExpressionSyntax(arrayTypeExpression, elementTypeExpression);
+          var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementType);
+          if (arrayType.Rank > 1) {
+            invocation.AddArgument(arrayType.Rank.ToString());
+          }
+          LuaExpressionSyntax luaExpression = invocation;
           if (transfor != null) {
             transfor.ImportGenericTypeName(ref luaExpression, arrayType);
           }

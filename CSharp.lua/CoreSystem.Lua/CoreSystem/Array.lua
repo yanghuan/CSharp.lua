@@ -876,13 +876,6 @@ Array = {
   end
 }
 
-define("System.Array", function(T) 
-  return { 
-    __inherits__ = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
-    __genericT__ = T
-  }
-end, Array)
-
 function Array.__call(T, ...)
   return buildArray(T, select("#", ...), { ... })
 end
@@ -965,17 +958,6 @@ local MultiArray = {
   end
 }
 
-function System.multiArrayFromTable(t, T)
-  return setmetatable(t, MultiArray(T))
-end
-
-define("System.MultiArray", function(T) 
-  return { 
-    __inherits__ = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
-    __genericT__ = T
-  }
-end, MultiArray)
-
 function MultiArray.__call(T, rank, t)
   local len = 1
   for i = 1, #rank do
@@ -986,7 +968,12 @@ function MultiArray.__call(T, rank, t)
   return t
 end
 
-getmetatable(MultiArray).__index = Array
+System.defArray("System.Array", function(T) 
+  return { 
+    __inherits__ = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
+    __genericT__ = T
+  }
+end, Array, MultiArray)
 
 local ReadOnlyCollection = {
   version = 0,
