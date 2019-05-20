@@ -249,3 +249,5 @@ test/**/*.lua
 /CSharp.lua.Launcher/Properties/launchSettings.json
 /download/*.zip
 /Test/TestCases/out/
+!/test/BridgeNetTests/Tests/run.lua
+!/test/BridgeNetTests/Tests/strict.lua

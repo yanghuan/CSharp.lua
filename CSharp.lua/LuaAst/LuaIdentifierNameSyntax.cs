@@ -82,6 +82,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax BoolAndOfNull = "System.andOfNull";
     public static readonly LuaIdentifierNameSyntax BoolXorOfNull = "System.xorOfBoolNull";
     public static readonly LuaIdentifierNameSyntax Try = "System.try";
+    public static readonly LuaIdentifierNameSyntax CatchFilter = "System.when";
     public static readonly LuaIdentifierNameSyntax Is = "System.is";
     public static readonly LuaIdentifierNameSyntax As = "System.as";
     public static readonly LuaIdentifierNameSyntax Cast = "System.cast";

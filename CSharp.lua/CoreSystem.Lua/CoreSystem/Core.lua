@@ -71,8 +71,13 @@ local function xpcallErr(e)
     e = System.Exception("script error")
     e:traceback()
   elseif type(e) == "string" then
-    e = System.Exception(e)
-    e:traceback()
+    if e:find("attempt to divide by zero") then  
+      e = System.DivideByZeroException()
+      e:traceback()
+    else
+      e = System.Exception(e)
+      e:traceback()
+    end
   end
   return e
 end
@@ -348,6 +353,11 @@ local function trunc(num)
   return num > 0 and floor(num) or ceil(num)
 end
 
+local function when(f)
+  local ok, r = pcall(f)
+  return ok and r
+end
+
 System = {
   emptyFn = emptyFn,
   falseFn = falseFn,
@@ -359,6 +369,7 @@ System = {
   equals = equals,
   getCurrent = getCurrent,
   try = try,
+  when = when,
   throw = throw,
   getClass = set,
   multiKey = multiKey,

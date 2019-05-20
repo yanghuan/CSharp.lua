@@ -515,7 +515,12 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitCatchFilterClause(CatchFilterClauseSyntax node) {
-      return node.FilterExpression.Accept(this);
+      var function = new LuaFunctionExpressionSyntax();
+      PushFunction(function);
+      var expression = (LuaExpressionSyntax)node.FilterExpression.Accept(this);
+      function.AddStatement(new LuaReturnStatementSyntax(expression));
+      PopFunction();
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.CatchFilter, function);
     }
 
     public override LuaSyntaxNode VisitCatchClause(CatchClauseSyntax node) {

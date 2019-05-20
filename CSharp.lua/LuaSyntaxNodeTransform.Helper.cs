@@ -313,7 +313,8 @@ namespace CSharpLua {
       string codeTemplate,
       ExpressionSyntax targetExpression,
       IEnumerable<Func<LuaExpressionSyntax>> arguments,
-      IList<ITypeSymbol> typeArguments) {
+      IList<ITypeSymbol> typeArguments,
+      LuaIdentifierNameSyntax memberBindingIdentifier = null) {
       LuaCodeTemplateExpressionSyntax codeTemplateExpression = new LuaCodeTemplateExpressionSyntax();
 
       var matchs = codeTemplateRegex_.Matches(codeTemplate);
@@ -326,7 +327,7 @@ namespace CSharpLua {
         string comma = match.Groups[1].Value;
         string key = match.Groups[2].Value;
         if (key == "this") {
-          AddCodeTemplateExpression(BuildMemberAccessTargetExpression(targetExpression), comma, codeTemplateExpression);
+          AddCodeTemplateExpression(memberBindingIdentifier ?? BuildMemberAccessTargetExpression(targetExpression), comma, codeTemplateExpression);
         } else if (key == "class") {
           var type = semanticModel_.GetTypeInfo(targetExpression).Type;
           LuaExpressionSyntax typeName;

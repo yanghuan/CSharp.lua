@@ -276,7 +276,8 @@ define("System.Convert", {
   ToSingle = toSingle,
   ToDouble = toDouble,
   ToDateTime = toDateTime,
-  ChangeType = changeType
+  ChangeType = changeType,
+  ToString = System.toString
 })
 
 String.ToBoolean = toBoolean

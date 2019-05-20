@@ -1787,14 +1787,18 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax CheckCodeTemplateInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node) {
-      if (node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
+      if (node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression) || node.Expression.IsKind(SyntaxKind.MemberBindingExpression)) {
         string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
         if (codeTemplate != null) {
           var argumentExpressions = new List<Func<LuaExpressionSyntax>>();
-          var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
+          var memberAccessExpression = node.Expression as MemberAccessExpressionSyntax;
           if (symbol.IsExtensionMethod) {
             if (symbol.ReducedFrom != null) {
-              argumentExpressions.Add(() => (LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
+              if (memberAccessExpression != null) {
+                argumentExpressions.Add(() => (LuaExpressionSyntax)memberAccessExpression.Expression.Accept(this));
+              } else {
+                argumentExpressions.Add(() => conditionalTemps_.Peek());
+              }
             }
             if (symbol.ContainingType.IsSystemLinqEnumerable()) {
               CurCompilationUnit.ImportLinq();
@@ -1810,7 +1814,13 @@ namespace CSharpLua {
               return func;
             }));
           }
-          var invocationExpression = InternalBuildCodeTemplateExpression(codeTemplate, memberAccessExpression.Expression, argumentExpressions, symbol.TypeArguments);
+          var invocationExpression = InternalBuildCodeTemplateExpression(
+            codeTemplate, 
+            memberAccessExpression?.Expression, 
+            argumentExpressions, 
+            symbol.TypeArguments,
+            memberAccessExpression  == null ? conditionalTemps_.Peek() : null);
+
           var refOrOuts = node.ArgumentList.Arguments.Where(i => i.RefKindKeyword.IsOutOrRef());
           if (refOrOuts.Any()) {
             var refOrOutArguments = refOrOuts.Select(i => {
