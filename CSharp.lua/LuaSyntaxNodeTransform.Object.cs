@@ -539,19 +539,23 @@ namespace CSharpLua {
       functionExpress.AddParameter(temp);
 
       LuaIfStatementSyntax ifStatement = null;
+      LuaInvocationExpressionSyntax filter = null;
       bool hasCatchRoot = false;
       foreach (var catchNode in catches) {
         bool isRootExceptionDeclaration = false;
         LuaExpressionSyntax ifCondition = null;
         if (catchNode.Filter != null) {
-          ifCondition = (LuaExpressionSyntax)catchNode.Filter.Accept(this);
+          filter = (LuaInvocationExpressionSyntax)catchNode.Filter.Accept(this);
+          ifCondition = filter;
         }
+
         if (catchNode.Declaration != null) {
           var typeName = (LuaIdentifierNameSyntax)catchNode.Declaration.Type.Accept(this);
-          if (typeName.ValueText != "System.Exception") {
+          var typeSymbol = semanticModel_.GetTypeInfo(catchNode.Declaration.Type).Type;
+          if (typeSymbol != generator_.SystemExceptionTypeSymbol) {
             var mathcTypeInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, temp, typeName);
             if (ifCondition != null) {
-              ifCondition = new LuaBinaryExpressionSyntax(ifCondition, LuaSyntaxNode.Tokens.And, mathcTypeInvocation);
+              ifCondition = ifCondition.And(mathcTypeInvocation);
             } else {
               ifCondition = mathcTypeInvocation;
             }
@@ -580,6 +584,11 @@ namespace CSharpLua {
             var variableDeclarator = (LuaVariableDeclaratorSyntax)catchNode.Declaration.Accept(this);
             variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(temp);
             body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(variableDeclarator));
+            if (filter != null) {
+              var when = (LuaFunctionExpressionSyntax)filter.Arguments.First().Expression;
+              when.AddParameter(variableDeclarator.Identifier);
+              filter.AddArgument(temp);
+            }
           }
           body.Statements.AddRange(block.Statements);
         } else {
@@ -1215,13 +1224,20 @@ namespace CSharpLua {
       switch (node.Parent.Kind()) {
         case SyntaxKind.SimpleAssignmentExpression: {
           var assigment = (AssignmentExpressionSyntax)node.Parent;
-          if (assigment.Left == node || (assigment.Right.IsKind(SyntaxKind.TupleExpression) && assigment.Left.IsKind(SyntaxKind.TupleExpression))) {
+          if (assigment.Left == node) {
+            if (node.Arguments.Any(i => i.Expression.IsKind(SyntaxKind.DeclarationExpression))) {
+              return new LuaLocalTupleVariableExpression(expressions.Cast<LuaIdentifierNameSyntax>());
+            }
+            return new LuaSequenceListExpressionSyntax(expressions);
+          }
+          
+          if (assigment.Right.IsKind(SyntaxKind.TupleExpression) && assigment.Left.IsKind(SyntaxKind.TupleExpression)) {
             return new LuaSequenceListExpressionSyntax(expressions);
           }
           break;
         }
         case SyntaxKind.ForEachVariableStatement: {
-          return new LuaSequenceListExpressionSyntax(expressions);
+          return new LuaLocalTupleVariableExpression(expressions.Cast<LuaIdentifierNameSyntax>());
         }
       }
       return BuildValueTupleCreateExpression(expressions);

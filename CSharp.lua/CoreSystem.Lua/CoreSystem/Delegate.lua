@@ -19,31 +19,33 @@ local throw = System.throw
 local ArgumentNullException = System.ArgumentNullException
 
 local setmetatable = setmetatable
-local getmetatable = getmetatable
 local assert = assert
 local select = select
 local type = type
 local unpack = table.unpack
+local tmove = table.move
 
 local Delegate
 local multicast
 
-local function appendFn(t, f)
-  local count = #t + 1
-  if getmetatable(f) == multicast then
+local function appendFn(t, count, f)
+  if type(f) == "table" then
     for i = 1, #f do
       t[count] = f[i]
       count = count + 1
     end
   else
     t[count] = f
+    count = count + 1
   end
+  return count
 end
 
 local function combineImpl(fn1, fn2)    
   local t = setmetatable({}, multicast)
-  appendFn(t, fn1)
-  appendFn(t, fn2)
+  local count = 1
+  count = appendFn(t, count, fn1)
+  appendFn(t, count, fn2)
   return t
 end
 
@@ -82,10 +84,10 @@ local function delete(fn, count, deleteIndex, deleteCount)
 end
 
 local function removeImpl(fn1, fn2) 
-  if getmetatable(fn2) ~= multicast then
-    if getmetatable(fn1) ~= multicast then
+  if type(fn2) ~= "table" then
+    if type(fn1) ~= "table" then
       if fn1 == fn2 then
-          return nil
+        return nil
       end
     else
       local count = #fn1
@@ -99,7 +101,7 @@ local function removeImpl(fn1, fn2)
         end
       end
     end
-  elseif getmetatable(fn1) == multicast then
+  elseif type(fn1) == "table" then
       local count1, count2 = #fn1, # fn2
       local diff = count1 - count2
       for i = diff + 1, 1, -1 do
@@ -159,6 +161,16 @@ Delegate = System.define("System.Delegate", {
   end,
   GetType = function (this)
     return System.typeof(Delegate)
+  end,
+  GetInvocationList = function (this)
+    local t
+    if type(this) == "table" then
+      t = {}
+      tmove(this, 1, #this, 1, t)
+    else
+      t = { this }
+    end
+    return System.arrayFromTable(t, Delegate)
   end
 })
 setmetatable(Delegate, { __index = System.Object, __call = makeGenericTypes })

@@ -238,6 +238,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.AreEqual(1, Digits.Two.CompareTo(Digits.Zero), "CompareTo Digits.Two with Digits.Zero");
         }
 
+#if false
         [Test(ExpectedCount = 22)]
         public static void TestFormat()
         {
@@ -267,6 +268,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.AreEqual("Dog, Cat", Enum.Format(typeof(Pets1), Pets1.Cat | Pets1.Dog, "F"), "Format Pets1.Cat | Pets1.Dog F");
             Assert.AreEqual("Dog, Cat", Enum.Format(typeof(Pets1), Pets1.Cat | Pets1.Dog, "f"), "Format Pets1.Cat | Pets1.Dog f");
         }
+#endif
 
         [Test(ExpectedCount = 3)]
         public static void TestGetName()

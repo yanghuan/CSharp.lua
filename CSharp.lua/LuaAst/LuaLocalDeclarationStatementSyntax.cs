@@ -162,5 +162,12 @@ namespace CSharpLua.LuaAst {
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
+
+    public LuaLocalTupleVariableExpression() {
+    }
+
+    public LuaLocalTupleVariableExpression(IEnumerable<LuaIdentifierNameSyntax> variables) {
+      Variables.AddRange(variables);
+    }
   }
 }

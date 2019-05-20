@@ -1,8 +1,9 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 
 using System;
 using System.Globalization;
 
+#if false
 namespace Bridge.ClientTest.Format
 {
     [Category(Constants.MODULE_STRING)]
@@ -183,3 +184,4 @@ namespace Bridge.ClientTest.Format
         }
     }
 }
+#endif

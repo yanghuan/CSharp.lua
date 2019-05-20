@@ -118,7 +118,9 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax ValueTupleTypeCreate = "System.valueTuple";
     public static readonly LuaIdentifierNameSyntax Deconstruct = "Deconstruct";
     public static readonly LuaIdentifierNameSyntax KeyValuePair = "System.KeyValuePair";
+    public static readonly LuaIdentifierNameSyntax NullableType = "System.Nullable";
     public static readonly LuaIdentifierNameSyntax __GC = "__gc";
+    public static readonly LuaIdentifierNameSyntax __ToString = "__tostring";
     public static readonly LuaIdentifierNameSyntax Await = "await";
     public static readonly LuaIdentifierNameSyntax Async = "async";
     public static readonly LuaIdentifierNameSyntax MorenManyLocalVarTempTable = "const";

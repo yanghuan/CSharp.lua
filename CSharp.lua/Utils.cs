@@ -160,6 +160,10 @@ namespace CSharpLua {
       return -1;
     }
 
+    public static T[] ArrayOf<T>(this T t) {
+      return new T[] { t };
+    }
+
     public static Dictionary<string, string[]> GetCommondLines(string[] args) {
       Dictionary<string, string[]> cmds = new Dictionary<string, string[]>();
 

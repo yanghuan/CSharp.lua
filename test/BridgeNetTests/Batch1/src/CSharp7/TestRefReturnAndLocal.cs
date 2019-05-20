@@ -56,7 +56,7 @@ namespace Bridge.ClientTest.CSharp7
 
         private static ref int ThirdElement(int[] array)
         {
-            int a = 10;
+            int a = 3;
             return ref array[a];
         }
 

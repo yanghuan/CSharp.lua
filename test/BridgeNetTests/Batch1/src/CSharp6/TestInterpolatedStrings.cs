@@ -48,6 +48,7 @@ namespace Bridge.ClientTest.CSharp6
             Assert.AreEqual("i = 00, j = 1, k =            2", $"i = {i:00}, j = {j:##}, k = {k,12:#0}");
             Assert.AreEqual("0, 0, 0", $"{F1()}, {P = F2()}, {F3()}");
 
+#if false
             IFormattable f1 = $"i = {i}, j = {j}";
             FormattableString f2 = $"i = {i}, j = {j}";
             Assert.AreEqual(2, f2.ArgumentCount);
@@ -56,6 +57,7 @@ namespace Bridge.ClientTest.CSharp6
             Assert.AreEqual(1, f2.GetArgument(1));
             Assert.AreEqual(2, f2.GetArguments().Length);
             Assert.AreEqual("i = 0, j = 1", f2.ToString());
+#endif
         }
     }
 }

@@ -38,6 +38,14 @@ namespace CSharpLua.LuaAst {
     }
 
     public static readonly LuaExpressionSyntax EmptyExpression = new EmptyLuaExpressionSyntax();
+
+    public LuaBinaryExpressionSyntax And(LuaExpressionSyntax right) {
+      return new LuaBinaryExpressionSyntax(this, Tokens.And, right);
+    }
+
+    public LuaBinaryExpressionSyntax Or(LuaExpressionSyntax right) {
+      return new LuaBinaryExpressionSyntax(this, Tokens.Or, right);
+    }
   }
 
   public sealed class LuaAssignmentExpressionSyntax : LuaExpressionSyntax {

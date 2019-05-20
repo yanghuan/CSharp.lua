@@ -90,10 +90,6 @@ local function getIsInterface(this)
   return this[1].class == "I"
 end
 
-local function getIsValueType(this)
-  return this[1].class == "S"
-end
-
 local function fillInterfaces(t, cls, set)
   local base = getmetatable(cls)
   if base then
@@ -153,6 +149,10 @@ local function isAssignableFrom(this, c)
   end
 end
 
+local function isGenericTypeDefinition(this)
+  return not rawget(this[1], "__name__")
+end
+
 Type = System.define("System.Type", {
   Equals = System.equals,
   getIsGenericType = function (this)
@@ -160,6 +160,19 @@ Type = System.define("System.Type", {
   end,
   getContainsGenericParameters = function (this)
     return isGenericName(this[1].__name__)
+  end,
+  getIsGenericTypeDefinition = isGenericTypeDefinition,
+  GetGenericTypeDefinition = function (this)
+    if isGenericTypeDefinition(this) then
+      return this
+    end
+    local name = this[1].__name__
+    local i = name:find('`')
+    if i then
+      local genericTypeName = name:sub(1, i - 1)
+      return typeof(System.getClass(genericTypeName))
+    end
+    throw(System.InvalidOperationException())
   end,
   MakeGenericType = function (this, ...)
     local args = { ... }
@@ -203,7 +216,6 @@ Type = System.define("System.Type", {
   getBaseType = getBaseType,
   IsSubclassOf = isSubclassOf,
   getIsInterface = getIsInterface,
-  getIsValueType = getIsValueType,
   GetInterfaces = getInterfaces,
   IsAssignableFrom = isAssignableFrom,
   IsInstanceOfType = function (this, obj)
@@ -330,7 +342,7 @@ local checks = setmetatable({}, {
 
     local set = getCheckSet(cls)
     local function check(obj, T)
-      return set[T]
+      return set[T] == true
     end
     checks[cls] = check
     return check
@@ -357,7 +369,7 @@ checks[Number] = function (obj, T)
     if number then
       return number(obj)
     end
-    return set[T]
+    return set[T] == true
   end
   checks[Number] = check
   return check(obj, T)

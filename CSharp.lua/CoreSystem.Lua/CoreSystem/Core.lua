@@ -157,6 +157,9 @@ local function multiKey(t, ...)
 end
 
 local function genericName(name, ...)
+  if name:byte(-2) == 95 then
+    name = ssub(name, 1, -3)
+  end
   local n = select("#", ...)
   local t = { name, "`", n, "[" }
   local count = 5
@@ -403,8 +406,8 @@ local function trunc(num)
   return num > 0 and floor(num) or ceil(num)
 end
 
-local function when(f)
-  local ok, r = pcall(f)
+local function when(f, ...)
+  local ok, r = pcall(f, ...)
   return ok and r
 end
 
@@ -541,27 +544,6 @@ if version < 5.3 then
       throw(System.DivideByZeroException(), 1)
     end
     return x % y
-  end
-
-  function System.orOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x or y
-  end
-
-  function System.andOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x and y
-  end
-
-  function System.xorOfBoolNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x ~= y
   end
   
   function System.toUInt(v, max, mask, checked)
@@ -983,6 +965,27 @@ function System.ToSingle(v, checked)
   else
     return -1 / 0
   end
+end
+
+function System.orOfNull(x, y)
+  if x == nil or y == nil then
+    return nil
+  end
+  return x or y
+end
+
+function System.andOfNull(x, y)
+  if x == nil or y == nil then
+    return nil
+  end
+  return x and y
+end
+
+function System.xorOfBoolNull(x, y)
+  if x == nil or y == nil then
+    return nil
+  end
+  return x ~= y
 end
 
 function System.using(t, f)
@@ -1413,7 +1416,7 @@ end
 local function pointerAddress(p)
   local address = p[3]
   if address == nil then
-    address = tostring(p):sub(7)
+    address = ssub(tostring(p), 7)
     p[3] = address
   end
   return address + p[2]

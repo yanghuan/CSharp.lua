@@ -1,7 +1,8 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 
 using System.Globalization;
 
+#if false
 namespace Bridge.ClientTest.Format
 {
     [Category(Constants.MODULE_DATETIME)]
@@ -62,3 +63,4 @@ namespace Bridge.ClientTest.Format
         }
     }
 }
+#endif

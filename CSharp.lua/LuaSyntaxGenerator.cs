@@ -107,6 +107,7 @@ namespace CSharpLua {
     private readonly Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
     private readonly HashSet<string> monoBehaviourSpeicalMethodNames_;
     private IMethodSymbol mainEntryPoint_;
+    public INamedTypeSymbol SystemExceptionTypeSymbol { get; }
     private readonly INamedTypeSymbol monoBehaviourTypeSymbol_;
 
     static LuaSyntaxGenerator() {
@@ -130,6 +131,7 @@ namespace CSharpLua {
       XmlMetaProvider = new XmlMetaProvider(metas);
       CommandLineArguments = arguments;
       Setting = setting;
+      SystemExceptionTypeSymbol = compilation.GetTypeByMetadataName("System.Exception");
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
         if (monoBehaviourTypeSymbol_ != null) {
