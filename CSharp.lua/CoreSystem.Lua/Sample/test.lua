@@ -69,7 +69,7 @@ local function testDateTimeAndTimeSpan()
 end
 
 local function testArray() 
-  local arr = System.Array(System.Int):new(10)
+  local arr = System.Array(System.Int32):new(10)
   print(arr:ToString(), #arr)
   printList(arr)
   arr:set(0, 2)
