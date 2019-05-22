@@ -31,6 +31,7 @@ local IndexOutOfRangeException = System.IndexOutOfRangeException
 local NotSupportedException = System.NotSupportedException
 local EqualityComparer = System.EqualityComparer
 local Comparer_1 = System.Comparer_1
+local IEnumerator_1 = System.IEnumerator_1
 
 local assert = assert
 local select = select
@@ -58,7 +59,8 @@ local function checkIndex(t, index)
 end
 
 local function checkIndexAndCount(t, index, count)
-  if count < 0 or index > #t - count then
+  if t == nil then throw(ArgumentNullException("array")) end
+  if index < 0 or count < 0 or index + count > #t then
     throw(ArgumentOutOfRangeException("index or count"))
   end
 end
@@ -181,9 +183,9 @@ local function unset()
 end
 
 local function fill(t, f, e, v)
-  while e >= f do
-    t[e] = v
-    e = e - 1
+  while f <= e do
+    t[f] = v
+    f = f + 1
   end
 end
 
@@ -272,8 +274,6 @@ end
 
 local function copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length, reliable)
   if not reliable then
-    if sourceArray == nil then throw(ArgumentNullException("sourceArray")) end
-    if destinationArray == nil then throw(ArgumentNullException("destinationArray")) end
     checkIndexAndCount(sourceArray, sourceIndex, length)
     checkIndexAndCount(destinationArray, destinationIndex, length)
   end
@@ -339,7 +339,11 @@ local function sort(t, comparer)
   end
 end
 
-local ArrayEnumerator = define("System.ArrayEnumerator", {
+local ArrayEnumerator = define("System.ArrayEnumerator", function (T)
+  return {
+    __inherits__ = { IEnumerator_1(T) }
+  }
+end, {
   getCurrent = System.getCurrent, 
   Dispose = System.emptyFn,
   Reset = function (this)
@@ -367,11 +371,16 @@ local ArrayEnumerator = define("System.ArrayEnumerator", {
   end
 })
 
-arrayEnumerator = function (t)
-  return setmetatable({ list = t, index = 1, version = t.version }, ArrayEnumerator)
+arrayEnumerator = function (t, T)
+  if not T then T = t.__genericT__ end
+  return setmetatable({ list = t, index = 1, version = t.version, currnet = T:default() }, ArrayEnumerator(T))
 end
 
-local ArrayReverseEnumerator = define("System.ArrayReverseEnumerator", {
+local ArrayReverseEnumerator = define("System.ArrayReverseEnumerator", function (T)
+  return {
+    __inherits__ = { IEnumerator_1(T) }
+  }
+end, {
   getCurrent = System.getCurrent, 
   Dispose = System.emptyFn,
   Reset = function (this)
@@ -398,6 +407,11 @@ local ArrayReverseEnumerator = define("System.ArrayReverseEnumerator", {
     return false
   end
 })
+
+local function reverseEnumerator(t)
+  local T = t.__genericT__
+  return setmetatable({ list = t, index = #t, version = t.version, currnet = T:default() }, ArrayReverseEnumerator(T))
+end
 
 local function checkArrayIndex(index1, index2)
   if index2 then
@@ -618,7 +632,6 @@ Array = {
   end,
   Clear = unset,
   ClearArray = function (t, index, length)
-    if t == nil then throw(ArgumentNullException("array")) end
     checkIndexAndCount(t, index, length)
     local default = t.__genericT__:default()
     if default == nil then default = null end

@@ -335,6 +335,7 @@ namespace Bridge.ClientTest.Text
             sb.Insert(0, 56.7);
             Assert.AreEqual("56.7foo bartrue=123\r\nfoo bar\r\n(foo, False)", sb.ToString(), ".Insert()");
 
+#if false
             // Remove
             sb.Remove(4, 7);
             Assert.AreEqual("56.7true=123\r\nfoo bar\r\n(foo, False)", sb.ToString(), ".Remove(start, length)");
@@ -348,6 +349,7 @@ namespace Bridge.ClientTest.Text
             Assert.AreEqual("56.7true=123\n\nbar foo\n\n(Foo, False)", sb.ToString(), ".Replace(char, char, start, length)");
             sb.Replace("Foo", "foo", 23, 6);
             Assert.AreEqual("56.7true=123\n\nbar foo\n\n(foo, False)", sb.ToString(), ".Replace(string, string, start, length)");
+#endif
         }
 
         [Test(Name = "#2902 - {0}")]

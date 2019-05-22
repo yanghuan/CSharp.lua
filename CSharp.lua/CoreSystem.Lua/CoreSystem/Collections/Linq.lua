@@ -49,7 +49,7 @@ local tsort = table.sort
 
 local InternalEnumerable = define("System.Linq.InternalEnumerable", function(T) 
   return {
-    __inherits__ = { IEnumerable_1(T), IEnumerable }
+    __inherits__ = { IEnumerable_1(T) }
   }
 end)
 
@@ -60,7 +60,7 @@ end
 
 local InternalEnumerator = define("System.Linq.InternalEnumerator", function(T) 
   return {
-    __inherits__ = { IEnumerator_1(T), IEnumerator }
+    __inherits__ = { IEnumerator_1(T) }
   }
 end)
 
@@ -257,12 +257,17 @@ function Enumerable.SkipWhile(source, predicate)
   end)
 end
 
-local Lookup = {}
-function Lookup.__ctor__(this, comparer)
-  this.comparer = comparer or EqualityComparer(this.__genericTKey__).getDefault()
-  this.groups = {}
-  this.indexs = {}
-end
+local IGrouping = System.defInf("System.Linq.IGrouping")
+local Grouping = define("System.Linq.Grouping", {
+  __inherits__ = { IGrouping },
+  GetEnumerator = arrayEnumerator,
+  getKey = function (this)
+    return this.key
+  end,
+  getCount = function (this)
+    return #this
+  end
+})
 
 local function getGrouping(this, key)
   local hashCode = this.comparer:GetHashCodeOf(key)
@@ -270,23 +275,27 @@ local function getGrouping(this, key)
   return this.groups[groupIndex]
 end
 
-function Lookup.get(this, key)
-  local grouping = getGrouping(this, key)
-  if grouping ~= nil then return grouping end 
-  return Empty(this.__genericTElement__)
-end
-
-function Lookup.GetCount(this)
-  return #this.groups
-end
-
-function Lookup.Contains(this, key)
-  return getGrouping(this, key) ~= nil
-end
-
-function Lookup.GetEnumerator(this)
-  return arrayEnumerator(this.groups)
-end
+local Lookup = {
+  __ctor__ = function (this, comparer)
+    this.comparer = comparer or EqualityComparer(this.__genericTKey__).getDefault()
+    this.groups = {}
+    this.indexs = {}
+  end,
+  get = function (this, key)
+    local grouping = getGrouping(this, key)
+    if grouping ~= nil then return grouping end 
+    return Empty(this.__genericTElement__)
+  end,
+  GetCount = function (this)
+    return #this.groups
+  end,
+  Contains = function (this, key)
+    return getGrouping(this, key) ~= nil
+  end,
+  GetEnumerator = function (this)
+    return arrayEnumerator(this.groups, IGrouping)
+  end
+}
 
 local LookupFn = define("System.Linq.Lookup", function(TKey, TElement)
   local cls = {
@@ -295,22 +304,6 @@ local LookupFn = define("System.Linq.Lookup", function(TKey, TElement)
   }
   return cls
 end, Lookup)
-
-local IGrouping = System.defInf("System.Linq.IGrouping")
-
-local Grouping = {}
-Grouping.GetEnumerator = arrayEnumerator 
-
-function Grouping.getKey(this)
-  return this.key
-end
-
-function Grouping.getCount(this)
-  return #this
-end
-
-Grouping.__inherits__ = { IGrouping }
-define("System.Linq.Grouping", Grouping)
 
 local function addToLookup(this, key, value)
   local hashCode = this.comparer:GetHashCodeOf(key)

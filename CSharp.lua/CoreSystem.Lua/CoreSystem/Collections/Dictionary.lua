@@ -19,10 +19,10 @@ local define = System.define
 local throw = System.throw
 local null = System.null
 local falseFn = System.falseFn
+local checkIndexAndCount = System.checkIndexAndCount
 local throwFailedVersion = System.throwFailedVersion
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentException = System.ArgumentException
-local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local KeyNotFoundException = System.KeyNotFoundException
 local EqualityComparer = System.EqualityComparer
 
@@ -166,15 +166,17 @@ local DictionaryEnumerator = define("System.DictionaryEnumerator", {
 })
 
 local function dictionaryEnumerator(t, kind)
-  local TKey, TValue = t.__genericTKey__, t.__genericTValue__
   local current
   if not kind then
+    local TKey, TValue = t.__genericTKey__, t.__genericTValue__
     kind = setmetatable({ Key = TKey:default(), Value = TValue:default() }, KeyValuePairFn(TKey, TValue))
     current = kind
   elseif kind == 1 then
+    local TKey = t.__genericTKey__
     current = TKey:default()
     kind = nil
   else
+    local TValue = t.__genericTValue__
     current = TValue:default()
     kind = false
   end
@@ -298,15 +300,8 @@ local Dictionary = {
     return false
   end,
   CopyTo = function (this, array, index)
-    if array == nil then throw(ArgumentNullException("array")) end
-    local len = #array
-    if index < 0 or index > len then
-      throw(ArgumentOutOfRangeException("index"))
-    end
     local count = getCount(this)
-    if len - index < count then
-      throw(ArgumentException())
-    end
+    checkIndexAndCount(array, index, count)
     if count > 0 then
       local KeyValuePair = KeyValuePairFn(this.__genericTKey__, this.__genericTValue__)
       index = index + 1

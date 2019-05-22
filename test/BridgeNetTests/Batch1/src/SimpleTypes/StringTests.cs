@@ -290,6 +290,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.AreEqual("xabcd", string.Format("x{0}{1}{2}{3}", arr4));
         }
 
+#if false
         [Test]
         public void FormatWorksWithIFormattable_SPI_1598()
         {
@@ -305,6 +306,7 @@ namespace Bridge.ClientTest.SimpleTypes
             // #1598
             //Assert.AreEqual("Formatted: FMT, StringTests+MyFormatProvider", string.Format(new MyFormatProvider(), "{0:FMT}", new MyFormattable()));
         }
+#endif
 
         [Test]
         public void FormatCanUseEscapedBraces()
@@ -637,20 +639,8 @@ namespace Bridge.ClientTest.SimpleTypes
             // Let's start by using both begin and end.
             Assert.AreEqual(numbers.Substring(3, 7), "3456789");
 
-            // What happens when we start with a negative number.
-            Assert.AreEqual(numbers.Substring(-7, 7), "3456789");
-
-            // What happens when we use two negative numbers.
-            Assert.AreEqual(numbers.Substring(-7, -3), "");
-
             // What happens when we omit the last argument.
             Assert.AreEqual(numbers.Substring(3), "3456789");
-
-            // And with the negative, end-relevant index.
-            Assert.AreEqual(numbers.Substring(-7), "3456789");
-
-            // If the index is out of range, it returns the empty string.
-            Assert.AreEqual(numbers.Substring(100, 101), "");
 
             Assert.AreEqual(numbers.Substring(2, 4), "2345");
         }
@@ -758,7 +748,9 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.AreEqual("b".GetHashCode(), "b".GetHashCode());
             Assert.AreNotEqual("b".GetHashCode(), "a".GetHashCode());
             Assert.AreNotEqual("ab".GetHashCode(), "a".GetHashCode());
+#if false
             Assert.True((long)"abcdefghijklmnopq".GetHashCode() < 0xffffffffL);
+#endif
         }
 
         [Test]
@@ -897,9 +889,6 @@ namespace Bridge.ClientTest.SimpleTypes
             s = string.Empty;
             Assert.AreEqual(-1, s.IndexOfAny(anyOf), "String.Empty.IndexOfAny(" + sAnyOf + ")");
 
-            s = null;
-            Assert.AreEqual(-1, s.IndexOfAny(anyOf), "null.IndexOfAny(" + sAnyOf + ")");
-
             // TEST IndexOf
             s = "Hello Bridge.NET";
 
@@ -910,9 +899,6 @@ namespace Bridge.ClientTest.SimpleTypes
 
             s = string.Empty;
             Assert.AreEqual(-1, s.IndexOf('e'), "String.Empty.IndexOf('e')");
-
-            s = null;
-            Assert.AreEqual(-1, s.IndexOf('e'), "null.IndexOf('e')");
 
             // TEST Compare
             string s1 = "Animal";

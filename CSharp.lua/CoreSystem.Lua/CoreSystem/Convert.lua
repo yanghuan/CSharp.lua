@@ -354,9 +354,7 @@ local sr = System.sr
 local div = System.div
 local global = System.global
 local systemToInt16 = System.toInt16
-local systemToUInt16 = System.toUInt16
 local systemToInt32 = System.toInt32
-local systemToUInt32 = System.toUInt32
 local systemToUInt64 = System.toUInt64
 local arrayFromTable = System.arrayFromTable
 local checkIndexAndCount = System.checkIndexAndCount
@@ -424,7 +422,6 @@ if System.luaVersion < 5.3 then
   end
 
   toInt64 = function (value, startIndex)
-    if value == nil then throw(ArgumentNullException("value")) end
     checkIndexAndCount(value, startIndex, 8)
     if value <= -2147483647 or value >= 2147483647 then
       throw(System.NotSupportedException()) 
@@ -459,7 +456,6 @@ else
   end
 
   toInt64 = function (value, startIndex)
-    if value == nil then throw(ArgumentNullException("value")) end
     checkIndexAndCount(value, startIndex, 8)
     if isLittleEndian then
       local i = value[startIndex + 1]
@@ -530,13 +526,11 @@ local function getBytesFromDouble(value)
 end
 
 local function toBoolean(value, startIndex)
-  if value == nil then throw(ArgumentNullException("value")) end
   checkIndexAndCount(value, startIndex, 1)
   return value[startIndex + 1] ~= 0 and true or false
 end
 
-local function getInt16(value, startIndex)
-  if value == nil then throw(ArgumentNullException("value")) end
+local function toUInt16(value, startIndex)
   checkIndexAndCount(value, startIndex, 2)
   if isLittleEndian then
     value = bor(value[startIndex + 1], sl(value[startIndex + 2], 8))
@@ -547,17 +541,11 @@ local function getInt16(value, startIndex)
 end
 
 local function toInt16(value, startIndex)
-  value = getInt16(value. startIndex)
+  value = toUInt16(value, startIndex)
   return systemToInt16(value)
 end
 
-local function toUInt16(value, startIndex)
-  value = getInt16(value. startIndex)
-  return systemToUInt16(value)
-end
-
-local function getInt32(value, startIndex)
-  if value == nil then throw(ArgumentNullException("value")) end
+local function toUInt32(value, startIndex)
   checkIndexAndCount(value, startIndex, 4)
   local i
   if isLittleEndian then
@@ -575,13 +563,8 @@ local function getInt32(value, startIndex)
 end
 
 local function toInt32(value, startIndex)
-  value = getInt32(value, startIndex)
+  value = toUInt32(value, startIndex)
   return systemToInt32(value)
-end
-
-local function toUInt32(value, startIndex)
-  value = getInt32(value, startIndex)
-  return systemToUInt32(value)
 end
 
 local function toUInt64(value, startIndex)
@@ -590,13 +573,11 @@ local function toUInt64(value, startIndex)
 end
 
 local function toSingle(value, startIndex)
-  if value == nil then throw(ArgumentNullException("value")) end
   checkIndexAndCount(value, startIndex, 4)
   return sunpack("f", schar(unpack(value)))
 end
 
 local function toDouble(value, startIndex)
-  if value == nil then throw(ArgumentNullException("value")) end
   checkIndexAndCount(value, startIndex, 4)
   return sunpack("d", schar(unpack(value)))
 end
@@ -650,6 +631,7 @@ define("System.BitConverter", {
   GetBytesFromFloat = getBytesFromFloat,
   GetBytesFromDouble = getBytesFromDouble,
   ToBoolean = toBoolean,
+  ToChar = toUInt16,
   ToInt16 = toInt16,
   ToUInt16 = toUInt16,
   ToInt32 = toInt32,

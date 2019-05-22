@@ -212,7 +212,7 @@ define("System.InvalidCastException", {
   __inherits__ = { Exception },
 
   __ctor__ = function(this, message, innerException) 
-    ctorOfException(this, message or "The cast is not valid.", innerException)
+    ctorOfException(this, message or "Specified cast is not valid.", innerException)
   end
 })
 

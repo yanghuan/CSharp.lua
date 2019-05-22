@@ -1531,6 +1531,8 @@ namespace CSharpLua {
             var local = new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.Placeholder, right);
             CurBlock.AddStatement(local);
             return LuaExpressionSyntax.EmptyExpression;
+          } else if (leftNode.IsKind(SyntaxKind.ThisExpression)) {
+            return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(left, LuaIdentifierNameSyntax.CopyThis, true), right);
           }
           return BuildLuaSimpleAssignmentExpression(left, right);
         }

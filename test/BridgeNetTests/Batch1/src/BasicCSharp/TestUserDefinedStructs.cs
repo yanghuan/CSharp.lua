@@ -294,6 +294,7 @@ namespace Bridge.ClientTest
             Assert.AreEqual(42, s1.I);
         }
 
+#if false
         [Test]
         public void DefaultGetHashCodeGeneratesHashCodeBasedOnAllInstanceFields()
         {
@@ -307,6 +308,7 @@ namespace Bridge.ClientTest
             S3.StaticField = 20;
             Assert.AreEqual(hc, s1.GetHashCode(), "#3");
         }
+#endif
 
         [Test]
         public void DefaultEqualsUsesValueEqualityForAllMembers()

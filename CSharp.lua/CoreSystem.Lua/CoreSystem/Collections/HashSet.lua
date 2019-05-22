@@ -303,7 +303,6 @@ local HashSet = {
 }
 
 function System.hashSetFromTable(t, T)
-  assert(T)
   return setmetatable(t, HashSet(T))
 end
 
@@ -311,6 +310,7 @@ System.define("System.HashSet", function(T)
   return { 
     __inherits__ = { System.ICollection_1(T), System.ISet_1(T) }, 
     __genericT__ = T,
+    __genericTKey__ = T,
     __len = HashSet.getCount
   }
 end, HashSet)

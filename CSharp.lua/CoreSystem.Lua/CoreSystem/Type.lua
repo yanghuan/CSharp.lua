@@ -392,7 +392,7 @@ local function cast(cls, obj, nullable)
     if is(obj, cls) then
       return obj
     end
-    throw(InvalidCastException(), 1)
+    throw(InvalidCastException(("Unable to cast object of type '%s' to type '%s'."):format(obj.__name__, cls.__name__)), 1)
   else
     if cls.class ~= "S" or nullable then
       return

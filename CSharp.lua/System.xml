@@ -331,6 +331,9 @@ limitations under the License.
         <method name="GetBytes" Name="GetBytesFromFloat">
           <arg type="System.Single" />
         </method>
+        <method name="GetBytes" Name="GetBytesFromDouble">
+          <arg type="System.Double" />
+        </method>
       </class>
       <class name="ArraySegment^1" Name="System.ArraySegment" />
       <class name="Guid" Readonly="true" />
@@ -361,7 +364,7 @@ limitations under the License.
       <class name="LinkedList^1" Name="System.LinkedList">
         <property name="Count" IsField="true" />
       </class>
-      <class name="LinkedListNode^1" Name="System.LinkedListNode">
+      <class name="LinkedListNode^1" Name="System.LinkedListNode" IgnoreGeneric="true">
         <property name="Value" IsField="true" />
         <property name="List" IsField="true" />
       </class>
@@ -566,7 +569,7 @@ limitations under the License.
         <method name="Append" Name="AppendCharRepeat">
           <arg type="System.Char" />
           <arg type="System.Int32" />
-        </method>  
+        </method>
       </class>
     </namespace>
     <namespace name="System.Threading" Name="System">

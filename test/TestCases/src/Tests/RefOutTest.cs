@@ -233,7 +233,7 @@ namespace TestCases
             Console.WriteLine("Result = " + r.TestVal2);
             float a = 1.0f;
             float b = a / 2;
-            var str = string.Format("{0:0.000}", b);
+            var str = string.Format("{0}", b);
             Console.WriteLine(str);
         }
         [TestCase]

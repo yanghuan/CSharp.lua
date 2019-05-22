@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -2779,7 +2779,10 @@ namespace Bridge.ClientTest.Collections.Generic
             Random rand = new Random(seed);
             byte[] bytes = new byte[stringLength];
             rand.NextBytes(bytes);
+#if false
             return Convert.ToBase64String(bytes);
+#endif
+            return "Convert.ToBase64String(bytes)";
         }
 
         protected override ISet<string> GenericISetFactory()
@@ -2792,7 +2795,7 @@ namespace Bridge.ClientTest.Collections.Generic
     [TestFixture(TestNameFormat = "LinkedList_Generic_Tests_int - {0}")]
     public class LinkedList_Generic_Tests_int : LinkedList_Generic_Tests<int>
     {
-        #region Constructor_IEnumerable
+#region Constructor_IEnumerable
 
         [Test]
         public void LinkedList_Generic_Constructor_IEnumerable()
@@ -2821,7 +2824,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.Throws<ArgumentNullException>(() => new LinkedList<int>(null));
         }
 
-        #endregion
+#endregion
 
         [Test]
         public void AddAfter_LLNode()

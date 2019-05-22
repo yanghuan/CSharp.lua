@@ -155,7 +155,7 @@ function String.Concat(...)
     local v = ...
     if System.isEnumerableLike(v) then
       for _, v in System.each(v) do
-        t[count] = v:ToString()
+        t[count] = v ~= nil and v:ToString() or ""
         count = count + 1
       end
     else 
@@ -164,7 +164,7 @@ function String.Concat(...)
   else
     for i = 1, len do
       local v = select(i, ...)
-      t[count] = v:ToString()
+      t[count] = v ~= nil and v:ToString() or ""
       count = count + 1
     end
   end
@@ -295,26 +295,64 @@ function String.IsNullOrEmpty(value)
   return value == nil or #value == 0
 end
 
-local function simpleFormat(format, args, len, getFn)
-  return (sgsub(format, "{(%d)}", function(n)
-    n = tonumber(n)
-    if n >= len then
-      throw(FormatException())
-    end
-    local v = getFn(args, n)
-    if v ~= nil then
-      return v:ToString()
-    end
-    return ""
-  end))
+local function throwFormatError()
+  throw(FormatException("Input string was not in a correct format."))
 end
 
-local function formatGetFromArray(t, n)
-  return t:get(n)
-end
-
-local function formatGetFromTable(t, n)
-  return t[n + 1]
+local function formatBuild(format, args, len)
+  local t, count = {}, 1
+  local i, j, s = 1
+  while true do
+    local startPos  = i
+    while true do
+      i, j, s = sfind(format, "([{}])", i)
+      if not i then
+        if count == 1 then
+          return format
+        end
+        t[count] = ssub(format, startPos)
+        return table.concat(t)
+      end
+      local pos = i - 1
+      i = i + 1
+      local c = sbyte(format, i)
+      if not c then throwFormatError() end
+      if s == '{' then
+        if c == 123 then
+          i = i + 1
+        else
+          pos = i - 2
+          if pos >= startPos then
+            t[count] = ssub(format, startPos, pos)
+            count = count + 1
+          end
+          break
+        end
+      else
+        if c == 125 then
+          i = i + 1
+        else
+          throwFormatError()
+        end
+      end
+      if pos >= startPos then
+        t[count] = ssub(format, startPos, pos)
+        count = count + 1
+      end
+      t[count] = s
+      count = count + 1
+      startPos = i
+    end
+    i, j, s = sfind(format, "^(%d+)}", i)
+    if not i then throwFormatError() end
+    s = s + 1
+    if s > len then throwFormatError() end
+    s = args[s]
+    s = (s ~= nil and s ~= System.null) and s:ToString() or ""
+    t[count] = s
+    count = count + 1
+    i = j + 1
+  end
 end
 
 function String.Format(format, ...)
@@ -323,10 +361,10 @@ function String.Format(format, ...)
   if len == 1 then
     local args = ...
     if System.isArrayLike(args) then
-      return simpleFormat(format, args, #args, formatGetFromArray)
+      return formatBuild(format, args, #args)
     end
   end
-  return simpleFormat(format, { ... }, len, formatGetFromTable)
+  return formatBuild(format, { ... }, len)
 end
 
 function String.StartsWith(this, prefix)
@@ -342,6 +380,19 @@ function String.Contains(this, value)
     throw(ArgumentNullException("value"))
   end
   return sfind(this, value) ~= nil
+end
+
+function String.CopyTo(this, sourceIndex, destination, destinationIndex, count)
+  if destination == nil then throw(ArgumentNullException("destination")) end
+  if count < 0 then throw(ArgumentOutOfRangeException("count")) end
+  local len = #this
+  if sourceIndex < 0 or count > len - sourceIndex then throw(ArgumentOutOfRangeException("sourceIndex")) end
+  if destinationIndex > #destination - count or destinationIndex < 0 then throw(ArgumentOutOfRangeException("destinationIndex")) end
+  if count > 0 then
+    for i = sourceIndex + 1, sourceIndex + count do
+      destination[destinationIndex + i] = sbyte(this, i)      
+    end
+  end
 end
 
 function String.IndexOfAny(str, chars, startIndex, count)
@@ -469,35 +520,47 @@ end
 String.ToLower = slower
 String.ToUpper = supper
 
-function String.TrimEnd(this, chars)
-  if chars then
-    chars = schar(unpack(chars))
-    chars = escape(chars)
-    chars = "(.-)[" .. chars .. "]*$"
-  else 
-    chars = "(.-)%s*$"
-  end
-  return (sgsub(this, chars, "%1"))
-end
-
-function String.TrimStart(this, chars) 
-  if chars then
-    chars = schar(unpack(chars))
-    chars = escape(chars)
-    chars = "^[" .. chars .. "]*(.-)"
-  else 
-    chars = "^%s*(.-)"
-  end
-  return (sgsub(this, chars, "%1"))
-end
-
-function String.Trim(this, chars) 
-  if chars then
-    chars = schar(unpack(chars))
+function String.Trim(this, chars, ...)
+  if not chars then
+    chars = "^%s*(.-)%s*$"
+  else
+    if type(chars) == "table" then
+      chars = schar(unpack(chars))
+    else
+      chars = schar(chars, ...)
+    end
     chars = escape(chars)
     chars = "^[" .. chars .. "]*(.-)[" .. chars .. "]*$"
-  else 
-    chars = "^%s*(.-)%s*$"
+  end
+  return (sgsub(this, chars, "%1"))
+end
+
+function String.TrimEnd(this, chars, ...)
+  if not chars then
+    chars = "(.-)%s*$"
+  else
+    if type(chars) == "table" then
+      chars = schar(unpack(chars))
+    else
+      chars = schar(chars, ...)
+    end
+    chars = escape(chars)
+    chars = "(.-)[" .. chars .. "]*$"
+  end
+  return (sgsub(this, chars, "%1"))
+end
+
+function String.TrimStart(this, chars, ...)
+  if not chars then
+    chars = "^%s*(.-)"
+  else
+    if type(chars) == "table" then
+      chars = schar(unpack(chars))
+    else
+      chars = schar(chars, ...)
+    end
+    chars = escape(chars)
+    chars = "^[" .. chars .. "]*(.-)"
   end
   return (sgsub(this, chars, "%1"))
 end

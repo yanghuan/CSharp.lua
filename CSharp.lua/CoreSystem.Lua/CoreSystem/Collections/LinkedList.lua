@@ -18,6 +18,7 @@ local System = System
 local define = System.define
 local throw = System.throw
 local each = System.each
+local checkIndexAndCount = System.checkIndexAndCount
 local ArgumentNullException = System.ArgumentNullException
 local InvalidOperationException = System.InvalidOperationException
 local EqualityComparer = System.EqualityComparer
@@ -27,6 +28,9 @@ local setmetatable = setmetatable
 local select = select
 
 local LinkedListNode = define("System.LinkedListNode", {
+  __ctor__ = function (this, value)
+    this.Value = value
+  end,
   getNext = function (this)
     local next = this.next
     if next == nil or next == this.List.head then
@@ -36,7 +40,7 @@ local LinkedListNode = define("System.LinkedListNode", {
   end,
   getPrevious = function (this)
     local prev = this.prev
-    if prev == nil or prev == this.List.head then
+    if prev == nil or this == this.List.head then
       return nil
     end
     return prev
@@ -44,7 +48,16 @@ local LinkedListNode = define("System.LinkedListNode", {
 })
 
 local function newLinkedListNode(list, value)
-  return setmetatable({ List = list, Value = value }, LinkedListNode)
+  return setmetatable({ List = assert(list), Value = value }, LinkedListNode)
+end
+
+local function vaildateNewNode(this, node)
+  if node == nil then
+    throw(ArgumentNullException("node"))
+  end
+  if node.List ~= nil then
+    throw(InvalidOperationException("ExternalLinkedListNode"))
+  end
 end
 
 local function vaildateNode(this, node)
@@ -146,7 +159,7 @@ local LinkedList = {
   AddAfter = function (this, node, newNode)    
     vaildateNode(this, node)
     if getmetatable(newNode) == LinkedListNode then
-      vaildateNode(this, newNode)
+      vaildateNewNode(this, newNode)
       insertNodeBefore(this, node.next, newNode)
       newNode.List = this
     else
@@ -158,7 +171,7 @@ local LinkedList = {
   AddBefore = function (this, node, newNode)
     vaildateNode(this, node)
     if getmetatable(newNode) == LinkedListNode then
-      vaildateNode(this, newNode)
+      vaildateNewNode(this, newNode)
       insertNodeBefore(this, node, newNode)
       newNode.List = this
       if node == this.head then
@@ -175,7 +188,7 @@ local LinkedList = {
   end,
   AddFirst = function (this, node)
     if getmetatable(node) == LinkedListNode then
-      vaildateNode(this, node)
+      vaildateNewNode(this, node)
       if this.head == nil then
         insertNodeToEmptyList(this, node)
       else
@@ -196,7 +209,7 @@ local LinkedList = {
   end,
   AddLast = function (this, node)
     if getmetatable(node) == LinkedListNode then
-      vaildateNode(this, node)
+      vaildateNewNode(this, node)
       if this.head == nil then
         insertNodeToEmptyList(this, node)
       else
@@ -227,10 +240,25 @@ local LinkedList = {
   Contains = function (this, value)
     return this:Find(value) ~= nil
   end,
+  CopyTo = function (this, array, index)
+    checkIndexAndCount(array, index, this.Count)
+    local head = this.head
+    local node = head
+    if node then
+      index = index + 1
+      repeat
+        local value = node.Value
+        if value == nil then value = System.null end
+        array[index] = value
+        index = index + 1
+        node = node.next
+      until node == head
+    end
+  end,
   Find = function (this, value)     
     local head = this.head
     local node = head
-    local comparer = EqualityComparer(t.__genericT__).getDefault()
+    local comparer = EqualityComparer(this.__genericT__).getDefault()
     local equals = comparer.EqualsOf
     if node ~= nil then
       if value ~= nil then
@@ -256,7 +284,7 @@ local LinkedList = {
     if head == nil then return nil end
     local last = head.prev
     local node = last
-    local comparer = EqualityComparer(t.__genericT__).getDefault()
+    local comparer = EqualityComparer(this.__genericT__).getDefault()
     local equals = comparer.EqualsOf
     if node ~= nil then
       if value ~= nil then
@@ -265,14 +293,14 @@ local LinkedList = {
             return node
           end
           node = node.prev
-        until node == head
+        until node == last
       else
         repeat 
           if node.Value == nil then
             return node
           end
           node = node.prev
-         until node == head
+         until node == last
       end
     end
     return nil
@@ -309,7 +337,6 @@ local LinkedList = {
 }
 
 function System.linkedListFromTable(t, T)
-  assert(T)
   return setmetatable(t, LinkedList(T))
 end
 

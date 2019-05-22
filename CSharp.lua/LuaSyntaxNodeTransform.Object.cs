@@ -319,25 +319,30 @@ namespace CSharpLua {
       if (node.Initializer != null) {
         var initializerSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
         int ctroIndex = GetConstructorIndex(initializerSymbol);
-        LuaInvocationExpressionSyntax otherCtorInvoke;
+        LuaInvocationExpressionSyntax otherCtorInvoke = null;
         if (node.Initializer.IsKind(SyntaxKind.ThisConstructorInitializer)) {
           Contract.Assert(ctroIndex != 0);
-          LuaIdentifierNameSyntax thisCtor = LuaSyntaxNode.GetCtorNameString(ctroIndex);
-          otherCtorInvoke = new LuaInvocationExpressionSyntax(thisCtor);
-          function.IsInvokeThisCtor = true;
+          if (!symbol.IsCombineImplicitlyCtorMethod(out _)) {
+            LuaIdentifierNameSyntax thisCtor = LuaSyntaxNode.GetCtorNameString(ctroIndex);
+            otherCtorInvoke = new LuaInvocationExpressionSyntax(thisCtor);
+            function.IsInvokeThisCtor = true;
+          }
         } else {
           otherCtorInvoke = BuildCallBaseConstructor(symbol.ContainingType, initializerSymbol.ReceiverType, ctroIndex);
         }
-        otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
-        var refOrOutArguments = new List<RefOrOutArgument>();
-        var arguments = BuildArgumentList(initializerSymbol, initializerSymbol.Parameters, node.Initializer.ArgumentList, refOrOutArguments);
-        TryRemoveNilArgumentsAtTail(initializerSymbol, arguments);
-        otherCtorInvoke.AddArguments(arguments);
-        if (refOrOutArguments.Count == 0) {
-          function.AddStatement(otherCtorInvoke);
-        } else {
-          var newExpression = BuildInvokeRefOrOut(node.Initializer, otherCtorInvoke, refOrOutArguments);
-          function.AddStatement(newExpression);
+        
+        if (otherCtorInvoke != null) {
+          otherCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
+          var refOrOutArguments = new List<RefOrOutArgument>();
+          var arguments = BuildArgumentList(initializerSymbol, initializerSymbol.Parameters, node.Initializer.ArgumentList, refOrOutArguments);
+          TryRemoveNilArgumentsAtTail(initializerSymbol, arguments);
+          otherCtorInvoke.AddArguments(arguments);
+          if (refOrOutArguments.Count == 0) {
+            function.AddStatement(otherCtorInvoke);
+          } else {
+            var newExpression = BuildInvokeRefOrOut(node.Initializer, otherCtorInvoke, refOrOutArguments);
+            function.AddStatement(newExpression);
+          }
         }
       } else if (!isStatic && generator_.IsBaseExplicitCtorExists(symbol.ContainingType.BaseType)) {
         var baseCtorInvoke = BuildCallBaseConstructor(symbol.ContainingType, out int ctroCounter);
@@ -910,13 +915,6 @@ namespace CSharpLua {
       }
 
       var type = semanticModel_.GetTypeInfo(node.Type).Type;
-      if (type.IsKeyValuePairType()) {
-        var nameType = (INamedTypeSymbol)type;
-        var keyType = nameType.TypeArguments[0];
-        var valueType = nameType.TypeArguments[1];
-        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.KeyValuePair, GetDefaultValueExpression(keyType), GetDefaultValueExpression(valueType));
-      }
-
       return GetDefaultValueExpression(type);
     }
 

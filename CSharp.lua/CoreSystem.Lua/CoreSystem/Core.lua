@@ -322,10 +322,6 @@ end
 
 local function def(name, kind, cls, generic)
   if type(cls) == "function" then
-    if generic then
-      generic.__index = generic
-      generic.__call = new
-    end
     local mt = {}
     local fn = function(_, ...)
       local gt, gk = multiKey(mt, ...)
@@ -339,7 +335,14 @@ local function def(name, kind, cls, generic)
       end
       return t
     end
-    return set(name, setmetatable(generic or {}, { __call = fn, __index = Object }))
+
+    local base = kind ~= "S" and Object or ValueType
+    local caller = setmetatable({ __call = fn, __index = base }, base)
+    if generic then
+      generic.__index = generic
+      generic.__call = new
+    end
+    return set(name, setmetatable(generic or {}, caller))
   else
     return defCore(name, kind, cls, generic)
   end
@@ -1126,6 +1129,20 @@ ValueType = {
     end
     return this
   end,
+  __copy__ = function (this, obj)
+    for k, v in pairs(obj) do
+      if type(v) == "table" and v.class == "S" then
+        this[k] = v:__clone__()
+      else
+        this[k] = v
+      end
+    end
+    for k, v in pairs(this) do
+      if v ~= nil and rawget(obj, k) == nil then
+        this[k] = nil
+      end
+    end
+  end,
   EqualsObj = function (this, obj)
     if getmetatable(this) ~= getmetatable(obj) then return false end
     for k, v in pairs(this) do
@@ -1253,7 +1270,7 @@ end
 
 defCls("System.Attribute", {})
 
-local Nullable = {}
+local Nullable = { default = emptyFn }
 defStc("System.Nullable", function (T)
   return { 
     __genericT__ = T 
@@ -1304,8 +1321,7 @@ debug.setmetatable(nil, {
 })
 
 function System.toString(t)
-  if t == nil then return "" end
-  return t:ToString()
+  return t and t:ToString() or ""
 end
 
 function System.HasValueOfNull(this) 

@@ -24,6 +24,9 @@ local table = table
 local tconcat = table.concat
 local schar = string.char
 local ssub = string.sub
+local sbyte = string.byte
+local type = type
+local select = select
 
 local function build(this, value, startIndex, length)
   value = value:Substring(startIndex, length)
@@ -34,7 +37,29 @@ local function build(this, value, startIndex, length)
   end
 end
 
-System.define("System.StringBuilder", { 
+local function getItemIndex(this, index)
+  for i = 1, #this do
+    local s = this[i]
+    local len = #s
+    local begin = index
+    index = index - len
+    if index < 0 then
+      begin = begin + 1
+      local ch = sbyte(s, begin)
+      if not ch then
+        throw(ArgumentOutOfRangeException("index")) 
+      end
+      return i, s, begin, ch
+    end
+  end
+  throw(ArgumentOutOfRangeException("index"))
+end
+
+local function getLength(this)
+  return this.Length
+end
+
+local StringBuilder = System.define("System.Text.StringBuilder", { 
   Length = 0,
   ToString = tconcat,
   __tostring = tconcat,
@@ -53,9 +78,22 @@ System.define("System.StringBuilder", {
       build(this, value, startIndex, length)
     end
   end,
-  getLength = function (this)
-    return this.Length
+  get = function (this, index)
+    local _, _, _, ch = getItemIndex(this, index)
+    return ch
   end,
+  set = function (this, index, value)
+    local i, s, j = getItemIndex(this, index)
+    this[i] = ssub(s, 1, j - 1) .. schar(value) .. ssub(s, j + 1)
+  end,
+  setCapacity = function (this, value)
+    if value < this.Length then
+      throw(ArgumentOutOfRangeException())
+    end
+  end,
+  getCapacity = getLength,
+  getMaxCapacity = getLength,
+  getLength = getLength,
   setLength = function (this, value) 
     if value < 0 then throw(ArgumentOutOfRangeException("value")) end
     if value == 0 then
@@ -85,21 +123,20 @@ System.define("System.StringBuilder", {
       this.Length = this.Length + delta
     end  
   end,
-  Append = function (this, ...)
-    local len = select("#", "...")
-    if len == 1 then
-      local value = ...
+  Append = function (this, value, startIndex, count)
+    if not startIndex then
       if value ~= nil then
         value = value:ToString()
-        this[#this + 1] = value
-        this.Length =  this.Length + #value
+        if value ~= nil then
+          this[#this + 1] = value
+          this.Length =  this.Length + #value
+        end
       end
     else
-      local value, startIndex, length = ...
       if value == nil then
         throw(ArgumentNullException("value"))
       end
-      value = value:Substring(startIndex, length)
+      value = value:Substring(startIndex, count)
       this[#this + 1] = value
       this.Length =  this.Length + #value
     end
@@ -145,5 +182,22 @@ System.define("System.StringBuilder", {
     clear(this)
     this.length = 0
     return this
+  end,
+  Insert = function (this, index, value)
+    local length = this.length
+    if value ~= nil then
+      if index == length then
+        this:Append(value)
+      else
+        value = value:ToString()
+        if value ~= nil then
+          local i, s, j = getItemIndex(this, index)
+          this[i] = ssub(s, 1, j - 1) .. value .. ssub(s, j)
+          this.length = length +  #value
+        end
+      end
+    end
   end
 })
+
+System.StringBuilder = StringBuilder

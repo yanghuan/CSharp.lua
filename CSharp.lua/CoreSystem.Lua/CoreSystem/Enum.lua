@@ -107,8 +107,10 @@ System.define("System.Enum", {
     local t = {}
     local count = 1
     for k, v in pairs(enumType[1]) do
-      t[count] = k
-      count = count + 1
+      if type(v) == "number" then
+        t[count] = k
+        count = count + 1
+      end
     end
     return System.arrayFromTable(t, System.String)
   end,
@@ -118,8 +120,10 @@ System.define("System.Enum", {
     local t = {}
     local count = 1
     for k, v in pairs(enumType[1]) do
-      t[count] = v
-      count = count + 1
+      if type(v) == "number" then
+        t[count] = v
+        count = count + 1
+      end
     end
     return System.arrayFromTable(t, Int)
   end,

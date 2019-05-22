@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Bridge.ClientTest.Collections.Generic.Base
@@ -20,7 +20,7 @@ namespace Bridge.ClientTest.Collections.Generic.Base
         public enum EnumerableType
         {
             HashSet,
-            SortedSet,
+            //SortedSet,
             List,
             Queue,
             Lazy,
