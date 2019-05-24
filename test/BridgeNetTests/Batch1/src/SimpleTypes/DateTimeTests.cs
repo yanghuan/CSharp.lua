@@ -352,6 +352,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(dt.Ticks >= 636352416000000000, dt.Ticks + " >= 636352416000000000");
         }
 
+#if false
         [Test]
         public void FormatWorks()
         {
@@ -388,6 +389,7 @@ namespace Bridge.ClientTest.SimpleTypes
             var dt = new DateTime(2011, 7, 12);
             Assert.AreEqual("2011-07-12", dt.ToString("yyyy-MM-dd"));
         }
+#endif
 
         [Test]
         public void GetFullYearWorks()
@@ -539,6 +541,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.AreEqual(12, dt.Day);
         }
 
+#if false
         [Test]
         public void ParseWorks()
         {
@@ -571,6 +574,7 @@ namespace Bridge.ClientTest.SimpleTypes
         {
             Assert.Throws<FormatException>(() => { var dt = DateTime.ParseExact("X", "yyyy-dd-MM", CultureInfo.InvariantCulture); });
         }
+#endif
 
         // The test is restructured to run correctly within any TimeZone
         // And commented out due to DST problem
@@ -1467,6 +1471,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(result1 == result2, "[#1901] DateTime to Timestamp back to DateTime is different");
         }
 
+#if false
         [Test(Name = "#2149 - {0}")]
         public void ToShortDateStringWorks()
         {
@@ -1515,5 +1520,6 @@ namespace Bridge.ClientTest.SimpleTypes
                 CultureInfo.CurrentCulture = defaultCulture;
             }
         }
+#endif
     }
 }

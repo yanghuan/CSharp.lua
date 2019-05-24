@@ -38,13 +38,17 @@ end
 local main = System.Reflection.Assembly.GetEntryAssembly().getEntryPoint()
 main:Invoke()
 
-while true do
-  local nextExpiration = timeoutQueue:getNextExpiration()
-  if nextExpiration ~= timeoutQueue.MaxExpiration then
-    now = nextExpiration
-    timeoutQueue:RunLoop(now)
-  else
-    break
+if timeoutQueue then
+  while true do
+    local nextExpiration = timeoutQueue:getNextExpiration()
+    if nextExpiration ~= timeoutQueue.MaxExpiration then
+      now = nextExpiration
+      timeoutQueue:RunLoop(now)
+    else
+      break
+    end
   end
 end
+
+
 

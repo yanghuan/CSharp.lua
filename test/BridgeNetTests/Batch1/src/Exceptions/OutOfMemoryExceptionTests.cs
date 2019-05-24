@@ -1,7 +1,8 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 
 using System;
 
+#if false
 namespace Bridge.ClientTest.Exceptions
 {
     [Category(Constants.MODULE_OUTOFMEMORYEXCEPTION)]
@@ -49,3 +50,4 @@ namespace Bridge.ClientTest.Exceptions
         }
     }
 }
+#endif

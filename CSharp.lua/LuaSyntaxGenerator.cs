@@ -352,9 +352,8 @@ namespace CSharpLua {
           parentTypes.Add(superType.OriginalDefinition);
           foreach (var typeArgument in superType.TypeArguments) {
             if (typeArgument.Kind != SymbolKind.TypeParameter) {
-              if (!rootType.IsAssignableFrom(typeArgument.OriginalDefinition)) {
-                INamedTypeSymbol typeArgumentType = (INamedTypeSymbol)typeArgument;
-                AddSuperTypeTo(parentTypes, rootType, typeArgumentType);
+              if (!typeArgument.OriginalDefinition.Is(rootType)) {
+                AddSuperTypeTo(parentTypes, rootType, (INamedTypeSymbol)typeArgument);
               }
             }
           }
@@ -1126,7 +1125,7 @@ namespace CSharpLua {
 
     public bool IsMonoBehaviourSpeicalMethod(IMethodSymbol symbol) {
       if (monoBehaviourSpeicalMethodNames_ != null && monoBehaviourSpeicalMethodNames_.Contains(symbol.Name)) {
-        return monoBehaviourTypeSymbol_.IsAssignableFrom(symbol.ContainingType);
+        return symbol.ContainingType.Is(monoBehaviourTypeSymbol_);
       }
       return false;
     }

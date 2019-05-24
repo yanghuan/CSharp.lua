@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Text;
 
 namespace Bridge.Test.NUnit {
@@ -15,6 +16,7 @@ namespace Bridge.Test.NUnit {
     /// <param name="actual">Actual</param>
     /// <param name="description">Description</param>
     public static void AreEqual(object expected, object actual, string description = null) {
+      Contract.Assert(Equals(expected, actual), description);
     }
 
     /// <summary>
@@ -59,6 +61,7 @@ namespace Bridge.Test.NUnit {
     /// <param name="condition">The value being tested</param>
     /// <param name="description">Description</param>
     public static void True(bool condition, string description = null) {
+      Contract.Assert(condition, description);
     }
 
     /// <summary>
@@ -67,6 +70,7 @@ namespace Bridge.Test.NUnit {
     /// <param name="condition">The value being tested</param>
     /// <param name="description">Description</param>
     public static void False(bool condition, string description = null) {
+      Contract.Assert(!condition, description);
     }
 
     /// <summary>
@@ -75,6 +79,7 @@ namespace Bridge.Test.NUnit {
     /// </summary>
     /// <param name="description">Description</param>
     public static void Fail(string description = null) {
+      Contract.Assert(false, description);
     }
 
     /// <summary>
@@ -122,6 +127,7 @@ namespace Bridge.Test.NUnit {
     /// <param name="anObject">An object being tested</param>
     /// <param name="description">Description</param>
     public static void Null(object anObject, string description = null) {
+      Contract.Assert(anObject == null, description);
     }
 
     /// <summary>
@@ -130,6 +136,7 @@ namespace Bridge.Test.NUnit {
     /// <param name="anObject">An object being tested</param>
     /// <param name="description">Description</param>
     public static void NotNull(object anObject, string description = null) {
+      Contract.Assert(anObject != null, description);
     }
   }
 }

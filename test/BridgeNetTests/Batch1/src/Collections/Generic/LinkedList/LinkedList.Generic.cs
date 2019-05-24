@@ -2782,7 +2782,7 @@ namespace Bridge.ClientTest.Collections.Generic
 #if false
             return Convert.ToBase64String(bytes);
 #endif
-            return "Convert.ToBase64String(bytes)";
+            return rand.Next().ToString();
         }
 
         protected override ISet<string> GenericISetFactory()

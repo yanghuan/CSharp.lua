@@ -718,20 +718,20 @@ end
 function Enumerable.Reverse(source)
   if source == nil then throw(ArgumentNullException("source")) end
   local T = source.__genericT__
-  return createEnumerable(T, source, function()
+  return createEnumerable(T, function()
     local t = {}    
     local index
     return createEnumerator(T, nil, function() 
       if index > 1 then
         index = index - 1
-        return true, unWrap(t[index])
+        return true, t[index]
       end
       return false
-    end, 
+    end,
     function()
       local count = 1
       for _, v in each(source) do
-        t[count] = wrap(v)
+        t[count] = v
         count = count + 1
       end  
       index = count
@@ -811,6 +811,44 @@ function Enumerable.ToLookup(source, ...)
   else
     return toLookup(source, ...)
   end
+end
+
+function Enumerable.DefaultIfEmpty(source)
+  if source == nil then throw(ArgumentNullException("source")) end
+  local T = source.__genericT__
+  local state 
+  return createEnumerable(T, function()
+    return createEnumerator(T, source, function(en)
+      if not state then
+        if en:MoveNext() then
+          state = 1
+          return true, en:getCurrent()
+        end
+        state = 2
+        return true, T:default()
+      elseif state == 1 then
+        if en:MoveNext() then
+          return true, en:getCurrent()
+        end
+      end
+      return false
+    end)
+  end)
+end
+
+function Enumerable.OfType(source, T)
+  if source == nil then throw(ArgumentNullException("source")) end
+  return createEnumerable(T, function()
+    return createEnumerator(T, source, function(en) 
+      while en:MoveNext() do
+        local current = en:getCurrent()
+        if is(current, T) then
+          return true, current
+        end
+      end
+      return false
+    end)
+  end)
 end
 
 function Enumerable.Cast(source, T)
@@ -1201,4 +1239,27 @@ end
 
 function Enumerable.Max(source, ...)
   return minOrMax(maxFn, source, ...)
+end
+
+function Enumerable.Average(source, ...)
+  if source == nil then throw(ArgumentNullException("source")) end
+  local sum, count = 0, 0
+  local len = select("#", ...)
+  if len == 0 then
+    for _, v in each(source) do
+      sum = sum + v
+      count = count + 1
+    end
+  else
+    local selector = ...
+    if selector == nil then throw(ArgumentNullException("selector")) end
+    for _, v in each(source) do
+      sum = sum + selector(v)
+      count = count + 1
+    end
+  end
+  if count > 0 then
+    return sum / count
+  end
+  throw(InvalidOperationException("NoElements"))
 end

@@ -1,7 +1,8 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Collections.Generic;
 
+#if false
 namespace Bridge.ClientTest
 {
     [Category(Constants.MODULE_GUID)]
@@ -299,3 +300,4 @@ namespace Bridge.ClientTest
         }
     }
 }
+#endif

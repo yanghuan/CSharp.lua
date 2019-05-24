@@ -302,7 +302,7 @@ namespace CSharpLua {
           if (baseTypeSymbol.IsMemberExists("Finalize", true)) {
             fields.Add(LuaIdentifierNameSyntax.__GC);
           }
-          if (baseTypeSymbol.IsAssignableFrom(generator_.SystemExceptionTypeSymbol)) {
+          if (baseTypeSymbol.Is(generator_.SystemExceptionTypeSymbol)) {
             fields.Add(LuaIdentifierNameSyntax.__ToString);
           }
         }
@@ -3602,8 +3602,13 @@ namespace CSharpLua {
         case SyntaxKind.IsExpression: {
           var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
           var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
-          if (leftType.IsImplementType(rightType)) {
+          if (leftType.Is(rightType)) {
             return LuaIdentifierLiteralExpressionSyntax.True;
+          }
+
+          var constValue = semanticModel_.GetConstantValue(node.Right);
+          if (constValue.HasValue) {
+            return BuildIsConstantExpression(node.Left, node.Right, constValue);
           }
 
           return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.Is);
@@ -3615,11 +3620,16 @@ namespace CSharpLua {
 
           var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
           var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
-          if (leftType.IsImplementType(rightType)) {
+          if (leftType.Is(rightType)) {
             return node.Left.Accept(this);
           }
 
-          return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.As);
+          var left = (LuaExpressionSyntax)node.Left.Accept(this);
+          var right = (LuaExpressionSyntax)node.Right.Accept(this);
+          if (rightType.IsNullableType()) {
+            right = ((LuaInvocationExpressionSyntax)right).Arguments.First().Expression;
+          }
+          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.As, left, right);
         }
         case SyntaxKind.LogicalOrExpression: {
           return BuildLogicOrBinaryExpression(node);
@@ -3922,7 +3932,7 @@ namespace CSharpLua {
       bool hasCast = false;
       var elementType = sourceType.GetIEnumerableElementType();
       if (elementType != null) {
-        if (!elementType.Equals(targetType) && !elementType.IsImplementType(targetType)) {
+        if (!elementType.Equals(targetType) && !elementType.Is(targetType)) {
           hasCast = true;
         }
       } else {
@@ -4122,6 +4132,91 @@ namespace CSharpLua {
       return LuaStatementSyntax.Empty;
     }
 
+    private LuaExpressionSyntax BuildEnumCastExpression(LuaExpressionSyntax expression, ITypeSymbol originalType, ITypeSymbol targetType) {
+      if (targetType.TypeKind == TypeKind.Enum) {
+        var targetEnumUnderlyingType = ((INamedTypeSymbol)targetType).EnumUnderlyingType;
+        if (originalType.TypeKind == TypeKind.Enum || originalType.IsCastIntegerType()) {
+          var originalIntegerType = originalType.TypeKind == TypeKind.Enum ? ((INamedTypeSymbol)originalType).EnumUnderlyingType : originalType;
+          if (targetEnumUnderlyingType.IsNumberTypeAssignableFrom(originalIntegerType)) {
+            return expression;
+          }
+          return GetCastToNumberExpression(expression, targetEnumUnderlyingType, false);
+        } else if (originalType.IsDoubleOrFloatType()) {
+          return GetCastToNumberExpression(expression, targetEnumUnderlyingType, true);
+        }
+      } else if (originalType.TypeKind == TypeKind.Enum) {
+        var originalEnumUnderlyingType = ((INamedTypeSymbol)originalType).EnumUnderlyingType;
+        if (targetType.IsCastIntegerType()) {
+          if (targetType.IsNumberTypeAssignableFrom(originalEnumUnderlyingType)) {
+            return expression;
+          }
+          return GetCastToNumberExpression(expression, targetType, false);
+        } else if (targetType.IsDoubleOrFloatType()) {
+          return expression;
+        }
+      }
+
+      return null;
+    }
+
+    private LuaExpressionSyntax BuildNumberCastExpression(LuaExpressionSyntax expression, ITypeSymbol originalType, ITypeSymbol targetType) {
+      if (targetType.IsCastIntegerType()) {
+        if (originalType.IsCastIntegerType()) {
+          if (targetType.IsNumberTypeAssignableFrom(originalType)) {
+            return expression;
+          }
+          return GetCastToNumberExpression(expression, targetType, false);
+        } else if (originalType.IsDoubleOrFloatType()) {
+          return GetCastToNumberExpression(expression, targetType, true);
+        }
+      } else if (originalType.IsCastIntegerType()) {
+        if (targetType.IsDoubleOrFloatType()) {
+          return expression;
+        }
+      } else if (targetType.SpecialType == SpecialType.System_Single && originalType.SpecialType == SpecialType.System_Double) {
+        return GetCastToNumberExpression(expression, targetType, true);
+      }
+      return null;
+    }
+
+    private LuaExpressionSyntax BuildEnumAndNumberCastExpression(LuaExpressionSyntax expression, ITypeSymbol originalType, ITypeSymbol targetType) {
+      return BuildEnumCastExpression(expression, originalType, targetType) ?? BuildNumberCastExpression(expression, originalType, targetType);
+    }
+
+    private LuaExpressionSyntax BuildNullableCastExpression(CastExpressionSyntax node, LuaExpressionSyntax expression, ITypeSymbol originalType, ITypeSymbol targetType) {
+      var targetNullableElemetType = targetType.NullableElemetType();
+      var originalNullableElemetType = originalType.NullableElemetType();
+      if (targetNullableElemetType != null) {
+        if (originalNullableElemetType != null) {
+          bool isIdentifier = false;
+          LuaIdentifierNameSyntax identifier;
+          if (expression is LuaIdentifierNameSyntax identifierName) {
+            identifier = identifierName;
+            isIdentifier = true;
+          } else {
+            identifier = GetTempIdentifier(node);
+          }
+          var castExpression = BuildEnumAndNumberCastExpression(identifier, originalNullableElemetType, targetNullableElemetType);
+          if (castExpression != null) {
+            if (castExpression == identifier) {
+              return expression;
+            }
+            if (!isIdentifier) {
+              CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(identifier, expression));
+            }
+            return identifier.And(castExpression);
+          }
+        } else {
+          return BuildEnumAndNumberCastExpression(expression, originalType, targetNullableElemetType);
+        }
+      } else if (originalNullableElemetType != null) {
+        var explicitMethod = (IMethodSymbol)originalType.GetMembers("op_Explicit").First();
+        expression = BuildConversionExpression(explicitMethod, expression);
+        return BuildEnumAndNumberCastExpression(expression, originalNullableElemetType, targetType);
+      }
+      return null;
+    }
+
     public override LuaSyntaxNode VisitCastExpression(CastExpressionSyntax node) {
       var constExpression = GetConstExpression(node);
       if (constExpression != null) {
@@ -4140,43 +4235,18 @@ namespace CSharpLua {
         return expression;
       }
 
-      if (targetType.IsAssignableFrom(originalType)) {
+      if (originalType.Is(targetType)) {
         return expression;
       }
 
-      if (targetType.TypeKind == TypeKind.Enum) {
-        if (originalType.TypeKind == TypeKind.Enum || originalType.IsIntegerType()) {
-          return expression;
-        }
+      var result = BuildEnumAndNumberCastExpression(expression, originalType, targetType);
+      if (result != null) {
+        return result;
       }
 
-      if (targetType.IsIntegerType()) {
-        if (originalType.TypeKind == TypeKind.Enum) {
-          return expression;
-        }
-
-        if (originalType.IsIntegerType()) {
-          if (originalType.IsNullableType()) {
-            var explicitMethod = (IMethodSymbol)originalType.GetMembers("op_Explicit").First();
-            return BuildConversionExpression(explicitMethod, expression);
-          }
-
-          if (targetType.IsNullableType()) {
-            return expression;
-          }
-
-          return GetCastToNumberExpression(expression, targetType, false);
-        }
-
-        if (originalType.SpecialType == SpecialType.System_Double || originalType.SpecialType == SpecialType.System_Single) {
-          return GetCastToNumberExpression(expression, targetType, true);
-        }
-      } else if (targetType.SpecialType == SpecialType.System_Single && originalType.SpecialType == SpecialType.System_Double) {
-        return GetCastToNumberExpression(expression, targetType, true);
-      }
-
-      if (originalType.IsAssignableFrom(targetType)) {
-        return BuildCastExpression(node.Type, expression);
+      result = BuildNullableCastExpression(node, expression, originalType, targetType);
+      if (result != null) {
+        return result;
       }
 
       var explicitSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
@@ -4184,13 +4254,13 @@ namespace CSharpLua {
         return BuildConversionExpression(explicitSymbol, expression);
       }
 
-      return BuildCastExpression(node.Type, expression);
+      return BuildCastExpression(targetType, expression);
     }
 
-    private LuaExpressionSyntax BuildCastExpression(TypeSyntax type, LuaExpressionSyntax expression) {
-      var typeExpression = (LuaExpressionSyntax)type.Accept(this);
+    private LuaExpressionSyntax BuildCastExpression(ITypeSymbol type, LuaExpressionSyntax expression) {
+      var typeExpression = GetTypeName(type.IsNullableType() ? type.NullableElemetType() : type);
       var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Cast, typeExpression, expression);
-      if (type.IsKind(SyntaxKind.NullableType)) {
+      if (type.IsNullableType()) {
         invocation.AddArgument(LuaIdentifierNameSyntax.True);
       }
       return invocation;
@@ -4200,7 +4270,7 @@ namespace CSharpLua {
       if (expression is LuaParenthesizedExpressionSyntax parenthesizedExpression) {
         expression = parenthesizedExpression.Expression;
       }
-      string name = (isFromFloat ? "To" : "to") + targetType.Name;
+      string name = (isFromFloat ? "To" : "to") + (targetType.SpecialType == SpecialType.System_Char ? "UInt16" : targetType.Name);
       var methodName = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, name);
       var invocation = new LuaInvocationExpressionSyntax(methodName, expression);
       if (IsCurChecked) {

@@ -45,13 +45,40 @@ local cyield = coroutine.yield
 local TaskCanceledException = define("System.TaskCanceledException", {
   __tostring = Exception.ToString,
   __inherits__ = { Exception },
-  __ctor__ = function(this, task)
+  __ctor__ = function (this, task)
     this.task = task  
     Exception.__ctor__(this, "A task was canceled.")
   end,
   getTask = function(this) 
     return this.task
+  end
+})
+
+local AggregateException = define("System.AggregateException", {
+  __tostring = Exception.ToString,
+  __inherits__ = { Exception },
+  __ctor__ = function (this, message, innerExceptions)
+    if type(message) == "table" then
+      message, innerExceptions = nil, message
+    end
+    Exception.__ctor__(this, message or "One or more errors occurred.")
+    if innerExceptions then
+      local ReadOnlyCollection = System.ReadOnlyCollection(Exception)
+      if System.is(innerExceptions, Exception) then
+        local list = System.List(Exception)()
+        list:Add(innerExceptions)
+        this.innerExceptions = ReadOnlyCollection(list)
+      else
+        if not System.isArrayLike(innerExceptions) then
+          innerExceptions = System.Array.toArray(innerExceptions)
+        end
+        this.innerExceptions = ReadOnlyCollection(innerExceptions)
+      end
+    end
   end,
+  getInnerExceptions = function (this)
+    return this.innerExceptions
+  end
 })
 
 local TaskStatusCreated = 0
@@ -135,7 +162,7 @@ local function getException(task)
   if not holder.isHandled then
     holder.isHandled = true
   end
-  return holder.exception
+  return AggregateException(holder.exception)
 end
 
 local Task

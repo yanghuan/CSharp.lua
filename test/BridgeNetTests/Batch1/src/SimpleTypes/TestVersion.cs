@@ -2,6 +2,7 @@ using Bridge.Test.NUnit;
 
 using System;
 
+#if false
 namespace Bridge.ClientTest.SimpleTypes
 {
     [Category(Constants.MODULE_VERSION)]
@@ -217,3 +218,4 @@ namespace Bridge.ClientTest.SimpleTypes
         }
     }
 }
+#endif

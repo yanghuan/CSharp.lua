@@ -1167,7 +1167,7 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildIsExpression(ExpressionSyntax leftTypeExpression, ExpressionSyntax rightTypeExpression, LuaIdentifierNameSyntax leftName) {
       var leftType = semanticModel_.GetTypeInfo(leftTypeExpression).Type;
       var rightType = semanticModel_.GetTypeInfo(rightTypeExpression).Type;
-      if (leftType.IsImplementType(rightType)) {
+      if (leftType.Is(rightType)) {
         return LuaIdentifierLiteralExpressionSyntax.True;
       } else {
         var type = (LuaExpressionSyntax)rightTypeExpression.Accept(this);
@@ -1175,10 +1175,25 @@ namespace CSharpLua {
       }
     }
 
+    private LuaExpressionSyntax BuildIsConstantExpression(CSharpSyntaxNode left, CSharpSyntaxNode right) {
+      var constValue = semanticModel_.GetConstantValue(right);
+      return BuildIsConstantExpression(left, right, constValue);
+    }
+
+    private LuaExpressionSyntax BuildIsConstantExpression(CSharpSyntaxNode left, CSharpSyntaxNode right, Optional<object> constValue) {
+      Contract.Assert(constValue.HasValue);
+      var leftExpression = (LuaExpressionSyntax)left.Accept(this);
+      if (constValue.Value is double.NaN) {
+        return new LuaInvocationExpressionSyntax("System.Double.IsNaN", leftExpression);
+      }
+      var rightExpression = (LuaExpressionSyntax)right.Accept(this);
+      return new LuaBinaryExpressionSyntax(leftExpression, LuaSyntaxNode.Tokens.EqualsEquals, rightExpression);
+    }
+
     public override LuaSyntaxNode VisitIsPatternExpression(IsPatternExpressionSyntax node) {
-      var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       switch (node.Pattern.Kind()) {
         case SyntaxKind.VarPattern: {
+          var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
           var varPattern = (VarPatternSyntax)node.Pattern;
           if (!varPattern.IsKind(SyntaxKind.DiscardPattern)) {
             var name = (LuaIdentifierNameSyntax)varPattern.Designation.Accept(this);
@@ -1187,10 +1202,11 @@ namespace CSharpLua {
           return LuaIdentifierLiteralExpressionSyntax.True;
         }
         case SyntaxKind.ConstantPattern: {
-          var value = (LuaExpressionSyntax)node.Pattern.Accept(this);
-          return new LuaBinaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.EqualsEquals, value);
+          var pattern = (ConstantPatternSyntax)node.Pattern;
+          return BuildIsConstantExpression(node.Expression, pattern.Expression);
         }
         default: {
+          var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
           var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
           var name = (LuaIdentifierNameSyntax)declarationPattern.Designation.Accept(this);
           CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, expression));

@@ -500,6 +500,22 @@ namespace CSharpLua {
     private LuaLiteralExpressionSyntax GetConstExpression(ExpressionSyntax node) {
       var constValue = semanticModel_.GetConstantValue(node);
       if (constValue.HasValue) {
+        if (constValue.Value is double d) {
+          switch (d) {
+            case double.NegativeInfinity:
+            case double.PositiveInfinity:
+            case double.NaN:
+              return null;
+          }
+        } else if (constValue.Value is float f) {
+          switch (f) {
+            case float.NegativeInfinity:
+            case float.PositiveInfinity:
+            case float.NaN:
+              return null;
+          }
+        }
+
         var literalExpression = GetLiteralExpression(constValue.Value);
         return new LuaConstLiteralExpression(literalExpression, node.ToString());
       }
@@ -1330,8 +1346,7 @@ namespace CSharpLua {
         if (typeSymbol != null) {
           if (typeSymbol.TypeKind != TypeKind.Enum
             && typeSymbol.TypeKind != TypeKind.Delegate
-            && typeSymbol.SpecialType == SpecialType.None
-            && !typeSymbol.IsTimeSpanType()) {
+            && (typeSymbol.SpecialType == SpecialType.None || typeSymbol.SpecialType == SpecialType.System_DateTime)) {
             var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
             if (codeTemplate != null) {
               return InternalBuildCodeTemplateExpression(codeTemplate, null, arguments, null);

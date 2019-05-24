@@ -77,6 +77,26 @@ limitations under the License.
           <arg type="System.Int32" />
           <arg type="System.DateTimeKind" />
         </method>
+        <method name="op_Addition" Template="{0} + {1}" />
+        <method name="op_Subtraction" Template="{0} - {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_LessThan" Template="{0} &lt; {1}" />
+        <method name="op_LessThanOrEqual" Template="{0} &lt;= {1}" />
+        <method name="op_GreaterThan" Template="{0} &gt; {1}" />
+        <method name="op_GreaterThanOrEqual" Template="{0} &gt;= {1}" />
+      </class>
+      <class name="TimeSpan">
+        <method name="op_UnaryPlus" Template="{0}" />
+        <method name="op_Addition" Template="{0} + {1}" />
+        <method name="op_UnaryNegation" Template="-{0}" />
+        <method name="op_Subtraction" Template="{0} - {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+        <method name="op_LessThan" Template="{0} &lt; {1}" />
+        <method name="op_LessThanOrEqual" Template="{0} &lt;= {1}" />
+        <method name="op_GreaterThan" Template="{0} &gt; {1}" />
+        <method name="op_GreaterThanOrEqual" Template="{0} &gt;= {1}" />
       </class>
       <class name="TimeZoneInfo">
         <property name="BaseUtcOffset" >
@@ -288,18 +308,19 @@ limitations under the License.
         <method name="Create" ArgCount="8" Template="System.valueTuple({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})" />
       </class>
       <class name="Nullable^1" Name="System.Nullable">
+        <method name=".ctor" Template="{0}" />
         <property name="HasValue">
-          <get Template="System.HasValueOfNull({this})" />
+          <get Template="({this} ~= nil)" />
         </property>
         <property name="Value">
-          <get Template="System.getValueOfNull({this})" />
+          <get Template="System.Nullable.Value({this})" />
         </property>
-        <method name="Equals" Template="System.Object.EqualsStatic({this}, {0})" />
-        <method name="GetHashCode" Template="System.GetHashCodeOfNull({this})" />
-        <method name="GetValueOrDefault" ArgCount="0" Template="System.GetValueOrDefaultT({this}, {^0})" />
-        <method name="GetValueOrDefault" ArgCount="1" Template="System.GetValueOrDefault({this}, {0})" />
+        <method name="Equals" Template="System.Nullable.EqualsObj({this}, {0})" />
+        <method name="GetHashCode" Template="System.Nullable.GetHashCode({this})" />
+        <method name="GetValueOrDefault" ArgCount="0" Template="({this} or {^0}:default())" />
+        <method name="GetValueOrDefault" ArgCount="1" Template="({this} or {0})" />
         <method name="ToString" Template="System.toString({this})" />
-        <method name="op_Explicit" Template="System.getValueOfNull({0})" />
+        <method name="op_Explicit" Template="System.Nullable.Value({0})" />
       </class>
       <class name="WeakReference^1" IgnoreGeneric="true" />
       <class name="Lazy^1" Name="System.Lazy" />
@@ -521,6 +542,8 @@ limitations under the License.
         <method name="ThenBy" ArgCount="3" Template="Linq.ThenBy({0}, {1}, {2}, {^1})" />
         <method name="ThenByDescending" ArgCount="2" Template="Linq.ThenByDescending({0}, {1}, nil, {^1})" />
         <method name="ThenByDescending" ArgCount="3" Template="Linq.ThenByDescending({0}, {1}, {2}, {^1})" />
+        <method name="Average" Template="Linq.Average({0}, {1})" />
+        <method name="DefaultIfEmpty" Template="Linq.DefaultIfEmpty({0})" />
       </class>
     </namespace>
     <namespace name="System.Diagnostics" Name="System">

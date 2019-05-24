@@ -76,9 +76,17 @@ local Exception = define("System.Exception", {
   end
 })
 
-local ArgumentException = define("System.ArgumentException", {
+local SystemException = define("System.SystemException", {
   __tostring = toString,
   __inherits__ = { Exception },
+  __ctor__ = function (this, message, innerException)
+    ctorOfException(this, message or "System error.", innerException)
+  end
+})
+
+local ArgumentException = define("System.ArgumentException", {
+  __tostring = toString,
+  __inherits__ = { SystemException },
 
   __ctor__ = function(this, message, paramName, innerException) 
     ctorOfException(this, message or "Value does not fall within the expected range.", innerException)

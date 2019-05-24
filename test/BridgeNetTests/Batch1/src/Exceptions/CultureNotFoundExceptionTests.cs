@@ -1,8 +1,9 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 
 using System;
 using System.Globalization;
 
+#if false
 namespace Bridge.ClientTest.Exceptions
 {
     [Category(Constants.PREFIX_EXCEPTIONS)]
@@ -120,3 +121,4 @@ namespace Bridge.ClientTest.Exceptions
         }
     }
 }
+#endif

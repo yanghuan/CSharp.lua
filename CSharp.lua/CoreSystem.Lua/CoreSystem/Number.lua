@@ -177,7 +177,7 @@ setmetatable(Int64, Int)
 
 local UInt64 = define("System.UInt64", {
   Parse = function (s)
-    return parseIntWithException(s, 0, 18446744073709551615)
+    return parseIntWithException(s, 0, 18446744073709551615.0)
   end,
   TryParse = function (s)
     return tryParseInt(s, 0, 18446744073709551615)
@@ -236,6 +236,9 @@ local Number = define("System.Number", {
   end,
   GetHashCode = function (this)
     return isNaN(this) and nanHashCode or this
+  end,
+  IsFinite = function (v)
+    return v ~= posInf and v ~= negInf and not isNaN(v)
   end,
   IsInfinity = function (v)
     return v == posInf or v == negInf

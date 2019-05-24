@@ -1,15 +1,16 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
+#if false
 namespace Bridge.ClientTest
 {
     [Category(Constants.MODULE_ENVIRONMENT)]
     [TestFixture(TestNameFormat = "Environment - {0}")]
     public class EnvironmentTests
     {
-        #region Helpers
+#region Helpers
 
         private static dynamic Variables
         {
@@ -34,7 +35,7 @@ namespace Bridge.ClientTest
             return variables;
         }
 
-        #endregion Helpers
+#endregion Helpers
 
         [Test]
         public void CommandLineNotEmpty()
@@ -390,3 +391,5 @@ namespace Bridge.ClientTest
 
     }
 }
+
+#endif

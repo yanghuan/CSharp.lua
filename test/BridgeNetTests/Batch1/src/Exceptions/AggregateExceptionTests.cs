@@ -1,8 +1,9 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
+#if false
 namespace Bridge.ClientTest.Exceptions
 {
     [Category(Constants.MODULE_ARGUMENTEXCEPTION)]
@@ -209,3 +210,5 @@ namespace Bridge.ClientTest.Exceptions
         }
     }
 }
+
+#endif

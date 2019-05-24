@@ -1,7 +1,8 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Globalization;
 
+#if false
 namespace Bridge.ClientTest
 {
     [Category(Constants.MODULE_CULTUREINFO)]
@@ -142,3 +143,4 @@ namespace Bridge.ClientTest
         }
     }
 }
+#endif

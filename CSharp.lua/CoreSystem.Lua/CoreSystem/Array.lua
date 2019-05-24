@@ -153,6 +153,7 @@ local function get(t, index)
   if v ~= null then 
     return v
   end
+  return nil
 end
 
 local function set(t, index, v)
@@ -732,11 +733,7 @@ Array = {
   end,
   ForEach = function (t, action)
     if action == nil then throw(ArgumentNullException("action")) end
-    local version = t.version
     for i = 1, #t do
-      if version ~= t.version then
-        throwFailedVersion()
-      end
       local item = t[i]
       if item == null then item = nil end
       action(item)
@@ -989,17 +986,31 @@ System.defArray("System.Array", function(T)
 end, Array, MultiArray)
 
 local ReadOnlyCollection = {
-  version = 0,
-  __ctor__ = Array.ctorList,
-  getCount = lengthFn,
-  get = get,
-  Contains = Array.Contains,
-  GetEnumerator = arrayEnumerator,
+  __ctor__ = function (this, list)
+    if not list then throw(ArgumentNullException("list")) end
+    this.list = list
+  end,
+  getCount = function (this)
+    return #this.list
+  end,
+  get = function (this, index)
+    return this.list:get(index)
+  end,
+  Contains = function (this, value)
+    return this.list:Contains(value)
+  end,
+  GetEnumerator = function (this)
+    return this.list:GetEnumerator()
+  end,
+  CopyTo = function (this, array, index)
+    this.list:CopyTo(array, index)
+  end,
+  IndexOf = function (this, value)
+    return this.list:IndexOf(value)
+  end,
   getIsSynchronized = falseFn,
   getIsReadOnly = trueFn,
   getIsFixedSize = trueFn,
-  CopyTo = Array.CopyTo,
-  IndexOf = Array.IndexOf,
 }
 
 define("System.ReadOnlyCollection", function (T)

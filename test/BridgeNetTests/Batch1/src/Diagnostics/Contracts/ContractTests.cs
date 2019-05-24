@@ -4,6 +4,7 @@ using Bridge.Test.NUnit;
 using System;
 using System.Diagnostics.Contracts;
 
+#if false
 namespace Bridge.ClientTest.Diagnostics.Contracts
 {
     [Category(Constants.MODULE_DIAGNOSTICS)]
@@ -31,7 +32,7 @@ namespace Bridge.ClientTest.Diagnostics.Contracts
             }
             catch (Exception ex)
             {
-                #if false
+#if false
                 var cex = ex as ContractException;
                 if (cex == null)
                     Assert.Fail("Unexpected Exception");
@@ -44,7 +45,7 @@ namespace Bridge.ClientTest.Diagnostics.Contracts
                 else if (cex.InnerException == null && expectedInnerException != null)
                     Assert.Fail("InnerException");
 
-                #endif
+#endif
             }
         }
 
@@ -155,3 +156,4 @@ namespace Bridge.ClientTest.Diagnostics.Contracts
         }
     }
 }
+#endif

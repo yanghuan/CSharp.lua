@@ -177,6 +177,7 @@ namespace Bridge.ClientTest
             Assert.AreEqual(-4.0, Math.Floor(-3.6));
         }
 
+#if false
         [Test]
         public void FloorOfDecimalWorks()
         {
@@ -184,6 +185,7 @@ namespace Bridge.ClientTest
             NumberHelper.AssertDecimal(-4.0, Math.Floor(-3.6m));
             NumberHelper.AssertDecimal(3, decimal.Floor(3m));
         }
+#endif
 
         [Test]
         public void LogWorks()

@@ -226,6 +226,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(((IComparable<double>)((double)1)).CompareTo((double)1) == 0);
         }
 
+#if false
         [Test]
         public void ParseCurrentCultureWorks()
         {
@@ -381,5 +382,6 @@ namespace Bridge.ClientTest.SimpleTypes
             NumberHelper.AssertDoubleTryParse(false, 0.0, "(123)", "f16");
             NumberHelper.AssertDoubleTryParse(false, 0.0, "$1000", "f17");
         }
+#endif
     }
 }

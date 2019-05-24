@@ -35,6 +35,7 @@ Math.Cosh = cosh
 Math.Exp = exp
 Math.Floor = math.floor
 Math.Log = math.log
+Math.Log10 = math.log10
 Math.Max = math.max
 Math.Min = math.min
 Math.Pow = pow
@@ -49,26 +50,18 @@ function Math.BigMul(a, b)
 end
 
 function Math.DivRem(a, b) 
-  local remainder = a % b;
+  local remainder = a % b
   return (a - remainder) / b, remainder
 end
 
-local function round(n, d, rounding)
-  local m = math.pow(10, d or 0);
-  n = n * m
-  local sign = n > 0 and 1 or -1
-  if n % 1 == 0.5 * sign then 
-    local f = math.floor(n)
-    return (f + (rounding == 1 and (sign > 0) or (f % 2 * sign))) / m
-  end
-  return math.floor(n + 0.5) / m
+function Math.Round(value, digits)
+  local mult = 10 ^ (digits or 0)
+  return math.floor(value * mult + 0.5) / mult
 end
 
 function Math.IEEERemainder(x, y)
-  return x - (y * round(x / y))
+  return x - (y * Math.Round(x / y))
 end
-
-Math.Round = round
 
 Math.Sign = function(v) 
   return v == 0 and 0 or (v > 0 and 1 or -1) 

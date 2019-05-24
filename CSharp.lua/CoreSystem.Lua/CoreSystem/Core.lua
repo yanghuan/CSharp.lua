@@ -41,6 +41,7 @@ local cresume = coroutine.resume
 local cyield = coroutine.yield
 
 local emptyFn = function() end
+local nilFn = function() return nil end
 local falseFn = function() return false end
 local trueFn = function() return true end
 local identityFn = function(x) return x end
@@ -182,7 +183,7 @@ end
 local enumMetatable = { class = "E", default = zeroFn, __index = false }
 enumMetatable.__index = enumMetatable
 
-local interfaceMetatable = { class = "I", default = emptyFn, __index = false }
+local interfaceMetatable = { class = "I", default = nilFn, __index = false }
 interfaceMetatable.__index = interfaceMetatable
 
 local ctorMetatable = { __call = function (ctor, ...) return ctor[1](...) end }
@@ -327,7 +328,7 @@ local function def(name, kind, cls, generic)
       local gt, gk = multiKey(mt, ...)
       local t = gt[gk]
       if t == nil then
-        t = defCore(genericName(name, ...), kind, cls(...) or {}, true)
+        t = defCore(kind ~= "I" and genericName(name, ...) or name, kind, cls(...) or {}, true)
         if generic then
           setmetatable(t, generic)
         end
@@ -533,8 +534,8 @@ if version < 5.3 then
     if y == 0 then
       throw(System.DivideByZeroException(), 1)
     end
-    if x < 0 and y > 0 then
-      y = -y
+    if x * y < 0 then
+      return x % y - y
     end
     return x % y
   end
@@ -727,8 +728,8 @@ else
   function System.xor(x, y) return x ~ y end
   function System.sl(x, y) return x << y end
   function System.sr(x, y) return x >> y end
-  function System.div(x, y) return x // y end
-  function System.mod(x, y) if x < 0 and y > 0 then y = -y end return x % y end
+  function System.div(x, y) if x * y < 0 then return -(-x // y) end return x // y end
+  function System.mod(x, y) if x * y < 0 then return x % y - y end return x % y end
   
   function System.bnotOfNull(x) 
     if x == nil 
@@ -1098,7 +1099,7 @@ System.compareObj = compareObj
 Object = defCls("System.Object", {
   __call = new,
   __ctor__ = emptyFn,
-  default = emptyFn,
+  default = nilFn,
   class = "C",
   EqualsObj = equals,
   ReferenceEquals = rawequal,
@@ -1270,7 +1271,22 @@ end
 
 defCls("System.Attribute", {})
 
-local Nullable = { default = emptyFn }
+local Nullable = { 
+  default = nilFn,
+  Value = function (this)
+    if this == nil then
+      throw(System.InvalidOperationException("Nullable object must have a value."))
+    end
+    return this
+  end,
+  EqualsObj = equalsObj,
+  GetHashCode = function (this)
+    if this == nil then
+      return 0
+    end
+    return this:GetHashCode()
+  end
+}
 defStc("System.Nullable", function (T)
   return { 
     __genericT__ = T 
@@ -1302,58 +1318,26 @@ debug.setmetatable(nil, {
     end
     return nil
   end,
-  __sub = emptyFn,
-  __mul = emptyFn,
-  __div = emptyFn,
-  __mod = emptyFn,
-  __unm = emptyFn,
+  __sub = nilFn,
+  __mul = nilFn,
+  __div = nilFn,
+  __mod = nilFn,
+  __unm = nilFn,
   __lt = falseFn,
   __le = falseFn,
 
   -- lua 5.3
-  __idiv = emptyFn,
-  __band = emptyFn,
-  __bor = emptyFn,
-  __bxor = emptyFn,
-  __bnot = emptyFn,
-  __shl = emptyFn,
-  __shr = emptyFn,
+  __idiv = nilFn,
+  __band = nilFn,
+  __bor = nilFn,
+  __bxor = nilFn,
+  __bnot = nilFn,
+  __shl = nilFn,
+  __shr = nilFn,
 })
 
 function System.toString(t)
   return t and t:ToString() or ""
-end
-
-function System.HasValueOfNull(this) 
-  return this ~= nil
-end
-
-function System.getValueOfNull(this)
-  if this == nil then
-    throw(System.InvalidOperationException())
-  end
-  return this
-end
-
-function System.GetHashCodeOfNull(this)
-  if this == nil then
-    return 0
-  end
-  return this:GetHashCode()
-end
-
-function System.GetValueOrDefaultT(this, T)
-  if this == nil then
-    return T:default()
-  end
-  return this
-end
-
-function System.GetValueOrDefault(this, defaultValue)
-  if this == nil then
-    return defaultValue
-  end
-  return this
 end
 
 local IEnumerable = defInf("System.IEnumerable")

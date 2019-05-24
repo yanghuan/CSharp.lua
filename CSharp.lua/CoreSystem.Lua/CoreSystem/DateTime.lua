@@ -154,7 +154,7 @@ end
 
 local function daysInMonth(year, month)
   if month < 1 or month > 12 then
-      throw(ArgumentOutOfRangeException("month"))
+    throw(ArgumentOutOfRangeException("month"))
   end
   local days = isLeapYear(year) and daysToMonth366 or daysToMonth365
   return days[month + 1] - days[month]
@@ -162,7 +162,7 @@ end
 
 local function addMonths(this, months)
   if months < -120000 or months > 12000 then
-      throw(ArgumentOutOfRangeException("months"))
+    throw(ArgumentOutOfRangeException("months"))
   end
   local ticks = this.ticks
   local y, m, d = getDatePart(ticks)
@@ -171,7 +171,7 @@ local function addMonths(this, months)
     m = i % 12 + 1
     y = y + div(i, 12)
   else
-    m = 12 + (i + 1) % 12;
+    m = 12 + (i + 1) % -12
     y = y + div(i - 11, 12)
   end
   if y < 1 or y > 9999 then

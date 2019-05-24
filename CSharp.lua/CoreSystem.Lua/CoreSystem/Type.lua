@@ -213,7 +213,16 @@ Type = System.define("System.Type", {
     end
     return namespace
   end,
-  getBaseType = getBaseType,
+  getBaseType = function (this)
+    local cls = this[1]
+    if cls.class ~= "I" and cls ~= Object then
+      local base = getmetatable(cls)
+      if base then
+        return typeof(base)
+      end
+    end
+    return nil
+  end,
   IsSubclassOf = isSubclassOf,
   getIsInterface = getIsInterface,
   GetInterfaces = getInterfaces,
@@ -385,6 +394,7 @@ function System.as(obj, cls)
   if obj ~= nil and is(obj, cls) then
     return obj
   end
+  return nil
 end
 
 local function cast(cls, obj, nullable)
@@ -395,7 +405,7 @@ local function cast(cls, obj, nullable)
     throw(InvalidCastException(("Unable to cast object of type '%s' to type '%s'."):format(obj.__name__, cls.__name__)), 1)
   else
     if cls.class ~= "S" or nullable then
-      return
+      return nil
     end
     throw(NullReferenceException(), 1)
   end

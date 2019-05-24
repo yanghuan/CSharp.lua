@@ -1,6 +1,7 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 
+#if false
 namespace Bridge.ClientTest.Exceptions
 {
     [Category(Constants.MODULE_TIMOUTEXCEPTION)]
@@ -48,3 +49,4 @@ namespace Bridge.ClientTest.Exceptions
         }
     }
 }
+#endif

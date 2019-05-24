@@ -1,10 +1,11 @@
-﻿// The source is licensed to the .NET Foundation under the MIT license:
+// The source is licensed to the .NET Foundation under the MIT license:
 // https://github.com/dotnet/corefx/blob/master/src/System.Runtime.Extensions/tests/System/Convert.ToBase64String.cs
 // https://github.com/dotnet/corefx/blob/master/LICENSE
 
 using Bridge.Test.NUnit;
 using System;
 
+#if false
 namespace Bridge.ClientTest.ConvertTests
 {
     [Category(Constants.MODULE_CONVERT)]
@@ -118,3 +119,4 @@ namespace Bridge.ClientTest.ConvertTests
         }
     }
 }
+#endif

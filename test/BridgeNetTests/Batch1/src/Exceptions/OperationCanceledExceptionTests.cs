@@ -1,7 +1,8 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 using System.Threading;
 
+#if false
 namespace Bridge.ClientTest.Exceptions
 {
     [Category(Constants.MODULE_ARGUMENTEXCEPTION)]
@@ -88,3 +89,4 @@ namespace Bridge.ClientTest.Exceptions
         }
     }
 }
+#endif
