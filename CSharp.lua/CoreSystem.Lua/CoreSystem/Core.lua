@@ -1235,13 +1235,18 @@ local function tupleGet(t, index)
   return t[index + 1]
 end
 
+local function tupleGetRest(t)
+  return t[8]
+end
+
 local Tuple = { 
   Deconstruct = tupleDeconstruct,
   ToString = tupleToString,
   EqualsObj = tupleEqualsObj,
   CompareToObj = tupleCompareToObj,
   getLength = tupleLength,
-  get = tupleGet
+  get = tupleGet,
+  getRest = tupleGetRest
 }
 
 defCls("System.Tuple", Tuple)
