@@ -18,6 +18,7 @@ namespace Bridge.ClientTest.BasicCSharp
             r = writeAfter;
         }
 
+#if false
         [Test]
         public void CanUseReferenceToLocalVariables()
         {
@@ -85,6 +86,7 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual(24, a2[2, 1]);
             Assert.AreEqual(8, a1[2, 1]);
         }
+#endif
 
         private struct S
         {

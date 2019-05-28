@@ -1,4 +1,4 @@
-﻿using Bridge.ClientTestHelper;
+using Bridge.ClientTestHelper;
 using Bridge.Test.NUnit;
 using System;
 using System.Collections;
@@ -145,6 +145,7 @@ namespace Bridge.ClientTest.Collections.Generic
             AssertEqual(sb.ToString(), "yielding 0\ngot 0\nyielding 1\ngot 1\nyielding -1\ngot -1\nin finally\n");
         }
 
+#if false
         [Test]
         public void PrematureDisposalOfIEnumeratorIteratorExecutesFinallyBlocks_SPI_1555()
         {
@@ -162,6 +163,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
             AssertEqual(sb.ToString(), "yielding 0\ngot 0\nyielding 1\ngot 1\nin finally\n");
         }
+#endif
 
         [Test(Name = "IteratorBlock - {0} Exception thrown not caught")]
         public void ExceptionInIEnumeratorIteratorBodyExecutesFinallyBlocks_SPI_1554()
@@ -222,6 +224,7 @@ namespace Bridge.ClientTest.Collections.Generic
             AssertEqual(sb.ToString(), result + "-\n" + result);
         }
 
+#if false
         [Test]
         public void PrematureDisposalOfIEnumerableIteratorExecutesFinallyBlocks_SPI_1555()
         {
@@ -240,6 +243,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
             AssertEqual(sb.ToString(), "yielding 0\ngot 0\nyielding 1\ngot 1\nin finally\n");
         }
+#endif
 
         [Test(Name = "IteratorBlock - {0} exception thrown not caught")]
         public void ExceptionInIEnumerableIteratorBodyExecutesFinallyBlocks_SPI_1554()

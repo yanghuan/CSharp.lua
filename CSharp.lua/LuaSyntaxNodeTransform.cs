@@ -2882,6 +2882,12 @@ namespace CSharpLua {
               case 'd':
               case 'D': {
                 if (!value.StartsWith("0x") && !value.StartsWith("0X")) {
+                  object v = semanticModel_.GetConstantValue(node).Value;
+                  if ((v is float f && f == 0 || v is double d && d == 0) && len > 5) {
+                    hasTransform = true;
+                    value = 0.ToString();
+                    break;
+                  }
                   removeCount = 1;
                 }
                 break;

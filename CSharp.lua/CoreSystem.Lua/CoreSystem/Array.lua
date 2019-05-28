@@ -43,6 +43,13 @@ local tinsert = table.insert
 local tremove = table.remove
 local tmove = table.move
 local tsort = table.sort
+local pack = table.pack
+local unpack = table.unpack
+local error = error
+local coroutine = coroutine
+local ccreate = coroutine.create
+local cresume = coroutine.resume
+local cyield = coroutine.yield
 
 local null = {}
 local arrayEnumerator
@@ -165,6 +172,13 @@ local function set(t, index, v)
   t.version = t.version + 1
 end
 
+local function add(t, v)
+  local n = #t
+  t[n + 1] = v == nil and null or v
+  t.version = t.version + 1
+  return n
+end
+
 local function addRange(t, collection)
   if collection == nil then throw(ArgumentNullException("collection")) end
   local count = #t + 1
@@ -194,9 +208,17 @@ local function buildArray(T, len, t)
   if t == nil then 
     t = {}
     if len > 0 then
-      local default = T.__genericT__:default()
-      if default == nil then default = null end
-      fill(t, 1, len, default)
+      local genericT = T.__genericT__
+      local default = genericT:default()
+      if default == nil then
+        fill(t, 1, len, null)
+      elseif type(default) ~= "table" then
+        fill(t, 1, len, default)
+      else
+        for i = 1, len do
+          t[i] = genericT:default()
+        end
+      end
     end
   else
     if len > 0 then
@@ -282,17 +304,15 @@ local function copy(sourceArray, sourceIndex, destinationArray, destinationIndex
 end
 
 local function removeRange(t, index, count)
-  if count < 0 or index > #t - count then
+  local n = #t
+  if count < 0 or index > n - count then
     throw(ArgumentOutOfRangeException("index or count"))
   end
   if count > 0 then
-    local size = #t - count
-    if index < size then
-      copy(t, index + count, t, index, size - index)
+    if index + count < n then
+      tmove(t, index + count + 1, n, index + 1)
     end
-    for i = size + 1, size + count do
-      t[i] = nil
-    end
+    fill(t, n - count + 1, n, nil)
     t.version = t.version + 1
   end
 end
@@ -439,9 +459,12 @@ Array = {
     if type(collection) == "number" then return end
     addRange(t, collection)
   end,
-  add = function (t, v)
-    t[#t + 1] = v == nil and null or v
-    t.version = t.version + 1
+  add = add,
+  addObj = function (this, item)
+    if not System.is(item, this.__genericT__) then
+      throw(ArgumentException())
+    end
+    return add(this, item)
   end,
   addRange = addRange,
   AsReadOnly = function (t)
@@ -719,7 +742,7 @@ Array = {
     if count < 0 or startIndex - count + 1 < 0 then
       throw(ArgumentOutOfRangeException("count"))
     end
-    local endIndex = startIndex - count
+    local endIndex = startIndex - count + 1
     for i = startIndex + 1, endIndex + 1, -1 do
       local item = t[i]
       if item == null then
@@ -764,7 +787,7 @@ Array = {
     end
     local comparer = EqualityComparer(t.__genericT__).getDefault()
     local equals = comparer.EqualsOf
-    local endIndex = startIndex - count
+    local endIndex = startIndex - count + 1
     for i = startIndex + 1, endIndex + 1, -1 do
       local item = t[i]
       if item == null then item = nil end
@@ -862,8 +885,19 @@ Array = {
     return t
   end,
   CopyTo = function (this, array, index)
-    if array == nil then throw(ArgumentNullException("array")) end
-    copy(this, 0, array, index or 0, #this)
+    local n = #this
+    checkIndexAndCount(array, index, n)
+    local T = this.__genericT__
+    if T.class == "S" then
+      local default = T:default()
+      if type(default) == "table" then
+        for i = 1, n do
+          array[i + index] = this[i]:__clone__()
+        end
+        return
+      end
+    end
+    tmove(this, 1, n, index + 1, array)
   end,
   GetEnumerator = arrayEnumerator,
   GetLength = function (this, dimension)
@@ -883,6 +917,11 @@ Array = {
   end,
   SetValue = function (this, value, index1, index2)
     set(this, checkArrayIndex(index1, index2), System.castWithNullable(this.__genericT__, value))
+  end,
+  Clone = function (this)
+    local array = {}
+    tmove(this, 1, #this, 1, array)
+    return arrayFromTable(array, this.__genericT__)
   end
 }
 
@@ -958,13 +997,18 @@ local MultiArray = {
   GetUpperBound = function (this, dimension)
     local rank = this.__rank__
     if dimension < 0 or dimension >= #rank then throw(IndexOutOfRangeException()) end
-    return #rank - 1
+    return rank[dimension + 1] - 1
   end,
   GetValue = function (this, ...)
     return get(this, checkMultiArrayIndex(this, ...))
   end,
   SetValue = function (this, value, ...)
     set(this, checkMultiArrayIndex(this, ...), System.castWithNullable(this.__genericT__, value))
+  end,
+  Clone = function (this)
+    local array = { __rank__ = this.__rank__ }
+    tmove(this, 1, #this, 1, array)
+    return arrayFromTable(array, this.__genericT__)
   end
 }
 
@@ -980,10 +1024,83 @@ end
 
 System.defArray("System.Array", function(T) 
   return { 
-    __inherits__ = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
+    __inherits__ = { System.ICloneable, System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
     __genericT__ = T
   }
 end, Array, MultiArray)
+
+local yieldCoroutinePool = {}
+local function yieldCoroutineCreate(f)
+  local co = tremove(yieldCoroutinePool)
+  if co == nil then
+    co = ccreate(function (...)
+      f(...)
+      while true do
+        f = nil
+        yieldCoroutinePool[#yieldCoroutinePool + 1] = co
+        f = cyield(yieldCoroutinePool)
+        f(cyield())
+      end
+    end)
+  else
+    cresume(co, f)
+  end
+  return co
+end
+
+local YieldEnumerable
+YieldEnumerable = define("System.YieldEnumerable", function (T)
+  return {
+    __inherits__ = { System.IEnumerable_1(T), System.IEnumerator_1(T), System.IDisposable },
+    __genericT__ = T
+  }
+end, {
+  getCurrent = System.getCurrent, 
+  Dispose = System.emptyFn,
+  GetEnumerator = function (this)
+    return setmetatable({ f = this.f, args = this.args }, YieldEnumerable(this.__genericT__))
+  end,
+  MoveNext = function (this)
+    local co = this.co
+    if co == false then
+      return false
+    end
+  
+    local ok, v
+    if co == nil then
+      co = yieldCoroutineCreate(this.f)
+      this.co = co
+      local args = this.args
+      ok, v = cresume(co, unpack(args, 1, args.n))
+      this.args = nil
+    else
+      ok, v = cresume(co)
+    end
+  
+    if ok then
+      if v == yieldCoroutinePool then
+        this.co = false
+        this.current = nil
+        return false
+      else
+        this.current = v
+        return true
+      end
+    else
+      error(v)
+    end
+  end
+})
+
+function System.yieldIEnumerator(f, T, ...)
+  return setmetatable({ f = f, args = pack(...) }, YieldEnumerable(T))
+end
+
+function System.yieldIEnumerable(f, T, ...)
+  return setmetatable({ f = f, args = pack(...) }, YieldEnumerable(T))
+end
+
+System.yieldReturn = cyield
 
 local ReadOnlyCollection = {
   __ctor__ = function (this, list)

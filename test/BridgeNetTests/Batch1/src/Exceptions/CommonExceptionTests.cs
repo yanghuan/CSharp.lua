@@ -1,4 +1,4 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 
 using System;
 
@@ -77,7 +77,9 @@ namespace Bridge.ClientTest.Exceptions
         }
 
         [Template("(function() {{ throw 'The message'; }})()")]
-        private static void ThrowIt() { }
+        private static void ThrowIt() {
+            throw new Exception("The message");
+        }
 
         [Test]
         public void CanCatchStringAsException()

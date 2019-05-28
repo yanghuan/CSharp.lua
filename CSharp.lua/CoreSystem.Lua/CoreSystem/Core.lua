@@ -35,10 +35,6 @@ local string = string
 local sfind = string.find
 local ssub = string.sub
 local global = _G
-local coroutine = coroutine
-local ccreate = coroutine.create
-local cresume = coroutine.resume
-local cyield = coroutine.yield
 
 local emptyFn = function() end
 local nilFn = function() return nil end
@@ -328,7 +324,7 @@ local function def(name, kind, cls, generic)
       local gt, gk = multiKey(mt, ...)
       local t = gt[gk]
       if t == nil then
-        t = defCore(kind ~= "I" and genericName(name, ...) or name, kind, cls(...) or {}, true)
+        t = defCore(genericName(name, ...), kind, cls(...) or {}, true)
         if generic then
           setmetatable(t, generic)
         end
@@ -437,7 +433,6 @@ System = {
   defArray = defArray,
   trunc = trunc,
   global = global,
-  yieldReturn = cyield,
   classes = classes
 }
 global.System = System
@@ -1292,6 +1287,7 @@ local Nullable = {
     return this:GetHashCode()
   end
 }
+
 defStc("System.Nullable", function (T)
   return { 
     __genericT__ = T 
@@ -1342,80 +1338,7 @@ debug.setmetatable(nil, {
 })
 
 function System.toString(t)
-  return t and t:ToString() or ""
-end
-
-local IEnumerable = defInf("System.IEnumerable")
-local IEnumerator = defInf("System.IEnumerator")
-
-local yieldCoroutinePool = {}
-local function yieldCoroutineCreate(f)
-  local co = tremove(yieldCoroutinePool)
-  if co == nil then
-    co = ccreate(function (...)
-      f(...)
-      while true do
-        f = nil
-        yieldCoroutinePool[#yieldCoroutinePool + 1] = co
-        f = cyield(yieldCoroutinePool)
-        f(cyield())
-      end
-    end)
-  else
-    cresume(co, f)
-  end
-  return co
-end
-
-local YieldEnumerator = defCls("System.YieldEnumerator", {
-  __inherits__ =  { IEnumerator },
-  getCurrent = getCurrent, 
-  Dispose = emptyFn,
-  MoveNext = function (this)
-    local co = this.co
-    if co == false then
-      return false
-    end
-  
-    local ok, v
-    if co == nil then
-      co = yieldCoroutineCreate(this.f)
-      this.co = co
-      local args = this.args
-      ok, v = cresume(co, unpack(args, 1, args.n))
-      this.args = nil
-    else
-      ok, v = cresume(co)
-    end
-  
-    if ok then
-      if v == yieldCoroutinePool then
-        this.co = false
-        this.current = nil
-        return false
-      else
-        this.current = v
-        return true
-      end
-    else
-      throw(v)
-    end
-  end
-})
-
-function System.yieldIEnumerator(f, T, ...)
-  return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerator)
-end
-
-local YieldEnumerable = defCls("System.YieldEnumerable", {
-  __inherits__ = { IEnumerable },
-  GetEnumerator = function (this)
-    return setmetatable({ f = this.f, __genericT__ = this.__genericT__, args = this.args }, YieldEnumerator)
-  end,
-})
-
-function System.yieldIEnumerable(f, T, ...)
-  return setmetatable({ f = f, __genericT__ = T, args = pack(...) }, YieldEnumerable)
+  return t ~= nil and t:ToString() or ""
 end
 
 local function pointerAddress(p)

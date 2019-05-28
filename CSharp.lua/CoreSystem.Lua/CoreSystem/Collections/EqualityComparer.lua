@@ -23,8 +23,25 @@ local ArgumentNullException = System.ArgumentNullException
 
 local EqualityComparer
 EqualityComparer = define("System.EqualityComparer", function (T)
-  local equals = T.Equals or T.EqualsObj
-  local getHashCode = T.GetHashCode
+  local equals
+  local Equals = T.Equals
+  if Equals then
+    if T.class == 'S' then
+      equals = Equals 
+    else
+      equals = function (x, y) 
+        return x:Equals(y) 
+      end 
+    end
+  else
+    if T.class == 'S' then
+      equals = T.EqualsObj
+    else
+      equals = function (x, y) 
+        return x:EqualsObj(y) 
+      end
+    end
+  end
   local defaultComparer
   return {
     __genericT__ = T,
@@ -47,11 +64,11 @@ EqualityComparer = define("System.EqualityComparer", function (T)
     end,
     GetHashCodeOf = function (this, obj)
       if obj == nil then return 0 end
-      return getHashCode(obj)
+      return obj:GetHashCode()
     end,
     GetHashCodeObjOf = function (this, obj)
       if obj == nil then return 0 end
-      if System.is(obj, T) then return getHashCode(obj) end
+      if System.is(obj, T) then return obj:GetHashCode() end
       throw(ArgumentException("Type of argument is not compatible with the generic comparer."))
       return false
     end,

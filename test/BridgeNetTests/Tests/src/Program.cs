@@ -21,18 +21,18 @@ namespace Tests {
       var types = Assembly.GetExecutingAssembly().GetExportedTypes();
       foreach (var t in types) {
         if (IsTestClass(t, out var category, out var testFixture)) {
-          TestClass(t, category, testFixture);
+          TestClass(t, category.Name, testFixture.TestNameFormat);
         }
       }
     }
 
-    private static void TestClass(Type type, CategoryAttribute category, TestFixtureAttribute testFixture) {
-      Console.WriteLine("{0} for {1}", category.Name, type);
+    private static void TestClass(Type type, string category, string testFixture) {
+      Console.WriteLine("{0} for {1}", category, type);
       var methods = type.GetMethods();
       object instance = Activator.CreateInstance(type);
       foreach (var method in methods) {
         if (method.IsDefined(typeof(TestAttribute), true)) {
-          Console.WriteLine(testFixture.TestNameFormat ?? "Test - {0}", method.Name);
+          Console.WriteLine(testFixture ?? "Test - {0}", method.Name);
           method.Invoke(instance, null);
         }
       }

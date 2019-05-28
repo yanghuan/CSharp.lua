@@ -30,6 +30,7 @@ local function runTimeout()
   end
 end
 
+package.path = package.path .. ";CSharp.lua/Coresystem.lua/?.lua"
 require("All")("", conf)
 collectgarbage("collect")
 print(collectgarbage("count"))
@@ -371,3 +372,6 @@ test(testStringBuilder, "StringBuilder")
 test(testIO, "IO")
 --test(testConsole, "Console")
 --test(testAsync, "Async")
+
+
+

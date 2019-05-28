@@ -152,9 +152,17 @@ limitations under the License.
       </class>
       <class name="Math" Name="math" />
       <class name="Activator" >
-        <method name="CreateInstance" ArgCount="0" Template="{^0}()" />
-        <method name="CreateInstance" ArgCount="1" Template="{0}[1]()" />
-        <method name="CreateInstance" ArgCount="2" Template="System.CreateInstance({0}, {*1})" />
+        <method name="CreateInstance" Template="System.Activator.CreateInstance({0}, {*1})">
+          <arg type="System.Type" />
+          <arg type="System.Object[]" />
+        </method>
+        <method name="CreateInstance" Name="CreateInstance1">
+          <arg type="System.Type" />
+          <arg type="System.Boolean" />
+        </method>
+        <method name="CreateInstance" ArgCount="3" Baned="true" />
+        <method name="CreateInstance" ArgCount="5" Baned="true" />
+        <method name="CreateInstance" ArgCount="6" Baned="true" />
       </class>
       <class name="Tuple">
         <method name="Create" ArgCount="1" Template="System.tuple({0})" />
@@ -324,6 +332,15 @@ limitations under the License.
       </class>
       <class name="WeakReference^1" IgnoreGeneric="true" />
       <class name="Lazy^1" Name="System.Lazy" />
+      <class name="Convert">
+        <method name="ToString" Name="ToStringFromChar">
+          <arg type="System.Char" />
+        </method>
+        <method name="ToString" Name="ToStringFromChar">
+          <arg type="System.Char" />
+          <arg type="System.IFormatProvider" />
+        </method>
+      </class>
       <class name="BitConverter">
         <method name="GetBytes" Name="GetBytesFromBoolean">
           <arg type="System.Boolean" />
@@ -364,6 +381,9 @@ limitations under the License.
         <method name="Equals" Name="EqualsObjOf" />
         <method name="GetHashCode" Name="GetHashCodeObjOf" />
       </class>
+      <class name="IList">
+        <method name="Add" Name="AddObj" />
+      </class>
     </namespace>
     <namespace name="System.Collections.Generic" Name="System">
       <class name="List^1" Name="System.List">
@@ -396,6 +416,7 @@ limitations under the License.
       </class>
       <class name="IDictionary^2">
         <method name="Add" Name="AddKeyValue" />
+        <method name="Remove" Name="RemoveKey" />
       </class>
       <class name="IEqualityComparer^1">
         <method name="Equals" Name="EqualsOf" />

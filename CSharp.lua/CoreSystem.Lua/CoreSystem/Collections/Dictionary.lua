@@ -129,6 +129,10 @@ KeyValuePairFn = System.defStc("System.KeyValuePair", function(TKey, TValue)
   return cls
 end, KeyValuePair)
 
+local function isKeyValuePair(t)
+  return getmetatable(getmetatable(t)) == KeyValuePair
+end
+
 local DictionaryEnumerator = define("System.DictionaryEnumerator", {
   getCurrent = System.getCurrent, 
   Dispose = System.emptyFn,
@@ -190,11 +194,15 @@ local function dictionaryEnumerator(t, kind)
   return setmetatable(en, DictionaryEnumerator)
 end
 
-local DictionaryCollection = define("System.DictionaryCollection", {
+local DictionaryCollection = define("System.DictionaryCollection", function (T)
+    return {
+      __inherits__ = { System.ICollection_1(T), System.IReadOnlyCollection_1(T), System.ICollection },
+      __genericT__ = T
+    }
+  end, {
   __ctor__ = function (this, dict, kind, T)
     this.dict = dict
     this.kind = kind
-    this.__genericT__ = T
   end,
   getCount = function (this)
     return getCount(this.dict)
@@ -215,6 +223,18 @@ local function add(this, key, value)
   else
     counts[this] = { 1, 1 }
   end
+end
+
+local function remove(this, key)
+  if key == nil then throw(ArgumentNullException("key")) end
+  if this[key] ~= nil then
+    this[key] = nil
+    local t = counts[this]
+    t[1] = t[1] - 1
+    t[2] = t[2] + 1
+    return true
+  end
+  return false
 end
 
 local Dictionary = {
@@ -312,16 +332,22 @@ local Dictionary = {
       end
     end
   end,
+  RemoveKey = remove,
   Remove = function (this, key)
-    if key == nil then throw(ArgumentNullException("key")) end
-    if this[key] then
-      this[key] = nil
-      local t = counts[this]
-      t[1] = t[1] - 1
-      t[2] = t[2] + 1
-      return true
+    if isKeyValuePair(key) then
+      local k, v = key.Key, key.Value
+      local value = this[k]
+      if value ~= nil then
+        if value == null then value = nil end
+        local comparer = EqualityComparer(this.__genericTValue__).getDefault()
+        if comparer:EqualsOf(value, v) then
+          remove(this, k)
+          return true
+        end
+      end
+      return false
     end
-    return false
+    return remove(this, key)
   end,
   TryGetValue = function (this, key)
     if key == nil then throw(ArgumentNullException("key")) end
@@ -359,10 +385,10 @@ local Dictionary = {
   end,
   GetEnumerator = dictionaryEnumerator,
   getKeys = function (this)
-    return DictionaryCollection(this, 1, this.__genericTKey__)
+    return DictionaryCollection(this.__genericTKey__)(this, 1)
   end,
   getValues = function (this)
-    return DictionaryCollection(this, 2, this.__genericTValue__)
+    return DictionaryCollection(this.__genericTValue__)(this, 2)
   end
 }
 
@@ -372,7 +398,8 @@ end
 
 define("System.Dictionary", function(TKey, TValue) 
   return { 
-    __inherits__ = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) }, 
+    __inherits__ = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
+    __genericT__ = KeyValuePairFn(TKey, TValue),
     __genericTKey__ = TKey,
     __genericTValue__ = TValue,
     __len = getCount

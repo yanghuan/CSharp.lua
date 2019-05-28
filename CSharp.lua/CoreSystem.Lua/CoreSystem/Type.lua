@@ -21,8 +21,6 @@ local String = System.String
 local Boolean = System.Boolean
 local Delegate = System.Delegate
 local getClass = System.getClass
-local try = System.try
-local new = System.new
 local arrayFromTable = System.arrayFromTable
 
 local InvalidCastException = System.InvalidCastException
@@ -81,7 +79,7 @@ local function isSubclassOf(this, c)
     if p == c then
       return true
     end
-    p = getBaseType(p)
+    p = getmetatable(p)
   end
   return false
 end
@@ -140,13 +138,22 @@ local function isAssignableFrom(this, c)
     return false 
   end
   if this == c then 
-    return true 
+    return true
   end
-  if getIsInterface(this) then
+  local left, right = this[1], c[1]
+  if left == Object then
+    return true
+  end
+
+  if isSubclassOf(right, left) then
+    return true
+  end
+
+  if left.class == "I" then
     return implementInterface(c, this)
-  else 
-    return isSubclassOf(c, this)
   end
+
+  return false
 end
 
 local function isGenericTypeDefinition(this)
@@ -223,7 +230,9 @@ Type = System.define("System.Type", {
     end
     return nil
   end,
-  IsSubclassOf = isSubclassOf,
+  IsSubclassOf = function (this, c)
+    return isSubclassOf(this[1], c[1])
+  end,
   getIsInterface = getIsInterface,
   GetInterfaces = getInterfaces,
   IsAssignableFrom = isAssignableFrom,
@@ -418,60 +427,4 @@ function System.castWithNullable(cls, obj)
     return cast(cls.__genericT__, obj, true)
   end
   return cast(cls, obj)
-end
-
-local function tryMatchParameters(parameter, argument)
-  if type(argument) == "table" then
-      return typeof(parameter) == typeof(argument)
-  end
-  -- If userdata or nil is handled then the parameter type can be ignored
-  if type(argument) == "userdata" then 
-    return true 
-  end
-  return type(argument) == type(parameter)
-end
-
-local function tryCallConstructor(cls, ...)
-  if not cls.__ctor__ then
-    throw(MissingMethodException("No matching constructor was found"))
-  end
-  if type(cls.__ctor__) == "table" then
-    if cls.__metadata__ and cls.__metadata__.methods then
-      local methods = cls.__metadata__.methods
-      local args = { ... }
-      for i = 1, #methods do
-        if methods[i][1] == ".ctor" then 
-          local index = 4
-          local matched = true
-          -- Use pairs as arguments can be nil
-          for _,arg in pairs(args) do
-            if not tryMatchParameters(methods[i][index]) then
-              matched = false
-            end
-            index = index + 1
-          end
-          if matched then
-            return new(cls, i, ...)
-          end
-        end
-      end
-      throw(MissingMethodException("No matching constructor was found"))
-    else
-      -- For backward compability we use the first constructor if no metadata is present, this can later be changed to throwing the exception below
-      return new(cls, 1, ...)
-      -- throw(MissingMethodException("CSharp.lua can't find a constructor out of multiple constructors in class ".. typeof(cls):getName() .." without defined metadata, use @CSharpLua.Metadata at constructors"))
-    end
-  else
-    return cls(...)
-  end
-end
-
-function System.CreateInstance(type, ...)
-  if type == nil then
-    throw(ArgumentNullException("type"))
-  end
-  if getmetatable(type) ~= Type then   -- is T
-    return type()
-  end
-  return tryCallConstructor(type[1], ...)
 end

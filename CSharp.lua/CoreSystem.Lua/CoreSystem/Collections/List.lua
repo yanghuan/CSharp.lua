@@ -29,6 +29,7 @@ local List = {
   get = Array.get,
   set = Array.set,
   Add = Array.add,
+  AddObj = Array.addObj,
   AddRange = Array.addRange,
   AsReadOnly = Array.AsReadOnly,
   BinarySearch = Array.BinarySearch,

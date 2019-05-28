@@ -80,7 +80,9 @@ namespace Bridge.ClientTest.Collections.Generic
         [Test]
         public void TypePropertiesAreCorrect()
         {
+#if false
             Assert.AreEqual("System.Collections.Generic.IReadOnlyDictionary`2[[System.Object, mscorlib],[System.Object, mscorlib]]", typeof(IReadOnlyDictionary<object, object>).FullName, "FullName should be correct");
+#endif
             Assert.True(typeof(IReadOnlyDictionary<object, object>).IsInterface, "IsInterface should be true");
 
             var interfaces = typeof(IReadOnlyDictionary<int, string>).GetInterfaces();
@@ -118,7 +120,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
             foreach (var key in keys)
             {
-                Assert.AreEqual(actualKeys[i], key);
+                Assert.True(actualKeys.Contains(key));
                 i++;
             }
             Assert.AreEqual(actualKeys.Length, i);
@@ -129,7 +131,7 @@ namespace Bridge.ClientTest.Collections.Generic
             i = 0;
             foreach (var key in keys)
             {
-                Assert.AreEqual(actualKeys[i], key);
+                Assert.True(actualKeys.Contains(key));
                 i++;
             }
             Assert.AreEqual(actualKeys.Length, i);
@@ -175,7 +177,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.True(values is IEnumerable<string>);
             foreach (var val in values)
             {
-                Assert.AreEqual(actualValues[i], val);
+                Assert.True(actualValues.Contains(val));
                 i++;
             }
             Assert.AreEqual(actualValues.Length, i);
@@ -187,7 +189,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
             foreach (var val in values)
             {
-                Assert.AreEqual(actualValues[i], val);
+                Assert.True(actualValues.Contains(val));
                 i++;
             }
             Assert.AreEqual(actualValues.Length, i);

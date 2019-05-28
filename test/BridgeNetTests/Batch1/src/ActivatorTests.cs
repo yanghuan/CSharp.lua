@@ -57,7 +57,7 @@ namespace Bridge.ClientTest
 
         public class C5
         {
-            public int i;
+            public int i = 42;
 
             [Template("{ i: 42 }")]
             public C5()

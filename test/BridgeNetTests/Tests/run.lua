@@ -35,6 +35,9 @@ for i = 1, #modules do
   require(name .. "/out/manifest")(name .. "/out")
 end
 
+collectgarbage("collect")
+print(collectgarbage("count"))
+
 local main = System.Reflection.Assembly.GetEntryAssembly().getEntryPoint()
 main:Invoke()
 
@@ -49,6 +52,3 @@ if timeoutQueue then
     end
   end
 end
-
-
-

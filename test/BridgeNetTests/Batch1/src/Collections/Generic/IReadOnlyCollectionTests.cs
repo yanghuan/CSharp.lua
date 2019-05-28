@@ -70,7 +70,9 @@ namespace Bridge.ClientTest.Collections.Generic
         [Test]
         public void TypePropertiesAreCorrect()
         {
+#if false
             Assert.AreEqual("System.Collections.Generic.IReadOnlyCollection`1[[System.Object, mscorlib]]", typeof(IReadOnlyCollection<object>).FullName, "FullName should be correct");
+#endif
             Assert.True(typeof(IReadOnlyCollection<object>).IsInterface, "IsInterface should be true");
 
             var interfaces = typeof(IReadOnlyCollection<object>).GetInterfaces();

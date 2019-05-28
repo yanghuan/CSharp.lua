@@ -26,6 +26,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(typeof(object).IsClass);
         }
 
+#if false
         [Test]
         public void CanGetHashCodeForObject()
         {
@@ -33,6 +34,7 @@ namespace Bridge.ClientTest.SimpleTypes
             int c = o.GetHashCode();
             Assert.True((object)c is int);
         }
+#endif
 
         [Test]
         public void RepeatedCallsToGetHashCodeReturnsSameValue()

@@ -608,4 +608,5 @@ end
 
 System.define("System.String", String)
 String.__call = ctor
+String.__genericT__ = System.Char
 debug.setmetatable("", String)
