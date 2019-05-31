@@ -875,8 +875,8 @@ namespace CSharpLua {
       }
 
       if (valueExpression == null) {
-        if (typeSymbol.IsValueType && !typeSymbol.IsNullableType()) {
-          LuaExpressionSyntax defalutValue = GetPredefinedValueTypeDefaultValue(typeSymbol);
+        if (typeSymbol.IsMaybeValueType() && !typeSymbol.IsNullableType()) {
+          var defalutValue = GetPredefinedValueTypeDefaultValue(typeSymbol);
           if (defalutValue != null) {
             valueExpression = defalutValue;
             valueIsLiteral = true;
@@ -2864,6 +2864,12 @@ namespace CSharpLua {
       return new LuaArgumentSyntax(expression);
     }
 
+    private bool IsExtremelyZero(LiteralExpressionSyntax node, string value) {
+      object v = semanticModel_.GetConstantValue(node).Value;
+      var isFloatZero = (v is float f && f == 0) || (v is double d && d == 0);
+      return isFloatZero && value.Length > 5;
+    }
+
     private LuaExpressionSyntax InternalVisitLiteralExpression(LiteralExpressionSyntax node) {
       switch (node.Kind()) {
         case SyntaxKind.NumericLiteralExpression: {
@@ -2882,13 +2888,12 @@ namespace CSharpLua {
               case 'd':
               case 'D': {
                 if (!value.StartsWith("0x") && !value.StartsWith("0X")) {
-                  object v = semanticModel_.GetConstantValue(node).Value;
-                  if ((v is float f && f == 0 || v is double d && d == 0) && len > 5) {
+                  if (IsExtremelyZero(node, value)) {
+                    value = LuaNumberLiteralExpressionSyntax.ZeroFloat.Text;
                     hasTransform = true;
-                    value = 0.ToString();
-                    break;
+                  } else {
+                    removeCount = 1;
                   }
-                  removeCount = 1;
                 }
                 break;
               }
@@ -3412,12 +3417,12 @@ namespace CSharpLua {
         }
       } else if (typeInfo.SpecialType >= SpecialType.System_Boolean && typeInfo.SpecialType <= SpecialType.System_Double) {
         return original;
-      } else if (typeInfo.TypeKind == TypeKind.Enum) {
+      } else if (typeInfo.IsEnumType(out var enumTypeSybmol)) {
         if (original is LuaLiteralExpressionSyntax) {
           var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
           return new LuaConstLiteralExpression(symbol.Name, typeInfo.ToString());
         } else {
-          return BuildEnumToStringExpression(typeInfo, original);
+          return BuildEnumToStringExpression(enumTypeSybmol, original);
         }
       } else if (typeInfo.IsValueType) {
         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);
@@ -3606,8 +3611,14 @@ namespace CSharpLua {
           break;
         }
         case SyntaxKind.IsExpression: {
-          var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
           var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+          if (rightType.IsNullableType(out var nullElementType)) {
+            var left = (LuaExpressionSyntax)node.Left.Accept(this);
+            var right = GetTypeName(nullElementType);
+            return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, left, right);
+          }
+
+          var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
           if (leftType.Is(rightType)) {
             return LuaIdentifierLiteralExpressionSyntax.True;
           }

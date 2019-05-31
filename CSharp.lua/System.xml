@@ -29,6 +29,12 @@ limitations under the License.
         <field name="NegativeInfinity" Template="System.Double.NegativeInfinity" />
       </class>
       <class name="Decimal" Name="System.Double" />
+      <class name="Char">
+        <method name="ToString" Template="System.Char.ToString({0})">
+          <arg type="System.Char" />
+        </method>  
+        <method name="ToString" Template="System.Char.ToString({this})" />
+      </class>
       <class name="String">
         <field name="Empty" Template="(&quot;&quot;)" />
         <property name="Length">
@@ -40,6 +46,27 @@ limitations under the License.
           <arg type="System.Collections.Generic.IEnumerable^1" />
         </method>
         <method name="Join" ArgCount="2" Name="JoinParams" />
+        <method name="LastIndexOf" Template="{this}:LastIndexOf({0}, nil, nil, {1})">
+          <arg type="System.String" />
+          <arg type="System.StringComparison" />
+        </method>
+        <method name="LastIndexOf" Template="{this}:LastIndexOf({0}, {1}, nil, {2})">
+          <arg type="System.String" />
+          <arg type="System.Int32" />
+          <arg type="System.StringComparison" />
+        </method>
+         <method name="Split" Template="{this}:Split({0}, nil, {1})">
+          <arg type="System.Char" />
+          <arg type="System.StringSplitOptions" />
+        </method>
+        <method name="Split" Template="{this}:Split({0}, nil, {1})">
+          <arg type="System.Char[]" />
+          <arg type="System.StringSplitOptions" />
+        </method>
+        <method name="Split" Template="{this}:Split({0}, nil, {1})">
+          <arg type="System.String[]" />
+          <arg type="System.StringSplitOptions" />
+        </method>
       </class>
       <class name="Enum">
         <method name="TryParse" ArgCount="2" Template="System.Enum.TryParse({^0}, {0})" />
@@ -339,6 +366,21 @@ limitations under the License.
         <method name="ToString" Name="ToStringFromChar">
           <arg type="System.Char" />
           <arg type="System.IFormatProvider" />
+        </method>
+        <method name="ToString" Template="({0})">
+          <arg type="System.String" />
+        </method>
+        <method name="ToString" Template="({0})">
+          <arg type="System.String" />
+          <arg type="System.IFormatProvider" />
+        </method>
+        <method name="ToString" Template="System.Convert.ToString({0}, {1}, System.toUInt16)">
+          <arg type="System.Int16" />
+          <arg type="System.Int32" />
+        </method>
+        <method name="ToString" Template="System.Convert.ToString({0}, {1}, System.toUInt32)">
+          <arg type="System.Int32" />
+          <arg type="System.Int32" />
         </method>
       </class>
       <class name="BitConverter">

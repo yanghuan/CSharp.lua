@@ -811,13 +811,14 @@ function Type.getAttributes(this)
 end
 
 function Type.GetGenericArguments(this)
+  local t = {}
+  local count = 1
+
   local cls = this[1]
   local metadata = rawget(cls, "__metadata__")
   if metadata then
     metadata = metadata.class
     if metadata then
-      local t = {}
-      local count = 1
       local flags = metadata[1]
       local typeParameterCount = band(flags, 0xFF00)
       if typeParameterCount ~= 0 then
@@ -830,7 +831,22 @@ function Type.GetGenericArguments(this)
       return arrayFromTable(t, Type)
     end
   end
-  throwNoMatadata(cls.__name__)
+
+  local name = cls.__name__ 
+  local i = name:find("%[")
+  if i then
+    while true do
+      i = i + 1
+      local j = name:find(",", i) or -1
+      local clsName = name:sub(i, j - 1)
+      t[count] = typeof(System.getClass(clsName))
+      count = count + 1
+      if j == -1 then
+        break
+      end
+    end
+  end
+  return arrayFromTable(t, Type)
 end
 
 local Assembly = define("System.Reflection.Assembly", {

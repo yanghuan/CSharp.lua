@@ -223,9 +223,15 @@ Type = System.define("System.Type", {
   getBaseType = function (this)
     local cls = this[1]
     if cls.class ~= "I" and cls ~= Object then
-      local base = getmetatable(cls)
-      if base then
-        return typeof(base)
+      while true do
+        local base = getmetatable(cls)
+        if not base then
+          break
+        end
+        if base.__index == base then
+          return typeof(base)
+        end
+        cls = base
       end
     end
     return nil
@@ -305,16 +311,16 @@ local customTypeOf = System.config.customTypeOf
 
 function typeof(cls)
   assert(cls)
-  local type = types[cls]
-  if type == nil then
+  local t = types[cls]
+  if t == nil then
     if customTypeOf then
-      type = customTypeOf(cls)
+      t = customTypeOf(cls)
     else
-      type = setmetatable({ cls }, Type)
+      t = setmetatable({ cls }, Type)
     end
-    types[cls] = type
+    types[cls] = t
   end
-  return type
+  return t
 end
 
 local function getType(obj)

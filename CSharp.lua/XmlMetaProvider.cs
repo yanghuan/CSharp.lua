@@ -607,7 +607,20 @@ namespace CSharpLua {
       return GetMethodMetaInfo(symbol, MethodMetaType.Name);
     }
 
+    private bool IsNullableEnumToString(IMethodSymbol symbol, out string template) {
+      var type = symbol.ContainingType;
+      if (type != null && type.IsNullableType(out var elemetType) && elemetType.TypeKind == TypeKind.Enum && symbol.Name == "ToString") {
+        template = "System.ToEnumString({this}, {class})";
+        return true;
+      }
+      template = null;
+      return false;
+    }
+
     public string GetMethodCodeTemplate(IMethodSymbol symbol) {
+      if (IsNullableEnumToString(symbol, out string template)) {
+        return template;
+      }
       return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate);
     }
 

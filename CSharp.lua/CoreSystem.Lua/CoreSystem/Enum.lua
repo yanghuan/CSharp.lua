@@ -29,6 +29,7 @@ local tostring = tostring
 local type = type
 
 local function toString(this, cls)
+  if this == nil then return "" end
   if cls then
     for k, v in pairs(cls) do
       if v == this then
@@ -40,11 +41,15 @@ local function toString(this, cls)
 end
 
 local function hasFlag(this, flag)
+  if this == flag then
+    return true
+  end
   return band(this, flag) ~= 0
 end
 
 Number.ToEnumString = toString
 Number.HasFlag = hasFlag
+System.ToEnumString = toString
 
 local function tryParseEnum(enumType, value, ignoreCase)
   if enumType == nil then throw(ArgumentNullException("enumType")) end
@@ -125,7 +130,7 @@ System.define("System.Enum", {
         count = count + 1
       end
     end
-    return System.arrayFromTable(t, Int)
+    return System.arrayFromTable(t, System.Int32)
   end,
   IsDefined = function (enumType, value)
     if enumType == nil then throw(ArgumentNullException("enumType")) end

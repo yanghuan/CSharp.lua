@@ -41,7 +41,8 @@ System.define("System.Random", (function ()
         if n >= 55 then
           n = n - 55
         end
-        this._seedArray:set(i, this._seedArray:get(i) - this._seedArray:get(1 + n))
+        local v =  this._seedArray:get(i) - this._seedArray:get(1 + n)
+        this._seedArray:set(i, System.toInt32(v))
         if this._seedArray:get(i) < 0 then
           this._seedArray:set(i, this._seedArray:get(i) + 2147483647 --[[Random.MBIG]])
         end
@@ -54,7 +55,7 @@ System.define("System.Random", (function ()
   Sample = function (this)
     --Including this division at the end gives us significantly improved
     --random number distribution.
-    return (InternalSample(this) * (4.6566128752458E-10 --[[1.0 / MBIG]]))
+    return (InternalSample(this) * (4.6566128752457969E-10 --[[1.0 / MBIG]]))
   end
   InternalSample = function (this)
     local retVal

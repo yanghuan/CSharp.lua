@@ -18,11 +18,11 @@ local System = System
 local defInf = System.defInf
 local emptyFn = System.emptyFn
 
-defInf("System.IFormattable")
-defInf("System.IComparable")
+local IComparable = defInf("System.IComparable")
+local IFormattable = defInf("System.IFormattable")
+local IConvertible = defInf("System.IConvertible")
 defInf("System.IFormatProvider")
 defInf("System.ICloneable")
-defInf("System.IConvertible")
 
 defInf("System.IComparable_1", emptyFn)
 defInf("System.IEquatable_1", emptyFn)
@@ -103,3 +103,5 @@ defInf("System.IComparer")
 defInf("System.IComparer_1", emptyFn)
 defInf("System.IEqualityComparer")
 defInf("System.IEqualityComparer_1", emptyFn)
+
+System.enumMetatable.interface = { IComparable, IFormattable, IConvertible }

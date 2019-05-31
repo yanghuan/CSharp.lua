@@ -68,13 +68,14 @@ local function xpcallErr(e)
     e = System.Exception("script error")
     e:traceback()
   elseif type(e) == "string" then
-    if e:find("attempt to divide by zero") then  
+    if e:find("attempt to index a nil value") then
+      e = System.NullReferenceException()
+    elseif e:find("attempt to divide by zero") then  
       e = System.DivideByZeroException()
-      e:traceback()
     else
       e = System.Exception(e)
-      e:traceback()
     end
+    e:traceback()
   end
   return e
 end
@@ -109,7 +110,7 @@ local function set(className, cls)
   local scope = global
   local starIndex = 1
   while true do
-    local pos = sfind(className, "%.", starIndex) or 0
+    local pos = sfind(className, "[%.+]", starIndex) or 0
     local name = ssub(className, starIndex, pos -1)
     if pos ~= 0 then
       local t = rawget(scope, name)
@@ -176,7 +177,7 @@ local function genericName(name, ...)
   return tconcat(t)
 end
 
-local enumMetatable = { class = "E", default = zeroFn, __index = false }
+local enumMetatable = { class = "E", default = zeroFn, __index = false, interface = false }
 enumMetatable.__index = enumMetatable
 
 local interfaceMetatable = { class = "I", default = nilFn, __index = false }
@@ -431,6 +432,7 @@ System = {
   defStc = defStc,
   defEnum = defEnum,
   defArray = defArray,
+  enumMetatable = enumMetatable,
   trunc = trunc,
   global = global,
   classes = classes
@@ -573,7 +575,10 @@ if version < 5.3 then
     v = band(v, mask)
     local uv = band(v, umask)
     if uv ~= v then
-      return -xor(uv - 1, umask)
+      v = xor(uv - 1, umask)
+      if uv ~= 0 then
+        v = -v
+      end
     end
     return v
   end
@@ -811,7 +816,10 @@ else
     v = v & mask
     local uv = v & umask
     if uv ~= v then
-      return -((uv - 1) ~ umask)
+      v = (uv - 1) ~ umask
+      if uv ~= 0 then
+        v = -v
+      end
     end
     return v
   end
@@ -1285,6 +1293,9 @@ local Nullable = {
       return 0
     end
     return this:GetHashCode()
+  end,
+  clone = function (t)
+    return t and t:__clone__()
   end
 }
 
@@ -1389,40 +1400,41 @@ function System.import(f)
 end
 
 local namespace
-local curCacheName
 
 local function defIn(kind, name, f)
-  if #curCacheName > 0 then
-    name = curCacheName .. "." .. name
+  local namespaceName, isClass = namespace[1], namespace[2]
+  if #namespaceName > 0 then
+    name = namespaceName .. (isClass and "+" or ".") .. name
   end
   assert(modules[name] == nil, name)
-  local prevName = curCacheName
-  curCacheName = name
+  namespace[1], namespace[2] = name, kind == "C" or kind == "S"
   local t = f(namespace)
-  curCacheName = prevName
-  modules[name] = function()
+  namespace[1], namespace[2] = namespaceName, isClass
+  modules[isClass and name:gsub("+", ".") or name] = function()
     return def(name, kind, t)
   end
 end
 
 namespace = {
+  "",
+  false,
   class = function(name, f) defIn("C", name, f) end,
   struct = function(name, f) defIn("S", name, f) end,
   interface = function(name, f) defIn("I", name, f) end,
   enum = function(name, f) defIn("E", name, f) end,
-  namespace = function(name, f) 
-    name = curCacheName .. "." .. name
-    local prevName = curCacheName
-    curCacheName = name
+  namespace = function(name, f)
+    local namespaceName = namespace[1]
+    name = namespaceName .. "." .. name
+    namespace[1] = name
     f(namespace)
-    curCacheName = prevName
-  end,
+    namespace[1] = namespaceName
+  end
 }
 
 function System.namespace(name, f)
-  curCacheName = name
+  namespace[1] = name
   f(namespace)
-  curCacheName = nil
+  namespace[1], namespace[2] = "", false
 end
 
 function System.init(namelist, conf)
@@ -1452,7 +1464,6 @@ function System.init(namelist, conf)
   modules = {}
   usings = {}
   metadatas = nil
-  curCacheName = nil
 end
 
 return function (config)

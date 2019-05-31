@@ -61,27 +61,6 @@ namespace Bridge.ClientTest.BasicCSharp
         }
 
         [Test(ExpectedCount = 1)]
-        public static void Bridge320()
-        {
-            string exceptionMessage = string.Empty;
-
-            try
-            {
-                Script.Write("\"someString\".SomeNotExistingMethod();");
-            }
-            catch (Exception ex)
-            {
-                exceptionMessage = ex.Message;
-            }
-
-            // var expectedMessage = Utilities.BrowserHelper.IsPhantomJs()
-            //    ? "undefined is not a constructor (evaluating '\"someString\".SomeNotExistingMethod()')"
-            //    : "\"someString\".SomeNotExistingMethod is not a function";
-
-            Assert.True(exceptionMessage.Contains("SomeNotExistingMethod"), "ex.Message works on built-in JavaScript type");
-        }
-
-        [Test(ExpectedCount = 1)]
         public static void Bridge343()
         {
             string exceptionMessage = string.Empty;

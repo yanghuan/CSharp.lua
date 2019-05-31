@@ -90,6 +90,10 @@ public static class Extension {
   }
 
   public static T[] Concat<T>(this T[] array, params T[] v) {
+    if (v.Length == 1 && v[0] == null) {
+      return array;
+    }
+
     T[] newArray = new T[array.Length + v.Length];
     Array.Copy(array, newArray, array.Length);
     Array.Copy(v, 0, newArray, array.Length, v.Length);

@@ -92,6 +92,7 @@ local function isLetter(c, index)
 end
 
 local Char = System.defStc("System.Char", {
+  ToString = string.char,
   CompareTo = Int.CompareTo,
   CompareToObj = Int.CompareToObj,
   Equals = Int.Equals,

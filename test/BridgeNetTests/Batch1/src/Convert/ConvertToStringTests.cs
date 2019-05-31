@@ -204,6 +204,7 @@ namespace Bridge.ClientTest.ConvertTests
             Assert.AreEqual("Bridge.ClientTest.ConvertTests.ConvertToStringTests", Convert.ToString(new ConvertToStringTests()));
         }
 
+#if false
         [Test]
         public static void FromDateTime()
         {
@@ -216,6 +217,7 @@ namespace Bridge.ClientTest.ConvertTests
                 Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], DateTimeFormatInfo.InvariantInfo));
             }
         }
+#endif
 
         [Test]
         public static void FromChar()
@@ -230,7 +232,6 @@ namespace Bridge.ClientTest.ConvertTests
             }
         }
 
-#if false
         [Test]
         public static void FromByteBase2()
         {
@@ -239,7 +240,9 @@ namespace Bridge.ClientTest.ConvertTests
 
             for (int i = 0; i < testValues.Length; i++)
             {
-                Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 2));
+                string testValue = Convert.ToString(testValues[i], 2);
+                string expectedValue = expectedValues[i];
+                Assert.AreEqual(expectedValue, testValue, $"{i}, {testValue} != {expectedValue}");
             }
         }
 
@@ -266,7 +269,6 @@ namespace Bridge.ClientTest.ConvertTests
                 Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 16));
             }
         }
-#endif
 
         [Test]
         public static void FromByteBase10()
@@ -294,7 +296,9 @@ namespace Bridge.ClientTest.ConvertTests
 
             for (int i = 0; i < testValues.Length; i++)
             {
-                Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 2));
+                string testValue = Convert.ToString(testValues[i], 2);
+                string expectedValue = expectedValues[i];
+                Assert.AreEqual(expectedValue, testValue, $"{i}, {testValue} != {expectedValue}");
             }
         }
 
@@ -330,7 +334,8 @@ namespace Bridge.ClientTest.ConvertTests
 
             for (int i = 0; i < testValues.Length; i++)
             {
-                Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 16));
+                string testValue = Convert.ToString(testValues[i], 16);
+                Assert.AreEqual(expectedValues[i], testValue, $"{1}, {testValue} != {expectedValues[i]}");
             }
         }
 
@@ -402,7 +407,9 @@ namespace Bridge.ClientTest.ConvertTests
 
             for (int i = 0; i < testValues.Length; i++)
             {
-                Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 2));
+                string testValue = Convert.ToString(testValues[i], 2);
+                string expectedValue = expectedValues[i];
+                Assert.AreEqual(expectedValue, testValue, $"{i}, {testValue} != {expectedValue}");
             }
         }
 
@@ -580,8 +587,8 @@ namespace Bridge.ClientTest.ConvertTests
         public static void FromSingleArray()
         {
             float[] testValues = new float[] { float.MinValue, 0.0f, 1.0f, 1000.0f, float.MaxValue, float.NegativeInfinity, float.PositiveInfinity, float.Epsilon, float.NaN };
-            string[] expectedValues1 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-Infinity", "Infinity", ConvertConstants.SINGLE_EPSILON_STRING, "NaN" };
-            string[] expectedValues2 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-Infinity", "Infinity", ConvertConstants.SINGLE_EPSILON_STRING, "NaN" };
+            string[] expectedValues1 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0.0", "1.0", "1000.0", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
+            string[] expectedValues2 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0.0", "1.0", "1000.0", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
 
             for (int i = 0; i < testValues.Length; i++)
             {
@@ -597,16 +604,17 @@ namespace Bridge.ClientTest.ConvertTests
         public static void FromDoubleArray()
         {
             double[] testValues = new double[] { -double.MaxValue, 0.0, 1.0, 1000.0, double.MaxValue, double.NegativeInfinity, double.PositiveInfinity, double.Epsilon, double.NaN };
-            string[] expectedValues = new string[] { ConvertConstants.DOUBLE_MIN_STRING, "0", "1", "1000", ConvertConstants.DOUBLE_MAX_STRING, "-Infinity", "Infinity", ConvertConstants.DOUBLE_EPSILON_STRING, "NaN" };
+            string[] expectedValues = new string[] { ConvertConstants.DOUBLE_MIN_STRING, "0.0", "1.0", "1000.0", ConvertConstants.DOUBLE_MAX_STRING, "-inf", "inf", ConvertConstants.DOUBLE_EPSILON_STRING, "nan" };
 
             // Vanila Test Cases
             for (int i = 0; i < testValues.Length; i++)
             {
                 string result = Convert.ToString(testValues[i], NumberFormatInfo.CurrentInfo);
-                Assert.AreEqual(expectedValues[i], result);
+                Assert.AreEqual(expectedValues[i], result, $"{i}, {result} != {expectedValues[i]}");
             }
         }
 
+#if false
         [Test]
         public static void FromDecimalArray()
         {
@@ -619,6 +627,7 @@ namespace Bridge.ClientTest.ConvertTests
                 Assert.AreEqual(expectedValues[i], result);
             }
         }
+
 
         [Test]
         public static void FromDateTimeArray()
@@ -638,6 +647,7 @@ namespace Bridge.ClientTest.ConvertTests
                 Assert.AreEqual(expected, result);
             }
         }
+#endif
 
         [Test]
         public static void FromString()
@@ -653,6 +663,7 @@ namespace Bridge.ClientTest.ConvertTests
             }
         }
 
+#if false
         [Test]
         public static void FromIFormattable()
         {
@@ -666,6 +677,7 @@ namespace Bridge.ClientTest.ConvertTests
             result = Convert.ToString(foo, NumberFormatInfo.CurrentInfo);
             Assert.AreEqual("", result);
         }
+#endif
 
         [Test]
         public static void FromNonIConvertible()

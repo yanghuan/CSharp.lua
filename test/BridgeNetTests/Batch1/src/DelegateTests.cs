@@ -31,10 +31,10 @@ namespace Bridge.ClientTest
         [Test]
         public void TypePropertiesAreCorrect()
         {
-            Assert.AreEqual("Function", typeof(Delegate).FullName);
+            Assert.AreEqual("System.Delegate", typeof(Delegate).FullName);
             Assert.True(typeof(Delegate).IsClass);
-            Assert.AreEqual("Function", typeof(Func<int, string>).FullName);
-            Assert.AreEqual("Function", typeof(Func<,>).FullName);
+            Assert.AreEqual("System.Delegate", typeof(Func<int, string>).FullName);
+            Assert.AreEqual("System.Delegate", typeof(Func<,>).FullName);
             Assert.True((object)(Action)(() =>
             {
             }) is Delegate);

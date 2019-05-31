@@ -75,7 +75,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True((object)TestEnum.FirstValue is TestEnum);
 
             var interfaces = typeof(TestEnum).GetInterfaces();
-            Assert.AreEqual(2, interfaces.Length);
+            Assert.AreEqual(3, interfaces.Length);
             Assert.NotNull(interfaces.FirstOrDefault(x => x == typeof(IComparable)));
             Assert.NotNull(interfaces.FirstOrDefault(x => x == typeof(IFormattable)));
 
@@ -191,7 +191,7 @@ namespace Bridge.ClientTest.SimpleTypes
         public void StaticToStringWorks()
         {
             Assert.AreEqual("FirstValue", TestEnum.FirstValue.ToString());
-            Assert.AreEqual("FirstValue, ThirdValue", (FlagsEnum.FirstValue | FlagsEnum.ThirdValue).ToString());
+            Assert.AreEqual("5", (FlagsEnum.FirstValue | FlagsEnum.ThirdValue).ToString());
         }
 
 
@@ -208,18 +208,18 @@ namespace Bridge.ClientTest.SimpleTypes
         [Test]
         public void GetValuesWorks()
         {
-            Array values = Enum.GetValues(typeof(TestEnum));
+            var values = (TestEnum[])Enum.GetValues(typeof(TestEnum));
             Assert.AreEqual(3, values.Length);
-            Assert.AreEqual(TestEnum.FirstValue, values.GetValue(0));
-            Assert.AreEqual(TestEnum.SecondValue, values.GetValue(1));
-            Assert.AreEqual(TestEnum.ThirdValue, values.GetValue(2));
+            Assert.True(values.Contains(TestEnum.FirstValue));
+            Assert.True(values.Contains(TestEnum.SecondValue));
+            Assert.True(values.Contains(TestEnum.ThirdValue));
 
-            values = Enum.GetValues(typeof(FlagsEnum));
-            Assert.AreEqual(4, values.Length);
-            Assert.AreEqual(FlagsEnum.None, values.GetValue(0));
-            Assert.AreEqual(FlagsEnum.FirstValue, values.GetValue(1));
-            Assert.AreEqual(FlagsEnum.SecondValue, values.GetValue(2));
-            Assert.AreEqual(FlagsEnum.ThirdValue, values.GetValue(3));
+            var values2 = (FlagsEnum[])Enum.GetValues(typeof(FlagsEnum));
+            Assert.AreEqual(4, values2.Length);
+            Assert.True(values2.Contains(FlagsEnum.None));
+            Assert.True(values2.Contains(FlagsEnum.SecondValue));
+            Assert.True(values2.Contains(FlagsEnum.SecondValue));
+            Assert.True(values2.Contains(FlagsEnum.ThirdValue));
         }
 
         [Test(ExpectedCount = 2)]

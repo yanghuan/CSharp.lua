@@ -341,8 +341,28 @@ namespace CSharpLua {
       return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
     }
 
+    public static bool IsNullableType(this ITypeSymbol type, out ITypeSymbol elemetType) {
+      elemetType = type.NullableElemetType();
+      return elemetType != null;
+    }
+
     public static ITypeSymbol NullableElemetType(this ITypeSymbol type) {
       return type.IsNullableType() ? ((INamedTypeSymbol)type).TypeArguments.First() : null;
+    }
+
+    public static bool IsEnumType(this ITypeSymbol type ,out ITypeSymbol symbol) {
+      if (type.TypeKind == TypeKind.Enum) {
+        symbol = type;
+        return true;
+      } else {
+        var nullableElemetType = type.NullableElemetType();
+        if (nullableElemetType != null && nullableElemetType.TypeKind == TypeKind.Enum) {
+          symbol = nullableElemetType;
+          return true;
+        }
+      }
+      symbol = null;
+      return false;
     }
 
     public static bool IsImmutable(this ITypeSymbol type) {
@@ -649,6 +669,18 @@ namespace CSharpLua {
         && typeSymbol.TypeKind != TypeKind.Enum
         && typeSymbol.TypeKind != TypeKind.Pointer
         && (typeSymbol.SpecialType == SpecialType.None && !typeSymbol.IsTimeSpanType());
+    }
+
+    public static bool IsMaybeValueType(this ITypeSymbol typeSymbol) {
+      if (typeSymbol.IsValueType) {
+        return true;
+      }
+
+      if (typeSymbol.IsReferenceType) {
+        return false;
+      }
+
+      return typeSymbol.TypeKind == TypeKind.TypeParameter;
     }
 
     public static bool IsExplicitInterfaceImplementation(this ISymbol symbol) {
@@ -1026,7 +1058,7 @@ namespace CSharpLua {
     }
 
     public static bool IsNotNullParameterExists(this IMethodSymbol symbol) {
-      return symbol.FindNotNullParameterIndex() != -1;
+      return symbol.OriginalDefinition.FindNotNullParameterIndex() != -1;
     }
 
     public static bool IsCombineImplicitlyCtorMethod(this IMethodSymbol symbol, out int notNullParameterIndex) {

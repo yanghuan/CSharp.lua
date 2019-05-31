@@ -25,15 +25,14 @@ local FormatException = System.FormatException
 local IndexOutOfRangeException = System.IndexOutOfRangeException
 
 local string = string
-local schar = string.char
-local srep = string.rep
-local slower = string.lower
-local supper = string.upper
-local sbyte = string.byte
-local ssub = string.sub
-local sfind = string.find
-local smatch = string.match
-local sgsub = string.gsub
+local char = string.char
+local rep = string.rep
+local lower = string.lower
+local upper = string.upper
+local byte = string.byte
+local sub = string.sub
+local find = string.find
+local gsub = string.gsub
 
 local table = table
 local tconcat = table.concat
@@ -41,113 +40,95 @@ local unpack = table.unpack
 local setmetatable = setmetatable
 local select = select
 local type = type
-local tonumber = tonumber
 
-local String = string
-String.traceback = emptyFn  -- make throw(str) not fail
-String.getLength = lengthFn
-String.getCount = lengthFn
-
-local function check(s, startIndex, count)
-  local len = #s
-  startIndex = startIndex or 0
-  if startIndex < 0 or startIndex > len then
-    throw(ArgumentOutOfRangeException("startIndex"))
-  end
-  count = count or len - startIndex
-  if count < 0 or count > len - startIndex then
-    throw(ArgumentOutOfRangeException("count"))
+local function checkIndex(value, startIndex, count)
+  if value == nil then throw(ArgumentNullException("value")) end
+  local len = #value
+  if not startIndex then
+    startIndex, count = 0, len
+  elseif not count then
+    if startIndex < 0 or startIndex > len then
+      throw(ArgumentOutOfRangeException("startIndex"))
+    end
+    count = len - startIndex
+  else
+    if startIndex < 0 or startIndex > len then
+      throw(ArgumentOutOfRangeException("startIndex"))
+    end
+    if count < 0 or count > len - startIndex then
+      throw(ArgumentOutOfRangeException("count"))
+    end
   end
   return startIndex, count, len
 end
 
-local function ctor(_, ...)
-  local len = select("#", ...)
-  if len == 2 then
-    local c, count = ...
-    if count <= 0 then
-      throw(ArgumentOutOfRangeException("count"))
-    end
-    return srep(schar(c), count)
+local function ctor(String, value, startIndex, count)
+  if type(value) == "number" then
+    if startIndex <= 0 then throw(ArgumentOutOfRangeException("count")) end
+    return rep(char(value), startIndex)
   end
-  local value, startIndex, length = ...
-  startIndex, length = check(value, startIndex, length)
-  return schar(unpack(value, startIndex + 1, startIndex + length))
+  startIndex, count = checkIndex(value, startIndex, count)
+  return char(unpack(value, startIndex + 1, startIndex + count))
 end
 
-local function compare(strA, strB, ignoreCaseOrType, cultureInfo)
-  if strA == nil then
-    return(strB == nil) and 0 or -1
+local function get(this, index)
+  local c = byte(this, index + 1)
+  if not c then
+    throw(IndexOutOfRangeException())
   end
+  return c
+end
 
-  if strB == nil then
+local function compare(strA, strB, ignoreCase)
+  if strA == nil then
+    if strB == nil then
+      return 0
+    end
+    return -1
+  elseif strB == nil then
     return 1
   end
 
-  if ignoreCaseOrType ~= nil then
-    if type(ignoreCaseOrType) == "number" then
-      -- StringComparison
-      if ignoreCaseOrType % 2 ~= 0 then
-        strA = slower(strA)
-        strB = slower(strB)
-      end
-    else
-      -- ignoreCase
-      if ignoreCaseOrType then
-        strA = slower(strA)
-        strB = slower(strB)
-      end
-
-      if cultureInfo then
-        -- CultureInfo
-        throw(System.NotSupportedException("cultureInfo is not support"))
-      end
-    end
+  if ignoreCase then
+    strA, strB = lower(strA), lower(strB)
   end
-  if strA > strB then return 1 end
+
   if strA < strB then return -1 end
+  if strA > strB then return 1 end
   return 0
 end
 
-String.Compare = compare
-
-function String.CompareTo(this, v)
-  return compare(this, v)
-end
-
-function String.CompareToObj(this, v)
-  if v == nil then return 1 end
-  if type(v) ~= "string" then
-    throw(ArgumentException("Arg_MustBeString"))
+local function compareFull(...)
+  local n = select("#", ...)
+  if n == 2 then
+    return compare(...)
+  elseif n == 3 then
+    local strA, strB, ignoreCase = ...
+    if type(ignoreCase) == "number" then
+      ignoreCase = ignoreCase % 2 ~= 0
+    end
+    return compare(strA, strB, ignoreCase)
+  elseif n == 4 then
+    local strA, strB, ignoreCase, options = ...
+    if type(options) == "number" then
+      ignoreCase = options == 1 or options == 268435456
+    end
+    return compare(strA, strB, ignoreCase)
+  else
+    local strA, indexA, strB, indexB, length, ignoreCase, options = ...
+    if type(ignoreCase) == "number" then
+      ignoreCase = ignoreCase % 2 ~= 0
+    elseif type(options) == "number" then
+      ignoreCase = options == 1 or options == 268435456
+    end
+    checkIndex(strA, indexA, length)
+    checkIndex(strB, indexB, length)
+    strA, strB = sub(strA, indexA + 1, indexA +  length), sub(strB, indexB + 1, indexB + length)
+    return compare(strA, strB, ignoreCase) 
   end
-  return compare(this, v)
 end
 
-function String.Equals(this, v, comparisonType)
-  return compare(this, v, comparisonType) == 0
-end
-
-function String.EqualsObj(this, v)
-  if type(v) == "string" then
-    return this == v
-  end
-  return false
-end
-
-function String.GetType(this)
-  return System.typeof(String)
-end
-
-String.ToString = System.identityFn
-
-function String.get(this, index)
-  if index < 0 or index >= #this then
-    throw(IndexOutOfRangeException())
-  end
-  return sbyte(this, index + 1)
-end
-
-function String.Concat(...)
+local function concat(...)
   local t = {}
   local count = 1
   local len = select("#", ...)
@@ -171,10 +152,97 @@ function String.Concat(...)
   return tconcat(t)
 end
 
-function String.JoinEnumerable(separator, values)
+local function equals(this, value, comparisonType)
+  if not comparisonType then
+    return this == value
+  end
+  return compare(this, value, comparisonType % 2 ~= 0) == 0
+end
+
+local function throwFormatError()
+  throw(FormatException("Input string was not in a correct format."))
+end
+
+local function formatBuild(format, args, len)
+  local t, count = {}, 1
+  local i, j, s = 1
+  while true do
+    local startPos  = i
+    while true do
+      i, j, s = find(format, "([{}])", i)
+      if not i then
+        if count == 1 then
+          return format
+        end
+        t[count] = sub(format, startPos)
+        return table.concat(t)
+      end
+      local pos = i - 1
+      i = i + 1
+      local c = byte(format, i)
+      if not c then throwFormatError() end
+      if s == '{' then
+        if c == 123 then
+          i = i + 1
+        else
+          pos = i - 2
+          if pos >= startPos then
+            t[count] = sub(format, startPos, pos)
+            count = count + 1
+          end
+          break
+        end
+      else
+        if c == 125 then
+          i = i + 1
+        else
+          throwFormatError()
+        end
+      end
+      if pos >= startPos then
+        t[count] = sub(format, startPos, pos)
+        count = count + 1
+      end
+      t[count] = s
+      count = count + 1
+      startPos = i
+    end
+    i, j, s = find(format, "^(%d+)}", i)
+    if not i then throwFormatError() end
+    s = s + 1
+    if s > len then throwFormatError() end
+    s = args[s]
+    s = (s ~= nil and s ~= System.null) and s:ToString() or ""
+    t[count] = s
+    count = count + 1
+    i = j + 1
+  end
+end
+
+local function format(format, ...)
+  if format == nil then throw(ArgumentNullException()) end
+  local len = select("#", ...)
+  if len == 1 then
+    local args = ...
+    if System.isArrayLike(args) then
+      return formatBuild(format, args, #args)
+    end
+  end
+  return formatBuild(format, { ... }, len)
+end
+
+local function isNullOrEmpty(value)
+  return value == nil or #value == 0
+end
+
+local function isNullOrWhiteSpace(value)
+  return value == nil or find(value, "^%s*$") ~= nil
+end
+
+local function joinEnumerable(separator, values)
   if values == nil then throw(ArgumentNullException("values")) end
   if type(separator) == "number" then
-    separator = schar(separator)
+    separator = char(separator)
   end
   local t = {}
   local len = 1
@@ -187,9 +255,9 @@ function String.JoinEnumerable(separator, values)
   return tconcat(t, separator)
 end
 
-function String.JoinParams(separator, ...)
+local function joinParams(separator, ...)
   if type(separator) == "number" then
-    separator = schar(separator)
+    separator = char(separator)
   end
   local t = {}
   local len = 1
@@ -217,14 +285,17 @@ function String.JoinParams(separator, ...)
   return tconcat(t, separator) 
 end
 
-function String.Join(separator, value, startIndex, count)
+local function join(separator, value, startIndex, count)
+  if type(separator) == "number" then
+    separator = char(separator)
+  end
   local t = {}
   local len = 1
   if startIndex then  
-    check(value, startIndex, count)
+    checkIndex(value, startIndex, count)
     for i = startIndex + 1, startIndex + count do
-      local v = value:get(i)
-      if v ~= nil then
+      local v = value[i]
+      if v ~= System.null then
         t[len] = v
         len = len + 1
       end
@@ -240,256 +311,252 @@ function String.Join(separator, value, startIndex, count)
   return tconcat(t, separator)
 end
 
+local function compareToObj(this, v)
+  if v == nil then return 1 end
+  if type(v) ~= "string" then
+    throw(ArgumentException("Arg_MustBeString"))
+  end
+  return compare(this, v)
+end
+
 local function escape(s)
-  return sgsub(s, "([%%%^%.])", "%%%1")
+  return gsub(s, "([%%%^%.])", "%%%1")
 end
 
-local function checkIndexOf(str, value, startIndex, count, comparisonType)
-  if value == nil then
-    throw(ArgumentNullException("value"))
-  end
-  startIndex, count = check(str, startIndex, count)
-  str = ssub(str, startIndex + 1, startIndex + count)
-  if comparisonType and comparisonType % 2 ~= 0 then
-    str = slower(str)
-    value = slower(value)
-  end
-  return str, escape(value), startIndex
-end
-
-function String.LastIndexOf(str, value, startIndex, count, comparisonType)
+local function contains(this, value, comparisonType)
+  if value == nil then throw(ArgumentNullException("value")) end
   if type(value) == "number" then
-    value = schar(value)
+    value = char(value)
   end
-  str, value, startIndex = checkIndexOf(str, value, startIndex, count, comparisonType)
-  local index = smatch(str, ".*()" .. value)
-  if index then
-    return index - 1 + startIndex
-  end
-  return -1
-end
-
-local function indexOfAny(str, chars, startIndex, count)
-  if chars == nil then
-    throw(ArgumentNullException("chars"))
-  end
-  startIndex, count = check(str, startIndex, count)
-  str = ssub(str, startIndex + 1, startIndex + count)
-  return str, "[" .. escape(schar(unpack(chars))) .. "]", startIndex
-end
-
-function String.LastIndexOfAny(str, chars, startIndex, count)
-  str, chars, startIndex = indexOfAny(str, chars, startIndex, count)
-  local index = smatch(str, "^.*()" .. chars)
-  if index then
-    return index - 1 + startIndex
-  end
-  return -1
-end
-
-function String.IsNullOrWhiteSpace(value)
-  return value == nil or sfind(value, "^%s*$") ~= nil
-end
-
-function String.IsNullOrEmpty(value)
-  return value == nil or #value == 0
-end
-
-local function throwFormatError()
-  throw(FormatException("Input string was not in a correct format."))
-end
-
-local function formatBuild(format, args, len)
-  local t, count = {}, 1
-  local i, j, s = 1
-  while true do
-    local startPos  = i
-    while true do
-      i, j, s = sfind(format, "([{}])", i)
-      if not i then
-        if count == 1 then
-          return format
-        end
-        t[count] = ssub(format, startPos)
-        return table.concat(t)
-      end
-      local pos = i - 1
-      i = i + 1
-      local c = sbyte(format, i)
-      if not c then throwFormatError() end
-      if s == '{' then
-        if c == 123 then
-          i = i + 1
-        else
-          pos = i - 2
-          if pos >= startPos then
-            t[count] = ssub(format, startPos, pos)
-            count = count + 1
-          end
-          break
-        end
-      else
-        if c == 125 then
-          i = i + 1
-        else
-          throwFormatError()
-        end
-      end
-      if pos >= startPos then
-        t[count] = ssub(format, startPos, pos)
-        count = count + 1
-      end
-      t[count] = s
-      count = count + 1
-      startPos = i
+  if comparisonType then
+    local ignoreCase = comparisonType % 2 ~= 0
+    if ignoreCase then
+      this, value = lower(this), lower(value)
     end
-    i, j, s = sfind(format, "^(%d+)}", i)
-    if not i then throwFormatError() end
-    s = s + 1
-    if s > len then throwFormatError() end
-    s = args[s]
-    s = (s ~= nil and s ~= System.null) and s:ToString() or ""
-    t[count] = s
-    count = count + 1
-    i = j + 1
-  end
+  end 
+  return find(this, escape(value)) ~= nil
 end
 
-function String.Format(format, ...)
-  if format == nil then throw(ArgumentNullException()) end
-  local len = select("#", ...)
-  if len == 1 then
-    local args = ...
-    if System.isArrayLike(args) then
-      return formatBuild(format, args, #args)
-    end
-  end
-  return formatBuild(format, { ... }, len)
-end
-
-function String.StartsWith(this, prefix)
-  return ssub(this, 1, #prefix) == prefix
-end
-
-function String.EndsWith(this, suffix)
-  return suffix == "" or ssub(this, -#suffix) == suffix
-end
-
-function String.Contains(this, value)
-  if value == nil then
-    throw(ArgumentNullException("value"))
-  end
-  return sfind(this, value) ~= nil
-end
-
-function String.CopyTo(this, sourceIndex, destination, destinationIndex, count)
+local function copyTo(this, sourceIndex, destination, destinationIndex, count)
   if destination == nil then throw(ArgumentNullException("destination")) end
   if count < 0 then throw(ArgumentOutOfRangeException("count")) end
   local len = #this
   if sourceIndex < 0 or count > len - sourceIndex then throw(ArgumentOutOfRangeException("sourceIndex")) end
   if destinationIndex > #destination - count or destinationIndex < 0 then throw(ArgumentOutOfRangeException("destinationIndex")) end
   if count > 0 then
+    destinationIndex = destinationIndex + 1
     for i = sourceIndex + 1, sourceIndex + count do
-      destination[destinationIndex + i] = sbyte(this, i)      
+      destination[destinationIndex] = byte(this, i)
+      destinationIndex = destinationIndex + 1
     end
   end
 end
 
-function String.IndexOfAny(str, chars, startIndex, count)
-  str, chars, startIndex = indexOfAny(str, chars, startIndex, count)
-  local index = sfind(str, chars)
-  if index then
-    return index - 1 + startIndex
+local function endsWith(this, suffix)
+  return suffix == "" or sub(this, -#suffix) == suffix
+end
+
+local function equalsObj(this, v)
+  if type(v) == "string" then
+    return this == v
+  end
+  return false
+end
+
+local CharEnumerator = System.define("System.CharEnumerator", {
+  __inherits__ = { System.IEnumerator_1(System.Char), System.IDisposable, System.ICloneable },
+  getCurrent = System.getCurrent,
+  Dispose = emptyFn,
+  MoveNext = function (this)
+    local index, s = this.index, this.s
+    if index <= #s then
+      this.current = byte(s, index)
+      this.index = index + 1
+      return true
+    end
+    return false
+  end
+})
+
+local function getEnumerator(this)
+  return setmetatable({ s = this, index = 1 }, CharEnumerator)
+end
+
+local function getTypeCode()
+  return 18
+end
+
+local function indexOf(this, value, startIndex, count, comparisonType)
+  if value == nil then throw(ArgumentNullException("value")) end
+  startIndex, count = checkIndex(this, startIndex, count)
+  if type(value) == "number" then value = char(value) end
+  local ignoreCase = comparisonType and comparisonType % 2 ~= 0
+  if ignoreCase then
+    this, value = lower(this), lower(value)
+  end
+  local i, j = find(this, escape(value), startIndex + 1)
+  if i then
+    local e = startIndex + count
+    if j <= e then
+      return i - 1
+    end
+    return - 1
   end
   return -1
 end
 
-function String.IndexOf(str, value, startIndex, count, comparisonType)
-  if type(value) == "number" then
-    value = schar(value)
-  end
-  str, value, startIndex = checkIndexOf(str, value, startIndex, count, comparisonType)
-  local index = sfind(str, value)
-  if index then
-    return index - 1 + startIndex
+local function indexOfAny(this, anyOf, startIndex, count)
+  if anyOf == nil then throw(ArgumentNullException("chars")) end
+  startIndex, count = checkIndex(this, startIndex, count)
+  anyOf = "[" .. escape(char(unpack(anyOf))) .. "]"
+  local i, j = find(this, anyOf, startIndex + 1)
+  if i then
+    local e = startIndex + count
+    if j <= e then
+      return i - 1
+    end
+    return - 1
   end
   return -1
 end
 
-function String.ToCharArray(str, startIndex, count)
-  startIndex, count = check(str, startIndex, count)
-  local t = {}
-  local len = 1
-  for i = startIndex + 1, startIndex + count do
-    t[len] = sbyte(str, i)
-    len = len + 1
-  end
-  return System.arrayFromTable(t, System.Char)
+local function insert(this, startIndex, value) 
+  if value == nil then throw(ArgumentNullException("value")) end
+  if startIndex < 0 or startIndex > #this then throw(ArgumentOutOfRangeException("startIndex")) end
+  return sub(this, 1, startIndex) .. value .. sub(this, startIndex + 1)
 end
 
-function String.Replace(this, a, b)
+local function chechLastIndexOf(value, startIndex, count)
+  if value == nil then throw(ArgumentNullException("value")) end
+  local len = #value
+  if not startIndex then
+    startIndex, count = len - 1, len
+  elseif not count then
+    count = len == 0 and 0 or (startIndex + 1)
+  end
+  if len == 0 then
+    if startIndex ~= -1 and startIndex ~= 0 then
+      throw(ArgumentOutOfRangeException("startIndex"))
+    end
+    if count ~= 0 then
+      throw(ArgumentOutOfRangeException("count"))
+    end
+  end
+  if startIndex < 0 or startIndex >= len then
+    throw(ArgumentOutOfRangeException("startIndex"))
+  end
+  if count < 0 or startIndex - count + 1 < 0 then
+    throw(ArgumentOutOfRangeException("count"))
+  end
+  return startIndex, count, len
+end
+
+local function lastIndexOf(this, value, startIndex, count, comparisonType)
+  if value == nil then throw(ArgumentNullException("value")) end
+  startIndex, count = chechLastIndexOf(this, startIndex, count)
+  if type(value) == "number" then value = char(value) end
+  local ignoreCase = comparisonType and comparisonType % 2 ~= 0
+  if ignoreCase then
+    this, value = lower(this), lower(value)
+  end
+  value = escape(value)
+  local e = startIndex + 1
+  local f = e - count + 1
+  local index = -1  
+  while true do
+    local i, j = find(this, value, f)
+    if not i or j > e then
+      break
+    end
+    index = i - 1
+    f = j + 1
+  end
+  return index
+end
+
+local function lastIndexOfAny(this, anyOf, startIndex, count)
+  if anyOf == nil then throw(ArgumentNullException("chars")) end
+  startIndex, count = chechLastIndexOf(this, startIndex, count)
+  anyOf = "[" .. escape(char(unpack(anyOf))) .. "]"
+  local f, e = startIndex - count + 1, startIndex + 1
+  local index = -1
+  while true do
+    local i, j = find(this, anyOf, f)
+    if not i or j > e then
+      break
+    end
+    index = i - 1
+    f = j + 1
+  end
+  return index
+end
+
+local function padLeft(this, totalWidth, paddingChar) 
+  local len = #this;
+  if len >= totalWidth then
+    return this
+  else
+    paddingChar = paddingChar or 0x20;
+    return rep(char(paddingChar), totalWidth - len) .. this
+  end
+end
+
+local function padRight(this, totalWidth, paddingChar) 
+  local len = #this;
+  if len >= totalWidth then
+    return this
+  else
+    paddingChar = paddingChar or 0x20;
+    return this .. rep(char(paddingChar), totalWidth - len)
+  end
+end
+
+local function remove(this, startIndex, count) 
+  startIndex, count = checkIndex(this, startIndex, count)
+  return sub(this, 1, startIndex) .. sub(this, startIndex + 1 + count)
+end
+
+local function replace(this, a, b)
   if type(a) == "number" then
-    a = schar(a)
-    b = schar(b)
+    a, b = char(a), char(b)
   end
-  a = escape(a)
-  return sgsub(this, a, b)
-end
-
-function String.Insert(this, startIndex, value) 
-  if value == nil then
-    throw(ArgumentNullException("value"))
-  end
-  startIndex = check(this, startIndex)
-  return ssub(this, 1, startIndex) .. value .. ssub(this, startIndex + 1)
-end
-
-function String.Remove(this, startIndex, count) 
-  startIndex, count = check(this, startIndex, count)
-  return ssub(this, 1, startIndex) .. ssub(this, startIndex + 1 + count)
-end
-
-function String.Substring(this, startIndex, count)
-  startIndex, count = check(this, startIndex, count)
-  return ssub(this, startIndex + 1, startIndex + count)
+  return gsub(this, escape(a), b)
 end
 
 local function findAny(s, strings, startIndex)
-  local findBegin, findEnd, findStr
+  local findBegin, findEnd
   for i = 1, #strings do
-    local str = strings[i]
-    local pattern = escape(str)
-    local posBegin, posEnd = sfind(s, pattern, startIndex)
+    local posBegin, posEnd = find(s, escape(strings[i]), startIndex)
     if posBegin then
       if not findBegin or posBegin < findBegin then
-        findBegin, findEnd, findStr = posBegin, posEnd, str
+        findBegin, findEnd = posBegin, posEnd
+      else
+        break
       end
     end
   end
-  return findBegin, findEnd, findStr
+  return findBegin, findEnd
 end
 
-String.FindAny = findAny
-
-function String.Split(this, strings, count, options) 
+local function split(this, strings, count, options) 
   local t = {}
-  local find = sfind
+  local find = find
   if type(strings) == "table" then
     if #strings == 0 then
       return t
-    end  
+    end
 
     if type(strings[1]) == "string" then
       find = findAny
     else
-      strings = schar(unpack(strings))
+      strings = char(unpack(strings))
       strings = escape(strings)
       strings = "[" .. strings .. "]"
     end
   elseif type(strings) == "string" then       
     strings = escape(strings)         
   else
-    strings = schar(strings)
+    strings = char(strings)
     strings = escape(strings)
   end
 
@@ -498,115 +565,147 @@ function String.Split(this, strings, count, options)
   while true do
     local posBegin, posEnd = find(this, strings, startIndex)
     posBegin = posBegin or 0
-    local subStr = ssub(this, startIndex, posBegin -1)
+    local subStr = sub(this, startIndex, posBegin -1)
     if options ~= 1 or #subStr > 0 then
       t[len] = subStr
       len = len + 1
       if count then
         count = count -1
         if count == 0 then
+          if posBegin ~= 0 then
+            t[len - 1] = sub(this, startIndex)
+          end
           break
         end
-      end  
+      end
     end
     if posBegin == 0 then
       break
     end 
     startIndex = posEnd + 1
   end   
-  return System.arrayFromTable(t, String) 
+  return System.arrayFromTable(t, string) 
 end
 
-String.ToLower = slower
-String.ToUpper = supper
+local function startsWith(this, prefix)
+  return sub(this, 1, #prefix) == prefix
+end
 
-function String.Trim(this, chars, ...)
+local function substring(this, startIndex, count)
+  startIndex, count = checkIndex(this, startIndex, count)
+  return sub(this, startIndex + 1, startIndex + count)
+end
+
+local function toCharArray(str, startIndex, count)
+  startIndex, count = checkIndex(str, startIndex, count)
+  local t = {}
+  local len = 1
+  for i = startIndex + 1, startIndex + count do
+    t[len] = byte(str, i)
+    len = len + 1
+  end
+  return System.arrayFromTable(t, System.Char)
+end
+
+local function trim(this, chars, ...)
   if not chars then
     chars = "^%s*(.-)%s*$"
   else
     if type(chars) == "table" then
-      chars = schar(unpack(chars))
+      chars = char(unpack(chars))
     else
-      chars = schar(chars, ...)
+      chars = char(chars, ...)
     end
     chars = escape(chars)
     chars = "^[" .. chars .. "]*(.-)[" .. chars .. "]*$"
   end
-  return (sgsub(this, chars, "%1"))
+  return (gsub(this, chars, "%1"))
 end
 
-function String.TrimEnd(this, chars, ...)
+local function trimEnd(this, chars, ...)
   if not chars then
     chars = "(.-)%s*$"
   else
     if type(chars) == "table" then
-      chars = schar(unpack(chars))
+      chars = char(unpack(chars))
     else
-      chars = schar(chars, ...)
+      chars = char(chars, ...)
     end
     chars = escape(chars)
     chars = "(.-)[" .. chars .. "]*$"
   end
-  return (sgsub(this, chars, "%1"))
+  return (gsub(this, chars, "%1"))
 end
 
-function String.TrimStart(this, chars, ...)
+local function trimStart(this, chars, ...)
   if not chars then
     chars = "^%s*(.-)"
   else
     if type(chars) == "table" then
-      chars = schar(unpack(chars))
+      chars = char(unpack(chars))
     else
-      chars = schar(chars, ...)
+      chars = char(chars, ...)
     end
     chars = escape(chars)
     chars = "^[" .. chars .. "]*(.-)"
   end
-  return (sgsub(this, chars, "%1"))
+  return (gsub(this, chars, "%1"))
 end
 
-function String.PadLeft(this, totalWidth, paddingChar) 
-  local len = #this;
-  if len >= totalWidth then
-    return this
-  else
-    paddingChar = paddingChar or 0x20;
-    return srep(schar(paddingChar), totalWidth - len) .. this
-  end
+local function inherits(_, T)
+  return { System.IEnumerable_1(System.Char), System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T), System.ICloneable }
 end
 
-function String.PadRight(this, totalWidth, paddingChar) 
-  local len = #this;
-  if len >= totalWidth then
-    return this
-  else
-    paddingChar = paddingChar or 0x20;
-    return this .. srep(schar(paddingChar), totalWidth - len)
-  end
-end
-
-local CharEnumerator = { getCurrent = System.getCurrent, Dispose = emptyFn  }
-CharEnumerator.__index = CharEnumerator
-
-function CharEnumerator.MoveNext(this)
-  local index, s = this.index, this.s
-  if index <= #s then
-    this.current = sbyte(s, index)
-    this.index = index + 1
-    return true
-  end
-  return false
-end
-
-function String.GetEnumerator(this)
-  return setmetatable({ s = this, index = 1 }, CharEnumerator)
-end
-
-function String.__inherits__()
-  return { System.IEnumerable_1(System.Char), System.IEnumerable, System.IComparable, System.IComparable_1(String), System.IConvertible, System.IEquatable_1(String) }
-end
-
-System.define("System.String", String)
-String.__call = ctor
+local String = string
+String.traceback = emptyFn  -- make throw(str) not fail
+String.getLength = lengthFn
+String.getCount = lengthFn
+String.get = get
+String.Compare = compareFull
+String.CompareOrdinal = compareFull
+String.Concat = concat
+String.Copy = System.identityFn
+String.Equals = equals
+String.Format = format
+String.IsNullOrEmpty = isNullOrEmpty
+String.IsNullOrWhiteSpace = isNullOrWhiteSpace
+String.JoinEnumerable = joinEnumerable
+String.JoinParams = joinParams
+String.Join = join
+String.CompareTo = compare
+String.CompareToObj = compareToObj
+String.Contains = contains
+String.CopyTo = copyTo
+String.EndsWith = endsWith
+String.EqualsObj = equalsObj
+String.GetEnumerator = getEnumerator
+String.GetTypeCode = getTypeCode
+String.IndexOf = indexOf
+String.IndexOfAny = indexOfAny
+String.Insert = insert
+String.LastIndexOf = lastIndexOf
+String.LastIndexOfAny = lastIndexOfAny
+String.PadLeft = padLeft
+String.PadRight = padRight
+String.Remove = remove
+String.Replace = replace
+String.Split = split
+String.StartsWith = startsWith
+String.Substring = substring
+String.ToCharArray = toCharArray
+String.ToLower = lower
+String.ToLowerInvariant = lower
+String.ToString = System.identityFn
+String.ToUpper = upper
+String.ToUpperInvariant = upper
+String.Trim = trim
+String.TrimEnd = trimEnd
+String.TrimStart = trimStart
 String.__genericT__ = System.Char
+String.__inherits__ = inherits
+System.define("System.String", String)
+
 debug.setmetatable("", String)
+local Object = System.Object
+local StringMetaTable = setmetatable({ __index = Object, __call = ctor }, Object)
+setmetatable(String, StringMetaTable)

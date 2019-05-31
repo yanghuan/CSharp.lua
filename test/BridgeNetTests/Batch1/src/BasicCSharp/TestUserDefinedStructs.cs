@@ -83,25 +83,23 @@ namespace Bridge.ClientTest
 
         private struct S6
         {
-            [Name("i")]
             public readonly int I;
 
-            [Template("{ i: 42 }")]
             public S6(int _)
                 : this()
             {
+                I = _;
             }
         }
 
         private struct S6G<TT>
         {
-            [Name("i")]
             public readonly TT I;
 
-            [Template("{ i: 42 }")]
-            public S6G(int _)
+            public S6G(TT _)
                 : this()
             {
+                I = _;
             }
         }
 
@@ -283,14 +281,14 @@ namespace Bridge.ClientTest
         [Test]
         public void DefaultConstructorOfStructWithInlineCodeDefaultConstructorWorks()
         {
-            var s1 = new S6();
+            var s1 = new S6(42);
             Assert.AreEqual(42, s1.I);
         }
 
         [Test]
         public void DefaultConstructorOfStructWithInlineCodeDefaultConstructorWorksGeneric()
         {
-            var s1 = new S6G<int>();
+            var s1 = new S6G<int>(42);
             Assert.AreEqual(42, s1.I);
         }
 

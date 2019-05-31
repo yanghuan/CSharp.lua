@@ -19,6 +19,7 @@ local throw = System.throw
 local clear = System.Array.clear
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
+local IndexOutOfRangeException = System.IndexOutOfRangeException
 
 local table = table
 local tconcat = table.concat
@@ -47,12 +48,11 @@ local function getItemIndex(this, index)
       begin = begin + 1
       local ch = sbyte(s, begin)
       if not ch then
-        throw(ArgumentOutOfRangeException("index")) 
+        break
       end
       return i, s, begin, ch
     end
   end
-  throw(ArgumentOutOfRangeException("index"))
 end
 
 local function getLength(this)
@@ -80,10 +80,16 @@ local StringBuilder = System.define("System.Text.StringBuilder", {
   end,
   get = function (this, index)
     local _, _, _, ch = getItemIndex(this, index)
+    if not _ then
+      throw(IndexOutOfRangeException())
+    end
     return ch
   end,
   set = function (this, index, value)
     local i, s, j = getItemIndex(this, index)
+    if not i then
+      throw(ArgumentOutOfRangeException("index"))
+    end
     this[i] = ssub(s, 1, j - 1) .. schar(value) .. ssub(s, j + 1)
   end,
   setCapacity = function (this, value)
@@ -180,7 +186,7 @@ local StringBuilder = System.define("System.Text.StringBuilder", {
   end,
   Clear = function (this)
     clear(this)
-    this.length = 0
+    this.Length = 0
     return this
   end,
   Insert = function (this, index, value)
@@ -192,6 +198,9 @@ local StringBuilder = System.define("System.Text.StringBuilder", {
         value = value:ToString()
         if value ~= nil then
           local i, s, j = getItemIndex(this, index)
+          if not i then
+            throw(ArgumentOutOfRangeException("index"))
+          end
           this[i] = ssub(s, 1, j - 1) .. value .. ssub(s, j)
           this.length = length +  #value
         end

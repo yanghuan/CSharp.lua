@@ -620,6 +620,11 @@ Array = {
   getIsReadOnly = falseFn,
   getIsFixedSize = trueFn,
   getRank = System.oneFn,
+  Add = unset,
+  Clear = unset,
+  Insert = unset,
+  Remove = unset,
+  RemoveAt = unset,
   BinarySearch = function (t, ...)
     if t == nil then throw(ArgumentNullException("array")) end
     local len = #t
@@ -654,9 +659,11 @@ Array = {
     end
     return -1
   end,
-  Clear = unset,
   ClearArray = function (t, index, length)
-    checkIndexAndCount(t, index, length)
+    if t == nil then throw(ArgumentNullException("array")) end
+    if index < 0 or length < 0 or index + length > #t then
+      throw(IndexOutOfRangeException())
+    end
     local default = t.__genericT__:default()
     if default == nil then default = null end
     fill(t, index + 1, index + length, default)
@@ -913,9 +920,11 @@ Array = {
     return #this - 1
   end,
   GetValue = function (this, index1, index2)
+    if index1 == nil then throw(ArgumentNullException("indices")) end
     return get(this, checkArrayIndex(index1, index2))
   end,
   SetValue = function (this, value, index1, index2)
+    if index1 == nil then throw(ArgumentNullException("indices")) end
     set(this, checkArrayIndex(index1, index2), System.castWithNullable(this.__genericT__, value))
   end,
   Clone = function (this)
@@ -955,6 +964,7 @@ local function getIndex(t, ...)
 end
 
 local function checkMultiArrayIndex(t, index1, ...)
+  if index1 == nil then throw(ArgumentNullException("indices")) end
   local rank = t.__rank__
   local len = #rank
   if type(index1) == "table" then

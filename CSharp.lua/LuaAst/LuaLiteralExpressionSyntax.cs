@@ -153,7 +153,7 @@ namespace CSharpLua.LuaAst {
 
     public override string Text {
       get {
-        return Number.ToString(CultureInfo.InvariantCulture);
+        return Number.ToString("r", CultureInfo.InvariantCulture);
       }
     }
 

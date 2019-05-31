@@ -964,14 +964,13 @@ namespace CSharpLua {
       List<LuaExpressionSyntax> expressions = new List<LuaExpressionSyntax>();
       foreach (var content in node.Contents) {
         if (content.IsKind(SyntaxKind.InterpolatedStringText)) {
-          var stringText = (InterpolatedStringTextSyntax)content;
-          sb.Append(stringText.TextToken.ValueText);
+          sb.Append((LuaExpressionSyntax)content.Accept(this));
         } else {
           var interpolation = (InterpolationSyntax)content;
           ITypeSymbol typeSymbol = semanticModel_.GetTypeInfo(interpolation.Expression).Type;
           var expression = (LuaExpressionSyntax)interpolation.Expression.Accept(this);
-          if (typeSymbol.TypeKind == TypeKind.Enum) {
-            expression = BuildEnumToStringExpression(typeSymbol, expression);
+          if (typeSymbol.IsEnumType(out var enumTypeSymbol)) {
+            expression = BuildEnumToStringExpression(enumTypeSymbol, expression);
           }
           expressions.Add(expression);
           sb.Append('{');
@@ -986,7 +985,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax WrapInterpolatedString(object obj) {
-      if (obj is string s) {
+      if (obj is LuaIdentifierNameSyntax s) {
         return new LuaStringLiteralExpressionSyntax(s);
       } else if (obj is ExpressionSyntax e) {
         return WrapStringConcatExpression(e);
@@ -1003,8 +1002,7 @@ namespace CSharpLua {
       List<object> expressions = new List<object>();
       foreach (var content in node.Contents) {
         if (content.IsKind(SyntaxKind.InterpolatedStringText)) {
-          var stringText = (InterpolatedStringTextSyntax)content;
-          expressions.Add(stringText.TextToken.ValueText);
+          expressions.Add(content.Accept(this));
         } else {
           var interpolation = (InterpolationSyntax)content;
           expressions.Add(interpolation.Expression);
@@ -1013,7 +1011,8 @@ namespace CSharpLua {
       }
 
       if (expressions.Count == 1) {
-        expressions.Add("");
+        LuaIdentifierNameSyntax empty = "";
+        expressions.Add(empty);
       }
 
       var resultExpression = (LuaExpressionSyntax)expressions.Aggregate(ConcatInterpolatedString);
@@ -1035,7 +1034,8 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitInterpolatedStringText(InterpolatedStringTextSyntax node) {
-      throw new InvalidOperationException();
+      string text = node.TextToken.ValueText.Replace("{{", "{").Replace("}}", "}");
+      return (LuaIdentifierNameSyntax)text;
     }
 
     public override LuaSyntaxNode VisitAliasQualifiedName(AliasQualifiedNameSyntax node) {

@@ -35,7 +35,7 @@ namespace Bridge.ClientTest.Exceptions
             Assert.AreEqual(null, ex.InnerException, "InnerException");
             // #1669
             Assert.AreEqual("Exception of type 'System.Exception' was thrown.", ex.Message);
-            Assert.False(string.IsNullOrEmpty(ex.StackTrace), "Stack available");
+            Assert.Null(ex.StackTrace, "Stack not available");
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace Bridge.ClientTest.Exceptions
             Assert.True((object)ex is Exception, "is Exception");
             Assert.AreEqual(null, ex.InnerException, "InnerException");
             Assert.AreEqual("The message", ex.Message);
-            Assert.False(string.IsNullOrEmpty(ex.StackTrace), "Stack available");
+            Assert.Null(ex.StackTrace, "Stack not available");
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace Bridge.ClientTest.Exceptions
             Assert.True((object)ex is Exception, "is Exception");
             Assert.True(ReferenceEquals(ex.InnerException, inner), "InnerException");
             Assert.AreEqual("The message", ex.Message);
-            Assert.False(string.IsNullOrEmpty(ex.StackTrace), "Stack available");
+            Assert.Null(ex.StackTrace, "Stack not available");
         }
 
         [Test]

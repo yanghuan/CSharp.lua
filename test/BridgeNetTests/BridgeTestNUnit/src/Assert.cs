@@ -6,6 +6,8 @@ using System.Linq;
 
 namespace Bridge.Test.NUnit {
   public sealed class Assert {
+    private static readonly bool kIsCtachException = false;
+
     public static Action Async() {
       return () => { };
     }
@@ -16,27 +18,46 @@ namespace Bridge.Test.NUnit {
     /// <param name="expected">Expected</param>
     /// <param name="actual">Actual</param>
     /// <param name="description">Description</param>
-    public static void AreEqual(object expected, object actual, string description = "") {
-      try {
+    public static void AreEqual(object expected, object actual, string description = null) {
+      description += $", '{expected}' != '{actual}'";
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(Equals(expected, actual), description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
         Contract.Assert(Equals(expected, actual), description);
-      } catch (Exception e) {
-        Console.WriteLine(e);
       }
     }
 
-    public static void AreEqual(string expected, string actual, string description= "") {
-      try {
+    public static void AreEqual(string expected, string actual, string description = null) {
+      description += $", '{expected}' != '{actual}'";
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(expected == actual, description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
         Contract.Assert(expected == actual, description);
-      } catch (Exception e) {
-        Console.WriteLine(e);
       }
     }
 
-    public static void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> actual, string description = "") {
-      try {
+    public static void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> actual, string description = null) {
+      if (description == null) {
+        string expectedString = string.Join(',', expected);
+        string actualString = string.Join(',', actual);
+        description = $"'{actualString}' != '{expectedString}'";
+      }
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(expected == actual || expected.SequenceEqual(actual), description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
         Contract.Assert(expected == actual || expected.SequenceEqual(actual), description);
-      } catch (Exception e) {
-        Console.WriteLine(e);
       }
     }
 
@@ -82,7 +103,15 @@ namespace Bridge.Test.NUnit {
     /// <param name="condition">The value being tested</param>
     /// <param name="description">Description</param>
     public static void True(bool condition, string description = "") {
-      Contract.Assert(condition, description);
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(condition, description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
+        Contract.Assert(condition, description);
+      }
     }
 
     /// <summary>
@@ -91,7 +120,15 @@ namespace Bridge.Test.NUnit {
     /// <param name="condition">The value being tested</param>
     /// <param name="description">Description</param>
     public static void False(bool condition, string description = "") {
-      Contract.Assert(!condition, description);
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(!condition, description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
+        Contract.Assert(!condition, description);
+      }
     }
 
     /// <summary>
@@ -100,7 +137,15 @@ namespace Bridge.Test.NUnit {
     /// </summary>
     /// <param name="description">Description</param>
     public static void Fail(string description = "") {
-      Contract.Assert(false, description);
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(false, description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
+        Contract.Assert(false, description);
+      }
     }
 
     /// <summary>
@@ -120,6 +165,11 @@ namespace Bridge.Test.NUnit {
     /// <param name="block">Delegate which is used to execute the code in question. Under .NET 2.0, this may be an anonymous delegate.</param>
     /// <param name="description">Description</param>
     public static void Throws<T>(Action block, string description = "") {
+      try {
+        block();
+      } catch (Exception e) {
+        Contract.Assert(e is T, description);
+      }
     }
 
     /// <summary>
@@ -140,6 +190,11 @@ namespace Bridge.Test.NUnit {
     /// <param name="expected"> callback Function that must return true to pass the assertion check.</param>
     /// <param name="description">Description</param>
     public static void Throws(Action block, Func<object, bool> expected, string description = "") {
+      try {
+        block();
+      } catch (Exception e) {
+        Contract.Assert(expected(e), description);
+      }
     }
 
     /// <summary>
@@ -148,10 +203,14 @@ namespace Bridge.Test.NUnit {
     /// <param name="anObject">An object being tested</param>
     /// <param name="description">Description</param>
     public static void Null(object anObject, string description = "") {
-      try {
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(anObject == null, description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
         Contract.Assert(anObject == null, description);
-      } catch (Exception e) {
-        Console.WriteLine(e);
       }
     }
 
@@ -161,10 +220,14 @@ namespace Bridge.Test.NUnit {
     /// <param name="anObject">An object being tested</param>
     /// <param name="description">Description</param>
     public static void NotNull(object anObject, string description = "") {
-      try {
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(anObject != null, description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
         Contract.Assert(anObject != null, description);
-      } catch (Exception e) {
-        Console.WriteLine(e);
       }
     }
   }

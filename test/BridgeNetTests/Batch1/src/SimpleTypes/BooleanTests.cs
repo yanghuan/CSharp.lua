@@ -1,4 +1,4 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 
 namespace Bridge.ClientTest.SimpleTypes
@@ -28,7 +28,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True((object)true is bool);
             Assert.AreEqual("System.Boolean", typeof(bool).FullName);
             // #1575
-            Assert.AreEqual(typeof(object), typeof(bool).BaseType);
+            Assert.AreEqual(typeof(ValueType), typeof(bool).BaseType);
             Assert.False(typeof(bool).IsClass);
             Assert.True(typeof(IComparable<bool>).IsAssignableFrom(typeof(bool)));
             Assert.True(typeof(IEquatable<bool>).IsAssignableFrom(typeof(bool)));
@@ -38,7 +38,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(b is IEquatable<bool>);
 
             var interfaces = typeof(bool).GetInterfaces();
-            Assert.AreEqual(3, interfaces.Length);
+            Assert.AreEqual(4, interfaces.Length);
             Assert.True(interfaces.Contains(typeof(IComparable<bool>)));
             Assert.True(interfaces.Contains(typeof(IEquatable<bool>)));
         }
