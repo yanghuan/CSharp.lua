@@ -1,4 +1,4 @@
-﻿// The source is licensed to the .NET Foundation under the MIT license:
+// The source is licensed to the .NET Foundation under the MIT license:
 // https://github.com/dotnet/corefx/blob/master/src/System.Runtime.Extensions/tests/System/Convert.ToChar.cs
 // https://github.com/dotnet/corefx/blob/master/LICENSE
 
@@ -27,6 +27,7 @@ namespace Bridge.ClientTest.ConvertTests
             Verify(Convert.ToChar, testValues, expectedValues);
         }
 
+#if false
         [Test]
         public void FromDecimal()
         {
@@ -40,6 +41,7 @@ namespace Bridge.ClientTest.ConvertTests
             object[] invalidValues = { 0m, decimal.MinValue, decimal.MaxValue };
             VerifyFromObjectThrows<InvalidCastException>(Convert.ToChar, Convert.ToChar, invalidValues);
         }
+#endif
 
         [Test]
         public void FromDouble()

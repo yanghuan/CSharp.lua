@@ -66,6 +66,7 @@ local math = math
 local floor = math.floor
 local tconcat = table.concat
 local getmetatable = getmetatable
+local tonumber = tonumber
 
 local function toBoolean(value)
   if value == nil then return false end
@@ -85,11 +86,11 @@ local function toChar(value)
   if value == nil then return 0 end
   local typename = type(value)
   if typename == "number" then
+    if value ~= floor(value) or value > 9223372036854775807 or value < -9223372036854775808 then
+      throw(InvalidCastException("InvalidCast_FromTo_Char"))
+    end
     if value < 0 or value > 65535 then 
       throw(OverflowException("Overflow_Char")) 
-    end
-    if value ~= floor(value) then
-      throw(InvalidCastException("InvalidCast_FromTo_Char"))
     end
     return value
   elseif typename == "string" then
@@ -102,22 +103,85 @@ local function toChar(value)
   end
 end
 
+local function parseBits(s, p, n)
+  local i, j, v = s:find(p)
+  if not i then
+    throw(FormatException())
+  end
+  v = tonumber(v)
+  for i = j + 1, #s do
+    local ch = sbyte(s, i)
+    local b = ch - 48
+    if b < 0 or b >= n then
+      if not s:find("^%s*$", i) then
+        throw(FormatException())
+      end
+      break
+    end
+    v = v * n + b
+  end
+  return v
+end
+
+local function parseNumberFromBase(value, fromBase, min, max)
+  if fromBase == 2 then
+    value = parseBits(value, "^%s*(1)", fromBase)
+  elseif fromBase == 8 then
+    value = parseBits(value, "^%s*([1-7])", fromBase)
+  elseif fromBase == 16 then
+    local _, _, v = value:find("^%s*(%w+)%s*$")
+    if not v then
+      throw(ArgumentException("String cannot contain a minus sign if the base is not 10."))
+    end
+    local ch = sbyte(v, 2)
+    if ch == 120 or ch == 88 then
+    else
+      v = "0x" .. v
+    end
+    value = tonumber(v)
+  else
+    throw(ArgumentException("fromBase")) 
+  end
+  if max == 127 and value <= 255 then
+    return System.toSByte(value)
+  end
+  if max == 32767 and value <= 65535 then
+    return System.toInt16(value)
+  end
+  if max == 2147483647 and value <= 4294967295 then
+    return System.toInt32(value)
+  end
+  if value < min or value > max then
+    throw(OverflowException())
+  end
+  return value
+end
+
 local function toNumber(value, min, max, parse, objectTo, sign)
   if value == nil then return 0 end
   local typename = type(value)
   if typename == "number" then
-    if sign == nil then
+    if sign == false then
       if value < min or value > max then
         throw(OverflowException())
       end
-      return trunc(value)
-    elseif sign == 1 then
+      value = value * 1.0
+    elseif sign == true then
+      value = value * 1.0
+    else
+      if value ~= floor(value) then
+        local i = value >= 0 and 0.5 or -0.5
+        value = trunc(value + i)
+      end
       if value < min or value > max then
         throw(OverflowException())
       end
     end
     return value
   elseif typename == "string" then
+    if sign and sign ~= 10 and type(sign) == "number" then
+      return parseNumberFromBase(value, sign, min, max)
+    end
     return parse(value) 
   elseif typename == "boolean" then
     return value and 1 or 0
@@ -126,84 +190,84 @@ local function toNumber(value, min, max, parse, objectTo, sign)
   end
 end
 
-local function objectToSByte(v)
+local function objectToSByte(value)
   return cast(IConvertible, value):ToSByte()
 end
 
-local function toSByte(value)
-  return toNumber(value, -128, 127, ParseSByte, objectToSByte)
+local function toSByte(value, fromBase)
+  return toNumber(value, -128, 127, ParseSByte, objectToSByte, fromBase)
 end
 
-local function objectToByte(v)
+local function objectToByte(value)
   return cast(IConvertible, value):ToByte()
 end
 
-local function toByte(value)
-  return toNumber(value, 0, 255, ParseByte, objectToByte) 
+local function toByte(value, fromBase)
+  return toNumber(value, 0, 255, ParseByte, objectToByte, fromBase) 
 end
 
-local function objectToInt16(v)
+local function objectToInt16(value)
   return cast(IConvertible, value):ToInt16()
 end
 
-local function toInt16(value)
-  return toNumber(value, -32768, 32767, ParseInt16, objectToInt16) 
+local function toInt16(value, fromBase)
+  return toNumber(value, -32768, 32767, ParseInt16, objectToInt16, fromBase) 
 end
 
-local function objectToUInt16(v)
+local function objectToUInt16(value)
   return cast(IConvertible, value):ToUInt16()
 end
 
-local function toUInt16(value)
-  return toNumber(value, 0, 65535, ParseUInt16, objectToUInt16) 
+local function toUInt16(value, fromBase)
+  return toNumber(value, 0, 65535, ParseUInt16, objectToUInt16, fromBase) 
 end
 
-local function objectToInt32(v)
+local function objectToInt32(value)
   return cast(IConvertible, value):ToInt32()
 end
 
-local function toInt32(value)
-  return toNumber(value, -2147483648, 2147483647, ParseInt32, objectToInt32) 
+local function toInt32(value, fromBase)
+  return toNumber(value, -2147483648, 2147483647, ParseInt32, objectToInt32, fromBase) 
 end
 
-local function objectToUInt32(v)
+local function objectToUInt32(value)
   return cast(IConvertible, value):ToUInt32()
 end
 
-local function toUInt32(value)
-  return toNumber(value, 0, 4294967295, ParseUInt32, objectToUInt32) 
+local function toUInt32(value, fromBase)
+  return toNumber(value, 0, 4294967295, ParseUInt32, objectToUInt32, fromBase) 
 end
 
-local function objectToInt64(v)
+local function objectToInt64(value)
   return cast(IConvertible, value):ToInt64()
 end
 
-local function toInt64(value)
-  return toNumber(value, -9223372036854775808, 9223372036854775807, ParseInt64, objectToInt64) 
+local function toInt64(value, fromBase)
+  return toNumber(value, -9223372036854775808, 9223372036854775807, ParseInt64, objectToInt64, fromBase) 
 end
 
-local function objectToUInt64(v)
+local function objectToUInt64(value)
   return cast(IConvertible, value):ToUInt64()
 end
 
-local function toUInt64(value)
-  return toNumber(value, 0, 18446744073709551615, ParseUInt64, objectToUInt64) 
+local function toUInt64(value, fromBase)
+  return toNumber(value, 0, 18446744073709551615.0, ParseUInt64, objectToUInt64, fromBase) 
 end
 
-local function objectToSingle(v)
+local function objectToSingle(value)
   return cast(IConvertible, value):ToSingle()
 end
 
 local function toSingle(value)
-  return toNumber(value, -3.40282347E+38, 3.40282347E+38, ParseSingle, objectToSingle, 1) 
+  return toNumber(value, -3.40282347E+38, 3.40282347E+38, ParseSingle, objectToSingle, false) 
 end
 
-local function objectToDouble(v)
+local function objectToDouble(value)
   return cast(IConvertible, value):ToDouble()
 end
 
 local function toDouble(value)
-  return toNumber(value, nil, nil, ParseDouble, objectToDouble, 2) 
+  return toNumber(value, nil, nil, ParseDouble, objectToDouble, true) 
 end
 
 local function toDateTime(value)

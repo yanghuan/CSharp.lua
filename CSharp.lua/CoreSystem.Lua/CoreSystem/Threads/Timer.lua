@@ -92,7 +92,7 @@ local TimeoutQueue = define("System.TimeoutQueue", (function ()
     local e = this.ids_[id]
     if e then
       this.ids_[id] = nil
-      this.events_:Remove(e.LinkNode)
+      this.events_:RemoveNode(e.LinkNode)
       return true
     end
     return false

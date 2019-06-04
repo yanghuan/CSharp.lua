@@ -502,7 +502,7 @@ local function padLeft(this, totalWidth, paddingChar)
 end
 
 local function padRight(this, totalWidth, paddingChar) 
-  local len = #this;
+  local len = #this
   if len >= totalWidth then
     return this
   else

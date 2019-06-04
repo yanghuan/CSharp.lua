@@ -446,6 +446,23 @@ limitations under the License.
       </class>
       <class name="LinkedList^1" Name="System.LinkedList">
         <property name="Count" IsField="true" />
+        <method name="AddAfter" Name="AddAfterNode">
+          <arg type="System.Collections.Generic.LinkedListNode^1" />
+          <arg type="System.Collections.Generic.LinkedListNode^1" />
+        </method>
+        <method name="AddBefore" Name="AddBeforeNode">
+          <arg type="System.Collections.Generic.LinkedListNode^1" />
+          <arg type="System.Collections.Generic.LinkedListNode^1" />
+        </method>
+        <method name="AddFirst" Name="AddFirstNode">
+          <arg type="System.Collections.Generic.LinkedListNode^1" />
+        </method>
+        <method name="AddLast" Name="AddLastNode">
+          <arg type="System.Collections.Generic.LinkedListNode^1" />
+        </method>
+        <method name="Remove" Name="RemoveNode">
+          <arg type="System.Collections.Generic.LinkedListNode^1" />
+        </method>
       </class>
       <class name="LinkedListNode^1" Name="System.LinkedListNode" IgnoreGeneric="true">
         <property name="Value" IsField="true" />

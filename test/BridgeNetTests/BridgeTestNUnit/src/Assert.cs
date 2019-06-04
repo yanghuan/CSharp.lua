@@ -46,8 +46,8 @@ namespace Bridge.Test.NUnit {
 
     public static void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> actual, string description = null) {
       if (description == null) {
-        string expectedString = string.Join(',', expected);
-        string actualString = string.Join(',', actual);
+        string expectedString = expected != null ? string.Join(',', expected) : "null";
+        string actualString = expected != null ? string.Join(',', actual) : "null";
         description = $"'{actualString}' != '{expectedString}'";
       }
       if (kIsCtachException) {
@@ -168,7 +168,9 @@ namespace Bridge.Test.NUnit {
       try {
         block();
       } catch (Exception e) {
-        Contract.Assert(e is T, description);
+        if (!(e is T)) {
+          throw new Exception(description, e);
+        }
       }
     }
 
@@ -193,7 +195,9 @@ namespace Bridge.Test.NUnit {
       try {
         block();
       } catch (Exception e) {
-        Contract.Assert(expected(e), description);
+        if (!expected(e)) {
+          throw new Exception(description, e);
+        }
       }
     }
 

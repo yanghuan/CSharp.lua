@@ -36,6 +36,7 @@ local type = type
 local tonumber = tonumber
 local floor = math.floor
 local setmetatable = setmetatable
+local tostring = tostring
 
 local function compareInt(this, v)
   if this < v then return -1 end
@@ -211,12 +212,30 @@ local function equalsDouble(this, v)
   return isNaN(this) and isNaN(v)
 end
 
+local function toStringWithFormat(this, format)
+  if #format ~= 0 then
+    local i, j, x, n = format:find("^%s*([xX])(%d?)%s*$")
+    if i then
+      format = n == "" and "%" .. x or "%0" .. n .. x
+      return format:format(this)
+    end
+  end
+  return tostring(this)
+end
+
+local function toString(this, format)
+  if format then
+    return toStringWithFormat(this, format)
+  end
+  return tostring(this)
+end
+
 local Number = define("System.Number", {
   __inherits__ = inherits,
   default = zeroFn,
   CompareTo = compareDouble,
   Equals = equalsDouble,
-  ToString = tostring,
+  ToString = toString,
   NaN = nan,
   IsNaN = isNaN,
   NegativeInfinity = negInf,

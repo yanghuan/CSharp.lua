@@ -1,7 +1,8 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 
 using System;
 
+#if false
 namespace Bridge.ClientTest
 {
     public class CheckedUncheckedTests
@@ -953,3 +954,4 @@ namespace Bridge.ClientTest
         }
     }
 }
+#endif

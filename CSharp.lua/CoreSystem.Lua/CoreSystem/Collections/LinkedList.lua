@@ -23,7 +23,6 @@ local ArgumentNullException = System.ArgumentNullException
 local InvalidOperationException = System.InvalidOperationException
 local EqualityComparer = System.EqualityComparer
 
-local getmetatable = getmetatable
 local setmetatable = setmetatable
 local select = select
 
@@ -156,75 +155,73 @@ local LinkedList = {
     local head = this.head
     return head ~= nil and head.prev or nil
   end,
-  AddAfter = function (this, node, newNode)    
+  AddAfterNode = function (this, node, newNode)
     vaildateNode(this, node)
-    if getmetatable(newNode) == LinkedListNode then
-      vaildateNewNode(this, newNode)
-      insertNodeBefore(this, node.next, newNode)
-      newNode.List = this
-    else
-      local result = newLinkedListNode(node.List, newNode)
-      insertNodeBefore(this, node.next, result)
-      return result
-    end
+    vaildateNewNode(this, newNode)
+    insertNodeBefore(this, node.next, newNode)
+    newNode.List = this
   end,
-  AddBefore = function (this, node, newNode)
+  AddAfter = function (this, node, value)    
     vaildateNode(this, node)
-    if getmetatable(newNode) == LinkedListNode then
-      vaildateNewNode(this, newNode)
-      insertNodeBefore(this, node, newNode)
-      newNode.List = this
-      if node == this.head then
-        this.head = newNode
-      end
-    else
-      local result = newLinkedListNode(node.List, newNode)
-      insertNodeBefore(this, node, result)
-      if node == this.head then
-        this.head = result
-      end
-      return result
+    local result = newLinkedListNode(node.List, value)
+    insertNodeBefore(this, node.next, result)
+    return result
+  end,
+  AddBeforeNode = function (this, node, newNode)
+    vaildateNode(this, node)
+    vaildateNewNode(this, newNode)
+    insertNodeBefore(this, node, newNode)
+    newNode.List = this
+    if node == this.head then
+      this.head = newNode
     end
   end,
-  AddFirst = function (this, node)
-    if getmetatable(node) == LinkedListNode then
-      vaildateNewNode(this, node)
-      if this.head == nil then
-        insertNodeToEmptyList(this, node)
-      else
-        insertNodeBefore(this, this.head, node)
-          this.head = node
-        end
-        node.List = this
-    else
-      local result = newLinkedListNode(this, node)
-      if this.head == nil then
-        insertNodeToEmptyList(this, result)
-      else
-        insertNodeBefore(this, this.head, result)
-        this.head = result
-      end
-      return result
+  AddBefore = function (this, node, value)
+    vaildateNode(this, node)
+    local result = newLinkedListNode(node.List, value)
+    insertNodeBefore(this, node, result)
+    if node == this.head then
+      this.head = result
     end
+    return result
   end,
-  AddLast = function (this, node)
-    if getmetatable(node) == LinkedListNode then
-      vaildateNewNode(this, node)
-      if this.head == nil then
-        insertNodeToEmptyList(this, node)
-      else
-        insertNodeBefore(this, this.head, node)
-      end
-      node.List = this
+  AddFirstNode = function (this, node)
+	  vaildateNewNode(this, node)
+    if this.head == nil then
+      insertNodeToEmptyList(this, node)
     else
-      local result = newLinkedListNode(this, node)
-      if this.head == nil then
-        insertNodeToEmptyList(this, result)
-      else
-        insertNodeBefore(this, this.head, result)
-      end
-      return result
+      insertNodeBefore(this, this.head, node)
+      this.head = node
     end
+    node.List = this
+  end,
+  AddFirst = function (this, value)
+    local result = newLinkedListNode(this, value)
+    if this.head == nil then
+      insertNodeToEmptyList(this, result)
+    else
+      insertNodeBefore(this, this.head, result)
+      this.head = result
+    end
+    return result
+  end,
+  AddLastNode = function (this, node)
+    vaildateNewNode(this, node)
+    if this.head == nil then
+      insertNodeToEmptyList(this, node)
+    else
+      insertNodeBefore(this, this.head, node)
+    end
+    node.List = this
+  end,
+  AddLast = function (this, value)
+    local result = newLinkedListNode(this, value)
+    if this.head == nil then
+      insertNodeToEmptyList(this, result)
+    else
+      insertNodeBefore(this, this.head, result)
+    end
+    return result
   end,
   Clear = function (this)
     local current = this.head
@@ -305,17 +302,16 @@ local LinkedList = {
     end
     return nil
   end,
+  RemoveNode = function (this, node)
+    vaildateNode(this, node)
+    remvoeNode(this, node)
+  end,
   Remove = function (this, node)
-    if getmetatable(node) == LinkedListNode then
-      vaildateNode(this, node)
+    node = this:Find(node)
+    if node ~= nil then
       remvoeNode(this, node)
-    else
-      node = this:Find(node)
-      if node ~= nil then
-        remvoeNode(this, node)
-      end
-      return false
     end
+    return false
   end,
   RemoveFirst = function (this)
     local head = this.head
