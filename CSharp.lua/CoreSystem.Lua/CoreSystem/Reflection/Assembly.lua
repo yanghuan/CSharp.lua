@@ -55,7 +55,7 @@ local TargetParameterCountException = define("System.Reflection.TargetParameterC
 
 local AmbiguousMatchException = define("System.Reflection.AmbiguousMatchException", {
   __tostring = Exception.ToString,
-  __inherits__ = { Exception },
+  __inherits__ = { System.SystemException },
   __ctor__ = function(this, message, innerException) 
     Exception.__ctor__(this, message or "Ambiguous match found.", innerException)
   end,

@@ -1571,20 +1571,16 @@ namespace CSharpLua {
           var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
           var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
           if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-            var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerDivOfNull : LuaIdentifierNameSyntax.IntegerDiv;
-            return BuildIntegerDivAssignmentExpression(leftNode, rightNode, methodName);
+            return BuildIntegerDivAssignmentExpression(leftNode, rightNode, LuaIdentifierNameSyntax.IntegerDiv);
           } else {
             return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Div, parnet);
           }
         }
         case SyntaxKind.ModuloAssignmentExpression: {
-          if (!IsLuaNewest) {
-            var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
-            var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
-            if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-              var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerModOfNull : LuaIdentifierNameSyntax.IntegerMod;
-              return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
-            }
+          var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
+          var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
+          if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
+            return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, LuaIdentifierNameSyntax.IntegerMod);
           }
           return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Mod, parnet);
         }
@@ -3449,12 +3445,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildIntegerDivExpression(ITypeSymbol leftType, ITypeSymbol rightType, BinaryExpressionSyntax node) {
-      if (IsLuaNewest) {
-        return BuildBinaryExpression(node, LuaSyntaxNode.Tokens.IntegerDiv);
-      } else {
-        var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerDivOfNull : LuaIdentifierNameSyntax.IntegerDiv;
-        return BuildBinaryInvokeExpression(node, methodName);
-      }
+      return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.IntegerDiv);
     }
 
     private LuaBinaryExpressionSyntax BuildBinaryExpression(BinaryExpressionSyntax node, string operatorToken) {
@@ -3561,13 +3552,10 @@ namespace CSharpLua {
           break;
         }
         case SyntaxKind.ModuloExpression: {
-          if (!IsLuaNewest) {
-            var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
-            var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
-            if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-              var methodName = leftType.IsNullableType() || rightType.IsNullableType() ? LuaIdentifierNameSyntax.IntegerModOfNull : LuaIdentifierNameSyntax.IntegerMod;
-              return BuildBinaryInvokeExpression(node, methodName);
-            }
+          var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
+          var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
+          if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
+            return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.IntegerMod);
           }
           break;
         }
@@ -4158,7 +4146,7 @@ namespace CSharpLua {
             return expression;
           }
           return GetCastToNumberExpression(expression, targetEnumUnderlyingType, false);
-        } else if (originalType.IsDoubleOrFloatType()) {
+        } else if (originalType.IsDoubleOrFloatType(false)) {
           return GetCastToNumberExpression(expression, targetEnumUnderlyingType, true);
         }
       } else if (originalType.TypeKind == TypeKind.Enum) {
@@ -4168,7 +4156,7 @@ namespace CSharpLua {
             return expression;
           }
           return GetCastToNumberExpression(expression, targetType, false);
-        } else if (targetType.IsDoubleOrFloatType()) {
+        } else if (targetType.IsDoubleOrFloatType(false)) {
           return expression;
         }
       }
@@ -4183,11 +4171,11 @@ namespace CSharpLua {
             return expression;
           }
           return GetCastToNumberExpression(expression, targetType, false);
-        } else if (originalType.IsDoubleOrFloatType()) {
+        } else if (originalType.IsDoubleOrFloatType(false)) {
           return GetCastToNumberExpression(expression, targetType, true);
         }
       } else if (originalType.IsCastIntegerType()) {
-        if (targetType.IsDoubleOrFloatType()) {
+        if (targetType.IsDoubleOrFloatType(false)) {
           return expression;
         }
       } else if (targetType.SpecialType == SpecialType.System_Single && originalType.SpecialType == SpecialType.System_Double) {

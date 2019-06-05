@@ -72,14 +72,18 @@ namespace Bridge.ClientTestHelper
 
         public static void AssertDouble(string expected, double actual, string message = null)
         {
+#if false
             Assert.AreEqual("Double", actual.GetType().Name, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message + " representation");
         }
 
         public static void AssertDouble(object expected, double actual, string message = null)
         {
+#if false
             Assert.AreEqual("Double", actual.GetType().Name, message + " type");
-            Assert.AreEqual(expected.ToString(), actual.ToString(), message + " representation");
+#endif
+            Assert.AreEqual(expected, actual, message + " representation");
         }
 
         public static void AssertDoubleWithEpsilon8(double expected, double actual)
@@ -108,43 +112,57 @@ namespace Bridge.ClientTestHelper
             var b = double.TryParse(s, out actual);
 
             Assert.AreEqual(r, b, message + " result");
+ #if false
             Assert.AreEqual("Double", actual.GetType().Name, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message + " representation");
         }
 
         public static void AssertFloat(string expected, float actual, string message = null)
         {
+#if false
             Assert.AreEqual("Single", actual.GetType().Name, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message + " representation");
         }
 
         public static void AssertDecimal(object expected, object actual, string message = null)
         {
+#if false
             Assert.AreEqual("Decimal", actual.GetType().Name, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message + " representation");
         }
 
         public static void AssertDecimal(string expected, decimal actual, string message = null)
         {
+#if false
             Assert.AreEqual("Decimal", actual.GetType().Name, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message + " representation");
         }
 
         public static void AssertDecimal(double expected, decimal actual, string message = null)
         {
+#if false
             Assert.AreEqual("Decimal", actual.GetType().Name, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message + " representation");
         }
 
         public static void AssertLong(object expected, object actual, string message = "")
         {
+#if false
             Assert.AreEqual("System.Int64", actual.GetType().FullName, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message);
         }
 
         public static void AssertULong(object expected, object actual, string message = "")
         {
+#if false
             Assert.AreEqual("System.UInt64", actual.GetType().FullName, message + " type");
+#endif
             Assert.AreEqual(expected.ToString(), actual.ToString(), message);
         }
     }

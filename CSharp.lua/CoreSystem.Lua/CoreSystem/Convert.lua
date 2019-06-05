@@ -125,9 +125,9 @@ end
 
 local function parseNumberFromBase(value, fromBase, min, max)
   if fromBase == 2 then
-    value = parseBits(value, "^%s*(1)", fromBase)
+    value = parseBits(value, "^%s*([01])", fromBase)
   elseif fromBase == 8 then
-    value = parseBits(value, "^%s*([1-7])", fromBase)
+    value = parseBits(value, "^%s*([0-7])", fromBase)
   elseif fromBase == 16 then
     local _, _, v = value:find("^%s*(%w+)%s*$")
     if not v then
@@ -162,16 +162,23 @@ local function toNumber(value, min, max, parse, objectTo, sign)
   local typename = type(value)
   if typename == "number" then
     if sign == false then
-      if value < min or value > max then
-        throw(OverflowException())
-      end
-      value = value * 1.0
+      value = System.ToSingle(value * 1.0)
     elseif sign == true then
       value = value * 1.0
     else
-      if value ~= floor(value) then
-        local i = value >= 0 and 0.5 or -0.5
-        value = trunc(value + i)
+      local i = value
+      value = trunc(value)
+      if value ~= i then
+        local dif = i - value
+        if value >= 0 then
+          if dif > 0.5 or (dif == 0.5 and value % 2 ~= 0) then
+            value = value + 1  
+          end
+        else
+          if dif < 0.5 or (dif == -0.5 and value % 2 ~= 0) then
+            value = value - 1  
+          end
+        end
       end
       if value < min or value > max then
         throw(OverflowException())
@@ -259,7 +266,7 @@ local function objectToSingle(value)
 end
 
 local function toSingle(value)
-  return toNumber(value, -3.40282347E+38, 3.40282347E+38, ParseSingle, objectToSingle, false) 
+  return toNumber(value, nil, nil, ParseSingle, objectToSingle, false) 
 end
 
 local function objectToDouble(value)

@@ -84,9 +84,15 @@ local SystemException = define("System.SystemException", {
 local ArgumentException = define("System.ArgumentException", {
   __tostring = toString,
   __inherits__ = { SystemException },
-  __ctor__ = function(this, message, paramName, innerException) 
+  __ctor__ = function(this, message, paramName, innerException)
+    if type(paramName) == "table" then
+      paramName, innerException = nil, paramName
+    end
     ctorOfException(this, message or "Value does not fall within the expected range.", innerException)
     this.paramName = paramName
+    if paramName and #paramName > 0 then
+      this.message = this.message .. "\nParameter name: " .. paramName
+    end
   end,
   getParamName = function(this) 
     return this.paramName
@@ -97,13 +103,7 @@ define("System.ArgumentNullException", {
   __tostring = toString,
   __inherits__ = { ArgumentException },
   __ctor__ = function(this, paramName, message, innerException) 
-    if not message then
-      message = "Value cannot be null."
-      if paramName then 
-        message = message .. "\nParameter name: " .. paramName
-      end
-    end
-    ArgumentException.__ctor__(this, message, paramName, innerException)
+    ArgumentException.__ctor__(this, message or "Value cannot be null.", paramName, innerException)
   end
 })
 
@@ -111,13 +111,7 @@ define("System.ArgumentOutOfRangeException", {
   __tostring = toString,
   __inherits__ = { ArgumentException },
   __ctor__ = function(this, paramName, message, innerException, actualValue) 
-    if not message then
-      message = "Value is out of range."
-      if paramName then
-        message = message .. "\nParameter name = " .. paramName
-      end
-    end
-    ArgumentException.__ctor__(this, message, paramName, innerException)
+    ArgumentException.__ctor__(this, message or "Specified argument was out of the range of valid values.", paramName, innerException)
     this.actualValue = actualValue
   end,
   getActualValue = function(this) 
@@ -127,7 +121,7 @@ define("System.ArgumentOutOfRangeException", {
 
 define("System.IndexOutOfRangeException", {
    __tostring = toString,
-   __inherits__ = { Exception },
+   __inherits__ = { SystemException },
    __ctor__ = function (this, message, innerException)
     ctorOfException(this, message or "Index was outside the bounds of the array.", innerException)
   end
@@ -158,17 +152,18 @@ define("System.CultureNotFoundException", {
   end
 })
 
-define("System.KeyNotFoundException", {
+local KeyNotFoundException = define("System.Collections.Generic.KeyNotFoundException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
-    ctorOfException(this, message or "Key not found.", innerException)
+    ctorOfException(this, message or "The given key was not present in the dictionary.", innerException)
   end
 })
+System.KeyNotFoundException = KeyNotFoundException
 
 local ArithmeticException = define("System.ArithmeticException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
     ctorOfException(this, message or "Overflow or underflow in the arithmetic operation.", innerException)
   end
@@ -178,7 +173,7 @@ define("System.DivideByZeroException", {
   __tostring = toString,
   __inherits__ = { ArithmeticException },
   __ctor__ = function(this, message, innerException) 
-    ArithmeticException.__ctor__(this, message or "Division by 0.", innerException)
+    ArithmeticException.__ctor__(this, message or "Attempted to divide by zero.", innerException)
   end
 })
 
@@ -192,7 +187,7 @@ define("System.OverflowException", {
 
 define("System.FormatException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
     ctorOfException(this, message or "Invalid format.", innerException)
   end
@@ -200,7 +195,7 @@ define("System.FormatException", {
 
 define("System.InvalidCastException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
     ctorOfException(this, message or "Specified cast is not valid.", innerException)
   end
@@ -208,7 +203,7 @@ define("System.InvalidCastException", {
 
 define("System.InvalidOperationException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
     ctorOfException(this, message or "Operation is not valid due to the current state of the object.", innerException)
   end
@@ -216,7 +211,7 @@ define("System.InvalidOperationException", {
 
 define("System.NotImplementedException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
     ctorOfException(this, message or "The method or operation is not implemented.", innerException)
   end
@@ -224,7 +219,7 @@ define("System.NotImplementedException", {
 
 define("System.NotSupportedException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
     ctorOfException(this, message or "Specified method is not supported.", innerException)
   end
@@ -232,7 +227,7 @@ define("System.NotSupportedException", {
 
 define("System.NullReferenceException", {
   __tostring = toString,
-  __inherits__ = { Exception },
+  __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
     ctorOfException(this, message or "Object reference not set to an instance of an object.", innerException)
   end

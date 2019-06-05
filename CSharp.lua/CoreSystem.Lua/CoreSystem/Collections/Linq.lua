@@ -1013,7 +1013,7 @@ local function elementAt(source, index)
     if isArrayLike(source) then
       local count = #source
       if index < count then
-        return unWrap(source[index + 1])
+        return true, unWrap(source[index + 1])
       end
     else
       local en = source:GetEnumerator()

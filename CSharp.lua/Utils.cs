@@ -312,8 +312,8 @@ namespace CSharpLua {
       return type.TypeKind == TypeKind.Delegate;
     }
 
-    public static bool IsIntegerType(this ITypeSymbol type) {
-      if (type.IsNullableType()) {
+    public static bool IsIntegerType(this ITypeSymbol type, bool withNullable = true) {
+      if (withNullable && type.IsNullableType()) {
         type = ((INamedTypeSymbol)type).TypeArguments.First();
       }
       return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_UInt64;
@@ -323,12 +323,20 @@ namespace CSharpLua {
       return type.SpecialType >= SpecialType.System_Char && type.SpecialType <= SpecialType.System_UInt64;
     }
 
-    public static bool IsNumberType(this ITypeSymbol type) {
-      if (type.IsNullableType()) {
+    public static bool IsNumberType(this ITypeSymbol type, bool withNullable = true) {
+      if (withNullable && type.IsNullableType()) {
         type = ((INamedTypeSymbol)type).TypeArguments.First();
       }
       return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_Double;
     }
+
+    public static bool IsDoubleOrFloatType(this ITypeSymbol type, bool withNullable = true) {
+      if (withNullable && type.IsNullableType()) {
+        type = ((INamedTypeSymbol)type).TypeArguments.First();
+      }
+      return type.SpecialType == SpecialType.System_Double || type.SpecialType == SpecialType.System_Single;
+    }
+
 
     public static bool IsBoolType(this ITypeSymbol type) {
       if (type.IsNullableType()) {
@@ -528,10 +536,6 @@ namespace CSharpLua {
 
     private static bool IsBaseNumberType(this SpecialType specialType) {
       return specialType >= SpecialType.System_Char && specialType <= SpecialType.System_Double;
-    }
-
-    public static bool IsDoubleOrFloatType(this ITypeSymbol type) {
-      return type.SpecialType == SpecialType.System_Double || type.SpecialType == SpecialType.System_Single;
     }
 
     public static bool IsNumberTypeAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {

@@ -1,4 +1,4 @@
-﻿// The source is licensed to the .NET Foundation under the MIT license:
+// The source is licensed to the .NET Foundation under the MIT license:
 // https://github.com/dotnet/corefx/blob/master/src/System.Runtime.Extensions/tests/System/Convert.ToUInt64.cs
 // https://github.com/dotnet/corefx/blob/master/LICENSE
 
@@ -133,6 +133,7 @@ namespace Bridge.ClientTest.ConvertTests
             ulong[] expectedValues = { 1000, 0, ushort.MaxValue, uint.MaxValue, 0, 10, 0 };
             VerifyFromString(Convert.ToUInt64, Convert.ToUInt64, testValues, expectedValues);
 
+#if false
             var longMaxValue = ulong.MaxValue;
             string[] testValuesLong = { longMaxValue.ToString() };
             ulong[] expectedValuesLong = { longMaxValue };
@@ -140,11 +141,13 @@ namespace Bridge.ClientTest.ConvertTests
 
             string[] overflowValues = { ConvertConstants.UINT64_OVERFLOW_MIN_STRING, decimal.MaxValue.ToFixed(0, MidpointRounding.AwayFromZero) };
             VerifyFromStringThrows<OverflowException>(Convert.ToUInt64, Convert.ToUInt64, overflowValues);
+#endif
 
             string[] formatExceptionValues = { "abba" };
             VerifyFromStringThrows<FormatException>(Convert.ToUInt64, Convert.ToUInt64, formatExceptionValues);
         }
 
+#if false
         [Test]
         public void FromStringWithBase()
         {
@@ -171,6 +174,7 @@ namespace Bridge.ClientTest.ConvertTests
             int[] argumentExceptionBases = { -1, 3, 0, 16 };
             VerifyFromStringWithBaseThrows<ArgumentException>(Convert.ToUInt64, argumentExceptionValues, argumentExceptionBases);
         }
+#endif
 
         [Test]
         public void FromUInt16()
@@ -188,6 +192,7 @@ namespace Bridge.ClientTest.ConvertTests
             VerifyViaObj(Convert.ToUInt64, testValues, expectedValues);
         }
 
+#if false
         [Test]
         public void FromUInt64()
         {
@@ -195,5 +200,6 @@ namespace Bridge.ClientTest.ConvertTests
             ulong[] expectedValues = { ulong.MaxValue, ulong.MinValue };
             VerifyViaObj(Convert.ToUInt64, testValues, expectedValues);
         }
+#endif
     }
 }

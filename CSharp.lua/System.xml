@@ -177,7 +177,16 @@ limitations under the License.
           <arg type="System.Char" />
         </method>
       </class>
-      <class name="Math" Name="math" />
+      <class name="Math" Name="math" >
+        <method name="Round" Template="math.Round({0}, nil, {1})">
+          <arg type="System.Double" />
+          <arg type="System.MidpointRounding" />
+        </method>
+        <method name="Round" Template="math.Round({0}, nil, {1})">
+          <arg type="System.Decimal" />
+          <arg type="System.MidpointRounding" />
+        </method>
+      </class>
       <class name="Activator" >
         <method name="CreateInstance" Template="System.Activator.CreateInstance({0}, {*1})">
           <arg type="System.Type" />
@@ -417,6 +426,23 @@ limitations under the License.
       </class>
       <class name="ArraySegment^1" Name="System.ArraySegment" />
       <class name="Guid" Readonly="true" />
+      <class name="ArgumentNullException">
+        <method name=".ctor" Template="System.ArgumentNullException(nil, {0}, {1})">
+          <arg type="System.String" />
+          <arg type="System.Exception" />
+        </method>
+      </class>
+      <class name="ArgumentOutOfRangeException">
+        <method name=".ctor" Template="System.ArgumentOutOfRangeException(nil, {0}, {1})">
+          <arg type="System.String" />
+          <arg type="System.Exception" />
+        </method>
+        <method name=".ctor" Template="System.ArgumentOutOfRangeException({0}, nil, nil, {1}, {2})">
+          <arg type="System.String" />
+          <arg type="System.Object" />
+          <arg type="System.String" />
+        </method>
+      </class>
     </namespace>
     <namespace name="System.Collections" Name="System" >
       <class name="IEqualityComparer">

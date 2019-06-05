@@ -98,19 +98,22 @@ define("System.Lazy", function (T)
   }
 end, Lazy)
 
-local function getPrecision(seconds)
-  local s = tostring(seconds)
-  local i = s:find("%.")
-  if i then
-    return #s - i
+local function getPrecision(f)
+  local function build()
+    local s = tostring(f())
+    local i = s:find("%.")
+    if i then
+      return #s - i
+    end
+    return 0
   end
-  return 0
+  return math.max(build(), build(), build())
 end
 
 local ticker, frequency
 local time = System.config.time
 if time then
-  local p1, p2 = getPrecision(time()), getPrecision(clock())
+  local p1, p2 = getPrecision(time), getPrecision(clock)
   if p1 > p2 then
     ticker = time
     frequency = 10 ^ p1
@@ -119,7 +122,8 @@ if time then
     frequency = 10 ^ p2
   end
 else
-  local p = getPrecision(clock())
+  local p = getPrecision(clock)
+  assert(p > 2)
   ticker = clock
   frequency = 10 ^ p
 end
@@ -135,7 +139,7 @@ local function getRawElapsedSeconds(this)
 end
 
 local Stopwatch
-Stopwatch = define("System.Stopwatch", {
+Stopwatch = define("System.Diagnostics.Stopwatch", {
   elapsed = 0,
   running = false,
   IsHighResolution = false,
@@ -181,7 +185,7 @@ Stopwatch = define("System.Stopwatch", {
     return this.running
   end,
   getElapsed = function (this)
-    return TimeSpan(getRawElapsedSeconds(this) * 1e7)
+    return TimeSpan(trunc(getRawElapsedSeconds(this) * 1e7))
   end,
   getElapsedMilliseconds = function (this)
     return trunc(getRawElapsedSeconds(this) * 1000)
@@ -190,6 +194,7 @@ Stopwatch = define("System.Stopwatch", {
     return trunc(getRawElapsedSeconds(this) * frequency)
   end
 })
+System.Stopwatch = Stopwatch
 
 local weaks = setmetatable({}, { __mode = "kv" })
 

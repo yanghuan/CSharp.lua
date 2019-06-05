@@ -15,8 +15,69 @@ limitations under the License.
 --]]
 
 local System = System
+local trunc = System.trunc
 
 local math = math
+local floor = math.floor
+local min = math.min
+local max = math.max
+local abs = math.abs
+
+local function bigMul(a, b)
+  return a * b
+end
+
+local function divRem(a, b)
+  local remainder = a % b
+  return (a - remainder) / b, remainder
+end
+
+local function round(value, digits)
+  local i = value >= 0 and 0.5 or -0.5
+  local mult = 10 ^ (digits or 0)
+  return trunc(value * mult + i) / mult
+end
+
+local function sign(v)
+  return v == 0 and 0 or (v > 0 and 1 or -1) 
+end
+
+local function IEEERemainder(x, y)
+  if x ~= x then
+    return x
+  end
+  if y ~= y then
+    return y
+  end
+  local regularMod = System.mod(x, y)
+  if regularMod ~= regularMod then
+    return regularMod
+  end
+  if regularMod == 0 and x < 0 then
+    return -0.0
+  end
+  local alternativeResult = regularMod - abs(y) * sign(x)
+  local i, j = abs(alternativeResult), abs(regularMod)
+  if i == j then
+    local divisionResult = x / y
+    local roundedResult = round(divisionResult)
+    if abs(roundedResult) > abs(divisionResult) then
+      return alternativeResult
+    else
+      return regularMod
+    end
+  end
+  if i < j then
+    return alternativeResult
+  else
+    return regularMod
+  end
+end
+
+local function clamp(a, b, c)
+  return min(max(a, b), c)
+end
+
 local exp = math.exp
 local cosh = math.cosh or function(x) return (exp(x) + exp(-x)) / 2.0 end
 local pow = math.pow or function(x, y) return x ^ y end
@@ -24,52 +85,32 @@ local sinh = math.sinh or function(x) return (exp(x) - exp(-x)) / 2.0 end
 local tanh = math.tanh or function(x) return sinh(x) / cosh(x) end
 
 local Math = math
-Math.Abs = math.abs
+Math.Abs = abs
 Math.Acos = math.acos
 Math.Asin = math.asin
 Math.Atan = math.atan
 Math.Atan2 = math.atan2 or math.atan
+Math.BigMul = bigMul
 Math.Ceiling = math.ceil
+Math.Clamp = clamp
 Math.Cos = math.cos
 Math.Cosh = cosh
+Math.DivRem = divRem
 Math.Exp = exp
 Math.Floor = math.floor
+Math.IEEERemainder = IEEERemainder
 Math.Log = math.log
 Math.Log10 = math.log10
 Math.Max = math.max
 Math.Min = math.min
 Math.Pow = pow
+Math.Round = round
+Math.Sign = sign
 Math.Sin = math.sin
 Math.Sinh = sinh
 Math.Sqrt = math.sqrt
 Math.Tan = math.tan
-Math.Tanh = tanh 
+Math.Tanh = tanh
+Math.Truncate = trunc
 
-function Math.BigMul(a, b) 
-  return a * b 
-end
-
-function Math.DivRem(a, b) 
-  local remainder = a % b
-  return (a - remainder) / b, remainder
-end
-
-function Math.Round(value, digits)
-  local mult = 10 ^ (digits or 0)
-  return math.floor(value * mult + 0.5) / mult
-end
-
-function Math.IEEERemainder(x, y)
-  return x - (y * Math.Round(x / y))
-end
-
-Math.Sign = function(v) 
-  return v == 0 and 0 or (v > 0 and 1 or -1) 
-end
-
-Math.Clamp = function(v, min, max)
-  return Math.Min(Math.Max(v, min), max)
-end
-
-Math.Truncate = System.trunc
 System.define("System.Math", Math)

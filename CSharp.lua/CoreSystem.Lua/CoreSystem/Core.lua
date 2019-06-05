@@ -511,42 +511,18 @@ if version < 5.3 then
   end
 
   function System.div(x, y) 
-    if y == 0 then
-      throw(System.DivideByZeroException(), 1)
-    end
+    if y == 0 then throw(System.DivideByZeroException(), 1) end
     return trunc(x / y)
   end
 
-  function System.divOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    if y == 0 then
-      throw(System.DivideByZeroException(), 1)
-    end
-    return trunc(x / y) 
-  end
-    
   function System.mod(x, y) 
-    if y == 0 then
-      throw(System.DivideByZeroException(), 1)
-    end
+    if y == 0 then throw(System.DivideByZeroException(), 1) end
     if x * y < 0 then
       return x % y - y
     end
     return x % y
   end
 
-  function System.modOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    if y == 0 then
-      throw(System.DivideByZeroException(), 1)
-    end
-    return x % y
-  end
-  
   function System.toUInt(v, max, mask, checked)
     if v >= 0 and v <= max then
       return v
@@ -730,62 +706,6 @@ else
   function System.sr(x, y) return x >> y end
   function System.div(x, y) if x * y < 0 then return -(-x // y) end return x // y end
   function System.mod(x, y) if x * y < 0 then return x % y - y end return x % y end
-  
-  function System.bnotOfNull(x) 
-    if x == nil 
-      then return nil 
-    end 
-    return ~v 
-  end
-  
-  function System.bandOfNull(x, y) 
-    if x == nil or y == nil then
-      return nil
-    end
-    return x & y
-  end
-
-  function System.borOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x | y
-  end
-  
-  function System.xorOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x ~ y
-  end
-  
-  function System.slOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x << y
-  end
-  
-  function System.srOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x >> y
-  end
-  
-  function System.divOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x // y
-  end
-  
-  function System.modOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x % y
-  end
   
   local function toUInt (v, max, mask, checked)  
     if v >= 0 and v <= max then
