@@ -9,6 +9,7 @@ namespace Bridge.ClientTest.SimpleTypes
     [TestFixture(TestNameFormat = "Int16 - {0}")]
     public class Int16Tests
     {
+#if false
         [Test]
         public void TypePropertiesAreCorrect_SPI_1717()
         {
@@ -33,6 +34,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(interfaces.Contains(typeof(IEquatable<short>)));
             Assert.True(interfaces.Contains(typeof(IFormattable)));
         }
+#endif
 
         [Test]
         public void CastsWork()

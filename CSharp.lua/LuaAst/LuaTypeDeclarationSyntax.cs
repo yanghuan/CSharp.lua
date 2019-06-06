@@ -515,7 +515,7 @@ namespace CSharpLua.LuaAst {
     }
 
     private void CheckMetatableMoreThanUpvalues(LuaTableExpression table, int nameIndex, ref int upvalueCount) {
-      const int kMaxUpvalueCount = kUpvaluesMaxCount - 2;
+      int kMaxUpvalueCount = kUpvaluesMaxCount - 2 - (IsClassUsed ? 1 : 0);
       var expression = table.GetSingleExpression(nameIndex);
       if (expression is LuaIdentifierNameSyntax name) {
         if (upvalueCount >= kMaxUpvalueCount) {

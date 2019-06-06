@@ -8,6 +8,7 @@ namespace Bridge.ClientTest.SimpleTypes
     [TestFixture(TestNameFormat = "Float - {0}")]
     public class SingleTests
     {
+#if false
         [Test]
         public void TypePropertiesAreCorrect_SPI_1717()
         {
@@ -29,6 +30,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(interfaces.Contains(typeof(IEquatable<float>)));
             Assert.True(interfaces.Contains(typeof(IFormattable)));
         }
+#endif
 
         private T GetDefaultValue<T>()
         {

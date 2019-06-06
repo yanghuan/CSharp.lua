@@ -9,6 +9,7 @@ namespace Bridge.ClientTest.SimpleTypes
     [TestFixture(TestNameFormat = "Byte - {0}")]
     public class ByteTests
     {
+#if false
         [Test]
         public void TypePropertiesAreCorrect_SPI_1717()
         {
@@ -33,6 +34,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(interfaces.Contains(typeof(IEquatable<byte>)));
             Assert.True(interfaces.Contains(typeof(IFormattable)));
         }
+#endif
 
         [Test]
         public void CastsWork()

@@ -10,6 +10,7 @@ namespace Bridge.ClientTest.SimpleTypes
     [TestFixture(TestNameFormat = "Int64 - {0}")]
     public class Int64Tests
     {
+#if false
         [Test]
         public void TypePropertiesAreCorrect_SPI_1717()
         {
@@ -33,6 +34,7 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(interfaces.Contains(typeof(IEquatable<long>)));
             Assert.True(interfaces.Contains(typeof(IFormattable)));
         }
+#endif
 
         [Test]
         public void MinMaxValuesAreCorrect()
