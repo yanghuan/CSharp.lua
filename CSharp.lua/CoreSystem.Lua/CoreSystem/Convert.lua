@@ -175,7 +175,7 @@ local function toNumber(value, min, max, parse, objectTo, sign)
             value = value + 1  
           end
         else
-          if dif < 0.5 or (dif == -0.5 and value % 2 ~= 0) then
+          if dif < -0.5 or (dif == -0.5 and value % 2 ~= 0) then
             value = value - 1  
           end
         end

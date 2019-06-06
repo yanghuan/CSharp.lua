@@ -510,22 +510,45 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private void CheckMetadataMoreThanUpvalues() {
+    private static IEnumerable<LuaTableExpression> GetMetatables(LuaTableExpression metaMethods) {
+      return metaMethods.Items.OfType<LuaSingleTableItemSyntax>().Select(i => (LuaTableExpression)i.Expression);
+    }
+
+    private void CheckMetatableMoreThanUpvalues(LuaTableExpression table, int nameIndex, ref int upvalueCount) {
       const int kMaxUpvalueCount = kUpvaluesMaxCount - 2;
-      const int kNameIndex = 2;
+      var expression = table.GetSingleExpression(nameIndex);
+      if (expression is LuaIdentifierNameSyntax name) {
+        if (upvalueCount >= kMaxUpvalueCount) {
+          CheckTooManyVariables(false);
+          var left = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, name);
+          methodList_.Statements.Add(new LuaAssignmentExpressionSyntax(left, name));
+          table.Items[nameIndex] = new LuaSingleTableItemSyntax(left);
+        } else {
+          ++upvalueCount;
+        }
+      }
+    }
+
+    private void CheckMetadataMoreThanUpvalues() {
+      int upvalueCount = 0;
       if (metaMethods_ != null) {
-        int upvalueCount = 0;
-        foreach (LuaSingleTableItemSyntax item in metaMethods_.Items) {
-          var table = (LuaTableExpression)item.Expression;
-          var expression = (LuaSingleTableItemSyntax)table.Items[kNameIndex];
-          if (expression.Expression is LuaIdentifierNameSyntax name) {
-            if (upvalueCount >= kMaxUpvalueCount) {
-              CheckTooManyVariables(false);
-              var left = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, name);
-              methodList_.Statements.Add(new LuaAssignmentExpressionSyntax(left, name));
-              table.Items[kNameIndex] = new LuaSingleTableItemSyntax(left);
-            } else {
-              ++upvalueCount;
+        const int kNameIndex = 2;
+        foreach (var table in GetMetatables(metaMethods_)) {
+          CheckMetatableMoreThanUpvalues(table, kNameIndex, ref upvalueCount);
+        }
+      }
+      if (metaProperties_ != null) {
+        const int kFlagIndex = 1;
+        const int kGetIndex = 3;
+        const int kSetIndex = 4;
+        foreach (var table in GetMetatables(metaProperties_)) {
+          var flagIdentifierName = (LuaIdentifierNameSyntax)table.GetSingleExpression(kFlagIndex);
+          int flag = Convert.ToInt32(flagIdentifierName.ValueText, 16);
+          var kind = (PropertyMethodKind)((flag >> 8) & 0xff);
+          if (kind != PropertyMethodKind.Field) {
+            CheckMetatableMoreThanUpvalues(table, kGetIndex, ref upvalueCount);
+            if (kind == PropertyMethodKind.Both) {
+              CheckMetatableMoreThanUpvalues(table, kSetIndex, ref upvalueCount);
             }
           }
         }

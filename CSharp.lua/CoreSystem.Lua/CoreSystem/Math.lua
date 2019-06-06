@@ -32,10 +32,27 @@ local function divRem(a, b)
   return (a - remainder) / b, remainder
 end
 
-local function round(value, digits)
-  local i = value >= 0 and 0.5 or -0.5
+local function round(value, digits, mode)
   local mult = 10 ^ (digits or 0)
-  return trunc(value * mult + i) / mult
+  local i = value * mult
+  if mode == 1 then
+    value = trunc(i + (value >= 0 and 0.5 or -0.5))
+  else
+    value = trunc(i)
+    if value ~= i then
+      local dif = i - value
+      if value >= 0 then
+        if dif > 0.5 or (dif == 0.5 and value % 2 ~= 0) then
+          value = value + 1  
+        end
+      else
+        if dif < -0.5 or (dif == -0.5 and value % 2 ~= 0) then
+          value = value - 1  
+        end
+      end
+    end
+  end
+  return value / mult
 end
 
 local function sign(v)
@@ -78,6 +95,10 @@ local function clamp(a, b, c)
   return min(max(a, b), c)
 end
 
+local function truncate(d)
+  return trunc(d) * 1.0
+end
+
 local exp = math.exp
 local cosh = math.cosh or function(x) return (exp(x) + exp(-x)) / 2.0 end
 local pow = math.pow or function(x, y) return x ^ y end
@@ -111,6 +132,6 @@ Math.Sinh = sinh
 Math.Sqrt = math.sqrt
 Math.Tan = math.tan
 Math.Tanh = tanh
-Math.Truncate = trunc
+Math.Truncate = truncate
 
 System.define("System.Math", Math)

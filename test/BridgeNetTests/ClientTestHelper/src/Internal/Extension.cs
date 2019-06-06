@@ -5,36 +5,46 @@ using System.Linq;
 using System.Reflection;
 
 public static class Extension {
+  private static string ToFormat(int format) {
+    if (format == 10) {
+      return "D";
+    }
+    if (format == 16) {
+      return "x";
+    }
+    return "";
+  }
+
   public static string ToString(this sbyte b, int format) {
-    return b.ToString(format.ToString());
+    return b.ToString(ToFormat(format));
   }
 
   public static string ToString(this byte b, int format) {
-    return b.ToString(format.ToString());
+    return b.ToString(ToFormat(format));
   }
 
   public static string ToString(this ushort v, int format) {
-    return v.ToString(format.ToString());
+    return v.ToString(ToFormat(format));
   }
 
   public static string ToString(this short v, int format) {
-    return v.ToString(format.ToString());
+    return v.ToString(ToFormat(format));
   }
 
   public static string ToString(this int v, int format) {
-    return v.ToString(format.ToString());
+    return v.ToString(ToFormat(format));
   }
 
   public static string ToString(this uint v, int format) {
-    return v.ToString(format.ToString());
+    return v.ToString(ToFormat(format));
   }
 
   public static string ToString(this long v, int format) {
-    return v.ToString(format.ToString());
+    return v.ToString(ToFormat(format));
   }
 
   public static string ToString(this ulong v, int format) {
-    return v.ToString(format.ToString());
+    return v.ToString(ToFormat(format));
   }
 
   public static string ToPrecision(this float v, int decimals = 0) {

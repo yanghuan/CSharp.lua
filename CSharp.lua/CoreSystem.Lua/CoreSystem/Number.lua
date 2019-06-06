@@ -214,9 +214,15 @@ end
 
 local function toStringWithFormat(this, format)
   if #format ~= 0 then
-    local i, j, x, n = format:find("^%s*([xX])(%d?)%s*$")
+    local i, j, x, n = format:find("^%s*([xXdDfF])(%d?)%s*$")
     if i then
-      format = n == "" and "%" .. x or "%0" .. n .. x
+      if x == 'x' or x == 'X' then
+        format = n == "" and "%" .. x or "%0" .. n .. x
+      elseif x == 'f' or x == 'F' then
+        format = n == "" and "%.f" or "%." .. n .. 'f'
+      else
+        format = n == "" and "%d" or "%0" .. n .. 'd'
+      end
       return format:format(this)
     end
   end

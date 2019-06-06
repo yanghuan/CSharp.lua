@@ -194,7 +194,7 @@ namespace Bridge.ClientTest.Diagnostics
 
             Assert.True(hasIncreased, "Times should increase inside the loop");
             Assert.True(watch.ElapsedMilliseconds > 150, "ElapsedMilliseconds > 150" + " Actual: " + watch.ElapsedMilliseconds);
-            Assert.AreEqual(watch.Elapsed, new TimeSpan(0, 0, 0, 0, (int)watch.ElapsedMilliseconds));
+            Assert.AreEqual((long)watch.Elapsed.TotalMilliseconds, watch.ElapsedMilliseconds);
 
             var value = (double)watch.ElapsedTicks / Stopwatch.Frequency;
 

@@ -906,14 +906,18 @@ namespace CSharpLua {
     private void AddPropertyOrEventMetaData(ISymbol symol, PropertyMethodResult get, PropertyMethodResult set, LuaIdentifierNameSyntax name, List<LuaExpressionSyntax> attributes) {
       bool isProperty = symol.Kind == SymbolKind.Property;
       PropertyMethodKind kind;
-      if (get == null && set == null) {
-        kind = PropertyMethodKind.Field;
-      } else if (get != null) {
-        kind = PropertyMethodKind.GetOnly;
-      } else if (set != null) {
-        kind = PropertyMethodKind.SetOnly;
-      } else {
-        kind = PropertyMethodKind.Both;
+      if (get != null) {
+        if (set != null) {
+          kind = PropertyMethodKind.Both;
+        } else {
+          kind = PropertyMethodKind.GetOnly;
+        }
+      } else { 
+        if (set != null) {
+          kind = PropertyMethodKind.SetOnly;
+        } else {
+          kind = PropertyMethodKind.Field;
+        }
       }
       var data = new LuaTableExpression() { IsSingleLine = true };
       data.Add(new LuaStringLiteralExpressionSyntax(symol.Name));

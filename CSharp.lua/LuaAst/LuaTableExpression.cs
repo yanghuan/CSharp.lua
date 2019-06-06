@@ -51,6 +51,11 @@ namespace CSharpLua.LuaAst {
     }
 
     public static readonly LuaTableExpression Empty = new LuaTableExpression();
+
+    public LuaExpressionSyntax GetSingleExpression(int index) {
+      var item = (LuaSingleTableItemSyntax)Items[index];
+      return item.Expression;
+    }
   }
 
   public abstract class LuaTableItemSyntax : LuaSyntaxNode {
