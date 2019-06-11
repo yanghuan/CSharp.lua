@@ -61,14 +61,14 @@ local function dateToTicks(year, month, day)
     if day >= 1 and day <= days[month + 1] - days[month] then
       local y = year - 1
       local n = y * 365 + div(y, 4) - div(y, 100) + div(y, 400) + days[month] + day - 1
-      return n * 864e9
+      return n * 864000000000
     end
   end
 end
 
 local function timeToTicks(hour, minute, second)
   if hour >= 0 and hour < 24 and minute >= 0 and minute < 60 and second >=0 and second < 60 then 
-    return (((hour * 60 + minute) * 60) + second) * 1e7
+    return (((hour * 60 + minute) * 60) + second) * 10000000
   end
   throw(ArgumentOutOfRangeException("ArgumentOutOfRange_BadHourMinuteSecond"))
 end
@@ -106,7 +106,7 @@ local function subtract(this, v)
 end
 
 local function getDataPart(ticks, part)
-  local n = div(ticks, 864e9)
+  local n = div(ticks, 864000000000)
   local y400 = div(n, 146097)
   n = n - y400 * 146097
   local y100 = div(n, 36524)
@@ -131,14 +131,14 @@ end
 
 local function getDatePart(ticks)
   local year, month, day
-  local n = div(ticks, 864e9)
+  local n = div(ticks, 864000000000)
   local y400 = div(n, 146097)
   n = n - y400 * 146097
   local y100 = div(n, 36524)
   if y100 == 4 then y100 = 3 end
   n = n - y100 * 36524
   local y4 = div(n, 1461)
-  n = n - y4 * 1461;
+  n = n - y4 * 1461
   local y1 = div(n, 365)
   if y1 == 4 then y1 = 3 end
   year = y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1
@@ -179,7 +179,7 @@ local function addMonths(this, months)
   end
   local days = daysInMonth(y, m)
   if d > days then d = days end
-  return DateTime(dateToTicks(y, m, d) + ticks % 864e9, this.kind)
+  return DateTime(dateToTicks(y, m, d) + ticks % 864000000000, this.kind)
 end
 
 local function getTimeZone()
@@ -187,7 +187,7 @@ local function getTimeZone()
   return osdifftime(now, ostime(osdate("!*t", now)))
 end
 
-local timeZoneTicks = getTimeZone() * 1e7
+local timeZoneTicks = getTimeZone() * 10000000
 
 local time = System.config.time or ostime
 System.time = time
@@ -195,7 +195,7 @@ System.currentTimeMillis = function () return trunc(time() * 1000) end
 
 local function now()
   local seconds = time()
-  local ticks = seconds * 1e7 + timeZoneTicks + 621355968000000000
+  local ticks = seconds * 10000000 + timeZoneTicks + 621355968000000000
   return DateTime(ticks, 2)
 end
 
@@ -248,7 +248,7 @@ local function parse(s)
             if decimal > 0.5 then
               ticks = ticks + 1
             end
-            milliseconds = floor(ticks) / 1e4
+            milliseconds = floor(ticks) / 10000
           end
         end
       end
@@ -305,11 +305,11 @@ DateTime = System.defStc("System.DateTime", {
       this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second)
     elseif len == 7 then
       local year, month, day, hour, minute, second, millisecond = ...
-      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
+      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 10000
     elseif len == 8 then
       local year, month, day, hour, minute, second, millisecond, kind = ...
       checkKind(kind)
-      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 1e4
+      this.ticks = dateToTicks(year, month, day) + timeToTicks(hour, minute, second) + millisecond * 10000
       this.kind = kind
     else
       assert(false)
@@ -349,10 +349,10 @@ DateTime = System.defStc("System.DateTime", {
   end,
   getDate = function (this)
     local ticks = this.ticks
-    return DateTime(ticks - ticks % 864e9)
+    return DateTime(ticks - ticks % 864000000000, this.kind)
   end,
   getDayOfWeek = function (this)
-    return (div(this.ticks, 864e9) + 1) % 7
+    return (div(this.ticks, 864000000000) + 1) % 7
   end,
   getDayOfYear = function (this)
     return getDataPart(this.ticks, 1)
@@ -371,7 +371,7 @@ DateTime = System.defStc("System.DateTime", {
     return getDataPart(this.ticks, 0)
   end,
   getTimeOfDay = function (this)
-    return TimeSpan(this.ticks % 864e9)
+    return TimeSpan(this.ticks % 864000000000)
   end,
   getTicks = function (this)
     return this.ticks
@@ -379,7 +379,7 @@ DateTime = System.defStc("System.DateTime", {
   BaseUtcOffset = TimeSpan(timeZoneTicks),
   getUtcNow = function ()
     local seconds = time()
-    local ticks = seconds * 1e7 + 621355968000000000
+    local ticks = seconds * 10000000 + 621355968000000000
     return DateTime(ticks, 1)
   end,
   getNow = now,
@@ -428,7 +428,7 @@ DateTime = System.defStc("System.DateTime", {
   __lt = TimeSpan.__lt,
   __le = TimeSpan.__le,
   __inherits__ =  function(_, T)
-    return { System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T) }
+    return { System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T), System.IFormattable }
   end,
   default = function ()
     return minValue

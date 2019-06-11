@@ -1,4 +1,4 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using Bridge.ClientTestHelper;
 using System;
 using System.Collections;

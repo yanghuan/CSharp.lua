@@ -517,10 +517,11 @@ if version < 5.3 then
 
   function System.mod(x, y) 
     if y == 0 then throw(System.DivideByZeroException(), 1) end
-    if x * y < 0 then
-      return x % y - y
+    local v = x % y
+    if v ~= 0 and x * y < 0 then
+      return v - y
     end
-    return x % y
+    return v
   end
 
   function System.toUInt(v, max, mask, checked)
@@ -692,7 +693,7 @@ if version < 5.3 then
       end
     end
   end
-else  
+else
   load[[
   local System = System
   local throw = System.throw
@@ -704,8 +705,15 @@ else
   function System.xor(x, y) return x ~ y end
   function System.sl(x, y) return x << y end
   function System.sr(x, y) return x >> y end
-  function System.div(x, y) if x * y < 0 then return -(-x // y) end return x // y end
-  function System.mod(x, y) if x * y < 0 then return x % y - y end return x % y end
+  function System.div(x, y) if x ~ y < 0 then return -(-x // y) end return x // y end
+  
+  function System.mod(x, y)
+    local v = x % y
+    if v ~= 0 and 1.0 * x * y < 0 then
+      return v - y
+    end
+    return v
+  end
   
   local function toUInt (v, max, mask, checked)  
     if v >= 0 and v <= max then

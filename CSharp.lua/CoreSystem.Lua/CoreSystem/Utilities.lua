@@ -98,34 +98,14 @@ define("System.Lazy", function (T)
   }
 end, Lazy)
 
-local function getPrecision(f)
-  local function build()
-    local s = tostring(f())
-    local i = s:find("%.")
-    if i then
-      return #s - i
-    end
-    return 0
-  end
-  return math.max(build(), build(), build())
-end
-
 local ticker, frequency
 local time = System.config.time
 if time then
-  local p1, p2 = getPrecision(time), getPrecision(clock)
-  if p1 > p2 then
-    ticker = time
-    frequency = 10 ^ p1
-  else
-    ticker = clock
-    frequency = 10 ^ p2
-  end
+  ticker = time
+  frequency = 10000
 else
-  local p = getPrecision(clock)
-  assert(p > 2)
   ticker = clock
-  frequency = 10 ^ p
+  frequency = 1000
 end
 
 local function getRawElapsedSeconds(this)

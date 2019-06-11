@@ -24,10 +24,6 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace CSharpLua.LuaAst {
   public abstract class LuaLiteralExpressionSyntax : LuaExpressionSyntax {
     public abstract string Text { get; }
-
-    public static implicit operator LuaLiteralExpressionSyntax(double number) {
-      return (LuaNumberLiteralExpressionSyntax)number;
-    }
   }
 
   public sealed class LuaIdentifierLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
@@ -141,13 +137,48 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaNumberLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
-    public double Number { get; }
-
+  public abstract class LuaNumberLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
+    public abstract double Number { get; }
     public static readonly LuaNumberLiteralExpressionSyntax Zero = 0;
     public static readonly LuaNumberLiteralExpressionSyntax ZeroFloat = 0.0;
 
-    private LuaNumberLiteralExpressionSyntax(double number) {
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+
+    public static implicit operator LuaNumberLiteralExpressionSyntax(float number) {
+      return new LuaFloatLiteralExpressionSyntax(number);
+    }
+
+    public static implicit operator LuaNumberLiteralExpressionSyntax(double number) {
+      return new LuaDoubleLiteralExpressionSyntax(number);
+    }
+  }
+
+  public sealed class LuaFloatLiteralExpressionSyntax : LuaNumberLiteralExpressionSyntax {
+    private float number_;
+
+    public LuaFloatLiteralExpressionSyntax(float number) {
+      number_ = number;
+    }
+
+    public override double Number {
+      get {
+        return number_;
+      }
+    }
+
+    public override string Text {
+      get {
+        return number_.ToString("r", CultureInfo.InvariantCulture);
+      }
+    }
+  }
+
+  public sealed class LuaDoubleLiteralExpressionSyntax : LuaNumberLiteralExpressionSyntax {
+    public override double Number { get;}
+
+    public LuaDoubleLiteralExpressionSyntax(double number) {
       Number = number;
     }
 
@@ -155,14 +186,6 @@ namespace CSharpLua.LuaAst {
       get {
         return Number.ToString("r", CultureInfo.InvariantCulture);
       }
-    }
-
-    internal override void Render(LuaRenderer renderer) {
-      renderer.Render(this);
-    }
-
-    public static implicit operator LuaNumberLiteralExpressionSyntax(double number) {
-      return new LuaNumberLiteralExpressionSyntax(number);
     }
   }
 }

@@ -372,3 +372,8 @@ test(testStringBuilder, "StringBuilder")
 test(testIO, "IO")
 --test(testConsole, "Console")
 --test(testAsync, "Async")
+
+
+print(tonumber("100000000000000000000"))
+print(tonumber("9223372036854775807"))
+print(tonumber("9223372036854775809"))

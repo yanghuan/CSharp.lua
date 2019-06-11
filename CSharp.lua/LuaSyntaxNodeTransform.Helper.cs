@@ -462,10 +462,12 @@ namespace CSharpLua {
             return v ? LuaIdentifierLiteralExpressionSyntax.True : LuaIdentifierLiteralExpressionSyntax.False;
           }
           case TypeCode.Single: {
-            return (float)constantValue;
+            float v = (float)constantValue;
+            return (LuaFloatLiteralExpressionSyntax)v;
           }
           case TypeCode.Double: {
-            return (double)constantValue;
+            double v = (double)constantValue;
+            return (LuaDoubleLiteralExpressionSyntax)v;
           }
           default: {
             return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
@@ -1073,7 +1075,7 @@ namespace CSharpLua {
         } else {
           LuaFunctionExpressionSyntax function = new LuaFunctionExpressionSyntax();
           PushFunction(function);
-          var temp = GetTempIdentifier(node);
+          var temp = GetTempIdentifier();
           function.AddParameter(temp);
 
           foreach (var initializer in initializers) {
@@ -1847,7 +1849,7 @@ namespace CSharpLua {
       int prevFunctionTempCount = CurFunction.TempCount;
       int prevBlockTempCount = CurBlock.TempCount;
       if (!symbol.ReturnsVoid) {
-        methodInfo.InliningReturnVars.Add(GetTempIdentifier(root));
+        methodInfo.InliningReturnVars.Add(GetTempIdentifier());
       }
       methodInfos_.Push(methodInfo);
 
@@ -1870,7 +1872,7 @@ namespace CSharpLua {
             parameters.Add(parameter.Identifier);
             if (parameterNode.Modifiers.IsOutOrRef()) {
               refOrOutParameters.Add(parameter.Identifier);
-              methodInfo.InliningReturnVars.Add(GetTempIdentifier(root));
+              methodInfo.InliningReturnVars.Add(GetTempIdentifier());
             }
           }
         }
@@ -2126,7 +2128,7 @@ namespace CSharpLua {
         if (memberAccess.Expression is LuaIdentifierNameSyntax targetName) {
           target = targetName;
         } else {
-          var temp = GetTempIdentifier(node);
+          var temp = GetTempIdentifier();
           CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, memberAccess.Expression));
           memberAccess.UpdateExpression(temp);
           target = temp;

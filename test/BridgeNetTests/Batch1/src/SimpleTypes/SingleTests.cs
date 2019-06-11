@@ -107,13 +107,13 @@ namespace Bridge.ClientTest.SimpleTypes
         [Test]
         public void ToExponentialWorks()
         {
-            Assert.AreEqual("1.23e+2", ((float)123.0).ToExponential());
+            Assert.AreEqual("1.230000e+002", ((float)123.0).ToExponential());
         }
 
         [Test]
         public void ToExponentialWithFractionalDigitsWorks()
         {
-            Assert.AreEqual("1.2e+2", ((float)123.0).ToExponential(1));
+            Assert.AreEqual("1.2e+002", ((float)123.0).ToExponential(1));
         }
 
         [Test]
@@ -126,18 +126,6 @@ namespace Bridge.ClientTest.SimpleTypes
         public void ToFixedWithFractionalDigitsWorks()
         {
             Assert.AreEqual("123.0", ((float)123.0).ToFixed(1));
-        }
-
-        [Test]
-        public void ToPrecisionWorks()
-        {
-            Assert.AreEqual("12345", ((float)12345.0).ToPrecision());
-        }
-
-        [Test]
-        public void ToPrecisionWithPrecisionWorks()
-        {
-            Assert.AreEqual("1.2e+4", ((float)12345.0).ToPrecision(2));
         }
 
         [Test]

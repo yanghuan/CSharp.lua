@@ -67,7 +67,16 @@ local function interval(value, scale)
   if millis > 922337203685477 or millis < -922337203685477 then
     throw(OverflowException("Overflow_TimeSpanTooLong"))
   end
-  return TimeSpan(trunc(millis) * 1e4)
+  return TimeSpan(trunc(millis) * 10000)
+end
+
+local function getPart(this, i, j)
+  local t = this.ticks
+  local v = div(t, i) % j
+  if v ~= 0 and t < 0 then
+    return v - j
+  end
+  return v
 end
 
 local function parse(s)
@@ -144,13 +153,13 @@ TimeSpan = System.defStc("System.TimeSpan", {
       ticks = ...
     elseif length == 3 then
       local hours, minutes, seconds = ...
-      ticks = (((hours * 60 + minutes) * 60) + seconds) * 1e7
+      ticks = (((hours * 60 + minutes) * 60) + seconds) * 10000000
     elseif length == 4 then
       local days, hours, minutes, seconds = ...
-      ticks = ((((days * 24 + hours) * 60 + minutes) * 60) + seconds) * 1e7
+      ticks = ((((days * 24 + hours) * 60 + minutes) * 60) + seconds) * 10000000
     elseif length == 5 then
       local days, hours, minutes, seconds, milliseconds = ...
-      ticks = (((((days * 24 + hours) * 60 + minutes) * 60) + seconds) * 1e3 + milliseconds) * 1e4
+      ticks = (((((days * 24 + hours) * 60 + minutes) * 60) + seconds) * 1000 + milliseconds) * 10000
     else 
       assert(ticks)
     end
@@ -181,34 +190,34 @@ TimeSpan = System.defStc("System.TimeSpan", {
     return this.ticks
   end,
   getDays = function (this) 
-    return div(this.ticks, 864e9)
+    return div(this.ticks, 864000000000)
   end,
-  getHours = function(this) 
-    return div(this.ticks, 36e9) % 24
+  getHours = function(this)
+    return getPart(this, 36000000000, 24)
   end,
-  getMinutes = function (this) 
-    return div(this.ticks, 6e8) % 60
+  getMinutes = function (this)
+    return getPart(this, 600000000, 60)
   end,
-  getSeconds = function (this) 
-    return div(this.ticks, 1e7) % 60
+  getSeconds = function (this)
+    return getPart(this, 10000000, 60)
   end,
-  getMilliseconds = function (this) 
-    return div(this.ticks, 1e4) % 1000
+  getMilliseconds = function (this)
+    return getPart(this, 10000, 1000)
   end,
   getTotalDays = function (this) 
-    return this.ticks / 864e9
+    return this.ticks / 864000000000
   end,
   getTotalHours = function (this) 
-    return this.ticks / 36e9
+    return this.ticks / 36000000000
   end,
   getTotalMilliseconds = function (this) 
-    return this.ticks / 1e4
+    return this.ticks / 10000
   end,
   getTotalMinutes = function (this) 
-    return this.ticks / 6e8
+    return this.ticks / 600000000
   end,
   getTotalSeconds = function (this) 
-    return this.ticks / 1e7
+    return this.ticks / 10000000
   end,
   Add = add,
   Subtract = subtract,
@@ -221,9 +230,9 @@ TimeSpan = System.defStc("System.TimeSpan", {
   end,
   Negate = negate,
   ToString = function (this) 
-    local day, milliseconds = this:getDays(), this.ticks % 1e7
+    local day, milliseconds = this:getDays(), this.ticks % 10000000
     local daysStr = day == 0 and "" or (day .. ".")
-    local millisecondsStr = milliseconds == 0 and "" or "." .. milliseconds
+    local millisecondsStr = milliseconds == 0 and "" or (".%07d"):format(milliseconds)
     return sformat("%s%02d:%02d:%02d%s", daysStr, this:getHours(), this:getMinutes(), this:getSeconds(), millisecondsStr)
   end,
   Parse = function (s)

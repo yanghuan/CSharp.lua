@@ -61,8 +61,8 @@ namespace CSharpLua.LuaAst {
       public const string BitAnd = "&";
       public const string BitOr = "|";
       public const string BitXor = "~";
-      public const string LeftShift = "<<";
-      public const string RightShift = ">>";
+      public const string ShiftLeft = "<<";
+      public const string ShiftRight = ">>";
       public const string ShortComment = "--";
       public const string OpenLongComment = "--[[";
       public const string CloseLongComment = "--]]";

@@ -181,7 +181,7 @@ local UInt64 = define("System.UInt64", {
     return parseIntWithException(s, 0, 18446744073709551615.0)
   end,
   TryParse = function (s)
-    return tryParseInt(s, 0, 18446744073709551615)
+    return tryParseInt(s, 0, 18446744073709551615.0)
   end
 })
 setmetatable(UInt64, Int)
@@ -212,16 +212,40 @@ local function equalsDouble(this, v)
   return isNaN(this) and isNaN(v)
 end
 
+local function hexForamt(x, n)
+  return n == "" and "%" .. x or "%0" .. n .. x
+end
+
+local function floatForamt(x, n)
+  return n == "" and "%.f" or "%." .. n .. 'f'
+end
+
+local function integerFormat(x, n)
+  return n == "" and "%d" or "%0" .. n .. 'd'
+end
+
+local function exponentialFormat(x, n)
+  return n == "" and "%" .. x or "%." .. n .. x
+end
+
+local formats = {
+  ['x'] = hexForamt,
+  ['X'] = hexForamt,
+  ['f'] = floatForamt,
+  ['F'] = floatForamt,
+  ['d'] = integerFormat,
+  ['D'] = integerFormat,
+  ['e'] = exponentialFormat,
+  ['E'] = exponentialFormat
+}
+
 local function toStringWithFormat(this, format)
   if #format ~= 0 then
-    local i, j, x, n = format:find("^%s*([xXdDfF])(%d?)%s*$")
+    local i, j, x, n = format:find("^%s*([xXdDfFeE])(%d?)%s*$")
     if i then
-      if x == 'x' or x == 'X' then
-        format = n == "" and "%" .. x or "%0" .. n .. x
-      elseif x == 'f' or x == 'F' then
-        format = n == "" and "%.f" or "%." .. n .. 'f'
-      else
-        format = n == "" and "%d" or "%0" .. n .. 'd'
+      local f = formats[x]
+      if f then
+        format = f(x, n)
       end
       return format:format(this)
     end

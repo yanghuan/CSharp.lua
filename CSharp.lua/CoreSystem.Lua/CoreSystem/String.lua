@@ -496,7 +496,7 @@ local function padLeft(this, totalWidth, paddingChar)
   if len >= totalWidth then
     return this
   else
-    paddingChar = paddingChar or 0x20;
+    paddingChar = paddingChar or 0x20
     return rep(char(paddingChar), totalWidth - len) .. this
   end
 end
@@ -506,7 +506,7 @@ local function padRight(this, totalWidth, paddingChar)
   if len >= totalWidth then
     return this
   else
-    paddingChar = paddingChar or 0x20;
+    paddingChar = paddingChar or 0x20
     return this .. rep(char(paddingChar), totalWidth - len)
   end
 end

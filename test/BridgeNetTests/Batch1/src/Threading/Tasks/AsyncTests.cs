@@ -58,7 +58,7 @@ namespace Bridge.ClientTest.Threading
 
             Task asyncTask = someMethod();
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running immediately");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running immediately");
             Assert.AreEqual(1, state, "Async method should start running after being invoked");
 
             asyncTask.ContinueWith(x =>
@@ -70,7 +70,7 @@ namespace Bridge.ClientTest.Threading
                    done();
                });
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running before awaited task is finished");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running before awaited task is finished");
             Assert.AreEqual(1, state, "Async method should not continue past point 1 until task is finished");
 
             tcs.SetResult(0);
@@ -96,7 +96,7 @@ namespace Bridge.ClientTest.Threading
 
             Task asyncTask = someMethod();
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running immediately");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running immediately");
             Assert.AreEqual(1, state, "Async method should start running after being invoked");
 
             asyncTask.ContinueWith(x =>
@@ -109,7 +109,7 @@ namespace Bridge.ClientTest.Threading
                     done();
                 });
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running before awaited task is finished");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running before awaited task is finished");
             Assert.AreEqual(1, state, "Async method should not continue past point 1 until task is finished");
 
             tcs.SetResult(0);
@@ -134,7 +134,7 @@ namespace Bridge.ClientTest.Threading
 
             Task asyncTask = someMethod();
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running immediately");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running immediately");
             Assert.AreEqual(1, state, "Async method should start running after being invoked");
 
             asyncTask.ContinueWith(x =>
@@ -147,7 +147,7 @@ namespace Bridge.ClientTest.Threading
                     done();
                 });
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running before awaited task is finished");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running before awaited task is finished");
             Assert.AreEqual(1, state, "Async method should not continue past point 1 until task is finished");
 
             tcs.SetException(ex);
@@ -208,7 +208,7 @@ namespace Bridge.ClientTest.Threading
 
             Task<int> asyncTask = someMethod();
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running immediately");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running immediately");
             Assert.AreEqual(1, state, "Async method should start running after being invoked");
 
             asyncTask.ContinueWith(x =>
@@ -221,7 +221,7 @@ namespace Bridge.ClientTest.Threading
                     done();
                 });
 
-            Assert.AreEqual(TaskStatus.Running, asyncTask.Status, "asyncTask should be running before awaited task is finished");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, asyncTask.Status, "asyncTask should be running before awaited task is finished");
             Assert.AreEqual(1, state, "Async method should not continue past point 1 until task is finished");
 
             tcs.SetResult(0);

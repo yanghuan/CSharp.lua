@@ -17,8 +17,11 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local Int = System.Int
+local ArgumentNullException = System.ArgumentNullException
+local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 
 local setmetatable = setmetatable
+local byte = string.byte
 
 local isSeparatorTable = {
   [32] = true,
@@ -65,9 +68,16 @@ local isWhiteSpace = {
   [0x0085] = true,
 }
 
+local function get(s, index)
+  if s == nil then throw(ArgumentNullException("s")) end
+  local c = byte(s, index + 1)
+  if not c then throw(ArgumentOutOfRangeException("index")) end
+  return c
+end
+
 local function isDigit(c, index)
   if index then
-    c = c:get(index)
+    c = get(c, index)
   end
   return (c >= 48 and c <= 57)
 end
@@ -75,9 +85,9 @@ end
 -- https://msdn.microsoft.com/zh-cn/library/yyxz6h5w(v=vs.110).aspx
 local function isLetter(c, index)    
   if index then
-    c = c:get(index) 
+    c = get(c, index) 
   end
-  if c < 256 then
+  if c < 128 then
     return (c >= 65 and c <= 90) or (c >= 97 and c <= 122)
   else  
     return (c >= 0x0400 and c <= 0x042F) 
@@ -101,7 +111,7 @@ local Char = System.defStc("System.Char", {
   default = Int.default,
   IsControl = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return (c >=0 and c <= 31) or (c >= 127 and c <= 159)
   end,
@@ -109,25 +119,25 @@ local Char = System.defStc("System.Char", {
   IsLetter = isLetter,
   IsLetterOrDigit = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return isDigit(c) or isLetter(c)
   end,
   IsLower = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return (c >= 97 and c <= 122) or (c >= 945 and c <= 969)
   end,
   IsNumber = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return (c >= 48 and c <= 57) or c == 178 or c == 179 or c == 185 or c == 188 or c == 189 or c == 190
   end,
   IsPunctuation = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     if c < 256 then
       return (c >= 0x0021 and c <= 0x0023) 
@@ -142,13 +152,13 @@ local Char = System.defStc("System.Char", {
   end,
   IsSeparator = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return (c >= 0x2000 and c <= 0x200A) or isSeparatorTable[c] == true
   end,
   IsSymbol = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     if c < 256 then
       return (c >= 162 and c <= 169) or (c >= 174 and c <= 177) or isSymbolTable(c) == true
@@ -157,13 +167,13 @@ local Char = System.defStc("System.Char", {
   end,
   IsUpper = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return (c >= 65 and c <= 90) or (c >= 913 and c <= 937)
   end,
   IsWhiteSpace = function (c, index)
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return (c >= 0x2000 and c <= 0x200A) or (c >= 0x0009 and c <= 0x000d) or isWhiteSpace[c] == true
   end,
@@ -196,19 +206,19 @@ local Char = System.defStc("System.Char", {
   end,
   IsHighSurrogate = function (c, index) 
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return c >= 0xD800 and c <= 0xDBFF
   end,
   IsLowSurrogate = function (c, index) 
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return c >= 0xDC00 and c <= 0xDFFF
   end,
   IsSurrogate = function (c, index) 
     if index then
-      c = c:get(index)
+      c = get(c, index)
     end
     return c >= 0xD800 and c <= 0xDFFF
   end,

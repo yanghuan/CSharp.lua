@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 
 public static class Extension {
-  private static string ToFormat(int format) {
+  private static string ToIntegerFormat(int format) {
     if (format == 10) {
       return "D";
     }
@@ -16,47 +16,58 @@ public static class Extension {
   }
 
   public static string ToString(this sbyte b, int format) {
-    return b.ToString(ToFormat(format));
+    return b.ToString(ToIntegerFormat(format));
   }
 
   public static string ToString(this byte b, int format) {
-    return b.ToString(ToFormat(format));
+    return b.ToString(ToIntegerFormat(format));
   }
 
   public static string ToString(this ushort v, int format) {
-    return v.ToString(ToFormat(format));
+    return v.ToString(ToIntegerFormat(format));
   }
 
   public static string ToString(this short v, int format) {
-    return v.ToString(ToFormat(format));
+    return v.ToString(ToIntegerFormat(format));
   }
 
   public static string ToString(this int v, int format) {
-    return v.ToString(ToFormat(format));
+    return v.ToString(ToIntegerFormat(format));
   }
 
   public static string ToString(this uint v, int format) {
-    return v.ToString(ToFormat(format));
+    return v.ToString(ToIntegerFormat(format));
   }
 
   public static string ToString(this long v, int format) {
-    return v.ToString(ToFormat(format));
+    return v.ToString(ToIntegerFormat(format));
   }
 
   public static string ToString(this ulong v, int format) {
-    return v.ToString(ToFormat(format));
+    return v.ToString(ToIntegerFormat(format));
   }
 
   public static string ToPrecision(this float v, int decimals = 0) {
-    return v.ToString();
+    return v.ToString(ToIntegerFormat(decimals));
+  }
+
+  private static string ToSingleFormat(int format) {
+    return "f" + format;
   }
 
   public static string ToFixed(this float v, int decimals = 0) {
-    return v.ToString("N" + decimals);
+    return v.ToString(ToSingleFormat(decimals));
+  }
+
+  private static string ToExponentialFormat(int format) {
+    if (format == 0) {
+      return "e";
+    }
+    return "e" + format;
   }
 
   public static string ToExponential(this float v, int decimals = 0) {
-    return v.ToString();
+    return v.ToString(ToExponentialFormat(decimals));
   }
 
   public static string ToFixed(this decimal v, int decimals, MidpointRounding midpointRounding) {
