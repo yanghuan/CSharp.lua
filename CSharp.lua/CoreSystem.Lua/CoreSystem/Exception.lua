@@ -201,7 +201,7 @@ define("System.InvalidCastException", {
   end
 })
 
-define("System.InvalidOperationException", {
+local InvalidOperationException = define("System.InvalidOperationException", {
   __tostring = toString,
   __inherits__ = { SystemException },
   __ctor__ = function(this, message, innerException) 
@@ -249,6 +249,17 @@ define("System.TypeLoadException", {
   end
 })
 
+define("System.ObjectDisposedException", {
+  __tostring = toString,
+  __inherits__ = { InvalidOperationException },
+  __ctor__ = function(this, objectName, message, innerException)
+    ctorOfException(this, message or "Cannot access a disposed object.", innerException)
+    this.objectName = objectName
+    if objectName and #objectName > 0 then
+      this.message = this.message .. "\nObject name: '" .. objectName .. "'."
+    end
+  end
+})
 
 local function toStringOfAggregateException(this)
   local t = { toString(this) }

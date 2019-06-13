@@ -966,7 +966,7 @@ define("System.Activator", {
         return T(unpack(args, 1, n))
       end
     end
-    local i = findMatchCtor(T, n, function (i, ...) return select(i, ...) end, ...)
+    local i = findMatchCtor(T, n, select, ...)
     if i and i ~= 1 then
       return System.new(T, i, ...)
     end

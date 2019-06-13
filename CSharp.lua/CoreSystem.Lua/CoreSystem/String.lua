@@ -163,7 +163,7 @@ local function throwFormatError()
   throw(FormatException("Input string was not in a correct format."))
 end
 
-local function formatBuild(format, args, len)
+local function formatBuild(format, len, select, ...)
   local t, count = {}, 1
   local i, j, s = 1
   while true do
@@ -211,12 +211,16 @@ local function formatBuild(format, args, len)
     if not i then throwFormatError() end
     s = s + 1
     if s > len then throwFormatError() end
-    s = args[s]
+    s = select(s, ...)
     s = (s ~= nil and s ~= System.null) and s:ToString() or ""
     t[count] = s
     count = count + 1
     i = j + 1
   end
+end
+
+local function selectTable(i, t)
+  return t[i]
 end
 
 local function format(format, ...)
@@ -225,10 +229,10 @@ local function format(format, ...)
   if len == 1 then
     local args = ...
     if System.isArrayLike(args) then
-      return formatBuild(format, args, #args)
+      return formatBuild(format, #args, selectTable, args)
     end
   end
-  return formatBuild(format, { ... }, len)
+  return formatBuild(format, len, select, ...)
 end
 
 local function isNullOrEmpty(value)

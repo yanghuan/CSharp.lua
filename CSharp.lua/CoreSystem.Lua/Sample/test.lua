@@ -374,6 +374,21 @@ test(testIO, "IO")
 --test(testAsync, "Async")
 
 
-print(tonumber("100000000000000000000"))
-print(tonumber("9223372036854775807"))
-print(tonumber("9223372036854775809"))
+      local state = 0
+      local tcs = System.TaskCompletionSource()
+      local task = tcs:getTask()
+      local ex = System.Exception("Some text")
+
+      local someMethod = function ()
+        return System.async(function (async)
+          print("11111")
+          state = 1
+          async:await(task)
+          print("222")
+          state = 2
+        end, nil)
+      end
+
+      local asyncTask = someMethod()
+      tcs:SetException(ex)
+

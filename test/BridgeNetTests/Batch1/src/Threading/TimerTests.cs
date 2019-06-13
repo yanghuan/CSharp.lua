@@ -75,7 +75,7 @@ namespace Bridge.ClientTest.Threading
             var count = StaticCounter;
             timer.Dispose();
 
-            Assert.Throws<InvalidOperationException>(() => { timer.Change(1, 1); }, "No change after Dispose allowed");
+            Assert.Throws<ObjectDisposedException>(() => { timer.Change(1, 1); }, "No change after Dispose allowed");
             Assert.True(count > 0, "Ticks: " + count);
             Assert.AreEqual("SomeState", StaticData, "State works");
 

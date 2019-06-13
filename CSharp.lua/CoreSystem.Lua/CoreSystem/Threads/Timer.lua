@@ -21,6 +21,7 @@ local currentTimeMillis = System.currentTimeMillis
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException  = System.ArgumentOutOfRangeException
 local NotImplementedException = System.NotImplementedException
+local ObjectDisposedException = System.ObjectDisposedException
 
 local type = type
 
@@ -196,6 +197,7 @@ local function change(this, dueTime, period)
   if period < -1 or period > 0xfffffffe then
     throw(ArgumentOutOfRangeException("period"))
   end
+  if this.id == -1 then throw(ObjectDisposedException()) end
   close(this)
   if dueTime ~= -1 then
     this.id = addTimer(this.callback, dueTime, period)
@@ -210,6 +212,9 @@ define("System.Timer", {
     change(this, dueTime, period)
   end,
   Change = change,
-  Dispose = close,
+  Dispose = function (this)
+    close(this)
+    this.id = -1
+  end,
   __gc = close
 })

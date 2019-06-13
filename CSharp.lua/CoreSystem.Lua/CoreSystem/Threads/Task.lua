@@ -16,6 +16,7 @@ limitations under the License.
 
 local System = System
 local define = System.define
+local defStc = System.defStc
 local throw = System.throw
 local try = System.try
 local trunc = System.trunc
@@ -24,6 +25,7 @@ local post = System.post
 local addTimer = System.addTimer
 local removeTimer = System.removeTimer
 local waitTask = System.Thread.waitTask
+local arrayFromTable = System.arrayFromTable
 local Exception = System.Exception
 local NotImplementedException = System.NotImplementedException
 local ArgumentException = System.ArgumentException
@@ -31,12 +33,15 @@ local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local InvalidOperationException = System.InvalidOperationException
 local AggregateException = System.AggregateException
+local ObjectDisposedException = System.ObjectDisposedException
 
 local type = type
 local table = table
+local select = select
 
 local tremove = table.remove
 local setmetatable = setmetatable
+local getmetatable = getmetatable
 local assert = assert
 local coroutine = coroutine
 local ccreate = coroutine.create
@@ -131,12 +136,16 @@ local function newTaskExceptionHolder(task, exception)
   return setmetatable({ task = task, exception = exception }, TaskExceptionHolder)
 end
 
-local function getException(task)
+local function getException(task, await)
   local holder = task.data
   if not holder.isHandled then
     holder.isHandled = true
   end
-  return AggregateException(holder.exception)
+  local e = holder.exception
+  if await then
+    return e
+  end
+  return AggregateException(e)
 end
 
 local Task
@@ -246,10 +255,20 @@ local function addContinueAction(task, f)
   continueActions[#continueActions + 1] = assert(f)
 end
 
-local function checkTasks(tasks)
-  if tasks == nil then throw(ArgumentNullException("tasks")) end
-  if not System.isArrayLike(tasks) then
-    tasks = System.Array.toArray(tasks)
+local function checkTasks(...)
+  local tasks
+  local n = select("#", ...)
+  if n == 1 then
+    local args = ...
+    if args == nil then throw(ArgumentNullException("tasks")) end
+    if System.isArrayLike(args) then
+      tasks = args
+    elseif System.isEnumerableLike(args) then
+      tasks = System.Array.toArray(args)
+    end
+  end
+  if not tasks then
+    tasks = System.Array(Task)(...)
   end
   for i = 1, #tasks do
     if tasks[i] == System.null then
@@ -259,15 +278,29 @@ local function checkTasks(tasks)
   return tasks
 end
 
+local function getDelay(delay)
+  if type(delay) == "table" then
+    delay = trunc(delay:getTotalMilliseconds())
+    if delay < -1 or delay > 2147483647 then
+      throw(ArgumentOutOfRangeException("delay"))
+    end
+  elseif delay < -1 then
+    throw(ArgumentOutOfRangeException("millisecondsDelay"))  
+  end
+  return delay
+end
+
 local waitToken = {}
-local function getResult(this)
+local function getResult(this, await)
   local status = this.status
   if status == TaskStatusRanToCompletion then
     return this.data
   elseif status == TaskStatusFaulted then
-    throw(getException(this))
+    throw(getException(this, await))
   elseif status == TaskStatusCanceled then
-    throw(TaskCanceledException(this))
+    local e = TaskCanceledException(this)
+    if not await then e = AggregateException(e) end
+    throw(e)
   end
   return waitToken
 end
@@ -280,7 +313,7 @@ local function awaitTask(t, task)
     if status == TaskStatusRanToCompletion then
       ok, v = true, task.data
     elseif status == TaskStatusFaulted then
-      ok, v = false, getException(task)
+      ok, v = false, getException(task, true)
     elseif status == TaskStatusCanceled then
       ok, v = false, TaskCanceledException(task)
     else
@@ -313,12 +346,13 @@ local factory = {
   end
 }
 
-Task = define("System.Task", {
+Task = define("System.Threading.Tasks.Task", {
+  Dispose = System.emptyFn,
   __ctor__ = function (this, action, state)
     if action == nil then throw(ArgumentNullException("action")) end
     this.status = TaskStatusCreated
     this.data = function ()
-      action(state)
+      return action(state)
     end
   end,
   getId = getId,
@@ -361,14 +395,7 @@ Task = define("System.Task", {
   FromException = fromException,
   getCompletedTask = getCompletedTask,
   Delay = function (delay, cancellationToken)
-    if type(delay) == "table" then
-      delay = trunc(delay:getTotalMilliseconds())
-      if delay < -1 or delay > 2147483647 then
-        throw(ArgumentOutOfRangeException("delay"))
-      end
-    elseif delay < -1 then
-      throw(ArgumentOutOfRangeException("millisecondsDelay"))  
-    end
+    delay = getDelay(delay)
 
     if cancellationToken and cancellationToken:getIsCancellationRequested() then
       return fromCanceled(cancellationToken)
@@ -380,7 +407,7 @@ Task = define("System.Task", {
     local timerId, registration  
 
     if cancellationToken and cancellationToken:getCanBeCanceled() then
-      registration = cancellationToken.source:register(function ()
+      registration = cancellationToken:Register(function ()
         local success = trySetCanceled(t, cancellationToken)
         if success and timerId then
           removeTimer(timerId)
@@ -404,29 +431,32 @@ Task = define("System.Task", {
     t:Start()
     return t
   end,
-  WhenAll = function (tasks)
-    tasks = checkTasks(tasks)
+  WhenAll = function (...)
+    local tasks = checkTasks(...)
     local count = #tasks
     if count == 0 then
       return getCompletedTask()
     end
-    local exception, cancelled
+    local result, exceptions, cancelled = {}, {}
     local t = newWaitingTask()
     local function f(task)
       local status = task.status
-      if status == TaskStatusFaulted then
-        exception = getException(task)
+      if status == TaskStatusRanToCompletion then
+        result[#result + 1] = task.data
+      elseif status == TaskStatusFaulted then
+        local exception = getException(task, true)
+        exceptions[#exceptions + 1] = exception
       elseif status == TaskStatusCanceled then
         cancelled = true
       end
       count = count - 1
       if count == 0 then
-        if exception then
-          trySetException(t, exception)
+        if #exceptions > 0 then
+          trySetException(t, arrayFromTable(exceptions, Exception))
         elseif cancelled then
           trySetCanceled(t)
         else
-          trySetResult(t)
+          trySetResult(arrayFromTable(result, getmetatable(result[1])))
         end
       end
     end
@@ -442,8 +472,8 @@ Task = define("System.Task", {
     end
     return t
   end,
-  WhenAny = function (tasks)
-    tasks = checkTasks(tasks)
+  WhenAny = function (...)
+    local tasks = checkTasks(...)
     local count = #tasks
     if count == 0 then
       throw(ArgumentException())
@@ -476,6 +506,7 @@ Task = define("System.Task", {
     local t = newWaitingTask()
     local function f(task)
       try(function ()
+        t.status = TaskStatusRunning
         assert(trySetResult(t, continuationAction(task)))
       end, function (e)
         assert(trySetException(t, e))
@@ -492,11 +523,13 @@ Task = define("System.Task", {
   end,
   Start = function (this)
     if this.status ~= TaskStatusCreated then throw(InvalidOperationException("Task was already started.")) end
+    this.status = TaskStatusWaitingToRun
     post(function ()
       try(function ()
-        assert(trySetResult(t, this.data()))
+        this.status = TaskStatusRunning
+        assert(trySetResult(this, this.data()))
       end, function (e)
-        assert(trySetException(t, e))
+        assert(trySetException(this, e))
       end)
     end)
   end,
@@ -504,7 +537,7 @@ Task = define("System.Task", {
     waitTask(getContinueActions(this))
   end,
   await = function (this, task)
-    local result = getResult(task)
+    local result = getResult(task, true)
     if result ~= waitToken then
       return result
     end
@@ -513,7 +546,7 @@ Task = define("System.Task", {
 })
 
 local TaskT_TransitionToFinal_AlreadyCompleted = "An attempt was made to transition a task to a final state when it had already completed."
-define("System.TaskCompletionSource", {
+local TaskCompletionSource = define("System.Threading.Tasks.TaskCompletionSource", {
   __ctor__ = function (this)
     this.task = newWaitingTask()
   end,
@@ -527,7 +560,7 @@ define("System.TaskCompletionSource", {
   end,
   SetException = function (this, exception)
     if exception == nil then throw(ArgumentNullException("exception")) end
-    if not trySetException(this.task) then
+    if not trySetException(this.task, exception) then
       throw(InvalidOperationException(TaskT_TransitionToFinal_AlreadyCompleted))
     end
   end,
@@ -541,11 +574,229 @@ define("System.TaskCompletionSource", {
   TrySetResult = trySetResult
 })
 
-System.defStc("System.CancellationTokenRegistration", {
-  __inherits__ =  function(_, T)
-    return { System.IDisposable, System.IEquatable_1(T) }
+local CancellationTokenRegistration = defStc("System.Threading.CancellationTokenRegistration", (function ()
+  local function unregister(this)
+    local token = this.token
+    if token then
+      local f = this.f
+      if f then
+        this.f = nil
+        return token.source:unRegister(f)
+      end
+    end
+    return false
+  end
+  return {
+    __inherits__ =  function(_, T)
+      return { System.IDisposable, System.IEquatable_1(T) }
+    end,
+    __ctor__ = function (this, token, f)
+      if not token then
+        return
+      end
+      this.token = token
+      this.f = f
+    end,
+    getToken = function (this)
+      return this.token
+    end,
+    Equals = System.equals,
+    Unregister = unregister,
+    Dispose = unregister
+  }
+end)())
+
+local canceledSource
+
+local OperationCanceledException = define("System.OperationCanceledException", {
+  __tostring = Exception.ToString,
+  __inherits__ = { System.SystemException },
+  __ctor__ = function (this, message, innerException, token)
+    Exception.__ctor__(this, message or "The operation was canceled.", innerException)
+    this.tokne = token
   end,
+  getCancellationToken = function (this)
+    return this.token
+  end
 })
+
+local CancellationToken 
+CancellationToken = defStc("System.Threading.CancellationToken", {
+  __ctor__ = function (this, canceled)
+    if canceled == nil then
+      return
+    end
+    if canceled == true then
+      this.source = canceledSource
+    elseif canceled then
+      this.source = canceled
+    end
+  end,
+  getCanBeCanceled = function (this)
+    return this.source ~= nil
+  end,
+  getIsCancellationRequested = function (this)
+    local source = this.source
+    if source then
+      return source:getIsCancellationRequested()
+    end
+    return false
+  end,
+  getNone = function ()
+    return CancellationToken()
+  end,
+  Equals = System.equals,
+  Register = function (this, callback, state)
+    local source = this.source
+    if source then
+      if not source:getIsCancellationRequested() then
+        local function f()
+          callback(state)
+        end
+        this.source:register(f)
+        return CancellationTokenRegistration(this, f)
+      end
+      callback(state)
+    end
+    return CancellationTokenRegistration()
+  end,
+  ThrowIfCancellationRequested = function (this)
+    if this:getIsCancellationRequested() then
+      throw(OperationCanceledException())
+    end
+  end
+})
+
+local CancellationTokenSource 
+CancellationTokenSource = define("System.Threading.CancellationTokenSource", (function ()
+  local function clean(this)
+    local timerId = this.timerId
+    if timerId then
+      removeTimer(timerId)
+    end
+    local links = this.links
+    if links then
+      for i = 1, #links do
+        links[i]:Dispose()
+      end
+    end
+  end
+  return  {
+    state = 0,
+    __inherits__ = { System.IDisposable },
+    __ctor__  = function (this, delay)
+      if delay then
+        delay = getDelay(delay)
+        if delay == 0 then
+          this.state = 1
+        else
+          this.timerId = addTimer(function ()
+            this.Cancel()
+          end, delay)
+        end
+      end
+    end,
+    Cancel = function (this, throwOnFirstException)
+      if this.disposed then throw(ObjectDisposedException()) end
+      if this.state == 1  then
+        return
+      end
+      clean(this)
+      this.state = 1
+      local actions = this.continueActions
+      if actions then
+        local t = {}
+        for i = 1, #actions do
+          try(function ()
+            actions[i]()          
+          end, function (e)
+            if throwOnFirstException then
+              throw(e)
+            end
+            t[#t + 1] = e
+          end)
+        end
+        if #t > 0 then
+          throw(AggregateException(arrayFromTable(t, Exception)))
+        end
+      end
+    end,
+    CancelAfter = function (this, delay)
+      if this.disposed then throw(ObjectDisposedException()) end
+      delay = getDelay(delay)
+      if this.state == 1  then
+        return
+      end
+      local timerId = this.timerId
+      if timerId then
+        removeTimer(timerId)
+      end
+      this.timerId = addTimer(function ()
+        this:Cancel()
+      end, delay)
+    end,
+    Dispose = function (this)
+      if this.disposed then
+        return
+      end
+      clean(this)
+      this.disposed = true
+    end,
+    getIsCancellationRequested = function (this)
+      return this.state == 1
+    end,
+    getToken = function (this)
+      local t = this.token
+      if not t then
+        t = CancellationToken(this)
+        this.token = t
+      end
+      return t
+    end,
+    register = addContinueAction,
+    unRegister = function (this, f)
+      local actions = this.continueActions
+      if actions then
+        for i = 1, #actions do
+          if actions[i] == f then
+            tremove(actions, i)
+            return true
+          end
+        end
+      end
+      return false
+    end,
+    CreateLinkedTokenSource = function (...)
+      local cts, links, count = CancellationTokenSource(), {}, 1
+      cts.links = links
+      local n = select("#", ...)
+      if n == 1 then
+        local args = ...
+        if System.isArrayLike(args) then
+          for i = 1, #args do
+            links[count] = args[i]:Register(cts.Cancel, cts)
+            count = count + 1 
+          end
+          return cts
+        end
+      end
+      for i = 1, n do
+        local token = select(i, ...)
+        links[count] = token:Register(cts.Cancel, cts)
+        count = count + 1 
+      end
+      return cts
+    end
+  }
+end)())
+
+canceledSource = setmetatable({ state = 1 }, CancellationTokenSource)
+
+System.Task = Task
+System.TaskCompletionSource = TaskCompletionSource
+System.CancellationTokenRegistration = CancellationTokenRegistration
+System.CancellationToken = CancellationToken
+System.CancellationTokenSource = CancellationTokenSource
 
 local taskCoroutinePool = {}
 local function taskCoroutineCreate(t, f)

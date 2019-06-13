@@ -153,10 +153,6 @@ public static class Script {
     Console.WriteLine(message);
   }
 
-  public  static void Eval(string message) {
-    Console.WriteLine(message);
-  }
-
   public static T CreateInstance<T>(params object[] args) {
     return (T)Activator.CreateInstance(typeof(T), args);
   }

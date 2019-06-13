@@ -28,7 +28,9 @@ namespace Bridge.ClientTest.Threading
         public void TaskTypePropertiesAreCorrect()
         {
             Assert.AreEqual("System.Threading.Tasks.Task", typeof(Task).FullName, "FullName for non-generic task should be correct");
+#if false
             Assert.AreEqual("System.Threading.Tasks.Task`1[[System.Int32, mscorlib]]", typeof(Task<int>).FullName, "FullName for generic task should be correct");
+#endif
 
             var task = new TaskCompletionSource<int>().Task;
             Assert.True(task is Task<int>);
@@ -58,7 +60,7 @@ namespace Bridge.ClientTest.Threading
                     callbackRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "The task should be running before SetResult is called");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "The task should be running before SetResult is called");
             Assert.False(callbackRun, "Callback should not be run before SetResult() is called");
 
             tcs.SetResult(1);
@@ -100,7 +102,7 @@ namespace Bridge.ClientTest.Threading
                     callbackRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "The task should be running before the SetException() call");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "The task should be running before the SetException() call");
             Assert.False(callbackRun, "Callback should not be run before SetException() is called");
 
             tcs.SetException(ex);
@@ -148,7 +150,7 @@ namespace Bridge.ClientTest.Threading
                     callbackRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "The task should be running before the SetException() call");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "The task should be running before the SetException() call");
             Assert.False(callbackRun, "Callback should not be run before SetException() is called");
 
             tcs.SetException(MakeEnumerable(new[] { ex1, ex2 }));
@@ -192,7 +194,7 @@ namespace Bridge.ClientTest.Threading
                     callbackRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "The task should be running before the SetCanceled() call");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "The task should be running before the SetCanceled() call");
             Assert.False(callbackRun, "Callback should not be run before SetCanceled() is called");
 
             tcs.SetCanceled();
@@ -357,7 +359,7 @@ namespace Bridge.ClientTest.Threading
             var tcs = new TaskCompletionSource<int>();
             Task task = tcs.Task;
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running at point 1");
 
             Task continuedTask = null;
 
@@ -399,7 +401,7 @@ namespace Bridge.ClientTest.Threading
             var tcs = new TaskCompletionSource<int>();
             Task task = tcs.Task;
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running at point 1");
 
             var t1 = task.ContinueWith(t =>
                 {
@@ -437,13 +439,13 @@ namespace Bridge.ClientTest.Threading
             var tcs = new TaskCompletionSource<int>();
             Task task = tcs.Task;
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running at point 1");
 
             Task continuedTask = null;
 
             continuedTask = task.ContinueWith(t =>
                 {
-                    Script.Eval("throw 'This is a test message'");
+                    throw new Exception("This is a test message");
                 });
 
             Assert.False(task == continuedTask, "task and continuedTask should not be the same");
@@ -478,7 +480,7 @@ namespace Bridge.ClientTest.Threading
             var tcs = new TaskCompletionSource<int>();
             Task task = tcs.Task;
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running at point 1");
 
             Task<int> continuedTask = null;
             continuedTask = task.ContinueWith(t =>
@@ -523,7 +525,7 @@ namespace Bridge.ClientTest.Threading
             var tcs = new TaskCompletionSource<int>();
             Task<int> task = tcs.Task;
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running at point 1");
 
             Task continuedTask = null;
 
@@ -565,7 +567,7 @@ namespace Bridge.ClientTest.Threading
             var tcs = new TaskCompletionSource<int>();
             Task<int> task = tcs.Task;
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running at point 1");
 
             Task<string> continuedTask = null;
 
@@ -615,7 +617,7 @@ namespace Bridge.ClientTest.Threading
 
             var delay = Task.Delay(100);
 
-            Assert.AreEqual(TaskStatus.Running, delay.Status, "delay should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, delay.Status, "delay should be running at point 1");
 
             var afterDelay = delay.ContinueWith(t =>
                 {
@@ -654,7 +656,7 @@ namespace Bridge.ClientTest.Threading
                     bodyRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingToRun, task.Status, "task should be running at point 1");
 
             var doneTask = task.ContinueWith(t =>
                 {
@@ -686,7 +688,8 @@ namespace Bridge.ClientTest.Threading
                     return 42;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingToRun, task.Status, "task should be running at point 1");
+
 
             var doneTask = task.ContinueWith(t =>
                 {
@@ -716,10 +719,10 @@ namespace Bridge.ClientTest.Threading
             var task = Task.Run(() =>
                 {
                     bodyRun = true;
-                    Script.Eval("throw 'This is a test message'");
+                    throw new Exception("This is a test message");
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running at point 1");
+            Assert.AreEqual(TaskStatus.WaitingToRun, task.Status, "task should be running at point 1");
 
             var doneTask = task.ContinueWith(t =>
                 {
@@ -783,7 +786,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
             tcs1.SetResult(101);
@@ -840,7 +843,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
             tcs1.SetResult(101);
@@ -896,7 +899,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
             tcs1.SetResult(101);
@@ -952,7 +955,7 @@ namespace Bridge.ClientTest.Threading
                 continuationRun = true;
             });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
             tcs1.SetResult(101);
@@ -1021,7 +1024,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetException(ex1);
             tcs1.SetResult(101);
@@ -1077,7 +1080,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
             tcs1.SetCanceled();
@@ -1119,7 +1122,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
 
@@ -1166,7 +1169,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
 
@@ -1213,7 +1216,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
 
@@ -1260,7 +1263,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetResult(3);
 
@@ -1308,7 +1311,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetException(ex);
 
@@ -1353,7 +1356,7 @@ namespace Bridge.ClientTest.Threading
                     continuationRun = true;
                 });
 
-            Assert.AreEqual(TaskStatus.Running, task.Status, "task should be running after creation.");
+            Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status, "task should be running after creation.");
 
             tcs2.SetCanceled();
 
@@ -1402,7 +1405,7 @@ namespace Bridge.ClientTest.Threading
 
                     task.Start();
 
-                    Assert.AreEqual(TaskStatus.Running, task.Status);
+                    Assert.AreEqual(TaskStatus.WaitingToRun, task.Status);
                 });
 
             task1.ContinueWith(x =>
@@ -1443,7 +1446,7 @@ namespace Bridge.ClientTest.Threading
 
                     task.Start();
 
-                    Assert.AreEqual(TaskStatus.Running, task.Status);
+                    Assert.AreEqual(TaskStatus.WaitingToRun, task.Status);
                 });
 
             task1.ContinueWith(x =>
@@ -1527,7 +1530,7 @@ namespace Bridge.ClientTest.Threading
 
                     task.Start();
 
-                    Assert.AreEqual(TaskStatus.Running, task.Status);
+                    Assert.AreEqual(TaskStatus.WaitingToRun, task.Status);
                 });
 
             doneTask.ContinueWith(x =>
@@ -1571,7 +1574,7 @@ namespace Bridge.ClientTest.Threading
 
                     task.Start();
 
-                    Assert.AreEqual(TaskStatus.Running, task.Status);
+                    Assert.AreEqual(TaskStatus.WaitingToRun, task.Status);
                 });
 
             doneTask.ContinueWith(x =>
