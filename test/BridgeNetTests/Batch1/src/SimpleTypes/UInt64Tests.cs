@@ -87,6 +87,7 @@ namespace Bridge.ClientTest.SimpleTypes
         }
 #endif
 
+#if !__JIT__
         [Test]
         public void OverflowWorks()
         {
@@ -106,6 +107,7 @@ namespace Bridge.ClientTest.SimpleTypes
                 Assert.Throws(() => { var l = max * max; }, err => err is OverflowException, "max * max should be OverflowException");
             }
         }
+#endif
 
         [Test]
         public void CombinedTypesOperationsWork()

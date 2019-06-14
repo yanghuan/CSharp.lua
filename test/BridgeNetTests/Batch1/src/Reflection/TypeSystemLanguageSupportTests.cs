@@ -692,6 +692,7 @@ namespace Bridge.ClientTest.Reflection
         }*/
 #pragma warning restore 219
 
+#if !__JIT__
         [Test]
         public void TypeCheckForSubTypeOfGenericType()
         {
@@ -700,5 +701,7 @@ namespace Bridge.ClientTest.Reflection
             Assert.True(c12 is C11<K>, "#2");
             Assert.True(c12 is C10<K>, "#3");
         }
+#endif
     }
+
 }

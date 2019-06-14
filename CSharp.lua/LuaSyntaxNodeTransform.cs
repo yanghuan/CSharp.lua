@@ -1575,7 +1575,11 @@ namespace CSharpLua {
           var leftType = semanticModel_.GetTypeInfo(leftNode).Type;
           var rightType = semanticModel_.GetTypeInfo(rightNode).Type;
           if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-            return BuildIntegerDivAssignmentExpression(leftNode, rightNode, LuaIdentifierNameSyntax.IntegerDiv);
+            var method = LuaIdentifierNameSyntax.IntegerDiv;
+            if (!IsLuaNewest && (leftType.IsNullableType() || rightType.IsNullableType())) {
+              method = LuaIdentifierNameSyntax.IntegerDivOfNull;
+            }
+            return BuildIntegerDivAssignmentExpression(leftNode, rightNode, method);
           } else {
             return BuildCommonAssignmentExpression(leftNode, rightNode, LuaSyntaxNode.Tokens.Div, parnet);
           }
@@ -3448,10 +3452,6 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(name, left, right);
     }
 
-    private LuaExpressionSyntax BuildIntegerDivExpression(ITypeSymbol leftType, ITypeSymbol rightType, BinaryExpressionSyntax node) {
-      return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.IntegerDiv);
-    }
-
     private LuaBinaryExpressionSyntax BuildBinaryExpression(BinaryExpressionSyntax node, string operatorToken) {
       var left = VisitExpression(node.Left);
       var right = VisitExpression(node.Right);
@@ -3551,7 +3551,11 @@ namespace CSharpLua {
           var leftType = semanticModel_.GetTypeInfo(node.Left).Type;
           var rightType = semanticModel_.GetTypeInfo(node.Right).Type;
           if (leftType.IsIntegerType() && rightType.IsIntegerType()) {
-            return BuildIntegerDivExpression(leftType, rightType, node);
+            var method = LuaIdentifierNameSyntax.IntegerDiv;
+            if (!IsLuaNewest && (leftType.IsNullableType() || rightType.IsNullableType())) {
+              method = LuaIdentifierNameSyntax.IntegerDivOfNull;
+            }
+            return BuildBinaryInvokeExpression(node, method);
           }
           break;
         }
@@ -3828,9 +3832,12 @@ namespace CSharpLua {
         case SyntaxKind.UnaryPlusExpression: {
           return operand;
         }
+        case SyntaxKind.UnaryMinusExpression when (operand is LuaLiteralExpressionSyntax e && e.Text == "0"): {
+          return operand;
+        }
         default: {
           string operatorToken = GetOperatorToken(node.OperatorToken);
-          LuaPrefixUnaryExpressionSyntax unaryExpression = new LuaPrefixUnaryExpressionSyntax(operand, operatorToken);
+          var unaryExpression = new LuaPrefixUnaryExpressionSyntax(operand, operatorToken);
           return unaryExpression;
         }
       }

@@ -108,9 +108,9 @@ namespace Bridge.ClientTest.Text
         public void AppendDoubleWorks()
         {
             var sb = new StringBuilder("|");
-            Assert.True(sb.Append(123.0) == sb);
-            Assert.AreEqual("|123.0", sb.ToString(), "Text");
-            Assert.AreEqual(6, sb.Length, "Length");
+            Assert.True(sb.Append(123) == sb);
+            Assert.AreEqual("|123", sb.ToString(), "Text");
+            Assert.AreEqual(4, sb.Length, "Length");
         }
 
         [Test]
@@ -180,9 +180,9 @@ namespace Bridge.ClientTest.Text
         public void AppendLineDoubleWorks()
         {
             var sb = new StringBuilder("|");
-            Assert.True(sb.AppendLine((123.0).ToString()) == sb);
-            Assert.AreEqual("|123.0\n", sb.ToString(), "Text");
-            Assert.AreEqual(7, sb.Length, "Length");
+            Assert.True(sb.AppendLine((123).ToString()) == sb);
+            Assert.AreEqual("|123\n", sb.ToString(), "Text");
+            Assert.AreEqual(5, sb.Length, "Length");
         }
 
         [Test]

@@ -1,4 +1,4 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 
 using System;
 
@@ -37,7 +37,7 @@ namespace Bridge.ClientTest
         [Test]
         public static void Seeded()
         {
-            int seed = (int)DateTime.Now.Ticks;
+            int seed = Environment.TickCount;
 
             Random r1 = new Random(seed);
             Random r2 = new Random(seed);

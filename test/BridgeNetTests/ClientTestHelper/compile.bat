@@ -1,4 +1,4 @@
-call ..\compile-config.bat
+call ..\Tests\compile-config.bat
 set src=.\src
 set out=.\out
 set bin=\bin\Debug\netcoreapp2.1\

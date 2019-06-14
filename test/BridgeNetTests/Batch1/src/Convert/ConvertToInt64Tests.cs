@@ -1,4 +1,4 @@
-﻿// The source is licensed to the .NET Foundation under the MIT license:
+// The source is licensed to the .NET Foundation under the MIT license:
 // https://github.com/dotnet/corefx/blob/master/src/System.Runtime.Extensions/tests/System/Convert.ToInt64.cs
 // https://github.com/dotnet/corefx/blob/master/LICENSE
 
@@ -111,6 +111,7 @@ namespace Bridge.ClientTest.ConvertTests
             VerifyThrowsViaObj<OverflowException, float>(Convert.ToInt64, overflowValues);
         }
 
+#if !__JIT__
         [Test]
         public void FromString()
         {
@@ -165,6 +166,7 @@ namespace Bridge.ClientTest.ConvertTests
             int[] argumentExceptionBases = { -1, 3, 0, 16 };
             VerifyFromStringWithBaseThrows<ArgumentException>(Convert.ToInt64, argumentExceptionValues, argumentExceptionBases);
         }
+#endif
 
         [Test]
         public void FromUInt16()

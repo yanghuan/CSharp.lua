@@ -38,7 +38,7 @@ namespace Bridge.ClientTest.ConvertTests
             -12.236465923406483,
             -1.7753E-83,
             +12.345e+234,
-            +12e+1,
+            +120,
             double.NegativeInfinity,
             double.PositiveInfinity,
             double.NaN,
@@ -46,7 +46,7 @@ namespace Bridge.ClientTest.ConvertTests
             // Single
             -12.2364f,
             -1.7753e-83f,
-            +12e+1f,
+            +120,
             float.NegativeInfinity,
             float.PositiveInfinity,
             float.NaN,
@@ -125,7 +125,7 @@ namespace Bridge.ClientTest.ConvertTests
             "-12.236465923406",
             "-1.7753e-083",
             "1.2345e+235",
-            "120.0",
+            "120",
             "-inf",
             "inf",
             "nan",
@@ -133,7 +133,7 @@ namespace Bridge.ClientTest.ConvertTests
             // Single
             "-12.2364",
             "0",
-            "120.0",
+            "120",
             "-inf",
             "inf",
             "nan",
@@ -399,6 +399,7 @@ namespace Bridge.ClientTest.ConvertTests
             Assert.Throws(() => Convert.ToString(int.MaxValue, 9), err => err is ArgumentException);
         }
 
+#if !__JIT__
         [Test]
         public static void FromInt64Base2()
         {
@@ -426,18 +427,6 @@ namespace Bridge.ClientTest.ConvertTests
         }
 
         [Test]
-        public static void FromInt64Base10()
-        {
-            long[] testValues = { long.MinValue, 0, long.MaxValue };
-            string[] expectedValues = { long.MinValue.ToString(), "0", long.MaxValue.ToString() };
-
-            for (int i = 0; i < testValues.Length; i++)
-            {
-                Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 10));
-            }
-        }
-
-        [Test]
         public static void FromInt64Base16()
         {
             long[] testValues = { long.MinValue, 0, long.MaxValue };
@@ -446,6 +435,19 @@ namespace Bridge.ClientTest.ConvertTests
             for (int i = 0; i < testValues.Length; i++)
             {
                 Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 16));
+            }
+        }
+#endif
+
+        [Test]
+        public static void FromInt64Base10()
+        {
+            long[] testValues = { long.MinValue, 0, long.MaxValue };
+            string[] expectedValues = { long.MinValue.ToString(), "0", long.MaxValue.ToString() };
+
+            for (int i = 0; i < testValues.Length; i++)
+            {
+                Assert.AreEqual(expectedValues[i], Convert.ToString(testValues[i], 10));
             }
         }
 
@@ -586,9 +588,9 @@ namespace Bridge.ClientTest.ConvertTests
         [Test]
         public static void FromSingleArray()
         {
-            float[] testValues = new float[] { float.MinValue, 0.0f, 1.0f, 1000.0f, float.MaxValue, float.NegativeInfinity, float.PositiveInfinity, float.Epsilon, float.NaN };
-            string[] expectedValues1 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0.0", "1.0", "1000.0", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
-            string[] expectedValues2 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0.0", "1.0", "1000.0", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
+            float[] testValues = new float[] { float.MinValue, 0f, 1f, 1000f, float.MaxValue, float.NegativeInfinity, float.PositiveInfinity, float.Epsilon, float.NaN };
+            string[] expectedValues1 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
+            string[] expectedValues2 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
 
             for (int i = 0; i < testValues.Length; i++)
             {
@@ -603,8 +605,8 @@ namespace Bridge.ClientTest.ConvertTests
         [Test]
         public static void FromDoubleArray()
         {
-            double[] testValues = new double[] { -double.MaxValue, 0.0, 1.0, 1000.0, double.MaxValue, double.NegativeInfinity, double.PositiveInfinity, double.Epsilon, double.NaN };
-            string[] expectedValues = new string[] { ConvertConstants.DOUBLE_MIN_STRING, "0.0", "1.0", "1000.0", ConvertConstants.DOUBLE_MAX_STRING, "-inf", "inf", ConvertConstants.DOUBLE_EPSILON_STRING, "nan" };
+            double[] testValues = new double[] { -double.MaxValue, 0, 1, 1000, double.MaxValue, double.NegativeInfinity, double.PositiveInfinity, double.Epsilon, double.NaN };
+            string[] expectedValues = new string[] { ConvertConstants.DOUBLE_MIN_STRING, "0", "1", "1000", ConvertConstants.DOUBLE_MAX_STRING, "-inf", "inf", ConvertConstants.DOUBLE_EPSILON_STRING, "nan" };
 
             // Vanila Test Cases
             for (int i = 0; i < testValues.Length; i++)

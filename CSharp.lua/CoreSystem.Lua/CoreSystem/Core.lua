@@ -68,7 +68,7 @@ local function xpcallErr(e)
     e = System.Exception("script error")
     e:traceback()
   elseif type(e) == "string" then
-    if e:find("attempt to index a nil value") then
+    if e:find("attempt to index") then
       e = System.NullReferenceException()
     elseif e:find("attempt to divide by zero") then  
       e = System.DivideByZeroException()
@@ -515,6 +515,14 @@ if version < 5.3 then
     return trunc(x / y)
   end
 
+  function System.divOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    if y == 0 then throw(System.DivideByZeroException(), 1) end
+    return trunc(x / y)
+  end
+
   function System.mod(x, y) 
     if y == 0 then throw(System.DivideByZeroException(), 1) end
     local v = x % y
@@ -685,11 +693,19 @@ if version < 5.3 then
   if table.move == nil then
     table.move = function(a1, f, e, t, a2)
       if a2 == nil then a2 = a1 end
-      t = e - f + t
-      while e >= f do
-        a2[t] = a1[e]
-        t = t - 1
-        e = e - 1
+      if t > f then
+        t = e - f + t
+        while e >= f do
+          a2[t] = a1[e]
+          t = t - 1
+          e = e - 1
+        end
+      else
+        while f <= e do
+          a2[t] = a1[f]
+          t = t + 1
+          f = f + 1
+        end
       end
     end
   end
@@ -699,7 +715,7 @@ else
   local throw = System.throw
   local trunc = System.trunc
   
-  function System.bnot(x) return ~v end 
+  function System.bnot(x) return ~x end 
   function System.band(x, y) return x & y end
   function System.bor(x, y) return x | y end
   function System.xor(x, y) return x ~ y end

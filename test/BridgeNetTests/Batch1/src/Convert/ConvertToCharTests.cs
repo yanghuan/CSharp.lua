@@ -164,7 +164,7 @@ namespace Bridge.ClientTest.ConvertTests
             char[] expectedValues = { '\0', 'b', char.MaxValue };
             Verify(Convert.ToChar, testValues, expectedValues);
 
-            ulong[] overflowValues = { ulong.MaxValue, (ulong)ushort.MaxValue + 1 };
+            ulong[] overflowValues = { int.MaxValue, (ulong)ushort.MaxValue + 1 };
             VerifyThrows<OverflowException, ulong>(Convert.ToChar, overflowValues);
         }
     }

@@ -36,6 +36,7 @@ namespace Bridge.ClientTest.SimpleTypes
         }
 #endif
 
+#if !__JIT__
         [Test]
         public void MinMaxValuesAreCorrect()
         {
@@ -103,6 +104,7 @@ namespace Bridge.ClientTest.SimpleTypes
                 Assert.Throws(() => { var l = -min; }, err => err is OverflowException);
             }
         }
+#endif
 
         [Test]
         public void CombinedTypesOperationsWork()
@@ -351,11 +353,14 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(8388608 == x << 23);
             Assert.True(16777216 == x << 24);
             Assert.True(33554432 == x << 25);
+#if !__JIT__
             Assert.True(4294967296 == x << 32);
             Assert.True(140737488355328 == x << 47);
             Assert.True(281474976710656 == x << 48);
             Assert.True(562949953421312 == x << 49);
             Assert.True(-9223372036854775808 == x << 63);
+#endif
+
 #if false
             Assert.True(1 == x << 64);
 #endif

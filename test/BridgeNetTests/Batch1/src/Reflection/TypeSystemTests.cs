@@ -902,6 +902,7 @@ namespace Bridge.ClientTest.Reflection
             }
         }
 
+#if !__JIT__
         [Test]
         public void IsAssignableFromWorks()
         {
@@ -1096,6 +1097,7 @@ namespace Bridge.ClientTest.Reflection
             Assert.True(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X1>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#189");
             Assert.True(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsAssignableFrom(typeof(IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>)), "#190");
         }
+#endif
 
         private class IsSubclassOfTypes
         {
@@ -1188,6 +1190,7 @@ namespace Bridge.ClientTest.Reflection
             Assert.True(typeof(IG<int>).IsInterface);
         }
 
+#if !__JIT__
         [Test]
         public void IsInstanceOfTypeWorksForReferenceTypes()
         {
@@ -1331,6 +1334,7 @@ namespace Bridge.ClientTest.Reflection
             Assert.True(typeof(IsAssignableFromTypes.I7<IsAssignableFromTypes.I10<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>>).IsInstanceOfType(new IsAssignableFromTypes.Y6<IsAssignableFromTypes.X2, IsAssignableFromTypes.X2>()), "#162");
             Assert.False(typeof(object).IsInstanceOfType(null), "#163");
         }
+#endif
 
         public class BaseUnnamedConstructorWithoutArgumentsTypes
         {

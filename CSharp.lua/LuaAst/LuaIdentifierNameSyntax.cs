@@ -63,6 +63,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax DelegateMake = "System.fn";
     public static readonly LuaIdentifierNameSyntax DelegateBind = "System.bind";
     public static readonly LuaIdentifierNameSyntax IntegerDiv = "System.div";
+    public static readonly LuaIdentifierNameSyntax IntegerDivOfNull = "System.divOfNull";
     public static readonly LuaIdentifierNameSyntax IntegerMod = "System.mod";
     public static readonly LuaIdentifierNameSyntax BitNot = "System.bnot";
     public static readonly LuaIdentifierNameSyntax BitNotOfNull = "System.bnotOfNull";

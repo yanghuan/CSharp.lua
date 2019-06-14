@@ -33,7 +33,9 @@ local collectgarbage = collectgarbage
 define("System.Environment", {
   Exit = os.exit,
   getStackTrace = debug.traceback,
-  getTickCount = System.currentTimeMillis
+  getTickCount = function ()
+    return System.currentTimeMillis() % 2147483648
+  end
 })
 
 define("System.GC", {

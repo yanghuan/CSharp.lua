@@ -181,12 +181,14 @@ namespace Bridge.ClientTest.SimpleTypes
             DateHelper.AssertDate(dt, DateTimeKind.Unspecified, 0, 1, 1, 1);
         }
 
+#if !__JIT__
         [Test]
         public void MaxWorks()
         {
             var dt = DateTime.MaxValue;
             DateHelper.AssertDate(dt, DateTimeKind.Unspecified, 3155378975999999999, 9999, 12, 31);
         }
+#endif
 
         [Test]
         public void NowWorks()

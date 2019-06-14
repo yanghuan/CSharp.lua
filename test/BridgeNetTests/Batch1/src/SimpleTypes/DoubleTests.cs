@@ -125,7 +125,7 @@ namespace Bridge.ClientTest.SimpleTypes
         [Test]
         public void ToStringWorks()
         {
-            Assert.AreEqual("123.0", (123.0).ToString());
+            Assert.AreEqual("123", (123).ToString());
         }
 
         [Test]

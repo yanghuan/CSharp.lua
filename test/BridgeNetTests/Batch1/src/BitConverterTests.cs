@@ -107,6 +107,7 @@ namespace Bridge.ClientTest
             Assert.Throws<ArgumentException>(() => BitConverter.ToString(new byte[2], 1, 2));
         }
 
+#if !__JIT__
         [Test]
         public static void RoundtripDoubleToInt64Bits()
         {
@@ -142,6 +143,7 @@ namespace Bridge.ClientTest
                 Assert.AreEqual(expected[i].ToString(), BitConverter.DoubleToInt64Bits(input[i]).ToString());
             }
         }
+#endif
 
         [Test]
         public static void RoundtripBoolean()
@@ -165,6 +167,7 @@ namespace Bridge.ClientTest
             VerifyRoundtrip(BitConverter.GetBytes, BitConverter.ToChar, input, expected);
         }
 
+#if !__JIT__
         [Test]
         public static void RoundtripDouble()
         {
@@ -191,6 +194,7 @@ namespace Bridge.ClientTest
 
             VerifyRoundtrip(BitConverter.GetBytes, BitConverter.ToSingle, input, expected);
         }
+#endif
 
         [Test]
         public static void RoundtripInt16()
@@ -224,6 +228,7 @@ namespace Bridge.ClientTest
             VerifyRoundtrip(BitConverter.GetBytes, BitConverter.ToInt32, input, expected);
         }
 
+#if !__JIT__
         [Test]
         public static void RoundtripInt64()
         {
@@ -239,6 +244,7 @@ namespace Bridge.ClientTest
 
             VerifyRoundtrip(BitConverter.GetBytes, BitConverter.ToInt64, input, expected);
         }
+#endif
 
         [Test]
         public static void RoundtripUInt16()
@@ -256,6 +262,7 @@ namespace Bridge.ClientTest
             VerifyRoundtrip(BitConverter.GetBytes, BitConverter.ToUInt16, input, expected);
         }
 
+#if !__JIT__
         [Test]
         public static void RoundtripUInt32()
         {
@@ -287,6 +294,7 @@ namespace Bridge.ClientTest
 
             VerifyRoundtrip(BitConverter.GetBytes, BitConverter.ToUInt64, input, expected);
         }
+#endif
 
         [Test]
         public static void RoundtripString()
