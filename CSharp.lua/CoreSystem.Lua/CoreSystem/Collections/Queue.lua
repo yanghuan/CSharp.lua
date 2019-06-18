@@ -18,7 +18,6 @@ local System = System
 local Array = System.Array
 
 local Queue = {
-  version = 0,
   __ctor__ = Array.ctorList,
   getCount = Array.getLength,
   Clear = Array.clear,

@@ -19,8 +19,7 @@ local falseFn = System.falseFn
 local lengthFn = System.lengthFn
 local Array = System.Array
 
-local List = { 
-  version = 0,
+local List = {
   __ctor__ = Array.ctorList,
   getCapacity = lengthFn,
   getCount = lengthFn,
