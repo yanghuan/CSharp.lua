@@ -1041,6 +1041,7 @@ local function compareObj(a, b)
   throw(System.ArgumentException("Argument_ImplementIComparable"))
 end
 
+System.equalsObj = equalsObj
 System.compareObj = compareObj
 
 Object = defCls("System.Object", {
