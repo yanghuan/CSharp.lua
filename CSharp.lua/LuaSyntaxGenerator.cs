@@ -117,8 +117,14 @@ namespace CSharpLua {
       };
     }
 
+    private static CSharpCompilationOptions WithOptions(CSharpCompilationOptions compilationOptions) {
+      return compilationOptions
+        .WithOutputKind(OutputKind.DynamicallyLinkedLibrary)
+        .WithMetadataImportOptions(MetadataImportOptions.All);
+    }
+
     public LuaSyntaxGenerator(IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references, CSharpCommandLineArguments arguments, IEnumerable<string> metas, SettingInfo setting) {
-      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, arguments.CompilationOptions.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
+      CSharpCompilation compilation = CSharpCompilation.Create("_", syntaxTrees, references, WithOptions(arguments.CompilationOptions));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
         if (!result.Success) {
