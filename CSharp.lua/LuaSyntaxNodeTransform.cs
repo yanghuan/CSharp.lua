@@ -2393,8 +2393,8 @@ namespace CSharpLua {
       return false;
     }
 
-    private LuaExpressionSyntax VisitPropertyOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty) {
-      bool isField, isReadOnly;
+    private LuaExpressionSyntax VisitPropertyOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty, out bool isField) {
+      bool isReadOnly;
       if (isProperty) {
         var propertySymbol = (IPropertySymbol)symbol;
         isField = IsPropertyField(propertySymbol);
@@ -2793,11 +2793,15 @@ namespace CSharpLua {
           break;
         }
         case SymbolKind.Property: {
-          identifier = VisitPropertyOrEventIdentifierName(node, symbol, true);
+          var propertyField = (IPropertySymbol)symbol;
+          identifier = VisitPropertyOrEventIdentifierName(node, propertyField, true, out bool isField);
+          if (isField) {
+            CheckValueTypeClone(propertyField.Type, node, ref identifier, true);
+          }
           break;
         }
         case SymbolKind.Event: {
-          identifier = VisitPropertyOrEventIdentifierName(node, symbol, false);
+          identifier = VisitPropertyOrEventIdentifierName(node, symbol, false, out _);
           break;
         }
         case SymbolKind.Discard: {

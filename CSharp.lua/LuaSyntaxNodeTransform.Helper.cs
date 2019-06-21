@@ -1116,81 +1116,91 @@ namespace CSharpLua {
       return parameter;
     }
 
-    private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression) {
-      if (typeSymbol.IsCustomValueType() /*&& !typeSymbol.IsNullableType()*/ && !generator_.IsReadOnlyStruct(typeSymbol)) {
+    private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression, bool isPropertyField = false) {
+      if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol)) {
         bool need = false;
-        switch (node.Parent.Kind()) {
-          case SyntaxKind.Argument: {
-            var argument = (ArgumentSyntax)node.Parent;
-            switch (argument.RefKindKeyword.Kind()) {
-              case SyntaxKind.RefKeyword:
-              case SyntaxKind.OutKeyword:
-              case SyntaxKind.InKeyword: {
-                return;
-              }
-            }
-
-            var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol;
-            if (symbol != null) {
-              if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
-                break;
-              }
-
-              var parameter = GetParameterSymbol(symbol, argument);
-              if (parameter.RefKind == RefKind.In) {
-                break;
-              }
-            }
-
-            need = true;
-            break;
-          }
-          case SyntaxKind.ReturnStatement: {
-            need = true;
-            break;
-          }
-          case SyntaxKind.SimpleAssignmentExpression: {
+        if (isPropertyField) {
+          need = true;
+          if (node.Parent.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
             var assignment = (AssignmentExpressionSyntax)node.Parent;
-            if (assignment.Right == node) {
-              var symbol = semanticModel_.GetSymbolInfo(assignment.Left).Symbol;
-              if (symbol != null && symbol.IsFromAssembly()) {
-                break;
+            if (assignment.Left == node) {
+              need = false;
+            }
+          }
+        } else {
+          switch (node.Parent.Kind()) {
+            case SyntaxKind.Argument: {
+              var argument = (ArgumentSyntax)node.Parent;
+              switch (argument.RefKindKeyword.Kind()) {
+                case SyntaxKind.RefKeyword:
+                case SyntaxKind.OutKeyword:
+                case SyntaxKind.InKeyword: {
+                  return;
+                }
               }
 
-              if (assignment.Left.Kind().IsTupleDeclaration()) {
-                break;
-              }
-
-              need = true;
-            }
-            break;
-          }
-          case SyntaxKind.EqualsValueClause: {
-            var equalsValueClause = (EqualsValueClauseSyntax)node.Parent;
-            if (equalsValueClause.Value == node) {
-              need = true;
-            }
-            break;
-          }
-          case SyntaxKind.SimpleMemberAccessExpression: {
-            var memberAccess = (MemberAccessExpressionSyntax)node.Parent;
-            if (memberAccess.Name == node) {
-              switch (memberAccess.Parent.Kind()) {
-                case SyntaxKind.EqualsValueClause: {
-                  need = true;
+              var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol;
+              if (symbol != null) {
+                if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
                   break;
                 }
 
-                case SyntaxKind.SimpleAssignmentExpression: {
-                  var assignment = (AssignmentExpressionSyntax)memberAccess.Parent;
-                  if (assignment.Right == memberAccess) {
+                var parameter = GetParameterSymbol(symbol, argument);
+                if (parameter.RefKind == RefKind.In) {
+                  break;
+                }
+              }
+
+              need = true;
+              break;
+            }
+            case SyntaxKind.ReturnStatement: {
+              need = true;
+              break;
+            }
+            case SyntaxKind.SimpleAssignmentExpression: {
+              var assignment = (AssignmentExpressionSyntax)node.Parent;
+              if (assignment.Right == node) {
+                var symbol = semanticModel_.GetSymbolInfo(assignment.Left).Symbol;
+                if (symbol != null && symbol.IsFromAssembly()) {
+                  break;
+                }
+
+                if (assignment.Left.Kind().IsTupleDeclaration()) {
+                  break;
+                }
+
+                need = true;
+              }
+              break;
+            }
+            case SyntaxKind.EqualsValueClause: {
+              var equalsValueClause = (EqualsValueClauseSyntax)node.Parent;
+              if (equalsValueClause.Value == node) {
+                need = true;
+              }
+              break;
+            }
+            case SyntaxKind.SimpleMemberAccessExpression: {
+              var memberAccess = (MemberAccessExpressionSyntax)node.Parent;
+              if (memberAccess.Name == node) {
+                switch (memberAccess.Parent.Kind()) {
+                  case SyntaxKind.EqualsValueClause: {
                     need = true;
+                    break;
                   }
-                  break;
+
+                  case SyntaxKind.SimpleAssignmentExpression: {
+                    var assignment = (AssignmentExpressionSyntax)memberAccess.Parent;
+                    if (assignment.Right == memberAccess) {
+                      need = true;
+                    }
+                    break;
+                  }
                 }
               }
+              break;
             }
-            break;
           }
         }
 
