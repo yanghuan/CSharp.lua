@@ -3381,15 +3381,18 @@ namespace CSharpLua {
       bool isTry = false;
       FindParent(node, i => {
         var kind = i.Kind();
-        if (kind <= SyntaxKind.ForEachStatement && kind >= SyntaxKind.WhileStatement) {
-          return true;
-        }
-        if (kind == SyntaxKind.SwitchStatement) {
-          return true;
-        }
-        if (kind <= SyntaxKind.FinallyClause && kind >= SyntaxKind.TryStatement) {
-          isTry = true;
-          return true;
+        switch (kind) {
+          case SyntaxKind.WhileStatement:
+          case SyntaxKind.DoStatement:
+          case SyntaxKind.ForStatement:
+          case SyntaxKind.ForEachStatement:
+          case SyntaxKind.SwitchStatement:
+            return true;
+
+          case SyntaxKind.TryStatement:
+          case SyntaxKind.UsingStatement:
+            isTry = true;
+            return true;
         }
         return false;
       });
