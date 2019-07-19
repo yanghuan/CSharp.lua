@@ -490,6 +490,7 @@ Array = {
     if v ~= null then
       return v
     end
+    return nil
   end,
   insert = function (t, index, v)
     if index < 0 or index > #t then
@@ -532,6 +533,7 @@ Array = {
     if v ~= null then
       return v
     end
+    return nil
   end,
   popFirst = function (t)
     if #t == 0 then throw(InvalidOperationException()) end
@@ -541,6 +543,7 @@ Array = {
     if v ~= null then
       return v
     end
+    return nil
   end,
   popLast = function (t)
     local n = #t
@@ -550,6 +553,7 @@ Array = {
     if v ~= null then
       return v
     end
+    return nil
   end,
   removeRange = removeRange,
   remove = function (t, v)

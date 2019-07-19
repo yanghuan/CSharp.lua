@@ -369,6 +369,7 @@ local Dictionary = {
     if value ~= null then
       return value
     end
+    return nil
   end,
   set = function (this, key, value)
     if key == nil then throw(ArgumentNullException("key")) end
