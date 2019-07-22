@@ -114,6 +114,8 @@ namespace CSharpLua {
           var name = GetMemberName(symbol);
           var memberAccess = new LuaMemberAccessExpressionSyntax(temp, name, true);
           var invocation = new LuaInvocationExpressionSyntax(memberAccess);
+          var block = new LuaBlockSyntax();
+          PushBlock(block);
           if (expression.IsKind(SyntaxKind.ComplexElementInitializerExpression)) {
             var initializer = (InitializerExpressionSyntax)expression;
             foreach (var expressionNode in initializer.Expressions) {
@@ -124,6 +126,8 @@ namespace CSharpLua {
             var value = (LuaExpressionSyntax)expression.Accept(this);
             invocation.AddArgument(value);
           }
+          PopBlock();
+          CurBlock.Statements.AddRange(block.Statements);
           CurBlock.AddStatement(invocation);
         }
       }
