@@ -2277,9 +2277,11 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
       ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
       if (symbol == null) {  // dynamic
+        var expressSymol = semanticModel_.GetSymbolInfo(node.Expression).Symbol;
         var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
+        bool isObjectColon = node.Parent.IsKind(SyntaxKind.InvocationExpression) && (expressSymol == null || expressSymol.Kind != SymbolKind.NamedType);
         LuaIdentifierNameSyntax name = node.Name.Identifier.ValueText;
-        return new LuaMemberAccessExpressionSyntax(expression, name, node.Parent.IsKind(SyntaxKind.InvocationExpression));
+        return new LuaMemberAccessExpressionSyntax(expression, name, isObjectColon);
       }
 
       if (symbol.Kind == SymbolKind.NamedType) {
@@ -2739,7 +2741,10 @@ namespace CSharpLua {
 
       SymbolInfo symbolInfo = semanticModel_.GetSymbolInfo(node);
       ISymbol symbol = symbolInfo.Symbol;
-      Contract.Assert(symbol != null);
+      if (symbol == null) {  // dynamic
+        return (LuaIdentifierNameSyntax)node.Identifier.ValueText;
+      }
+
       LuaExpressionSyntax identifier;
       switch (symbol.Kind) {
         case SymbolKind.Local: {
