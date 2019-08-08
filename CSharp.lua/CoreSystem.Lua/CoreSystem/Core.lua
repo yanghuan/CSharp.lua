@@ -443,7 +443,7 @@ local _, _, version = sfind(_VERSION, "^Lua (.*)$")
 version = tonumber(version)
 System.luaVersion = version
 
-if version < 5.3 then
+--[[if version < 5.3 then
   local bnot, band, bor, xor, sl, sr
   local bit = rawget(global, "bit")
   if not bit then
@@ -710,7 +710,7 @@ if version < 5.3 then
     end
   end
 else
-  load[[
+  load[[]]
   local System = System
   local throw = System.throw
   local trunc = System.trunc
@@ -842,8 +842,8 @@ else
     return v
   end
 
-  ]]()
-end
+--  ]]()
+--end
 
 local toUInt = System.toUInt
 local toInt = System.toInt
@@ -1254,7 +1254,7 @@ function System.isNullable(T)
   return getmetatable(T) == Nullable
 end
 
-debug.setmetatable(nil, {
+--[[debug.setmetatable(nil, {
   __concat = function(a, b)
     if a == nil then
       if b == nil then
@@ -1291,7 +1291,7 @@ debug.setmetatable(nil, {
   __bnot = nilFn,
   __shl = nilFn,
   __shr = nilFn,
-})
+})]]
 
 function System.toString(t)
   return t ~= nil and t:ToString() or ""
@@ -1411,6 +1411,8 @@ function System.init(namelist, conf)
   metadatas = nil
 end
 
-return function (config)
-  System.config = config or {}
-end
+--return function (config)
+--  System.config = config or {}
+--end
+
+System.config = {}

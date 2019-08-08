@@ -709,7 +709,7 @@ String.__genericT__ = System.Char
 String.__inherits__ = inherits
 System.define("System.String", String)
 
-debug.setmetatable("", String)
+--debug.setmetatable("", String)
 local Object = System.Object
 local StringMetaTable = setmetatable({ __index = Object, __call = ctor }, Object)
 setmetatable(String, StringMetaTable)

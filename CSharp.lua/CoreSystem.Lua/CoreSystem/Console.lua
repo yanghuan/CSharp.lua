@@ -17,15 +17,16 @@ limitations under the License.
 local System = System
 
 local io = io
-local stdin = io.stdin
-local stdout = io.stdout
-local read = stdin.read
-local write = stdout.write
+--local stdin = io.stdin
+--local stdout = io.stdout
+--local read = stdin.read
+--local write = stdout.write
 local select = select
 local string = string
 local byte = string.byte
 local char = string.char
 local Format = string.Format
+local throw = System.throw
 
 local function getWriteValue(v, ...)
   if select("#", ...) ~= 0 then
@@ -40,22 +41,28 @@ end
 
 System.define("System.Console", {
   Read = function ()
-    local ch = read(stdin, 1)
-    return byte(ch)
+    throw(System.NotSupportedException())
+    --local ch = read(stdin, 1)
+    --return byte(ch)
   end,
   ReadLine = function ()
-    return read(stdin)
+    throw(System.NotSupportedException())
+    --return read(stdin)
   end,
   Write = function (v, ...)
-    write(stdout, getWriteValue(v, ...))     
+    throw(System.NotSupportedException())
+    --write(stdout, getWriteValue(v, ...))     
   end,
   WriteChar = function (v)
-    write(stdout, char(v))     
+    throw(System.NotSupportedException())
+    --write(stdout, char(v))     
   end,
   WriteLine = function (v, ...)
-    write(stdout, getWriteValue(v, ...), "\n")     
+    throw(System.NotSupportedException())
+    --write(stdout, getWriteValue(v, ...), "\n")     
   end,
   WriteLineChar = function (v)
-    write(stdout, char(v), "\n")     
+    throw(System.NotSupportedException())
+    --write(stdout, char(v), "\n")     
   end
 })

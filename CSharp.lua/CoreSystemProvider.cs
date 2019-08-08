@@ -17,6 +17,7 @@ namespace CSharpLua {
       yield return Path.Combine(CoreSystemDirectory, @"Enum.lua");
       yield return Path.Combine(CoreSystemDirectory, @"TimeSpan.lua");
       yield return Path.Combine(CoreSystemDirectory, @"DateTime.lua");
+      yield return Path.Combine(CoreSystemDirectory, @"Common.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Collections\EqualityComparer.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Array.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Type.lua");
@@ -32,7 +33,7 @@ namespace CSharpLua {
       yield return Path.Combine(CoreSystemDirectory, @"Random.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Text\StringBuilder.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Console.lua");
-      yield return Path.Combine(CoreSystemDirectory, @"IO\File.lua");
+      // yield return Path.Combine(CoreSystemDirectory, @"IO\File.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Reflection\Assembly.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Threads\Timer.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Threads\Thread.lua");
@@ -41,10 +42,10 @@ namespace CSharpLua {
       yield return Path.Combine(CoreSystemDirectory, @"Globalization\Globalization.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Numerics\HashCodeHelper.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Numerics\Complex.lua");
-      yield return Path.Combine(CoreSystemDirectory, @"Numerics\Matrix3x2.lua");
-      yield return Path.Combine(CoreSystemDirectory, @"Numerics\Matrix4x4.lua");
-      yield return Path.Combine(CoreSystemDirectory, @"Numerics\Plane.lua");
-      yield return Path.Combine(CoreSystemDirectory, @"Numerics\Quaternion.lua");
+      // yield return Path.Combine(CoreSystemDirectory, @"Numerics\Matrix3x2.lua");
+      // yield return Path.Combine(CoreSystemDirectory, @"Numerics\Matrix4x4.lua");
+      // yield return Path.Combine(CoreSystemDirectory, @"Numerics\Plane.lua");
+      // yield return Path.Combine(CoreSystemDirectory, @"Numerics\Quaternion.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Numerics\Vector2.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Numerics\Vector3.lua");
       yield return Path.Combine(CoreSystemDirectory, @"Numerics\Vector4.lua");

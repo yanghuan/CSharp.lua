@@ -18,7 +18,7 @@ local System = System
 local define = System.define
 local Object = System.Object
 
-local traceback = debug.traceback
+--local traceback = debug.traceback
 local tconcat = table.concat
 local type = type
 
@@ -69,7 +69,7 @@ local Exception = define("System.Exception", {
     return data
   end,
   traceback = function(this, lv)
-    this.errorStack = traceback("", lv and lv + 3 or 3)
+    --this.errorStack = traceback("", lv and lv + 3 or 3)
   end
 })
 
