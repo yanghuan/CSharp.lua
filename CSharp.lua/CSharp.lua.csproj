@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,6 +11,7 @@
     <PackageProjectUrl>https://github.com/yanghuan/CSharp.lua</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE</PackageLicenseUrl>
     <LangVersion>latest</LangVersion>
+    <RootNamespace>CSharpLua</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,13 @@
     <None Update="System.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="CoreSystem.Lua\CoreSystem\**" />
+    <Content Include="CoreSystem.Lua\CoreSystem\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

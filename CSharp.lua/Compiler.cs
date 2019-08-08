@@ -40,6 +40,7 @@ namespace CSharpLua {
     public bool IsExportMetadata { get; set; }
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
+    public bool IsOutputSingleFile { get; set; }
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
       folder_ = folder;
@@ -139,8 +140,19 @@ namespace CSharpLua {
         IsModule = IsModule,
         IsInlineSimpleProperty = IsInlineSimpleProperty,
       };
-      var generator = Build(cscArguments_, codes, libs, Metas, setting);
-      generator.Generate(output_);
+
+      LuaSyntaxGenerator generator = null;
+      try {
+        generator = Build(cscArguments_, codes, libs, Metas, setting);
+      } catch {
+        return;
+      }
+
+      if (IsOutputSingleFile) {
+        generator.GenerateSingle(output_);
+      } else {
+        generator.Generate(output_);
+      }
     }
 
     public static string CompileSingleCode(string code) {

@@ -183,6 +183,72 @@ namespace CSharpLua {
       ExportManifestFile(modules, outFolder);
     }
 
+    public void GenerateSingle(string outFile) {
+      Directory.CreateDirectory(new FileInfo(outFile).DirectoryName);
+      using (var fileStream = File.Create(outFile)) {
+        using (var writer = new StreamWriter(fileStream, Encoding)) {
+          foreach (var luaFile in CoreSystemProvider.GetCoreSystemFiles()) {
+            WriteCoreSystemFile(luaFile, writer);
+          }
+
+          foreach (var luaCompilationUnit in Create()) {
+            WriteCompilationUnitFile(luaCompilationUnit, writer);
+          }
+
+          if (mainEntryPoint_ == null) {
+            throw new Exception("Program has no entry point.");
+          }
+
+          WriteManifest(writer);
+          writer.WriteLine();
+        }
+      }
+    }
+
+    private void WriteCoreSystemFile(string filePath, TextWriter writer) {
+      writer.WriteLine(LuaSyntaxNode.Keyword.Do);
+      writer.WriteLine(File.ReadAllText(filePath));
+      writer.WriteLine(LuaSyntaxNode.Keyword.End);
+    }
+
+    private void WriteCompilationUnitFile(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer) {
+      writer.WriteLine(LuaSyntaxNode.Keyword.Do);
+      Write(luaCompilationUnit, writer);
+      writer.WriteLine();
+      writer.WriteLine(LuaSyntaxNode.Keyword.End);
+    }
+
+    private void WriteManifest(TextWriter writer) {
+      const string kInit = "System.init";
+      const string kManifestFuncName = "InitCSharp";
+
+      var types = GetExportTypes();
+      if (types.Count > 0) {
+        var functionExpression = new LuaFunctionExpressionSyntax();
+        var initCSharpFunctionDeclarationStatement = new LuaLocalVariablesStatementSyntax();
+        initCSharpFunctionDeclarationStatement.Initializer = new LuaEqualsValueClauseListSyntax(new[] { functionExpression });
+        initCSharpFunctionDeclarationStatement.Variables.Add(new LuaSymbolNameSyntax(new LuaIdentifierLiteralExpressionSyntax(kManifestFuncName)));
+
+        LuaTableExpression typeTable = new LuaTableExpression();
+        foreach (var type in types) {
+          LuaIdentifierNameSyntax typeName = GetTypeShortName(type);
+          typeTable.Add(new LuaStringLiteralExpressionSyntax(typeName));
+        }
+
+        var methodName = mainEntryPoint_.Name;
+        var methodTypeName = GetTypeName(mainEntryPoint_.ContainingType);
+        var entryPointInvocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(methodTypeName, methodName));
+
+        functionExpression.AddStatement(new LuaInvocationExpressionSyntax(kInit, typeTable));
+        functionExpression.AddStatement(entryPointInvocation);
+
+        LuaCompilationUnitSyntax luaCompilationUnit = new LuaCompilationUnitSyntax();
+        luaCompilationUnit.AddStatement(new LuaLocalDeclarationStatementSyntax(initCSharpFunctionDeclarationStatement));
+
+        Write(luaCompilationUnit, writer);
+      }
+    }
+
     public string GenerateSingle() {
       foreach (var luaCompilationUnit in Create()) {
         StringBuilder sb = new StringBuilder();
@@ -406,9 +472,9 @@ namespace CSharpLua {
       return allTypes;
     }
 
-    public bool SetMainEntryPoint(IMethodSymbol sybmol) {
+    public bool SetMainEntryPoint(IMethodSymbol symbol) {
       if (mainEntryPoint_ == null) {
-        mainEntryPoint_ = sybmol;
+        mainEntryPoint_ = symbol;
         return true;
       }
       return false;
