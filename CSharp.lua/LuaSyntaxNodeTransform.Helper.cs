@@ -1121,10 +1121,20 @@ namespace CSharpLua {
         bool need = false;
         if (isPropertyField) {
           need = true;
-          if (node.Parent.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
-            var assignment = (AssignmentExpressionSyntax)node.Parent;
-            if (assignment.Left == node) {
-              need = false;
+          SyntaxNode current = node;
+          while (true) {
+            var parent = current.Parent;
+            var kind = parent.Kind();
+            if (kind == SyntaxKind.SimpleAssignmentExpression) {
+              var assignment = (AssignmentExpressionSyntax)parent;
+              if (assignment.Left == current) {
+                need = false;
+              }
+              break;
+            } else if (kind == SyntaxKind.SimpleMemberAccessExpression) {
+              current = parent;
+            } else {
+              break;
             }
           }
         } else {
