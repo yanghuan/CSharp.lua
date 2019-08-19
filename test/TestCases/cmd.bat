@@ -5,9 +5,9 @@ set lua=../__bin/lua5.3/lua
 dotnet "%dir%CSharp.lua.Launcher.dll" -l "Bridge/Bridge.dll" -m "Bridge/Bridge.xml" -s src -d out -c -a "TestCase" -metadata
 if not %errorlevel%==0 (
     echo please see log, has some error.
+    pause
     goto:Fail 
 )
-"%lua%" launcher.lua
 
+"%lua%" launcher.lua
 :Fail
-rem pause
