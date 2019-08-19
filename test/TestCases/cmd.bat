@@ -10,4 +10,4 @@ if not %errorlevel%==0 (
 "%lua%" launcher.lua
 
 :Fail
-pause
+rem pause

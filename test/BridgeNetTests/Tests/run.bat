@@ -9,4 +9,4 @@ if not %errorlevel%==0 (
 )
 
 :Fail
-pause
+rem pause

@@ -15,5 +15,5 @@ jobs:
         dotnet-version: 2.2.401
     - name: Build with dotnet
       run: dotnet build --configuration Debug
-    - name: Test self-compiling
+    - name: Test Case
       run: cd test/ & test
