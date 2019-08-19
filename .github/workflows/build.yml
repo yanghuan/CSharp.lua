@@ -16,5 +16,4 @@ jobs:
     - name: Build with dotnet
       run: dotnet build --configuration Debug
     - name: Test self-compiling
-      run: cd test/self-compiling
-           self
+      run: cd test/self-compiling & self
