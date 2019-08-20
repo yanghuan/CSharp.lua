@@ -9,7 +9,10 @@ if not %errorlevel%==0 (
   goto:Fail 
 )
 
-echo test with jit
+echo **********************************************
+echo ***********  test with jit         ***********
+echo **********************************************
+
 set version=LuaJIT-2.0.2
 set lua=../../__bin/%version%/lua
 call compile-all

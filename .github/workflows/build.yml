@@ -1,4 +1,4 @@
-name: .NET Core CI
+name: Run Test Case
 
 on: [push]
 
@@ -15,5 +15,5 @@ jobs:
         dotnet-version: 2.2.401
     - name: Build with dotnet
       run: dotnet build --configuration Debug
-    - name: Test Case
+    - name: Run Test Case
       run: cd test/ & test
