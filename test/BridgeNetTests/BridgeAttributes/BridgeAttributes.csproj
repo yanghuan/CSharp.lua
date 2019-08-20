@@ -5,8 +5,4 @@
     <Version>1.1.0</Version>
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ProjectDir)compile.bat" />
-  </Target>
-
 </Project>

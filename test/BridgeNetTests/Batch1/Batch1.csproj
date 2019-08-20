@@ -14,8 +14,4 @@
     <Folder Include="Properties\" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ProjectDir)compile.bat" />
-  </Target>
-
 </Project>

@@ -1,13 +1,27 @@
 set dir=../../CSharp.lua.Launcher/bin/Debug/netcoreapp2.0/
-set version=LuaJIT-2.0.2
-set lua=../__bin/lua5.3/lua
+set version=Lua5.3
+set lua=../__bin/%version%/lua
 
-dotnet "%dir%CSharp.lua.Launcher.dll" -l "Bridge/Bridge.dll" -m "Bridge/Bridge.xml" -s src -d out -c -a "TestCase" -metadata
+dotnet "%dir%CSharp.lua.Launcher.dll" -l "Bridge/Bridge.dll" -m "Bridge/Bridge.xml" -s src -d out -a "TestCase" -metadata
 if not %errorlevel%==0 (
-    echo please see log, has some error.
-    pause
-    goto:Fail 
+  goto:Fail 
+)
+"%lua%" launcher.lua
+if not %errorlevel%==0 (
+  goto:Fail 
 )
 
+echo test with jit
+set version=LuaJIT-2.0.2
+set lua=../__bin/%version%/lua
+
+dotnet "%dir%CSharp.lua.Launcher.dll" -l "Bridge/Bridge.dll" -m "Bridge/Bridge.xml" -s src -d out -a "TestCase" -metadata -c
+if not %errorlevel%==0 (
+  goto:Fail 
+)
 "%lua%" launcher.lua
+if not %errorlevel%==0 (
+  goto:Fail 
+)
+
 :Fail

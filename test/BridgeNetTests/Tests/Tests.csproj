@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ProjectDir)compile.bat" />
+    <Exec Command="$(ProjectDir)run.bat" />
   </Target>
 
 </Project>
