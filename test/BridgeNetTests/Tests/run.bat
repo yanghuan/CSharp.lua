@@ -25,4 +25,6 @@ if not %errorlevel%==0 (
 )
 
 :Fail
-
+if not %errorlevel%==0 (
+  exit -1
+)

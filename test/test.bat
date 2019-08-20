@@ -22,3 +22,6 @@ if not %errorlevel%==0 (
 cd ../..
 
 :Fail
+if not %errorlevel%==0 (
+  exit -1
+)
