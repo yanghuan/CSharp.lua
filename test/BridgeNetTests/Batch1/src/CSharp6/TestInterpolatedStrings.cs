@@ -44,7 +44,7 @@ namespace Bridge.ClientTest.CSharp6
             p.Age = 1;
             Assert.AreEqual("Jane is 1 year old", $"{p.Name} is {p.Age} year{(p.Age == 1 ? "" : "s")} old");
 
-            int i = 0, j = 1, k = 2;
+            int i = 0, j = 1;
             Assert.AreEqual("i = 0, j = 1", $"i = {i}, j = {j}");
             Assert.AreEqual("{0, 1}", $"{{{i}, {j}}}");
 #if false
