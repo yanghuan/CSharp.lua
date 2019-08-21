@@ -41,7 +41,8 @@ namespace CSharpLua {
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsOutputSingleFile { get; set; }
-    public string LuaNativeApiPrefix { get; set; } // Used to call Lua functions, that have an API .dll in C#, from C# code
+    [Obsolete("Use NativeLuaMemberAttribute instead.")]
+    public string LuaNativeApiPrefix { get; set; }
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
       folder_ = folder;
@@ -150,7 +151,7 @@ namespace CSharpLua {
       }
 
       if (IsOutputSingleFile) {
-        generator.GenerateSingle(output_, LuaNativeApiPrefix);
+        generator.GenerateSingle(output_);
       } else {
         generator.Generate(output_);
       }

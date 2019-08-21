@@ -24,24 +24,14 @@ namespace CSharpLua {
   public sealed class LuaRenderer {
     private readonly LuaSyntaxGenerator generator_;
     private readonly TextWriter writer_;
-    private readonly string nativeApiPrefix_;
     private bool isNewLine_;
     private int indentLevel_;
     private int singleLineCounter_;
     private bool IsSingleLine => singleLineCounter_ > 0;
 
-    public LuaRenderer(LuaSyntaxGenerator generator, TextWriter writer, string nativeApiPrefix = null) {
+    public LuaRenderer(LuaSyntaxGenerator generator, TextWriter writer) {
       generator_ = generator;
       writer_ = writer;
-      nativeApiPrefix_ = nativeApiPrefix;
-    }
-
-    private bool IsCallToNativeApi(string s) {
-      if (nativeApiPrefix_ is null || s is null) {
-        return false;
-      } else {
-        return s.StartsWith(nativeApiPrefix_);
-      }
     }
 
     public LuaSyntaxGenerator.SettingInfo Setting {
@@ -131,10 +121,8 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaMemberAccessExpressionSyntax node) {
-      if (!IsCallToNativeApi((node.Expression as LuaIdentifierNameSyntax)?.ValueText)) {
-        node.Expression.Render(this);
-        Write(node.OperatorToken);
-      }
+      node.Expression.Render(this);
+      Write(node.OperatorToken);
       node.Name.Render(this);
     }
 
@@ -400,10 +388,6 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaVariableDeclaratorSyntax node) {
-      if (IsCallToNativeApi(node.Identifier.ValueText)) {
-        Write(LuaSyntaxNode.Tokens.ShortComment);
-      }
-
       Write(node.LocalKeyword);
       WriteSpace();
       node.Identifier.Render(this);

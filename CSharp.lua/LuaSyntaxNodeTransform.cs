@@ -2148,6 +2148,9 @@ namespace CSharpLua {
         }
 
         if (fieldSymbol.HasConstantValue) {
+          if (fieldSymbol.HasAttribute<EnumMemberIdentifierExpressionAttribute>(out var attributeData)) {
+            return GetConstLiteralExpression(fieldSymbol, attributeData.ConstructorArguments[0]);
+          }
           return GetConstLiteralExpression(fieldSymbol);
         }
 
@@ -4165,7 +4168,9 @@ namespace CSharpLua {
         var targetEnumUnderlyingType = ((INamedTypeSymbol)targetType).EnumUnderlyingType;
         if (originalType.TypeKind == TypeKind.Enum || originalType.IsCastIntegerType()) {
           var originalIntegerType = originalType.TypeKind == TypeKind.Enum ? ((INamedTypeSymbol)originalType).EnumUnderlyingType : originalType;
-          if (targetEnumUnderlyingType.IsNumberTypeAssignableFrom(originalIntegerType)) {
+          if (targetType.HasAttribute<EnumCastMethodAttribute>(out var attributeData)) {
+            return EnumCastMethodAttribute.GenerateExpression(attributeData, expression);
+          } else if (targetEnumUnderlyingType.IsNumberTypeAssignableFrom(originalIntegerType)) {
             return expression;
           }
           return GetCastToNumberExpression(expression, targetEnumUnderlyingType, false);
@@ -4247,11 +4252,14 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitCastExpression(CastExpressionSyntax node) {
       var constExpression = GetConstExpression(node);
+      var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
       if (constExpression != null) {
+        if (targetType.HasAttribute<EnumCastMethodAttribute>(out var attributeData)) {
+          return EnumCastMethodAttribute.GenerateExpression(attributeData, constExpression);
+        }
         return constExpression;
       }
 
-      var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       if (targetType.SpecialType == SpecialType.System_Object || targetType.Kind == SymbolKind.DynamicType) {
         return expression;

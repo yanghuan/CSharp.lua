@@ -478,12 +478,14 @@ namespace CSharpLua {
       }
     }
 
-    private LuaLiteralExpressionSyntax GetConstLiteralExpression(IFieldSymbol constField) {
+    private LuaLiteralExpressionSyntax GetConstLiteralExpression(IFieldSymbol constField, TypedConstant? constValue = null) {
       Contract.Assert(constField.HasConstantValue);
       if (constField.Type.SpecialType == SpecialType.System_Char) {
         return new LuaCharacterLiteralExpression((char)constField.ConstantValue);
       } else {
-        var literalExpression = GetLiteralExpression(constField.ConstantValue);
+        var literalExpression = constValue.HasValue
+          ? new LuaIdentifierLiteralExpressionSyntax(constValue.Value.ToString())
+          : GetLiteralExpression(constField.ConstantValue);
         string identifierToken = constField.ContainingType.Name + '.' + constField.Name;
         return new LuaConstLiteralExpression(literalExpression, identifierToken);
       }
@@ -650,7 +652,7 @@ namespace CSharpLua {
       }
     }
 
-    private bool CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node, LuaExpressionSyntax expression, out LuaMemberAccessExpressionSyntax outExpression) {
+    private bool CheckUsingStaticNameSyntax(ISymbol symbol, NameSyntax node, LuaExpressionSyntax expression, out LuaExpressionSyntax outExpression) {
       bool isUsingStaticName = false;
       if (node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
         var memberAccess = (MemberAccessExpressionSyntax)node.Parent;
@@ -663,6 +665,10 @@ namespace CSharpLua {
 
       if (isUsingStaticName) {
         if (!CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
+          if (symbol.HasAttribute<NativeLuaMemberAttribute>(out _)) {
+            outExpression = expression;
+            return true;
+          }
           var usingStaticType = GetTypeName(symbol.ContainingType);
           outExpression = new LuaMemberAccessExpressionSyntax(usingStaticType, expression);
           return true;
@@ -890,7 +896,8 @@ namespace CSharpLua {
             string newPrefix = prefix.Replace(".", "");
             CheckNewPrefix(ref newPrefix, prefix);
             if (!IsLocalVarExistsInCurMethod(newPrefix)) {
-              bool success = AddImport(prefix, newPrefix, symbol.IsFromCode());
+              // Don't add import for native lua members, by putting the attribute check on left side of || operator.
+              bool success = symbol.HasAttribute<NativeLuaMemberAttribute>(out _) || AddImport(prefix, newPrefix, symbol.IsFromCode());
               if (success) {
                 name = newPrefix + name.Substring(pos);
               }

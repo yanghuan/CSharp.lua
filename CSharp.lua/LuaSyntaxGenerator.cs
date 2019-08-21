@@ -162,8 +162,8 @@ namespace CSharpLua {
       return luaCompilationUnits.Where(i => !i.IsEmpty);
     }
 
-    private void Write(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer, string nativeApiPrefix = null) {
-      LuaRenderer rener = new LuaRenderer(this, writer, nativeApiPrefix);
+    private void Write(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer) {
+      LuaRenderer rener = new LuaRenderer(this, writer);
       luaCompilationUnit.Render(rener);
     }
 
@@ -183,7 +183,7 @@ namespace CSharpLua {
       ExportManifestFile(modules, outFolder);
     }
 
-    public void GenerateSingle(string outFile, string nativeApiPrefix = null) {
+    public void GenerateSingle(string outFile) {
       Directory.CreateDirectory(new FileInfo(outFile).DirectoryName);
       using (var fileStream = File.Create(outFile)) {
         using (var writer = new StreamWriter(fileStream, Encoding)) {
@@ -192,7 +192,7 @@ namespace CSharpLua {
           }
 
           foreach (var luaCompilationUnit in Create()) {
-            WriteCompilationUnitFile(luaCompilationUnit, writer, nativeApiPrefix);
+            WriteCompilationUnitFile(luaCompilationUnit, writer);
           }
 
           if (mainEntryPoint_ == null) {
@@ -211,9 +211,9 @@ namespace CSharpLua {
       writer.WriteLine(LuaSyntaxNode.Keyword.End);
     }
 
-    private void WriteCompilationUnitFile(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer, string nativeApiPrefix) {
+    private void WriteCompilationUnitFile(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer) {
       writer.WriteLine(LuaSyntaxNode.Keyword.Do);
-      Write(luaCompilationUnit, writer, nativeApiPrefix);
+      Write(luaCompilationUnit, writer);
       writer.WriteLine();
       writer.WriteLine(LuaSyntaxNode.Keyword.End);
     }
