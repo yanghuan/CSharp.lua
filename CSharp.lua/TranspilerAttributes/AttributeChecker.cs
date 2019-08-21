@@ -8,7 +8,7 @@ namespace CSharpLua {
       where T : Attribute {
       foreach (var attrData in symbol.GetAttributes()) {
         // TODO: find better method to compare AttributeData and Attribute?
-        if (attrData.AttributeClass.Name == nameof(T)) {
+        if (attrData.AttributeClass.Name == typeof(T).Name) {
           attributeData = attrData;
           return true;
         }
