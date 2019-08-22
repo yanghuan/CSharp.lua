@@ -69,9 +69,9 @@ local function xpcallErr(e)
     e:traceback()
   elseif type(e) == "string" then
     if sfind(e, "attempt to index") then
-      e = System.NullReferenceException()
+      e = System.NullReferenceException(e)
     elseif sfind(e, "attempt to divide by zero") then  
-      e = System.DivideByZeroException()
+      e = System.DivideByZeroException(e)
     else
       e = System.Exception(e)
     end
