@@ -1149,7 +1149,7 @@ namespace CSharpLua {
                 }
               }
 
-              var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol;
+              var symbol = semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol as IMethodSymbol;
               if (symbol != null) {
                 if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
                   break;
