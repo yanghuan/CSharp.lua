@@ -267,5 +267,43 @@ namespace TestCases
 		  throw new Exception("the correct value is true");
       }
     }
+
+	public class Node
+	{
+		private Node parent;
+
+		public Node Root
+		{
+			get
+			{
+				return parent == null && GetType() == typeof(Node) ? (Node)this : parent.Root;
+			}
+		}
+
+		private Node owner;
+		public Node Owner
+		{
+			get
+			{
+				return Root.owner;
+			}
+		}
+
+	}
+	
+
+	public class TestNode
+	{
+		Node node1;
+		Node node2;
+		public void Test()
+		{
+			node1 = node2.Owner;
+		}
+
+	}
   }
+
+
+
 }
