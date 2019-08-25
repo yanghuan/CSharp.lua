@@ -1156,7 +1156,7 @@ namespace CSharpLua {
                 }
               }
 
-              var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol;
+              var symbol = semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol as IMethodSymbol;
               if (symbol != null) {
                 if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
                   break;
@@ -1970,14 +1970,26 @@ namespace CSharpLua {
       return false;
     }
 
-    private void InliningMemberAccessUpdateTarget(LuaMemberAccessExpressionSyntax memberAccess, LuaExpressionSyntax target) {
+    private static bool InliningMemberAccessUpdateTarget(LuaMemberAccessExpressionSyntax memberAccess, LuaExpressionSyntax target) {
       if (memberAccess.Expression == LuaIdentifierNameSyntax.This) {
         memberAccess.UpdateExpression(target);
+        return true;
       } else if (memberAccess.Expression is LuaMemberAccessExpressionSyntax accessExpression) {
-        InliningMemberAccessUpdateTarget(accessExpression, target);
-      } else {
-        throw new InvalidProgramException();
+        return InliningMemberAccessUpdateTarget(accessExpression, target);
+      } else if (memberAccess.Expression is LuaPropertyAdapterExpressionSyntax propertyAdapter && propertyAdapter.IsProperty) {
+        return InlinePropertyAdapterUpdateTarget(propertyAdapter, target);
       }
+      return false;
+    }
+
+    private static bool InlinePropertyAdapterUpdateTarget(LuaPropertyAdapterExpressionSyntax propertyAdapter, LuaExpressionSyntax target) {
+      if (propertyAdapter.Expression == LuaIdentifierNameSyntax.This) {
+        propertyAdapter.Update(target);
+        return true;
+      } else if (propertyAdapter.Expression is LuaMemberAccessExpressionSyntax proertyExpression) {
+        return InliningMemberAccessUpdateTarget(proertyExpression, target);
+      }
+      return false;
     }
 
     private LuaExpressionSyntax CompressionInliningBlock(SyntaxNode root, LuaBlockStatementSyntax block, MethodInfo methodInfo, bool isThisMemberAccess) {
@@ -2017,13 +2029,11 @@ namespace CSharpLua {
           var thisLocal = (LuaLocalVariableDeclaratorSyntax)block.Statements.First();
           var target = thisLocal.Declarator.Initializer.Value;
           if (expression is LuaMemberAccessExpressionSyntax memberAccess) {
-            InliningMemberAccessUpdateTarget(memberAccess, target);
+            if(!InliningMemberAccessUpdateTarget(memberAccess, target)) {
+              return null;
+            }
           } else if (expression is LuaPropertyAdapterExpressionSyntax propertyAdapter && propertyAdapter.IsProperty) {
-            if (propertyAdapter.Expression == LuaIdentifierNameSyntax.This) {
-              propertyAdapter.Update(target);
-            } else if (propertyAdapter.Expression is LuaMemberAccessExpressionSyntax proertyExpression) {
-              InliningMemberAccessUpdateTarget(proertyExpression, target);
-            } else {
+            if (!InlinePropertyAdapterUpdateTarget(propertyAdapter, target)) {
               return null;
             }
           } else {

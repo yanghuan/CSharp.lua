@@ -419,19 +419,19 @@ namespace CSharpLua {
     }
 
     private void AddSuperTypeTo(HashSet<INamedTypeSymbol> parentTypes, INamedTypeSymbol rootType, INamedTypeSymbol superType) {
-      if (superType.IsFromCode()) {
-        if (superType.IsGenericType) {
+      if (superType.IsGenericType) {
+        if (superType.OriginalDefinition.IsFromCode()) {
           parentTypes.Add(superType.OriginalDefinition);
-          foreach (var typeArgument in superType.TypeArguments) {
-            if (typeArgument.Kind != SymbolKind.TypeParameter) {
-              if (!typeArgument.OriginalDefinition.Is(rootType)) {
-                AddSuperTypeTo(parentTypes, rootType, (INamedTypeSymbol)typeArgument);
-              }
+        }
+        foreach (var typeArgument in superType.TypeArguments) {
+          if (typeArgument.Kind != SymbolKind.TypeParameter) {
+            if (typeArgument.OriginalDefinition.IsFromCode() && !typeArgument.OriginalDefinition.Is(rootType)) {
+              AddSuperTypeTo(parentTypes, rootType, (INamedTypeSymbol)typeArgument);
             }
           }
-        } else {
-          parentTypes.Add(superType);
         }
+      } else if (superType.IsFromCode()) {
+        parentTypes.Add(superType);
       }
     }
 

@@ -1,88 +1,15 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B6B98FCF-78F3-4E78-A8EC-201FFEB9F232}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TestCases</RootNamespace>
-    <AssemblyName>TestCases</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Version>1.1.0</Version>
+    <ApplicationIcon />
+    <StartupObject />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Lua|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;__CSharpLua__</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CSharp|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\CSharp\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="src\TestBase\StaticTestUnit.cs" />
-    <Compile Include="src\TestBase\TestResultInfo.cs" />
-    <Compile Include="src\TestFramework\ClassInheritanceTest.cs" />
-    <Compile Include="src\TestFramework\DelegateTest.cs" />
-    <Compile Include="src\TestFramework\TestClass2.cs" />
-    <Compile Include="src\TestFramework\TestClass3.cs" />
-    <Compile Include="src\TestFramework\TestCLRAttribute.cs" />
-    <Compile Include="src\TestFramework\TestCLREnum.cs" />
-    <Compile Include="src\TestFramework\TestVector3.cs" />
-    <Compile Include="src\Tests\ActivatorCreateInstanceTest.cs" />
-    <Compile Include="src\Tests\ArrayTest.cs" />
-    <Compile Include="src\Tests\BaseClassCtorCall.cs" />
-    <Compile Include="src\Tests\DelegateInnerTest.cs" />
-    <Compile Include="src\Tests\DelegateTest.cs" />
-    <Compile Include="src\Tests\EnumTest.cs" />
-    <Compile Include="src\Tests\InterfaceGenericMethodTest.cs" />
-    <Compile Include="src\Tests\JsonManager.cs" />
-    <Compile Include="src\Tests\LuaArrayTest.cs" />
-    <Compile Include="src\Tests\WhileAndOutTest.cs" />
-    <Compile Include="src\Tests\ExternionsMethodTest.cs" />
-    <Compile Include="src\Tests\GCTest.cs" />
-    <Compile Include="src\Tests\GenericMethodTest.cs" />
-    <Compile Include="src\Tests\HonorEventView.cs" />
-    <Compile Include="src\Tests\InheritanceTest.cs" />
-    <Compile Include="src\Tests\JsonTest.cs" />
-    <Compile Include="src\Tests\LightTester1.cs" />
-    <Compile Include="src\Tests\LightTester2.cs" />
-    <Compile Include="src\Tests\MutliImageQueue.cs" />
-    <Compile Include="src\Tests\NestedClass.cs" />
-    <Compile Include="src\Tests\ReflectionTest.cs" />
-    <Compile Include="src\Tests\RefOutTest.cs" />
-    <Compile Include="src\Tests\SimpleTest.cs" />
-    <Compile Include="src\Tests\Structs.cs" />
-    <Compile Include="src\Tests\Test01.cs" />
-    <Compile Include="src\Tests\Test03.cs" />
-    <Compile Include="src\Tests\Test05.cs" />
-    <Compile Include="src\Tests\TestCLREnum.cs" />
-    <Compile Include="src\Tests\TestValueTypeBinding.cs" />
-    <Compile Include="src\Tests\UIPage.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Bridge\Bridge\Bridge.csproj">
-      <Project>{0821ab8f-9ed7-4fa9-aa06-e62013de60c7}</Project>
-      <Name>Bridge</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="$(ProjectDir)cmd.bat" />
+  </Target>
+
 </Project>
