@@ -607,12 +607,27 @@ namespace CSharpLua {
       return GetAllTypeSameName(symbol);
     }
 
+    private static bool IsSameNameSymbol(ISymbol member, ISymbol symbol) {
+      if (member.Equals(symbol)) {
+        return true;
+      }
+
+      if (symbol.Kind == SymbolKind.Method) {
+        var methodSymbol = (IMethodSymbol)symbol;
+        if (methodSymbol.PartialDefinitionPart != null && methodSymbol.PartialDefinitionPart.Equals(member)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     private LuaIdentifierNameSyntax GetAllTypeSameName(ISymbol symbol) {
       List<ISymbol> sameNameMembers = GetSameNameMembers(symbol);
       LuaIdentifierNameSyntax symbolExpression = null;
       int index = 0;
       foreach (ISymbol member in sameNameMembers) {
-        if (member.Equals(symbol)) {
+        if (IsSameNameSymbol(member, symbol)) {
           symbolExpression = GetSymbolBaseName(symbol);
         } else {
           if (!memberNames_.ContainsKey(member)) {

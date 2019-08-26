@@ -712,7 +712,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
-      if (!node.Modifiers.IsAbstract() && !node.Modifiers.IsExtern() && !node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Ignore)) {
+      if ((node.Body != null || node.ExpressionBody != null) && !node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Ignore)) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
         bool isMoreThanLocalVariables = IsMoreThanLocalVariables(result.Symbol);
         CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables);
@@ -1944,8 +1944,10 @@ namespace CSharpLua {
 
       var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       if (symbol != null) {
-        if (symbol.ReturnsVoid && generator_.IsConditionalAttributeIgnore(symbol)) {
-          return LuaExpressionSyntax.EmptyExpression;
+        if (symbol.ReturnsVoid) {
+          if (generator_.IsConditionalAttributeIgnore(symbol) || symbol.IsEmptyPartialMethod()) {
+            return LuaExpressionSyntax.EmptyExpression;
+          }
         }
 
         var codeTemplateExpression = CheckCodeTemplateInvocationExpression(symbol, node);

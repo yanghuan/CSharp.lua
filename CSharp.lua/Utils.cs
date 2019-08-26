@@ -1083,6 +1083,20 @@ namespace CSharpLua {
       return false;
     }
 
+    public static bool IsEmptyPartialMethod(this IMethodSymbol symbol) {
+      if (symbol.ReturnsVoid && symbol.IsPrivate()) {
+        var p = symbol.GetType().GetProperty("DeclarationModifiers", BindingFlags.NonPublic | BindingFlags.Instance);
+        if (p != null) {
+          var declarationModifiers = p.GetValue(symbol);
+          if (declarationModifiers.ToString().Contains("Partial")) {
+            return symbol.PartialImplementationPart == null || symbol.PartialDefinitionPart != null;
+          }
+        }
+      }
+
+      return false;
+    }
+
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {
       const int kParametersMaxCount = 256;
 
