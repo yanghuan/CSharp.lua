@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -559,5 +559,13 @@ namespace TestCases
 
         }
     }
+
+  public struct InkListItem {
+
+  }
+
+  public class InkList : Dictionary<InkListItem, int> {
+
+  }
 
 }
