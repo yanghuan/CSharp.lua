@@ -2567,7 +2567,7 @@ namespace CSharpLua {
 
       if (symbol.IsGenericMethod) {
         var originalDefinition = symbol.OriginalDefinition;
-        if (originalDefinition != symbol) {
+        if (!originalDefinition.Equals(symbol)) {
           var targetMethodSymbol = GetDelegateTargetMethodSymbol(node);
           var targetTypeParameters = new List<TypeParameterPlaceholder>();
           foreach (var typeArgument in targetMethodSymbol.ContainingType.TypeArguments) {

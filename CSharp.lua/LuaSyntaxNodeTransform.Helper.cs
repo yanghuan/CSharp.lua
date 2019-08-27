@@ -1437,7 +1437,7 @@ namespace CSharpLua {
       public override void VisitAssignmentExpression(AssignmentExpressionSyntax node) {
         var semanticModel = generator_.GetSemanticModel(node.SyntaxTree);
         var symbol = semanticModel.GetSymbolInfo(node.Left).Symbol;
-        if (symbol == symbol_) {
+        if (symbol_.Equals(symbol)) {
           Found();
         }
 
@@ -1456,7 +1456,7 @@ namespace CSharpLua {
             foreach (var argument in node.ArgumentList.Arguments) {
               if (argument.RefKindKeyword.IsOutOrRef()) {
                 var symbol = semanticModel.GetSymbolInfo(argument.Expression).Symbol;
-                if (symbol == symbol_) {
+                if (symbol.Equals(symbol_)) {
                   Found();
                 }
               }
@@ -1796,7 +1796,7 @@ namespace CSharpLua {
 
         var methodSymbol = (IMethodSymbol)semanticModel.GetSymbolInfo(node).Symbol;
         if (methodSymbol != null) {
-          if (methodSymbol == symbol_) {
+          if (methodSymbol.Equals(symbol_)) {
             Found();
           }
         }

@@ -561,7 +561,7 @@ namespace CSharpLua {
         if (catchNode.Declaration != null) {
           var typeName = (LuaIdentifierNameSyntax)catchNode.Declaration.Type.Accept(this);
           var typeSymbol = semanticModel_.GetTypeInfo(catchNode.Declaration.Type).Type;
-          if (typeSymbol != generator_.SystemExceptionTypeSymbol) {
+          if (!typeSymbol.Equals(generator_.SystemExceptionTypeSymbol)) {
             var mathcTypeInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, temp, typeName);
             if (ifCondition != null) {
               ifCondition = ifCondition.And(mathcTypeInvocation);

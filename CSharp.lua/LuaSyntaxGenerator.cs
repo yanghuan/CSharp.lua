@@ -761,7 +761,7 @@ namespace CSharpLua {
       var rootType = symbol.ContainingType;
       var curTypeSymbol = rootType;
       while (true) {
-        AddSimilarNameMembers(curTypeSymbol, names, members, rootType != curTypeSymbol);
+        AddSimilarNameMembers(curTypeSymbol, names, members, !rootType.Equals(curTypeSymbol));
         var baseTypeSymbol = curTypeSymbol.BaseType;
         if (baseTypeSymbol != null) {
           curTypeSymbol = baseTypeSymbol;
@@ -868,7 +868,7 @@ namespace CSharpLua {
         if (countOfA == 1) {
           var implementationOfA = a.InterfaceImplementations().First();
           var implementationOfB = b.InterfaceImplementations().First();
-          if (implementationOfA == implementationOfB) {
+          if (implementationOfA.Equals(implementationOfB)) {
             throw new CompilationErrorException($"{a} is conflict with {b}");
           }
 
@@ -1224,7 +1224,7 @@ namespace CSharpLua {
               }
 
               var implementationType = implementationMember.ContainingType;
-              if (implementationType != type) {
+              if (!implementationType.Equals(type)) {
                 if (!implementationType.AllInterfaces.Contains(baseInterface)) {
                   generator_.AddImplicitInterfaceImplementation(implementationMember, interfaceMember);
                   generator_.TryAddExtend(baseInterface, implementationType);
@@ -1290,7 +1290,7 @@ namespace CSharpLua {
       }
 
       private static bool CheckTypeNameExists(IEnumerable<ISymbol> all, ISymbol type, string newName) {
-        return all.Where(i => i.ContainingNamespace == type.ContainingNamespace).Any(i => i.Name == newName);
+        return all.Where(i => i.ContainingNamespace.Equals(type.ContainingNamespace)).Any(i => i.Name == newName);
       }
 
       private void CheckNamespace() {
@@ -1518,12 +1518,12 @@ namespace CSharpLua {
         int index = 0;
         switch (symbol.Kind) {
           case SymbolKind.Method: {
-            index = methods.FindIndex(i => i == symbol);
+            index = methods.FindIndex(i => i.Equals(symbol));
             break;
           }
           case SymbolKind.Property:
           case SymbolKind.Event: {
-            index = methods.FindIndex(i => i.Kind == SymbolKind.Method && ((IMethodSymbol)i).AssociatedSymbol == symbol) + 1;
+            index = methods.FindIndex(i => i.Kind == SymbolKind.Method && symbol.Equals(((IMethodSymbol)i).AssociatedSymbol)) + 1;
             break;
           }
         }
