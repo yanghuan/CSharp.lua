@@ -712,7 +712,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
-      if (!node.Modifiers.IsAbstract() && !node.Modifiers.IsExtern() && !node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Ignore)) {
+      if ((node.Body != null || node.ExpressionBody != null) && !node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Ignore)) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
         bool isMoreThanLocalVariables = IsMoreThanLocalVariables(result.Symbol);
         CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables);
@@ -1944,8 +1944,10 @@ namespace CSharpLua {
 
       var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       if (symbol != null) {
-        if (symbol.ReturnsVoid && generator_.IsConditionalAttributeIgnore(symbol)) {
-          return LuaExpressionSyntax.EmptyExpression;
+        if (symbol.ReturnsVoid) {
+          if (generator_.IsConditionalAttributeIgnore(symbol) || symbol.IsEmptyPartialMethod()) {
+            return LuaExpressionSyntax.EmptyExpression;
+          }
         }
 
         var codeTemplateExpression = CheckCodeTemplateInvocationExpression(symbol, node);
@@ -2568,7 +2570,7 @@ namespace CSharpLua {
 
       if (symbol.IsGenericMethod) {
         var originalDefinition = symbol.OriginalDefinition;
-        if (originalDefinition != symbol) {
+        if (!originalDefinition.Equals(symbol)) {
           var targetMethodSymbol = GetDelegateTargetMethodSymbol(node);
           var targetTypeParameters = new List<TypeParameterPlaceholder>();
           foreach (var typeArgument in targetMethodSymbol.ContainingType.TypeArguments) {
@@ -3111,12 +3113,30 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitElseClause(ElseClauseSyntax node) {
       if (node.Statement.IsKind(SyntaxKind.IfStatement)) {
         var ifStatement = (IfStatementSyntax)node.Statement;
+
+        LuaBlockSyntax conditionBody = new LuaBlockSyntax();
+        PushBlock(conditionBody);
         var condition = VisitExpression(ifStatement.Condition);
-        LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(condition);
-        WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
-        ifStatements_.Peek().ElseIfStatements.Add(elseIfStatement);
-        ifStatement.Else?.Accept(this);
-        return elseIfStatement;
+        PopBlock();
+
+        if (conditionBody.Statements.Count == 0) {
+          LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(condition);
+          WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
+          ifStatements_.Peek().ElseIfStatements.Add(elseIfStatement);
+          ifStatement.Else?.Accept(this);
+          return elseIfStatement;
+        } else {
+          LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
+          elseClause.Body.Statements.AddRange(conditionBody.Statements);
+          LuaIfStatementSyntax elseIfStatement = new LuaIfStatementSyntax(condition);
+          WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
+          elseClause.Body.AddStatement(elseIfStatement);
+          ifStatements_.Peek().Else = elseClause;
+          ifStatements_.Push(elseIfStatement);
+          ifStatement.Else?.Accept(this);
+          ifStatements_.Pop();
+          return elseClause;
+        }
       } else {
         LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
         WriteStatementOrBlock(node.Statement, elseClause.Body);

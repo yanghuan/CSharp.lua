@@ -561,7 +561,7 @@ namespace CSharpLua {
         if (catchNode.Declaration != null) {
           var typeName = (LuaIdentifierNameSyntax)catchNode.Declaration.Type.Accept(this);
           var typeSymbol = semanticModel_.GetTypeInfo(catchNode.Declaration.Type).Type;
-          if (typeSymbol != generator_.SystemExceptionTypeSymbol) {
+          if (!typeSymbol.Equals(generator_.SystemExceptionTypeSymbol)) {
             var mathcTypeInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, temp, typeName);
             if (ifCondition != null) {
               ifCondition = ifCondition.And(mathcTypeInvocation);
@@ -1038,7 +1038,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitInterpolatedStringText(InterpolatedStringTextSyntax node) {
-      string text = node.TextToken.ValueText.Replace("{{", "{").Replace("}}", "}");
+      string text = node.TextToken.Text.Replace("{{", "{").Replace("}}", "}");
       return (LuaIdentifierNameSyntax)text;
     }
 
