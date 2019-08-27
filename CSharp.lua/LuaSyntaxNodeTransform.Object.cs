@@ -1038,7 +1038,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitInterpolatedStringText(InterpolatedStringTextSyntax node) {
-      string text = node.TextToken.ValueText.Replace("{{", "{").Replace("}}", "}");
+      string text = node.TextToken.Text.Replace("{{", "{").Replace("}}", "}");
       return (LuaIdentifierNameSyntax)text;
     }
 
