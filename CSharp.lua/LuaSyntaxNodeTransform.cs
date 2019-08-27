@@ -3110,12 +3110,30 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitElseClause(ElseClauseSyntax node) {
       if (node.Statement.IsKind(SyntaxKind.IfStatement)) {
         var ifStatement = (IfStatementSyntax)node.Statement;
+
+        LuaBlockSyntax conditionBody = new LuaBlockSyntax();
+        PushBlock(conditionBody);
         var condition = VisitExpression(ifStatement.Condition);
-        LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(condition);
-        WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
-        ifStatements_.Peek().ElseIfStatements.Add(elseIfStatement);
-        ifStatement.Else?.Accept(this);
-        return elseIfStatement;
+        PopBlock();
+
+        if (conditionBody.Statements.Count == 0) {
+          LuaElseIfStatementSyntax elseIfStatement = new LuaElseIfStatementSyntax(condition);
+          WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
+          ifStatements_.Peek().ElseIfStatements.Add(elseIfStatement);
+          ifStatement.Else?.Accept(this);
+          return elseIfStatement;
+        } else {
+          LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
+          elseClause.Body.Statements.AddRange(conditionBody.Statements);
+          LuaIfStatementSyntax elseIfStatement = new LuaIfStatementSyntax(condition);
+          WriteStatementOrBlock(ifStatement.Statement, elseIfStatement.Body);
+          elseClause.Body.AddStatement(elseIfStatement);
+          ifStatements_.Peek().Else = elseClause;
+          ifStatements_.Push(elseIfStatement);
+          ifStatement.Else?.Accept(this);
+          ifStatements_.Pop();
+          return elseClause;
+        }
       } else {
         LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
         WriteStatementOrBlock(node.Statement, elseClause.Body);
