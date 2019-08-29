@@ -304,6 +304,10 @@ namespace CSharpLua {
       return token.IsKind(SyntaxKind.OutKeyword) || token.IsKind(SyntaxKind.RefKeyword);
     }
 
+    public static bool IsBasicType(this ITypeSymbol type) {
+      return type.SpecialType >= SpecialType.System_Enum && type.SpecialType <= SpecialType.System_Double;
+    }
+
     public static bool IsStringType(this ITypeSymbol type) {
       return type.SpecialType == SpecialType.System_String;
     }

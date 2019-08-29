@@ -62,6 +62,8 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax ToEnumString = "ToEnumString";
     public static readonly LuaIdentifierNameSyntax DelegateMake = "System.fn";
     public static readonly LuaIdentifierNameSyntax DelegateBind = "System.bind";
+    public static readonly LuaIdentifierNameSyntax DelegateCombine = "System.Delegate.Combine";
+    public static readonly LuaIdentifierNameSyntax DelegateRemove = "System.Delegate.Remove";
     public static readonly LuaIdentifierNameSyntax IntegerDiv = "System.div";
     public static readonly LuaIdentifierNameSyntax IntegerDivOfNull = "System.divOfNull";
     public static readonly LuaIdentifierNameSyntax IntegerMod = "System.mod";

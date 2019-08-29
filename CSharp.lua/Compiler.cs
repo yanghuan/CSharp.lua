@@ -40,6 +40,7 @@ namespace CSharpLua {
     public bool IsExportMetadata { get; set; }
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
+    public bool IsPreventDebugObject { get; set; }
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
       folder_ = folder;
@@ -138,6 +139,7 @@ namespace CSharpLua {
         LuaModuleLibs = new HashSet<string>(luaModuleLibs),
         IsModule = IsModule,
         IsInlineSimpleProperty = IsInlineSimpleProperty,
+        IsPreventDebugObject = IsPreventDebugObject,
       };
       var generator = Build(cscArguments_, codes, libs, Metas, setting);
       generator.Generate(output_);
