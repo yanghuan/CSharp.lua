@@ -1,5 +1,6 @@
 #pragma warning disable IDE0052, IDE1006, CS0626
 using CSharpLua;
+using System;
 
 namespace War3Api {
   public static class Common {
@@ -4889,6 +4890,10 @@ namespace War3Api {
     public static extern @event TriggerRegisterUnitInRange(trigger whichTrigger, unit whichUnit, float range, boolexpr filter);
     [NativeLuaMemberAttribute]
     public static extern triggercondition TriggerAddCondition(trigger whichTrigger, boolexpr condition);
+    [NativeLuaMemberAttribute]
+    // TODO: test this works
+    // TODO: ensure that building csharplua actually updates the dll referenced by wc3managerial
+    public static extern triggercondition TriggerAddCondition(trigger whichTrigger, Func<bool> condition);
     [NativeLuaMemberAttribute]
     public static extern void TriggerRemoveCondition(trigger whichTrigger, triggercondition whichCondition);
     [NativeLuaMemberAttribute]
