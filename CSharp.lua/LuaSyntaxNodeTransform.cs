@@ -2121,8 +2121,14 @@ namespace CSharpLua {
             } else if (statement is LuaLocalDeclarationStatementSyntax declarationStatement) {
               if (declarationStatement.Declaration is LuaVariableListDeclarationSyntax variableList) {
                 var last = variableList.Variables.Last();
-                if (last.Initializer != null && last.Initializer.Value is LuaInvocationExpressionSyntax) {
-                  hasInsertColon = true;
+                var value = last.Initializer?.Value;
+                if (value != null) {
+                  switch (value) {
+                    case LuaInvocationExpressionSyntax _:
+                    case LuaPropertyAdapterExpressionSyntax _:
+                      hasInsertColon = true;
+                      break;
+                  }
                 }
               }
             }
