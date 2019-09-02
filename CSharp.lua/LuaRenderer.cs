@@ -18,11 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+
 using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed class LuaRenderer {
-    private readonly LuaSyntaxGenerator generator_;
+    // private readonly LuaSyntaxGenerator generator_;
+    private readonly LuaSyntaxGenerator.SettingInfo settings_;
     private readonly TextWriter writer_;
     private bool isNewLine_;
     private int indentLevel_;
@@ -30,14 +32,26 @@ namespace CSharpLua {
     private bool IsSingleLine => singleLineCounter_ > 0;
 
     public LuaRenderer(LuaSyntaxGenerator generator, TextWriter writer) {
-      generator_ = generator;
+      // generator_ = generator;
+      settings_ = generator.Setting;
+      writer_ = writer;
+    }
+
+    public LuaRenderer(LuaSyntaxGenerator.SettingInfo settings, TextWriter writer) {
+      // generator_ = generator;
+      settings_ = settings;
       writer_ = writer;
     }
 
     public LuaSyntaxGenerator.SettingInfo Setting {
       get {
-        return generator_.Setting;
+        // return generator_.Setting;
+        return settings_;
       }
+    }
+
+    public void RenderCompilationUnit(LuaCompilationUnitSyntax luaCompilationUnit) {
+      luaCompilationUnit.Render(this);
     }
 
     private void AddIndent() {
