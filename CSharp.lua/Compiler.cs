@@ -41,8 +41,6 @@ namespace CSharpLua {
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsOutputSingleFile { get; set; }
-    [Obsolete("Use NativeLuaMemberAttribute instead.")]
-    public string LuaNativeApiPrefix { get; set; }
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
       folder_ = folder;
@@ -118,7 +116,7 @@ namespace CSharpLua {
 
     private static LuaSyntaxGenerator Build(
       IEnumerable<string> cscArguments,
-      IEnumerable<(string Text, string Path)> codes, 
+      IEnumerable<(string Text, string Path)> codes,
       IEnumerable<string> libs,
       IEnumerable<string> metas,
       LuaSyntaxGenerator.SettingInfo setting) {
@@ -130,7 +128,7 @@ namespace CSharpLua {
     }
 
     public void Compile() {
-      var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
+      var files = GetCSharpFiles(folder_);
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
@@ -146,8 +144,8 @@ namespace CSharpLua {
       LuaSyntaxGenerator generator = null;
       try {
         generator = Build(cscArguments_, codes, libs, Metas, setting);
-      } catch {
-        return;
+      } catch (CompilationErrorException) {
+        throw;
       }
 
       if (IsOutputSingleFile) {
@@ -161,6 +159,27 @@ namespace CSharpLua {
       var codes = new (string, string)[] { (code, "") };
       var generator = Build(null, codes, GetSystemLibs(), GetMetas(null), new LuaSyntaxGenerator.SettingInfo());
       return generator.GenerateSingle();
+    }
+
+    private static IEnumerable<string> GetCSharpFiles(string folder) {
+      /*var csprojFile = Directory.EnumerateFiles( folder, "*.csproj", SearchOption.TopDirectoryOnly ).SingleOrDefault();
+      if (csprojFile != null) {
+        return DNT.ProjectExtensions.GetProjectCompileFiles(csprojFile);
+      } else*/ {
+        // return Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories);
+        foreach (var file in Directory.EnumerateFiles(folder, "*.cs", SearchOption.TopDirectoryOnly)) {
+          yield return file;
+        }
+
+        foreach (var subFolder in Directory.EnumerateDirectories(folder, "*", SearchOption.TopDirectoryOnly)) {
+          var subFolderName = new DirectoryInfo(subFolder).Name;
+          if (subFolderName != "bin" && subFolderName != "obj") {
+            foreach (var file in Directory.EnumerateFiles(subFolder, "*.cs", SearchOption.AllDirectories)) {
+              yield return file;
+            }
+          }
+        }
+      }
     }
   }
 }
