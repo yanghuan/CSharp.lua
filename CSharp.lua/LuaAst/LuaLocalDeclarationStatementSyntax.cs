@@ -101,12 +101,14 @@ namespace CSharpLua.LuaAst {
     public string LocalKeyword => Tokens.Local;
     public LuaIdentifierNameSyntax Identifier { get; }
     public LuaEqualsValueClauseSyntax Initializer { get; set; }
+    public bool IsLocalDeclaration { get; set; }
 
     public LuaVariableDeclaratorSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression = null) {
       Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
       if (expression != null) {
         Initializer = new LuaEqualsValueClauseSyntax(expression);
       }
+      IsLocalDeclaration = true;
     }
 
     internal override void Render(LuaRenderer renderer) {

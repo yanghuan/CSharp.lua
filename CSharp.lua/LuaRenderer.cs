@@ -402,8 +402,10 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaVariableDeclaratorSyntax node) {
-      Write(node.LocalKeyword);
-      WriteSpace();
+      if (node.IsLocalDeclaration) {
+        Write(node.LocalKeyword);
+        WriteSpace();
+      }
       node.Identifier.Render(this);
       node.Initializer?.Render(this);
       Write(node.SemicolonToken);
