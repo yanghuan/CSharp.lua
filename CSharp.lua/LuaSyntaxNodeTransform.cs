@@ -1471,11 +1471,20 @@ namespace CSharpLua {
       return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode, parnet);
     }
 
+    private LuaExpressionSyntax BuildDelegateBinaryExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, bool isPlus) {
+      if (generator_.Setting.IsPreventDebugObject) {
+        var methodName = isPlus ? LuaIdentifierNameSyntax.DelegateCombine : LuaIdentifierNameSyntax.DelegateRemove;
+        return new LuaInvocationExpressionSyntax(methodName, left, right);
+      } else {
+        var operatorToken = isPlus ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
+        return new LuaBinaryExpressionSyntax(left, operatorToken, right);
+      }
+    }
+
     private LuaExpressionSyntax BuildDelegateAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right, bool isPlus) {
-      var operatorToken = isPlus ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
       if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
         if (propertyAdapter.IsProperty) {
-          propertyAdapter.ArgumentList.AddArgument(new LuaBinaryExpressionSyntax(propertyAdapter.GetCloneOfGet(), operatorToken, right));
+          propertyAdapter.ArgumentList.AddArgument(BuildDelegateBinaryExpression(propertyAdapter.GetCloneOfGet(), right, isPlus));
           return propertyAdapter;
         } else {
           propertyAdapter.IsGetOrAdd = isPlus;
@@ -1483,7 +1492,7 @@ namespace CSharpLua {
           return propertyAdapter;
         }
       } else {
-        return new LuaAssignmentExpressionSyntax(left, new LuaBinaryExpressionSyntax(left, operatorToken, right));
+        return new LuaAssignmentExpressionSyntax(left, BuildDelegateBinaryExpression(left, right, isPlus));
       }
     }
 
@@ -1901,6 +1910,10 @@ namespace CSharpLua {
       return arguments;
     }
 
+    private bool IsPreventDebugObject(INamedTypeSymbol symbol) {
+      return generator_.Setting.IsPreventDebugObject && symbol.IsBasicType();
+    }
+
     private LuaInvocationExpressionSyntax CheckInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node, LuaExpressionSyntax expression) {
       LuaInvocationExpressionSyntax invocation;
       if (symbol != null && symbol.IsExtensionMethod) {
@@ -1922,7 +1935,13 @@ namespace CSharpLua {
             invocation = new LuaInvocationExpressionSyntax(memberAccess.Name);
             invocation.AddArgument(memberAccess.Expression);
           } else {
-            invocation = new LuaInvocationExpressionSyntax(memberAccess);
+            if (memberAccess.IsObjectColon && IsPreventDebugObject(symbol.ContainingType)) {
+              var typeName = GetTypeName(symbol.ContainingType);
+              invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(typeName, memberAccess.Name));
+              invocation.AddArgument(memberAccess.Expression);
+            } else {
+              invocation = new LuaInvocationExpressionSyntax(memberAccess);
+            }
           }
         } else {
           invocation = new LuaInvocationExpressionSyntax(expression);
@@ -2102,8 +2121,14 @@ namespace CSharpLua {
             } else if (statement is LuaLocalDeclarationStatementSyntax declarationStatement) {
               if (declarationStatement.Declaration is LuaVariableListDeclarationSyntax variableList) {
                 var last = variableList.Variables.Last();
-                if (last.Initializer != null && last.Initializer.Value is LuaInvocationExpressionSyntax) {
-                  hasInsertColon = true;
+                var value = last.Initializer?.Value;
+                if (value != null) {
+                  switch (value) {
+                    case LuaInvocationExpressionSyntax _:
+                    case LuaPropertyAdapterExpressionSyntax _:
+                      hasInsertColon = true;
+                      break;
+                  }
                 }
               }
             }
@@ -3576,8 +3601,14 @@ namespace CSharpLua {
         case SyntaxKind.AddExpression: {
           if (semanticModel_.GetSymbolInfo(node).Symbol is IMethodSymbol methodSymbol) {
             var containingType = methodSymbol.ContainingType;
-            if (containingType != null && containingType.IsStringType()) {
-              return BuildStringConcatExpression(node);
+            if (containingType != null) {
+              if (containingType.IsStringType()) {
+                return BuildStringConcatExpression(node);
+              }
+
+              if (generator_.Setting.IsPreventDebugObject && containingType.IsDelegateType()) {
+                return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.DelegateCombine);
+              }
             }
           }
           break;

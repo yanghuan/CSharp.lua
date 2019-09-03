@@ -59,10 +59,13 @@ namespace CSharpLua {
       public bool IsExportMetadata { get; set; }
       public string BaseFolder { get; set; } = "";
       public bool IsExportAttributesAll { get; private set; }
+      public bool IsExportEnumAll { get; private set; }
       public bool IsModule { get; set; }
       public HashSet<string> ExportAttributes { get; private set; }
+      public HashSet<string> ExportEnums { get; private set; }
       public HashSet<string> LuaModuleLibs;
       public bool IsInlineSimpleProperty { get; set; }
+      public bool IsPreventDebugObject { get; set; }
 
       public SettingInfo() {
         Indent = 2;
@@ -75,6 +78,18 @@ namespace CSharpLua {
               IsExportAttributesAll = true;
             } else {
               ExportAttributes = new HashSet<string>(value);
+            }
+          }
+        }
+      }
+
+      public string[] Enums {
+        set {
+          if (value != null) {
+            if (value.Length == 0) {
+              IsExportEnumAll = true;
+            } else {
+              ExportEnums = new HashSet<string>(value);
             }
           }
         }
@@ -137,6 +152,9 @@ namespace CSharpLua {
       XmlMetaProvider = new XmlMetaProvider(metas);
       CommandLineArguments = arguments;
       Setting = setting;
+      if (Setting.ExportEnums != null) {
+        exportEnums_.UnionWith(Setting.ExportEnums);
+      }
       SystemExceptionTypeSymbol = compilation.GetTypeByMetadataName("System.Exception");
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
@@ -285,6 +303,9 @@ namespace CSharpLua {
     }
 
     internal bool IsEnumExport(string enumTypeSymbol) {
+      if (Setting.IsExportEnumAll) {
+        return true;
+      }
       return exportEnums_.Contains(enumTypeSymbol);
     }
 
