@@ -36,13 +36,14 @@ namespace CSharpLua {
     private readonly string[] cscArguments_;
     private readonly bool isClassic_;
     private readonly string[] attributes_;
+    private readonly string[] enums_;
 
     public bool IsExportMetadata { get; set; }
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
 
-    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts) {
+    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
       folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
@@ -51,6 +52,9 @@ namespace CSharpLua {
       isClassic_ = isClassic;
       if (atts != null) {
         attributes_ = Utility.Split(atts, false);
+      }
+      if (enums != null) {
+        enums_ = Utility.Split(enums, false);
       }
     }
 
@@ -136,6 +140,7 @@ namespace CSharpLua {
         IsExportMetadata = IsExportMetadata,
         BaseFolder = folder_,
         Attributes = attributes_,
+        Enums = enums_,
         LuaModuleLibs = new HashSet<string>(luaModuleLibs),
         IsModule = IsModule,
         IsInlineSimpleProperty = IsInlineSimpleProperty,
