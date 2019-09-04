@@ -758,13 +758,19 @@ namespace CSharpLua {
       return false;
     }
 
+    private static bool IsMethodTypeArgument(IMethodSymbol method, ITypeSymbol symbol) {
+      if (method.TypeArguments.Length > 0) {
+        return method.TypeArguments.Any(i => symbol.IsTypeParameterExists(i));
+      } else if (method.MethodKind == MethodKind.LambdaMethod || method.MethodKind == MethodKind.LocalFunction) {
+        return IsMethodTypeArgument((IMethodSymbol)method.ContainingSymbol, symbol);
+      }
+      return false;
+    }
+
     private bool IsCurMethodTypeArgument(ITypeSymbol symbol) {
-      var method = CurMethodInfoOrNull;
-      if (method != null && method.Symbol.TypeArguments.Length > 0) {
-        bool isMethodTypeArgument = method.Symbol.TypeArguments.Any(i => symbol.IsTypeParameterExists(i));
-        if (isMethodTypeArgument) {
-          return true;
-        }
+      var methodInfo = CurMethodInfoOrNull;
+      if (methodInfo != null) {
+        return IsMethodTypeArgument(methodInfo.Symbol, symbol);
       }
       return false;
     }
