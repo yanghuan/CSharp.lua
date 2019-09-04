@@ -403,7 +403,7 @@ DateTime = System.defStc("System.DateTime", {
     return DateTime(ticks, 1)
   end,
   IsDaylightSavingTime = function(this)
-    return dstTicks > 0
+    return this.kind == 2 and dstTicks > 0
   end,
   ToString = function (this)
     local year, month, day = getDatePart(this.ticks)
