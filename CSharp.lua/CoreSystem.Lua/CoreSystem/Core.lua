@@ -35,6 +35,7 @@ local string = string
 local sfind = string.find
 local ssub = string.sub
 local global = _G
+local prevSystem = rawget(global, "System")
 
 local emptyFn = function() end
 local nilFn = function() return nil end
@@ -437,6 +438,9 @@ System = {
   global = global,
   classes = classes
 }
+if prevSystem then
+  setmetatable(System, { __index == prevSystem })
+end
 global.System = System
 
 local _, _, version = sfind(_VERSION, "^Lua (.*)$")

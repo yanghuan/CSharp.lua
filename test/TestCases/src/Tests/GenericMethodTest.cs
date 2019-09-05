@@ -350,4 +350,17 @@ namespace TestCases {
       list.Invoke(comp.OnMemberStaticInvoke, comp, comp);
     }
   }
+
+  class BugTemplateAndLambda {
+    class TemplateClass<T> {
+    }
+
+    private void TemplateFunc<T>() {
+      void NotWorkableFunc() => new TemplateClass<T>();
+
+      void WorkableFunc() {
+        new TemplateClass<T>();
+      }
+    }
+  }
 }
