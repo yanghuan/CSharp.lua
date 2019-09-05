@@ -183,11 +183,13 @@ local function addMonths(this, months)
 end
 
 local function getTimeZone()
-  local now = ostime()
-  return osdifftime(now, ostime(osdate("!*t", now)))
+  local date = osdate("*t")
+  local dst = date.isdst
+  local now = ostime(date)
+  return osdifftime(now, ostime(osdate("!*t", now))) * 10000000, dst and 3600 * 10000000 or 0 
 end
 
-local timeZoneTicks = getTimeZone() * 10000000
+local timeZoneTicks, dstTicks = getTimeZone()
 
 local time = System.config.time or ostime
 System.time = time
@@ -195,7 +197,7 @@ System.currentTimeMillis = function () return trunc(time() * 1000) end
 
 local function now()
   local seconds = time()
-  local ticks = seconds * 10000000 + timeZoneTicks + 621355968000000000
+  local ticks = seconds * 10000000 + timeZoneTicks + dstTicks + 621355968000000000
   return DateTime(ticks, 2)
 end
 
@@ -390,15 +392,18 @@ DateTime = System.defStc("System.DateTime", {
     if this.kind == 2 then 
       return this
     end
-    local ticks = this.ticks + timeZoneTicks
+    local ticks = this.ticks + timeZoneTicks + dstTicks
     return DateTime(ticks, 2)
   end,
   ToUniversalTime = function (this)
     if this.kind == 1 then
       return this
     end
-    local ticks = this.ticks - timeZoneTicks
+    local ticks = this.ticks - timeZoneTicks - dstTicks
     return DateTime(ticks, 1)
+  end,
+  IsDaylightSavingTime = function(this)
+    return this.kind == 2 and dstTicks > 0
   end,
   ToString = function (this)
     local year, month, day = getDatePart(this.ticks)
