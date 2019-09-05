@@ -870,7 +870,8 @@ namespace CSharpLua {
         ReleaseTempIdentifier(temp);
       }
 
-      if (node.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
+      bool isReturnVoidStatement = node.Parent.IsKind(SyntaxKind.ExpressionStatement) || (node.Parent.IsKind(SyntaxKind.ArrowExpressionClause) && CurMethodInfoOrNull.Symbol.ReturnsVoid);
+      if (isReturnVoidStatement) {
         if (isEmpty) {
           throw new InvalidOperationException();
         }
