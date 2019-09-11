@@ -69,8 +69,8 @@ limitations under the License.
         </method>
       </class>
       <class name="Enum">
-        <method name="TryParse" ArgCount="2" Template="System.Enum.TryParse({^0}, {0})" />
-        <method name="TryParse" ArgCount="3" Template="System.Enum.TryParse({^0}, {0}, {1})" />
+        <method name="TryParse" GenericArgCount="1" ArgCount="2" Template="System.Enum.TryParse({^0}, {0})" />
+        <method name="TryParse" GenericArgCount="1" ArgCount="3" Template="System.Enum.TryParse({^0}, {0}, {1})" />
         <method name="ToString" Template="{this}:ToEnumString({class})" />
       </class>
       <class name="DateTime">
