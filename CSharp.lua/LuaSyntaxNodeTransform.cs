@@ -2282,6 +2282,11 @@ namespace CSharpLua {
         }
       }
 
+      if (symbol.HasAttribute<NativeLuaMemberAttribute>(out _)) {
+        // TODO: throw exception if symbol not static?
+        return name;
+      }
+
       return new LuaMemberAccessExpressionSyntax(expression, name, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
     }
 
