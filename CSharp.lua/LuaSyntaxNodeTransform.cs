@@ -3449,9 +3449,31 @@ namespace CSharpLua {
       return isTry;
     }
 
+
+    private bool CheckBreakLastBlockStatement(BreakStatementSyntax node) {
+      if (generator_.Setting.IsClassic) {
+        switch (node.Parent.Kind()) {
+          case SyntaxKind.Block: {
+            var block = (BlockSyntax)node.Parent;
+            return block.Statements.Last() != node;
+          }
+          case SyntaxKind.SwitchSection: {
+            var switchSection = (SwitchSectionSyntax)node.Parent;
+            return switchSection.Statements.Last() != node;
+          }
+        }
+      }
+      return false;
+    }
+
     public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {
       if (IsParnetTryStatement(node)) {
         return new LuaReturnStatementSyntax();
+      }
+      if (CheckBreakLastBlockStatement(node)) {
+        var blockStatement = new LuaBlockStatementSyntax();
+        blockStatement.Statements.Add(LuaBreakStatementSyntax.Statement);
+        return blockStatement;
       }
       return LuaBreakStatementSyntax.Statement;
     }
@@ -3989,7 +4011,7 @@ namespace CSharpLua {
         LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
         WriteStatementOrBlock(bodyStatement, repeatStatement.Body);
         var lastStatement = repeatStatement.Body.Statements.Last();
-        if (lastStatement is LuaBaseReturnStatementSyntax) {
+        if (lastStatement is LuaBaseReturnStatementSyntax || (generator_.Setting.IsClassic && lastStatement == LuaBreakStatementSyntax.Statement)) {
           LuaBlockStatementSyntax returnBlock = new LuaBlockStatementSyntax();
           returnBlock.Statements.Add(lastStatement);
           repeatStatement.Body.Statements[repeatStatement.Body.Statements.Count - 1] = returnBlock;
