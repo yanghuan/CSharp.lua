@@ -159,7 +159,10 @@ namespace CSharpLua {
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
         if (monoBehaviourTypeSymbol_ != null) {
-          monoBehaviourSpeicalMethodNames_ = new HashSet<string>() { "Awake", "Start", "Update", "FixedUpdate", "LateUpdate" };
+          monoBehaviourSpeicalMethodNames_ = new HashSet<string>() {
+            "Awake", "Start", "Update", "FixedUpdate", "LateUpdate",
+            "OnGUI", "OnDisable", "OnEnable"
+          };
         }
       }
       DoPretreatment();
