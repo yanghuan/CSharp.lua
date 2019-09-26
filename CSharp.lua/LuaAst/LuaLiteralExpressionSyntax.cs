@@ -170,7 +170,7 @@ namespace CSharpLua.LuaAst {
 
     public override string Text {
       get {
-        return number_.ToString("r", CultureInfo.InvariantCulture);
+        return number_.ToString("G9", CultureInfo.InvariantCulture);
       }
     }
   }
@@ -184,7 +184,7 @@ namespace CSharpLua.LuaAst {
 
     public override string Text {
       get {
-        return Number.ToString("r", CultureInfo.InvariantCulture);
+        return Number.ToString("G17", CultureInfo.InvariantCulture);
       }
     }
   }
