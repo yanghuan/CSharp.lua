@@ -439,7 +439,7 @@ System = {
   classes = classes
 }
 if prevSystem then
-  setmetatable(System, { __index == prevSystem })
+  setmetatable(System, { __index = prevSystem })
 end
 global.System = System
 

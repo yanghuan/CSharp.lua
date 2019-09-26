@@ -33,9 +33,54 @@ namespace CSharpLua {
         public string Template;
       }
 
-      public sealed class PropertyModel {
+      public class MemberModel {
         [XmlAttribute]
         public string name;
+
+        [XmlAttribute]
+        public string Baned;
+
+        protected static bool TryTryParseBool(string v, out bool b) {
+          b = false;
+          if (v != null) {
+            if (v.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase)) {
+              b = true;
+              return true;
+            }
+            if (v.Equals(bool.FalseString, StringComparison.OrdinalIgnoreCase)) {
+              b = false;
+              return false;
+            }
+          }
+          return false;
+        }
+
+        public bool IsBaned {
+          get {
+            if (!string.IsNullOrEmpty(Baned)) {
+              if (TryTryParseBool(Baned, out bool b)) {
+                return b;
+              }
+              return true;
+            }
+            return false;
+          }
+        }
+
+        public string BanedMessage {
+          get {
+            if (!string.IsNullOrEmpty(Baned)) {
+              if (TryTryParseBool(Baned, out bool b)) {
+                return b ? "cannot use" : null;
+              }
+              return Baned;
+            }
+            return null;
+          }
+        }
+      }
+
+      public sealed class PropertyModel : MemberModel {
         [XmlAttribute]
         public string Name;
         [XmlElement]
@@ -44,31 +89,20 @@ namespace CSharpLua {
         public TemplateModel get;
         [XmlAttribute]
         public string IsField;
-        [XmlAttribute]
-        public bool Baned;
 
         public bool? CheckIsField {
           get {
-            if (IsField != null) {
-              if (IsField.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase)) {
-                return true;
-              }
-              if (IsField.Equals(bool.FalseString, StringComparison.OrdinalIgnoreCase)) {
-                return false;
-              }
+            if (TryTryParseBool(IsField, out bool b)) {
+              return b;
             }
             return null;
           }
         }
       }
 
-      public sealed class FieldModel {
-        [XmlAttribute]
-        public string name;
+      public sealed class FieldModel : MemberModel {
         [XmlAttribute]
         public string Template;
-        [XmlAttribute]
-        public bool Baned;
         [XmlAttribute]
         public bool IsProperty;
       }
@@ -80,9 +114,7 @@ namespace CSharpLua {
         public ArgumentModel[] GenericArgs;
       }
 
-      public sealed class MethodModel {
-        [XmlAttribute]
-        public string name;
+      public sealed class MethodModel : MemberModel {
         [XmlAttribute]
         public string Name;
         [XmlAttribute]
@@ -97,13 +129,9 @@ namespace CSharpLua {
         public int GenericArgCount = -1;
         [XmlAttribute]
         public bool IgnoreGeneric;
-        [XmlAttribute]
-        public bool Baned;
       }
 
-      public sealed class ClassModel {
-        [XmlAttribute]
-        public string name;
+      public sealed class ClassModel : MemberModel {
         [XmlAttribute]
         public string Name;
         [XmlElement("property")]
@@ -115,20 +143,14 @@ namespace CSharpLua {
         [XmlAttribute]
         public bool IgnoreGeneric;
         [XmlAttribute]
-        public bool Baned;
-        [XmlAttribute]
         public bool Readonly;
       }
 
-      public sealed class NamespaceModel {
-        [XmlAttribute]
-        public string name;
+      public sealed class NamespaceModel : MemberModel {
         [XmlAttribute]
         public string Name;
         [XmlElement("class")]
         public ClassModel[] Classes;
-        [XmlAttribute]
-        public bool Baned;
       }
 
       public sealed class AssemblyModel {
@@ -285,7 +307,7 @@ namespace CSharpLua {
         }
 
         var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
-        if (methodModel != null && methodModel.Baned) {
+        if (methodModel != null && methodModel.IsBaned) {
           throw new CompilationErrorException($"{symbol} is baned");
         }
         return methodModel?.Template;
@@ -303,7 +325,7 @@ namespace CSharpLua {
             isIgnoreGeneric = methodModel.IgnoreGeneric;
           }
         }
-        if (methodModel != null && methodModel.Baned) {
+        if (methodModel != null && methodModel.IsBaned) {
           throw new CompilationErrorException($"{symbol} is baned");
         }
         return isIgnoreGeneric ? bool.TrueString : bool.FalseString;
@@ -443,7 +465,7 @@ namespace CSharpLua {
         if (namespaceNameMaps_.ContainsKey(namespaceName)) {
           throw new ArgumentException($"namespace [{namespaceName}] is already has");
         }
-        if (!string.IsNullOrEmpty(model.Name) || model.Baned) {
+        if (!string.IsNullOrEmpty(model.Name) || model.IsBaned) {
           namespaceNameMaps_.Add(namespaceName, model);
         }
       }
@@ -474,7 +496,7 @@ namespace CSharpLua {
     public string GetNamespaceMapName(INamespaceSymbol symbol, string original) {
       var info = namespaceNameMaps_.GetOrDefault(original);
       if (info != null) {
-        if (info.Baned) {
+        if (info.IsBaned) {
           throw new CompilationErrorException($"{symbol} is baned");
         }
         return info.Name;
@@ -493,7 +515,7 @@ namespace CSharpLua {
 
     internal string GetTypeMapName(ISymbol symbol, string shortName) {
       if (MayHaveCodeMeta(symbol)) {
-        var info = GetTypeMetaInfo(shortName);
+        var info = GetTypeMetaInfo(symbol, shortName);
         return info?.Model.Name;
       }
       return null;
@@ -515,17 +537,17 @@ namespace CSharpLua {
       return false;
     }
 
-    private TypeMetaInfo GetTypeMetaInfo(string shortName) {
+    private TypeMetaInfo GetTypeMetaInfo(ISymbol symbol, string shortName) {
       var info = typeMetas_.GetOrDefault(shortName);
-      if (info != null && info.Model.Baned) {
-        throw new CompilationErrorException($"{shortName} is baned");
+      if (info != null && info.Model.IsBaned) {
+        throw new CompilationErrorException($"{symbol} is baned, {info.Model.BanedMessage}");
       }
       return info;
     }
 
     private TypeMetaInfo GetTypeMetaInfo(INamedTypeSymbol typeSymbol) {
       string shortName = GetTypeShortString(typeSymbol);
-      return GetTypeMetaInfo(shortName);
+      return GetTypeMetaInfo(typeSymbol, shortName);
     }
 
     private TypeMetaInfo GetTypeMetaInfo(ISymbol memberSymbol) {
@@ -558,7 +580,7 @@ namespace CSharpLua {
       if (MayHaveCodeMeta(symbol)) {
         var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
         if (info != null) {
-          if (info.Baned) {
+          if (info.IsBaned) {
             throw new CompilationErrorException($"{symbol} is baned");
           }
           return isGet ? info.get?.Template : info.set?.Template;
