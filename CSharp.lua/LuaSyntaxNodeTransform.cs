@@ -632,7 +632,7 @@ namespace CSharpLua {
 
       var document = BuildDocumentationComment(node);
       bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
-      if (!symbol.IsStatic) {
+      if (!symbol.IsStatic && symbol.MethodKind != MethodKind.LocalFunction) {
         function.AddParameter(LuaIdentifierNameSyntax.This);
         if (isPrivate) {
           if (generator_.IsForcePublicSymbol(symbol) || generator_.IsMonoBehaviourSpeicalMethod(symbol)) {

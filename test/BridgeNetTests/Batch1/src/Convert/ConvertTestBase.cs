@@ -96,7 +96,7 @@ namespace Bridge.ClientTest.ConvertTests
 
         public const string SINGLE_MAX_STRING = "3.40282347e+038";
         public const string SINGLE_MIN_STRING = "-3.40282347e+038";
-        public const string SINGLE_EPSILON_STRING = "1.401298e-045";
+        public const string SINGLE_EPSILON_STRING = "1.40129846e-045";
     }
 
     public abstract class ConvertTestBase<TOutput>
