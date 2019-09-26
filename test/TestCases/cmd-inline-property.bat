@@ -1,4 +1,4 @@
-set dir=../../CSharp.lua.Launcher/bin/Debug/netcoreapp2.0/
+set dir=../../CSharp.lua.Launcher/bin/Debug/netcoreapp3.0/
 set version=Lua5.3
 set lua=../__bin/%version%/lua
 
