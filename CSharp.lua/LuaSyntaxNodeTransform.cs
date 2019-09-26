@@ -871,7 +871,11 @@ namespace CSharpLua {
         if (function.Body.Statements.Count > 0) {
           statements = function.Body.Statements;
         }
-        valueIsLiteral = valueExpression is LuaLiteralExpressionSyntax;
+        LuaExpressionSyntax v = valueExpression;
+        if (valueExpression is LuaPrefixUnaryExpressionSyntax prefixUnaryExpression) {
+          v = prefixUnaryExpression.Operand;
+        }
+        valueIsLiteral = v is LuaLiteralExpressionSyntax;
       }
 
       if (valueExpression == null) {
