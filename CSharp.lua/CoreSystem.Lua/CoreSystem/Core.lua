@@ -276,10 +276,6 @@ local staticCtorMetatable = {
 }
 
 local function setHasStaticCtor(cls, kind)
-  local extends = applyExtends(cls)
-  if extends then
-    cls.__inherits__ = extends
-  end
   local name = cls.__name__
   cls.__name__ = nil
   local t = {}
