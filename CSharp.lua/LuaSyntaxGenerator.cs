@@ -1395,7 +1395,7 @@ namespace CSharpLua {
             bool hasSet = false;
             if (property.AccessorList != null) {
               foreach (var accessor in property.AccessorList.Accessors) {
-                if (accessor.Body != null) {
+                if (accessor.Body != null || accessor.ExpressionBody != null) {
                   if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
                     Contract.Assert(!hasGet);
                     hasGet = true;
