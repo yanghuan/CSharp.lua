@@ -307,17 +307,11 @@ local types = {
   [Number] = newNumberType(Number),
 }
 
-local customTypeOf = System.config.customTypeOf
-
 function typeof(cls)
   assert(cls)
   local t = types[cls]
   if t == nil then
-    if customTypeOf then
-      t = customTypeOf(cls)
-    else
-      t = setmetatable({ cls }, Type)
-    end
+    t = setmetatable({ cls }, Type)
     types[cls] = t
   end
   return t
