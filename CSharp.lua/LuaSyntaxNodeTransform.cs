@@ -3869,6 +3869,12 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
+      SyntaxKind kind = node.Kind();
+      if (kind == SyntaxKind.IndexExpression) {
+        var expression = VisitExpression(node.Operand);
+        return new LuaPrefixUnaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.Sub);
+      }
+
       var operatorExpression = GetUserDefinedOperatorExpression(node, node.Operand);
       if (operatorExpression != null) {
         var type = semanticModel_.GetTypeInfo(node.Operand).Type;
@@ -3880,7 +3886,6 @@ namespace CSharpLua {
       }
 
       var operand = VisitExpression(node.Operand);
-      SyntaxKind kind = node.Kind();
       switch (kind) {
         case SyntaxKind.PreIncrementExpression:
         case SyntaxKind.PreDecrementExpression: {
