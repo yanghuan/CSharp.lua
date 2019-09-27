@@ -1238,7 +1238,7 @@ namespace CSharpLua {
       private void CheckImplicitInterfaceImplementation(INamedTypeSymbol type) {
         if (type.TypeKind == TypeKind.Class && !type.IsStatic) {
           foreach (var baseInterface in type.AllInterfaces) {
-            foreach (var interfaceMember in baseInterface.GetMembers()) {
+            foreach (var interfaceMember in baseInterface.GetMembers().Where(i => !i.IsStatic)) {
               var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
               if (implementationMember.Kind == SymbolKind.Method) {
                 var methodSymbol = (IMethodSymbol)implementationMember;

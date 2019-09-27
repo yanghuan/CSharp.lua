@@ -251,15 +251,13 @@ namespace CSharpLua {
     }
 
     private void BuildTypeMembers(LuaTypeDeclarationSyntax typeDeclaration, TypeDeclarationSyntax node) {
-      if (!node.IsKind(SyntaxKind.InterfaceDeclaration)) {
-        foreach (var nestedTypeDeclaration in node.Members.Where(i => i.Kind().IsTypeDeclaration())) {
-          var luaNestedTypeDeclaration = (LuaTypeDeclarationSyntax)nestedTypeDeclaration.Accept(this);
-          typeDeclaration.AddNestedTypeDeclaration(luaNestedTypeDeclaration);
-        }
+      foreach (var nestedTypeDeclaration in node.Members.Where(i => i.Kind().IsTypeDeclaration())) {
+        var luaNestedTypeDeclaration = (LuaTypeDeclarationSyntax)nestedTypeDeclaration.Accept(this);
+        typeDeclaration.AddNestedTypeDeclaration(luaNestedTypeDeclaration);
+      }
 
-        foreach (var member in node.Members.Where(i => !i.Kind().IsTypeDeclaration())) {
-          member.Accept(this);
-        }
+      foreach (var member in node.Members.Where(i => !i.Kind().IsTypeDeclaration())) {
+        member.Accept(this);
       }
     }
 
@@ -790,6 +788,10 @@ namespace CSharpLua {
         bool isImmutable = typeSymbol.IsImmutable();
         foreach (var variable in node.Declaration.Variables) {
           var variableSymbol = semanticModel_.GetDeclaredSymbol(variable);
+          if (variableSymbol.IsAbstract) {
+            continue;
+          }
+
           if (node.IsKind(SyntaxKind.EventFieldDeclaration)) {
             var eventSymbol = (IEventSymbol)variableSymbol;
             if (!IsEventFiled(eventSymbol)) {
@@ -963,12 +965,11 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
-      if (!node.Modifiers.IsAbstract()) {
-        var symbol = semanticModel_.GetDeclaredSymbol(node);
+      var symbol = semanticModel_.GetDeclaredSymbol(node);
+      if (!symbol.IsAbstract) {
         if (symbol.IsProtobufNetSpecialProperty()) {
           return null;
         }
-
         bool isStatic = symbol.IsStatic;
         bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
         bool hasGet = false;
@@ -1078,9 +1079,9 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitEventDeclaration(EventDeclarationSyntax node) {
-      if (!node.Modifiers.IsAbstract()) {
+      var symbol = semanticModel_.GetDeclaredSymbol(node);
+      if (!symbol.IsAbstract) {
         var attributes = BuildAttributes(node.AttributeLists);
-        var symbol = semanticModel_.GetDeclaredSymbol(node);
         bool isStatic = symbol.IsStatic;
         bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
         LuaIdentifierNameSyntax eventName = GetMemberName(symbol);
@@ -1128,8 +1129,8 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitIndexerDeclaration(IndexerDeclarationSyntax node) {
-      if (!node.Modifiers.IsAbstract()) {
-        var symbol = semanticModel_.GetDeclaredSymbol(node);
+      var symbol = semanticModel_.GetDeclaredSymbol(node);
+      if (!symbol.IsAbstract) {
         bool isPrivate = symbol.IsPrivate();
         LuaIdentifierNameSyntax indexName = GetMemberName(symbol);
         var parameterList = (LuaParameterListSyntax)node.ParameterList.Accept(this);
