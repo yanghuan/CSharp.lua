@@ -2500,7 +2500,14 @@ namespace CSharpLua {
     }
 
     private static bool IsParentDelegateName(NameSyntax node) {
-      return !node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression) && !node.Parent.IsKind(SyntaxKind.InvocationExpression);
+      var kind = node.Parent.Kind();
+      switch (kind) {
+        case SyntaxKind.SimpleMemberAccessExpression:
+        case SyntaxKind.InvocationExpression:
+        case SyntaxKind.MemberBindingExpression:
+          return false;
+      }
+      return true;
     }
 
     private sealed class GenericPlaceholder {
