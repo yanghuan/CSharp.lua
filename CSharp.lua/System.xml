@@ -367,7 +367,13 @@ limitations under the License.
         <method name="op_Explicit" Template="System.Nullable.Value({0})" />
       </class>
       <class name="Index">
-        <method name="Index" Template="-{0}" />
+        <property name="End" IsField="true" />
+        <property name="Start" IsField="true" />
+        <property name="Value">
+          <get Template="{this}" />
+        </property>
+        <method name="ToString" Template="System.Index.ToString({this})" />
+        <method name="op_Implicit" Template="System.Index({0})" />
       </class>
       <class name="WeakReference^1" IgnoreGeneric="true" />
       <class name="Lazy^1" Name="System.Lazy" />

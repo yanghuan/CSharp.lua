@@ -1743,6 +1743,7 @@ namespace CSharpLua {
     private sealed class RefOrOutArgument {
       public LuaExpressionSyntax Expression { get; }
       public bool IsDeclaration { get; }
+      public bool IsSpecial { get; }
 
       public RefOrOutArgument(LuaExpressionSyntax expression) {
         Expression = expression;
@@ -1750,7 +1751,51 @@ namespace CSharpLua {
 
       public RefOrOutArgument(LuaExpressionSyntax expression, ArgumentSyntax argument) {
         Expression = expression;
-        IsDeclaration = argument.Expression.IsKind(SyntaxKind.DeclarationExpression) || expression == LuaIdentifierNameSyntax.Placeholder;
+        IsSpecial = IsInSpecialBinaryExpression(argument);
+        IsDeclaration = (argument.Expression.IsKind(SyntaxKind.DeclarationExpression) && !IsSpecial) || expression == LuaIdentifierNameSyntax.Placeholder;
+      }
+
+      private static bool IsInSpecialBinaryExpression(ArgumentSyntax argument) {
+        if (argument.Expression.IsKind(SyntaxKind.DeclarationExpression)) {
+          var invocationExpression = (InvocationExpressionSyntax)argument.Parent.Parent;
+          var parent = invocationExpression.Parent;
+          if (parent.IsKind(SyntaxKind.LogicalAndExpression) || parent.IsKind(SyntaxKind.LogicalOrExpression)) {
+            var binaryExpression = (BinaryExpressionSyntax)parent;
+            if (binaryExpression.Right == invocationExpression) {
+              switch (binaryExpression.Parent.Kind()) {
+                case SyntaxKind.LogicalAndExpression:
+                case SyntaxKind.LogicalOrExpression: {
+                  var parentBinaryExpression = (BinaryExpressionSyntax)binaryExpression.Parent;
+                  if (parentBinaryExpression.Left == binaryExpression) {
+                    var declaration = (DeclarationExpressionSyntax)argument.Expression;
+                    var singleVariable = (SingleVariableDesignationSyntax)declaration.Designation;
+                    string name = singleVariable.Identifier.ValueText;
+                    if (IsIdentifierNameExists(name, parentBinaryExpression.Right)) {
+                      return true;
+                    }
+                  }
+                  break;
+                }
+                case SyntaxKind.ConditionalExpression: {
+                  var conditionalExpressionSyntax = (ConditionalExpressionSyntax)binaryExpression.Parent;
+                  if (conditionalExpressionSyntax.Condition == binaryExpression) {
+                    var declaration = (DeclarationExpressionSyntax)argument.Expression;
+                    var singleVariable = (SingleVariableDesignationSyntax)declaration.Designation;
+                    string name = singleVariable.Identifier.ValueText;
+                    if (IsIdentifierNameExists(name, conditionalExpressionSyntax.WhenTrue)) {
+                      return true;
+                    }
+                    if (IsIdentifierNameExists(name, conditionalExpressionSyntax.WhenFalse)) {
+                      return true;
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+        return false;
       }
     }
 
@@ -1774,6 +1819,8 @@ namespace CSharpLua {
           } else {
             if (refOrOutArgument.IsDeclaration) {
               locals.Variables.Add((LuaIdentifierNameSyntax)refOrOutArgument.Expression);
+            } else if (refOrOutArgument.IsSpecial) {
+              CurFunction.Body.AddHeadVariable((LuaIdentifierNameSyntax)refOrOutArgument.Expression);
             }
             multipleAssignment.Lefts.Add(refOrOutArgument.Expression);
           }
@@ -4204,7 +4251,7 @@ namespace CSharpLua {
       } else {
         LuaExpressionSyntax Accept(ExpressionSyntax expressionNode) {
           var expression = VisitExpression(expressionNode);
-          return expressionNode.IsKind(SyntaxKind.LogicalAndExpression) || expressionNode.IsKind(SyntaxKind.LogicalOrExpression) ? new LuaParenthesizedExpressionSyntax(expression) : expression;
+          return expression is LuaBinaryExpressionSyntax ? new LuaParenthesizedExpressionSyntax(expression) : expression;
         }
 
         var condition = Accept(node.Condition);

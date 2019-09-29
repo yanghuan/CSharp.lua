@@ -102,8 +102,27 @@ namespace CSharpLua {
       }
     }
 
-    private bool IsLocalVarExists(string name, SyntaxNode root) {
-      LocalVarSearcher searcher = new LocalVarSearcher(name);
+    private sealed class IdentifierNameSearcher : LuaSyntaxSearcher {
+      private readonly string name_;
+
+      public IdentifierNameSearcher(string name) {
+        name_ = name;
+      }
+
+      public override void VisitIdentifierName(IdentifierNameSyntax node) {
+        if (node.Identifier.ValueText == name_) {
+          Found();
+        }
+      }
+    }
+
+    private static bool IsLocalVarExists(string name, SyntaxNode root) {
+      var searcher = new LocalVarSearcher(name);
+      return searcher.Find(root);
+    }
+
+    private static bool IsIdentifierNameExists(string name, SyntaxNode root) {
+      var searcher = new IdentifierNameSearcher(name);
       return searcher.Find(root);
     }
 

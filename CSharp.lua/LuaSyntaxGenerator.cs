@@ -1604,18 +1604,7 @@ namespace CSharpLua {
 
     internal bool IsReadOnlyStruct(ITypeSymbol symbol) {
       if (symbol.IsValueType && symbol.TypeKind != TypeKind.TypeParameter) {
-        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-        if (syntaxReference != null) {
-          if (syntaxReference.GetSyntax() is StructDeclarationSyntax declaration) {
-            if (declaration.Modifiers.IsReadOnly()) {
-              return true;
-            }
-          } else {
-            return false;
-          }
-        } else {
-          return XmlMetaProvider.IsTypeReadOnly((INamedTypeSymbol)symbol);
-        }
+        return symbol.IsReadOnly || XmlMetaProvider.IsTypeReadOnly((INamedTypeSymbol)symbol);
       }
       return false;
     }
