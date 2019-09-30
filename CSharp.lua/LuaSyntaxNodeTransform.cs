@@ -1762,36 +1762,7 @@ namespace CSharpLua {
           if (parent.IsKind(SyntaxKind.LogicalAndExpression) || parent.IsKind(SyntaxKind.LogicalOrExpression)) {
             var binaryExpression = (BinaryExpressionSyntax)parent;
             if (binaryExpression.Right == invocationExpression) {
-              switch (binaryExpression.Parent.Kind()) {
-                case SyntaxKind.LogicalAndExpression:
-                case SyntaxKind.LogicalOrExpression: {
-                  var parentBinaryExpression = (BinaryExpressionSyntax)binaryExpression.Parent;
-                  if (parentBinaryExpression.Left == binaryExpression) {
-                    var declaration = (DeclarationExpressionSyntax)argument.Expression;
-                    var singleVariable = (SingleVariableDesignationSyntax)declaration.Designation;
-                    string name = singleVariable.Identifier.ValueText;
-                    if (IsIdentifierNameExists(name, parentBinaryExpression.Right)) {
-                      return true;
-                    }
-                  }
-                  break;
-                }
-                case SyntaxKind.ConditionalExpression: {
-                  var conditionalExpressionSyntax = (ConditionalExpressionSyntax)binaryExpression.Parent;
-                  if (conditionalExpressionSyntax.Condition == binaryExpression) {
-                    var declaration = (DeclarationExpressionSyntax)argument.Expression;
-                    var singleVariable = (SingleVariableDesignationSyntax)declaration.Designation;
-                    string name = singleVariable.Identifier.ValueText;
-                    if (IsIdentifierNameExists(name, conditionalExpressionSyntax.WhenTrue)) {
-                      return true;
-                    }
-                    if (IsIdentifierNameExists(name, conditionalExpressionSyntax.WhenFalse)) {
-                      return true;
-                    }
-                  }
-                  break;
-                }
-              }
+              return true;
             }
           }
         }
