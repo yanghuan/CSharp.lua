@@ -159,7 +159,10 @@ namespace CSharpLua {
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
         if (monoBehaviourTypeSymbol_ != null) {
-          monoBehaviourSpeicalMethodNames_ = new HashSet<string>() { "Awake", "Start", "Update", "FixedUpdate", "LateUpdate" };
+          monoBehaviourSpeicalMethodNames_ = new HashSet<string>() {
+            "Awake", "Start", "Update", "FixedUpdate", "LateUpdate",
+            "OnGUI", "OnDisable", "OnEnable"
+          };
         }
       }
       DoPretreatment();
@@ -1301,7 +1304,7 @@ namespace CSharpLua {
       private void CheckImplicitInterfaceImplementation(INamedTypeSymbol type) {
         if (type.TypeKind == TypeKind.Class && !type.IsStatic) {
           foreach (var baseInterface in type.AllInterfaces) {
-            foreach (var interfaceMember in baseInterface.GetMembers()) {
+            foreach (var interfaceMember in baseInterface.GetMembers().Where(i => !i.IsStatic)) {
               var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
               if (implementationMember.Kind == SymbolKind.Method) {
                 var methodSymbol = (IMethodSymbol)implementationMember;
@@ -1458,7 +1461,7 @@ namespace CSharpLua {
             bool hasSet = false;
             if (property.AccessorList != null) {
               foreach (var accessor in property.AccessorList.Accessors) {
-                if (accessor.Body != null) {
+                if (accessor.Body != null || accessor.ExpressionBody != null) {
                   if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
                     Contract.Assert(!hasGet);
                     hasGet = true;
@@ -1667,18 +1670,7 @@ namespace CSharpLua {
 
     internal bool IsReadOnlyStruct(ITypeSymbol symbol) {
       if (symbol.IsValueType && symbol.TypeKind != TypeKind.TypeParameter) {
-        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-        if (syntaxReference != null) {
-          if (syntaxReference.GetSyntax() is StructDeclarationSyntax declaration) {
-            if (declaration.Modifiers.IsReadOnly()) {
-              return true;
-            }
-          } else {
-            return false;
-          }
-        } else {
-          return XmlMetaProvider.IsTypeReadOnly((INamedTypeSymbol)symbol);
-        }
+        return symbol.IsReadOnly || XmlMetaProvider.IsTypeReadOnly((INamedTypeSymbol)symbol);
       }
       return false;
     }

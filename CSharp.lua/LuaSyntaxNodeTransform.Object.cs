@@ -928,17 +928,23 @@ namespace CSharpLua {
         bool isGet = node.IsGetExpressionNode();
         string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(symbol, isGet);
         if (codeTemplate != null) {
-          List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+          var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
           return BuildCodeTemplateExpression(codeTemplate, node.Expression, arguments, null);
         }
       }
 
       var expression = BuildMemberAccessTargetExpression(node.Expression);
-      LuaIdentifierNameSyntax baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
-      LuaPropertyOrEventIdentifierNameSyntax identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);
-      LuaPropertyAdapterExpressionSyntax propertyAdapter = new LuaPropertyAdapterExpressionSyntax(expression, identifierName, true);
+      var baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
+      var identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);
+      if (node.ArgumentList.Arguments.Count == 1) {
+        var arg = node.ArgumentList.Arguments.First().Expression;
+        if (arg.IsKind(SyntaxKind.IndexExpression) || arg.IsKind(SyntaxKind.RangeExpression)) {
+          identifierName.SetIsIndex();
+        }
+      }
+      var propertyAdapter = new LuaPropertyAdapterExpressionSyntax(expression, identifierName, true);
       if (symbol != null) {
-        List<LuaExpressionSyntax> arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
+        var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
         propertyAdapter.ArgumentList.AddArguments(arguments);
       } else {
         var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
@@ -1271,6 +1277,12 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitAwaitExpression(AwaitExpressionSyntax node) {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.Async, LuaIdentifierNameSyntax.Await, true), expression);
+    }
+
+    public override LuaSyntaxNode VisitRangeExpression(RangeExpressionSyntax node) {
+      var left = (LuaExpressionSyntax)node.LeftOperand.Accept(this);
+      var right = (LuaExpressionSyntax)node.RightOperand.Accept(this);
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Range, left, right);
     }
   }
 }

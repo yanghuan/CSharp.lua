@@ -307,17 +307,11 @@ local types = {
   [Number] = newNumberType(Number),
 }
 
-local customTypeOf = System.config.customTypeOf
-
 function typeof(cls)
   assert(cls)
   local t = types[cls]
   if t == nil then
-    if customTypeOf then
-      t = customTypeOf(cls)
-    else
-      t = setmetatable({ cls }, Type)
-    end
+    t = setmetatable({ cls }, Type)
     types[cls] = t
   end
   return t
@@ -357,11 +351,13 @@ local customTypeCheck = System.config.customTypeCheck
 local checks = setmetatable({}, {
   __index = function (checks, cls)
     if customTypeCheck then
-      local add, f = customTypeCheck(cls)
-      if add then
-        checks[cls] = f
+      local f, add = customTypeCheck(cls)
+      if f then
+        if add then
+          checks[cls] = f
+        end
+        return f
       end
-      return f
     end
 
     local set = getCheckSet(cls)

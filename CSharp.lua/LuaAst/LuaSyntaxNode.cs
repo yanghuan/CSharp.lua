@@ -76,6 +76,7 @@ namespace CSharpLua.LuaAst {
       public const string Set = "set";
       public const string Add = "add";
       public const string Remove = "remove";
+      public const string Index = "index";
       public const string Label = "::";
       public const string Concatenation = "..";
     }

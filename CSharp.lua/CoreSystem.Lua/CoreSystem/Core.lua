@@ -282,7 +282,7 @@ local function setHasStaticCtor(cls, kind)
   for k, v in pairs(cls) do
     t[k] = v
     cls[k] = nil
-  end  
+  end
   cls[cls] = t
   cls.__name__ = name
   cls.class = kind
@@ -439,7 +439,7 @@ System = {
   classes = classes
 }
 if prevSystem then
-  setmetatable(System, { __index == prevSystem })
+  setmetatable(System, { __index = prevSystem })
 end
 global.System = System
 
