@@ -16,6 +16,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.2.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
+    <ProjectReference Include="..\..\War3Net\src\War3Net.CodeAnalysis.CSharp\War3Net.CodeAnalysis.CSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
     <PackageReference Include="War3Net.CodeAnalysis.CSharp" Version="1.0.0" />
   </ItemGroup>
 
@@ -24,7 +31,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Remove="CoreSystem.Lua\CoreSystem\**" />
     <Content Include="CoreSystem.Lua\CoreSystem\**">
