@@ -2282,7 +2282,7 @@ namespace CSharpLua {
         }
       }
 
-      if (symbol.HasAttribute<NativeLuaMemberAttribute>(out _)) {
+      if (symbol.HasAttribute<War3Net.CodeAnalysis.CSharp.Attributes.NativeLuaMemberAttribute>(out _)) {
         // TODO: throw exception if symbol not static?
         return name;
       }
@@ -4225,7 +4225,7 @@ namespace CSharpLua {
         if (originalType.TypeKind == TypeKind.Enum || originalType.IsCastIntegerType()) {
           var originalIntegerType = originalType.TypeKind == TypeKind.Enum ? ((INamedTypeSymbol)originalType).EnumUnderlyingType : originalType;
           if (targetType.HasAttribute<EnumCastMethodAttribute>(out var attributeData)) {
-            return EnumCastMethodAttribute.GenerateExpression(attributeData, expression);
+            return AttributeHelper.GenerateEnumCastExpression(attributeData, expression);
           } else if (targetEnumUnderlyingType.IsNumberTypeAssignableFrom(originalIntegerType)) {
             return expression;
           }
@@ -4311,7 +4311,7 @@ namespace CSharpLua {
       var targetType = semanticModel_.GetTypeInfo(node.Type).Type;
       if (constExpression != null) {
         if (targetType.HasAttribute<EnumCastMethodAttribute>(out var attributeData)) {
-          return EnumCastMethodAttribute.GenerateExpression(attributeData, constExpression);
+          return AttributeHelper.GenerateEnumCastExpression(attributeData, constExpression);
         }
         return constExpression;
       }

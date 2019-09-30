@@ -665,7 +665,7 @@ namespace CSharpLua {
 
       if (isUsingStaticName) {
         if (!CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
-          if (symbol.HasAttribute<NativeLuaMemberAttribute>(out _)) {
+          if (symbol.HasAttribute<War3Net.CodeAnalysis.CSharp.Attributes.NativeLuaMemberAttribute>(out _)) {
             outExpression = expression;
             return true;
           }
@@ -903,7 +903,7 @@ namespace CSharpLua {
             CheckNewPrefix(ref newPrefix, prefix);
             if (!IsLocalVarExistsInCurMethod(newPrefix)) {
               // Don't add import for native lua members, by putting the attribute check on left side of || operator.
-              bool success = symbol.HasAttribute<NativeLuaMemberAttribute>(out _) || AddImport(prefix, newPrefix, symbol.IsFromCode());
+              bool success = symbol.HasAttribute<War3Net.CodeAnalysis.CSharp.Attributes.NativeLuaMemberAttribute>(out _) || AddImport(prefix, newPrefix, symbol.IsFromCode());
               if (success) {
                 name = newPrefix + name.Substring(pos);
               }
