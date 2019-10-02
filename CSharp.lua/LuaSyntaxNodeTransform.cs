@@ -20,10 +20,11 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
+using CSharpLua.LuaAst;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
-using CSharpLua.LuaAst;
+using War3Net.CodeAnalysis.CSharp.Attributes;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform : CSharpSyntaxVisitor<LuaSyntaxNode> {
