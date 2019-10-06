@@ -24,7 +24,7 @@ using CSharpLua.LuaAst;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
-using War3Net.CodeAnalysis.CSharp.Attributes;
+using War3Net.CodeAnalysis.Common;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform : CSharpSyntaxVisitor<LuaSyntaxNode> {
@@ -2306,7 +2306,7 @@ namespace CSharpLua {
         }
       }
 
-      if (symbol.HasAttribute<War3Net.CodeAnalysis.CSharp.Attributes.NativeLuaMemberAttribute>(out _)) {
+      if (symbol.HasAttribute<NativeLuaMemberAttribute>(out _)) {
         // TODO: throw exception if symbol not static?
         return name;
       }

@@ -21,11 +21,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <ProjectReference Include="..\..\War3Net\src\War3Net.CodeAnalysis.CSharp\War3Net.CodeAnalysis.CSharp.csproj" />
+    <ProjectReference Include="..\..\War3Net\src\War3Net.CodeAnalysis.Common\War3Net.CodeAnalysis.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Release'">
-    <PackageReference Include="War3Net.CodeAnalysis.CSharp" Version="1.0.1" />
+    <PackageReference Include="War3Net.CodeAnalysis.Common" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
