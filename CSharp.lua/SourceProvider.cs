@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,21 +8,14 @@ using Cake.Core.Diagnostics;
 using Cake.Incubator.Project;
 
 namespace CSharpLua {
-  internal sealed class SourceProvider {
+  [Obsolete]
+  internal static class SourceProvider {
     internal static IEnumerable<string> GetCSharpFilesFromFolder(string folder) {
-      // return Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories);
-      foreach (var file in Directory.EnumerateFiles(folder, "*.cs", SearchOption.TopDirectoryOnly)) {
-        yield return file;
-      }
+      return new FolderReference(folder).EnumerateFiles("*.cs", SearchOption.AllDirectories, null, "bin", "obj");
+    }
 
-      foreach (var subFolder in Directory.EnumerateDirectories(folder, "*", SearchOption.TopDirectoryOnly)) {
-        var subFolderName = new DirectoryInfo(subFolder).Name;
-        if (subFolderName != "bin" && subFolderName != "obj") {
-          foreach (var file in Directory.EnumerateFiles(subFolder, "*.cs", SearchOption.AllDirectories)) {
-            yield return file;
-          }
-        }
-      }
+    internal static IEnumerable<string> GetLibsFromFolder(string folder) {
+      return new FolderReference(folder).EnumerateFiles("*.dll", SearchOption.AllDirectories, "lib");
     }
 
     internal static IEnumerable<string> GetCSharpFilesFromProject(string csProjFolderPath) {

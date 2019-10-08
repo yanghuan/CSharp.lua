@@ -43,7 +43,6 @@ namespace CSharpLua {
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
     public bool IsOutputSingleFile { get; set; }
-    public bool RetrieveSourceFilesFromCsProj { get; set; }
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
       folder_ = folder;
@@ -134,9 +133,13 @@ namespace CSharpLua {
     }
 
     public void Compile() {
-      var files = RetrieveSourceFilesFromCsProj ? SourceProvider.GetCSharpFilesFromProject(folder_) : SourceProvider.GetCSharpFilesFromFolder(folder_);
+      Compile(new[] { new FolderReference(folder_) });
+    }
+
+    public void Compile(IEnumerable<ContentReference> references) {
+      var files = references.SelectMany(reference => reference.EnumerateSourceFiles());
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var libs = GetLibs(libs_, out var luaModuleLibs);
+      var libs = GetLibs(libs_.Concat(references.SelectMany(reference => reference.EnumerateLibraries())), out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
