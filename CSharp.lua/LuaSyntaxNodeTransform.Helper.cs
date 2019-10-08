@@ -685,8 +685,10 @@ namespace CSharpLua {
 
       if (isUsingStaticName) {
         if (!CurTypeSymbol.IsContainsInternalSymbol(symbol)) {
-          if (symbol.HasAttribute<NativeLuaMemberAttribute>(out _)) {
-            outExpression = expression;
+          if (symbol.HasAttribute<NativeLuaMemberAttribute>(out var attributeData)) {
+            outExpression = attributeData.ConstructorArguments.Length == 1
+              ? (string)attributeData.ConstructorArguments[0].Value
+              : expression;
             return true;
           }
           var usingStaticType = GetTypeName(symbol.ContainingType);
