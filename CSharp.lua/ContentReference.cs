@@ -17,6 +17,9 @@ namespace CSharpLua {
 
     public IEnumerable<string> EnumerateFiles(string searchPattern, SearchOption searchOption, string? searchSubFolder, params string[] ignoredSubFolders) {
       var searchPath = string.IsNullOrWhiteSpace(searchSubFolder) ? Folder : Path.Combine(Folder, searchSubFolder);
+      if (!Directory.Exists(searchPath)) {
+        yield break;
+      }
       if (searchOption == SearchOption.TopDirectoryOnly || ignoredSubFolders.Length == 0) {
         foreach (var file in Directory.EnumerateFiles(searchPath, searchPattern, searchOption)) {
           yield return file;
@@ -182,6 +185,9 @@ namespace CSharpLua {
 
     internal override IEnumerable<string> EnumerateSourceFiles() {
       var sourceFolder = Path.Combine(Folder, SourceCodeFolder);
+      if (!Directory.Exists(sourceFolder)) {
+        return Array.Empty<string>();
+      }
       var bestMatchFramework = NuGetHelper.GetNearest(Directory.EnumerateDirectories(sourceFolder));
       return EnumerateFiles("*.cs", SearchOption.AllDirectories, Path.Combine(sourceFolder, bestMatchFramework.ToString()));
     }
