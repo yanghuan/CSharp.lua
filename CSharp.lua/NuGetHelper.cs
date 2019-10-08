@@ -77,7 +77,8 @@ namespace CSharpLua {
       // var currentFramework = new NuGetFramework(FrameworkConstants.FrameworkIdentifiers.NetCore, FrameworkConstants.FrameworkIdentifiers.
       // var targetFramework = NuGetFramework.Parse(_targetFramework);
       // var dependencyGroup = NuGetFrameworkUtility.GetNearest(reader.GetDependencyGroups(), targetFramework);
-      var dependencyGroup = GetNearest(reader.GetDependencyGroups());
+      // var dependencyGroup = GetNearest(reader.GetDependencyGroups());
+      var dependencyGroup = reader.GetDependencyGroups().Single();
 
       return dependencyGroup.Packages.Select(package => (package.Id, package.VersionRange));
     }

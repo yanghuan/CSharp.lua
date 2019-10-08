@@ -188,7 +188,8 @@ namespace CSharpLua {
       if (!Directory.Exists(sourceFolder)) {
         return Array.Empty<string>();
       }
-      var bestMatchFramework = NuGetHelper.GetNearest(Directory.EnumerateDirectories(sourceFolder));
+      // var bestMatchFramework = NuGetHelper.GetNearest(Directory.EnumerateDirectories(sourceFolder));
+      var bestMatchFramework = Directory.EnumerateDirectories(sourceFolder).Single();
       return EnumerateFiles("*.cs", SearchOption.AllDirectories, Path.Combine(sourceFolder, bestMatchFramework.ToString()));
     }
   }
