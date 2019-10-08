@@ -209,7 +209,7 @@ namespace CSharpLua {
         }
         sb.Append(symbol.Name);
         if (typeSymbol.TypeArguments.Length > 0) {
-          sb.Append('^');
+          sb.Append('`');
           sb.Append(typeSymbol.TypeArguments.Length);
         }
         return sb.ToString();
@@ -484,7 +484,7 @@ namespace CSharpLua {
         }
 
         string classesfullName = namespaceName.Length > 0 ? namespaceName + '.' + className : className;
-        classesfullName = classesfullName.Replace('^', '_');
+        classesfullName = classesfullName.Replace('`', '_');
         if (typeMetas_.ContainsKey(classesfullName)) {
           throw new ArgumentException($"type [{classesfullName}] is already has");
         }

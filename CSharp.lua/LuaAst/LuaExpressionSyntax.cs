@@ -46,6 +46,14 @@ namespace CSharpLua.LuaAst {
     public LuaBinaryExpressionSyntax Or(LuaExpressionSyntax right) {
       return new LuaBinaryExpressionSyntax(this, Tokens.Or, right);
     }
+
+    public LuaBinaryExpressionSyntax EqualsEquals(LuaExpressionSyntax right) {
+      return new LuaBinaryExpressionSyntax(this, Tokens.EqualsEquals, right);
+    }
+
+    public LuaBinaryExpressionSyntax NotEquals(LuaExpressionSyntax right) {
+      return new LuaBinaryExpressionSyntax(this, Tokens.NotEquals, right);
+    }
   }
 
   public sealed class LuaAssignmentExpressionSyntax : LuaExpressionSyntax {

@@ -58,7 +58,7 @@ namespace CSharpLua {
     }
 
     private const int kMaxArrayInitializerCount = 225;
-    private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|^]+)\}", RegexOptions.Compiled);
+    private static readonly Regex codeTemplateRegex_ = new Regex(@"(,?\s*)\{(\*?[\w|`]+)\}", RegexOptions.Compiled);
     private static readonly Regex unicodeRegex_ = new Regex(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
     private readonly Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new Dictionary<ISymbol, LuaIdentifierNameSyntax>();
     private readonly Dictionary<LuaFunctionExpressionSyntax, FunctionUpValuesInfo> functionUpValues_ = new Dictionary<LuaFunctionExpressionSyntax, FunctionUpValuesInfo>();
@@ -359,7 +359,7 @@ namespace CSharpLua {
             typeName = GetTypeName(type);
           }
           AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
-        } else if (key[0] == '^') {
+        } else if (key[0] == '`') {
           if (int.TryParse(key.Substring(1), out int typeIndex)) {
             var typeArgument = typeArguments.GetOrDefault(typeIndex);
             if (typeArgument != null) {

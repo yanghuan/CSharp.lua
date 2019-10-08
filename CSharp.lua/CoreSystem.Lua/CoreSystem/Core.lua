@@ -1258,6 +1258,37 @@ function System.isNullable(T)
   return getmetatable(T) == Nullable
 end
 
+local Index = defStc("System.Index", {
+  End = -0.0,
+  Start = 0,
+  IsFromEnd = function (this)
+    return 1 / this < 0 
+  end,
+  GetOffset = function (this, length)
+    if 1 / this < 0 then
+      return length + this
+    end
+    return this
+  end,
+  ToString = function (this)
+    return ((1 / this < 0) and '^' or '') .. this
+  end
+})
+setmetatable(Index, { 
+  __call = function (value, fromEnd)
+    if value < 0 then
+      throw(System.ArgumentOutOfRangeException("Non-negative number required."))
+    end
+    if fromEnd then
+      if value == 0 then
+        return -0.0
+      end
+      return -value
+    end
+    return value
+  end 
+})
+
 --[[debug.setmetatable(nil, {
   __concat = function(a, b)
     if a == nil then
