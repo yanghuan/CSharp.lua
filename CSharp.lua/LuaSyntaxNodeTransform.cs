@@ -1635,6 +1635,14 @@ namespace CSharpLua {
             return BuildBinaryInvokeAssignmentExpression(leftNode, rightNode, methodName);
           }
         }
+        case SyntaxKind.CoalesceAssignmentExpression: {
+          var left = (LuaExpressionSyntax)leftNode.Accept(this);
+          var right = VisitExpression(rightNode);
+          LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(left.EqualsEquals(LuaIdentifierNameSyntax.Nil));
+          ifStatement.Body.AddStatement(new LuaAssignmentExpressionSyntax(left, right));
+          CurBlock.AddStatement(ifStatement);
+          return LuaExpressionSyntax.EmptyExpression;
+        }
         default:
           throw new NotImplementedException();
       }
