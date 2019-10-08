@@ -29,6 +29,8 @@ using Microsoft.CodeAnalysis.Emit;
 
 using CSharpLua.LuaAst;
 
+using War3Net.CodeAnalysis.Common;
+
 namespace CSharpLua {
   internal sealed class PartialTypeDeclaration : IComparable<PartialTypeDeclaration> {
     public INamedTypeSymbol Symbol;
@@ -1942,7 +1944,8 @@ namespace CSharpLua {
           if (!name.StartsWith(LuaIdentifierNameSyntax.System.ValueText) && !name.StartsWith(LuaIdentifierNameSyntax.Class.ValueText)) {
             name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
           }
-        } else {
+          // TODO: verify that all members in the container symbol have NativeLuaMemberAttribute
+        } else if (!symbol.HasAttribute<NativeLuaMemberContainerAttribute>(out var _)) {
           transfor.ImportTypeName(ref name, (INamedTypeSymbol)symbol);
         }
       }
