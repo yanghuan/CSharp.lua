@@ -3,10 +3,10 @@
   <assembly>
 
     <namespace name="">
-      <class name="PropValue^1" Name="PropValue">
+      <class name="PropValue`1" Name="PropValue">
         <method name="op_Implicit" Template="{0}:Get()" />
       </class>
-      <class name="ObservableList^1" Name="ObservableList"/>
+      <class name="ObservableList`1" Name="ObservableList"/>
 
       <class name="LuaArrayExternions">
 			<method name="DOLocalMove" GenericArgCount="0" Template="LuaArrayExternions.DOLocalMove({0}, {1}, {2})">
@@ -18,7 +18,7 @@
 			</method>
 		</class>
 
-      <class name="LuaTable^2">
+      <class name="LuaTable`2">
         <method name=".ctor" Template="{}" />
         <property name="Count">
           <get Template="#{this}" />
@@ -32,7 +32,7 @@
 		<method name="Remove" Template="{this}[{0}] = nil" />
       </class>
 
-      <class name="LuaArray^1">
+      <class name="LuaArray`1">
         <method name=".ctor" Template="{}" />
         <property name="Count">
           <get Template="#{this}" />
