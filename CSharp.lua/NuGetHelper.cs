@@ -57,7 +57,16 @@ namespace CSharpLua {
     }
 
     internal static string GetPath(string name, VersionRange versionRange, out string version) {
-      var nuGetVersion = versionRange.FindBestMatch(GetAvailableVersions(name));
+      // var nuGetVersion = versionRange.FindBestMatch(GetAvailableVersions(name));
+      var nuGetVersion = (NuGetVersion)null;
+      foreach (var availableVersion in GetAvailableVersions(name)) {
+        if (versionRange.Satisfies(availableVersion)) {
+          if (nuGetVersion is null || availableVersion > nuGetVersion) {
+            nuGetVersion = availableVersion;
+          }
+        }
+      }
+
       if (nuGetVersion is null) {
         version = null;
         return null;
