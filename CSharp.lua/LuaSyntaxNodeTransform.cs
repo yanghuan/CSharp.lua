@@ -3905,7 +3905,11 @@ namespace CSharpLua {
       SyntaxKind kind = node.Kind();
       if (kind == SyntaxKind.IndexExpression) {
         var expression = VisitExpression(node.Operand);
-        return new LuaPrefixUnaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.Sub);
+        var v = semanticModel_.GetConstantValue(node.Operand);
+        if (v.HasValue && (int)v.Value > 0) {
+          return new LuaPrefixUnaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.Sub);
+        }
+        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Index, expression, LuaIdentifierNameSyntax.True);
       }
 
       var operatorExpression = GetUserDefinedOperatorExpression(node, node.Operand);

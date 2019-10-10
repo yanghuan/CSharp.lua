@@ -1286,7 +1286,7 @@ setmetatable(Index, {
       return -value
     end
     return value
-  end 
+  end
 })
 
 debug.setmetatable(nil, {

@@ -386,6 +386,10 @@ namespace CSharpLua {
       return type.Name == "Tuple" && type.ContainingNamespace.Name == "System";
     }
 
+    public static bool IsSystemIndex(this ITypeSymbol type) {
+      return type.Name == "Index" && type.ContainingNamespace.Name == "System";
+    }
+
     public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
       if (!symbol.IsStatic) {
         var type = symbol.ContainingType;

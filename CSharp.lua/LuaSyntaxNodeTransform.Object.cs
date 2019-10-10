@@ -923,6 +923,49 @@ namespace CSharpLua {
       return GetDefaultValueExpression(type);
     }
 
+    private LuaExpressionSyntax BuildCountExpressionForIndex(ExpressionSyntax targetExpression, LuaIdentifierNameSyntax target) {
+      var typeSymbol = semanticModel_.GetTypeInfo(targetExpression).Type;
+      if (typeSymbol.Kind == SymbolKind.ArrayType) {
+        return new LuaCodeTemplateExpressionSyntax("#", target);
+      }
+
+      var propertySymbol = typeSymbol.GetMembers("Count").Concat(typeSymbol.GetMembers("Length")).OfType<IPropertySymbol>().Where(i => {
+        return !i.IsWriteOnly && i.Type.SpecialType == SpecialType.System_Int32;
+      }).First();
+      string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, true);
+      if (codeTemplate != null) {
+        return InternalBuildCodeTemplateExpression(codeTemplate, null, null, null, target);
+      }
+
+      var name = GetMemberName(propertySymbol);
+      if (IsPropertyField(propertySymbol)) {
+        return new LuaMemberAccessExpressionSyntax(target, name);
+      }
+
+      return new LuaPropertyAdapterExpressionSyntax(target, new LuaPropertyOrEventIdentifierNameSyntax(true, name), true);
+    }
+
+    private void UpdateIndexArgumentExpression(ExpressionSyntax targetExpression, LuaPropertyAdapterExpressionSyntax propertyAdapter, bool isIndex) {
+      var target = propertyAdapter.Expression as LuaIdentifierNameSyntax;
+      if (target == null) {
+        target = GetTempIdentifier();
+        CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(target, propertyAdapter.Expression));
+        propertyAdapter.Update(target);
+      }
+      var argumentExpression = propertyAdapter.ArgumentList.Arguments[0].Expression;
+      var lengthExpression = BuildCountExpressionForIndex(targetExpression, target);
+      if (isIndex) {
+        var code = new LuaCodeTemplateExpressionSyntax();
+        code.Expressions.Add(lengthExpression);
+        code.Expressions.Add(argumentExpression is LuaPrefixUnaryExpressionSyntax ? " " : " + ");
+        code.Expressions.Add(argumentExpression);
+        argumentExpression = code;
+      } else {
+        argumentExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.IndexGetOffset, argumentExpression, lengthExpression);
+      }
+      propertyAdapter.ArgumentList.Arguments[0] = new LuaArgumentSyntax(argumentExpression);
+    }
+
     private LuaExpressionSyntax InternalVisitElementAccessExpression(IPropertySymbol symbol, ElementAccessExpressionSyntax node) {
       if (symbol != null) {
         bool isGet = node.IsGetExpressionNode();
@@ -936,12 +979,6 @@ namespace CSharpLua {
       var expression = BuildMemberAccessTargetExpression(node.Expression);
       var baseName = symbol == null ? LuaIdentifierNameSyntax.Empty : GetMemberName(symbol);
       var identifierName = new LuaPropertyOrEventIdentifierNameSyntax(true, baseName);
-      if (node.ArgumentList.Arguments.Count == 1) {
-        var arg = node.ArgumentList.Arguments.First().Expression;
-        if (arg.IsKind(SyntaxKind.IndexExpression) || arg.IsKind(SyntaxKind.RangeExpression)) {
-          identifierName.SetIsIndex();
-        }
-      }
       var propertyAdapter = new LuaPropertyAdapterExpressionSyntax(expression, identifierName, true);
       if (symbol != null) {
         var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
@@ -949,6 +986,17 @@ namespace CSharpLua {
       } else {
         var argumentList = (LuaArgumentListSyntax)node.ArgumentList.Accept(this);
         propertyAdapter.ArgumentList.Arguments.AddRange(argumentList.Arguments);
+        if (node.ArgumentList.Arguments.Count == 1) {
+          var arg = node.ArgumentList.Arguments.First().Expression;
+          if (arg.IsKind(SyntaxKind.IndexExpression)) {
+            UpdateIndexArgumentExpression(node.Expression, propertyAdapter, true);
+          } else {
+            var typeSymbol = semanticModel_.GetTypeInfo(arg).Type;
+            if (typeSymbol.IsSystemIndex()) {
+              UpdateIndexArgumentExpression(node.Expression, propertyAdapter, false);
+            }
+          }
+        }
       }
       return propertyAdapter;
     }
