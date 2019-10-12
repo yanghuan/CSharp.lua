@@ -35,7 +35,7 @@ namespace CSharpLua {
       return _fileSystem.GetFile(path).ParseProjectFile(configuration, platform);
     }
 
-    public static IEnumerable<(string path, CustomProjectParserResult project)> EnumerateProjects(this CustomProjectParserResult mainProject) {
+    public static IEnumerable<(string folder, CustomProjectParserResult project)> EnumerateProjects(this CustomProjectParserResult mainProject) {
       var result = new Dictionary<string, CustomProjectParserResult>();
       void AddReferences(string folderPath, CustomProjectParserResult project) {
         foreach (var referencedProject in project.ProjectReferences.Select(p => ParseProject(p.FilePath, folderPath, project.Configuration, project.Platform))) {

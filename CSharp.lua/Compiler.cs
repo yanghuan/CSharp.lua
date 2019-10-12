@@ -20,6 +20,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+using Cake.Incubator.Project;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -142,9 +144,16 @@ namespace CSharpLua {
     }
 
     private LuaSyntaxGenerator GetGenerator() {
-      var files = Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
+      // TODO: configure configuration
+      const bool isDebug = true;
+      const string configurationDebug = "Debug";
+      const string configurationRelease = "Release";
+      var mainProject = isProject_ ? ProjectHelper.ParseProject(input_, isDebug ? configurationDebug : configurationRelease) : null;
+      var projects = mainProject?.EnumerateProjects().ToArray();
+      var files = isProject_ ? GetFiles(projects) : GetFiles();
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var libs = GetLibs(libs_, out var luaModuleLibs);
+      // TODO: implement GetLibs for projects
+      var libs = isProject_ ? GetLibs(libs_, out var luaModuleLibs) : GetLibs(libs_, out luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
@@ -155,8 +164,23 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
       };
-      setting.AddBaseFolder(input_);
+      if (isProject_) {
+        foreach (var folder in projects.Select(p => p.folder)) {
+          setting.AddBaseFolder(folder, false);
+        }
+      } else {
+        setting.AddBaseFolder(input_, false);
+      }
       return Build(cscArguments_, codes, libs, Metas, setting);
+    }
+
+    private IEnumerable<string> GetFiles() {
+      return Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
+    }
+
+    private IEnumerable<string> GetFiles(IEnumerable<(string folder, CustomProjectParserResult project)> projects) {
+      // TODO: don't return bin/obj contents
+      return projects.SelectMany(project => Directory.EnumerateFiles(project.folder, "*.cs", SearchOption.AllDirectories));
     }
 
     public static string CompileSingleCode(string code) {

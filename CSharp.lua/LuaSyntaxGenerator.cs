@@ -112,7 +112,26 @@ namespace CSharpLua {
         }
       }
 
-      public bool AddBaseFolder(string path) {
+      public void AddBaseFolder(string path, bool overwriteSubFolders) {
+        var remove = new List<string>();
+        foreach (var other in BaseFolders) {
+          if (path.StartsWith(other)) {
+            throw new Exception();
+          }
+          if (other.StartsWith(path)) {
+            if (!overwriteSubFolders) {
+              throw new Exception();
+            }
+            remove.Add(other);
+          }
+        }
+        foreach (var other in remove) {
+          BaseFolders.Remove(other);
+        }
+        BaseFolders.Add(path);
+      }
+
+      public bool TryAddBaseFolder(string path) {
         var remove = new List<string>();
         foreach (var other in BaseFolders) {
           if (path.StartsWith(other)) {
