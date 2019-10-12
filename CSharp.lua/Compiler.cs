@@ -132,6 +132,14 @@ namespace CSharpLua {
     }
 
     public void Compile() {
+      GetGenerator().Generate(output_);
+    }
+
+    public void CompileSingleFile(string fileName, IEnumerable<string> luaSystemLibs) {
+      GetGenerator().GenerateSingleFile(fileName, output_, luaSystemLibs);
+    }
+
+    private LuaSyntaxGenerator GetGenerator() {
       var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
@@ -146,8 +154,7 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
       };
-      var generator = Build(cscArguments_, codes, libs, Metas, setting);
-      generator.Generate(output_);
+      return Build(cscArguments_, codes, libs, Metas, setting);
     }
 
     public static string CompileSingleCode(string code) {
