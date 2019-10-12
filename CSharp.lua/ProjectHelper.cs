@@ -58,5 +58,25 @@ namespace CSharpLua {
     public static string GetDirectory(this CustomProjectParserResult project) {
       return project.ProjectFilePath.GetDirectory().FullPath;
     }
+
+    public static IEnumerable<string> EnumerateSourceFiles(this CustomProjectParserResult project, string folder = null) {
+      folder ??= project.GetDirectory();
+      const string ObjFolder = "obj";
+      const string OutputFolder = "bin";
+      const string SearchPattern = "*.cs";
+      foreach (var file in System.IO.Directory.EnumerateFiles(folder, SearchPattern, System.IO.SearchOption.TopDirectoryOnly)) {
+        yield return file;
+      }
+      var ignoredSubFolders = new HashSet<string>() { ObjFolder, OutputFolder };
+      foreach (var subFolder in System.IO.Directory.EnumerateDirectories(folder)) {
+        var subFolderName = new System.IO.DirectoryInfo(subFolder).Name;
+        if (ignoredSubFolders.Contains(subFolderName)) {
+          continue;
+        }
+        foreach (var file in System.IO.Directory.EnumerateFiles(subFolder, SearchPattern, System.IO.SearchOption.AllDirectories)) {
+          yield return file;
+        }
+      }
+    }
   }
 }

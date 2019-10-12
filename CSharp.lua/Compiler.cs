@@ -179,8 +179,7 @@ namespace CSharpLua {
     }
 
     private IEnumerable<string> GetFiles(IEnumerable<(string folder, CustomProjectParserResult project)> projects) {
-      // TODO: don't return bin/obj contents
-      return projects.SelectMany(project => Directory.EnumerateFiles(project.folder, "*.cs", SearchOption.AllDirectories));
+      return projects.SelectMany(project => project.project.EnumerateSourceFiles(project.folder));
     }
 
     public static string CompileSingleCode(string code) {
