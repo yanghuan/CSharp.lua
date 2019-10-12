@@ -144,11 +144,9 @@ namespace CSharpLua {
     }
 
     private LuaSyntaxGenerator GetGenerator() {
-      // TODO: configure configuration
-      const bool isDebug = true;
       const string configurationDebug = "Debug";
       const string configurationRelease = "Release";
-      var mainProject = isProject_ ? ProjectHelper.ParseProject(input_, isDebug ? configurationDebug : configurationRelease) : null;
+      var mainProject = isProject_ ? ProjectHelper.ParseProject(input_, IsCompileDebug() ? configurationDebug : configurationRelease) : null;
       var projects = mainProject?.EnumerateProjects().ToArray();
       var files = isProject_ ? GetFiles(projects) : GetFiles();
       var codes = files.Select(i => (File.ReadAllText(i), i));
@@ -180,6 +178,15 @@ namespace CSharpLua {
 
     private IEnumerable<string> GetFiles(IEnumerable<(string folder, CustomProjectParserResult project)> projects) {
       return projects.SelectMany(project => project.project.EnumerateSourceFiles(project.folder));
+    }
+
+    private bool IsCompileDebug() {
+      foreach (var arg in cscArguments_) {
+        if (arg.StartsWith("-debug")) {
+          return true;
+        }
+      }
+      return false;
     }
 
     public static string CompileSingleCode(string code) {
