@@ -854,18 +854,18 @@ namespace CSharpLua {
       const int kMaxCountUpvalues = LuaSyntaxNode.kUpvaluesMaxCount - 2;
       var current = CurFunctionOrNull;
       if (current != null) {
-        var upvaluse = functionUpValues_.GetOrDefault(current);
-        if (upvaluse != null) {
-          if (!upvaluse.Contains(nameStringOrSymbol)) {
-            if (upvaluse.Count >= kMaxCountUpvalues) {
+        var upvalues = functionUpValues_.GetOrDefault(current);
+        if (upvalues != null) {
+          if (!upvalues.Contains(nameStringOrSymbol)) {
+            if (upvalues.Count >= kMaxCountUpvalues) {
               return true;
             }
-            upvaluse.Add(nameStringOrSymbol);
+            upvalues.Add(nameStringOrSymbol);
           }
         } else {
-          upvaluse = new FunctionUpValuesInfo();
-          functionUpValues_.Add(current, upvaluse);
-          upvaluse.Add(nameStringOrSymbol);
+          upvalues = new FunctionUpValuesInfo();
+          functionUpValues_.Add(current, upvalues);
+          upvalues.Add(nameStringOrSymbol);
         }
       }
       return false;
