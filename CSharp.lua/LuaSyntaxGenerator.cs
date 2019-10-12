@@ -120,7 +120,7 @@ namespace CSharpLua {
     private readonly HashSet<ISymbol> forcePublicSymbols_ = new HashSet<ISymbol>();
     private readonly List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
     private readonly Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
-    private readonly HashSet<string> monoBehaviourSpeicalMethodNames_;
+    private readonly HashSet<string> monoBehaviourSpecialMethodNames_;
     private IMethodSymbol mainEntryPoint_;
     public INamedTypeSymbol SystemExceptionTypeSymbol { get; }
     private readonly INamedTypeSymbol monoBehaviourTypeSymbol_;
@@ -159,7 +159,7 @@ namespace CSharpLua {
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
         if (monoBehaviourTypeSymbol_ != null) {
-          monoBehaviourSpeicalMethodNames_ = new HashSet<string>() {
+          monoBehaviourSpecialMethodNames_ = new HashSet<string>() {
             "Awake", "Start", "Update", "FixedUpdate", "LateUpdate",
             "OnGUI", "OnDisable", "OnEnable"
           };
@@ -1168,8 +1168,8 @@ namespace CSharpLua {
       return true;
     }
 
-    public bool IsMonoBehaviourSpeicalMethod(IMethodSymbol symbol) {
-      if (monoBehaviourSpeicalMethodNames_ != null && monoBehaviourSpeicalMethodNames_.Contains(symbol.Name)) {
+    public bool IsMonoBehaviourSpecialMethod(IMethodSymbol symbol) {
+      if (monoBehaviourSpecialMethodNames_ != null && monoBehaviourSpecialMethodNames_.Contains(symbol.Name)) {
         return symbol.ContainingType.Is(monoBehaviourTypeSymbol_);
       }
       return false;
