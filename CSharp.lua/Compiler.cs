@@ -29,7 +29,8 @@ namespace CSharpLua {
     private const string kSystemMeta = "~/System.xml";
     private const char kLuaModuleSuffix = '!';
 
-    private readonly string folder_;
+    private readonly bool isProject_;
+    private readonly string input_;
     private readonly string output_;
     private readonly string[] libs_;
     private readonly string[] metas_;
@@ -43,8 +44,9 @@ namespace CSharpLua {
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
 
-    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
-      folder_ = folder;
+    public Compiler(string input, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
+      isProject_ = new FileInfo(input).Extension.ToLower() == ".csproj";
+      input_ = input;
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
@@ -140,7 +142,7 @@ namespace CSharpLua {
     }
 
     private LuaSyntaxGenerator GetGenerator() {
-      var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
+      var files = Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
@@ -153,7 +155,7 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
       };
-      setting.AddBaseFolder(folder_);
+      setting.AddBaseFolder(input_);
       return Build(cscArguments_, codes, libs, Metas, setting);
     }
 
