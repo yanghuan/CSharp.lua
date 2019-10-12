@@ -26,20 +26,20 @@ namespace CSharpLua {
   class Program {
     private const string kHelpCmdString = @"Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
 Arguments
--s              : source directory, all *.cs files whill be compiled
+-s              : source directory, all *.cs files will be compiled
 -d              : destination  directory, will put the out lua files
 
 Options
 -h              : show the help message and exit
 -l              : libraries referenced, use ';' to separate
-                  if the librarie is a module, whitch is compield by CSharp.lua with -module arguemnt, the last character needs to be '!' in order to mark  
+                  if the library is a module, which is compiled by CSharp.lua with -module argument, the last character needs to be '!' in order to mark  
 
 -m              : meta files, like System.xml, use ';' to separate
--csc            : csc.exe command argumnets, use ' ' or '\t' to separate
+-csc            : csc.exe command arguments, use ' ' or '\t' to separate
 
 -c              : support classic lua version(5.1), default support 5.3
--a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
--e              : enums need to export, use ';' to separate, if ""-e"" only, all enums whill be exported
+-a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes will be exported
+-e              : enums need to export, use ';' to separate, if ""-e"" only, all enums will be exported
 -p              : do not use debug.setmetatable, in some Addon/Plugin environment debug object cannot be used
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
