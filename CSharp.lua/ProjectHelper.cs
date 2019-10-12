@@ -50,7 +50,9 @@ namespace CSharpLua {
       var mainDirectory = mainProject.GetDirectory();
       result.Add(mainDirectory, mainProject);
       AddReferences(mainDirectory, mainProject);
-      return (IEnumerable<(string path, CustomProjectParserResult project)>)result;
+      foreach (var pair in result) {
+        yield return (pair.Key, pair.Value);
+      }
     }
 
     public static string GetDirectory(this CustomProjectParserResult project) {
