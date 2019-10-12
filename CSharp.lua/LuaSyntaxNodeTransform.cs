@@ -714,7 +714,7 @@ namespace CSharpLua {
       if ((node.Body != null || node.ExpressionBody != null) && !node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Ignore)) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
         bool isMoreThanLocalVariables = IsMoreThanLocalVariables(result.Symbol);
-        CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables);
+        CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables, result.Symbol.IsInterfaceDefaultMethod());
         if (IsCurTypeExportMetadataAll || result.Attributes.Count > 0 || result.IsMetadata) {
           AddMethodMetaData(result, isMoreThanLocalVariables);
         }
@@ -3556,12 +3556,12 @@ namespace CSharpLua {
         }
       } else if (typeInfo.SpecialType >= SpecialType.System_Boolean && typeInfo.SpecialType <= SpecialType.System_Double) {
         return original;
-      } else if (typeInfo.IsEnumType(out var enumTypeSybmol)) {
+      } else if (typeInfo.IsEnumType(out var enumTypeSymbol)) {
         if (original is LuaLiteralExpressionSyntax) {
           var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
           return new LuaConstLiteralExpression(symbol.Name, typeInfo.ToString());
         } else {
-          return BuildEnumToStringExpression(enumTypeSybmol, original);
+          return BuildEnumToStringExpression(enumTypeSymbol, original);
         }
       } else if (typeInfo.IsValueType) {
         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);
@@ -3923,7 +3923,11 @@ namespace CSharpLua {
       SyntaxKind kind = node.Kind();
       if (kind == SyntaxKind.IndexExpression) {
         var expression = VisitExpression(node.Operand);
-        return new LuaPrefixUnaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.Sub);
+        var v = semanticModel_.GetConstantValue(node.Operand);
+        if (v.HasValue && (int)v.Value > 0) {
+          return new LuaPrefixUnaryExpressionSyntax(expression, LuaSyntaxNode.Tokens.Sub);
+        }
+        return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Index, expression, LuaIdentifierNameSyntax.True);
       }
 
       var operatorExpression = GetUserDefinedOperatorExpression(node, node.Operand);

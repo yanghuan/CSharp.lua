@@ -38,6 +38,10 @@ namespace CSharpLua.LuaAst {
     }
 
     public static readonly LuaExpressionSyntax EmptyExpression = new EmptyLuaExpressionSyntax();
+    
+    public LuaBinaryExpressionSyntax Plus(LuaExpressionSyntax right) {
+      return new LuaBinaryExpressionSyntax(this, Tokens.Plus, right);
+    }
 
     public LuaBinaryExpressionSyntax And(LuaExpressionSyntax right) {
       return new LuaBinaryExpressionSyntax(this, Tokens.And, right);
@@ -135,6 +139,12 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaCodeTemplateExpressionSyntax : LuaExpressionSyntax {
     public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+
+    public LuaCodeTemplateExpressionSyntax() { }
+
+    public LuaCodeTemplateExpressionSyntax(params LuaExpressionSyntax[] expressions) {
+      Expressions.AddRange(expressions);
+    }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);

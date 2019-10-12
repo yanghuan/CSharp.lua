@@ -123,11 +123,14 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax KeyValuePair = "System.KeyValuePair";
     public static readonly LuaIdentifierNameSyntax NullableType = "System.Nullable";
     public static readonly LuaIdentifierNameSyntax Range = "System.Range";
+    public static readonly LuaIdentifierNameSyntax Index = "System.Index";
+    public static readonly LuaIdentifierNameSyntax IndexGetOffset = "System.Index.GetOffset";
     public static readonly LuaIdentifierNameSyntax __GC = "__gc";
     public static readonly LuaIdentifierNameSyntax __ToString = "__tostring";
     public static readonly LuaIdentifierNameSyntax Await = "await";
     public static readonly LuaIdentifierNameSyntax Async = "async";
     public static readonly LuaIdentifierNameSyntax MorenManyLocalVarTempTable = "const";
+    public static readonly LuaIdentifierNameSyntax InterfaceDefaultMethodVar = "extern";
 
     #region QueryExpression
     public static readonly LuaIdentifierNameSyntax LinqCast = "Linq.Cast";
@@ -157,7 +160,6 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaPropertyOrEventIdentifierNameSyntax : LuaIdentifierNameSyntax {
-    private bool isIndex_;
     public bool IsGetOrAdd { get; set; }
     public bool IsProperty { get; }
     public LuaIdentifierNameSyntax Name { get; }
@@ -173,20 +175,12 @@ namespace CSharpLua.LuaAst {
 
     public string PrefixToken {
       get {
-        if (isIndex_) {
-          return Tokens.Index;
-        }
-
         if (IsProperty) {
           return IsGetOrAdd ? Tokens.Get : Tokens.Set;
         } else {
           return IsGetOrAdd ? Tokens.Add : Tokens.Remove;
         }
       }
-    }
-
-    public void SetIsIndex() {
-      isIndex_ = true;
     }
 
     public LuaPropertyOrEventIdentifierNameSyntax GetClone() {

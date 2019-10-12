@@ -386,6 +386,10 @@ namespace CSharpLua {
       return type.Name == "Tuple" && type.ContainingNamespace.Name == "System";
     }
 
+    public static bool IsSystemIndex(this ITypeSymbol type) {
+      return type.Name == "Index" && type.ContainingNamespace.Name == "System";
+    }
+
     public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
       if (!symbol.IsStatic) {
         var type = symbol.ContainingType;
@@ -1099,6 +1103,10 @@ namespace CSharpLua {
       }
 
       return false;
+    }
+
+    public static bool IsInterfaceDefaultMethod(this IMethodSymbol symbol) {
+      return symbol.ContainingType.TypeKind == TypeKind.Interface && !symbol.IsStatic && !symbol.IsAbstract;
     }
 
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {

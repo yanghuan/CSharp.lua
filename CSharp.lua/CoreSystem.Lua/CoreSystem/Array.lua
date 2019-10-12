@@ -492,12 +492,6 @@ Array = {
     end
     return nil
   end,
-  index = function (t, index)
-    if 1 / index < 0 then
-      index = #t + index
-    end
-    return get(t, index)
-  end,
   insert = function (t, index, v)
     if index < 0 or index > #t then
       throw(ArgumentOutOfRangeException("index"))

@@ -54,6 +54,7 @@ namespace CSharpLua.LuaAst {
     private readonly List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
     private readonly List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
     private readonly LuaDocumentStatement document_ = new LuaDocumentStatement();
+    private LuaTableExpression interfaceDefaultMethods_;
 
     private LuaTableExpression metadata_;
     private LuaTableExpression metaProperties_;
@@ -196,7 +197,17 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, LuaDocumentStatement document = null, bool isMoreThanLocalVariables = false) {
+    private void AddInterfaceDefaultMethod(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
+      if (interfaceDefaultMethods_ == null) {
+        interfaceDefaultMethods_ = new LuaTableExpression();
+        AddResultTable(LuaIdentifierNameSyntax.InterfaceDefaultMethodVar, interfaceDefaultMethods_);
+      }
+      interfaceDefaultMethods_.Add(name, value);
+    }
+
+    private void AddInterfaceDefaultMethod(LuaIdentifierNameSyntax name) => AddInterfaceDefaultMethod(name, name);
+
+    public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, LuaDocumentStatement document = null, bool isMoreThanLocalVariables = false, bool isInterfaceDefaultMethod = false) {
       if (document != null && document.HasIgnoreAttribute) {
         return;
       }
@@ -208,7 +219,11 @@ namespace CSharpLua.LuaAst {
         }
         var left = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, name);
         methodList_.Statements.Add(new LuaAssignmentExpressionSyntax(left, method));
-        AddResultTable(name, left);
+        if (isInterfaceDefaultMethod) {
+          AddInterfaceDefaultMethod(name, left);
+        } else {
+          AddResultTable(name, left);
+        }
       } else {
         local_.Variables.Add(name);
         if (document != null && !document.IsEmpty) {
@@ -216,7 +231,11 @@ namespace CSharpLua.LuaAst {
         }
         methodList_.Statements.Add(new LuaAssignmentExpressionSyntax(name, method));
         if (!isPrivate) {
-          AddResultTable(name);
+          if (isInterfaceDefaultMethod) {
+            AddInterfaceDefaultMethod(name);
+          } else {
+            AddResultTable(name);
+          }
         }
       }
     }

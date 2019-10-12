@@ -377,6 +377,7 @@ limitations under the License.
         </property>
         <method name="FromStart" Template="System.Index({0})" />
         <method name="FromEnd" Template="System.Index({0}, true)" />
+        <method name="GetOffset" Template="System.Index.GetOffset({this}, {0})" />
         <method name="ToString" Template="System.Index.ToString({this})" />
         <method name="op_Implicit" Template="System.Index({0})" />
       </class>
