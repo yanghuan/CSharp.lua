@@ -48,7 +48,7 @@ Options
     public static void Main(string[] args) {
       if (args.Length > 0) {
         try {
-          var cmds = Utility.GetCommondLines(args);
+          var cmds = Utility.GetCommandLines(args);
           if (cmds.ContainsKey("-h")) {
             ShowHelpInfo();
             return;
@@ -104,20 +104,20 @@ Options
       Console.Error.WriteLine(kHelpCmdString);
     }
 
-    private static HashSet<string> argumnets_; 
+    private static HashSet<string> arguments_; 
 
     private static bool IsArgumentKey(string key) {
-      if (argumnets_ == null) {
-        argumnets_ = new HashSet<string>();
+      if (arguments_ == null) {
+        arguments_ = new HashSet<string>();
         string[] lines = kHelpCmdString.Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string line in lines) {
           if (line.StartsWith('-')) {
             char[] chars = line.TakeWhile(i => !char.IsWhiteSpace(i)).ToArray();
-            argumnets_.Add(new string(chars));
+            arguments_.Add(new string(chars));
           }
         }
       }
-      return argumnets_.Contains(key);
+      return arguments_.Contains(key);
     }
 
     private static string GetCSCArgument(string[] args) {
