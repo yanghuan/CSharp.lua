@@ -57,7 +57,10 @@ namespace CSharpLua {
       public string IndentString { get; private set; }
       public bool IsClassic { get; set; }
       public bool IsExportMetadata { get; set; }
-      public string BaseFolder { get; set; } = "";
+      public string BaseFolder {
+        get => BaseFolders.SingleOrDefault() ?? string.Empty;
+        set { BaseFolders.Clear(); BaseFolders.Add(value); } }
+      internal HashSet<string> BaseFolders { get; private set; }
       public bool IsExportAttributesAll { get; private set; }
       public bool IsExportEnumAll { get; private set; }
       public bool IsModule { get; set; }
@@ -69,6 +72,7 @@ namespace CSharpLua {
 
       public SettingInfo() {
         Indent = 2;
+        BaseFolders = new HashSet<string>();
       }
 
       public string[] Attributes {
@@ -105,6 +109,32 @@ namespace CSharpLua {
             IndentString = new string(' ', indent_);
           }
         }
+      }
+
+      public bool AddBaseFolder(string path) {
+        var remove = new List<string>();
+        foreach (var other in BaseFolders) {
+          if (path.StartsWith(other)) {
+            return false;
+          }
+          if (other.StartsWith(path)) {
+            remove.Add(other);
+          }
+        }
+        foreach (var other in remove) {
+          BaseFolders.Remove(other);
+        }
+        BaseFolders.Add(path);
+        return true;
+      }
+
+      public string GetBaseFolder(string path) {
+        foreach (var baseFolder in BaseFolders) {
+          if (path.StartsWith(baseFolder)) {
+            return baseFolder;
+          }
+        }
+        throw new DirectoryNotFoundException($"Could not find base folder for path: \"{path}\".");
       }
     }
 
