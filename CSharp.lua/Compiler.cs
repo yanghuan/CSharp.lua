@@ -42,7 +42,6 @@ namespace CSharpLua {
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
-    public bool IsOutputSingleFile { get; set; }
 
     public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
       folder_ = folder;
@@ -121,7 +120,7 @@ namespace CSharpLua {
 
     private static LuaSyntaxGenerator Build(
       IEnumerable<string> cscArguments,
-      IEnumerable<(string Text, string Path)> codes,
+      IEnumerable<(string Text, string Path)> codes, 
       IEnumerable<string> libs,
       IEnumerable<string> metas,
       LuaSyntaxGenerator.SettingInfo setting) {
@@ -133,13 +132,17 @@ namespace CSharpLua {
     }
 
     public void Compile() {
-      Compile(new[] { new FolderReference(folder_) });
+      GetGenerator().Generate(output_);
     }
 
-    public void Compile(IEnumerable<ContentReference> references) {
-      var files = references.SelectMany(reference => reference.EnumerateSourceFiles());
+    public void CompileSingleFile(string fileName, IEnumerable<string> luaSystemLibs) {
+      GetGenerator().GenerateSingleFile(fileName, output_, luaSystemLibs);
+    }
+
+    private LuaSyntaxGenerator GetGenerator() {
+      var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var libs = GetLibs(libs_.Concat(references.SelectMany(reference => reference.EnumerateLibraries())), out var luaModuleLibs);
+      var libs = GetLibs(libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
@@ -151,19 +154,7 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
       };
-
-      LuaSyntaxGenerator generator = null;
-      try {
-        generator = Build(cscArguments_, codes, libs, Metas, setting);
-      } catch (CompilationErrorException) {
-        throw;
-      }
-
-      if (IsOutputSingleFile) {
-        generator.GenerateSingle(output_);
-      } else {
-        generator.Generate(output_);
-      }
+      return Build(cscArguments_, codes, libs, Metas, setting);
     }
 
     public static string CompileSingleCode(string code) {

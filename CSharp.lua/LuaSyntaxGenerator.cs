@@ -29,8 +29,6 @@ using Microsoft.CodeAnalysis.Emit;
 
 using CSharpLua.LuaAst;
 
-using War3Net.CodeAnalysis.Common;
-
 namespace CSharpLua {
   internal sealed class PartialTypeDeclaration : IComparable<PartialTypeDeclaration> {
     public INamedTypeSymbol Symbol;
@@ -109,6 +107,8 @@ namespace CSharpLua {
         }
       }
     }
+
+    public const string kManifestFuncName = "InitCSharp";
 
     private const string kLuaSuffix = ".lua";
     private static readonly Encoding Encoding = new UTF8Encoding(false);
@@ -199,42 +199,36 @@ namespace CSharpLua {
     public void Generate(string outFolder) {
       List<string> modules = new List<string>();
       foreach (var luaCompilationUnit in Create()) {
-        string outFile = GetOutFilePath(luaCompilationUnit.FilePath, outFolder, out string module);
+        string outFile = GetOutFileAbsolutePath(luaCompilationUnit.FilePath, outFolder, out string module);
         Write(luaCompilationUnit, outFile);
         modules.Add(module);
       }
       ExportManifestFile(modules, outFolder);
     }
 
-    public void GenerateSingle(string outFile) {
-      Directory.CreateDirectory(new FileInfo(outFile).DirectoryName);
-      using (var fileStream = File.Create(outFile)) {
-        using (var writer = new StreamWriter(fileStream, Encoding)) {
-          foreach (var luaFile in CoreSystemProvider.GetCoreSystemFiles()) {
-            WriteCoreSystemFile(luaFile, writer);
-          }
-
-          foreach (var luaCompilationUnit in Create()) {
-            WriteCompilationUnitFile(luaCompilationUnit, writer);
-          }
-
-          if (mainEntryPoint_ == null) {
-            throw new Exception("Program has no entry point.");
-          }
-
-          WriteManifest(writer);
-          writer.WriteLine();
+    public void GenerateSingleFile(string outFile, string outFolder, IEnumerable<string> luaSystemLibs) {
+      outFile = GetOutFileRelativePath(outFile, outFolder, out _);
+      using (var streamWriter = new StreamWriter(outFile, false, Encoding)) {
+        foreach (var luaSystemLib in luaSystemLibs) {
+          WriteLuaSystemLib(luaSystemLib, streamWriter);
         }
+        foreach (var luaCompilationUnit in Create()) {
+          WriteCompilationUnit(luaCompilationUnit, streamWriter);
+        }
+        if (mainEntryPoint_ is null) {
+          throw new CompilationErrorException("Program has no main entry point.");
+        }
+        WriteManifest(streamWriter);
       }
     }
 
-    private void WriteCoreSystemFile(string filePath, TextWriter writer) {
+    private void WriteLuaSystemLib(string filePath, TextWriter writer) {
       writer.WriteLine(LuaSyntaxNode.Keyword.Do);
       writer.WriteLine(File.ReadAllText(filePath));
       writer.WriteLine(LuaSyntaxNode.Keyword.End);
     }
 
-    private void WriteCompilationUnitFile(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer) {
+    private void WriteCompilationUnit(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer) {
       writer.WriteLine(LuaSyntaxNode.Keyword.Do);
       Write(luaCompilationUnit, writer);
       writer.WriteLine();
@@ -243,8 +237,6 @@ namespace CSharpLua {
 
     private void WriteManifest(TextWriter writer) {
       const string kInit = "System.init";
-      const string kManifestFuncName = "InitCSharp";
-
       var types = GetExportTypes();
       if (types.Count > 0) {
         var functionExpression = new LuaFunctionExpressionSyntax();
@@ -269,6 +261,7 @@ namespace CSharpLua {
         luaCompilationUnit.AddStatement(new LuaLocalDeclarationStatementSyntax(initCSharpFunctionDeclarationStatement));
 
         Write(luaCompilationUnit, writer);
+        writer.WriteLine();
       }
     }
 
@@ -287,8 +280,11 @@ namespace CSharpLua {
       return patrh.Remove(0, Setting.BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
     }
 
-    private string GetOutFilePath(string inFilePath, string output_, out string module) {
-      string path = RemoveBaseFolder(inFilePath);
+    private string GetOutFileAbsolutePath(string inFilePath, string output_, out string module) {
+      return GetOutFileRelativePath(RemoveBaseFolder(inFilePath), output_, out module);
+    }
+
+    private string GetOutFileRelativePath(string path, string output_, out string module) {
       string extend = Path.GetExtension(path);
       path = path.Remove(path.Length - extend.Length, extend.Length);
       path = path.Replace('.', '_');
@@ -1944,8 +1940,7 @@ namespace CSharpLua {
           if (!name.StartsWith(LuaIdentifierNameSyntax.System.ValueText) && !name.StartsWith(LuaIdentifierNameSyntax.Class.ValueText)) {
             name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
           }
-          // TODO: verify that all members in the container symbol have NativeLuaMemberAttribute
-        } else if (!symbol.HasAttribute<NativeLuaMemberContainerAttribute>(out var _)) {
+        } else {
           transfor.ImportTypeName(ref name, (INamedTypeSymbol)symbol);
         }
       }
