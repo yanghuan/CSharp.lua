@@ -150,8 +150,7 @@ namespace CSharpLua {
       var projects = mainProject?.EnumerateProjects().ToArray();
       var files = isProject_ ? GetFiles(projects) : GetFiles();
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      // TODO: implement GetLibs for projects
-      var libs = isProject_ ? GetLibs(libs_, out var luaModuleLibs) : GetLibs(libs_, out luaModuleLibs);
+      var libs = GetLibs(libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
