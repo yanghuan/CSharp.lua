@@ -430,9 +430,9 @@ namespace CSharpLua {
       return allTypes;
     }
 
-    public bool SetMainEntryPoint(IMethodSymbol sybmol) {
+    public bool SetMainEntryPoint(IMethodSymbol symbol) {
       if (mainEntryPoint_ == null) {
-        mainEntryPoint_ = sybmol;
+        mainEntryPoint_ = symbol;
         return true;
       }
       return false;

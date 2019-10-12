@@ -1092,7 +1092,7 @@ namespace CSharpLua {
           }
         }
 
-        CheckInvocationDeafultArguments(symbol, symbol.Parameters, arguments, argumentNodeInfos, node, false);
+        CheckInvocationDefaultArguments(symbol, symbol.Parameters, arguments, argumentNodeInfos, node, false);
         invocation.AddArguments(arguments);
 
         if (initializers.Count == 0) {

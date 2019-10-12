@@ -1881,7 +1881,7 @@ namespace CSharpLua {
           }));
           if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
             argumentExpressions.AddRange(symbol.Parameters.Skip(node.ArgumentList.Arguments.Count).Where(i => !i.IsParams).Select(i => {
-              Func<LuaExpressionSyntax> func = () => GetDeafultParameterValue(i, node, true);
+              Func<LuaExpressionSyntax> func = () => GetDefaultParameterValue(i, node, true);
               return func;
             }));
           }
@@ -2031,7 +2031,7 @@ namespace CSharpLua {
       return invocation;
     }
 
-    private LuaExpressionSyntax GetDeafultParameterValue(IParameterSymbol parameter, SyntaxNode node, bool isCheckCallerAttribute) {
+    private LuaExpressionSyntax GetDefaultParameterValue(IParameterSymbol parameter, SyntaxNode node, bool isCheckCallerAttribute) {
       Contract.Assert(parameter.HasExplicitDefaultValue);
       LuaExpressionSyntax defaultValue = isCheckCallerAttribute ? CheckCallerAttribute(parameter, node) : null;
       if (defaultValue == null) {
@@ -2045,7 +2045,7 @@ namespace CSharpLua {
       return defaultValue;
     }
 
-    private void CheckInvocationDeafultArguments(
+    private void CheckInvocationDefaultArguments(
       ISymbol symbol,
       ImmutableArray<IParameterSymbol> parameters,
       List<LuaExpressionSyntax> arguments,
@@ -2060,7 +2060,7 @@ namespace CSharpLua {
             LuaExpressionSyntax emptyArray = BuildArray(arrayType.ElementType);
             arguments.Add(emptyArray);
           } else {
-            LuaExpressionSyntax defaultValue = GetDeafultParameterValue(parameter, node, isCheckCallerAttribute);
+            LuaExpressionSyntax defaultValue = GetDefaultParameterValue(parameter, node, isCheckCallerAttribute);
             arguments.Add(defaultValue);
           }
         }
@@ -2095,15 +2095,15 @@ namespace CSharpLua {
 
       for (int i = 0; i < arguments.Count; ++i) {
         if (arguments[i] == null) {
-          LuaExpressionSyntax defaultValue = GetDeafultParameterValue(parameters[i], node, isCheckCallerAttribute);
+          LuaExpressionSyntax defaultValue = GetDefaultParameterValue(parameters[i], node, isCheckCallerAttribute);
           arguments[i] = defaultValue;
         }
       }
     }
 
-    private void CheckInvocationDeafultArguments(ISymbol symbol, ImmutableArray<IParameterSymbol> parameters, List<LuaExpressionSyntax> arguments, BaseArgumentListSyntax node) {
+    private void CheckInvocationDefaultArguments(ISymbol symbol, ImmutableArray<IParameterSymbol> parameters, List<LuaExpressionSyntax> arguments, BaseArgumentListSyntax node) {
       var argumentNodeInfos = node.Arguments.Select(i => (i.NameColon, i.Expression)).ToList();
-      CheckInvocationDeafultArguments(symbol, parameters, arguments, argumentNodeInfos, node.Parent, true);
+      CheckInvocationDefaultArguments(symbol, parameters, arguments, argumentNodeInfos, node.Parent, true);
     }
 
     private void CheckPrevIsInvokeStatement(ExpressionSyntax node) {
@@ -2919,7 +2919,7 @@ namespace CSharpLua {
       foreach (var argument in node.Arguments) {
         FillInvocationArgument(arguments, argument, parameters, refOrOutArguments);
       }
-      CheckInvocationDeafultArguments(symbol, parameters, arguments, node);
+      CheckInvocationDefaultArguments(symbol, parameters, arguments, node);
       return arguments;
     }
 
@@ -3538,12 +3538,12 @@ namespace CSharpLua {
         }
       } else if (typeInfo.SpecialType >= SpecialType.System_Boolean && typeInfo.SpecialType <= SpecialType.System_Double) {
         return original;
-      } else if (typeInfo.IsEnumType(out var enumTypeSybmol)) {
+      } else if (typeInfo.IsEnumType(out var enumTypeSymbol)) {
         if (original is LuaLiteralExpressionSyntax) {
           var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
           return new LuaConstLiteralExpression(symbol.Name, typeInfo.ToString());
         } else {
-          return BuildEnumToStringExpression(enumTypeSybmol, original);
+          return BuildEnumToStringExpression(enumTypeSymbol, original);
         }
       } else if (typeInfo.IsValueType) {
         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);
