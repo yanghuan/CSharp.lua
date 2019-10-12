@@ -60,7 +60,7 @@ namespace CSharpLua {
       [Obsolete]
       public string BaseFolder {
         get => BaseFolders.SingleOrDefault() ?? string.Empty;
-        set { BaseFolders.Clear(); BaseFolders.Add(value); } }
+        set { BaseFolders.Clear(); AddBaseFolder(value, false); } }
       internal HashSet<string> BaseFolders { get; private set; }
       public bool IsExportAttributesAll { get; private set; }
       public bool IsExportEnumAll { get; private set; }
@@ -114,38 +114,30 @@ namespace CSharpLua {
 
       public void AddBaseFolder(string path, bool overwriteSubFolders) {
         var remove = new List<string>();
+        path = path.TrimEnd(Path.DirectorySeparatorChar);
+        static bool ConflictsWith(string folder, string other) {
+          return folder == other || folder.StartsWith(other + Path.DirectorySeparatorChar);
+        }
         foreach (var other in BaseFolders) {
-          if (path.StartsWith(other)) {
-            throw new Exception();
-          }
-          if (other.StartsWith(path)) {
-            if (!overwriteSubFolders) {
-              throw new Exception();
+          if (ConflictsWith(path, other)) {
+            if (overwriteSubFolders) {
+              return;
+            } else {
+              throw new Exception($"Could not add folder \"{path}\", because it is the same as, or a subdirectory of, an already added folder.");
             }
-            remove.Add(other);
+          }
+          if (ConflictsWith(other, path)) {
+            if (overwriteSubFolders) {
+              remove.Add(other);
+            } else { 
+              throw new Exception($"Could not add folder \"{path}\", because one of its subdirectories has already been added.");
+            }
           }
         }
         foreach (var other in remove) {
           BaseFolders.Remove(other);
         }
         BaseFolders.Add(path);
-      }
-
-      public bool TryAddBaseFolder(string path) {
-        var remove = new List<string>();
-        foreach (var other in BaseFolders) {
-          if (path.StartsWith(other)) {
-            return false;
-          }
-          if (other.StartsWith(path)) {
-            remove.Add(other);
-          }
-        }
-        foreach (var other in remove) {
-          BaseFolders.Remove(other);
-        }
-        BaseFolders.Add(path);
-        return true;
       }
 
       public string GetBaseFolder(string path) {
