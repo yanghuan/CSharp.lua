@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 
 namespace CSharpLua {
-  internal static class CoreSystemProvider {
+  public static class CoreSystemProvider {
     private const string CoreSystemDirectory = @"CoreSystem.Lua\CoreSystem";
 
     public static IEnumerable<string> GetCoreSystemFiles() {
