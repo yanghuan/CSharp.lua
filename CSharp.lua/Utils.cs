@@ -1105,6 +1105,10 @@ namespace CSharpLua {
       return false;
     }
 
+    public static bool IsInterfaceDefaultMethod(this IMethodSymbol symbol) {
+      return symbol.ContainingType.TypeKind == TypeKind.Interface && !symbol.IsStatic && !symbol.IsAbstract;
+    }
+
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {
       const int kParametersMaxCount = 256;
 

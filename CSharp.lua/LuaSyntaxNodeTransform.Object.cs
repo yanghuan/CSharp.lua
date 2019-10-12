@@ -412,7 +412,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node) {
-      if (node.Body.Statements.Any()) {
+      if (node.Body != null || node.ExpressionBody != null) {
         IMethodSymbol ctorSymbol = semanticModel_.GetDeclaredSymbol(node);
         methodInfos_.Push(new MethodInfo(ctorSymbol));
 
@@ -420,8 +420,13 @@ namespace CSharpLua {
         PushFunction(function);
 
         function.AddParameter(LuaIdentifierNameSyntax.This);
-        var block = (LuaBlockSyntax)node.Body.Accept(this);
-        function.Body.Statements.AddRange(block.Statements);
+        if (node.Body != null) {
+          var block = (LuaBlockSyntax)node.Body.Accept(this);
+          function.Body.Statements.AddRange(block.Statements);
+        } else {
+          var bodyExpression = (LuaExpressionSyntax)node.ExpressionBody.Accept(this);
+          function.AddStatement(bodyExpression);
+        }
         CurType.AddMethod(LuaIdentifierNameSyntax.__GC, function, false);
 
         PopFunction();

@@ -713,7 +713,7 @@ namespace CSharpLua {
       if ((node.Body != null || node.ExpressionBody != null) && !node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Ignore)) {
         var result = BuildMethodDeclaration(node, node.AttributeLists, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
         bool isMoreThanLocalVariables = IsMoreThanLocalVariables(result.Symbol);
-        CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables);
+        CurType.AddMethod(result.Name, result.Function, result.IsPrivate, result.Document, isMoreThanLocalVariables, result.Symbol.IsInterfaceDefaultMethod());
         if (IsCurTypeExportMetadataAll || result.Attributes.Count > 0 || result.IsMetadata) {
           AddMethodMetaData(result, isMoreThanLocalVariables);
         }
