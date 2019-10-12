@@ -146,7 +146,6 @@ namespace CSharpLua {
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
-        BaseFolder = folder_,
         Attributes = attributes_,
         Enums = enums_,
         LuaModuleLibs = new HashSet<string>(luaModuleLibs),
@@ -154,6 +153,7 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
       };
+      setting.AddBaseFolder(folder_);
       return Build(cscArguments_, codes, libs, Metas, setting);
     }
 

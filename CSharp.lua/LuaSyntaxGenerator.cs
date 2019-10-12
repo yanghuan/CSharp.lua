@@ -57,6 +57,7 @@ namespace CSharpLua {
       public string IndentString { get; private set; }
       public bool IsClassic { get; set; }
       public bool IsExportMetadata { get; set; }
+      [Obsolete]
       public string BaseFolder {
         get => BaseFolders.SingleOrDefault() ?? string.Empty;
         set { BaseFolders.Clear(); BaseFolders.Add(value); } }
@@ -306,8 +307,8 @@ namespace CSharpLua {
       throw new InvalidProgramException();
     }
 
-    internal string RemoveBaseFolder(string patrh) {
-      return patrh.Remove(0, Setting.BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+    internal string RemoveBaseFolder(string path) {
+      return path.Remove(0, Setting.GetBaseFolder(path).Length).TrimStart(Path.DirectorySeparatorChar, '/');
     }
 
     private string GetOutFileAbsolutePath(string inFilePath, string output_, out string module) {
