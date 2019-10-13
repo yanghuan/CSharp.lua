@@ -164,7 +164,7 @@ namespace CSharpLua {
         foreach (var package in packages) {
           var packageFiles = PackageHelper.EnumerateSourceFiles(package, out var baseFolder).ToArray();
           if (packageFiles.Length > 0) {
-            files.Concat(packageFiles);
+            files = files.Concat(packageFiles);
             packageBaseFolders.Add(baseFolder);
           }
         }
