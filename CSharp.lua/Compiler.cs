@@ -98,6 +98,7 @@ namespace CSharpLua {
     private static List<string> GetLibs(IEnumerable<string> additionalLibs, out List<string> luaModuleLibs) {
       luaModuleLibs = new List<string>();
       var libs = GetSystemLibs();
+      var dlls = new HashSet<string>(libs.Select(lib => new FileInfo(lib).Name));
       if (additionalLibs != null) {
         foreach (string additionalLib in additionalLibs) {
           string lib = additionalLib;
@@ -105,6 +106,14 @@ namespace CSharpLua {
           if (lib.Last() == kLuaModuleSuffix) {
             lib = lib.TrimEnd(kLuaModuleSuffix);
             isLuaModule = true;
+          } else {
+            var dllName = new FileInfo(lib).Name;
+            if (dlls.Contains(dllName)) {
+              // Avoid duplicate dlls.
+              continue;
+            } else {
+              dlls.Add(dllName);
+            }
           }
 
           string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
@@ -148,9 +157,11 @@ namespace CSharpLua {
       const string configurationRelease = "Release";
       var mainProject = isProject_ ? ProjectHelper.ParseProject(input_, IsCompileDebug() ? configurationDebug : configurationRelease) : null;
       var projects = mainProject?.EnumerateProjects().ToArray();
+      var packages = isProject_ ? PackageHelper.EnumeratePackages(mainProject.TargetFrameworkVersions.First(), projects.Select(project => project.project)) : null;
+      // TODO: if .cs files are encountered in packages, add a BaseFolder for this package: packages.SelectMany(package => PackageHelper.EnumerateSourceFiles(package))
       var files = isProject_ ? GetFiles(projects) : GetFiles();
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var libs = GetLibs(libs_, out var luaModuleLibs);
+      var libs = GetLibs(isProject_ ? libs_.Concat(packages.SelectMany(package => PackageHelper.EnumerateLibs(package))) : libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
