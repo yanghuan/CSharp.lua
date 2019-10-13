@@ -142,7 +142,7 @@ namespace CSharpLua {
 
       public string GetBaseFolder(string path) {
         foreach (var baseFolder in BaseFolders) {
-          if (path.StartsWith(baseFolder)) {
+          if (path.StartsWith(baseFolder + Path.DirectorySeparatorChar)) {
             return baseFolder;
           }
         }
