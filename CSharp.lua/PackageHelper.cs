@@ -37,7 +37,7 @@ namespace CSharpLua {
       }
     }
     public void UpdateAllowedRange(VersionRange range) {
-      Allowed = VersionRange.Combine(new[] { Allowed, range });
+      Allowed = VersionRange.CommonSubSet(new[] { Allowed, range });
     }
     public override string ToString() {
       return Selected?.ToString() ?? Allowed.ToString();
