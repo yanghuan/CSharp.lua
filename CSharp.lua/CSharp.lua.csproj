@@ -11,6 +11,7 @@
     <PackageProjectUrl>https://github.com/yanghuan/CSharp.lua</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE</PackageLicenseUrl>
     <LangVersion>latest</LangVersion>
+    <RootNamespace>CSharpLua</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -10,7 +10,7 @@ using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
-namespace CSharp.lua {
+namespace CSharpLua {
   public sealed class PackageException : Exception {
     public PackageException() {
     }
