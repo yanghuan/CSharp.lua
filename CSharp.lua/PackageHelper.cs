@@ -58,15 +58,15 @@ namespace CSharpLua {
       }
     }
 
-    public static IEnumerable<string> EnumerateLibs(string packagePath, string frameworkFolderName) {
+    public static IEnumerable<string> EnumerateLibs((string packagePath, string frameworkFolderName) package) {
       const string SearchPattern = "*.dll";
-      var libPath = Path.Combine(packagePath, "lib");
+      var libPath = Path.Combine(package.packagePath, "lib");
       if (!Directory.Exists(libPath)) {
         return Array.Empty<string>();
       }
-      var frameworkPath = Path.Combine(libPath, frameworkFolderName ?? Directory.EnumerateDirectories(libPath).Single());
+      var frameworkPath = Path.Combine(libPath, package.frameworkFolderName ?? Directory.EnumerateDirectories(libPath).Single());
       if (!Directory.Exists(frameworkPath)) {
-        var targetFramework = NuGetFramework.Parse(frameworkFolderName);
+        var targetFramework = NuGetFramework.Parse(package.frameworkFolderName);
         var compatibleFrameworks = Directory.EnumerateDirectories(libPath)
           .Where(folder => NuGetFrameworkUtility.IsCompatibleWithFallbackCheck(targetFramework, NuGetFramework.ParseFolder(new DirectoryInfo(folder).Name)));
         // TODO: how to select best match framework?
