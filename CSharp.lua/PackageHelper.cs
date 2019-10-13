@@ -19,21 +19,27 @@ namespace CSharpLua {
   }
 
   internal sealed class VersionStatus {
+    private bool triedSelect;
     public VersionRange Allowed { get; private set; }
     public NuGetVersion Selected { get; private set; }
     public VersionStatus(VersionRange versionRange) {
+      triedSelect = false;
       Allowed = versionRange;
     }
     public bool SelectBestMatch(string id) {
-      if (Selected is null) {
+      if (!triedSelect) {
+        triedSelect = true;
         Selected = Allowed.FindBestMatch(PackageHelper.GetAvailableVersions(id));
-        return true;
+        return Selected != null;
       } else {
         return false;
       }
     }
     public void UpdateAllowedRange(VersionRange range) {
       Allowed = VersionRange.Combine(new[] { Allowed, range });
+    }
+    public override string ToString() {
+      return Selected?.ToString() ?? Allowed.ToString();
     }
   }
 
@@ -51,9 +57,14 @@ namespace CSharpLua {
       }
     }
 
+    public static IEnumerable<string> EnumerateLibs(string packagePath) {
+      var libPath = Path.Combine(packagePath, "lib"/*, targetFramework*/);
+      return Directory.EnumerateFiles(libPath, "*.dll", SearchOption.AllDirectories);
+    }
+
+    // TODO: return targetFramework as well
     public static IEnumerable<string> EnumeratePackages(string targetFrameworkVersion, IEnumerable<Cake.Incubator.Project.CustomProjectParserResult> projects) {
-      // TODO: check if this cast is correct
-      var targetFramework = NuGetFramework.ParseFrameworkName(targetFrameworkVersion, DefaultFrameworkNameProvider.Instance);
+      var targetFramework = NuGetFramework.Parse(targetFrameworkVersion);
       var packages = new Dictionary<string, VersionStatus>();
       void AddPackageReference(string id, VersionRange versionRange) {
         if (packages.TryGetValue(id, out var versionStatus)) {
@@ -85,7 +96,9 @@ namespace CSharpLua {
         newDependencies.Clear();
       }
       foreach (var package in packages) {
-        yield return Path.Combine(_globalPackagesPath, package.Key, package.Value.Selected.ToNormalizedString());
+        if (package.Value.Selected != null) {
+          yield return Path.Combine(_globalPackagesPath, package.Key, package.Value.Selected.ToNormalizedString());
+        }
       }
     }
 
@@ -95,9 +108,15 @@ namespace CSharpLua {
         throw new PackageException($"Could not locate the .nuspec file for package: {package}");
       }
       var reader = new NuspecReader(nuspecFile);
-      var compatibleGroups = reader.GetDependencyGroups().Where(dependencyGroup => NuGetFrameworkUtility.IsCompatibleWithFallbackCheck(targetFramework, dependencyGroup.TargetFramework));
-      // TODO: how to select best match dependencyGroup?
-      return compatibleGroups.First().Packages;
+      var dependencyGroups = reader.GetDependencyGroups();
+      if (dependencyGroups.FirstOrDefault() != null) {
+        var compatibleGroups = dependencyGroups.Where(dependencyGroup => NuGetFrameworkUtility.IsCompatibleWithFallbackCheck(targetFramework, dependencyGroup.TargetFramework));
+        // TODO: how to select best match dependencyGroup?
+        var selectedGroup = compatibleGroups.First();
+        foreach (var p in selectedGroup.Packages) {
+          yield return p;
+        }
+      }
     }
   }
 }
