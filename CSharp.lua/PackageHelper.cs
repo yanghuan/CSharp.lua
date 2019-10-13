@@ -22,6 +22,7 @@ namespace CSharpLua {
     private bool triedSelect;
     public VersionRange Allowed { get; private set; }
     public NuGetVersion Selected { get; private set; }
+    public NuGetFramework Framework { get; set; }
     public VersionStatus(VersionRange versionRange) {
       triedSelect = false;
       Allowed = versionRange;
@@ -57,13 +58,31 @@ namespace CSharpLua {
       }
     }
 
-    public static IEnumerable<string> EnumerateLibs(string packagePath) {
-      var libPath = Path.Combine(packagePath, "lib"/*, targetFramework*/);
-      return Directory.EnumerateFiles(libPath, "*.dll", SearchOption.AllDirectories);
+    public static IEnumerable<string> EnumerateLibs(string packagePath, string frameworkFolderName) {
+      var libPath = Path.Combine(packagePath, "lib");
+      if (!Directory.Exists(libPath)) {
+        return Array.Empty<string>();
+      }
+      var frameworkPath = Path.Combine(libPath, frameworkFolderName ?? Directory.EnumerateDirectories(libPath).Single());
+      if (!Directory.Exists(frameworkPath)) {
+        var targetFramework = NuGetFramework.Parse(frameworkFolderName);
+        var compatibleFrameworks = Directory.EnumerateDirectories(libPath)
+          .Where(folder => NuGetFrameworkUtility.IsCompatibleWithFallbackCheck(targetFramework, NuGetFramework.ParseFolder(new DirectoryInfo(folder).Name)));
+        // TODO: how to select best match framework?
+        frameworkPath = compatibleFrameworks.FirstOrDefault();
+        if (frameworkPath is null) {
+          // Ignore folders that contain no .dll files (these usually have a file called "_._" in it).
+          compatibleFrameworks = Directory.EnumerateDirectories(libPath)
+          .Where(folder => NuGetFrameworkUtility.IsCompatibleWithFallbackCheck(NuGetFramework.ParseFolder(new DirectoryInfo(folder).Name), targetFramework))
+          .Where(folder => Directory.EnumerateFiles(folder, "*.dll", SearchOption.AllDirectories).FirstOrDefault() != null);
+          // TODO: how to select best match framework?
+          frameworkPath = compatibleFrameworks.First();
+        }
+      }
+      return Directory.EnumerateFiles(frameworkPath, "*.dll", SearchOption.AllDirectories);
     }
 
-    // TODO: return targetFramework as well
-    public static IEnumerable<string> EnumeratePackages(string targetFrameworkVersion, IEnumerable<Cake.Incubator.Project.CustomProjectParserResult> projects) {
+    public static IEnumerable<(string folder, string frameworkFolderName)> EnumeratePackages(string targetFrameworkVersion, IEnumerable<Cake.Incubator.Project.CustomProjectParserResult> projects) {
       var targetFramework = NuGetFramework.Parse(targetFrameworkVersion);
       var packages = new Dictionary<string, VersionStatus>();
       void AddPackageReference(string id, VersionRange versionRange) {
@@ -90,19 +109,25 @@ namespace CSharpLua {
         if (newDependencies.Count == 0) {
           break;
         }
-        foreach (var package in newDependencies.SelectMany(package => GetDependencies(package, targetFramework))) {
-          AddPackageReference(package.Id, package.VersionRange);
+        foreach (var newDependency in newDependencies) {
+          var dependencyGroup = GetDependencyGroup(newDependency, targetFramework);
+          if (dependencyGroup != null) {
+            packages[newDependency.Id].Framework = dependencyGroup.TargetFramework;
+            foreach (var package in dependencyGroup.Packages) {
+              AddPackageReference(package.Id, package.VersionRange);
+            }
+          }
         }
         newDependencies.Clear();
       }
       foreach (var package in packages) {
         if (package.Value.Selected != null) {
-          yield return Path.Combine(_globalPackagesPath, package.Key, package.Value.Selected.ToNormalizedString());
+          yield return (Path.Combine(_globalPackagesPath, package.Key, package.Value.Selected.ToNormalizedString()), package.Value.Framework?.GetShortFolderName());
         }
       }
     }
 
-    private static IEnumerable<PackageDependency> GetDependencies(PackageIdentity package, NuGetFramework targetFramework) {
+    private static PackageDependencyGroup GetDependencyGroup(PackageIdentity package, NuGetFramework targetFramework) {
       var nuspecFile = Path.Combine(_globalPackagesPath, package.Id, package.Version.ToNormalizedString(), $"{package.Id}.nuspec");
       if (!NuGet.Packaging.PackageHelper.IsNuspec(nuspecFile)) {
         throw new PackageException($"Could not locate the .nuspec file for package: {package}");
@@ -111,12 +136,10 @@ namespace CSharpLua {
       var dependencyGroups = reader.GetDependencyGroups();
       if (dependencyGroups.FirstOrDefault() != null) {
         var compatibleGroups = dependencyGroups.Where(dependencyGroup => NuGetFrameworkUtility.IsCompatibleWithFallbackCheck(targetFramework, dependencyGroup.TargetFramework));
-        // TODO: how to select best match dependencyGroup?
-        var selectedGroup = compatibleGroups.First();
-        foreach (var p in selectedGroup.Packages) {
-          yield return p;
-        }
+        // TODO: how to select best match framework?
+        return compatibleGroups.First();
       }
+      return null;
     }
   }
 }
