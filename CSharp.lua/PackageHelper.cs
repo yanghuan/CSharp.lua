@@ -58,21 +58,22 @@ namespace CSharpLua {
       }
     }
 
-    public static IEnumerable<string> EnumerateSourceFiles((string packagePath, string frameworkFolderName) package) {
+    public static IEnumerable<string> EnumerateSourceFiles((string packagePath, string frameworkFolderName) package, out string baseFolder) {
       var sourcesPath = Path.Combine(package.packagePath, "contentFiles", "cs");
-      return EnumerateFiles(sourcesPath, package.frameworkFolderName, "*.cs", SearchOption.AllDirectories);
+      return EnumerateFiles(sourcesPath, package.frameworkFolderName, "*.cs", SearchOption.AllDirectories, out baseFolder);
     }
 
     public static IEnumerable<string> EnumerateLibs((string packagePath, string frameworkFolderName) package) {
       var libPath = Path.Combine(package.packagePath, "lib");
-      return EnumerateFiles(libPath, package.frameworkFolderName, "*.dll", SearchOption.TopDirectoryOnly);
+      return EnumerateFiles(libPath, package.frameworkFolderName, "*.dll", SearchOption.TopDirectoryOnly, out _);
     }
 
-    private static IEnumerable<string> EnumerateFiles(string path, string frameworkFolderName, string searchPattern, SearchOption searchOption) {
+    private static IEnumerable<string> EnumerateFiles(string path, string frameworkFolderName, string searchPattern, SearchOption searchOption, out string frameworkPath) {
       if (!Directory.Exists(path)) {
+        frameworkPath = null;
         return Array.Empty<string>();
       }
-      var frameworkPath = Path.Combine(path, frameworkFolderName ?? Directory.EnumerateDirectories(path).Single());
+      frameworkPath = Path.Combine(path, frameworkFolderName ?? Directory.EnumerateDirectories(path).Single());
       if (!Directory.Exists(frameworkPath)) {
         var targetFramework = NuGetFramework.Parse(frameworkFolderName);
         var compatibleFrameworks = Directory.EnumerateDirectories(path)

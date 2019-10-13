@@ -158,8 +158,17 @@ namespace CSharpLua {
       var mainProject = isProject_ ? ProjectHelper.ParseProject(input_, IsCompileDebug() ? configurationDebug : configurationRelease) : null;
       var projects = mainProject?.EnumerateProjects().ToArray();
       var packages = isProject_ ? PackageHelper.EnumeratePackages(mainProject.TargetFrameworkVersions.First(), projects.Select(project => project.project)) : null;
-      // TODO: if .cs files are encountered in packages, add a BaseFolder for this package: packages.SelectMany(package => PackageHelper.EnumerateSourceFiles(package))
       var files = isProject_ ? GetFiles(projects) : GetFiles();
+      var packageBaseFolders = new List<string>();
+      if (packages != null) {
+        foreach (var package in packages) {
+          var packageFiles = PackageHelper.EnumerateSourceFiles(package, out var baseFolder).ToArray();
+          if (packageFiles.Length > 0) {
+            files.Concat(packageFiles);
+            packageBaseFolders.Add(baseFolder);
+          }
+        }
+      }
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(isProject_ ? libs_.Concat(packages.SelectMany(package => PackageHelper.EnumerateLibs(package))) : libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
@@ -174,6 +183,9 @@ namespace CSharpLua {
       };
       if (isProject_) {
         foreach (var folder in projects.Select(p => p.folder)) {
+          setting.AddBaseFolder(folder, false);
+        }
+        foreach (var folder in packageBaseFolders) {
           setting.AddBaseFolder(folder, false);
         }
       } else {
