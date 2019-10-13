@@ -26,20 +26,20 @@ namespace CSharpLua {
   class Program {
     private const string kHelpCmdString = @"Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
 Arguments
--s              : source directory, all *.cs files whill be compiled
+-s              : source directory, all *.cs files will be compiled
 -d              : destination  directory, will put the out lua files
 
 Options
 -h              : show the help message and exit
 -l              : libraries referenced, use ';' to separate
-                  if the librarie is a module, whitch is compield by CSharp.lua with -module arguemnt, the last character needs to be '!' in order to mark  
+                  if the library is a module, which is compiled by CSharp.lua with -module argument, the last character needs to be '!' in order to mark  
 
 -m              : meta files, like System.xml, use ';' to separate
--csc            : csc.exe command argumnets, use ' ' or '\t' to separate
+-csc            : csc.exe command arguments, use ' ' or '\t' to separate
 
 -c              : support classic lua version(5.1), default support 5.3
--a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes whill be exported
--e              : enums need to export, use ';' to separate, if ""-e"" only, all enums whill be exported
+-a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes will be exported
+-e              : enums need to export, use ';' to separate, if ""-e"" only, all enums will be exported
 -p              : do not use debug.setmetatable, in some Addon/Plugin environment debug object cannot be used
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
@@ -48,7 +48,7 @@ Options
     public static void Main(string[] args) {
       if (args.Length > 0) {
         try {
-          var cmds = Utility.GetCommondLines(args);
+          var cmds = Utility.GetCommandLines(args);
           if (cmds.ContainsKey("-h")) {
             ShowHelpInfo();
             return;
@@ -104,20 +104,20 @@ Options
       Console.Error.WriteLine(kHelpCmdString);
     }
 
-    private static HashSet<string> argumnets_; 
+    private static HashSet<string> arguments_; 
 
     private static bool IsArgumentKey(string key) {
-      if (argumnets_ == null) {
-        argumnets_ = new HashSet<string>();
+      if (arguments_ == null) {
+        arguments_ = new HashSet<string>();
         string[] lines = kHelpCmdString.Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string line in lines) {
           if (line.StartsWith('-')) {
             char[] chars = line.TakeWhile(i => !char.IsWhiteSpace(i)).ToArray();
-            argumnets_.Add(new string(chars));
+            arguments_.Add(new string(chars));
           }
         }
       }
-      return argumnets_.Contains(key);
+      return arguments_.Contains(key);
     }
 
     private static string GetCSCArgument(string[] args) {

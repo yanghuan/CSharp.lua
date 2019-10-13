@@ -164,7 +164,7 @@ namespace CSharpLua {
       return new T[] { t };
     }
 
-    public static Dictionary<string, string[]> GetCommondLines(string[] args) {
+    public static Dictionary<string, string[]> GetCommandLines(string[] args) {
       Dictionary<string, string[]> cmds = new Dictionary<string, string[]>();
 
       string key = "";
