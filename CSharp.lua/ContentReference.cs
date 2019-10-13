@@ -8,6 +8,7 @@ using Cake.Core.Diagnostics;
 using Cake.Incubator.Project;
 
 namespace CSharpLua {
+  [Obsolete]
   public abstract class ContentReference : IEquatable<ContentReference> {
     public const string LibraryFolder = @"lib";
     public const string SourceCodeFolder = @"contentFiles\cs";

@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-using NuGet.Commands;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -16,6 +15,7 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
 namespace CSharpLua {
+  [Obsolete]
   internal static class NuGetHelper {
     private static readonly string _globalPackagesPath;
     private static readonly string _runtimeFramework;
@@ -77,7 +77,7 @@ namespace CSharpLua {
     }
 
     internal static IEnumerable<(string PackageName, VersionRange PackageVersion)> GetNuspecDependencies(string nuspecFilePath) {
-      if (!PackageHelper.IsNuspec(nuspecFilePath)) {
+      if (!NuGet.Packaging.PackageHelper.IsNuspec(nuspecFilePath)) {
         throw new Exception();
       }
 
