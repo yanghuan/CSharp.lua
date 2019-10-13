@@ -114,7 +114,7 @@ namespace CSharpLua {
 
       public void AddBaseFolder(string path, bool overwriteSubFolders) {
         var remove = new List<string>();
-        path = path.TrimEnd(Path.DirectorySeparatorChar);
+        path = new FileInfo(path).FullName.TrimEnd(Path.DirectorySeparatorChar);
         static bool ConflictsWith(string folder, string other) {
           return folder == other || folder.StartsWith(other + Path.DirectorySeparatorChar);
         }
@@ -140,7 +140,8 @@ namespace CSharpLua {
         BaseFolders.Add(path);
       }
 
-      public string GetBaseFolder(string path) {
+      public string GetBaseFolder(ref string path) {
+        path = new FileInfo(path).FullName;
         foreach (var baseFolder in BaseFolders) {
           if (path.StartsWith(baseFolder + Path.DirectorySeparatorChar)) {
             return baseFolder;
@@ -319,7 +320,8 @@ namespace CSharpLua {
     }
 
     internal string RemoveBaseFolder(string path) {
-      return path.Remove(0, Setting.GetBaseFolder(path).Length).TrimStart(Path.DirectorySeparatorChar, '/');
+      var baseFolder = Setting.GetBaseFolder(ref path);
+      return path.Remove(0, baseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
     }
 
     private string GetOutFileAbsolutePath(string inFilePath, string output_, out string module) {
