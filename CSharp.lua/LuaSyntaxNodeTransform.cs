@@ -634,7 +634,7 @@ namespace CSharpLua {
       if (!symbol.IsStatic && symbol.MethodKind != MethodKind.LocalFunction) {
         function.AddParameter(LuaIdentifierNameSyntax.This);
         if (isPrivate) {
-          if (generator_.IsForcePublicSymbol(symbol) || generator_.IsMonoBehaviourSpeicalMethod(symbol)) {
+          if (generator_.IsForcePublicSymbol(symbol) || generator_.IsMonoBehaviourSpecialMethod(symbol)) {
             isPrivate = false;
           }
         }

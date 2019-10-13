@@ -57,7 +57,11 @@ namespace CSharpLua {
       public string IndentString { get; private set; }
       public bool IsClassic { get; set; }
       public bool IsExportMetadata { get; set; }
-      public string BaseFolder { get; set; } = "";
+      [Obsolete]
+      public string BaseFolder {
+        get => BaseFolders.SingleOrDefault() ?? string.Empty;
+        set { BaseFolders.Clear(); AddBaseFolder(value, false); } }
+      internal HashSet<string> BaseFolders { get; private set; }
       public bool IsExportAttributesAll { get; private set; }
       public bool IsExportEnumAll { get; private set; }
       public bool IsModule { get; set; }
@@ -69,6 +73,7 @@ namespace CSharpLua {
 
       public SettingInfo() {
         Indent = 2;
+        BaseFolders = new HashSet<string>();
       }
 
       public string[] Attributes {
@@ -106,6 +111,44 @@ namespace CSharpLua {
           }
         }
       }
+
+      public void AddBaseFolder(string path, bool overwriteSubFolders) {
+        var remove = new List<string>();
+        path = new FileInfo(path).FullName.TrimEnd(Path.DirectorySeparatorChar);
+        static bool ConflictsWith(string folder, string other) {
+          return folder == other || folder.StartsWith(other + Path.DirectorySeparatorChar);
+        }
+        foreach (var other in BaseFolders) {
+          if (ConflictsWith(path, other)) {
+            if (overwriteSubFolders) {
+              return;
+            } else {
+              throw new Exception($"Could not add folder \"{path}\", because it is the same as, or a subdirectory of, an already added folder.");
+            }
+          }
+          if (ConflictsWith(other, path)) {
+            if (overwriteSubFolders) {
+              remove.Add(other);
+            } else { 
+              throw new Exception($"Could not add folder \"{path}\", because one of its subdirectories has already been added.");
+            }
+          }
+        }
+        foreach (var other in remove) {
+          BaseFolders.Remove(other);
+        }
+        BaseFolders.Add(path);
+      }
+
+      public string GetBaseFolder(ref string path) {
+        path = new FileInfo(path).FullName;
+        foreach (var baseFolder in BaseFolders) {
+          if (path.StartsWith(baseFolder + Path.DirectorySeparatorChar)) {
+            return baseFolder;
+          }
+        }
+        throw new DirectoryNotFoundException($"Could not find base folder for path: \"{path}\".");
+      }
     }
 
     public const string kManifestFuncName = "InitCSharp";
@@ -122,7 +165,7 @@ namespace CSharpLua {
     private readonly HashSet<ISymbol> forcePublicSymbols_ = new HashSet<ISymbol>();
     private readonly List<LuaEnumDeclarationSyntax> enumDeclarations_ = new List<LuaEnumDeclarationSyntax>();
     private readonly Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
-    private readonly HashSet<string> monoBehaviourSpeicalMethodNames_;
+    private readonly HashSet<string> monoBehaviourSpecialMethodNames_;
     private IMethodSymbol mainEntryPoint_;
     public INamedTypeSymbol SystemExceptionTypeSymbol { get; }
     private readonly INamedTypeSymbol monoBehaviourTypeSymbol_;
@@ -161,7 +204,7 @@ namespace CSharpLua {
       if (compilation.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
         if (monoBehaviourTypeSymbol_ != null) {
-          monoBehaviourSpeicalMethodNames_ = new HashSet<string>() {
+          monoBehaviourSpecialMethodNames_ = new HashSet<string>() {
             "Awake", "Start", "Update", "FixedUpdate", "LateUpdate",
             "OnGUI", "OnDisable", "OnEnable"
           };
@@ -276,8 +319,9 @@ namespace CSharpLua {
       throw new InvalidProgramException();
     }
 
-    internal string RemoveBaseFolder(string patrh) {
-      return patrh.Remove(0, Setting.BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+    internal string RemoveBaseFolder(string path) {
+      var baseFolder = Setting.GetBaseFolder(ref path);
+      return path.Remove(0, baseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
     }
 
     private string GetOutFileAbsolutePath(string inFilePath, string output_, out string module) {
@@ -1232,8 +1276,8 @@ namespace CSharpLua {
       return true;
     }
 
-    public bool IsMonoBehaviourSpeicalMethod(IMethodSymbol symbol) {
-      if (monoBehaviourSpeicalMethodNames_ != null && monoBehaviourSpeicalMethodNames_.Contains(symbol.Name)) {
+    public bool IsMonoBehaviourSpecialMethod(IMethodSymbol symbol) {
+      if (monoBehaviourSpecialMethodNames_ != null && monoBehaviourSpecialMethodNames_.Contains(symbol.Name)) {
         return symbol.ContainingType.Is(monoBehaviourTypeSymbol_);
       }
       return false;
