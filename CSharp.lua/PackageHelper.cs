@@ -59,6 +59,7 @@ namespace CSharpLua {
     }
 
     public static IEnumerable<string> EnumerateLibs(string packagePath, string frameworkFolderName) {
+      const string SearchPattern = "*.dll";
       var libPath = Path.Combine(packagePath, "lib");
       if (!Directory.Exists(libPath)) {
         return Array.Empty<string>();
@@ -74,12 +75,12 @@ namespace CSharpLua {
           // Ignore folders that contain no .dll files (these usually have a file called "_._" in it).
           compatibleFrameworks = Directory.EnumerateDirectories(libPath)
           .Where(folder => NuGetFrameworkUtility.IsCompatibleWithFallbackCheck(NuGetFramework.ParseFolder(new DirectoryInfo(folder).Name), targetFramework))
-          .Where(folder => Directory.EnumerateFiles(folder, "*.dll", SearchOption.AllDirectories).FirstOrDefault() != null);
+          .Where(folder => Directory.EnumerateFiles(folder, SearchPattern, SearchOption.AllDirectories).FirstOrDefault() != null);
           // TODO: how to select best match framework?
           frameworkPath = compatibleFrameworks.First();
         }
       }
-      return Directory.EnumerateFiles(frameworkPath, "*.dll", SearchOption.AllDirectories);
+      return Directory.EnumerateFiles(frameworkPath, SearchPattern, SearchOption.TopDirectoryOnly);
     }
 
     public static IEnumerable<(string folder, string frameworkFolderName)> EnumeratePackages(string targetFrameworkVersion, IEnumerable<Cake.Incubator.Project.CustomProjectParserResult> projects) {
