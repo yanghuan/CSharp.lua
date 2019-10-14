@@ -20,8 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-using Cake.Incubator.Project;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -31,8 +29,7 @@ namespace CSharpLua {
     private const string kSystemMeta = "~/System.xml";
     private const char kLuaModuleSuffix = '!';
 
-    private readonly bool isProject_;
-    private readonly string input_;
+    private readonly string folder_;
     private readonly string output_;
     private readonly string[] libs_;
     private readonly string[] metas_;
@@ -46,9 +43,8 @@ namespace CSharpLua {
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
 
-    public Compiler(string input, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
-      isProject_ = new FileInfo(input).Extension.ToLower() == ".csproj";
-      input_ = input;
+    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
+      folder_ = folder;
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
@@ -98,7 +94,6 @@ namespace CSharpLua {
     private static List<string> GetLibs(IEnumerable<string> additionalLibs, out List<string> luaModuleLibs) {
       luaModuleLibs = new List<string>();
       var libs = GetSystemLibs();
-      var dlls = new HashSet<string>(libs.Select(lib => new FileInfo(lib).Name));
       if (additionalLibs != null) {
         foreach (string additionalLib in additionalLibs) {
           string lib = additionalLib;
@@ -106,14 +101,6 @@ namespace CSharpLua {
           if (lib.Last() == kLuaModuleSuffix) {
             lib = lib.TrimEnd(kLuaModuleSuffix);
             isLuaModule = true;
-          } else {
-            var dllName = new FileInfo(lib).Name;
-            if (dlls.Contains(dllName)) {
-              // Avoid duplicate dlls.
-              continue;
-            } else {
-              dlls.Add(dllName);
-            }
           }
 
           string path = lib.EndsWith(kDllSuffix) ? lib : lib + kDllSuffix;
@@ -153,27 +140,13 @@ namespace CSharpLua {
     }
 
     private LuaSyntaxGenerator GetGenerator() {
-      const string configurationDebug = "Debug";
-      const string configurationRelease = "Release";
-      var mainProject = isProject_ ? ProjectHelper.ParseProject(input_, IsCompileDebug() ? configurationDebug : configurationRelease) : null;
-      var projects = mainProject?.EnumerateProjects().ToArray();
-      var packages = isProject_ ? PackageHelper.EnumeratePackages(mainProject.TargetFrameworkVersions.First(), projects.Select(project => project.project)) : null;
-      var files = isProject_ ? GetFiles(projects) : GetFiles();
-      var packageBaseFolders = new List<string>();
-      if (packages != null) {
-        foreach (var package in packages) {
-          var packageFiles = PackageHelper.EnumerateSourceFiles(package, out var baseFolder).ToArray();
-          if (packageFiles.Length > 0) {
-            files = files.Concat(packageFiles);
-            packageBaseFolders.Add(baseFolder);
-          }
-        }
-      }
+      var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
       var codes = files.Select(i => (File.ReadAllText(i), i));
-      var libs = GetLibs(isProject_ ? libs_.Concat(packages.SelectMany(package => PackageHelper.EnumerateLibs(package))) : libs_, out var luaModuleLibs);
+      var libs = GetLibs(libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
+        BaseFolder = folder_,
         Attributes = attributes_,
         Enums = enums_,
         LuaModuleLibs = new HashSet<string>(luaModuleLibs),
@@ -181,34 +154,7 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
       };
-      if (isProject_) {
-        foreach (var folder in projects.Select(p => p.folder)) {
-          setting.AddBaseFolder(folder, false);
-        }
-        foreach (var folder in packageBaseFolders) {
-          setting.AddBaseFolder(folder, false);
-        }
-      } else {
-        setting.AddBaseFolder(input_, false);
-      }
       return Build(cscArguments_, codes, libs, Metas, setting);
-    }
-
-    private IEnumerable<string> GetFiles() {
-      return Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
-    }
-
-    private IEnumerable<string> GetFiles(IEnumerable<(string folder, CustomProjectParserResult project)> projects) {
-      return projects.SelectMany(project => project.project.EnumerateSourceFiles(project.folder));
-    }
-
-    private bool IsCompileDebug() {
-      foreach (var arg in cscArguments_) {
-        if (arg.StartsWith("-debug")) {
-          return true;
-        }
-      }
-      return false;
     }
 
     public static string CompileSingleCode(string code) {
