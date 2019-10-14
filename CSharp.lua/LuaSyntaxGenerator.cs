@@ -57,11 +57,7 @@ namespace CSharpLua {
       public string IndentString { get; private set; }
       public bool IsClassic { get; set; }
       public bool IsExportMetadata { get; set; }
-      [Obsolete]
-      public string BaseFolder {
-        get => BaseFolders.SingleOrDefault() ?? string.Empty;
-        set { BaseFolders.Clear(); AddBaseFolder(value, false); } }
-      internal HashSet<string> BaseFolders { get; private set; }
+      public string BaseFolder { get; set; } = "";
       public bool IsExportAttributesAll { get; private set; }
       public bool IsExportEnumAll { get; private set; }
       public bool IsModule { get; set; }
@@ -73,7 +69,6 @@ namespace CSharpLua {
 
       public SettingInfo() {
         Indent = 2;
-        BaseFolders = new HashSet<string>();
       }
 
       public string[] Attributes {
@@ -110,44 +105,6 @@ namespace CSharpLua {
             IndentString = new string(' ', indent_);
           }
         }
-      }
-
-      public void AddBaseFolder(string path, bool overwriteSubFolders) {
-        var remove = new List<string>();
-        path = new FileInfo(path).FullName.TrimEnd(Path.DirectorySeparatorChar);
-        static bool ConflictsWith(string folder, string other) {
-          return folder == other || folder.StartsWith(other + Path.DirectorySeparatorChar);
-        }
-        foreach (var other in BaseFolders) {
-          if (ConflictsWith(path, other)) {
-            if (overwriteSubFolders) {
-              return;
-            } else {
-              throw new Exception($"Could not add folder \"{path}\", because it is the same as, or a subdirectory of, an already added folder.");
-            }
-          }
-          if (ConflictsWith(other, path)) {
-            if (overwriteSubFolders) {
-              remove.Add(other);
-            } else { 
-              throw new Exception($"Could not add folder \"{path}\", because one of its subdirectories has already been added.");
-            }
-          }
-        }
-        foreach (var other in remove) {
-          BaseFolders.Remove(other);
-        }
-        BaseFolders.Add(path);
-      }
-
-      public string GetBaseFolder(ref string path) {
-        path = new FileInfo(path).FullName;
-        foreach (var baseFolder in BaseFolders) {
-          if (path.StartsWith(baseFolder + Path.DirectorySeparatorChar)) {
-            return baseFolder;
-          }
-        }
-        throw new DirectoryNotFoundException($"Could not find base folder for path: \"{path}\".");
       }
     }
 
@@ -319,9 +276,8 @@ namespace CSharpLua {
       throw new InvalidProgramException();
     }
 
-    internal string RemoveBaseFolder(string path) {
-      var baseFolder = Setting.GetBaseFolder(ref path);
-      return path.Remove(0, baseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+    internal string RemoveBaseFolder(string patrh) {
+      return patrh.Remove(0, Setting.BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
     }
 
     private string GetOutFileAbsolutePath(string inFilePath, string output_, out string module) {
