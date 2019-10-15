@@ -158,7 +158,7 @@ namespace CSharpLua {
       var mainProject = isProject_ ? ProjectHelper.ParseProject(input_, IsCompileDebug() ? configurationDebug : configurationRelease) : null;
       var projects = mainProject?.EnumerateProjects().ToArray();
       var packages = isProject_ ? PackageHelper.EnumeratePackages(mainProject.TargetFrameworkVersions.First(), projects.Select(project => project.project)) : null;
-      var files = isProject_ ? GetFiles(projects) : GetFiles();
+      var files = isProject_ ? GetSourceFiles(projects) : GetSourceFiles();
       var packageBaseFolders = new List<string>();
       if (packages != null) {
         foreach (var package in packages) {
@@ -188,17 +188,22 @@ namespace CSharpLua {
         foreach (var folder in packageBaseFolders) {
           setting.AddBaseFolder(folder, false);
         }
-      } else {
+      } else if (Directory.Exists(input_)) {
         setting.AddBaseFolder(input_, false);
+      } else {
+        throw new NotImplementedException("Unable to determine basefolder(s) when the input is a list of source files.");
       }
       return Build(cscArguments_, codes, libs, Metas, setting);
     }
 
-    private IEnumerable<string> GetFiles() {
-      return Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
+    private IEnumerable<string> GetSourceFiles() {
+      if (Directory.Exists(input_)) {
+        return Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
+      }
+      return Utility.Split(input_, true);
     }
 
-    private IEnumerable<string> GetFiles(IEnumerable<(string folder, CustomProjectParserResult project)> projects) {
+    private IEnumerable<string> GetSourceFiles(IEnumerable<(string folder, CustomProjectParserResult project)> projects) {
       return projects.SelectMany(project => project.project.EnumerateSourceFiles(project.folder));
     }
 

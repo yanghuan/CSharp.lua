@@ -119,8 +119,8 @@ namespace CSharpLua {
           if (expression.IsKind(SyntaxKind.ComplexElementInitializerExpression)) {
             var initializer = (InitializerExpressionSyntax)expression;
             foreach (var expressionNode in initializer.Expressions) {
-              var argumnet = (LuaExpressionSyntax)expressionNode.Accept(this);
-              invocation.AddArgument(argumnet);
+              var argument = (LuaExpressionSyntax)expressionNode.Accept(this);
+              invocation.AddArgument(argument);
             }
           } else {
             var value = (LuaExpressionSyntax)expression.Accept(this);
