@@ -26,7 +26,7 @@ namespace CSharpLua {
   class Program {
     private const string kHelpCmdString = @"Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
 Arguments
--s              : source directory, all *.cs files will be compiled
+-s              : can be a directory where all cs files will be compiled, or a list of files, using ';' or ',' to separate
 -d              : destination  directory, will put the out lua files
 
 Options
@@ -57,7 +57,7 @@ Options
           var sw = new Stopwatch();
           sw.Start();
 
-          string folder = cmds.GetArgument("-s");
+          string input = cmds.GetArgument("-s");
           string output = cmds.GetArgument("-d");
           string lib = cmds.GetArgument("-l", true);
           string meta = cmds.GetArgument("-m", true);
@@ -75,7 +75,7 @@ Options
           bool isModule = cmds.ContainsKey("-module");
           bool isInlineSimpleProperty = cmds.ContainsKey("-inline-property");
           bool isPreventDebugObject = cmds.ContainsKey("-p");
-          Compiler c = new Compiler(folder, output, lib, meta, csc, isClassic, atts, enums) {
+          Compiler c = new Compiler(input, output, lib, meta, csc, isClassic, atts, enums) {
             IsExportMetadata = isExportMetadata,
             IsModule = isModule,
             IsInlineSimpleProperty = isInlineSimpleProperty,

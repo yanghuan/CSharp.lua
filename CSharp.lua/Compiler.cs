@@ -29,7 +29,7 @@ namespace CSharpLua {
     private const string kSystemMeta = "~/System.xml";
     private const char kLuaModuleSuffix = '!';
 
-    private readonly string folder_;
+    private readonly string input_;
     private readonly string output_;
     private readonly string[] libs_;
     private readonly string[] metas_;
@@ -43,8 +43,8 @@ namespace CSharpLua {
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
 
-    public Compiler(string folder, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
-      folder_ = folder;
+    public Compiler(string input, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
+      input_ = input;
       output_ = output;
       libs_ = Utility.Split(lib);
       metas_ = Utility.Split(meta);
@@ -139,14 +139,21 @@ namespace CSharpLua {
       GetGenerator().GenerateSingleFile(fileName, output_, luaSystemLibs);
     }
 
+    private IEnumerable<string> GetSourceFiles() {
+      if (Directory.Exists(input_)) {
+        return Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
+      }
+      return Utility.Split(input_, true);
+    }
+
     private LuaSyntaxGenerator GetGenerator() {
-      var files = Directory.EnumerateFiles(folder_, "*.cs", SearchOption.AllDirectories);
+      var files = GetSourceFiles();
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
-        BaseFolder = folder_,
+        BaseFolder = input_,
         Attributes = attributes_,
         Enums = enums_,
         LuaModuleLibs = new HashSet<string>(luaModuleLibs),
