@@ -2,16 +2,38 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>1.1.0</Version>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Copyright>Copyright ©  YANG Huan 2017</Copyright>
-    <Description>The C# to Lua compiler</Description>
-    <Company>YANG Huan</Company>
-    <Authors>YANG Huan</Authors>
-    <PackageProjectUrl>https://github.com/yanghuan/CSharp.lua</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE</PackageLicenseUrl>
     <LangVersion>latest</LangVersion>
     <RootNamespace>CSharpLua</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Owners>Drake53</Owners>
+    <Copyright>Copyright © YANG Huan 2017</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <RepositoryUrl>https://github.com/Drake53/CSharp.lua</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>YANG Huan, Drake53</Authors>
+
+    <Description>The C# to Lua compiler, with edits to make it compatible with warcraft III lua maps.</Description>
+    <PackageProjectUrl>https://github.com/Drake53/CSharp.lua/tree/master/CSharp.lua</PackageProjectUrl>
+    <PackageTags>csharp lua compiler transpiler warcraft3 warcraft-iii</PackageTags>
+
+    <PackageId>War3Net.CSharpLua</PackageId>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <FileVersion>1.1.0</FileVersion>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
