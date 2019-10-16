@@ -952,19 +952,6 @@ define("System.Activator", {
     local T, n = type[1], select("#", ...)
     if n == 0 then
       return createInstance(T)
-    elseif n == 1 then
-      local args = ...
-      if System.isArrayLike(args) then
-        n = #args
-        if n == 0 then
-          return createInstance(T)
-        end
-        local i = findMatchCtor(T, n, function (i, args) return args:get(i - 1) end, args)
-        if i and i ~= 1 then
-          return System.new(T, i, unpack(args, 1, n))
-        end
-        return T(unpack(args, 1, n))
-      end
     end
     local i = findMatchCtor(T, n, select, ...)
     if i and i ~= 1 then
