@@ -31,9 +31,9 @@
     <PackageTags>csharp lua compiler transpiler warcraft3 warcraft-iii</PackageTags>
 
     <PackageId>War3Net.CSharpLua</PackageId>
-    <AssemblyVersion>1.1.1</AssemblyVersion>
-    <FileVersion>1.1.1</FileVersion>
-    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.2</AssemblyVersion>
+    <FileVersion>1.1.2</FileVersion>
+    <Version>1.1.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -55,6 +55,7 @@
     <None Remove="System.xml" />
     <Content Include="System.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
   </ItemGroup>
 
@@ -62,6 +63,7 @@
     <None Remove="CoreSystem.Lua\CoreSystem\**" />
     <Content Include="CoreSystem.Lua\CoreSystem\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
   </ItemGroup>
 
