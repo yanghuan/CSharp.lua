@@ -319,7 +319,6 @@ namespace CSharpLua {
         }
       }
 
-      bool isEmptyCtor = false;
       if (node.Initializer != null) {
         var initializerSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node.Initializer).Symbol;
         int ctroIndex = GetConstructorIndex(initializerSymbol);
@@ -352,7 +351,6 @@ namespace CSharpLua {
         var baseCtorInvoke = BuildCallBaseConstructor(symbol.ContainingType, out int ctroCounter);
         Contract.Assert(baseCtorInvoke != null);
         function.AddStatement(baseCtorInvoke);
-        isEmptyCtor = ctroCounter == 0 && !node.Body.Statements.Any();
       }
 
       bool isCombineImplicitlyCtorMethod = false;
@@ -383,10 +381,8 @@ namespace CSharpLua {
       if (isStatic) {
         CurType.SetStaticCtor(function, document);
       } else {
+        CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0 || isCombineImplicitlyCtorMethod, document);
         bool isExportMetadata = IsCurTypeExportMetadataAll || attributes.Count > 0 || symbol.HasMetadataAttribute();
-        if (!isEmptyCtor || isExportMetadata) {
-          CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0 || isCombineImplicitlyCtorMethod, document);
-        }
         if (isExportMetadata) {
           int ctorIndex = GetConstructorIndex(symbol);
           LuaIdentifierNameSyntax name;
