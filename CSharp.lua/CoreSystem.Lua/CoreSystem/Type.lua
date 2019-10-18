@@ -17,7 +17,6 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local Object = System.Object
-local String = System.String
 local Boolean = System.Boolean
 local Delegate = System.Delegate
 local getClass = System.getClass
@@ -323,6 +322,19 @@ end
 
 System.typeof = typeof
 System.Object.GetType = getType
+
+function System.ObjectGetType(this)
+  if this == nil then throw(NullReferenceException()) end
+  local t = type(this)
+  if t == "number" then
+    return typeof(Number)
+  elseif t == "boolean" then
+    return typeof(Boolean)
+  elseif t == "function" then
+    return typeof(Delegate)
+  end
+  return getType(this)
+end
 
 local function addCheckInterface(set, cls)
   local interface = cls.interface

@@ -41,6 +41,7 @@ local getmetatable = getmetatable
 local setmetatable = setmetatable
 local select = select
 local type = type
+local String = getmetatable("")
 
 local function checkIndex(value, startIndex, count)
   if value == nil then throw(ArgumentNullException("value")) end
@@ -589,7 +590,7 @@ local function split(this, strings, count, options)
     end 
     startIndex = posEnd + 1
   end   
-  return System.arrayFromTable(t, string) 
+  return System.arrayFromTable(t, String) 
 end
 
 local function startsWith(this, prefix)
@@ -661,57 +662,56 @@ local function inherits(_, T)
   return { System.IEnumerable_1(System.Char), System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T), System.ICloneable }
 end
 
-local String = string
-String.traceback = emptyFn  -- make throw(str) not fail
-String.getLength = lengthFn
-String.getCount = lengthFn
-String.get = get
-String.Compare = compareFull
-String.CompareOrdinal = compareFull
-String.Concat = concat
-String.Copy = System.identityFn
-String.Equals = equals
-String.Format = format
-String.IsNullOrEmpty = isNullOrEmpty
-String.IsNullOrWhiteSpace = isNullOrWhiteSpace
-String.JoinEnumerable = joinEnumerable
-String.JoinParams = joinParams
-String.Join = join
-String.CompareTo = compare
-String.CompareToObj = compareToObj
-String.Contains = contains
-String.CopyTo = copyTo
-String.EndsWith = endsWith
-String.EqualsObj = equalsObj
-String.GetEnumerator = getEnumerator
-String.GetTypeCode = getTypeCode
-String.IndexOf = indexOf
-String.IndexOfAny = indexOfAny
-String.Insert = insert
-String.LastIndexOf = lastIndexOf
-String.LastIndexOfAny = lastIndexOfAny
-String.PadLeft = padLeft
-String.PadRight = padRight
-String.Remove = remove
-String.Replace = replace
-String.Split = split
-String.StartsWith = startsWith
-String.Substring = substring
-String.ToCharArray = toCharArray
-String.ToLower = lower
-String.ToLowerInvariant = lower
-String.ToString = System.identityFn
-String.ToUpper = upper
-String.ToUpperInvariant = upper
-String.Trim = trim
-String.TrimEnd = trimEnd
-String.TrimStart = trimStart
+string.traceback = emptyFn  -- make throw(str) not fail
+string.getLength = lengthFn
+string.getCount = lengthFn
+string.get = get
+string.Compare = compareFull
+string.CompareOrdinal = compareFull
+string.Concat = concat
+string.Copy = System.identityFn
+string.Equals = equals
+string.Format = format
+string.IsNullOrEmpty = isNullOrEmpty
+string.IsNullOrWhiteSpace = isNullOrWhiteSpace
+string.JoinEnumerable = joinEnumerable
+string.JoinParams = joinParams
+string.Join = join
+string.CompareTo = compare
+string.CompareToObj = compareToObj
+string.Contains = contains
+string.CopyTo = copyTo
+string.EndsWith = endsWith
+string.EqualsObj = equalsObj
+string.GetEnumerator = getEnumerator
+string.GetTypeCode = getTypeCode
+string.IndexOf = indexOf
+string.IndexOfAny = indexOfAny
+string.Insert = insert
+string.LastIndexOf = lastIndexOf
+string.LastIndexOfAny = lastIndexOfAny
+string.PadLeft = padLeft
+string.PadRight = padRight
+string.Remove = remove
+string.Replace = replace
+string.Split = split
+string.StartsWith = startsWith
+string.Substring = substring
+string.ToCharArray = toCharArray
+string.ToLower = lower
+string.ToLowerInvariant = lower
+string.ToString = System.identityFn
+string.ToUpper = upper
+string.ToUpperInvariant = upper
+string.Trim = trim
+string.TrimEnd = trimEnd
+string.TrimStart = trimStart
+string.__call = ctor
+string.__index = string
+
 String.__genericT__ = System.Char
 String.__inherits__ = inherits
 System.define("System.String", String)
-
-local Object = System.Object
-local StringMetaTable = setmetatable({ __index = Object, __call = ctor }, Object)
-setmetatable(String, StringMetaTable)
-setmetatable(getmetatable(""), String)
-
+String.__index = string
+setmetatable(String, string)
+setmetatable(string, System.Object)

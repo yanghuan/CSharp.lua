@@ -546,7 +546,7 @@ namespace CSharpLua {
 
     private string DecodeUnicodeCharacter(string text) {
       if (unicodeRegex_.IsMatch(text)) {
-        if (generator_.Setting.IsClassic) {
+        if (IsLuaClassic) {
           return unicodeRegex_.Replace(text, m => {
             if (short.TryParse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var c)) {
               char ch = (char)c;

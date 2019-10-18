@@ -31,6 +31,7 @@ local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 local FormatException = System.FormatException
 local OverflowException = System.OverflowException
+local NullReferenceException = System.NullReferenceException
 
 local type = type
 local tonumber = tonumber
@@ -260,6 +261,17 @@ local function toString(this, format)
   return tostring(this)
 end
 
+local function equalsObj(this, v)
+  if type(v) ~= "number" then
+    return false
+  end
+  return equalsDouble(this, v)
+end
+
+local function getHashCode(this)
+  return isNaN(this) and nanHashCode or this
+end
+
 local Number = define("System.Number", {
   __inherits__ = inherits,
   default = zeroFn,
@@ -270,21 +282,14 @@ local Number = define("System.Number", {
   IsNaN = isNaN,
   NegativeInfinity = negInf,
   PositiveInfinity = posInf,
+  EqualsObj = equalsObj,
+  GetHashCode = getHashCode,
   CompareToObj = function (this, v)
     if v == nil then return 1 end
     if type(v) ~= "number" then
       throw(ArgumentException("Arg_MustBeNumber"))
     end
     return compareDouble(this, v)
-  end,
-  EqualsObj = function (this, v)
-    if type(v) ~= "number" then
-      return false
-    end
-    return equalsDouble(this, v)
-  end,
-  GetHashCode = function (this)
-    return isNaN(this) and nanHashCode or this
   end,
   IsFinite = function (v)
     return v ~= posInf and v ~= negInf and not isNaN(v)
@@ -354,3 +359,43 @@ local Double = define("System.Double", {
   end
 })
 setmetatable(Double, Number)
+
+function System.concat(obj)
+  if obj == nil then
+    return ""
+  end
+  local t = type(obj) 
+  if t == "table" then
+    return t:ToString()
+  elseif t == "boolean" then
+    return t and "True" or "False"
+  elseif t == "function" then
+    return "System.Delegate"
+  end
+  return tostring(obj)
+end
+
+function System.ObjectEquals(this, obj)
+  if this == nil then throw(NullReferenceException()) end
+  local t = type(this)
+  if t == "number" then
+    return equalsObj(this, obj)
+  elseif t == "table" then
+    return this:EqualsObj(obj)
+  end
+  return this == obj
+end
+
+function System.ObjectGetHashCode(this)
+  if this == nil then throw(NullReferenceException()) end
+  local t = type(this)
+  if t == "number" then
+    return getHashCode(this)
+  elseif t == "table" then
+    return this:GetHashCode()
+  end
+  return this
+end
+
+
+
