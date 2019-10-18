@@ -999,6 +999,19 @@ namespace CSharpLua {
             var typeSymbol = semanticModel_.GetTypeInfo(arg).Type;
             if (typeSymbol.IsSystemIndex()) {
               UpdateIndexArgumentExpression(node.Expression, propertyAdapter, false);
+            } else {
+              var parent = node.Parent;
+              if (parent.IsKind(SyntaxKind.Argument)) {
+                var argument = (ArgumentSyntax)parent;
+                if (argument.RefKindKeyword.IsKind(SyntaxKind.RefKeyword)) {
+                  var first = propertyAdapter.ArgumentList.Arguments[0].Expression;
+                  if (!(first is LuaIdentifierNameSyntax)) {
+                    var temp = GetTempIdentifier();
+                    CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, first));
+                    propertyAdapter.ArgumentList.Arguments[0] = new LuaArgumentSyntax(temp);
+                  }
+                }
+              }
             }
           }
         }
