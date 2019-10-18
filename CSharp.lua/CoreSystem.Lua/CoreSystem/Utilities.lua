@@ -32,7 +32,7 @@ local collectgarbage = collectgarbage
 
 define("System.Environment", {
   Exit = os.exit,
-  getStackTrace = debug.traceback,
+  getStackTrace = System.traceback,
   getTickCount = function ()
     return System.currentTimeMillis() % 2147483648
   end

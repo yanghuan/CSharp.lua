@@ -34,6 +34,7 @@ local tostring = tostring
 local string = string
 local sfind = string.find
 local ssub = string.sub
+local debug = debug
 local global = _G
 local prevSystem = rawget(global, "System")
 
@@ -1289,7 +1290,10 @@ setmetatable(Index, {
   end
 })
 
-debug.setmetatable(nil, {
+local debugsetmetatable = (debug and debug.setmetatable) or emptyFn
+System.debugsetmetatable = debugsetmetatable
+
+debugsetmetatable(nil, {
   __concat = function(a, b)
     if a == nil then
       if b == nil then
@@ -1446,6 +1450,10 @@ function System.init(namelist, conf)
   metadatas = nil
 end
 
+System.config = rawget(global, "CSharpLuaSystemConfig") or {}
+
 return function (config)
-  System.config = config or {}
+  if config then
+    System.config = config 
+  end
 end

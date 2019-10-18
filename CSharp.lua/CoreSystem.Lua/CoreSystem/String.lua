@@ -37,6 +37,7 @@ local gsub = string.gsub
 local table = table
 local tconcat = table.concat
 local unpack = table.unpack
+local getmetatable = getmetatable
 local setmetatable = setmetatable
 local select = select
 local type = type
@@ -709,7 +710,8 @@ String.__genericT__ = System.Char
 String.__inherits__ = inherits
 System.define("System.String", String)
 
-debug.setmetatable("", String)
 local Object = System.Object
 local StringMetaTable = setmetatable({ __index = Object, __call = ctor }, Object)
 setmetatable(String, StringMetaTable)
+setmetatable(getmetatable(""), String)
+

@@ -300,7 +300,7 @@ local Number = define("System.Number", {
   end
 })
 Number.__call = zeroFn
-debug.setmetatable(0, Number)
+System.debugsetmetatable(0, Number)
 
 local function parseDouble(s)
   if s == nil then

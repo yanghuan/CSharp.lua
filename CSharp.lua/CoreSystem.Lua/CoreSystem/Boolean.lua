@@ -106,7 +106,7 @@ local Boolean = System.defStc("System.Boolean", {
     return { System.IComparable, System.IConvertible, System.IComparable_1(T), System.IEquatable_1(T) }
   end
 })
-debug.setmetatable(false, Boolean)
+System.debugsetmetatable(false, Boolean)
 
 local ValueType = System.ValueType
 local boolMetaTable = setmetatable({ __index = ValueType, __call = Boolean.default }, ValueType)

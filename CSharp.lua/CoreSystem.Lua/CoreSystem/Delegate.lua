@@ -177,7 +177,7 @@ Delegate = System.define("System.Delegate", {
 
 local delegateMetaTable = setmetatable({ __index = Object, __call = makeGenericTypes }, Object)
 setmetatable(Delegate, delegateMetaTable)
-debug.setmetatable(System.emptyFn, Delegate)
+System.debugsetmetatable(System.emptyFn, Delegate)
 
 multicast = setmetatable({
   __index = Delegate,
