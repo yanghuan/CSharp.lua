@@ -366,6 +366,7 @@ limitations under the License.
         <method name="ToString" Template="System.toString({this})" />
         <method name="op_Explicit" Template="System.Nullable.Value({0})" />
       </class>
+      <class name="MulticastDelegate" Name="System.Delegate" />
       <class name="Index">
         <property name="End" IsField="true" />
         <property name="Start" IsField="true" />

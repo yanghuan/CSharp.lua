@@ -16,6 +16,7 @@ limitations under the License.
 
 local System = System
 local throw = System.throw
+local debugsetmetatable = System.debugsetmetatable
 local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 local FormatException = System.FormatException
@@ -106,7 +107,9 @@ local Boolean = System.defStc("System.Boolean", {
     return { System.IComparable, System.IConvertible, System.IComparable_1(T), System.IEquatable_1(T) }
   end
 })
-System.debugsetmetatable(false, Boolean)
+if debugsetmetatable then
+  debugsetmetatable(false, Boolean)
+end
 
 local ValueType = System.ValueType
 local boolMetaTable = setmetatable({ __index = ValueType, __call = Boolean.default }, ValueType)

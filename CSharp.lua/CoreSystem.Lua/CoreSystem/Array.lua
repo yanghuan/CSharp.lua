@@ -122,7 +122,7 @@ local function each(t)
 end
 
 function System.isArrayLike(t)
-  return t.GetEnumerator == arrayEnumerator
+  return type(t) == "table" and t.GetEnumerator == arrayEnumerator
 end
 
 function System.isEnumerableLike(t)

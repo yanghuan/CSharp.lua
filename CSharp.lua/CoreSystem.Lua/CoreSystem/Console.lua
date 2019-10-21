@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local System = System
+local toString = System.toString
 
 local io = io
 local stdin = io.stdin
@@ -29,13 +30,9 @@ local Format = string.Format
 
 local function getWriteValue(v, ...)
   if select("#", ...) ~= 0 then
-    v = Format(v, ...)
-  elseif v ~= nil then
-    v = v:ToString()      
-  else
-    v = ""
+    return Format(v, ...)
   end
-  return v
+  return toString(v)
 end
 
 System.define("System.Console", {

@@ -20,6 +20,7 @@ local define = System.defStc
 local equals = System.equals
 local zeroFn = System.zeroFn
 local identityFn = System.identityFn
+local debugsetmetatable = System.debugsetmetatable
 
 local IComparable = System.IComparable
 local IComparable_1 = System.IComparable_1
@@ -31,13 +32,60 @@ local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 local FormatException = System.FormatException
 local OverflowException = System.OverflowException
-local NullReferenceException = System.NullReferenceException
 
 local type = type
 local tonumber = tonumber
 local floor = math.floor
 local setmetatable = setmetatable
 local tostring = tostring
+
+local function hexForamt(x, n)
+  return n == "" and "%" .. x or "%0" .. n .. x
+end
+
+local function floatForamt(x, n)
+  return n == "" and "%.f" or "%." .. n .. 'f'
+end
+
+local function integerFormat(x, n)
+  return n == "" and "%d" or "%0" .. n .. 'd'
+end
+
+local function exponentialFormat(x, n)
+  return n == "" and "%" .. x or "%." .. n .. x
+end
+
+local formats = {
+  ['x'] = hexForamt,
+  ['X'] = hexForamt,
+  ['f'] = floatForamt,
+  ['F'] = floatForamt,
+  ['d'] = integerFormat,
+  ['D'] = integerFormat,
+  ['e'] = exponentialFormat,
+  ['E'] = exponentialFormat
+}
+
+local function toStringWithFormat(this, format)
+  if #format ~= 0 then
+    local i, j, x, n = format:find("^%s*([xXdDfFeE])(%d?)%s*$")
+    if i then
+      local f = formats[x]
+      if f then
+        format = f(x, n)
+      end
+      return format:format(this)
+    end
+  end
+  return tostring(this)
+end
+
+local function toString(this, format)
+  if format then
+    return toStringWithFormat(this, format)
+  end
+  return tostring(this)
+end
 
 local function compareInt(this, v)
   if this < v then return -1 end
@@ -54,6 +102,7 @@ local Int = define("System.Int", {
   default = zeroFn,
   CompareTo = compareInt,
   Equals = equals,
+  ToString = toString,
   GetHashCode = identityFn,
   CompareToObj = function (this, v)
     if v == nil then return 1 end
@@ -213,54 +262,6 @@ local function equalsDouble(this, v)
   return isNaN(this) and isNaN(v)
 end
 
-local function hexForamt(x, n)
-  return n == "" and "%" .. x or "%0" .. n .. x
-end
-
-local function floatForamt(x, n)
-  return n == "" and "%.f" or "%." .. n .. 'f'
-end
-
-local function integerFormat(x, n)
-  return n == "" and "%d" or "%0" .. n .. 'd'
-end
-
-local function exponentialFormat(x, n)
-  return n == "" and "%" .. x or "%." .. n .. x
-end
-
-local formats = {
-  ['x'] = hexForamt,
-  ['X'] = hexForamt,
-  ['f'] = floatForamt,
-  ['F'] = floatForamt,
-  ['d'] = integerFormat,
-  ['D'] = integerFormat,
-  ['e'] = exponentialFormat,
-  ['E'] = exponentialFormat
-}
-
-local function toStringWithFormat(this, format)
-  if #format ~= 0 then
-    local i, j, x, n = format:find("^%s*([xXdDfFeE])(%d?)%s*$")
-    if i then
-      local f = formats[x]
-      if f then
-        format = f(x, n)
-      end
-      return format:format(this)
-    end
-  end
-  return tostring(this)
-end
-
-local function toString(this, format)
-  if format then
-    return toStringWithFormat(this, format)
-  end
-  return tostring(this)
-end
-
 local function equalsObj(this, v)
   if type(v) ~= "number" then
     return false
@@ -305,7 +306,9 @@ local Number = define("System.Number", {
   end
 })
 Number.__call = zeroFn
-System.debugsetmetatable(0, Number)
+if debugsetmetatable then
+  debugsetmetatable(0, Number)
+end
 
 local function parseDouble(s)
   if s == nil then
@@ -360,42 +363,35 @@ local Double = define("System.Double", {
 })
 setmetatable(Double, Number)
 
-function System.concat(obj)
-  if obj == nil then
-    return ""
+if not debugsetmetatable then
+  local NullReferenceException = System.NullReferenceException
+  local toString = System.toString
+
+  function System.ObjectEquals(this, obj)
+    if this == nil then throw(NullReferenceException()) end
+    local t = type(this)
+    if t == "number" then
+      return equalsObj(this, obj)
+    elseif t == "table" then
+      return this:EqualsObj(obj)
+    end
+    return this == obj
   end
-  local t = type(obj) 
-  if t == "table" then
-    return t:ToString()
-  elseif t == "boolean" then
-    return t and "True" or "False"
-  elseif t == "function" then
-    return "System.Delegate"
+
+  function System.ObjectGetHashCode(this)
+    if this == nil then throw(NullReferenceException()) end
+    local t = type(this)
+    if t == "number" then
+      return getHashCode(this)
+    elseif t == "table" then
+      return this:GetHashCode()
+    end
+    return this
   end
-  return tostring(obj)
+
+  function System.ObjectToString(this)
+    if this == nil then throw(NullReferenceException()) end
+    return toString(this)
+  end
 end
-
-function System.ObjectEquals(this, obj)
-  if this == nil then throw(NullReferenceException()) end
-  local t = type(this)
-  if t == "number" then
-    return equalsObj(this, obj)
-  elseif t == "table" then
-    return this:EqualsObj(obj)
-  end
-  return this == obj
-end
-
-function System.ObjectGetHashCode(this)
-  if this == nil then throw(NullReferenceException()) end
-  local t = type(this)
-  if t == "number" then
-    return getHashCode(this)
-  elseif t == "table" then
-    return this:GetHashCode()
-  end
-  return this
-end
-
-
 

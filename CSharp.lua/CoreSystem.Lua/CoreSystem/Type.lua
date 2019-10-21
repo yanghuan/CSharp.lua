@@ -323,17 +323,19 @@ end
 System.typeof = typeof
 System.Object.GetType = getType
 
-function System.ObjectGetType(this)
-  if this == nil then throw(NullReferenceException()) end
-  local t = type(this)
-  if t == "number" then
-    return typeof(Number)
-  elseif t == "boolean" then
-    return typeof(Boolean)
-  elseif t == "function" then
-    return typeof(Delegate)
+if System.debugsetmetatable then
+  function System.ObjectGetType(this)
+    if this == nil then throw(NullReferenceException()) end
+    local t = type(this)
+    if t == "number" then
+      return typeof(Number)
+    elseif t == "boolean" then
+      return typeof(Boolean)
+    elseif t == "function" then
+      return typeof(Delegate)
+    end
+    return getType(this)
   end
-  return getType(this)
 end
 
 local function addCheckInterface(set, cls)

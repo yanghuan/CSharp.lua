@@ -18,6 +18,8 @@ local System = System
 local throw = System.throw
 local emptyFn = System.emptyFn
 local lengthFn = System.lengthFn
+local toString = System.toString
+local debugsetmetatable = System.debugsetmetatable
 local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
@@ -41,7 +43,7 @@ local getmetatable = getmetatable
 local setmetatable = setmetatable
 local select = select
 local type = type
-local String = getmetatable("")
+local String
 
 local function checkIndex(value, startIndex, count)
   if value == nil then throw(ArgumentNullException("value")) end
@@ -138,16 +140,16 @@ local function concat(...)
     local v = ...
     if System.isEnumerableLike(v) then
       for _, v in System.each(v) do
-        t[count] = v ~= nil and v:ToString() or ""
+        t[count] = v ~= nil and toString(v) or ""
         count = count + 1
       end
-    else 
-      return v:ToString()
+    else
+      return v ~= nil and toString(v) or ""
     end
   else
     for i = 1, len do
       local v = select(i, ...)
-      t[count] = v ~= nil and v:ToString() or ""
+      t[count] = v ~= nil and toString(v) or ""
       count = count + 1
     end
   end
@@ -214,7 +216,7 @@ local function formatBuild(format, len, select, ...)
     s = s + 1
     if s > len then throwFormatError() end
     s = select(s, ...)
-    s = (s ~= nil and s ~= System.null) and s:ToString() or ""
+    s = (s ~= nil and s ~= System.null) and toString(s) or ""
     t[count] = s
     count = count + 1
     i = j + 1
@@ -254,7 +256,7 @@ local function joinEnumerable(separator, values)
   local len = 1
   for _, v in System.each(values) do
     if v ~= nil then
-      t[len] = v:ToString()
+      t[len] = toString(v)
       len = len + 1
     end
   end
@@ -274,7 +276,7 @@ local function joinParams(separator, ...)
       for i = 0, #values - 1 do
         local v = values:get(i)
         if v ~= nil then
-          t[len] = v:ToString()
+          t[len] = toString(v)
           len = len + 1
         end
       end
@@ -284,7 +286,7 @@ local function joinParams(separator, ...)
   for i = 1, n do
     local v = select(i, ...)
     if v ~= nil then
-      t[len] = v:ToString()
+      t[len] = toString(v)
       len = len + 1
     end
   end
@@ -706,12 +708,26 @@ string.ToUpperInvariant = upper
 string.Trim = trim
 string.TrimEnd = trimEnd
 string.TrimStart = trimStart
-string.__call = ctor
-string.__index = string
 
-String.__genericT__ = System.Char
-String.__inherits__ = inherits
-System.define("System.String", String)
-String.__index = string
-setmetatable(String, string)
-setmetatable(string, System.Object)
+if debugsetmetatable then
+  String = string
+  String.__genericT__ = System.Char
+  String.__inherits__ = inherits
+  System.define("System.String", String)
+
+  debugsetmetatable("", String)
+  local Object = System.Object
+  local StringMetaTable = setmetatable({ __index = Object, __call = ctor }, Object)
+  setmetatable(String, StringMetaTable)
+else
+  string.__call = ctor
+  string.__index = string
+  
+  String = getmetatable("")
+  String.__genericT__ = System.Char
+  String.__inherits__ = inherits
+  System.define("System.String", String)
+  String.__index = string
+  setmetatable(String, string)
+  setmetatable(string, System.Object)  
+end

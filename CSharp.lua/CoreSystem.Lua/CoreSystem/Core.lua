@@ -1290,50 +1290,64 @@ setmetatable(Index, {
   end
 })
 
-local debugsetmetatable = (debug and debug.setmetatable) or emptyFn
+local debugsetmetatable = debug and debug.setmetatable
 System.debugsetmetatable = debugsetmetatable
 
-debugsetmetatable(nil, {
-  __concat = function(a, b)
-    if a == nil then
-      if b == nil then
-        return ""
+if debugsetmetatable then
+  debugsetmetatable(nil, {
+    __concat = function(a, b)
+      if a == nil then
+        if b == nil then
+          return ""
+        else
+          return b
+        end
       else
+        return a
+      end
+    end,
+    __add = function (a, b)
+      if a == nil then
+        if b == nil or type(b) == "number" then
+          return nil
+        end
         return b
       end
-    else
-      return a
-    end
-  end,
-  __add = function (a, b)
-    if a == nil then
-      if b == nil or type(b) == "number" then
-        return nil
-      end
-      return b
-    end
-    return nil
-  end,
-  __sub = nilFn,
-  __mul = nilFn,
-  __div = nilFn,
-  __mod = nilFn,
-  __unm = nilFn,
-  __lt = falseFn,
-  __le = falseFn,
+      return nil
+    end,
+    __sub = nilFn,
+    __mul = nilFn,
+    __div = nilFn,
+    __mod = nilFn,
+    __unm = nilFn,
+    __lt = falseFn,
+    __le = falseFn,
 
-  -- lua 5.3
-  __idiv = nilFn,
-  __band = nilFn,
-  __bor = nilFn,
-  __bxor = nilFn,
-  __bnot = nilFn,
-  __shl = nilFn,
-  __shr = nilFn,
-})
-
-function System.toString(t)
-  return t ~= nil and t:ToString() or ""
+    -- lua 5.3
+    __idiv = nilFn,
+    __band = nilFn,
+    __bor = nilFn,
+    __bxor = nilFn,
+    __bnot = nilFn,
+    __shl = nilFn,
+    __shr = nilFn,
+  })
+  function System.toString(t)
+    return t ~= nil and t:ToString() or ""
+  end
+else
+  function System.toString(obj)
+    if obj == nil then return "" end
+    local t = type(obj) 
+    if t == "table" then
+      return t:ToString()
+    elseif t == "boolean" then
+      return t and "True" or "False"
+    elseif t == "function" then
+      return "System.Delegate"
+    end
+    return tostring(obj)
+  end
 end
 
 local function pointerAddress(p)

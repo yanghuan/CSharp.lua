@@ -17,6 +17,7 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local Object = System.Object
+local debugsetmetatable = System.debugsetmetatable
 local ArgumentNullException = System.ArgumentNullException
 
 local setmetatable = setmetatable
@@ -177,7 +178,9 @@ Delegate = System.define("System.Delegate", {
 
 local delegateMetaTable = setmetatable({ __index = Object, __call = makeGenericTypes }, Object)
 setmetatable(Delegate, delegateMetaTable)
-System.debugsetmetatable(System.emptyFn, Delegate)
+if debugsetmetatable then
+  debugsetmetatable(System.emptyFn, Delegate)
+end
 
 multicast = setmetatable({
   __index = Delegate,

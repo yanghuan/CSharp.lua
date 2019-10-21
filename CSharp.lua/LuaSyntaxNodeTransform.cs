@@ -3538,7 +3538,7 @@ namespace CSharpLua {
       var original = (LuaExpressionSyntax)expression.Accept(this);
       if (typeInfo.IsStringType()) {
         if (IsPreventDebug && !expression.IsKind(SyntaxKind.AddExpression)) {
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringConcat, original);
+          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
         }
         return original;
       } else if (typeInfo.SpecialType == SpecialType.System_Char) {
@@ -3551,7 +3551,7 @@ namespace CSharpLua {
         }
       } else if (typeInfo.SpecialType >= SpecialType.System_Boolean && typeInfo.SpecialType <= SpecialType.System_Double) {
         if (IsPreventDebug && typeInfo.SpecialType == SpecialType.System_Boolean) {
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringConcat, original);
+          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
         }
         return original;
       } else if (typeInfo.IsEnumType(out var enumTypeSymbol)) {
@@ -3565,9 +3565,6 @@ namespace CSharpLua {
         LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToStr, true);
         return new LuaInvocationExpressionSyntax(memberAccess);
       } else {
-        if (IsPreventDebug) {
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringConcat, original);
-        }
         return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
       }
     }
