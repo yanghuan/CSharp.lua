@@ -1013,37 +1013,152 @@ function System.base(this)
   return getmetatable(getmetatable(this))
 end
 
-local function equalsObj(x, y)
-  if x == y then
-    return true
-  end
-  if x == nil or y == nil then
+local debugsetmetatable = debug and debug.setmetatable
+System.debugsetmetatable = debugsetmetatable
+
+local equalsObj, compareObj
+if debugsetmetatable then
+  equalsObj = function (x, y)
+    if x == y then
+      return true
+    end
+    if x == nil or y == nil then
+      return false
+    end
+    local ix = x.EqualsObj
+    if ix ~= nil then
+      return ix(x, y)
+    end
+    local iy = y.EqualsObj
+    if iy ~= nil then
+      return iy(y, x)
+    end
     return false
   end
-  local ix = x.EqualsObj
-  if ix ~= nil then
-    return ix(x, y)
-  end
-  local iy = y.EqualsObj
-  if iy ~= nil then
-    return iy(y, x)
-  end
-  return false
-end
 
-local function compareObj(a, b)
-  if a == b then return 0 end
-  if a == nil then return -1 end
-  if b == nil then return 1 end
-  local ia = a.CompareToObj
-  if ia ~= nil then
-    return ia(a, b)
+  compareObj = function (a, b)
+    if a == b then return 0 end
+    if a == nil then return -1 end
+    if b == nil then return 1 end
+    local ia = a.CompareToObj
+    if ia ~= nil then
+      return ia(a, b)
+    end
+    local ib = b.CompareToObj
+    if ib ~= nil then
+      return -ib(b, a)
+    end
+    throw(System.ArgumentException("Argument_ImplementIComparable"))
   end
-  local ib = b.CompareToObj
-  if ib ~= nil then
-    return -ib(b, a)
+
+  function System.toString(t)
+    return t ~= nil and t:ToString() or ""
   end
-  throw(System.ArgumentException("Argument_ImplementIComparable"))
+
+  debugsetmetatable(nil, {
+    __concat = function(a, b)
+      if a == nil then
+        if b == nil then
+          return ""
+        else
+          return b
+        end
+      else
+        return a
+      end
+    end,
+    __add = function (a, b)
+      if a == nil then
+        if b == nil or type(b) == "number" then
+          return nil
+        end
+        return b
+      end
+      return nil
+    end,
+    __sub = nilFn,
+    __mul = nilFn,
+    __div = nilFn,
+    __mod = nilFn,
+    __unm = nilFn,
+    __lt = falseFn,
+    __le = falseFn,
+
+    -- lua 5.3
+    __idiv = nilFn,
+    __band = nilFn,
+    __bor = nilFn,
+    __bxor = nilFn,
+    __bnot = nilFn,
+    __shl = nilFn,
+    __shr = nilFn,
+  })
+else
+  equalsObj = function (x, y)
+    if x == y then
+      return true
+    end
+    if x == nil or y == nil then
+      return false
+    end
+    local t = type(x)
+    if t == "table" then
+      local ix = x.EqualsObj
+      if ix ~= nil then
+        return ix(x, y)
+      end
+    end
+    t = type(y)
+    if t == "table" then
+      local iy = y.EqualsObj
+      if iy ~= nil then
+        return iy(y, x)
+      end
+    end
+    return false
+  end
+
+  compareObj = function (a, b)
+    if a == b then return 0 end
+    if a == nil then return -1 end
+    if b == nil then return 1 end
+    local t = type(a)
+    if t == "number" then
+      return System.Number.CompareToObj(a, b)
+    elseif t == "boolean" then
+      return System.Boolean.CompareToObj(a, b)
+    else
+      local ia = a.CompareToObj
+      if ia ~= nil then
+        return ia(a, b)
+      end
+    end
+    t = type(b)
+    if t == "number" then
+      return -System.Number.CompareToObj(b, a)
+    elseif t == "boolean" then
+      return -System.Boolean.CompareToObj(a, b)
+    else
+      local ib = b.CompareToObj
+      if ib ~= nil then
+        return -ib(b, a)
+      end
+    end
+    throw(System.ArgumentException("Argument_ImplementIComparable"))
+  end
+
+  function System.toString(obj)
+    if obj == nil then return "" end
+    local t = type(obj) 
+    if t == "table" then
+      return t:ToString()
+    elseif t == "boolean" then
+      return t and "True" or "False"
+    elseif t == "function" then
+      return "System.Delegate"
+    end
+    return tostring(obj)
+  end
 end
 
 System.equalsObj = equalsObj
@@ -1289,66 +1404,6 @@ setmetatable(Index, {
     return value
   end
 })
-
-local debugsetmetatable = debug and debug.setmetatable
-System.debugsetmetatable = debugsetmetatable
-
-if debugsetmetatable then
-  debugsetmetatable(nil, {
-    __concat = function(a, b)
-      if a == nil then
-        if b == nil then
-          return ""
-        else
-          return b
-        end
-      else
-        return a
-      end
-    end,
-    __add = function (a, b)
-      if a == nil then
-        if b == nil or type(b) == "number" then
-          return nil
-        end
-        return b
-      end
-      return nil
-    end,
-    __sub = nilFn,
-    __mul = nilFn,
-    __div = nilFn,
-    __mod = nilFn,
-    __unm = nilFn,
-    __lt = falseFn,
-    __le = falseFn,
-
-    -- lua 5.3
-    __idiv = nilFn,
-    __band = nilFn,
-    __bor = nilFn,
-    __bxor = nilFn,
-    __bnot = nilFn,
-    __shl = nilFn,
-    __shr = nilFn,
-  })
-  function System.toString(t)
-    return t ~= nil and t:ToString() or ""
-  end
-else
-  function System.toString(obj)
-    if obj == nil then return "" end
-    local t = type(obj) 
-    if t == "table" then
-      return t:ToString()
-    elseif t == "boolean" then
-      return t and "True" or "False"
-    elseif t == "function" then
-      return "System.Delegate"
-    end
-    return tostring(obj)
-  end
-end
 
 local function pointerAddress(p)
   local address = p[3]

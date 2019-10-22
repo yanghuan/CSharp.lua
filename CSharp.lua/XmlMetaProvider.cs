@@ -632,7 +632,7 @@ namespace CSharpLua {
     private bool IsNullableEnumToString(IMethodSymbol symbol, out string template) {
       var type = symbol.ContainingType;
       if (type != null && type.IsNullableType(out var elemetType) && elemetType.TypeKind == TypeKind.Enum && symbol.Name == "ToString") {
-        template = "System.ToEnumString({this}, {class})";
+        template = "System.EnumToString({this}, {class})";
         return true;
       }
       template = null;

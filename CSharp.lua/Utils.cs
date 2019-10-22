@@ -390,6 +390,14 @@ namespace CSharpLua {
       return type.Name == "Index" && type.ContainingNamespace.Name == "System";
     }
 
+    public static bool IsSystemIComparableT(this INamedTypeSymbol type) {
+      return type.Name == "IComparable" && type.ContainingNamespace.Name == "System" && type.IsGenericType;
+    }
+
+    public static bool IsSystemIEquatableT(this INamedTypeSymbol type) {
+      return type.Name == "IEquatable" && type.ContainingNamespace.Name == "System" && type.IsGenericType;
+    }
+
     public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
       if (!symbol.IsStatic) {
         var type = symbol.ContainingType;

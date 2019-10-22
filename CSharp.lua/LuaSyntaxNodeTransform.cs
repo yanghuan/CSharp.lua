@@ -1939,10 +1939,6 @@ namespace CSharpLua {
       return arguments;
     }
 
-    private bool IsPreventDebugObject(INamedTypeSymbol symbol) {
-      return IsPreventDebug && symbol.IsBasicType();
-    }
-
     private LuaInvocationExpressionSyntax CheckInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node, LuaExpressionSyntax expression) {
       LuaInvocationExpressionSyntax invocation;
       if (symbol != null && symbol.IsExtensionMethod) {
@@ -1964,12 +1960,18 @@ namespace CSharpLua {
             invocation = new LuaInvocationExpressionSyntax(memberAccess.Name);
             invocation.AddArgument(memberAccess.Expression);
           } else {
-            if (memberAccess.IsObjectColon && IsPreventDebugObject(symbol.ContainingType)) {
-              var typeName = GetTypeName(symbol.ContainingType);
-              invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(typeName, memberAccess.Name));
-              invocation.AddArgument(memberAccess.Expression);
-            } else {
-              invocation = new LuaInvocationExpressionSyntax(memberAccess);
+            invocation = new LuaInvocationExpressionSyntax(memberAccess);
+            if (IsPreventDebug && !symbol.IsStatic) {
+              var containingType = symbol.ContainingType;
+              if (containingType.IsBasicType()) {
+                var typeName = GetTypeName(symbol.ContainingType);
+                invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(typeName, memberAccess.Name));
+                invocation.AddArgument(memberAccess.Expression);
+              } else if (containingType.SpecialType == SpecialType.System_Object || containingType.IsSystemIComparableT() || containingType.IsSystemIEquatableT()) {
+                var methodMemberAccess = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, new LuaCodeTemplateExpressionSyntax(symbol.ContainingType.Name, memberAccess.Name));
+                invocation = new LuaInvocationExpressionSyntax(methodMemberAccess);
+                invocation.AddArgument(memberAccess.Expression);
+              }
             }
           }
         } else {
@@ -2008,13 +2010,6 @@ namespace CSharpLua {
       var expression = (LuaExpressionSyntax)node.Expression.Accept(this);
       var invocation = CheckInvocationExpression(symbol, node, expression);
       invocation.AddArguments(arguments);
-
-      if (IsPreventDebug && !symbol.IsStatic && symbol.ContainingType.SpecialType == SpecialType.System_Object) {
-        var memberAccess = (LuaMemberAccessExpressionSyntax)expression;
-        var newMemberAccess = new LuaCodeTemplateExpressionSyntax(new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, symbol.ContainingType.Name), symbol.Name);
-        return new LuaInvocationExpressionSyntax(newMemberAccess, memberAccess.Expression.ArrayOf().Concat(arguments));
-      }
-
       LuaExpressionSyntax resultExpression = invocation;
       if (symbol != null && symbol.HasAggressiveInliningAttribute()) {
         if (InliningInvocationExpression(node, symbol, invocation, out var inlineExpression)) {
@@ -3525,10 +3520,10 @@ namespace CSharpLua {
       AddExportEnum(typeInfo);
       LuaIdentifierNameSyntax typeName = GetTypeShortName(typeInfo);
       if (IsPreventDebug) {
-        var method = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.ToEnumString);
-        return new LuaInvocationExpressionSyntax(method, original);
+        var method = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.EnumToString);
+        return new LuaInvocationExpressionSyntax(method, original, typeName);
       } else {
-        LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.ToEnumString, true);
+        LuaMemberAccessExpressionSyntax memberAccess = new LuaMemberAccessExpressionSyntax(original, LuaIdentifierNameSyntax.EnumToString, true);
         return new LuaInvocationExpressionSyntax(memberAccess, typeName);
       }
     }

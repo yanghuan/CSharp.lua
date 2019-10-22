@@ -14,12 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --]]
 
+local io = io
+if not io then
+  return
+end
+
 local System = System
 local define = System.define
 local throw = System.throw
 local each = System.each
 
-local io = io
 local open = io.open
 local remove = os.remove
 

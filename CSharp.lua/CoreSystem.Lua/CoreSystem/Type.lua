@@ -323,21 +323,6 @@ end
 System.typeof = typeof
 System.Object.GetType = getType
 
-if System.debugsetmetatable then
-  function System.ObjectGetType(this)
-    if this == nil then throw(NullReferenceException()) end
-    local t = type(this)
-    if t == "number" then
-      return typeof(Number)
-    elseif t == "boolean" then
-      return typeof(Boolean)
-    elseif t == "function" then
-      return typeof(Delegate)
-    end
-    return getType(this)
-  end
-end
-
 local function addCheckInterface(set, cls)
   local interface = cls.interface
   if interface then
@@ -409,8 +394,33 @@ checks[Number] = function (obj, T)
   return check(obj, T)
 end
 
-local function is(obj, T)
-  return checks[getmetatable(obj)](obj, T)
+local is
+
+if System.debugsetmetatable then
+  is = function (obj, T)
+    return checks[getmetatable(obj)](obj, T)
+  end
+else
+  local function getBase(obj)
+    local t = type(obj)
+    if t == "number" then
+      return Number
+    elseif t == "boolean" then
+      return Boolean
+    elseif t == "function" then
+      return Delegate
+    end
+    return getmetatable(obj)
+  end
+
+  function System.ObjectGetType(this)
+    if this == nil then throw(NullReferenceException()) end
+    return typeof(getBase(this))
+  end
+
+  is = function (obj, T)
+    return checks[getBase(obj)](obj, T)
+  end
 end
 
 System.is = is

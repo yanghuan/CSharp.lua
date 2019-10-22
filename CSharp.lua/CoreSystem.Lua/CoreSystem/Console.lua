@@ -17,11 +17,7 @@ limitations under the License.
 local System = System
 local toString = System.toString
 
-local io = io
-local stdin = io.stdin
-local stdout = io.stdout
-local read = stdin.read
-local write = stdout.write
+local print = print
 local select = select
 local string = string
 local byte = string.byte
@@ -35,24 +31,36 @@ local function getWriteValue(v, ...)
   return toString(v)
 end
 
-System.define("System.Console", {
-  Read = function ()
-    local ch = read(stdin, 1)
-    return byte(ch)
-  end,
-  ReadLine = function ()
-    return read(stdin)
-  end,
-  Write = function (v, ...)
-    write(stdout, getWriteValue(v, ...))     
-  end,
-  WriteChar = function (v)
-    write(stdout, char(v))     
-  end,
+local Console = System.define("System.Console", {
   WriteLine = function (v, ...)
-    write(stdout, getWriteValue(v, ...), "\n")     
+    print(getWriteValue(v, ...))     
   end,
   WriteLineChar = function (v)
-    write(stdout, char(v), "\n")     
+    print(char(v))     
   end
 })
+
+local io = io
+if io then
+  local stdin = io.stdin
+  local stdout = io.stdout
+  local read = stdin.read
+  local write = stdout.write
+
+  function Console.Read()
+    local ch = read(stdin, 1)
+    return byte(ch)
+  end
+
+  function Console.ReadLine()
+     return read(stdin)
+  end
+
+  function Console.Write(v, ...)
+    write(stdout, getWriteValue(v, ...))
+  end
+
+  function Console.WriteChar(v)
+     write(stdout, char(v))
+  end
+end

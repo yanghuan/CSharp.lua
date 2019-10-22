@@ -25,6 +25,7 @@ local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local NotSupportedException = System.NotSupportedException
 
+local assert = assert
 local type = type
 local setmetatable = setmetatable
 local coroutine = coroutine
@@ -32,6 +33,8 @@ local ccreate = coroutine.create
 local cresume = coroutine.resume
 local cstatus = coroutine.status
 local cyield = coroutine.yield
+
+local mainThread
 
 local ThreadStateException = define("System.ThreadStateException", {
   __tostring = Exception.ToString,
@@ -188,5 +191,5 @@ local Thread =  define("System.Thread", {
   end,
 })
 
-local mainThread = setmetatable({ id = getThreadId() }, Thread)
+mainThread = setmetatable({ id = getThreadId() }, Thread)
 currentThread = mainThread

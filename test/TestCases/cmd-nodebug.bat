@@ -26,18 +26,3 @@ if not %errorlevel%==0 (
 if not %errorlevel%==0 (
   goto:Fail 
 )
-
-echo **********************************************
-echo ********  test with -inline-property  ********
-echo **********************************************
-
-call cmd-inline-property
-if not %errorlevel%==0 (
-  goto:Fail 
-)
-
-:Fail
-if not %errorlevel%==0 (
-  pause
-  exit -1
-)

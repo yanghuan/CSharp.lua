@@ -114,6 +114,11 @@ Comparer = define("System.Comparer_1", function (T)
   local Compare
   local compareTo = T.CompareTo
   if compareTo then
+    if T.class ~= 'S' then
+      compareTo = function (x, y)
+        return x:CompareTo(y)
+      end
+    end
     Compare = function (this, x, y)
       if x ~= nil then
         if y ~= nil then 

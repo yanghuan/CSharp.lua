@@ -367,7 +367,7 @@ if not debugsetmetatable then
   local NullReferenceException = System.NullReferenceException
   local toString = System.toString
 
-  function System.ObjectEquals(this, obj)
+  function System.ObjectEqualsObj(this, obj)
     if this == nil then throw(NullReferenceException()) end
     local t = type(this)
     if t == "number" then
@@ -392,6 +392,28 @@ if not debugsetmetatable then
   function System.ObjectToString(this)
     if this == nil then throw(NullReferenceException()) end
     return toString(this)
+  end
+
+  function System.IComparableCompareTo(this, other)
+    if this == nil then throw(NullReferenceException()) end
+    local t = type(this)
+    if t == "number" then
+      return compareDouble(this, other)
+    elseif t == "boolean" then
+      return System.Boolean.CompareTo(this, other)
+    end
+    return this:CompareTo(other)
+  end
+
+  function System.IEquatableEquals(this, other)
+    if this == nil then throw(NullReferenceException()) end
+    local t = type(this)
+    if t == "number" then
+      return equalsDouble(this, other)
+    elseif t == "boolean" then
+      return System.Boolean.Equals(this, other)
+    end
+    return this:CompareTo(other)
   end
 end
 
