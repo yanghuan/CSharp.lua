@@ -62,10 +62,9 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax EnumToString = "EnumToString";
     public static readonly LuaIdentifierNameSyntax DelegateMake = "System.fn";
     public static readonly LuaIdentifierNameSyntax DelegateBind = "System.bind";
-    public static readonly LuaIdentifierNameSyntax DelegateCombine = "System.Delegate.Combine";
-    public static readonly LuaIdentifierNameSyntax DelegateRemove = "System.Delegate.Remove";
+    public static readonly LuaIdentifierNameSyntax DelegateCombine = "System.DelegateCombine";
+    public static readonly LuaIdentifierNameSyntax DelegateRemove = "System.DelegateRemove";
     public static readonly LuaIdentifierNameSyntax IntegerDiv = "System.div";
-    public static readonly LuaIdentifierNameSyntax IntegerDivOfNull = "System.divOfNull";
     public static readonly LuaIdentifierNameSyntax IntegerMod = "System.mod";
     public static readonly LuaIdentifierNameSyntax BitNot = "System.bnot";
     public static readonly LuaIdentifierNameSyntax BitNotOfNull = "System.bnotOfNull";
@@ -79,6 +78,8 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax ShiftRightOfNull = "System.srOfNull";
     public static readonly LuaIdentifierNameSyntax ShiftLeft = "System.sl";
     public static readonly LuaIdentifierNameSyntax ShiftLeftOfNull = "System.slOfNull";
+    public static readonly LuaIdentifierNameSyntax AddOfNull = "System.addOfNull";
+    public static readonly LuaIdentifierNameSyntax SubOfNull = "System.subOfNull";
     public static readonly LuaIdentifierNameSyntax BoolOrOfNull = "System.orOfNull";
     public static readonly LuaIdentifierNameSyntax BoolAndOfNull = "System.andOfNull";
     public static readonly LuaIdentifierNameSyntax BoolXorOfNull = "System.xorOfBoolNull";

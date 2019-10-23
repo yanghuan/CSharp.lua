@@ -22,6 +22,7 @@ local trunc = System.trunc
 local define = System.define
 local identityFn = System.identityFn
 local IConvertible = System.IConvertible
+local systemToString = System.toString
 
 local OverflowException = System.OverflowException
 local FormatException = System.FormatException
@@ -368,7 +369,7 @@ local function toString(value, toBaseOrProvider, cast)
       elseif toBaseOrProvider == 8 then
         return ("%o"):format(value)
       elseif toBaseOrProvider == 10 then
-        return value:ToString()
+        return value .. ""
       elseif toBaseOrProvider == 16 then
         return ("%x"):format(value)
       else
@@ -376,7 +377,7 @@ local function toString(value, toBaseOrProvider, cast)
       end
     end
   end
-  return value:ToString()
+  return systemToString(value)
 end
 
 define("System.Convert", {

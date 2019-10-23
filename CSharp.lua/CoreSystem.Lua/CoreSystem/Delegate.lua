@@ -180,6 +180,9 @@ local delegateMetaTable = setmetatable({ __index = Object, __call = makeGenericT
 setmetatable(Delegate, delegateMetaTable)
 if debugsetmetatable then
   debugsetmetatable(System.emptyFn, Delegate)
+else
+  System.DelegateCombine = combine
+  System.DelegateRemove = remove
 end
 
 multicast = setmetatable({
@@ -196,7 +199,7 @@ multicast = setmetatable({
   __eq = function (fn1, fn2)
     local len1, len2 = #fn1, #fn2
     if len1 ~= len2 then
-      return false         
+      return false
     end
     for i = 1, len1 do
       if fn1[i] ~= fn2[i] then

@@ -419,7 +419,11 @@ else
   end
 
   is = function (obj, T)
-    return checks[getBase(obj)](obj, T)
+    local base = getBase(obj)
+    if base then
+      return checks[base](obj, T)
+    end
+    return false
   end
 end
 

@@ -1179,6 +1179,10 @@ namespace CSharpLua {
       }
     }
 
+    public static LuaExpressionSyntax WithNullable(this LuaExpressionSyntax expression) {
+      return new LuaCodeTemplateExpressionSyntax(expression, "OfNull");
+    }
+
     #region hard code for protobuf-net
 
     public static bool IsProtobufNetDeclaration(this INamedTypeSymbol type) {

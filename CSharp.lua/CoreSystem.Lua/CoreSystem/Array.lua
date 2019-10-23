@@ -337,11 +337,15 @@ end
 local function getComp(t, comparer)
   local compare
   if comparer then
-    local Compare = comparer.Compare
-    if Compare then
-      compare = function (x, y) return Compare(comparer, x, y) end
-    else
+    if type(comparer) == "function" then
       compare = comparer
+    else
+      local Compare = comparer.Compare
+      if Compare then
+        compare = function (x, y) return Compare(comparer, x, y) end
+      else
+        compare = comparer
+      end
     end
   else
     comparer = Comparer_1(t.__genericT__).getDefault()

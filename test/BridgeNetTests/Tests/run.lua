@@ -1,4 +1,10 @@
-require("strict")
+local traceback
+if arg[1] == "nodebug" then
+  traceback = debug.traceback 
+  debug = nil
+else
+  require("strict")
+end
 
 package.path = package.path .. ";../../../CSharp.lua/Coresystem.lua/?.lua"
 package.path = package.path .. ";../?.lua"
@@ -10,6 +16,7 @@ local now = 0
 local timeoutQueue
 
 local conf = {
+  traceback = traceback,
   setTimeout = function (f, delay)
     if not timeoutQueue then
       timeoutQueue = System.TimeoutQueue()

@@ -1332,8 +1332,16 @@ namespace CSharpLua {
       }
     }
 
+    private T Accept<T>(CSharpSyntaxNode node) where T : LuaSyntaxNode {
+      return (T)node.Accept(this);
+    }
+
+    private LuaExpressionSyntax Accept(ExpressionSyntax node) {
+      return Accept<LuaExpressionSyntax>(node);
+    }
+
     private LuaExpressionSyntax VisitExpression(ExpressionSyntax node) {
-      var luaExpression = (LuaExpressionSyntax)node.Accept(this);
+      var luaExpression = Accept(node);
       CheckConversion(node, ref luaExpression);
       return luaExpression;
     }

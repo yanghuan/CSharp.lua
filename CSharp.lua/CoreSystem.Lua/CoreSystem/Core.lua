@@ -444,6 +444,9 @@ if prevSystem then
 end
 global.System = System
 
+local debugsetmetatable = debug and debug.setmetatable
+System.debugsetmetatable = debugsetmetatable
+
 local _, _, version = sfind(_VERSION, "^Lua (.*)$")
 version = tonumber(version)
 System.luaVersion = version
@@ -521,9 +524,7 @@ if version < 5.3 then
   end
 
   function System.divOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
+    if x == nil or y == nil then return nil end
     if y == 0 then throw(System.DivideByZeroException(), 1) end
     return trunc(x / y)
   end
@@ -535,6 +536,18 @@ if version < 5.3 then
       return v - y
     end
     return v
+  end
+
+  if debugsetmetatable then
+    function System.modOfNull(x, y)
+      if x == nil or y == nil then return nil end
+      if y == 0 then throw(System.DivideByZeroException(), 1) end
+      local v = x % y
+      if v ~= 0 and x * y < 0 then
+        return v - y
+      end
+      return v
+    end
   end
 
   function System.toUInt(v, max, mask, checked)
@@ -719,6 +732,7 @@ else
   local System = System
   local throw = System.throw
   local trunc = System.trunc
+  local debugsetmetatable = System.debugsetmetatable
   
   function System.bnot(x) return ~x end 
   function System.band(x, y) return x & y end
@@ -727,7 +741,7 @@ else
   function System.sl(x, y) return x << y end
   function System.sr(x, y) return x >> y end
   function System.div(x, y) if x ~ y < 0 then return -(-x // y) end return x // y end
-  
+
   function System.mod(x, y)
     local v = x % y
     if v ~= 0 and 1.0 * x * y < 0 then
@@ -735,7 +749,28 @@ else
     end
     return v
   end
-  
+
+  if not debugsetmetatable then
+    function System.bnotOfNull(x) if x == nil then return nil end return ~x end 
+    function System.bandOfNull(x, y) if x == nil or y == nil then return nil end return x & y end
+    function System.borOfNull(x, y) if x == nil or y == nil then return nil end return x | y end
+    function System.xorOfNull(x, y) if x == nil or y == nil then return nil end return x ~ y end
+    function System.slOfNull(x, y) if x == nil or y == nil then return nil end return x << y end
+    function System.srOfNull(x, y) if x == nil or y == nil then return nil end return x >> y end
+    function System.divOfNull(x, y) if x == nil or y == nil then return nil end if x ~ y < 0 then return -(-x // y) end return x // y end
+
+    function System.modOfNull(x, y)
+      if x == nil or y == nil then
+        return nil
+      end
+      local v = x % y
+      if v ~= 0 and 1.0 * x * y < 0 then
+        return v - y
+      end
+      return v
+    end
+  end
+
   local function toUInt (v, max, mask, checked)  
     if v >= 0 and v <= max then
       return v
@@ -1013,9 +1048,6 @@ function System.base(this)
   return getmetatable(getmetatable(this))
 end
 
-local debugsetmetatable = debug and debug.setmetatable
-System.debugsetmetatable = debugsetmetatable
-
 local equalsObj, compareObj
 if debugsetmetatable then
   equalsObj = function (x, y)
@@ -1151,13 +1183,27 @@ else
     if obj == nil then return "" end
     local t = type(obj) 
     if t == "table" then
-      return t:ToString()
+      return obj:ToString()
     elseif t == "boolean" then
-      return t and "True" or "False"
+      return obj and "True" or "False"
     elseif t == "function" then
       return "System.Delegate"
     end
     return tostring(obj)
+  end
+
+  function System.addOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x + y
+  end
+
+  function System.subOfNull(x, y)
+    if x == nil or y == nil then
+      return nil
+    end
+    return x - y
   end
 end
 
@@ -1360,7 +1406,10 @@ local Nullable = {
     return this:GetHashCode()
   end,
   clone = function (t)
-    return t and t:__clone__()
+    if type(t) == "table" then
+      return t:__clone__()
+    end
+    return t
   end
 }
 

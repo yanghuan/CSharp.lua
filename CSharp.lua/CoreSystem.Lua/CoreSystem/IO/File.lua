@@ -15,9 +15,7 @@ limitations under the License.
 --]]
 
 local io = io
-if not io then
-  return
-end
+if io then
 
 local System = System
 local define = System.define
@@ -101,3 +99,5 @@ define("System.IO.File", {
     end
   end
 })
+
+end

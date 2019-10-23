@@ -16,7 +16,6 @@ echo ***********  test with jit         ***********
 echo **********************************************
 
 set version=LuaJIT-2.0.2
-set lua=../__bin/%version%/lua
 
 dotnet "%dir%CSharp.lua.Launcher.dll" -l "Bridge/Bridge.dll" -m "Bridge/Bridge.xml" -s src -d out -a "TestCase" -metadata -c -p
 if not %errorlevel%==0 (

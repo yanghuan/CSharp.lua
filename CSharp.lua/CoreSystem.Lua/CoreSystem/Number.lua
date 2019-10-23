@@ -413,7 +413,7 @@ if not debugsetmetatable then
     elseif t == "boolean" then
       return System.Boolean.Equals(this, other)
     end
-    return this:CompareTo(other)
+    return this:Equals(other)
   end
 end
 
