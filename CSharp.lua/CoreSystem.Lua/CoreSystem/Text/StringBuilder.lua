@@ -17,6 +17,7 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local clear = System.Array.clear
+local toString = System.toString
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException = System.ArgumentOutOfRangeException
 local IndexOutOfRangeException = System.IndexOutOfRangeException
@@ -132,7 +133,7 @@ local StringBuilder = System.define("System.Text.StringBuilder", {
   Append = function (this, value, startIndex, count)
     if not startIndex then
       if value ~= nil then
-        value = value:ToString()
+        value = toString(value)
         if value ~= nil then
           this[#this + 1] = value
           this.Length =  this.Length + #value
@@ -190,19 +191,19 @@ local StringBuilder = System.define("System.Text.StringBuilder", {
     return this
   end,
   Insert = function (this, index, value)
-    local length = this.length
+    local length = this.Length
     if value ~= nil then
       if index == length then
         this:Append(value)
       else
-        value = value:ToString()
+        value = toString(value)
         if value ~= nil then
           local i, s, j = getItemIndex(this, index)
           if not i then
             throw(ArgumentOutOfRangeException("index"))
           end
           this[i] = ssub(s, 1, j - 1) .. value .. ssub(s, j)
-          this.length = length +  #value
+          this.Length = length + #value
         end
       end
     end

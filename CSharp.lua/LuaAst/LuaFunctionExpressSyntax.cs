@@ -21,6 +21,16 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
+  public sealed class LuaParameterListSyntax : LuaSyntaxNode {
+    public string OpenParenToken => Tokens.OpenParentheses;
+    public string CloseParenToken => Tokens.CloseParentheses;
+    public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Parameters = new LuaSyntaxList<LuaIdentifierNameSyntax>();
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(this);
+    }
+  }
+
   public class LuaFunctionExpressionSyntax : LuaExpressionSyntax {
     public readonly LuaParameterListSyntax ParameterList = new LuaParameterListSyntax();
     public string FunctionKeyword => Tokens.Function;
@@ -31,16 +41,12 @@ namespace CSharpLua.LuaAst {
       CloseToken = Tokens.End,
     };
 
-    public void AddParameter(LuaParameterSyntax parameter) {
+    public void AddParameter(LuaIdentifierNameSyntax parameter) {
       ParameterList.Parameters.Add(parameter);
     }
 
-    public void AddParameters(IEnumerable<LuaParameterSyntax> parameters) {
+    public void AddParameters(IEnumerable<LuaIdentifierNameSyntax> parameters) {
       ParameterList.Parameters.AddRange(parameters);
-    }
-
-    public void AddParameter(LuaIdentifierNameSyntax identifier) {
-      AddParameter(new LuaParameterSyntax(identifier));
     }
 
     public void AddStatement(LuaStatementSyntax statement) {

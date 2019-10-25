@@ -42,8 +42,8 @@ namespace Bridge.ClientTest.Linq
                             select p.City[0];
             var uniqueFirstChars = nameChars.Union(cityChars).ToArray();
 
-            Assert.AreDeepEqual(new[] { (int)'F', (int)'Z', (int)'J', (int)'B', (int)'D', (int)'I', (int)'M', (int)'N',
-                                                        (int)'E', (int)'T', (int)'L', (int)'P', (int)'R', (int)'O' }, uniqueFirstChars,
+            Assert.AreDeepEqual(new[] { 'F', 'Z', 'J', 'B', 'D', 'I', 'M', 'N',
+                                                        'E', 'T', 'L', 'P', 'R', 'O' }, uniqueFirstChars,
                 "Union to get unique first letters of Name and City");
 
             // TEST
@@ -57,7 +57,7 @@ namespace Bridge.ClientTest.Linq
                         select p.City[0];
 
             var commonFirstChars = nameChars.Intersect(cityChars).ToArray();
-            Assert.AreDeepEqual(new[] { (int)'B', (int)'D' }, commonFirstChars, "Intersect() to get common first letters of Name and City");
+            Assert.AreDeepEqual(new[] { 'B', 'D' }, commonFirstChars, "Intersect() to get common first letters of Name and City");
 
             // TEST
             var exceptNumbersCD = numbersA.Except(numbersB).ToArray();
@@ -66,7 +66,7 @@ namespace Bridge.ClientTest.Linq
 
             // TEST
             var exceptFirstChars = nameChars.Except(cityChars).ToArray();
-            Assert.AreDeepEqual(new[] { (int)'F', (int)'Z', (int)'J', (int)'I', (int)'M', (int)'N' }, exceptFirstChars,
+            Assert.AreDeepEqual(new[] { 'F', 'Z', 'J', 'I', 'M', 'N' }, exceptFirstChars,
                 "Except() to get letters from Name sequence and does not contain City letters");
         }
     }

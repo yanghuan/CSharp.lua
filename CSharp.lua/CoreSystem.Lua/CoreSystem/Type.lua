@@ -394,14 +394,20 @@ checks[Number] = function (obj, T)
   return check(obj, T)
 end
 
-local is
+local is, getName
 
 if System.debugsetmetatable then
   is = function (obj, T)
     return checks[getmetatable(obj)](obj, T)
   end
+
+  getName = function (obj)
+    return obj.__name__
+  end
+
+  System.getClassFromObj = getmetatable
 else
-  local function getBase(obj)
+  local function getClassFromObj(obj)
     local t = type(obj)
     if t == "number" then
       return Number
@@ -415,16 +421,22 @@ else
 
   function System.ObjectGetType(this)
     if this == nil then throw(NullReferenceException()) end
-    return typeof(getBase(this))
+    return typeof(getClassFromObj(this))
   end
 
   is = function (obj, T)
-    local base = getBase(obj)
+    local base = getClassFromObj(obj)
     if base then
       return checks[base](obj, T)
     end
     return false
   end
+
+  getName = function (obj)
+    return getClassFromObj(obj).__name__
+  end
+
+  System.getClassFromObj = getClassFromObj
 end
 
 System.is = is
@@ -441,7 +453,7 @@ local function cast(cls, obj, nullable)
     if is(obj, cls) then
       return obj
     end
-    throw(InvalidCastException(("Unable to cast object of type '%s' to type '%s'."):format(obj.__name__, cls.__name__)), 1)
+    throw(InvalidCastException(("Unable to cast object of type '%s' to type '%s'."):format(getName(obj), cls.__name__)), 1)
   else
     if cls.class ~= "S" or nullable then
       return nil

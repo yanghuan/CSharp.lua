@@ -175,7 +175,7 @@ namespace Bridge.ClientTest
             public void CloneWorks()
             {
                 var arr = new[] { "x", "y" };
-                var arr2 = arr.Clone();
+                var arr2 = (string[])arr.Clone();
                 Assert.False(arr == arr2);
                 Assert.AreDeepEqual(arr2, arr);
             }
@@ -290,7 +290,7 @@ namespace Bridge.ClientTest
             public void ReverseWorks()
             {
                 var arr = new[] { 1, 3, 4, 1, 3, 2 };
-                arr.Reverse();
+                Array.Reverse(arr);
                 Assert.AreDeepEqual(new[] { 2, 3, 1, 4, 3, 1 }, arr);
             }
 

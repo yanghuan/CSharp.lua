@@ -140,6 +140,9 @@ local function parseNumberFromBase(value, fromBase, min, max)
       v = "0x" .. v
     end
     value = tonumber(v)
+    if value == nil then
+      throw(FormatException())
+    end
   else
     throw(ArgumentException("fromBase")) 
   end
@@ -754,13 +757,13 @@ end
 local function doubleToInt64Bits(value)
   assert(isLittleEndian, "This method is implemented assuming little endian with an ambiguous spec.")
   local s = spack("d", value)
-  return sunpack("i8", s)
+  return (sunpack("i8", s))
 end
 
 local function int64BitsToDouble(value)
   assert(isLittleEndian, "This method is implemented assuming little endian with an ambiguous spec.")
   local s = spack("i8", value)
-  return sunpack("d", s)
+  return (sunpack("d", s))
 end
 
 define("System.BitConverter", {

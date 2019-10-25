@@ -41,7 +41,6 @@ local select = select
 
 local tremove = table.remove
 local setmetatable = setmetatable
-local getmetatable = getmetatable
 local assert = assert
 local coroutine = coroutine
 local ccreate = coroutine.create
@@ -456,7 +455,7 @@ Task = define("System.Threading.Tasks.Task", {
         elseif cancelled then
           trySetCanceled(t)
         else
-          trySetResult(arrayFromTable(result, getmetatable(result[1])))
+          trySetResult(arrayFromTable(result, System.getClassFromObj(result[1])))
         end
       end
     end

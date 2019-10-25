@@ -475,61 +475,13 @@ if version < 5.3 then
   System.xor = xor
   System.sl = sl
   System.sr = sr
-  
-  function System.bnotOfNull(x)
-    if x == nil then
-      return nil
-    end
-    return bnot(x)
-  end
-
-  function System.bandOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return band(x, y)
-  end
-
-  function System.borOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return bor(x, y)
-  end
-
-  function System.xorOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return xor(x, y)
-  end
-
-  function System.slOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return sl(x, y)
-  end
-
-  function System.srOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return sr(x, y)
-  end
 
   function System.div(x, y) 
     if y == 0 then throw(System.DivideByZeroException(), 1) end
     return trunc(x / y)
   end
 
-  function System.divOfNull(x, y)
-    if x == nil or y == nil then return nil end
-    if y == 0 then throw(System.DivideByZeroException(), 1) end
-    return trunc(x / y)
-  end
-
-  function System.mod(x, y) 
+  function System.mod(x, y)
     if y == 0 then throw(System.DivideByZeroException(), 1) end
     local v = x % y
     if v ~= 0 and x * y < 0 then
@@ -537,17 +489,13 @@ if version < 5.3 then
     end
     return v
   end
-
-  if debugsetmetatable then
-    function System.modOfNull(x, y)
-      if x == nil or y == nil then return nil end
-      if y == 0 then throw(System.DivideByZeroException(), 1) end
-      local v = x % y
-      if v ~= 0 and x * y < 0 then
-        return v - y
-      end
-      return v
+  
+  function System.modf(x, y)
+    local v = x % y
+    if v ~= 0 and x * y < 0 then
+      return v - y
     end
+    return v
   end
 
   function System.toUInt(v, max, mask, checked)
@@ -732,7 +680,6 @@ else
   local System = System
   local throw = System.throw
   local trunc = System.trunc
-  local debugsetmetatable = System.debugsetmetatable
   
   function System.bnot(x) return ~x end 
   function System.band(x, y) return x & y end
@@ -748,27 +695,6 @@ else
       return v - y
     end
     return v
-  end
-
-  if not debugsetmetatable then
-    function System.bnotOfNull(x) if x == nil then return nil end return ~x end 
-    function System.bandOfNull(x, y) if x == nil or y == nil then return nil end return x & y end
-    function System.borOfNull(x, y) if x == nil or y == nil then return nil end return x | y end
-    function System.xorOfNull(x, y) if x == nil or y == nil then return nil end return x ~ y end
-    function System.slOfNull(x, y) if x == nil or y == nil then return nil end return x << y end
-    function System.srOfNull(x, y) if x == nil or y == nil then return nil end return x >> y end
-    function System.divOfNull(x, y) if x == nil or y == nil then return nil end if x ~ y < 0 then return -(-x // y) end return x // y end
-
-    function System.modOfNull(x, y)
-      if x == nil or y == nil then
-        return nil
-      end
-      local v = x % y
-      if v ~= 0 and 1.0 * x * y < 0 then
-        return v - y
-      end
-      return v
-    end
   end
 
   local function toUInt (v, max, mask, checked)  
@@ -1139,6 +1065,8 @@ else
       if ix ~= nil then
         return ix(x, y)
       end
+    elseif t == "number" then
+      return System.Number.EqualsObj(x, y)
     end
     t = type(y)
     if t == "table" then
@@ -1190,20 +1118,6 @@ else
       return "System.Delegate"
     end
     return tostring(obj)
-  end
-
-  function System.addOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x + y
-  end
-
-  function System.subOfNull(x, y)
-    if x == nil or y == nil then
-      return nil
-    end
-    return x - y
   end
 end
 
@@ -1403,7 +1317,10 @@ local Nullable = {
     if this == nil then
       return 0
     end
-    return this:GetHashCode()
+    if type(this) == "table" then
+      return this:GetHashCode()
+    end
+    return this
   end,
   clone = function (t)
     if type(t) == "table" then

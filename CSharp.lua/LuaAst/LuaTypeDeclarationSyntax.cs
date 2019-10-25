@@ -51,7 +51,7 @@ namespace CSharpLua.LuaAst {
     private readonly List<LuaStatementSyntax> initStatements_ = new List<LuaStatementSyntax>();
     private readonly List<LuaConstructorDeclaration> ctors_ = new List<LuaConstructorDeclaration>();
 
-    private readonly List<LuaParameterSyntax> typeParameters_ = new List<LuaParameterSyntax>();
+    private readonly List<LuaIdentifierNameSyntax> typeParameters_ = new List<LuaIdentifierNameSyntax>();
     private readonly List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
     private readonly LuaDocumentStatement document_ = new LuaDocumentStatement();
     private LuaTableExpression interfaceDefaultMethods_;
@@ -65,7 +65,7 @@ namespace CSharpLua.LuaAst {
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
     public bool IsExportMetadata => document_.HasMetadataAttribute;
     public bool IsExportMetadataAll => document_.HasMetadataAllAttribute;
-    public IEnumerable<LuaExpressionSyntax> TypeParameterExpressions => typeParameters_.Select(i => i.Identifier);
+    public IEnumerable<LuaExpressionSyntax> TypeParameterExpressions => typeParameters_;
 
     internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name) {
       if (!staticAssignmentNames_.Contains(name)) {
@@ -117,7 +117,7 @@ namespace CSharpLua.LuaAst {
       AddMetadata(ref metaMethods_, LuaIdentifierNameSyntax.Methods, new LuaSingleTableItemSyntax(data));
     }
 
-    internal void AddTypeParameters(IEnumerable<LuaParameterSyntax> typeParameters) {
+    internal void AddTypeParameters(IEnumerable<LuaIdentifierNameSyntax> typeParameters) {
       typeParameters_.AddRange(typeParameters);
     }
 

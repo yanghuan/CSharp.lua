@@ -919,12 +919,12 @@ namespace CSharpLua {
       var identifierName = (LuaIdentifierNameSyntax)invocationExpression.Expression;
       sb.Append(CheckLastName(identifierName.ValueText.LastName()));
       foreach (var argument in invocationExpression.ArgumentList.Arguments) {
-        if (argument.Expression is LuaIdentifierNameSyntax typeName) {
+        if (argument is LuaIdentifierNameSyntax typeName) {
           string argumentTypeName = typeName.ValueText;
           sb.Append(CheckLastName(argumentTypeName.LastName()));
           argumentTypeNames.Add(argumentTypeName);
         } else {
-          FillGenericTypeImportName(sb, argumentTypeNames, (LuaInvocationExpressionSyntax)argument.Expression);
+          FillGenericTypeImportName(sb, argumentTypeNames, (LuaInvocationExpressionSyntax)argument);
         }
       }
     }
@@ -962,8 +962,8 @@ namespace CSharpLua {
       if (name is LuaPropertyAdapterExpressionSyntax propertyMethod) {
         var arguments = propertyMethod.ArgumentList.Arguments;
         if (arguments.Count == 1) {
-          if (arguments[0].Expression == LuaIdentifierNameSyntax.This) {
-            propertyMethod.ArgumentList.Arguments[0] = new LuaArgumentSyntax(expression);
+          if (arguments[0] == LuaIdentifierNameSyntax.This) {
+            propertyMethod.ArgumentList.Arguments[0] = expression;
           }
         } else {
           propertyMethod.Update(expression, !isStatic);
@@ -1215,24 +1215,24 @@ namespace CSharpLua {
       var parameterList = new LuaParameterListSyntax();
       foreach (var typeParameter in node.Parameters) {
         var typeIdentifier = typeParameter.Accept<LuaIdentifierNameSyntax>(this);
-        parameterList.Parameters.Add(new LuaParameterSyntax(typeIdentifier));
+        parameterList.Parameters.Add(typeIdentifier);
       }
       return parameterList;
     }
 
-    private void FillExternalTypeParameters(List<LuaParameterSyntax> typeParameters, INamedTypeSymbol typeSymbol) {
+    private void FillExternalTypeParameters(List<LuaIdentifierNameSyntax> typeParameters, INamedTypeSymbol typeSymbol) {
       var externalType = typeSymbol.ContainingType;
       if (externalType != null) {
         FillExternalTypeParameters(typeParameters, externalType);
         foreach (var typeParameterSymbol in externalType.TypeParameters) {
           LuaIdentifierNameSyntax identifierName = typeParameterSymbol.Name;
-          typeParameters.Add(new LuaParameterSyntax(identifierName));
+          typeParameters.Add(identifierName);
         }
       }
     }
 
     private void BuildTypeParameters(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
-      List<LuaParameterSyntax> typeParameters = new List<LuaParameterSyntax>();
+      var typeParameters = new List<LuaIdentifierNameSyntax>();
       FillExternalTypeParameters(typeParameters, typeSymbol);
       if (node.TypeParameterList != null) {
         var parameterList = node.TypeParameterList.Accept<LuaParameterListSyntax>(this);
@@ -1313,14 +1313,14 @@ namespace CSharpLua {
       return new LuaInvocationExpressionSyntax(memberAccess, expression);
     }
 
-    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, ExpressionSyntax arguemt) {
-      return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(IMethodSymbol methodSymbol, ExpressionSyntax arguemt) {
+      return GetUserDefinedOperatorExpression(methodSymbol, new Func<LuaExpressionSyntax>[] {
         () => VisitExpression(arguemt),
       });
     }
 
-    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, ExpressionSyntax left, ExpressionSyntax right) {
-      return GetUserDefinedOperatorExpression(node, new Func<LuaExpressionSyntax>[] {
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(IMethodSymbol methodSymbol, ExpressionSyntax left, ExpressionSyntax right) {
+      return GetUserDefinedOperatorExpression(methodSymbol, new Func<LuaExpressionSyntax>[] {
         () => VisitExpression(left),
         () => VisitExpression(right)
       });
@@ -1333,22 +1333,33 @@ namespace CSharpLua {
       });
     }
 
-    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, IEnumerable<Func<LuaExpressionSyntax>> arguments) {
-      var methodSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+    private bool IstUserDefinedOperator(ExpressionSyntax node, out IMethodSymbol methodSymbol) {
+      methodSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       if (methodSymbol != null) {
         var typeSymbol = methodSymbol.ContainingType;
         if (typeSymbol != null) {
           if (typeSymbol.TypeKind != TypeKind.Enum
             && typeSymbol.TypeKind != TypeKind.Delegate
             && (typeSymbol.SpecialType == SpecialType.None || typeSymbol.SpecialType == SpecialType.System_DateTime)) {
-            var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
-            if (codeTemplate != null) {
-              return InternalBuildCodeTemplateExpression(codeTemplate, null, arguments, null);
-            }
-            var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
-            return new LuaInvocationExpressionSyntax(memberAccess, arguments.Select(i => i()));
+            return true;
           }
         }
+      }
+      return false;
+    }
+
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(IMethodSymbol methodSymbol, IEnumerable<Func<LuaExpressionSyntax>> arguments) {
+      var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
+      if (codeTemplate != null) {
+        return InternalBuildCodeTemplateExpression(codeTemplate, null, arguments, null);
+      }
+      var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
+      return new LuaInvocationExpressionSyntax(memberAccess, arguments.Select(i => i()));
+    }
+
+    private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, IEnumerable<Func<LuaExpressionSyntax>> arguments) {
+      if (IstUserDefinedOperator(node, out var methodSymbol)) {
+        return GetUserDefinedOperatorExpression(methodSymbol, arguments);
       }
       return null;
     }
@@ -1854,16 +1865,16 @@ namespace CSharpLua {
       if (parameterList != null && parameterList.Parameters.Count > 0) {
         var parameters = new List<LuaIdentifierNameSyntax>();
         foreach (var parameterNode in parameterList.Parameters) {
-          var parameter = parameterNode.Accept<LuaParameterSyntax>(this);
-          if (parameter.Identifier != LuaIdentifierNameSyntax.This) {
-            parameters.Add(parameter.Identifier);
+          var parameter = parameterNode.Accept<LuaIdentifierNameSyntax>(this);
+          if (parameter != LuaIdentifierNameSyntax.This) {
+            parameters.Add(parameter);
             if (parameterNode.Modifiers.IsOutOrRef()) {
-              refOrOutParameters.Add(parameter.Identifier);
+              refOrOutParameters.Add(parameter);
               methodInfo.InliningReturnVars.Add(GetTempIdentifier());
             }
           }
         }
-        var parameterValues = invocation.ArgumentList.Arguments.Select(i => i.Expression).Where(i => i != LuaIdentifierNameSyntax.This);
+        var parameterValues = invocation.ArgumentList.Arguments.Where(i => i != LuaIdentifierNameSyntax.This);
         block.AddStatement(new LuaLocalVariablesStatementSyntax(parameters, parameterValues));
       }
 

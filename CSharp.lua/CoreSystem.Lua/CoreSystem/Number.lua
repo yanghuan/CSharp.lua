@@ -365,7 +365,7 @@ setmetatable(Double, Number)
 
 if not debugsetmetatable then
   local NullReferenceException = System.NullReferenceException
-  local toString = System.toString
+  local systemToString = System.toString
 
   function System.ObjectEqualsObj(this, obj)
     if this == nil then throw(NullReferenceException()) end
@@ -391,7 +391,7 @@ if not debugsetmetatable then
 
   function System.ObjectToString(this)
     if this == nil then throw(NullReferenceException()) end
-    return toString(this)
+    return systemToString(this)
   end
 
   function System.IComparableCompareTo(this, other)
@@ -414,6 +414,15 @@ if not debugsetmetatable then
       return System.Boolean.Equals(this, other)
     end
     return this:Equals(other)
+  end
+
+  function System.IFormattableToString(this, format, formatProvider)
+    if this == nil then throw(NullReferenceException()) end
+    local t = type(this)
+    if t == "number" then
+      return toString(this, format, formatProvider)
+    end
+    return this:ToString(format, formatProvider)
   end
 end
 

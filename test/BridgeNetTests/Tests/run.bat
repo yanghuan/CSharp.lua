@@ -23,8 +23,6 @@ if not %errorlevel%==0 (
   goto:Fail 
 )
 
-goto:Fail
-
 echo **********************************************
 echo ********  test no debug object  *********
 echo **********************************************

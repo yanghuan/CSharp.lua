@@ -342,8 +342,8 @@ namespace CSharpLua {
     }
 
 
-    public static bool IsBoolType(this ITypeSymbol type) {
-      if (type.IsNullableType()) {
+    public static bool IsBoolType(this ITypeSymbol type, bool withNullable = true) {
+      if (withNullable && type.IsNullableType()) {
         type = ((INamedTypeSymbol)type).TypeArguments.First();
       }
       return type.SpecialType == SpecialType.System_Boolean;
@@ -390,12 +390,20 @@ namespace CSharpLua {
       return type.Name == "Index" && type.ContainingNamespace.Name == "System";
     }
 
-    public static bool IsSystemIComparableT(this INamedTypeSymbol type) {
-      return type.Name == "IComparable" && type.ContainingNamespace.Name == "System" && type.IsGenericType;
+    private static bool IsSystemIComparableT(this INamedTypeSymbol type) {
+      return type.Name == "IComparable"   && type.ContainingNamespace.Name == "System"  && type.IsGenericType;
     }
 
-    public static bool IsSystemIEquatableT(this INamedTypeSymbol type) {
-      return type.Name == "IEquatable" && type.ContainingNamespace.Name == "System" && type.IsGenericType;
+    private static bool IsSystemIEquatableT(this INamedTypeSymbol type) {
+      return type.Name == "IEquatable" && type.ContainingNamespace.Name == "System"  && type.IsGenericType;
+    }
+
+    private static bool IsSystemIFormattable(this INamedTypeSymbol type) {
+      return type.Name == "IFormattable"  && type.ContainingNamespace.Name == "System";
+    }
+
+    public static bool IsBasicTypInterface(this INamedTypeSymbol type) {
+      return type.TypeKind == TypeKind.Interface && (type.IsSystemIComparableT() || type.IsSystemIEquatableT() || type.IsSystemIFormattable());
     }
 
     public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
@@ -1174,10 +1182,6 @@ namespace CSharpLua {
       if (nilArgumentCount > 0) {
         expressions.RemoveRange(nilStartIndex, nilArgumentCount);
       }
-    }
-
-    public static LuaExpressionSyntax WithNullable(this LuaExpressionSyntax expression) {
-      return new LuaCodeTemplateExpressionSyntax(expression, "OfNull");
     }
 
     public static T Accept<T>(this CSharpSyntaxNode node, LuaSyntaxNodeTransform transform) where T : LuaSyntaxNode {
