@@ -16,4 +16,6 @@ jobs:
     - name: Build with dotnet
       run: dotnet build --configuration Debug
     - name: Run Test Case
-      run: cd test/ & test
+      run: |
+          cd test
+          test
