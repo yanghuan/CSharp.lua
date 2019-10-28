@@ -17,3 +17,4 @@ jobs:
       run: dotnet build --configuration Debug
     - name: Run Test Case
       run: cd test/ & test
+      shell: cmd
