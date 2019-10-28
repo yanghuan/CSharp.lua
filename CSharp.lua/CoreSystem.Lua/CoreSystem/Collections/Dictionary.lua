@@ -121,19 +121,20 @@ local KeyValuePair = {
   end
 }
 
-KeyValuePairFn = System.defStc("System.KeyValuePair", function(TKey, TValue)
+KeyValuePairFn = System.defStc("System.Collections.Generic.KeyValuePair", function(TKey, TValue)
   local cls = {
     __genericTKey__ = TKey,
     __genericTValue__ = TValue,
   }
   return cls
 end, KeyValuePair)
+System.KeyValuePair = KeyValuePairFn
 
 local function isKeyValuePair(t)
   return getmetatable(getmetatable(t)) == KeyValuePair
 end
 
-local DictionaryEnumerator = define("System.DictionaryEnumerator", {
+local DictionaryEnumerator = define("System.Collections.Generic.DictionaryEnumerator", {
   getCurrent = System.getCurrent, 
   Dispose = System.emptyFn,
   MoveNext = function (this)
@@ -194,7 +195,7 @@ local function dictionaryEnumerator(t, kind)
   return setmetatable(en, DictionaryEnumerator)
 end
 
-local DictionaryCollection = define("System.DictionaryCollection", function (T)
+local DictionaryCollection = define("System.Collections.Generic.DictionaryCollection", function (T)
     return {
       __inherits__ = { System.ICollection_1(T), System.IReadOnlyCollection_1(T), System.ICollection },
       __genericT__ = T
@@ -397,7 +398,7 @@ function System.dictionaryFromTable(t, TKey, TValue)
   return setmetatable(t, Dictionary(TKey, TValue))
 end
 
-define("System.Dictionary", function(TKey, TValue) 
+System.Dictionary = define("System.Collections.Generic.Dictionary", function(TKey, TValue) 
   return { 
     __inherits__ = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
     __genericT__ = KeyValuePairFn(TKey, TValue),

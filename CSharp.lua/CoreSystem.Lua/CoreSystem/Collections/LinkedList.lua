@@ -26,7 +26,7 @@ local EqualityComparer = System.EqualityComparer
 local setmetatable = setmetatable
 local select = select
 
-local LinkedListNode = define("System.LinkedListNode", {
+local LinkedListNode = define("System.Collections.Generic.LinkedListNode", {
   __ctor__ = function (this, value)
     this.Value = value
   end,
@@ -45,6 +45,7 @@ local LinkedListNode = define("System.LinkedListNode", {
     return prev
   end
 })
+System.LinkedListNode = LinkedListNode
 
 local function newLinkedListNode(list, value)
   return setmetatable({ List = assert(list), Value = value }, LinkedListNode)
@@ -336,7 +337,7 @@ function System.linkedListFromTable(t, T)
   return setmetatable(t, LinkedList(T))
 end
 
-define("System.LinkedList", function(T) 
+System.LinkedList = define("System.Collections.Generic.LinkedList", function(T) 
   return { 
   __inherits__ = { System.ICollection_1(T), System.ICollection }, 
   __genericT__ = T,

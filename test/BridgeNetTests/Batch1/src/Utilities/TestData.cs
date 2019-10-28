@@ -34,6 +34,21 @@ namespace Bridge.ClientTest.Utilities
             set;
         }
 
+        public override bool Equals(object obj)
+        {
+            var other = obj as Person;
+            if (other == null)
+            {
+                return false;
+            }
+            return ID == other.ID && Name == other.Name && City == other.City && Count == other.Count && Group == other.Group;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public static List<Person> GetPersons()
         {
             var persons = new List<Person>();

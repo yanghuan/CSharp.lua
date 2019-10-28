@@ -36,7 +36,7 @@ local cyield = coroutine.yield
 
 local mainThread
 
-local ThreadStateException = define("System.ThreadStateException", {
+local ThreadStateException = define("System.Threading.ThreadStateException", {
   __tostring = Exception.ToString,
   __inherits__ = { Exception },
 
@@ -45,7 +45,7 @@ local ThreadStateException = define("System.ThreadStateException", {
   end
 })
 
-local ThreadAbortException = define("System.ThreadAbortException", {
+local ThreadAbortException = define("System.Threading.ThreadAbortException", {
   __tostring = Exception.ToString,
   __inherits__ = { Exception },
   __ctor__ = function(this, message, innerException)
@@ -99,7 +99,7 @@ local function run(t, obj)
   end)
 end
 
-local Thread =  define("System.Thread", {
+local Thread =  define("System.Threading.Thread", {
   IsBackground = false,
   IsThreadPoolThread = false,
   Priority = 2,
@@ -193,3 +193,7 @@ local Thread =  define("System.Thread", {
 
 mainThread = setmetatable({ id = getThreadId() }, Thread)
 currentThread = mainThread
+
+System.ThreadStateException = ThreadStateException
+System.ThreadAbortException = ThreadAbortException
+System.Thread = Thread

@@ -1333,7 +1333,7 @@ namespace CSharpLua {
       });
     }
 
-    private bool IstUserDefinedOperator(ExpressionSyntax node, out IMethodSymbol methodSymbol) {
+    private bool IsUserDefinedOperator(ExpressionSyntax node, out IMethodSymbol methodSymbol) {
       methodSymbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
       if (methodSymbol != null) {
         var typeSymbol = methodSymbol.ContainingType;
@@ -1358,7 +1358,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax GetUserDefinedOperatorExpression(ExpressionSyntax node, IEnumerable<Func<LuaExpressionSyntax>> arguments) {
-      if (IstUserDefinedOperator(node, out var methodSymbol)) {
+      if (IsUserDefinedOperator(node, out var methodSymbol)) {
         return GetUserDefinedOperatorExpression(methodSymbol, arguments);
       }
       return null;

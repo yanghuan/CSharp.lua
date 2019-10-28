@@ -884,27 +884,6 @@ function System.ToSingle(v, checked)
   end
 end
 
-function System.orOfNull(x, y)
-  if x == nil or y == nil then
-    return nil
-  end
-  return x or y
-end
-
-function System.andOfNull(x, y)
-  if x == nil or y == nil then
-    return nil
-  end
-  return x and y
-end
-
-function System.xorOfBoolNull(x, y)
-  if x == nil or y == nil then
-    return nil
-  end
-  return x ~= y
-end
-
 function System.using(t, f)
   local dispose = t and t.Dispose
   if dispose ~= nil then
@@ -1188,7 +1167,18 @@ ValueType = {
 
 defCls("System.ValueType", ValueType)
 
-local AnonymousType = defCls("System.AnonymousType", {})
+local AnonymousType
+AnonymousType = defCls("System.AnonymousType", {
+  EqualsObj = function (this, obj)
+    if getmetatable(obj) ~= AnonymousType then return false end
+    for k, v in pairs(this) do
+      if not equalsObj(v, obj[k]) then
+        return false
+      end
+    end
+    return true
+  end
+})
 
 function System.anonymousType(t)
   return setmetatable(t, AnonymousType)

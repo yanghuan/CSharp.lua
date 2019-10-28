@@ -35,7 +35,7 @@ function System.queueFromTable(t, T)
   return setmetatable(t, Queue(T))
 end
 
-System.define("System.Queue", function(T) 
+System.Queue = System.define("System.Collections.Generic.Queue", function(T) 
   return {
     __inherits__ = { System.IEnumerable_1(T), System.ICollection },
     __genericT__ = T,

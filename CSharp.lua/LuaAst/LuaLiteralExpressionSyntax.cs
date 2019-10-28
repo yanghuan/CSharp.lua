@@ -156,7 +156,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaFloatLiteralExpressionSyntax : LuaNumberLiteralExpressionSyntax {
-    private float number_;
+    private readonly float number_;
 
     public LuaFloatLiteralExpressionSyntax(float number) {
       number_ = number;

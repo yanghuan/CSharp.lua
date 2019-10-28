@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Text;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Bridge.Test.NUnit {
   public sealed class Assert {
@@ -61,6 +62,33 @@ namespace Bridge.Test.NUnit {
       }
     }
 
+    private static bool DeepEqualObject(object objA, object objB) {
+      if(Equals(objA, objB)) {
+        return true;
+      }
+
+      if (objA != null && objB != null) {
+        Type typeOfA = objA.GetType();
+        Type typeofB = objB.GetType();
+        foreach (var pOfA in typeOfA.GetProperties()) {
+          var pOfB = typeofB.GetProperty(pOfA.Name);
+          if (pOfB == null) {
+            return false;
+          }
+
+          var vOfA = pOfA.GetValue(objA);
+          var vOfB = pOfB.GetValue(objB);
+          if (!Equals(vOfA, vOfB)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      return false;
+    }
+
     /// <summary>
     /// A deep recursive comparison, working on primitive types, arrays, objects, regular expressions, dates and functions.
     /// </summary>
@@ -68,15 +96,43 @@ namespace Bridge.Test.NUnit {
     /// <param name="actual">Actual</param>
     /// <param name="description">Description</param>
     public static void AreDeepEqual(object expected, object actual, string description = "") {
+      description += $", '{expected}' != '{actual}'";
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(DeepEqualObject(expected, actual), description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
+        Contract.Assert(DeepEqualObject(expected, actual), description);
+      }
     }
 
-    /// <summary>
-    /// A deep recursive comparison, working on primitive types, arrays, objects, regular expressions, dates and functions, checking for inequality.
-    /// </summary>
-    /// <param name="expected">Expected</param>
-    /// <param name="actual">Actual</param>
-    /// <param name="description">Description</param>
-    public static void AreNotDeepEqual(object expected, object actual, string description = "") {
+    private sealed class DeepEqualEqualityComparer<T> : IEqualityComparer<T> {
+      public bool Equals(T x, T y) {
+        return DeepEqualObject(x, y);
+      }
+
+      public int GetHashCode(T obj) {
+        return obj.GetHashCode();
+      }
+    }
+
+    public static void AreDeepEqual<T>(IEnumerable<T> expected, IEnumerable<T> actual, string description = null) {
+      if (description == null) {
+        string expectedString = expected != null ? string.Join(',', expected) : "null";
+        string actualString = expected != null ? string.Join(',', actual) : "null";
+        description = $"'{actualString}' != '{expectedString}'";
+      }
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(expected == actual || expected.SequenceEqual(actual, new DeepEqualEqualityComparer<T>()), description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
+        Contract.Assert(expected == actual || expected.SequenceEqual(actual, new DeepEqualEqualityComparer<T>()), description);
+      }
     }
 
     /// <summary>
@@ -86,6 +142,7 @@ namespace Bridge.Test.NUnit {
     /// <param name="actual">Actual</param>
     /// <param name="description">Description</param>
     public static void AreStrictEqual(object expected, object actual, string description = "") {
+      //AreEqual(expected, actual, description);
     }
 
     /// <summary>
@@ -95,6 +152,16 @@ namespace Bridge.Test.NUnit {
     /// <param name="actual">Actual</param>
     /// <param name="description">Description</param>
     public static void AreNotEqual(object expected, object actual, string description = "") {
+      description += $", '{expected}' == '{actual}'";
+      if (kIsCtachException) {
+        try {
+          Contract.Assert(!Equals(expected, actual), description);
+        } catch (Exception e) {
+          Console.WriteLine(e);
+        }
+      } else {
+        Contract.Assert(!Equals(expected, actual), description);
+      }
     }
 
     /// <summary>
@@ -155,6 +222,11 @@ namespace Bridge.Test.NUnit {
     /// <param name="block">Delegate which is used to execute the code in question. Under .NET 2.0, this may be an anonymous delegate.</param>
     /// <param name="description">Description</param>
     public static void Throws(Action block, string description = "") {
+      try {
+        block();
+        Fail(description);
+      } catch {
+      }
     }
 
     /// <summary>

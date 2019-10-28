@@ -63,7 +63,7 @@ function System.listFromTable(t, T)
   return setmetatable(t, List(T))
 end
 
-System.define("System.List", function(T) 
+System.List = System.define("System.Collections.Generic.List", function(T) 
   return { 
     __inherits__ = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
     __genericT__ = T,

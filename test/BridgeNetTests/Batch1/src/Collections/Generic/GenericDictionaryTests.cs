@@ -173,6 +173,7 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(EqualityComparer<string>.Default, d2.Comparer);
         }
 
+#if false
         [Test]
         public void EqualityComparerOnlyConstructorWorks()
         {
@@ -182,7 +183,6 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(c, d.Comparer);
         }
 
-#if false
         [Test]
         public void ConstructorWithBothDictionaryAndEqualityComparerWorks()
         {

@@ -34,7 +34,7 @@ function System.stackFromTable(t, T)
   return setmetatable(t, Stack(T))
 end
 
-System.define("System.Stack", function(T) 
+System.Stack = System.define("System.Collections.Generic.Stack", function(T) 
   return {
     __inherits__ = { System.IEnumerable_1(T), System.ICollection },
     __genericT__ = T,

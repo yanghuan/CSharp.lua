@@ -205,7 +205,7 @@ local function change(this, dueTime, period)
   return true
 end
 
-define("System.Timer", {
+System.Timer = define("System.Threading.Timer", {
   __ctor__ =  function (this, callback, state,  dueTime, period)
     if callback == nil then throw(ArgumentNullException("callback")) end
     this.callback = function () callback(state) end
@@ -218,3 +218,4 @@ define("System.Timer", {
   end,
   __gc = close
 })
+

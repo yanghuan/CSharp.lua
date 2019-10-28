@@ -599,7 +599,7 @@ limitations under the License.
         <method name="Intersect" Template="Linq.Intersect({0}, {1}, {2})" />
         <method name="Except" Template="Linq.Except({0}, {1}, {2})" />
         <method name="Reverse" Template="Linq.Reverse({0})" />
-        <method name="SequenceEqual" Template="Linq.SequenceEqual({0}, {1})" />
+        <method name="SequenceEqual" Template="Linq.SequenceEqual({0}, {1}, {2})" />
         <method name="ToArray" Template="Linq.ToArray({0})" />
         <method name="ToList" Template="Linq.ToList({0})" />
         <method name="ToDictionary" ArgCount="2" Template="Linq.ToDictionary({0}, {1}, {`1})" />

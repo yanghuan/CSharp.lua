@@ -372,10 +372,3 @@ test(testStringBuilder, "StringBuilder")
 test(testIO, "IO")
 --test(testConsole, "Console")
 --test(testAsync, "Async")
-
-local System = System
-local IEnumerable_1Object = System.IEnumerable_1(System.Object)
-local args = System.Array(System.String)()
-System.Console.WriteLine(System.is(args, IEnumerable_1Object))
-
-
