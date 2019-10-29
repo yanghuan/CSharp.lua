@@ -885,7 +885,7 @@ namespace CSharpLua {
           var function = CurFunction;
           function.AddStatement(new LuaReturnStatementSyntax(temp));
           PopFunction();
-          return new LuaInvocationExpressionSyntax(new LuaParenthesizedExpressionSyntax(function));
+          return function.Parenthesized().Invocation();
         } else {
           return temp;
         }
@@ -1085,7 +1085,7 @@ namespace CSharpLua {
 
       var resultExpression = (LuaExpressionSyntax)expressions.Aggregate(ConcatInterpolatedString);
       if (node.Parent.IsKind(SyntaxKind.SimpleMemberAccessExpression)) {
-        resultExpression = new LuaParenthesizedExpressionSyntax(resultExpression);
+        resultExpression = resultExpression.Parenthesized();
       }
       return resultExpression;
     }
