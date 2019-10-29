@@ -60,7 +60,7 @@ namespace CSharpLua {
       public LuaExpressionSyntax GetIdentifierName() {
         LuaExpressionSyntax name = name_;
         for (int i = 0; i < packCount_; ++i) {
-          name = new LuaMemberAccessExpressionSyntax(LuaIdentifierNameSyntax.Placeholder, name);
+          name = LuaIdentifierNameSyntax.Placeholder.MemberAccess(name);
         }
         return name;
       }

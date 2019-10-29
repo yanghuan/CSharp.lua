@@ -249,8 +249,7 @@ namespace CSharpLua {
 
         var methodName = mainEntryPoint_.Name;
         var methodTypeName = GetTypeName(mainEntryPoint_.ContainingType);
-        var entryPointInvocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(methodTypeName, methodName));
-
+        var entryPointInvocation = new LuaInvocationExpressionSyntax(methodTypeName.MemberAccess(methodName));
         functionExpression.AddStatement(new LuaInvocationExpressionSyntax(kInit, typeTable));
         functionExpression.AddStatement(entryPointInvocation);
 
@@ -562,7 +561,7 @@ namespace CSharpLua {
 
         LuaCodeTemplateExpressionSyntax codeTemplate = new LuaCodeTemplateExpressionSyntax();
         codeTemplate.Expressions.Add(quote);
-        codeTemplate.Expressions.Add(new LuaMemberAccessExpressionSyntax(methodTypeName, methodName));
+        codeTemplate.Expressions.Add(methodTypeName.MemberAccess(methodName));
         codeTemplate.Expressions.Add(quote);
 
         confTable.Add(methodName, codeTemplate);

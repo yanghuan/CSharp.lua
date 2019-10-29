@@ -135,23 +135,20 @@ namespace CSharpLua.LuaAst {
         var functionExpression = new LuaFunctionExpressionSyntax();
         functionExpression.AddParameter(global);
         foreach (var usingDeclare in usingDeclares) {
+          LuaIdentifierNameSyntax newPrefixIdentifier = usingDeclare.NewPrefix;
           if (usingDeclare.Prefix != usingDeclare.NewPrefix) {
-            var assignment = new LuaAssignmentExpressionSyntax(usingDeclare.NewPrefix, usingDeclare.Prefix);
-            functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+            functionExpression.Body.AddStatement(newPrefixIdentifier.Assignment(usingDeclare.Prefix));
           } else {
-            var right = new LuaMemberAccessExpressionSyntax(global, usingDeclare.Prefix);
-            var assignment = new LuaAssignmentExpressionSyntax(usingDeclare.NewPrefix, right);
-            functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+            functionExpression.Body.AddStatement(newPrefixIdentifier.Assignment(global.MemberAccess(usingDeclare.Prefix)));
           }
         }
 
         foreach (var usingDeclare in genericDeclares) {
-          var assignment = new LuaAssignmentExpressionSyntax(usingDeclare.NewName, usingDeclare.InvocationExpression);
-          functionExpression.Body.Statements.Add(new LuaExpressionStatementSyntax(assignment));
+          functionExpression.Body.AddStatement(((LuaIdentifierNameSyntax)usingDeclare.NewName).Assignment(usingDeclare.InvocationExpression));
         }
 
         var invocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Import, functionExpression);
-        importAreaStatements.Statements.Add(new LuaExpressionStatementSyntax(invocationExpression));
+        importAreaStatements.Statements.Add(invocationExpression);
       }
 
       int index = Statements.FindIndex(i => i is LuaNamespaceDeclarationSyntax);

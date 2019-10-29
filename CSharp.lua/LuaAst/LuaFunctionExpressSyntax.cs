@@ -53,10 +53,6 @@ namespace CSharpLua.LuaAst {
       Body.Statements.Add(statement);
     }
 
-    public void AddStatement(LuaExpressionSyntax expression) {
-      AddStatement(new LuaExpressionStatementSyntax(expression));
-    }
-
     public void AddStatements(IEnumerable<LuaStatementSyntax> statements) {
       Body.Statements.AddRange(statements);
     }

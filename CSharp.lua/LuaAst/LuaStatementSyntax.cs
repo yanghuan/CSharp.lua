@@ -48,6 +48,10 @@ namespace CSharpLua.LuaAst {
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
+
+    public static implicit operator LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
+      return new LuaExpressionStatementSyntax(expression);
+    }
   }
 
   public sealed class LuaStatementListSyntax : LuaStatementSyntax {
@@ -100,7 +104,7 @@ namespace CSharpLua.LuaAst {
     public LuaStatementSyntax Statement { get; }
 
     public LuaContinueAdapterStatementSyntax(bool isWithinTry) {
-      Assignment = new LuaExpressionStatementSyntax(new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Continue, LuaIdentifierNameSyntax.True));
+      Assignment = LuaIdentifierNameSyntax.Continue.Assignment(LuaIdentifierNameSyntax.True);
       if (isWithinTry) {
         Statement = new LuaReturnStatementSyntax();
       } else {
@@ -182,9 +186,7 @@ namespace CSharpLua.LuaAst {
       if (identifier == null) {
         throw new ArgumentNullException(nameof(identifier));
       }
-
-      LuaAssignmentExpressionSyntax assignment = new LuaAssignmentExpressionSyntax(identifier, LuaIdentifierNameSyntax.True);
-      Assignment = new LuaExpressionStatementSyntax(assignment);
+      Assignment = identifier.Assignment(LuaIdentifierNameSyntax.True);
       GotoStatement = new LuaGotoStatement(identifier);
     }
 

@@ -43,6 +43,14 @@ namespace CSharpLua.LuaAst {
       Statements.Add(statement);
     }
 
+    internal void AddStatements(IEnumerable<LuaExpressionSyntax> expressions) {
+      Statements.AddRange(expressions.Select(i => new LuaExpressionStatementSyntax(i)));
+    }
+
+    internal void AddStatements(IEnumerable<LuaStatementSyntax> statements) {
+      Statements.AddRange(statements);
+    }
+
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }

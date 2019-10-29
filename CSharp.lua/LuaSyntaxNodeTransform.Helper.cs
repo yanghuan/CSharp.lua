@@ -1183,10 +1183,9 @@ namespace CSharpLua {
 
         if (need) {
           if (typeSymbol.IsNullableType()) {
-            expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.NullableClone, expression);
+            expression = LuaIdentifierNameSyntax.NullableClone.Invocation(expression);
           } else {
-            var invocation = new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, LuaIdentifierNameSyntax.Clone, true));
-            expression = invocation;
+            expression = expression.MemberAccess(LuaIdentifierNameSyntax.Clone, true).Invocation();
           }
         }
       }
@@ -1638,17 +1637,17 @@ namespace CSharpLua {
           if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
             limitExpression = new LuaIdentifierLiteralExpressionSyntax((limitLiteral.Number - numberLiteral.Number).ToString());
           } else {
-            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, stepExpression);
+            limitExpression = limitExpression.Sub(stepExpression);
           }
         } else {
           if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
             if (numberLiteral.Number > 0) {
-              limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, stepExpression);
+              limitExpression = limitExpression.Sub(stepExpression);
             } else {
-              limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Plus, (-numberLiteral.Number).ToString());
+              limitExpression = limitExpression.Plus((-numberLiteral.Number).ToString());
             }
           } else {
-            limitExpression = new LuaBinaryExpressionSyntax(limitExpression, LuaSyntaxNode.Tokens.Sub, stepExpression);
+            limitExpression = limitExpression.Sub(stepExpression);
           }
         }
       }
@@ -1695,7 +1694,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildDeconstructExpression(LuaExpressionSyntax expression, LuaExpressionSyntax methodName) {
-      return new LuaInvocationExpressionSyntax(new LuaMemberAccessExpressionSyntax(expression, methodName, true));
+      return expression.MemberAccess(methodName, true).Invocation();
     }
 
     private LuaExpressionSyntax BuildDeconstructExpression(ITypeSymbol typeSymbol, LuaExpressionSyntax expression, SyntaxNode node) {
@@ -1896,7 +1895,7 @@ namespace CSharpLua {
         if (assignment.Lefts.Count > 0) {
           if (assignment.Lefts.Count == 1) {
             Contract.Assert(assignment.Rights.Count == 1);
-            block.AddStatement(new LuaAssignmentExpressionSyntax(assignment.Lefts.First(), assignment.Rights.First()));
+            block.AddStatement(assignment.Lefts.First().Assignment(assignment.Rights.First()));
           } else {
             block.AddStatement(assignment);
           }
@@ -2021,7 +2020,7 @@ namespace CSharpLua {
         }
       }
       if (root.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
-        expression = new LuaAssignmentExpressionSyntax(LuaIdentifierNameSyntax.Placeholder, expression);
+        expression = LuaIdentifierNameSyntax.Placeholder.Assignment(expression);
       }
       return expression;
     }
@@ -2037,7 +2036,7 @@ namespace CSharpLua {
           var memberAccess = (MemberAccessExpressionSyntax)root.Parent;
           if (memberAccess.Name == root) {
             var target = memberAccess.Expression.AcceptExpression(this);
-            expression = new LuaMemberAccessExpressionSyntax(target, symbol.Name, !symbol.IsStatic);
+            expression = target.MemberAccess(symbol.Name, !symbol.IsStatic);
           }
         }
         var invocation = new LuaInvocationExpressionSyntax(expression);
@@ -2145,7 +2144,7 @@ namespace CSharpLua {
         target = LuaIdentifierNameSyntax.This;
       }
 
-      AddLocalVariableMapping(new LuaSymbolNameSyntax(new LuaMemberAccessExpressionSyntax(target, name)), node);
+      AddLocalVariableMapping(new LuaSymbolNameSyntax(target.MemberAccess(name)), node);
     }
   }
 }
