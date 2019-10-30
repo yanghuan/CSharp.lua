@@ -1634,7 +1634,7 @@ namespace CSharpLua {
               }
 
               bool isPlus = kind == SyntaxKind.AddAssignmentExpression;
-              if (containingType.IsDelegateType()) {
+              if (containingType.IsDelegateType() || (symbol.MethodKind == MethodKind.EventAdd || symbol.MethodKind == MethodKind.EventRemove)) {
                 var left = leftNode.AcceptExpression(this);
                 var right = rightNode.AcceptExpression(this);
                 return BuildDelegateAssignmentExpression(left, right, isPlus);
