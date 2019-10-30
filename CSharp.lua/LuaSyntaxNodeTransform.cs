@@ -4375,6 +4375,7 @@ namespace CSharpLua {
             if (IsNullablePrefixUnaryExpression(node, operand, null, out var result, LuaIdentifierNameSyntax.BitNot)) {
               return result;
             }
+            return LuaIdentifierNameSyntax.BitNot.Invocation(operand);
           } else if (IsPreventDebug && IsNullablePrefixUnaryExpression(node, operand, LuaSyntaxNode.Tokens.BitNot, out var result)) {
             return result;
           }
