@@ -692,6 +692,10 @@ namespace CSharpLua {
       return typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
     }
 
+    public static bool IsGenericIAsyncEnumerableType(this ITypeSymbol typeSymbol) {
+      return typeSymbol.Name == "IAsyncEnumerable" && typeSymbol.IsCollectionType();
+    }
+
     public static bool IsCustomValueType(this ITypeSymbol typeSymbol) {
       return typeSymbol.IsValueType
         && typeSymbol.TypeKind != TypeKind.Enum
@@ -757,6 +761,11 @@ namespace CSharpLua {
 
     public static ITypeSymbol GetIEnumerableElementType(this ITypeSymbol symbol) {
       var interfaceType = symbol.IsGenericIEnumerableType() ? (INamedTypeSymbol)symbol : symbol.AllInterfaces.FirstOrDefault(i => i.IsGenericIEnumerableType());
+      return interfaceType?.TypeArguments.First();
+    }
+
+    public static ITypeSymbol GetIAsyncEnumerableElementType(this ITypeSymbol symbol) {
+      var interfaceType = symbol.IsGenericIAsyncEnumerableType() ? (INamedTypeSymbol)symbol : symbol.AllInterfaces.FirstOrDefault(i => i.IsGenericIAsyncEnumerableType());
       return interfaceType?.TypeArguments.First();
     }
 
@@ -920,7 +929,7 @@ namespace CSharpLua {
       return InternalGetAllNamespaces(symbol).Reverse();
     }
 
-    public static bool IsCollectionType(this INamedTypeSymbol symbol) {
+    public static bool IsCollectionType(this ITypeSymbol symbol) {
       INamespaceSymbol containingNamespace = symbol.ContainingNamespace;
       while (!containingNamespace.IsGlobalNamespace) {
         if (containingNamespace.Name == "Collections" && containingNamespace.ContainingNamespace.Name == "System") {

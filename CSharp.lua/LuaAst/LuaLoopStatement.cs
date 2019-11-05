@@ -33,7 +33,7 @@ namespace CSharpLua.LuaAst {
       CloseToken = Tokens.End,
     };
 
-    public LuaForInStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression) {
+    public LuaForInStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression, bool isAsync = false) {
       if (identifier == null) {
         throw new ArgumentNullException(nameof(identifier));
       }
@@ -41,7 +41,11 @@ namespace CSharpLua.LuaAst {
         throw new ArgumentNullException(nameof(expression));
       }
       Identifier = identifier;
-      Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each, expression);
+      if (isAsync) {
+        Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AsyncEach, LuaIdentifierNameSyntax.Async, expression);
+      } else {
+        Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each, expression);
+      }
     }
 
     internal override void Render(LuaRenderer renderer) {

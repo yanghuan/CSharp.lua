@@ -95,7 +95,6 @@ System.define("System.Enum", {
   EqualsObj = Int.EqualsObj,
   default = Int.default,
   ToString = toString,
-  ToEnumString = toString,
   HasFlag = hasFlag,
   GetName = function (enumType, value)
     if enumType == nil then throw(ArgumentNullException("enumType")) end

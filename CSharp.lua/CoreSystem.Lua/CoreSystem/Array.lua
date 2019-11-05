@@ -1047,24 +1047,29 @@ System.defArray("System.Array", function(T)
   }
 end, Array, MultiArray)
 
-local yieldCoroutinePool = {}
-local function yieldCoroutineCreate(f)
-  local co = tremove(yieldCoroutinePool)
-  if co == nil then
-    co = ccreate(function (...)
+local cpool = {}
+local function createCoroutine(f)
+  local c = tremove(cpool)
+  if c == nil then
+    c = ccreate(function (...)
       f(...)
       while true do
         f = nil
-        yieldCoroutinePool[#yieldCoroutinePool + 1] = co
-        f = cyield(yieldCoroutinePool)
+        cpool[#cpool + 1] = c
+        f = cyield(cpool)
         f(cyield())
       end
     end)
   else
-    cresume(co, f)
+    cresume(c, f)
   end
-  return co
+  return c
 end
+
+System.ccreate = createCoroutine
+System.cpool = cpool
+System.cresume = cresume
+System.yield = cyield
 
 local YieldEnumerable
 YieldEnumerable = define("System.YieldEnumerable", function (T)
@@ -1079,25 +1084,25 @@ end, {
     return setmetatable({ f = this.f, args = this.args }, YieldEnumerable(this.__genericT__))
   end,
   MoveNext = function (this)
-    local co = this.co
-    if co == false then
+    local c = this.c
+    if c == false then
       return false
     end
   
     local ok, v
-    if co == nil then
-      co = yieldCoroutineCreate(this.f)
-      this.co = co
+    if c == nil then
+      c = createCoroutine(this.f)
+      this.c = c
       local args = this.args
-      ok, v = cresume(co, unpack(args, 1, args.n))
+      ok, v = cresume(c, unpack(args, 1, args.n))
       this.args = nil
     else
-      ok, v = cresume(co)
+      ok, v = cresume(c)
     end
   
     if ok then
-      if v == yieldCoroutinePool then
-        this.co = false
+      if v == cpool then
+        this.c = false
         this.current = nil
         return false
       else
@@ -1110,15 +1115,12 @@ end, {
   end
 })
 
-function System.yieldIEnumerator(f, T, ...)
+local function yieldIEnumerable(f, T, ...)
   return setmetatable({ f = f, args = pack(...) }, YieldEnumerable(T))
 end
 
-function System.yieldIEnumerable(f, T, ...)
-  return setmetatable({ f = f, args = pack(...) }, YieldEnumerable(T))
-end
-
-System.yieldReturn = cyield
+System.yieldIEnumerable = yieldIEnumerable
+System.yieldIEnumerator = yieldIEnumerable
 
 local ReadOnlyCollection = {
   __ctor__ = function (this, list)

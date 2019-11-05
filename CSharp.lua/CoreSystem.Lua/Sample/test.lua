@@ -1,31 +1,33 @@
+require('mobdebug').coro()
 require("strict")
 local socket = require("socket")
-local timeout
-local conf = { 
+
+local now = 0
+local timeoutQueue
+
+local conf = {
   time = socket and socket.gettime or os.time,
-  setTimeout = function (fn, delay)
-    assert(not timeout)
-    timeout = { 
-      f = function ()
-        timeout = nil
-        fn()
-      end, 
-      delay = delay 
-    }
-    return timeout
+  setTimeout = function (f, delay)
+    if not timeoutQueue then
+      timeoutQueue = System.TimeoutQueue()
+    end
+    return timeoutQueue:Add(now, delay, f)
   end,
-  clearTimeout = function (id)
-		assert(timeout == id)
-		timeout = nil
+  clearTimeout = function (t)
+    timeoutQueue:Erase(t)
   end
 }
 
 local function runTimeout()
-	local now = conf.time()
-  while true do
-    if (conf.time() - now) * 1000 >= timeout.delay then
-      timeout.f()
-      break
+  if timeoutQueue then
+    while true do
+      local nextExpiration = timeoutQueue:getNextExpiration()
+      if nextExpiration ~= timeoutQueue.MaxExpiration then
+        now = nextExpiration
+        timeoutQueue:RunLoop(now)
+      else
+        break
+      end
     end
   end
 end
@@ -116,7 +118,7 @@ local function testYeild()
   local enumerable = function (begin, _end) 
     return System.yieldIEnumerable(function (begin, _end)
       while begin < _end do
-        System.yieldReturn(begin)
+        System.yield(begin)
         begin = begin + 1
       end
     end, System.Int, begin, _end)
@@ -319,7 +321,7 @@ local function testAsync()
 			local f, __ctor__
 			__ctor__ = function (this)
 				local t = f(this)
-				System.Console.WriteLine(("{0}, {1}"):Format(t:getStatus():ToEnumString(System.TaskStatus), t:getException()))
+				System.Console.WriteLine(("{0}, {1}"):Format(t:getStatus():EnumToString(System.TaskStatus), t:getException()))
 			end
 			f = function (this)
 				return System.async(function (async, this)
@@ -357,6 +359,50 @@ local function testAsync()
   runTimeout()
 end
 
+local function testAsyncForeach()
+  local System = System
+  local ListInt32 = System.List(System.Int32)
+  System.namespace("Test", function (namespace)
+    namespace.class("Program", function (namespace)
+      local GenerateSequence, Main, Test
+      GenerateSequence = function (n)
+        return System.yieldIAsyncEnumerable(function (async, n)
+          for i = 0, n - 1 do
+            async:yield(i)
+          end
+        end, System.Int32, n)
+      end
+      Main = function (args)
+        Test()
+      end
+      Test = function ()
+        System.async(function (async)
+          local l = ListInt32()
+          for _, number in System.asynceach(async, GenerateSequence(10)) do
+            System.Console.WriteLine(number)
+            l:Add(number)
+          end
+          async:await(System.Task.Delay(200))
+          System.Console.WriteLine(System.String.JoinEnumerable(",", l))
+        end, true)
+      end
+      return {
+        GenerateSequence = GenerateSequence,
+        Main = Main
+      }
+    end)
+  end)
+
+    System.init({
+      "Test.Program"
+    }, {
+      Main = "Test.Program.Main"
+    })
+
+    Test.Program.Main() 
+    runTimeout()
+end
+
 test(testDateTimeAndTimeSpan, "DateTime & TimeSpan")
 test(testArray, "Array")
 test(testList, "List")
@@ -372,3 +418,4 @@ test(testStringBuilder, "StringBuilder")
 test(testIO, "IO")
 --test(testConsole, "Console")
 --test(testAsync, "Async")
+--test(testAsyncForeach, "testAsyncForeach")

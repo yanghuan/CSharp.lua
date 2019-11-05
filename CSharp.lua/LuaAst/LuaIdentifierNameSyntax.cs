@@ -39,7 +39,6 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax False = "false";
     public static readonly LuaIdentifierNameSyntax Throw = "System.throw";
     public static readonly LuaIdentifierNameSyntax Each = "System.each";
-    public static readonly LuaIdentifierNameSyntax YieldReturn = "System.yieldReturn";
     public static readonly LuaIdentifierNameSyntax Object = "System.Object";
     public static readonly LuaIdentifierNameSyntax Array = "System.Array";
     public static readonly LuaIdentifierNameSyntax MultiArray = "System.MultiArray";
@@ -120,6 +119,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax __ToString = "__tostring";
     public static readonly LuaIdentifierNameSyntax Await = "await";
     public static readonly LuaIdentifierNameSyntax Async = "async";
+    public static readonly LuaIdentifierNameSyntax AsyncEach = "System.asynceach";
     public static readonly LuaIdentifierNameSyntax MorenManyLocalVarTempTable = "const";
     public static readonly LuaIdentifierNameSyntax InterfaceDefaultMethodVar = "extern";
 
