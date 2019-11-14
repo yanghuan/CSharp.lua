@@ -406,6 +406,13 @@ namespace CSharpLua {
       return type.TypeKind == TypeKind.Interface && (type.IsSystemIComparableT() || type.IsSystemIEquatableT() || type.IsSystemIFormattable());
     }
 
+    public static bool IsSystemTask(this ITypeSymbol symbol) {
+      return (symbol.Name == "Task" || symbol.Name == "ValueTask")
+        && symbol.ContainingNamespace.Name == "Tasks"
+        && symbol.ContainingNamespace.ContainingNamespace.Name == "Threading"
+        && symbol.ContainingNamespace.ContainingNamespace.ContainingNamespace.Name == "System";
+    }
+
     public static bool IsInterfaceImplementation<T>(this T symbol) where T : ISymbol {
       if (!symbol.IsStatic) {
         var type = symbol.ContainingType;

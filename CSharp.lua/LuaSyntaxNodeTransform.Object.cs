@@ -1332,8 +1332,10 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitAwaitExpression(AwaitExpressionSyntax node) {
+      var type = semanticModel_.GetTypeInfo(node.Expression).Type;
+      var methodName = type.IsSystemTask() ? LuaIdentifierNameSyntax.Await : LuaIdentifierNameSyntax.AwaitAnything;
       var expression = node.Expression.AcceptExpression(this);
-      return LuaIdentifierNameSyntax.Async.MemberAccess(LuaIdentifierNameSyntax.Await, true).Invocation(expression);
+      return LuaIdentifierNameSyntax.Async.MemberAccess(methodName, true).Invocation(expression);
     }
 
     public override LuaSyntaxNode VisitRangeExpression(RangeExpressionSyntax node) {

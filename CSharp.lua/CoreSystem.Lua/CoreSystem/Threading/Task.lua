@@ -51,7 +51,7 @@ local pack = table.pack
 local unpack = table.unpack
 local error = error
 
-local TaskCanceledException = define("System.TaskCanceledException", {
+local TaskCanceledException = define("System.Threading.Tasks.TaskCanceledException", {
   __tostring = Exception.ToString,
   __inherits__ = { Exception },
   __ctor__ = function (this, task)
@@ -62,6 +62,7 @@ local TaskCanceledException = define("System.TaskCanceledException", {
     return this.task
   end
 })
+System.TaskCanceledException = TaskCanceledException
 
 local TaskStatusCreated = 0
 local TaskStatusWaitingForActivation = 1
@@ -72,7 +73,7 @@ local TaskStatusRanToCompletion = 5
 local TaskStatusCanceled = 6
 local TaskStatusFaulted = 7
 
-System.defEnum("System.TaskStatus", {
+System.TaskStatus = System.defEnum("System.Threading.Tasks.TaskStatus", {
   Created = TaskStatusCreated,
   WaitingForActivation = TaskStatusWaitingForActivation,
   WaitingToRun = TaskStatusWaitingToRun,
@@ -83,7 +84,7 @@ System.defEnum("System.TaskStatus", {
   Faulted = TaskStatusFaulted,
 })
 
-local UnobservedTaskExceptionEventArgs = define("System.UnobservedTaskExceptionEventArgs", {
+local UnobservedTaskExceptionEventArgs = define("System.Threading.Tasks.UnobservedTaskExceptionEventArgs", {
   __ctor__ = function (this, exception)
     this.exception = exception
   end,
@@ -100,6 +101,7 @@ local UnobservedTaskExceptionEventArgs = define("System.UnobservedTaskExceptionE
     return this.exception
   end
 })
+System.UnobservedTaskExceptionEventArgs = UnobservedTaskExceptionEventArgs
 
 local unobservedTaskException
 local function publishUnobservedTaskException(sender, ueea)
@@ -109,7 +111,7 @@ local function publishUnobservedTaskException(sender, ueea)
   end
 end
 
-local TaskScheduler = define("System.TaskScheduler", {
+local TaskScheduler = define("System.Threading.Tasks.TaskScheduler", {
   addUnobservedTaskException = function (value)
     unobservedTaskException = unobservedTaskException + value
   end,
@@ -117,6 +119,7 @@ local TaskScheduler = define("System.TaskScheduler", {
     unobservedTaskException = unobservedTaskException - value
   end
 })
+System.TaskScheduler = TaskScheduler
 
 local TaskExceptionHolder = {
   __index = false,
@@ -527,6 +530,30 @@ Task = define("System.Threading.Tasks.Task", {
   Wait = function (this)
     waitTask(getContinueActions(this))
   end,
+  Await = function (this, t)
+    local a = t:GetAwaiter()
+    if a:getIsCompleted() then
+      return a:getResult()
+    end
+    a:OnCompleted(function ()
+      local ok, v
+      try(function ()
+        ok, v = true, a:getResult()
+      end, function (e)
+        ok, v = false, e
+      end)
+      ok, v = cresume(this.c, ok, v)
+      if not ok then
+        assert(trySetException(this, v))
+      end
+    end)
+    local ok, v = cyield()
+    if ok then
+      return v
+    else
+      error(v)
+    end
+  end,
   await = function (this, task)
     local result = getResult(task, true)
     if result ~= waitToken then
@@ -547,6 +574,7 @@ Task = define("System.Threading.Tasks.Task", {
     end
   end
 })
+System.Task = Task
 
 local TaskT_TransitionToFinal_AlreadyCompleted = "An attempt was made to transition a task to a final state when it had already completed."
 local TaskCompletionSource = define("System.Threading.Tasks.TaskCompletionSource", {
@@ -576,6 +604,7 @@ local TaskCompletionSource = define("System.Threading.Tasks.TaskCompletionSource
   TrySetException = trySetException,
   TrySetResult = trySetResult
 })
+System.TaskCompletionSource = TaskCompletionSource
 
 local CancellationTokenRegistration = defStc("System.Threading.CancellationTokenRegistration", (function ()
   local function unregister(this)
@@ -608,8 +637,7 @@ local CancellationTokenRegistration = defStc("System.Threading.CancellationToken
     Dispose = unregister
   }
 end)())
-
-local canceledSource
+System.CancellationTokenRegistration = CancellationTokenRegistration
 
 local OperationCanceledException = define("System.OperationCanceledException", {
   __tostring = Exception.ToString,
@@ -623,6 +651,7 @@ local OperationCanceledException = define("System.OperationCanceledException", {
   end
 })
 
+local canceledSource
 local CancellationToken 
 CancellationToken = defStc("System.Threading.CancellationToken", {
   __ctor__ = function (this, canceled)
@@ -669,6 +698,7 @@ CancellationToken = defStc("System.Threading.CancellationToken", {
     end
   end
 })
+System.CancellationToken = CancellationToken
 
 local CancellationTokenSource 
 CancellationTokenSource = define("System.Threading.CancellationTokenSource", (function ()
@@ -792,14 +822,8 @@ CancellationTokenSource = define("System.Threading.CancellationTokenSource", (fu
     end
   }
 end)())
-
-canceledSource = setmetatable({ state = 1 }, CancellationTokenSource)
-
-System.Task = Task
-System.TaskCompletionSource = TaskCompletionSource
-System.CancellationTokenRegistration = CancellationTokenRegistration
-System.CancellationToken = CancellationToken
 System.CancellationTokenSource = CancellationTokenSource
+canceledSource = setmetatable({ state = 1 }, CancellationTokenSource)
 
 local function taskCoroutineCreate(t, f)
   local c = ccreate(function (...)
