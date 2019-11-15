@@ -307,8 +307,16 @@ namespace CSharpLua {
       return null;
     }
 
-    private bool IsBaseTypeNotSystemObject(LuaExpressionSyntax baseTypeExpression) {
-      return !(baseTypeExpression is LuaIdentifierNameSyntax name && name.ValueText == LuaIdentifierNameSyntax.Object.ValueText);
+    private bool IsBaseTypeIgnore(ITypeSymbol symbol) {
+      if (symbol.SpecialType == SpecialType.System_Object) {
+        return true;
+      }
+
+      if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
+        return true;
+      }
+
+      return false;
     }
 
     private void BuildTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
@@ -323,8 +331,9 @@ namespace CSharpLua {
         bool hasExtendSelf = false;
         var baseTypes = new List<LuaExpressionSyntax>();
         foreach (var baseType in node.BaseList.Types) {
-          var baseTypeName = BuildInheritTypeName(baseType);
-          if (IsBaseTypeNotSystemObject(baseTypeName)) {
+          var baseTypeSymbol = semanticModel_.GetTypeInfo(baseType.Type).Type;
+          if (!IsBaseTypeIgnore(baseTypeSymbol)) {
+            var baseTypeName = BuildInheritTypeName(baseType);
             baseTypes.Add(baseTypeName);
             CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
           }
@@ -445,8 +454,9 @@ namespace CSharpLua {
         List<LuaExpressionSyntax> baseTypeExpressions = new List<LuaExpressionSyntax>();
         foreach (var baseType in baseTypes) {
           semanticModel_ = generator_.GetSemanticModel(baseType.SyntaxTree);
-          var baseTypeName = BuildInheritTypeName(baseType);
-          if (IsBaseTypeNotSystemObject(baseTypeName)) {
+          var baseTypeSymbol = semanticModel_.GetTypeInfo(baseType.Type).Type;
+          if (!IsBaseTypeIgnore(baseTypeSymbol)) {
+            var baseTypeName = BuildInheritTypeName(baseType);
             baseTypeExpressions.Add(baseTypeName);
             CheckBaseTypeGenericKind(ref hasExtendSelf, major.Symbol, baseType);
           }
