@@ -55,7 +55,7 @@ D:\>dotnet CSharp.Lua.Launcher.dll -h
 Usage: CSharp.lua [-s srcfolder] [-d dstfolder]
 Arguments
 -s              : can be a directory where all cs files will be compiled, or a list of files, using ';' or ',' to separate
--d              : destination  directory, will put the out lua files
+-d              : destination directory, will put the out lua files
 
 Options
 -h              : show the help message and exit

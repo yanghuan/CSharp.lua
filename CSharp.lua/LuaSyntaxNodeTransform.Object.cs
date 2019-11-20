@@ -1232,11 +1232,15 @@ namespace CSharpLua {
       return name;
     }
 
-    private LuaExpressionSyntax BuildIsExpression(ExpressionSyntax leftTypeExpression, ExpressionSyntax rightTypeExpression, LuaIdentifierNameSyntax leftName) {
+    private LuaExpressionSyntax BuildIsPatternExpression(ExpressionSyntax leftTypeExpression, ExpressionSyntax rightTypeExpression, LuaIdentifierNameSyntax leftName) {
       var leftType = semanticModel_.GetTypeInfo(leftTypeExpression).Type;
       var rightType = semanticModel_.GetTypeInfo(rightTypeExpression).Type;
       if (leftType.Is(rightType)) {
-        return LuaIdentifierLiteralExpressionSyntax.True;
+        if (leftType.IsValueType) {
+          return LuaIdentifierLiteralExpressionSyntax.True;
+        } else {
+          return leftName.NotEquals(LuaIdentifierNameSyntax.Nil);
+        }
       } else {
         var type = rightTypeExpression.AcceptExpression(this);
         return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, leftName, type);
@@ -1249,11 +1253,14 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildIsConstantExpression(CSharpSyntaxNode left, CSharpSyntaxNode right, Optional<object> constValue) {
+      const string kIsNaNMethodName = "System.Double.IsNaN";
+
       Contract.Assert(constValue.HasValue);
       var leftExpression = left.AcceptExpression(this);
       if (constValue.Value is double.NaN) {
-        return new LuaInvocationExpressionSyntax("System.Double.IsNaN", leftExpression);
+        return new LuaInvocationExpressionSyntax(kIsNaNMethodName, leftExpression);
       }
+
       var rightExpression = right.AcceptExpression(this);
       return leftExpression.EqualsEquals(rightExpression);
     }
@@ -1274,11 +1281,26 @@ namespace CSharpLua {
           return BuildIsConstantExpression(node.Expression, pattern.Expression);
         }
         default: {
-          var expression = node.Expression.AcceptExpression(this);
-          var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
-          var name = declarationPattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
-          CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, expression));
-          return BuildIsExpression(node.Expression, declarationPattern.Type, name);
+          var targetExpression = node.Expression.AcceptExpression(this);
+          if (node.Pattern.IsKind(SyntaxKind.DeclarationPattern)) {
+            var declarationPattern = (DeclarationPatternSyntax)node.Pattern;
+            var name = declarationPattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
+            CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+            return BuildIsPatternExpression(node.Expression, declarationPattern.Type, name);
+          } else {
+            var recursivePattern = (RecursivePatternSyntax)node.Pattern;
+            LuaIdentifierNameSyntax name;
+            if (recursivePattern.Designation != null) {
+              name = recursivePattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
+              CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+            } else if (targetExpression is LuaIdentifierNameSyntax identifierName) {
+              name = identifierName;
+            } else {
+              name = GetTempIdentifier();
+              CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+            }
+            return BuildRecursivePatternExpression(recursivePattern, name, null, node.Expression);
+          }
         }
       }
     }

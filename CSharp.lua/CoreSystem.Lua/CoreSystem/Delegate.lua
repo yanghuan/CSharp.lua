@@ -183,6 +183,16 @@ if debugsetmetatable then
 else
   System.DelegateCombine = combine
   System.DelegateRemove = remove
+
+  function System.event(name)
+    local function a(this, v)
+      this[name] = combine(this[name], v)
+    end
+    local function r(this, v)
+      this[name] = remove(this[name], v)
+    end
+    return a, r
+  end
 end
 
 multicast = setmetatable({

@@ -307,3 +307,11 @@ define("System.AggregateException", {
     return this.innerExceptions
   end
 })
+
+System.SwitchExpressionException = define("System.Runtime.CompilerServices", {
+  __tostring = toString,
+  __inherits__ = { InvalidOperationException },
+  __ctor__ = function(this, message, innerException)
+    ctorOfException(this, message or "Non-exhaustive switch expression failed to match its input.", innerException)
+  end
+})
