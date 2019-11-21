@@ -1117,7 +1117,7 @@ Object = defCls("System.Object", {
 })
 setmetatable(Object, { __call = new })
 
-ValueType = {
+ValueType = defCls("System.ValueType", {
   class = "S",
   default = function(T) 
     return T()
@@ -1163,9 +1163,7 @@ ValueType = {
   GetHashCode = function (this)
     throw(System.NotSupportedException(this.__name__ .. " User-defined struct not support GetHashCode"), 1)
   end
-}
-
-defCls("System.ValueType", ValueType)
+})
 
 local AnonymousType
 AnonymousType = defCls("System.AnonymousType", {
@@ -1180,9 +1178,12 @@ AnonymousType = defCls("System.AnonymousType", {
   end
 })
 
-function System.anonymousType(t)
-  return setmetatable(t, AnonymousType)
+local function anonymousTypeCreate(T, t)
+  return setmetatable(t, T)
 end
+
+local anonymousTypeMetaTable = setmetatable({ __index = Object, __call = anonymousTypeCreate }, Object)
+setmetatable(AnonymousType, anonymousTypeMetaTable)
 
 local pack, unpack = table.pack, table.unpack
 
@@ -1257,7 +1258,11 @@ local function tupleGetRest(t)
   return t[8]
 end
 
-local Tuple = { 
+local function tupleCreate(T, ...)
+  return setmetatable(pack(...), T)
+end
+
+local Tuple = defCls("System.Tuple", {
   Deconstruct = tupleDeconstruct,
   ToString = tupleToString,
   EqualsObj = tupleEqualsObj,
@@ -1265,13 +1270,9 @@ local Tuple = {
   getLength = tupleLength,
   get = tupleGet,
   getRest = tupleGetRest
-}
-
-defCls("System.Tuple", Tuple)
-
-function System.tuple(...)
-  return setmetatable(pack(...), Tuple)
-end
+})
+local tupleMetaTable = setmetatable({ __index  = Object, __call = tupleCreate }, Object)
+setmetatable(Tuple, tupleMetaTable)
 
 local ValueTuple = defStc("System.ValueTuple", {
   Deconstruct = tupleDeconstruct,
@@ -1287,12 +1288,10 @@ local ValueTuple = defStc("System.ValueTuple", {
     throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
   end
 })
+local valueTupleMetaTable = setmetatable({ __index  = ValueType, __call = tupleCreate }, ValueType)
+setmetatable(ValueTuple, valueTupleMetaTable)
 
-function System.valueTuple(...)
-  return setmetatable(pack(...), ValueTuple)
-end
-
-defCls("System.Attribute", {})
+defCls("System.Attribute")
 
 local Nullable = { 
   default = nilFn,

@@ -4939,7 +4939,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitNullableType(NullableTypeSyntax node) {
       var elementType = node.ElementType.AcceptExpression(this);
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.NullableType, elementType);
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Nullable, elementType);
     }
   }
 }

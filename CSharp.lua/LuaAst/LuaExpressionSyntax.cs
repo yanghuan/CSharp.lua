@@ -86,6 +86,10 @@ namespace CSharpLua.LuaAst {
     public LuaInvocationExpressionSyntax Invocation(params LuaExpressionSyntax[] arguments) {
       return new LuaInvocationExpressionSyntax(this, arguments);
     }
+
+    public LuaInvocationExpressionSyntax Invocation(IEnumerable<LuaExpressionSyntax> arguments) {
+      return new LuaInvocationExpressionSyntax(this, arguments);
+    }
   }
 
   public sealed class LuaAssignmentExpressionSyntax : LuaExpressionSyntax {

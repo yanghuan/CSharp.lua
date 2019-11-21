@@ -148,7 +148,7 @@ namespace CSharpLua {
         var item = initializer.Accept<LuaKeyValueTableItemSyntax>(this);
         table.Items.Add(item);
       }
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AnonymousTypeCreate, table);
+      return LuaIdentifierNameSyntax.AnonymousType.Invocation(table);
     }
 
     public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
@@ -1314,13 +1314,11 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitTupleType(TupleTypeSyntax node) {
-      return LuaIdentifierNameSyntax.ValueTupleType;
+      return LuaIdentifierNameSyntax.ValueTuple;
     }
 
     private LuaExpressionSyntax BuildValueTupleCreateExpression(IEnumerable<LuaExpressionSyntax> expressions) {
-      var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.ValueTupleTypeCreate);
-      invocation.AddArguments(expressions);
-      return invocation;
+      return LuaIdentifierNameSyntax.ValueTuple.Invocation(expressions);
     }
 
     public override LuaSyntaxNode VisitTupleExpression(TupleExpressionSyntax node) {

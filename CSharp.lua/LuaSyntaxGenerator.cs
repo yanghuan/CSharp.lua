@@ -1825,11 +1825,11 @@ namespace CSharpLua {
       }
 
       if (namedTypeSymbol.IsTupleType) {
-        return LuaIdentifierNameSyntax.ValueTupleType;
+        return LuaIdentifierNameSyntax.ValueTuple;
       }
 
       if (namedTypeSymbol.IsSystemTuple()) {
-        return LuaIdentifierNameSyntax.TupleType;
+        return LuaIdentifierNameSyntax.Tuple;
       }
 
       if (transfor != null && IsNoneGenericTypeCounter) {
