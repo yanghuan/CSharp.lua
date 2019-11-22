@@ -2071,8 +2071,31 @@ namespace CSharpLua {
       }
     }
 
+    private bool IsEnumToStringInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node, out LuaExpressionSyntax result) {
+      result = null;
+      if (symbol.Name == "ToString") {
+        if (symbol.ContainingType.SpecialType == SpecialType.System_Enum) {
+          var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
+          var target = memberAccessExpression.Expression.AcceptExpression(this);
+          var enumTypeSymbol = semanticModel_.GetTypeInfo(memberAccessExpression.Expression).Type;
+          result = BuildEnumToStringExpression(enumTypeSymbol, false, target, memberAccessExpression.Expression);
+          return true;
+        } else if (symbol.ContainingType.IsEnumType(out var enumTypeSymbol, out bool isNullable)) {
+          var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
+          var target = memberAccessExpression.Expression.AcceptExpression(this);
+          result = BuildEnumToStringExpression(enumTypeSymbol, isNullable, target, memberAccessExpression.Expression);
+          return true;
+        }
+      }
+      return false;
+    }
+
     private LuaExpressionSyntax CheckCodeTemplateInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node) {
       if (node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression) || node.Expression.IsKind(SyntaxKind.MemberBindingExpression)) {
+        if (IsEnumToStringInvocationExpression(symbol, node, out var result)) {
+          return result;
+        }
+
         string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
         if (codeTemplate != null) {
           var argumentExpressions = new List<Func<LuaExpressionSyntax>>();
@@ -2089,6 +2112,7 @@ namespace CSharpLua {
               CurCompilationUnit.ImportLinq();
             }
           }
+
           argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => {
             Func<LuaExpressionSyntax> func = () => VisitExpression(i.Expression);
             return func;
@@ -2099,6 +2123,7 @@ namespace CSharpLua {
               return func;
             }));
           }
+
           var invocationExpression = InternalBuildCodeTemplateExpression(
             codeTemplate,
             memberAccessExpression?.Expression,
@@ -2118,6 +2143,7 @@ namespace CSharpLua {
           }
         }
       }
+
       return null;
     }
 
@@ -3742,10 +3768,15 @@ namespace CSharpLua {
       return LuaBreakStatementSyntax.Statement;
     }
 
-    private LuaExpressionSyntax BuildEnumToStringExpression(ITypeSymbol typeInfo, LuaExpressionSyntax original) {
+    private LuaExpressionSyntax BuildEnumToStringExpression(ITypeSymbol typeInfo, bool isNullable, LuaExpressionSyntax original, ExpressionSyntax node) {
+      if (original is LuaLiteralExpressionSyntax) {
+        var symbol = semanticModel_.GetSymbolInfo(node).Symbol;
+        return new LuaConstLiteralExpression(new LuaStringLiteralExpressionSyntax(symbol.Name), typeInfo.ToString());
+      } 
+
       AddExportEnum(typeInfo);
       var typeName = GetTypeShortName(typeInfo);
-      if (IsPreventDebug) {
+      if (IsPreventDebug || isNullable) {
         return LuaIdentifierNameSyntax.System.MemberAccess(LuaIdentifierNameSyntax.EnumToString).Invocation(original, typeName);
       } else {
         return original.MemberAccess(LuaIdentifierNameSyntax.EnumToString, true).Invocation(typeName);
@@ -3756,7 +3787,7 @@ namespace CSharpLua {
       ITypeSymbol typeInfo = semanticModel_.GetTypeInfo(expression).Type;
       var original = expression.AcceptExpression(this);
       if (typeInfo.IsStringType()) {
-        if (IsPreventDebug && !expression.IsKind(SyntaxKind.AddExpression)) {
+        if (IsPreventDebug && !expression.IsKind(SyntaxKind.AddExpression) && !expression.IsKind(SyntaxKind.StringLiteralExpression)) {
           return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
         }
         return original;
@@ -3773,13 +3804,8 @@ namespace CSharpLua {
           return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
         }
         return original;
-      } else if (typeInfo.IsEnumType(out var enumTypeSymbol)) {
-        if (original is LuaLiteralExpressionSyntax) {
-          var symbol = semanticModel_.GetSymbolInfo(expression).Symbol;
-          return new LuaConstLiteralExpression(symbol.Name, typeInfo.ToString());
-        } else {
-          return BuildEnumToStringExpression(enumTypeSymbol, original);
-        }
+      } else if (typeInfo.IsEnumType(out var enumTypeSymbol, out bool isNullable)) {
+        return BuildEnumToStringExpression(enumTypeSymbol, isNullable, original, expression);
       } else if (typeInfo.IsValueType) {
         return original.MemberAccess(LuaIdentifierNameSyntax.ToStr, true).Invocation();
       } else {
@@ -4939,7 +4965,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitNullableType(NullableTypeSyntax node) {
       var elementType = node.ElementType.AcceptExpression(this);
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Nullable, elementType);
+      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.NullableType, elementType);
     }
   }
 }

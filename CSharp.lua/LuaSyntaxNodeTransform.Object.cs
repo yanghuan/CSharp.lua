@@ -1037,8 +1037,8 @@ namespace CSharpLua {
           var interpolation = (InterpolationSyntax)content;
           var typeSymbol = semanticModel_.GetTypeInfo(interpolation.Expression).Type;
           var expression = interpolation.Expression.AcceptExpression(this);
-          if (typeSymbol.IsEnumType(out var enumTypeSymbol)) {
-            expression = BuildEnumToStringExpression(enumTypeSymbol, expression);
+          if (typeSymbol.IsEnumType(out var enumTypeSymbol, out bool isNullable)) {
+            expression = BuildEnumToStringExpression(enumTypeSymbol, isNullable, expression, interpolation.Expression);
           }
           expressions.Add(expression);
           sb.Append('{');

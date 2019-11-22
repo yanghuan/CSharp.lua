@@ -129,6 +129,23 @@ namespace CSharpLua {
         public int GenericArgCount = -1;
         [XmlAttribute]
         public bool IgnoreGeneric;
+
+        internal string GetMetaInfo(MethodMetaType type) {
+          switch (type) {
+            case MethodMetaType.Name: {
+              return Name;
+            }
+            case MethodMetaType.CodeTemplate: {
+              return Template;
+            }
+            case MethodMetaType.IgnoreGeneric: {
+              return IgnoreGeneric ? bool.TrueString : bool.FalseString;
+            }
+            default: {
+              throw new InvalidOperationException();
+            }
+          }
+        }
       }
 
       public sealed class ClassModel : MemberModel {
@@ -164,7 +181,7 @@ namespace CSharpLua {
       public AssemblyModel Assembly;
     }
 
-    private enum MethodMetaType {
+    internal enum MethodMetaType {
       Name,
       CodeTemplate,
       IgnoreGeneric,
@@ -291,61 +308,21 @@ namespace CSharpLua {
         return true;
       }
 
-      private string GetName(IMethodSymbol symbol) {
+      private XmlMetaModel.MethodModel GetMethodModel(IMethodSymbol symbol) {
         XmlMetaModel.MethodModel methodModel;
         if (isSingleModel_) {
           methodModel = models_.First();
         } else {
           methodModel = models_.Find(i => IsMethodMatch(i, symbol));
         }
-        return methodModel?.Name;
-      }
-
-      private string GetCodeTemplate(IMethodSymbol symbol) {
-        if (isSingleModel_) {
-          return models_.First().Template;
-        }
-
-        var methodModel = models_.Find(i => IsMethodMatch(i, symbol));
         if (methodModel != null && methodModel.IsBaned) {
           throw new CompilationErrorException($"{symbol} is baned");
         }
-        return methodModel?.Template;
-      }
-
-      private string GetIgnoreGeneric(IMethodSymbol symbol) {
-        bool isIgnoreGeneric = false;
-        XmlMetaModel.MethodModel methodModel;
-        if (isSingleModel_) {
-          methodModel = models_.First();
-          isIgnoreGeneric = methodModel.IgnoreGeneric;
-        } else {
-          methodModel = models_.Find(i => IsMethodMatch(i, symbol));
-          if (methodModel != null) {
-            isIgnoreGeneric = methodModel.IgnoreGeneric;
-          }
-        }
-        if (methodModel != null && methodModel.IsBaned) {
-          throw new CompilationErrorException($"{symbol} is baned");
-        }
-        return isIgnoreGeneric ? bool.TrueString : bool.FalseString;
+        return methodModel;
       }
 
       public string GetMetaInfo(IMethodSymbol symbol, MethodMetaType type) {
-        switch (type) {
-          case MethodMetaType.Name: {
-              return GetName(symbol);
-            }
-          case MethodMetaType.CodeTemplate: {
-              return GetCodeTemplate(symbol);
-            }
-          case MethodMetaType.IgnoreGeneric: {
-              return GetIgnoreGeneric(symbol);
-            }
-          default: {
-              throw new InvalidOperationException();
-            }
-        }
+        return GetMethodModel(symbol)?.GetMetaInfo(type);
       }
     }
 
@@ -629,20 +606,7 @@ namespace CSharpLua {
       return GetMethodMetaInfo(symbol, MethodMetaType.Name);
     }
 
-    private bool IsNullableEnumToString(IMethodSymbol symbol, out string template) {
-      var type = symbol.ContainingType;
-      if (type != null && type.IsNullableType(out var elemetType) && elemetType.TypeKind == TypeKind.Enum && symbol.Name == "ToString") {
-        template = "System.EnumToString({this}, {class})";
-        return true;
-      }
-      template = null;
-      return false;
-    }
-
     public string GetMethodCodeTemplate(IMethodSymbol symbol) {
-      if (IsNullableEnumToString(symbol, out string template)) {
-        return template;
-      }
       return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate);
     }
 

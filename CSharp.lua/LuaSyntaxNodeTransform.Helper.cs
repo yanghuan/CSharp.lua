@@ -316,20 +316,14 @@ namespace CSharpLua {
           AddCodeTemplateExpression(memberBindingIdentifier ?? BuildMemberAccessTargetExpression(targetExpression), comma, codeTemplateExpression);
         } else if (key == "class") {
           var type = semanticModel_.GetTypeInfo(targetExpression).Type;
-          LuaExpressionSyntax typeName;
-          if (type.IsEnumType(out var enumTypeSymbol)) {
-            typeName = GetTypeShortName(enumTypeSymbol);
-            AddExportEnum(enumTypeSymbol);
-          } else {
-            typeName = GetTypeName(type);
-          }
+          var typeName = GetTypeName(type);
           AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
         } else if (key[0] == '`') {
           if (int.TryParse(key.Substring(1), out int typeIndex)) {
             var typeArgument = typeArguments.GetOrDefault(typeIndex);
             if (typeArgument != null) {
               LuaExpressionSyntax typeName;
-              if (typeArgument.TypeKind == TypeKind.Enum && codeTemplate.StartsWith("System.Enum.TryParse")) {
+              if (typeArgument.TypeKind == TypeKind.Enum && codeTemplate.StartsWith("System.Enum")) {
                 typeName = GetTypeShortName(typeArgument);
                 AddExportEnum(typeArgument);
               } else {
