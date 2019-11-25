@@ -293,7 +293,8 @@ namespace CSharpLua {
     private List<LuaIdentifierNameSyntax> GetBaseCopyFields(BaseTypeSyntax baseType) {
       if (baseType != null) {
         var fields = new List<LuaIdentifierNameSyntax>();
-        var baseTypeSymbol = semanticModel_.GetTypeInfo(baseType.Type).Type;
+        var semanticModel = generator_.GetSemanticModel(baseType.SyntaxTree);
+        var baseTypeSymbol = semanticModel.GetTypeInfo(baseType.Type).Type;
         if (baseTypeSymbol.TypeKind == TypeKind.Class && baseTypeSymbol.SpecialType != SpecialType.System_Object) {
           if (baseTypeSymbol.IsMemberExists("Finalize", true)) {
             fields.Add(LuaIdentifierNameSyntax.__GC);
