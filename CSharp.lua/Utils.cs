@@ -641,6 +641,8 @@ namespace CSharpLua {
       if (symbol.IsExtensionMethod) {
         if (symbol.ReducedFrom != null && !symbol.ReducedFrom.Equals(symbol)) {
           symbol = symbol.ReducedFrom;
+        } else {
+          CheckSymbolDefinition(ref symbol);
         }
       } else {
         CheckSymbolDefinition(ref symbol);
