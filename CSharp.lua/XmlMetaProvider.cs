@@ -308,21 +308,21 @@ namespace CSharpLua {
         return true;
       }
 
-      private XmlMetaModel.MethodModel GetMethodModel(IMethodSymbol symbol) {
+      private XmlMetaModel.MethodModel GetMethodModel(IMethodSymbol symbol, bool isCheckBaned) {
         XmlMetaModel.MethodModel methodModel;
         if (isSingleModel_) {
           methodModel = models_.First();
         } else {
           methodModel = models_.Find(i => IsMethodMatch(i, symbol));
         }
-        if (methodModel != null && methodModel.IsBaned) {
+        if (isCheckBaned && methodModel != null && methodModel.IsBaned) {
           throw new CompilationErrorException($"{symbol} is baned");
         }
         return methodModel;
       }
 
       public string GetMetaInfo(IMethodSymbol symbol, MethodMetaType type) {
-        return GetMethodModel(symbol)?.GetMetaInfo(type);
+        return GetMethodModel(symbol, type == MethodMetaType.CodeTemplate)?.GetMetaInfo(type);
       }
     }
 
