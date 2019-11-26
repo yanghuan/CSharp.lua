@@ -493,8 +493,31 @@ namespace CSharpLua {
     }
 
     public static bool HasCSharpLuaAttribute(this SyntaxNode node, LuaDocumentStatement.AttributeFlags attribute) {
+      return node.HasCSharpLuaAttribute(attribute, out _);
+    }
+
+    public static bool HasCSharpLuaAttribute(this SyntaxNode node, LuaDocumentStatement.AttributeFlags attribute, out string text) {
+      text = null;
       var documentTrivia = node.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
-      return documentTrivia != null && documentTrivia.ToString().Contains(LuaDocumentStatement.ToString(attribute));
+      if (documentTrivia != null) {
+        string document = documentTrivia.ToString();
+        if (document.Contains(LuaDocumentStatement.ToString(attribute))) {
+          text = document;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    private static readonly Regex codeTemplateAttributeRegex_ = new Regex(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
+
+    public static string GetCodeTemplateFromCSharpLuaAttribute(string document) {
+      var matchs = codeTemplateAttributeRegex_.Matches(document);
+      if (matchs.Count > 0) {
+        string text = matchs[0].Groups[1].Value;
+        return text.Trim().Trim('"');
+      }
+      return null;
     }
 
     public static bool IsAssignment(this SyntaxKind kind) {

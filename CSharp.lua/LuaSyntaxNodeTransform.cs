@@ -2091,13 +2091,24 @@ namespace CSharpLua {
       return false;
     }
 
+    private string GetMethodCodeTemplate(IMethodSymbol symbol) {
+      string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
+      if (codeTemplate == null && generator_.IsFromLuaModule(symbol)) {
+        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+        if (syntaxReference != null && syntaxReference.GetSyntax().HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Template, out string text)) {
+          return Utility.GetCodeTemplateFromCSharpLuaAttribute(text);
+        }
+      }
+      return codeTemplate;
+    }
+
     private LuaExpressionSyntax CheckCodeTemplateInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node) {
       if (node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression) || node.Expression.IsKind(SyntaxKind.MemberBindingExpression)) {
         if (IsEnumToStringInvocationExpression(symbol, node, out var result)) {
           return result;
         }
 
-        string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
+        string codeTemplate = GetMethodCodeTemplate(symbol);
         if (codeTemplate != null) {
           var argumentExpressions = new List<Func<LuaExpressionSyntax>>();
           var memberAccessExpression = node.Expression as MemberAccessExpressionSyntax;
