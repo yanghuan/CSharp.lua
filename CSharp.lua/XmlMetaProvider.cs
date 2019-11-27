@@ -531,37 +531,39 @@ namespace CSharpLua {
       return GetTypeMetaInfo(memberSymbol.ContainingType);
     }
 
-    public bool? IsPropertyField(IPropertySymbol symbol) {
+    private XmlMetaModel.FieldModel GetFieldMetaInfo(IFieldSymbol symbol) {
       if (MayHaveCodeMeta(symbol)) {
-        var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
-        return info?.CheckIsField;
+        return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name);
       }
       return null;
     }
 
     public string GetFieldCodeTemplate(IFieldSymbol symbol) {
+      return GetFieldMetaInfo(symbol)?.Template ?? GetCodeTemplateFromAttribute(symbol);
+    }
+
+    public bool IsFieldForceProperty(IFieldSymbol symbol) {
+      return GetFieldMetaInfo(symbol)?.IsProperty ?? false;
+    }
+
+    private XmlMetaModel.PropertyModel GetPropertyMetaInfo(IPropertySymbol symbol) {
       if (MayHaveCodeMeta(symbol)) {
-        return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.Template;
+        return GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
       }
       return null;
     }
 
-    public bool IsFieldForceProperty(IFieldSymbol symbol) {
-      if (MayHaveCodeMeta(symbol)) {
-        return GetTypeMetaInfo(symbol)?.GetFieldModel(symbol.Name)?.IsProperty ?? false;
-      }
-      return false;
+    public bool? IsPropertyField(IPropertySymbol symbol) {
+      return GetPropertyMetaInfo(symbol)?.CheckIsField;
     }
 
     public string GetProertyCodeTemplate(IPropertySymbol symbol, bool isGet) {
-      if (MayHaveCodeMeta(symbol)) {
-        var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
-        if (info != null) {
-          if (info.IsBaned) {
-            throw new CompilationErrorException($"{symbol} is baned");
-          }
-          return isGet ? info.get?.Template : info.set?.Template;
+      var info = GetPropertyMetaInfo(symbol);
+      if (info != null) {
+        if (info.IsBaned) {
+          throw new CompilationErrorException($"{symbol} is baned");
         }
+        return isGet ? info.get?.Template : info.set?.Template;
       }
       return null;
     }
@@ -607,11 +609,25 @@ namespace CSharpLua {
     }
 
     public string GetMethodCodeTemplate(IMethodSymbol symbol) {
-      return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate);
+      return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate) ?? GetCodeTemplateFromAttribute(symbol);
     }
 
     public bool IsMethodIgnoreGeneric(IMethodSymbol symbol) {
       return GetMethodMetaInfo(symbol, MethodMetaType.IgnoreGeneric) == bool.TrueString;
+    }
+
+    private string GetCodeTemplateFromAttribute(ISymbol symbol) {
+      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+      if (syntaxReference != null) {
+        var node = syntaxReference.GetSyntax();
+        if (symbol.Kind == SymbolKind.Field) {
+          node = node.Parent.Parent;
+        }
+        if (node.HasCSharpLuaAttribute(LuaAst.LuaDocumentStatement.AttributeFlags.Template, out string text)) {
+          return Utility.GetCodeTemplateFromCSharpLuaAttribute(text);
+        }
+      }
+      return null;
     }
   }
 }
