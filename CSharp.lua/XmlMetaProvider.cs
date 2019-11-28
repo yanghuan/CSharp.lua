@@ -618,7 +618,7 @@ namespace CSharpLua {
       return GetMethodMetaInfo(symbol, MethodMetaType.IgnoreGeneric) == bool.TrueString;
     }
 
-    private string GetCodeTemplateFromAttribute(ISymbol symbol) {
+    public static string GetCodeTemplateFromAttribute(ISymbol symbol) {
       var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
       if (syntaxReference != null) {
         var node = syntaxReference.GetSyntax();
