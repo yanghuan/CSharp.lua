@@ -1027,28 +1027,25 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax VisitForamtInterpolatedStringExpression(InterpolatedStringExpressionSyntax node) {
-      int index = 0;
       var sb = new StringBuilder();
       var expressions = new List<LuaExpressionSyntax>();
       foreach (var content in node.Contents) {
         if (content.IsKind(SyntaxKind.InterpolatedStringText)) {
-          sb.Append(content.AcceptExpression(this));
+          var identifier = content.Accept<LuaIdentifierNameSyntax>(this);
+          sb.Append(identifier.ValueText);
         } else {
           var interpolation = (InterpolationSyntax)content;
-          var typeSymbol = semanticModel_.GetTypeInfo(interpolation.Expression).Type;
-          var expression = interpolation.Expression.AcceptExpression(this);
-          if (typeSymbol.IsEnumType(out var enumTypeSymbol, out bool isNullable)) {
-            expression = BuildEnumToStringExpression(enumTypeSymbol, isNullable, expression, interpolation.Expression);
-          }
+          var expression = WrapStringConcatExpression(interpolation.Expression);
           expressions.Add(expression);
-          sb.Append('{');
-          sb.Append(index);
-          sb.Append('}');
-          ++index;
+          sb.Append("%s");
         }
       }
       LuaLiteralExpressionSyntax format = BuildVerbatimStringExpression(sb.ToString());
-      var memberAccessExpression = format.Parenthesized().MemberAccess(LuaIdentifierNameSyntax.Format, true);
+      if (expressions.Count == 0) {
+        return format;
+      }
+
+      var memberAccessExpression = format.Parenthesized().MemberAccess("format", true);
       return new LuaInvocationExpressionSyntax(memberAccessExpression, expressions);
     }
 

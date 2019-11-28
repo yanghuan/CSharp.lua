@@ -81,7 +81,6 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax UsingX = "System.usingX";
     public static readonly LuaIdentifierNameSyntax Linq = "Linq";
     public static readonly LuaIdentifierNameSyntax SystemLinqEnumerable = "System.Linq.Enumerable";
-    public static readonly LuaIdentifierNameSyntax Format = "Format";
     public static readonly LuaIdentifierNameSyntax Delegate = "System.Delegate";
     public static readonly LuaIdentifierNameSyntax Import = "System.import";
     public static readonly LuaIdentifierNameSyntax Global = "out";

@@ -107,7 +107,7 @@ namespace CSharpLua.LuaAst {
         break;
       }
       if (checkNewLine) {
-        if (value[0] == '\n') {
+        if (value.Length > 0 && value[0] == '\n') {
           value = '\n' + value;
         }
       }
