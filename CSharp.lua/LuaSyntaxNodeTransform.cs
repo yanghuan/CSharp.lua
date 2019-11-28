@@ -3086,7 +3086,7 @@ namespace CSharpLua {
         }
         case SymbolKind.Field: {
           var fieldSymbol = (IFieldSymbol)symbol;
-          var codeTemplate = XmlMetaProvider.GetCodeTemplateFromAttribute(fieldSymbol);
+          var codeTemplate = fieldSymbol.GetCodeTemplateFromAttribute();
           if (codeTemplate != null) {
             identifier = BuildCodeTemplateExpression(codeTemplate, null);
             break;

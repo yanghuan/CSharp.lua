@@ -543,7 +543,7 @@ namespace CSharpLua {
     }
 
     public string GetFieldCodeTemplate(IFieldSymbol symbol) {
-      return GetFieldMetaInfo(symbol)?.Template ?? GetCodeTemplateFromAttribute(symbol);
+      return GetFieldMetaInfo(symbol)?.Template ?? symbol.GetCodeTemplateFromAttribute();
     }
 
     public bool IsFieldForceProperty(IFieldSymbol symbol) {
@@ -611,25 +611,11 @@ namespace CSharpLua {
     }
 
     public string GetMethodCodeTemplate(IMethodSymbol symbol) {
-      return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate) ?? GetCodeTemplateFromAttribute(symbol);
+      return GetMethodMetaInfo(symbol, MethodMetaType.CodeTemplate) ?? symbol.GetCodeTemplateFromAttribute();
     }
 
     public bool IsMethodIgnoreGeneric(IMethodSymbol symbol) {
       return GetMethodMetaInfo(symbol, MethodMetaType.IgnoreGeneric) == bool.TrueString;
-    }
-
-    public static string GetCodeTemplateFromAttribute(ISymbol symbol) {
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      if (syntaxReference != null) {
-        var node = syntaxReference.GetSyntax();
-        if (symbol.Kind == SymbolKind.Field) {
-          node = node.Parent.Parent;
-        }
-        if (node.HasCSharpLuaAttribute(LuaAst.LuaDocumentStatement.AttributeFlags.Template, out string text)) {
-          return Utility.GetCodeTemplateFromCSharpLuaAttribute(text);
-        }
-      }
-      return null;
     }
   }
 }

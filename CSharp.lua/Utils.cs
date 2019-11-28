@@ -509,9 +509,23 @@ namespace CSharpLua {
       return false;
     }
 
+    public static string GetCodeTemplateFromAttribute(this ISymbol symbol) {
+      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+      if (syntaxReference != null) {
+        var node = syntaxReference.GetSyntax();
+        if (symbol.Kind == SymbolKind.Field) {
+          node = node.Parent.Parent;
+        }
+        if (node.HasCSharpLuaAttribute(LuaAst.LuaDocumentStatement.AttributeFlags.Template, out string text)) {
+          return GetCodeTemplateFromAttributeText(text);
+        }
+      }
+      return null;
+    }
+
     private static readonly Regex codeTemplateAttributeRegex_ = new Regex(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
 
-    public static string GetCodeTemplateFromCSharpLuaAttribute(string document) {
+    private static string GetCodeTemplateFromAttributeText(string document) {
       var matchs = codeTemplateAttributeRegex_.Matches(document);
       if (matchs.Count > 0) {
         string text = matchs[0].Groups[1].Value;
