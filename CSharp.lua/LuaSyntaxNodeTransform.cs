@@ -1039,11 +1039,13 @@ namespace CSharpLua {
           }
         } else {
           Contract.Assert(!hasGet);
+          methodInfos_.Push(new MethodInfo(symbol.GetMethod));
           var name = new LuaPropertyOrEventIdentifierNameSyntax(true, propertyName);
           var functionExpression = new LuaFunctionExpressionSyntax();
           PushFunction(functionExpression);
           var expression = node.ExpressionBody.AcceptExpression(this);
           PopFunction();
+          methodInfos_.Pop();
 
           if (!isStatic) {
             functionExpression.AddParameter(LuaIdentifierNameSyntax.This);
