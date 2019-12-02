@@ -573,25 +573,14 @@ namespace CSharpLua {
     }
 
     private CallerAttributeKind GetCallerAttributeKind(INamedTypeSymbol symbol) {
-      switch (symbol.Name) {
-        case "CallerLineNumberAttribute": {
-          if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
-            return CallerAttributeKind.Line;
-          }
-          break;
-        }
-        case "CallerMemberNameAttribute": {
-          if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
-            return CallerAttributeKind.Member;
-          }
-          break;
-        }
-        case "CallerFilePathAttribute": {
-          if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
-            return CallerAttributeKind.FilePath;
-          }
-          break;
-        }
+      if (symbol.ContainingNamespace.IsRuntimeCompilerServices()) {
+        return symbol.Name switch
+        {
+          "CallerLineNumberAttribute" => CallerAttributeKind.Line,
+          "CallerMemberNameAttribute" => CallerAttributeKind.Member,
+          "CallerFilePathAttribute" => CallerAttributeKind.FilePath,
+          _ => CallerAttributeKind.None
+        };
       }
       return CallerAttributeKind.None;
     }
@@ -1989,7 +1978,7 @@ namespace CSharpLua {
           var thisLocal = (LuaLocalVariableDeclaratorSyntax)block.Statements.First();
           var target = thisLocal.Declarator.Initializer.Value;
           if (expression is LuaMemberAccessExpressionSyntax memberAccess) {
-            if(!InliningMemberAccessUpdateTarget(memberAccess, target)) {
+            if (!InliningMemberAccessUpdateTarget(memberAccess, target)) {
               return null;
             }
           } else if (expression is LuaPropertyAdapterExpressionSyntax propertyAdapter && propertyAdapter.IsProperty) {

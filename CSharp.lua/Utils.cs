@@ -1097,6 +1097,14 @@ namespace CSharpLua {
       return symbol.Name == "CompilerGeneratedAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
     }
 
+    private static bool IsSystemReflection(this INamespaceSymbol symbol) {
+      return symbol.Name == "Reflection" && symbol.ContainingNamespace.Name == "System";
+    }
+
+    public static bool IsAssemblyAttribute(this INamedTypeSymbol symbol) {
+      return symbol.Name.StartsWith("Assembly") && symbol.ContainingNamespace.IsSystemReflection();
+    }
+
     public static bool HasAggressiveInliningAttribute(this ISymbol symbol) {
       return symbol.GetAttributes().Any(i => i.IsMethodImplOptions(MethodImplOptions.AggressiveInlining));
     }

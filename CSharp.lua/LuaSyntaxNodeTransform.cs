@@ -234,6 +234,9 @@ namespace CSharpLua {
         }
       }
 
+      var attributes = BuildAttributes(node.AttributeLists);
+      generator_.AddAssemblyAttributes(attributes);
+
       compilationUnits_.Pop();
       return compilationUnit;
     }
@@ -648,10 +651,7 @@ namespace CSharpLua {
         }
       } else if (symbol.IsMainEntryPoint()) {
         isPrivate = false;
-        bool success = generator_.SetMainEntryPoint(symbol);
-        if (!success) {
-          throw new CompilationErrorException(node, "has more than one entry point");
-        }
+        generator_.SetMainEntryPoint(symbol, node);
       } else if (isPrivate && generator_.IsForcePublicSymbol(symbol)) {
         isPrivate = false;
       }
