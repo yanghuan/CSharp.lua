@@ -686,6 +686,7 @@ limitations under the License.
     </namespace>
     <namespace name="System.Reflection">
       <class name="Assembly">
+        <method name="GetExecutingAssembly" Template="System.GetExecutingAssembly(namespace)" />
         <method name="GetType" Name="GetTypeFrom" />
       </class>
       <class name="MemberInfo">

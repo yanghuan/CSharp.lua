@@ -45,7 +45,7 @@ end
 collectgarbage("collect")
 print(collectgarbage("count"))
 
-local main = System.Reflection.Assembly.GetEntryAssembly().getEntryPoint()
+local main = System.Reflection.Assembly.GetEntryAssembly():getEntryPoint()
 main:Invoke()
 
 if timeoutQueue then

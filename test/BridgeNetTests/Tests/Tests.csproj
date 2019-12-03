@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Batch1\Batch1.csproj" />
     <ProjectReference Include="..\BridgeTestNUnit\BridgeTestNUnit.csproj" />
   </ItemGroup>
 

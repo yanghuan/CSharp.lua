@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
+using Bridge.ClientTest;
 using Bridge.Test.NUnit;
 
 namespace Tests {
@@ -18,7 +18,7 @@ namespace Tests {
     }
 
     static void Main(string[] args) {
-      var types = Assembly.GetExecutingAssembly().GetExportedTypes();
+      var types = typeof(Constants).Assembly.GetExportedTypes();
       foreach (var t in types) {
         if (IsTestClass(t, out var category, out var testFixture)) {
           TestClass(t, category.Name, testFixture.TestNameFormat);

@@ -48,10 +48,7 @@ local zeroFn = function() return 0 end
 local oneFn = function() return 1 end
 local equals = function(x, y) return x == y end
 local getCurrent = function(t) return t.current end
-local modules = {}
-local usings = {}
-local classes = {}
-local metadatas
+local assembly, metadatas
 local System, Object, ValueType
 
 local function new(cls, ...)
@@ -228,7 +225,7 @@ local function setBase(cls, kind)
     end
     setmetatable(cls, ValueType)
   else
-    if extends then      
+    if extends then
       local base = extends[1]
       if not base then error(cls.__name__ .. "'s base is nil") end
       if base.class == "I" then
@@ -295,6 +292,7 @@ end
 local function defCore(name, kind, cls, generic)
   cls = cls or {}
   cls.__name__ = name
+  cls.__assembly__ = assembly
   if not generic then
     set(name, cls)
   end
@@ -349,7 +347,7 @@ local function def(name, kind, cls, generic)
 end
 
 local function defCls(name, cls, generic)
-  return def(name, "C", cls, generic) 
+  return def(name, "C", cls, generic)
 end
 
 local function defInf(name, cls)
@@ -405,7 +403,7 @@ local function defArray(name, cls, Array, MultiArray)
   }))
 end
 
-local function trunc(num) 
+local function trunc(num)
   return num > 0 and floor(num) or ceil(num)
 end
 
@@ -436,8 +434,7 @@ System = {
   defArray = defArray,
   enumMetatable = enumMetatable,
   trunc = trunc,
-  global = global,
-  classes = classes
+  global = global
 }
 if prevSystem then
   setmetatable(System, { __index = prevSystem })
@@ -925,23 +922,23 @@ function System.default(T)
 end
 
 function System.property(name)
-  local function get(this)
+  local function g(this)
     return this[name]
   end
-  local function set(this, v)
+  local function s(this, v)
     this[name] = v
   end
-  return get, set
+  return g, s
 end
 
 function System.event(name)
-  local function add(this, v)
+  local function a(this, v)
     this[name] = this[name] + v
   end
-  local function remove(this, v)
+  local function r(this, v)
     this[name] = this[name] - v
   end
-  return add, remove
+  return a, r
 end
 
 function System.new(cls, index, ...)
@@ -1403,12 +1400,12 @@ function System.stackalloc(t)
   return newPointer(t, 1)
 end
 
+local modules, imports = {}, {}
 function System.import(f)
-  usings[#usings + 1] = f
+  imports[#imports + 1] = f
 end
 
 local namespace
-
 local function defIn(kind, name, f)
   local namespaceName, isClass = namespace[1], namespace[2]
   if #namespaceName > 0 then
@@ -1416,7 +1413,7 @@ local function defIn(kind, name, f)
   end
   assert(modules[name] == nil, name)
   namespace[1], namespace[2] = name, kind == "C" or kind == "S"
-  local t = f(namespace)
+  local t = f(assembly)
   namespace[1], namespace[2] = namespaceName, isClass
   modules[isClass and name:gsub("+", ".") or name] = function()
     return def(name, kind, t)
@@ -1426,6 +1423,7 @@ end
 namespace = {
   "",
   false,
+  __index = false,
   class = function(name, f) defIn("C", name, f) end,
   struct = function(name, f) defIn("S", name, f) end,
   interface = function(name, f) defIn("I", name, f) end,
@@ -1438,40 +1436,63 @@ namespace = {
     namespace[1] = namespaceName
   end
 }
+namespace.__index = namespace
 
 function System.namespace(name, f)
+  if not assembly then assembly = setmetatable({}, namespace) end
   namespace[1] = name
   f(namespace)
   namespace[1], namespace[2] = "", false
 end
 
-function System.init(namelist, conf)
-  metadatas = {}
-
-  local count = #classes + 1
-  for i = 1, #namelist do
-    local name = namelist[i]
-    local cls = assert(modules[name], name)()
-    classes[count] = cls
-    count = count + 1
-  end
-  for i = 1, #usings do
-    usings[i](global)
-  end
-  for i = 1, #metadatas do
-    metadatas[i](global)
-  end
-  if conf ~= nil then
-    local main = conf.Main
-    if main then
-      assert(not System.entryPoint)
-      System.entryPoint = main
+function System.init(t)
+  local path, files = t.path, t.files
+  if files then
+    path = (path and #path > 0) and (path .. '.') or ""
+    for i = 1, #files do
+      require(path .. files[i])
     end
   end
 
-  modules = {}
-  usings = {}
-  metadatas = nil
+  metadatas = {}
+  local types = t.types
+  if types then
+    local classes = {}
+    for i = 1, #types do
+      local name = types[i]
+      local cls = assert(modules[name], name)()
+      classes[i] = cls
+    end
+    assembly.classes = classes
+  end
+
+  for i = 1, #imports do
+    imports[i](global)
+  end
+
+  for i = 1, #metadatas do
+    metadatas[i](global)
+  end
+
+  local main = t.Main
+  if main then
+    assembly.entryPoint = main
+    System.entryAssembly = assembly
+  end
+
+  local attributes = t.assembly
+  if attributes then
+    if type(attributes) == "function" then
+      attributes = attributes(global)
+    end
+    for k, v in pairs(attributes) do
+      assembly[k] = v
+    end
+  end
+
+  local currentAssembly = assembly
+  modules, imports, assembly, metadatas = {}, {}, nil, nil
+  return currentAssembly
 end
 
 System.config = rawget(global, "CSharpLuaSystemConfig") or {}
