@@ -931,16 +931,6 @@ function System.property(name)
   return g, s
 end
 
-function System.event(name)
-  local function a(this, v)
-    this[name] = this[name] + v
-  end
-  local function r(this, v)
-    this[name] = this[name] - v
-  end
-  return a, r
-end
-
 function System.new(cls, index, ...)
   local this = setmetatable({}, cls)
   return this, cls.__ctor__[index](this, ...)
@@ -1490,9 +1480,9 @@ function System.init(t)
     end
   end
 
-  local currentAssembly = assembly
+  local current = assembly
   modules, imports, assembly, metadatas = {}, {}, nil, nil
-  return currentAssembly
+  return current
 end
 
 System.config = rawget(global, "CSharpLuaSystemConfig") or {}

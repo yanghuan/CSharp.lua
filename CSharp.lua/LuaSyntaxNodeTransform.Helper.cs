@@ -713,8 +713,7 @@ namespace CSharpLua {
     private bool IsLocalVarExistsInCurMethod(string name) {
       var methodInfo = CurMethodInfoOrNull;
       if (methodInfo != null) {
-        var syntaxReference = methodInfo.Symbol.DeclaringSyntaxReferences.First();
-        var root = syntaxReference.GetSyntax();
+        var root = methodInfo.Symbol.GetDeclaringSyntaxNode();
         if (IsLocalVarExists(name, root)) {
           return true;
         }
@@ -1425,9 +1424,9 @@ namespace CSharpLua {
           var methodSymbol = (IMethodSymbol)semanticModel.GetSymbolInfo(node).Symbol;
           if (methodSymbol != null && !methods_.Contains(methodSymbol)) {
             methods_.Add(methodSymbol);
-            var syntaxReference = methodSymbol.DeclaringSyntaxReferences.FirstOrDefault();
-            if (syntaxReference != null) {
-              Visit(syntaxReference.GetSyntax());
+            var declaringNode = methodSymbol.GetDeclaringSyntaxNode();
+            if (declaringNode != null) {
+              Visit(declaringNode);
             }
           }
         }
@@ -1777,12 +1776,7 @@ namespace CSharpLua {
       BlockSyntax bodyNode;
       ArrowExpressionClauseSyntax expressionBodyNode;
       if (symbol.MethodKind == MethodKind.PropertyGet) {
-        var syntaxReference = symbol.AssociatedSymbol.DeclaringSyntaxReferences.FirstOrDefault();
-        if (syntaxReference == null) {
-          goto Fail;
-        }
-
-        var propertyDeclaration = syntaxReference.GetSyntax() as PropertyDeclarationSyntax;
+        var propertyDeclaration = symbol.AssociatedSymbol.GetDeclaringSyntaxNode() as PropertyDeclarationSyntax;
         if (propertyDeclaration == null) {
           goto Fail;
         }
@@ -1793,12 +1787,7 @@ namespace CSharpLua {
         expressionBodyNode = accessor.ExpressionBody;
         parameterList = null;
       } else {
-        var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-        if (syntaxReference == null) {
-          goto Fail;
-        }
-
-        var methodDeclaration = syntaxReference.GetSyntax() as MethodDeclarationSyntax;
+        var methodDeclaration = symbol.GetDeclaringSyntaxNode() as MethodDeclarationSyntax;
         if (methodDeclaration == null) {
           goto Fail;
         }
@@ -2049,12 +2038,7 @@ namespace CSharpLua {
         return false;
       }
 
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      if (syntaxReference == null) {
-        return false;
-      }
-
-      var propertyDeclaration = syntaxReference.GetSyntax() as PropertyDeclarationSyntax;
+      var propertyDeclaration = symbol.GetDeclaringSyntaxNode() as PropertyDeclarationSyntax;
       if (propertyDeclaration == null || propertyDeclaration.AccessorList == null) {
         return false;
       }

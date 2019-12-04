@@ -104,19 +104,19 @@ local function removeImpl(fn1, fn2)
       end
     end
   elseif type(fn1) == "table" then
-      local count1, count2 = #fn1, # fn2
-      local diff = count1 - count2
-      for i = diff + 1, 1, -1 do
-        if equalsMulticast(fn1, fn2, i - 1, count2) then
-          if diff == 0 then 
-            return nil
-          elseif diff == 1 then 
-            return fn1[i ~= 1 and 1 or count1] 
-          else
-            return delete(fn1, count1, i, count2)
-          end
+    local count1, count2 = #fn1, # fn2
+    local diff = count1 - count2
+    for i = diff + 1, 1, -1 do
+      if equalsMulticast(fn1, fn2, i - 1, count2) then
+        if diff == 0 then 
+          return nil
+        elseif diff == 1 then 
+          return fn1[i ~= 1 and 1 or count1] 
+        else
+          return delete(fn1, count1, i, count2)
         end
       end
+    end
   end
   return fn1
 end
@@ -180,6 +180,16 @@ local delegateMetaTable = setmetatable({ __index = Object, __call = makeGenericT
 setmetatable(Delegate, delegateMetaTable)
 if debugsetmetatable then
   debugsetmetatable(System.emptyFn, Delegate)
+
+  function System.event(name)
+    local function a(this, v)
+      this[name] = this[name] + v
+    end
+    local function r(this, v)
+      this[name] = this[name] - v
+    end
+    return a, r
+  end
 else
   System.DelegateCombine = combine
   System.DelegateRemove = remove

@@ -485,9 +485,9 @@ namespace CSharpLua {
     }
 
     public static bool HasMetadataAttribute(this ISymbol symbol) {
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      if (syntaxReference != null) {
-        return syntaxReference.GetSyntax().HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Metadata);
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
+        return node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Metadata);
       }
       return false;
     }
@@ -510,9 +510,8 @@ namespace CSharpLua {
     }
 
     public static string GetCodeTemplateFromAttribute(this ISymbol symbol) {
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      if (syntaxReference != null) {
-        var node = syntaxReference.GetSyntax();
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
         if (symbol.Kind == SymbolKind.Field) {
           node = node.Parent.Parent;
         }
@@ -1234,8 +1233,7 @@ namespace CSharpLua {
     }
 
     public static SyntaxNode GetDeclaringSyntaxNode(this ISymbol symbol) {
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      return syntaxReference?.GetSyntax();
+      return symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
     }
 
     public static bool IsNil(this LuaExpressionSyntax expression) {

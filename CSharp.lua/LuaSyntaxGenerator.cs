@@ -528,12 +528,12 @@ namespace CSharpLua {
       }
 
       LuaTableExpression assemblyTable = new LuaTableExpression();
-      bool hasNormalAttribute = false;
       string moduleName = compilation_.Options.ModuleName;
       if (!string.IsNullOrEmpty(moduleName)) {
         assemblyTable.Add("name", new LuaStringLiteralExpressionSyntax(moduleName.TrimEnd(".dll")));
       }
 
+      bool hasNormalAttribute = false;
       if (assemblyAttributes_.Count > 0) {
         const string kAssemblyFields = "System.Reflection.Assembly";
         foreach (var attribute in assemblyAttributes_) {
@@ -1443,9 +1443,8 @@ namespace CSharpLua {
         return true;
       }
 
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      if (syntaxReference != null) {
-        var node = syntaxReference.GetSyntax();
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
         switch (node.Kind()) {
           case SyntaxKind.PropertyDeclaration: {
             var property = (PropertyDeclarationSyntax)node;
@@ -1519,11 +1518,11 @@ namespace CSharpLua {
         return false;
       }
 
-      var syntaxReference = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-      if (syntaxReference != null) {
-        bool isField = syntaxReference.GetSyntax().IsKind(SyntaxKind.VariableDeclarator);
-        return isField;
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
+        return node.IsKind(SyntaxKind.VariableDeclarator);
       }
+
       return false;
     }
 
@@ -1707,9 +1706,9 @@ namespace CSharpLua {
           return true;
         }
 
-        var syntaxReference = field.DeclaringSyntaxReferences.FirstOrDefault();
-        if (syntaxReference != null) {
-          var valueExpression = fieldValueFunc(syntaxReference.GetSyntax());
+        var node = field.GetDeclaringSyntaxNode();
+        if (node != null) {
+          var valueExpression = fieldValueFunc(node);
           if (valueExpression != null) {
             var valueKind = valueExpression.Kind();
             if (valueKind != SyntaxKind.NullLiteralExpression) {
