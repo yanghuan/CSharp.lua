@@ -4195,16 +4195,20 @@ namespace CSharpLua {
           var right = node.Right.AcceptExpression(this);
           PopBlock();
           if (block.Statements.Count == 0) {
-            ReleaseTempIdentifier(temp);
-            return left.Binary(GetOperatorToken(node.OperatorToken), right);
-          } else {
-            CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, left));
-            var ifStatement = new LuaIfStatementSyntax(temp.EqualsEquals(LuaIdentifierNameSyntax.Nil));
-            ifStatement.Body.AddStatements(block.Statements);
-            ifStatement.Body.AddStatement(temp.Assignment(right));
-            CurBlock.AddStatement(ifStatement);
-            return temp;
+            var typeSymbol = semanticModel_.GetTypeInfo(node.Left).Type;
+            bool isBool = typeSymbol != null && typeSymbol.IsBoolType();
+            if (!isBool) {
+              ReleaseTempIdentifier(temp);
+              return left.Binary(GetOperatorToken(node.OperatorToken), right);
+            }
           }
+
+          CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, left));
+          var ifStatement = new LuaIfStatementSyntax(temp.EqualsEquals(LuaIdentifierNameSyntax.Nil));
+          ifStatement.Body.AddStatements(block.Statements);
+          ifStatement.Body.AddStatement(temp.Assignment(right));
+          CurBlock.AddStatement(ifStatement);
+          return temp;
         }
       }
 
