@@ -185,12 +185,12 @@ interfaceMetatable.__index = interfaceMetatable
 local ctorMetatable = { __call = function (ctor, ...) return ctor[1](...) end }
 
 local function applyExtends(cls)
-  local extends = cls.__inherits__
+  local extends = cls.base
   if extends then
     if type(extends) == "function" then
       extends = extends(global, cls)
     end
-    cls.__inherits__ = nil
+    cls.base = nil
   end
   return extends
 end

@@ -43,7 +43,7 @@ Vector3.__ctor__ = function(this, X, Y, Z)
     setmetatable(this, mt)
 end
 
-Vector3.__inherits__ = function (_, T)
+Vector3.base = function (_, T)
     return { IComparable, IComparable_1(T), IEquatable_1(T), IFormattable }
 end
 

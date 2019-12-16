@@ -42,12 +42,12 @@ local select = select
 
 local TargetException = define("System.Reflection.TargetException", {
   __tostring = Exception.ToString,
-  __inherits__ = { Exception }
+  base = { Exception }
 })
 
 local TargetParameterCountException = define("System.Reflection.TargetParameterCountException", {
   __tostring = Exception.ToString,
-  __inherits__ = { Exception },
+  base = { Exception },
   __ctor__ = function(this, message, innerException) 
     Exception.__ctor__(this, message or "Parameter count mismatch.", innerException)
   end,
@@ -55,7 +55,7 @@ local TargetParameterCountException = define("System.Reflection.TargetParameterC
 
 local AmbiguousMatchException = define("System.Reflection.AmbiguousMatchException", {
   __tostring = Exception.ToString,
-  __inherits__ = { System.SystemException },
+  base = { System.SystemException },
   __ctor__ = function(this, message, innerException) 
     Exception.__ctor__(this, message or "Ambiguous match found.", innerException)
   end,
@@ -63,7 +63,7 @@ local AmbiguousMatchException = define("System.Reflection.AmbiguousMatchExceptio
 
 local MissingMethodException = define("System.MissingMethodException", {
   __tostring = Exception.ToString,
-  __inherits__ = { Exception },
+  base = { Exception },
   __ctor__ = function(this, message, innerException) 
     Exception.__ctor__(this, message or "Specified method could not be found.", innerException)
   end
@@ -225,7 +225,7 @@ end
 
 local FieldInfo = define("System.Reflection.FieldInfo", {
   __eq = eq,
-  __inherits__ = { MemberInfo },
+  base = { MemberInfo },
   memberType = 4,
   getFieldType = getFieldOrPropertyType,
   GetValue = getOrSetField,
@@ -361,7 +361,7 @@ end
 
 local PropertyInfo = define("System.Reflection.PropertyInfo", {
   __eq = eq,
-  __inherits__ = { MemberInfo },
+  base = { MemberInfo },
   memberType = 16,
   getPropertyType = getFieldOrPropertyType,
   GetValue = getOrSetProperty,
@@ -424,7 +424,7 @@ end
 
 local MethodInfo = define("System.Reflection.MethodInfo", {
   __eq = eq,
-  __inherits__ = { MemberInfo },
+  base = { MemberInfo },
   memberType = 8,
   getReturnType = function (this)
     local metadata = this.metadata

@@ -38,7 +38,7 @@ local mainThread
 
 local ThreadStateException = define("System.Threading.ThreadStateException", {
   __tostring = Exception.ToString,
-  __inherits__ = { Exception },
+  base = { Exception },
 
   __ctor__ = function(this, message, innerException)
      Exception.__ctor__(this, message or "Thread is running or terminated; it cannot restart.", innerException)
@@ -47,7 +47,7 @@ local ThreadStateException = define("System.Threading.ThreadStateException", {
 
 local ThreadAbortException = define("System.Threading.ThreadAbortException", {
   __tostring = Exception.ToString,
-  __inherits__ = { Exception },
+  base = { Exception },
   __ctor__ = function(this, message, innerException)
     Exception.__ctor__(this, message or "Thread aborted.", innerException)
 end

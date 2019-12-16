@@ -84,7 +84,7 @@ Matrix4x4.__ctor__ = function (this, m11, m12, m13, m14, m21, m22, m23, m24, m31
     setmetatable(this, mt)   
   end
 
-Matrix4x4.__inherits__ = function (_, T)
+Matrix4x4.base = function (_, T)
     return { IComparable, IComparable_1(T), IEquatable_1(T) }
 end
 

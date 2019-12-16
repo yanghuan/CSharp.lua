@@ -283,7 +283,7 @@ TimeSpan = System.defStc("System.TimeSpan", {
   FromTicks = function (value) 
     return TimeSpan(value)
   end,
-  __inherits__ = function (_, T)
+  base = function (_, T)
     return { System.IComparable, System.IComparable_1(T), System.IEquatable_1(T) }
   end,
   default = function ()

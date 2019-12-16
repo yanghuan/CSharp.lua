@@ -432,7 +432,7 @@ DateTime = System.defStc("System.DateTime", {
   __eq = TimeSpan.__eq,
   __lt = TimeSpan.__lt,
   __le = TimeSpan.__le,
-  __inherits__ =  function(_, T)
+  base =  function(_, T)
     return { System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T), System.IFormattable }
   end,
   default = function ()

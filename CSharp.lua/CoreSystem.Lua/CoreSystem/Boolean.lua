@@ -103,7 +103,7 @@ local Boolean = System.defStc("System.Boolean", {
     end
     return false, false
   end,
-  __inherits__ = function (_, T)
+  base = function (_, T)
     return { System.IComparable, System.IConvertible, System.IComparable_1(T), System.IEquatable_1(T) }
   end
 })

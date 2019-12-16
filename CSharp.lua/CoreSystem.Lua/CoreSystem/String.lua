@@ -372,7 +372,7 @@ local function equalsObj(this, v)
 end
 
 local CharEnumerator = System.define("System.CharEnumerator", {
-  __inherits__ = { System.IEnumerator_1(System.Char), System.IDisposable, System.ICloneable },
+  base = { System.IEnumerator_1(System.Char), System.IDisposable, System.ICloneable },
   getCurrent = System.getCurrent,
   Dispose = emptyFn,
   MoveNext = function (this)
@@ -712,7 +712,7 @@ string.TrimStart = trimStart
 if debugsetmetatable then
   String = string
   String.__genericT__ = System.Char
-  String.__inherits__ = inherits
+  String.base = inherits
   System.define("System.String", String)
 
   debugsetmetatable("", String)
@@ -725,7 +725,7 @@ else
   
   String = getmetatable("")
   String.__genericT__ = System.Char
-  String.__inherits__ = inherits
+  String.base = inherits
   System.define("System.String", String)
   String.__index = string
   setmetatable(String, string)

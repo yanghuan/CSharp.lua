@@ -339,7 +339,7 @@ end
 
 System.LinkedList = define("System.Collections.Generic.LinkedList", function(T) 
   return { 
-  __inherits__ = { System.ICollection_1(T), System.ICollection }, 
+  base = { System.ICollection_1(T), System.ICollection }, 
   __genericT__ = T,
   __len = LinkedList.getCount
   }

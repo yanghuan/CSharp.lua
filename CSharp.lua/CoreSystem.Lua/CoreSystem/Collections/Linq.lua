@@ -49,7 +49,7 @@ local tsort = table.sort
 
 local InternalEnumerable = define("System.Linq.InternalEnumerable", function(T) 
   return {
-    __inherits__ = { IEnumerable_1(T) }
+    base = { IEnumerable_1(T) }
   }
 end)
 
@@ -60,7 +60,7 @@ end
 
 local InternalEnumerator = define("System.Linq.InternalEnumerator", function(T) 
   return {
-    __inherits__ = { IEnumerator_1(T) }
+    base = { IEnumerator_1(T) }
   }
 end)
 
@@ -259,7 +259,7 @@ end
 
 local IGrouping = System.defInf("System.Linq.IGrouping")
 local Grouping = define("System.Linq.Grouping", {
-  __inherits__ = { IGrouping },
+  base = { IGrouping },
   GetEnumerator = arrayEnumerator,
   getKey = function (this)
     return this.key

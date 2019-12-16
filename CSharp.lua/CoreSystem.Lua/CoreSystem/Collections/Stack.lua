@@ -36,7 +36,7 @@ end
 
 System.Stack = System.define("System.Collections.Generic.Stack", function(T) 
   return {
-    __inherits__ = { System.IEnumerable_1(T), System.ICollection },
+    base = { System.IEnumerable_1(T), System.ICollection },
     __genericT__ = T,
   }
 end, Stack)

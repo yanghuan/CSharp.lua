@@ -29,7 +29,7 @@ Matrix3x2.__ctor__ = function(this, m11, m12, m21, m22, m31, m32)
     setmetatable(this, mt)
 end
 
-Matrix3x2.__inherits__ = function (_, T)
+Matrix3x2.base = function (_, T)
     return { IComparable, IComparable_1(T), IEquatable_1(T) }
 end
 

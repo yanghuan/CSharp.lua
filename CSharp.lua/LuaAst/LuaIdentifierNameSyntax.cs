@@ -46,7 +46,7 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax StaticCtor = "static";
     public static readonly LuaIdentifierNameSyntax Init = "internal";
     public static readonly LuaIdentifierNameSyntax Ctor = "__ctor__";
-    public static readonly LuaIdentifierNameSyntax Inherits = "__inherits__";
+    public static readonly LuaIdentifierNameSyntax Inherits = "base";
     public static readonly LuaIdentifierNameSyntax Default = "default";
     public static readonly LuaIdentifierNameSyntax SystemDefault = "System.default";
     public static readonly LuaIdentifierNameSyntax Property = "System.property";

@@ -33,7 +33,7 @@ Plane.__ctor__ = function(this, val1, val2, val3, val4)
     end
 end
 
-Plane.__inherits__ = function (_, T)
+Plane.base = function (_, T)
     return { IComparable, IComparable_1(T), IEquatable_1(T) }
 end
 

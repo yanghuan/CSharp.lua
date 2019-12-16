@@ -98,7 +98,7 @@ local function inherits(_, T)
 end
 
 local Int = define("System.Int", {
-  __inherits__ = inherits,
+  base = inherits,
   default = zeroFn,
   CompareTo = compareInt,
   Equals = equals,
@@ -274,7 +274,7 @@ local function getHashCode(this)
 end
 
 local Number = define("System.Number", {
-  __inherits__ = inherits,
+  base = inherits,
   default = zeroFn,
   CompareTo = compareDouble,
   Equals = equalsDouble,

@@ -197,7 +197,7 @@ end
 
 local DictionaryCollection = define("System.Collections.Generic.DictionaryCollection", function (T)
     return {
-      __inherits__ = { System.ICollection_1(T), System.IReadOnlyCollection_1(T), System.ICollection },
+      base = { System.ICollection_1(T), System.IReadOnlyCollection_1(T), System.ICollection },
       __genericT__ = T
     }
   end, {
@@ -400,7 +400,7 @@ end
 
 System.Dictionary = define("System.Collections.Generic.Dictionary", function(TKey, TValue) 
   return { 
-    __inherits__ = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
+    base = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
     __genericT__ = KeyValuePairFn(TKey, TValue),
     __genericTKey__ = TKey,
     __genericTValue__ = TValue,

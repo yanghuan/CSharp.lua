@@ -222,7 +222,7 @@ local Char = System.defStc("System.Char", {
     end
     return c >= 0xD800 and c <= 0xDFFF
   end,
-  __inherits__ = function (_, T)
+  base = function (_, T)
     return { System.IComparable, System.IComparable_1(T), System.IEquatable_1(T) }
   end
 })

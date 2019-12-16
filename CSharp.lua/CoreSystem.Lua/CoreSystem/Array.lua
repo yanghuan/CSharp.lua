@@ -368,7 +368,7 @@ end
 
 local ArrayEnumerator = define("System.ArrayEnumerator", function (T)
   return {
-    __inherits__ = { IEnumerator_1(T) }
+    base = { IEnumerator_1(T) }
   }
 end, {
   getCurrent = System.getCurrent, 
@@ -405,7 +405,7 @@ end
 
 local ArrayReverseEnumerator = define("System.ArrayReverseEnumerator", function (T)
   return {
-    __inherits__ = { IEnumerator_1(T) }
+    base = { IEnumerator_1(T) }
   }
 end, {
   getCurrent = System.getCurrent, 
@@ -1042,7 +1042,7 @@ end
 
 System.defArray("System.Array", function(T) 
   return { 
-    __inherits__ = { System.ICloneable, System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
+    base = { System.ICloneable, System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
     __genericT__ = T
   }
 end, Array, MultiArray)
@@ -1074,7 +1074,7 @@ System.yield = cyield
 local YieldEnumerable
 YieldEnumerable = define("System.YieldEnumerable", function (T)
   return {
-    __inherits__ = { System.IEnumerable_1(T), System.IEnumerator_1(T), System.IDisposable },
+    base = { System.IEnumerable_1(T), System.IEnumerator_1(T), System.IDisposable },
     __genericT__ = T
   }
 end, {
@@ -1152,7 +1152,7 @@ local ReadOnlyCollection = {
 
 define("System.ReadOnlyCollection", function (T)
   return { 
-    __inherits__ = { System.IList_1(T), System.IList, System.IReadOnlyList_1(T) }, 
+    base = { System.IList_1(T), System.IList, System.IReadOnlyList_1(T) }, 
     __genericT__ = T
   }
 end, ReadOnlyCollection)

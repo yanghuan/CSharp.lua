@@ -582,7 +582,7 @@ System.define("System.Numerics.Complex", (function ()
     return class(value, 0.0)
   end
   class = {
-    __inherits__ = function (out, T)
+    base = function (out, T)
       return {
         System.IEquatable_1(T),
         System.IFormattable

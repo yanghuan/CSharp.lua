@@ -48,7 +48,7 @@ EqualityComparer = define("System.EqualityComparer", function (T)
   local defaultComparer
   return {
     __genericT__ = T,
-    __inherits__ = { System.IEqualityComparer_1(T), System.IEqualityComparer }, 
+    base = { System.IEqualityComparer_1(T), System.IEqualityComparer }, 
     getDefault = function ()
       local comparer = defaultComparer 
       if comparer == nil then
@@ -93,7 +93,7 @@ end
 define("System.Comparer", (function ()
   local Comparer
   Comparer = {
-    __inherits__ = { System.IComparer },
+    base = { System.IComparer },
     static = function (this)
       local default = Comparer()
       this.Default = default
@@ -108,7 +108,7 @@ local Comparer, ComparisonComparer
 
 ComparisonComparer = define("System.ComparisonComparer", function (T)
   return {
-    __inherits__ = { Comparer(T) },
+    base = { Comparer(T) },
     __ctor__ = function (this, comparison)
       this.comparison = comparison
     end,
@@ -158,7 +158,7 @@ Comparer = define("System.Comparer_1", function (T)
 
   return {
     __genericT__ = T,
-    __inherits__ = { System.IComparer_1(T), System.IComparer }, 
+    base = { System.IComparer_1(T), System.IComparer }, 
     getDefault = getDefault,
     getDefaultInvariant = getDefault,
     Compare = Compare,

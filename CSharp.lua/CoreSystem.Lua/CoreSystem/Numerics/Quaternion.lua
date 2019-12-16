@@ -41,7 +41,7 @@ Quaternion.__ctor__ = function(this, x, y, z, w)
     setmetatable(this, mt)
 end
 
-Quaternion.__inherits__ = function (_, T)
+Quaternion.base = function (_, T)
     return { IComparable, IComparable_1(T), IEquatable_1(T) }
 end
 

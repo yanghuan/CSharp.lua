@@ -34,68 +34,68 @@ local IEnumerable = defInf("System.IEnumerable")
 local IEnumerator = defInf("System.IEnumerator")
 
 local ICollection = defInf("System.ICollection", {
-  __inherits__ = { IEnumerable }
+  base = { IEnumerable }
 })
 
 defInf("System.IList", {
-  __inherits__ = { ICollection }
+  base = { ICollection }
 })
 
 defInf("System.IDictionary", {
-  __inherits__ = { ICollection }
+  base = { ICollection }
 })
 
 defInf("System.IEnumerator_1", function(T) 
   return {
-    __inherits__ = { IEnumerator }
+    base = { IEnumerator }
   }
 end)
 
 local IEnumerable_1 = defInf("System.IEnumerable_1", function(T) 
   return {
-    __inherits__ = { IEnumerable }
+    base = { IEnumerable }
   }
 end)
 
 local ICollection_1 = defInf("System.ICollection_1", function(T) 
   return { 
-    __inherits__ = { IEnumerable_1(T) } 
+    base = { IEnumerable_1(T) } 
   }
 end)
 
 local IReadOnlyCollection_1 = defInf("System.IReadOnlyCollection_1", function (T)
   return { 
-    __inherits__ = { IEnumerable_1(T) } 
+    base = { IEnumerable_1(T) } 
   }
 end)
 
 defInf("System.IReadOnlyList_1", function (T)
   return { 
-    __inherits__ = { IReadOnlyCollection_1(T) } 
+    base = { IReadOnlyCollection_1(T) } 
   }
 end)
 
 defInf('System.IDictionary_2', function(TKey, TValue) 
   return {
-    __inherits__ = { ICollection_1(System.KeyValuePair(TKey, TValue)) }
+    base = { ICollection_1(System.KeyValuePair(TKey, TValue)) }
   }
 end)
 
 defInf("System.IReadOnlyDictionary_2", function(TKey, TValue) 
   return {
-    __inherits__ = { IReadOnlyCollection_1(System.KeyValuePair(TKey, TValue)) }
+    base = { IReadOnlyCollection_1(System.KeyValuePair(TKey, TValue)) }
   }
 end)
 
 defInf("System.IList_1", function(T) 
   return {
-    __inherits__ = { ICollection_1(T) }
+    base = { ICollection_1(T) }
   }
 end)
 
 defInf("System.ISet_1", function(T) 
   return {
-    __inherits__ = { ICollection_1(T) }
+    base = { ICollection_1(T) }
   }
 end)
 
