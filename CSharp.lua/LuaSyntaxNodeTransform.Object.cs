@@ -560,7 +560,7 @@ namespace CSharpLua {
         if (catchNode.Declaration != null) {
           var typeName = catchNode.Declaration.Type.Accept<LuaIdentifierNameSyntax>(this);
           var typeSymbol = semanticModel_.GetTypeInfo(catchNode.Declaration.Type).Type;
-          if (!typeSymbol.Equals(generator_.SystemExceptionTypeSymbol)) {
+          if (!typeSymbol.EQ(generator_.SystemExceptionTypeSymbol)) {
             var mathcTypeInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Is, temp, typeName);
             if (ifCondition != null) {
               ifCondition = ifCondition.And(mathcTypeInvocation);
@@ -781,7 +781,7 @@ namespace CSharpLua {
         if (generator_.IsSealed(curTypeSymbol)) {
           bool exists = curTypeSymbol.GetMembers().OfType<T>().Any(i => {
             var overriddenSymbol = overriddenFunc(i);
-            return overriddenSymbol != null && overriddenSymbol.OriginalDefinition.Equals(symbol.OriginalDefinition);
+            return overriddenSymbol != null && overriddenSymbol.OriginalDefinition.EQ(symbol.OriginalDefinition);
           });
           return exists ? BaseVisitType.UseBase : BaseVisitType.UseThis;
         } else {
@@ -1191,7 +1191,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitLocalFunctionStatement(LocalFunctionStatementSyntax node) {
-      var result = BuildMethodDeclaration(node, default, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody, node.ReturnType);
+      var result = BuildMethodDeclaration(node, default, node.ParameterList, node.TypeParameterList, node.Body, node.ExpressionBody);
       if (node.Modifiers.IsStatic() && IsStaticLocalMethodEnableAddToType(result.Symbol)) {
         CurTypeDeclaration.TypeDeclaration.AddMethod(result.Name, result.Function, true, result.Document);
         return LuaStatementSyntax.Empty;

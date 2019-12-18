@@ -62,18 +62,6 @@ namespace CSharpLua {
     }
   }
 
-  public sealed class ArgumentNullException : System.ArgumentNullException {
-    public ArgumentNullException(string paramName) : base(paramName) {
-      Contract.Assert(false);
-    }
-  }
-
-  public sealed class InvalidOperationException : System.InvalidOperationException {
-    public InvalidOperationException() {
-      Contract.Assert(false);
-    }
-  }
-
   public enum PropertyMethodKind {
     Field = 0,
     Both = 1,
@@ -304,6 +292,10 @@ namespace CSharpLua {
       return token.IsKind(SyntaxKind.OutKeyword) || token.IsKind(SyntaxKind.RefKeyword);
     }
 
+    public static bool EQ(this ISymbol a, ISymbol b) {
+      return SymbolEqualityComparer.Default.Equals(a, b);
+    }
+
     public static bool IsBasicType(this ITypeSymbol type) {
       return type.SpecialType >= SpecialType.System_Enum && type.SpecialType <= SpecialType.System_Double;
     }
@@ -474,7 +466,7 @@ namespace CSharpLua {
         ISymbol overriddenSymbol = symbol.OverriddenSymbol();
         if (overriddenSymbol != null) {
           CheckOriginalDefinition(ref overriddenSymbol);
-          if (overriddenSymbol.Equals(superSymbol)) {
+          if (overriddenSymbol.EQ(superSymbol)) {
             return true;
           }
           symbol = overriddenSymbol;
@@ -576,12 +568,12 @@ namespace CSharpLua {
       }
 
       ITypeSymbol p = child;
-      if (p.Equals(parent)) {
+      if (p.EQ(parent)) {
         return false;
       }
 
       while (p != null) {
-        if (p.Equals(parent)) {
+        if (p.EQ(parent)) {
           return true;
         }
         p = p.BaseType;
@@ -596,7 +588,7 @@ namespace CSharpLua {
       while (t != null) {
         var interfaces = implementType.AllInterfaces;
         foreach (var i in interfaces) {
-          if (i.Equals(interfaceType) || i.IsImplementInterface(interfaceType)) {
+          if (i.EQ(interfaceType) || i.IsImplementInterface(interfaceType)) {
             return true;
           }
         }
@@ -611,7 +603,7 @@ namespace CSharpLua {
 
     public static bool IsNumberTypeAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
       if (left.SpecialType.IsBaseNumberType() && right.SpecialType.IsBaseNumberType()) {
-        if (left.Equals(right)) {
+        if (left.EQ(right)) {
           return true;
         }
 
@@ -651,7 +643,7 @@ namespace CSharpLua {
     }
 
     public static bool Is(this ITypeSymbol left, ITypeSymbol right) {
-      if (left.Equals(right)) {
+      if (left.EQ(right)) {
         return true;
       }
 
@@ -675,7 +667,7 @@ namespace CSharpLua {
 
     public static void CheckMethodDefinition(ref IMethodSymbol symbol) {
       if (symbol.IsExtensionMethod) {
-        if (symbol.ReducedFrom != null && !symbol.ReducedFrom.Equals(symbol)) {
+        if (symbol.ReducedFrom != null && !symbol.ReducedFrom.EQ(symbol)) {
           symbol = symbol.ReducedFrom;
         } else {
           CheckSymbolDefinition(ref symbol);
@@ -689,7 +681,7 @@ namespace CSharpLua {
       if (symbol.Kind == SymbolKind.Method) {
         IMethodSymbol methodSymbol = (IMethodSymbol)symbol;
         CheckMethodDefinition(ref methodSymbol);
-        if (!methodSymbol.Equals(symbol)) {
+        if (!methodSymbol.EQ(symbol)) {
           symbol = methodSymbol;
         }
       } else {
@@ -720,7 +712,7 @@ namespace CSharpLua {
       if (baseTypeSymbol.IsGenericType) {
         foreach (var baseTypeArgument in baseTypeSymbol.TypeArguments) {
           if (baseTypeSymbol.Kind != SymbolKind.TypeParameter) {
-            if (!baseTypeArgument.Equals(typeSymbol) && baseTypeArgument.Is(typeSymbol)) {
+            if (!baseTypeArgument.EQ(typeSymbol) && baseTypeArgument.Is(typeSymbol)) {
               return true;
             }
           }
@@ -1013,7 +1005,7 @@ namespace CSharpLua {
           break;
         }
         case SymbolKind.TypeParameter: {
-          return matchType == null || symbol.Equals(matchType);
+          return matchType == null || symbol.EQ(matchType);
         }
         case SymbolKind.PointerType: {
           var pointType = (IPointerTypeSymbol)symbol;
@@ -1072,7 +1064,7 @@ namespace CSharpLua {
     }
 
     public static bool IsContainsInternalSymbol(this INamedTypeSymbol type, ISymbol symbol) {
-      if (type.Equals(symbol.ContainingType)) {
+      if (type.EQ(symbol.ContainingType)) {
         return true;
       }
 
@@ -1162,7 +1154,7 @@ namespace CSharpLua {
             int index = ctor.FindNotNullParameterIndex();
             if (index != -1) {
               notNullParameterIndex = index;
-              return symbol.Equals(ctor);
+              return symbol.EQ(ctor);
             }
           }
         }

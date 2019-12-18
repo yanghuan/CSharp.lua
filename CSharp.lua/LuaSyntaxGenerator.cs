@@ -122,7 +122,7 @@ namespace CSharpLua {
     private readonly Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>> partialTypes_ = new Dictionary<INamedTypeSymbol, List<PartialTypeDeclaration>>();
     private readonly HashSet<string> monoBehaviourSpecialMethodNames_;
     private IMethodSymbol mainEntryPoint_;
-    private List<LuaExpressionSyntax> assemblyAttributes_ = new List<LuaExpressionSyntax>();
+    private readonly List<LuaExpressionSyntax> assemblyAttributes_ = new List<LuaExpressionSyntax>();
     public INamedTypeSymbol SystemExceptionTypeSymbol { get; }
     private readonly INamedTypeSymbol monoBehaviourTypeSymbol_;
 
@@ -690,13 +690,13 @@ namespace CSharpLua {
     }
 
     private static bool IsSameNameSymbol(ISymbol member, ISymbol symbol) {
-      if (member.Equals(symbol)) {
+      if (member.EQ(symbol)) {
         return true;
       }
 
       if (symbol.Kind == SymbolKind.Method) {
         var methodSymbol = (IMethodSymbol)symbol;
-        if (methodSymbol.PartialDefinitionPart != null && methodSymbol.PartialDefinitionPart.Equals(member)) {
+        if (methodSymbol.PartialDefinitionPart != null && methodSymbol.PartialDefinitionPart.EQ(member)) {
           return true;
         }
       }
@@ -782,7 +782,7 @@ namespace CSharpLua {
       int index = 0;
       foreach (ISymbol member in sameNameMembers) {
         LuaIdentifierNameSyntax identifierName = GetMethodNameFromIndex(symbol, index);
-        if (member.Equals(symbol)) {
+        if (member.EQ(symbol)) {
           symbolExpression = identifierName;
         } else {
           if (!memberNames_.ContainsKey(member)) {
@@ -843,7 +843,7 @@ namespace CSharpLua {
       var rootType = symbol.ContainingType;
       var curTypeSymbol = rootType;
       while (true) {
-        AddSimilarNameMembers(curTypeSymbol, names, members, !rootType.Equals(curTypeSymbol));
+        AddSimilarNameMembers(curTypeSymbol, names, members, !rootType.EQ(curTypeSymbol));
         var baseTypeSymbol = curTypeSymbol.BaseType;
         if (baseTypeSymbol != null) {
           curTypeSymbol = baseTypeSymbol;
@@ -950,7 +950,7 @@ namespace CSharpLua {
         if (countOfA == 1) {
           var implementationOfA = a.InterfaceImplementations().First();
           var implementationOfB = b.InterfaceImplementations().First();
-          if (implementationOfA.Equals(implementationOfB)) {
+          if (implementationOfA.EQ(implementationOfB)) {
             throw new CompilationErrorException($"{a} is conflict with {b}");
           }
 
@@ -976,7 +976,7 @@ namespace CSharpLua {
     }
 
     private int MemberSymbolCommonComparison(ISymbol a, ISymbol b) {
-      if (a.ContainingType.Equals(b.ContainingType)) {
+      if (a.ContainingType.EQ(b.ContainingType)) {
         var type = a.ContainingType;
         var names = GetSymbolNames(a);
         List<ISymbol> members = new List<ISymbol>();
@@ -1306,7 +1306,7 @@ namespace CSharpLua {
               }
 
               var implementationType = implementationMember.ContainingType;
-              if (!implementationType.Equals(type)) {
+              if (!implementationType.EQ(type)) {
                 if (!implementationType.AllInterfaces.Contains(baseInterface)) {
                   generator_.AddImplicitInterfaceImplementation(implementationMember, interfaceMember);
                   generator_.TryAddExtend(baseInterface, implementationType);
@@ -1372,7 +1372,7 @@ namespace CSharpLua {
       }
 
       private static bool CheckTypeNameExists(IEnumerable<ISymbol> all, ISymbol type, string newName) {
-        return all.Where(i => i.ContainingNamespace.Equals(type.ContainingNamespace)).Any(i => i.Name == newName);
+        return all.Where(i => i.ContainingNamespace.EQ(type.ContainingNamespace)).Any(i => i.Name == newName);
       }
 
       private void CheckNamespace() {
@@ -1599,12 +1599,12 @@ namespace CSharpLua {
         int index = 0;
         switch (symbol.Kind) {
           case SymbolKind.Method: {
-            index = methods.FindIndex(i => i.Equals(symbol));
+            index = methods.FindIndex(i => i.EQ(symbol));
             break;
           }
           case SymbolKind.Property:
           case SymbolKind.Event: {
-            index = methods.FindIndex(i => i.Kind == SymbolKind.Method && symbol.Equals(((IMethodSymbol)i).AssociatedSymbol)) + 1;
+            index = methods.FindIndex(i => i.Kind == SymbolKind.Method && symbol.EQ(((IMethodSymbol)i).AssociatedSymbol)) + 1;
             break;
           }
         }
