@@ -2860,15 +2860,8 @@ namespace CSharpLua {
       }
     }
 
-    private LuaExpressionSyntax BuildDelegateNameExpression(IMethodSymbol symbol, LuaExpressionSyntax target, LuaExpressionSyntax name, CSharpSyntaxNode node) {
+    private void CheckDelegateBind(IMethodSymbol symbol, CSharpSyntaxNode node, ref LuaExpressionSyntax nameExpression) {
       const int kReturnParameterIndex = int.MaxValue;
-      LuaExpressionSyntax nameExpression;
-      if (symbol.IsStatic) {
-        nameExpression = name;
-      } else {
-        nameExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateMake, target, name);
-      }
-
       if (symbol.IsGenericMethod) {
         var originalDefinition = symbol.OriginalDefinition;
         if (!originalDefinition.Equals(symbol)) {
@@ -2945,18 +2938,21 @@ namespace CSharpLua {
                 string bindMethodName = LuaIdentifierNameSyntax.DelegateBind.ValueText + placeholders.Count;
                 var invocationExpression = new LuaInvocationExpressionSyntax(bindMethodName, nameExpression);
                 invocationExpression.AddArguments(placeholders.Select(i => i.Build(this)));
-                return invocationExpression;
+                nameExpression = invocationExpression;
+                return;
               }
             } else if (symbol.Parameters.Length == 2) {
               if (placeholders.Count == 2) {
                 if (placeholders[0].TypeParameterIndex == 2 && placeholders[1].TypeParameterIndex == 1) {
                   string bindMethodName = LuaIdentifierNameSyntax.DelegateBind.ValueText + "2_1";
-                  return new LuaInvocationExpressionSyntax(bindMethodName, nameExpression);
+                  nameExpression = new LuaInvocationExpressionSyntax(bindMethodName, nameExpression);
+                  return;
                 }
               } else if (placeholders.Count == 1) {
                 if (placeholders.First().TypeParameterIndex == 2) {
                   string bindMethodName = LuaIdentifierNameSyntax.DelegateBind.ValueText + "0_2";
-                  return new LuaInvocationExpressionSyntax(bindMethodName, nameExpression);
+                  nameExpression = new LuaInvocationExpressionSyntax(bindMethodName, nameExpression);
+                  return;
                 }
               }
             }
@@ -2967,7 +2963,16 @@ namespace CSharpLua {
           }
         }
       }
+    }
 
+    private LuaExpressionSyntax BuildDelegateNameExpression(IMethodSymbol symbol, LuaExpressionSyntax target, LuaExpressionSyntax name, CSharpSyntaxNode node) {
+      LuaExpressionSyntax nameExpression;
+      if (symbol.IsStatic) {
+        nameExpression = name;
+      } else {
+        nameExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.DelegateMake, target, name);
+      }
+      CheckDelegateBind(symbol, node, ref nameExpression);
       return nameExpression;
     }
 
@@ -2989,6 +2994,9 @@ namespace CSharpLua {
             return BuildDelegateNameExpression(symbol, methodName, node);
           }
           return new LuaInternalMethodExpressionSyntax(methodName);
+        }
+        if (CurTypeSymbol.IsContainsInternalSymbol(symbol) && IsMoreThanLocalVariables(symbol)) {
+          return LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(methodName);
         }
         return methodName;
       } else {

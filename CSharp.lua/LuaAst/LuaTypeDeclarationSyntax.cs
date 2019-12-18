@@ -187,8 +187,9 @@ namespace CSharpLua.LuaAst {
 
     private void CheckTooManyVariables(bool isLocalOrUpvalues) {
       if (!hasTooManyLocalVariables_) {
+        local_.Variables.Add(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable);
         methodList_.Statements.Add(new LuaShortCommentStatement(isLocalOrUpvalues ? " too many local variables (limit is 200)" : "too many upvalues (limit is 60)"));
-        methodList_.Statements.Add(new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable, LuaTableExpression.Empty));
+        methodList_.Statements.Add(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.Assignment(LuaTableExpression.Empty));
         hasTooManyLocalVariables_ = true;
       }
     }
