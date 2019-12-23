@@ -139,21 +139,24 @@ namespace CSharpLua {
       GetGenerator().GenerateSingleFile(fileName, output_, luaSystemLibs);
     }
 
-    private IEnumerable<string> GetSourceFiles() {
+    private IEnumerable<string> GetSourceFiles(out bool isDirectory) {
       if (Directory.Exists(input_)) {
+        isDirectory = true;
         return Directory.EnumerateFiles(input_, "*.cs", SearchOption.AllDirectories);
       }
+
+      isDirectory = false;
       return Utility.Split(input_, true);
     }
 
     private LuaSyntaxGenerator GetGenerator() {
-      var files = GetSourceFiles();
+      var files = GetSourceFiles(out bool isDirectory);
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
       var setting = new LuaSyntaxGenerator.SettingInfo() {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
-        BaseFolder = input_,
+        BaseFolder = isDirectory ? input_ : null,
         Attributes = attributes_,
         Enums = enums_,
         LuaModuleLibs = new HashSet<string>(luaModuleLibs),

@@ -267,8 +267,11 @@ namespace CSharpLua {
       throw new InvalidProgramException();
     }
 
-    internal string RemoveBaseFolder(string patrh) {
-      return patrh.Remove(0, Setting.BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+    internal string RemoveBaseFolder(string path) {
+      if (!string.IsNullOrEmpty(Setting.BaseFolder)) {
+        return path.Remove(0, Setting.BaseFolder.Length).TrimStart(Path.DirectorySeparatorChar, '/');
+      }
+      return Path.GetFileName(path);
     }
 
     private string GetOutFileAbsolutePath(string inFilePath, string output_, out string module) {
