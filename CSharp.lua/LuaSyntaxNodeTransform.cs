@@ -1712,7 +1712,7 @@ namespace CSharpLua {
             case SyntaxKind.LeftShiftAssignmentExpression:
             case SyntaxKind.RightShiftAssignmentExpression: {
               if (containingType.IsIntegerType(false)) {
-                bool isLeftShift = kind == SyntaxKind.LeftShiftExpression;
+                bool isLeftShift = kind == SyntaxKind.LeftShiftAssignmentExpression;
                 if (IsLuaClassic) {
                   var method = isLeftShift ? LuaIdentifierNameSyntax.ShiftLeft : LuaIdentifierNameSyntax.ShiftRight;
                   if (IsNullableAssignmentExpression(leftNode, rightNode, null, out var result, method)) {
@@ -1787,7 +1787,7 @@ namespace CSharpLua {
         return resultExpression;
       }
 
-      string operatorToken = GetOperatorToken(node.OperatorToken.ValueText[0].ToString());
+      string operatorToken = GetOperatorToken(node.OperatorToken.ValueText[0 ..^1]);
       return BuildCommonAssignmentExpression(leftNode, rightNode, operatorToken, node);
     }
 
