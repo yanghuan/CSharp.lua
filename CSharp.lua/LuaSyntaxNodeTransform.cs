@@ -80,7 +80,10 @@ namespace CSharpLua {
     private readonly Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
     private int noImportTypeNameCounter_;
     public bool IsNoImportTypeName => noImportTypeNameCounter_ > 0;
-    public bool IsNoneGenericTypeCounter => generator_.IsNoneGenericTypeCounter;
+    private int genericTypeCounter_;
+    public bool IsNoneGenericTypeCounter => genericTypeCounter_ == 0;
+    public void AddGenericTypeCounter() => ++genericTypeCounter_;
+    public void SubGenericTypeCounter() => --genericTypeCounter_;
     private int metadataTypeNameCounter_;
     public bool IsMetadataTypeName => metadataTypeNameCounter_ > 0;
 

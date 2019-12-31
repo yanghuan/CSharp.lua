@@ -145,11 +145,20 @@ namespace CSharpLua {
         .WithMetadataImportOptions(MetadataImportOptions.All);
     }
 
+    private static Task<SyntaxTree> BuildSyntaxTreeAsync((string Text, string Path) code, CSharpParseOptions parseOptions) {
+      return Task.Factory.StartNew(o => CSharpSyntaxTree.ParseText(code.Text, parseOptions, code.Path), null);
+    }
+
+    private static IEnumerable<SyntaxTree> BuildSyntaxTrees(IEnumerable<(string Text, string Path)> codes, CSharpParseOptions parseOptions) {
+      var tasks = codes.Select(i => BuildSyntaxTreeAsync(i, parseOptions));
+      return Task.WhenAll(tasks).Result;
+    }
+
     private static (CSharpCompilation, CSharpCommandLineArguments) BuildCompilation(IEnumerable<(string Text, string Path)> codes, IEnumerable<string> libs, IEnumerable<string> cscArguments, LuaSyntaxGenerator.SettingInfo setting) {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.CSharp8).WithDocumentationMode(DocumentationMode.Parse);
-      var syntaxTrees = codes.Select(code => CSharpSyntaxTree.ParseText(code.Text, parseOptions, code.Path));
-      var references = libs.Select(i => MetadataReference.CreateFromFile(i));
+      var syntaxTrees = BuildSyntaxTrees(codes, parseOptions);
+      var references = libs.Select(i => MetadataReference.CreateFromFile(i)).ToList();
       var compilation = CSharpCompilation.Create("_", syntaxTrees, references, WithOptions(commandLineArguments.CompilationOptions));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
@@ -1763,8 +1772,6 @@ namespace CSharpLua {
 
     private readonly Dictionary<INamespaceSymbol, string> namespaceRefactorNames_ = new Dictionary<INamespaceSymbol, string>();
     private readonly Dictionary<INamedTypeSymbol, string> typeRefactorNames_ = new Dictionary<INamedTypeSymbol, string>();
-    private int genericTypeCounter_;
-    public bool IsNoneGenericTypeCounter => genericTypeCounter_ == 0;
 
     private string GetTypeRefactorName(INamedTypeSymbol symbol) {
       return typeRefactorNames_.GetOrDefault(symbol);
@@ -1789,9 +1796,9 @@ namespace CSharpLua {
         }
         case SymbolKind.ArrayType: {
           var arrayType = (IArrayTypeSymbol)symbol;
-          ++genericTypeCounter_;
+          transfor?.AddGenericTypeCounter();
           var elementType = GetTypeName(arrayType.ElementType, transfor);
-          --genericTypeCounter_;
+          transfor?.SubGenericTypeCounter();
           var invocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementType);
           if (arrayType.Rank > 1) {
             invocation.AddArgument(arrayType.Rank.ToString());
@@ -1849,7 +1856,7 @@ namespace CSharpLua {
         return LuaIdentifierNameSyntax.Tuple;
       }
 
-      if (transfor != null && IsNoneGenericTypeCounter) {
+      if (transfor != null && transfor.IsNoneGenericTypeCounter) {
         var curTypeDeclaration = transfor.CurTypeDeclaration;
         if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(namedTypeSymbol, out var classIdentifier)) {
           return classIdentifier;
@@ -1896,15 +1903,15 @@ namespace CSharpLua {
 
     private void FillTypeArguments(List<LuaExpressionSyntax> typeArguments, INamedTypeSymbol typeSymbol, LuaSyntaxNodeTransform transfor) {
       if (typeSymbol.TypeArguments.Length > 0) {
-        ++genericTypeCounter_;
+        transfor?.AddGenericTypeCounter();
         foreach (var typeArgument in typeSymbol.TypeArguments) {
           if (typeArgument.Kind == SymbolKind.ErrorType) {
             break;
           }
-          LuaExpressionSyntax typeArgumentExpression = GetTypeName(typeArgument, transfor);
+          var typeArgumentExpression = GetTypeName(typeArgument, transfor);
           typeArguments.Add(typeArgumentExpression);
         }
-        --genericTypeCounter_;
+        transfor?.SubGenericTypeCounter();
       }
     }
 
