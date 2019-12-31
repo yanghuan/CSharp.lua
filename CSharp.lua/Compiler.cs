@@ -42,7 +42,6 @@ namespace CSharpLua {
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
-
     public Compiler(string input, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
       input_ = input;
       output_ = output;
@@ -118,19 +117,6 @@ namespace CSharpLua {
       return libs;
     }
 
-    private static LuaSyntaxGenerator Build(
-      IEnumerable<string> cscArguments,
-      IEnumerable<(string Text, string Path)> codes, 
-      IEnumerable<string> libs,
-      IEnumerable<string> metas,
-      LuaSyntaxGenerator.SettingInfo setting) {
-      var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
-      var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.CSharp8).WithDocumentationMode(DocumentationMode.Parse);
-      var syntaxTrees = codes.Select(code => CSharpSyntaxTree.ParseText(code.Text, parseOptions, code.Path));
-      var references = libs.Select(i => MetadataReference.CreateFromFile(i));
-      return new LuaSyntaxGenerator(syntaxTrees, references, commandLineArguments, metas, setting);
-    }
-
     public void Compile() {
       GetGenerator().Generate(output_);
     }
@@ -164,12 +150,12 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
       };
-      return Build(cscArguments_, codes, libs, Metas, setting);
+      return new LuaSyntaxGenerator(codes, libs, cscArguments_, Metas, setting);
     }
 
     public static string CompileSingleCode(string code) {
       var codes = new (string, string)[] { (code, "") };
-      var generator = Build(null, codes, GetSystemLibs(), GetMetas(null), new LuaSyntaxGenerator.SettingInfo());
+      var generator = new LuaSyntaxGenerator(codes, GetSystemLibs(), null, GetMetas(null), new LuaSyntaxGenerator.SettingInfo());
       return generator.GenerateSingle();
     }
   }

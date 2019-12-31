@@ -235,7 +235,7 @@ namespace CSharpLua {
       }
 
       var attributes = BuildAttributes(node.AttributeLists);
-      generator_.AddAssemblyAttributes(attributes);
+      generator_.WithAssemblyAttributes(attributes);
 
       compilationUnits_.Pop();
       return compilationUnit;
@@ -415,7 +415,7 @@ namespace CSharpLua {
       return typeSymbol;
     }
 
-    internal void AcceptPartialType(PartialTypeDeclaration major, List<PartialTypeDeclaration> typeDeclarations) {
+    internal void AcceptPartialType(PartialTypeDeclaration major, IEnumerable<PartialTypeDeclaration> typeDeclarations) {
       compilationUnits_.Push(major.CompilationUnit);
       typeDeclarations_.Push(new TypeDeclarationInfo(major.Symbol, major.TypeDeclaration));
 

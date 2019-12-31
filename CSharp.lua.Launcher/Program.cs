@@ -71,10 +71,10 @@ Options
             enums = string.Empty;
           }
           string csc = GetCSCArgument(args);
+          bool isPreventDebugObject = cmds.ContainsKey("-p");
           bool isExportMetadata = cmds.ContainsKey("-metadata");
           bool isModule = cmds.ContainsKey("-module");
           bool isInlineSimpleProperty = cmds.ContainsKey("-inline-property");
-          bool isPreventDebugObject = cmds.ContainsKey("-p");
           Compiler c = new Compiler(input, output, lib, meta, csc, isClassic, atts, enums) {
             IsExportMetadata = isExportMetadata,
             IsModule = isModule,

@@ -15,7 +15,9 @@ limitations under the License.
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -62,6 +64,35 @@ namespace CSharpLua {
     }
   }
 
+  public sealed class ConcurrentList<T> : ConcurrentBag<T> {
+  }
+
+  public sealed class ConcurrentHashSet<T> : IEnumerable<T> {
+    private ConcurrentDictionary<T, bool> dict_ = new ConcurrentDictionary<T, bool>();
+
+    public bool Add(T v) {
+      return dict_.TryAdd(v, true);
+    }
+
+    public bool Contains(T v) {
+      return dict_.ContainsKey(v);
+    }
+
+    public IEnumerator<T> GetEnumerator() {
+      return dict_.Keys.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() {
+      return GetEnumerator();
+    }
+
+    public void UnionWith(IEnumerable<T> collection) {
+      foreach (var v in collection) {
+        Add(v);
+      }
+    }
+  }
+
   public enum PropertyMethodKind {
     Field = 0,
     Both = 1,
@@ -104,6 +135,14 @@ namespace CSharpLua {
         dict.Add(key, set);
       }
       return set.Add(value);
+    }
+
+    public static T GetOrAdd<K, T>(this IDictionary<K, T> dict, K key, Func<K, T> valueFunc) {
+      if (!dict.TryGetValue(key, out var v)) {
+        v = valueFunc(key);
+        dict.Add(key, v);
+      }
+      return v;
     }
 
     public static bool Contains<K, V>(this Dictionary<K, HashSet<V>> dict, K key, V value) {
@@ -1249,7 +1288,7 @@ namespace CSharpLua {
       return node.Accept<LuaExpressionSyntax>(transform);
     }
 
-    #region hard code for protobuf-net
+#region hard code for protobuf-net
 
     public static bool IsProtobufNetDeclaration(this INamedTypeSymbol type) {
       foreach (var attr in type.GetAttributes()) {
@@ -1289,6 +1328,6 @@ namespace CSharpLua {
       return false;
     }
 
-    #endregion
+#endregion
   }
 }
