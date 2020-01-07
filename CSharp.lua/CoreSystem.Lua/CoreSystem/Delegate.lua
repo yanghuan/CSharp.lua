@@ -334,3 +334,6 @@ end
 function System.bind0_2(f)
   return bind(f, create0_2) 
 end
+
+local EventArgs = System.define("System.EventArgs")
+EventArgs.Empty = setmetatable({}, EventArgs)
