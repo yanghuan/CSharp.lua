@@ -1108,9 +1108,14 @@ namespace CSharpLua {
           }
           functionExpression.AddParameter(LuaIdentifierNameSyntax.Value);
           PushFunction(functionExpression);
-          var block = accessor.Body.Accept<LuaBlockSyntax>(this);
+          if (accessor.Body != null) {
+            var block = accessor.Body.Accept<LuaBlockSyntax>(this);
+            functionExpression.AddStatements(block.Statements);
+          } else {
+            var bodyExpression = accessor.ExpressionBody.AcceptExpression(this);
+            functionExpression.AddStatement(bodyExpression);
+          }
           PopFunction();
-          functionExpression.AddStatements(block.Statements);
           var name = new LuaPropertyOrEventIdentifierNameSyntax(false, eventName);
           CurType.AddMethod(name, functionExpression, isPrivate);
           if (accessor.IsKind(SyntaxKind.RemoveAccessorDeclaration)) {
