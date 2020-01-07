@@ -749,28 +749,31 @@ namespace CSharpLua {
     }
 
     private void CheckNewPrefix(ref string newPrefix, string prefix) {
+      var usingDeclare = CurCompilationUnit.UsingDeclares.Find(i => i.Prefix == prefix);
+      if (usingDeclare != null) {
+        newPrefix = usingDeclare.NewPrefix;
+        return;
+      }
+
+      string newName = newPrefix;
       const int kMaxNameLength = 25;
       if (newPrefix.Length > kMaxNameLength) {
         string[] names = prefix.Split('.');
         if (names.Length > 2) {
           string head = names.First();
           string tail = names.Last();
-          string newName = head + tail;
+          newName = head + tail;
           if (newName.Length > kMaxNameLength) {
             newName = tail;
-          }
-          if (!CurCompilationUnit.IsUsingDeclaresExists(newName)) {
-            newPrefix = newName;
-            return;
           }
         }
       }
 
       int index = 0;
       while (true) {
-        string newName = Utility.GetNewIdentifierName(newPrefix, index);
-        if (!CurCompilationUnit.IsUsingDeclaresExists(newName)) {
-          newPrefix = newName;
+        string result = Utility.GetNewIdentifierName(newName, index);
+        if (!CurCompilationUnit.UsingDeclares.Exists(i => i.NewPrefix == result)) {
+          newPrefix = result;
           return;
         }
         ++index;
