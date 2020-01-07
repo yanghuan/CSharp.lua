@@ -112,7 +112,7 @@ namespace CSharpLua {
     }
 
     private const string kLuaSuffix = ".lua";
-    private const string kSystemMeta = "~/System.xml";
+    private static readonly bool kIsConcurrent = true;
     private static readonly Encoding Encoding = new UTF8Encoding(false);
 
     private readonly CSharpCompilation compilation_;
@@ -200,8 +200,13 @@ namespace CSharpLua {
     }
 
     private IEnumerable<LuaCompilationUnitSyntax> Create() {
-      var tasks = compilation_.SyntaxTrees.Select(CreateCompilationUnitAsync);
-      var luaCompilationUnits = Task.WhenAll(tasks).Result.ToList();
+      List<LuaCompilationUnitSyntax> luaCompilationUnits;
+      if (kIsConcurrent) {
+        var tasks = compilation_.SyntaxTrees.Select(CreateCompilationUnitAsync);
+        luaCompilationUnits = Task.WhenAll(tasks).Result.ToList();
+      } else {
+        luaCompilationUnits = compilation_.SyntaxTrees.Select(CreateCompilationUnit).ToList();
+      }
 
       CheckExportEnums();
       CheckPartialTypes();

@@ -100,6 +100,10 @@ namespace CSharpLua.LuaAst {
       ++typeDeclarationCount_;
     }
 
+    public bool IsUsingDeclaresExists(string name) {
+      return UsingDeclares.Exists(i => i.NewPrefix == name);
+    }
+
     private void CheckUsingDeclares() {
       var imports = UsingDeclares.Where(i => !i.IsFromCode).ToList();
       if (imports.Count > 0) {

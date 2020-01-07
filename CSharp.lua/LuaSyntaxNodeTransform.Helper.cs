@@ -759,10 +759,21 @@ namespace CSharpLua {
           if (newName.Length > kMaxNameLength) {
             newName = tail;
           }
-          if (!CurCompilationUnit.UsingDeclares.Exists(i => i.Prefix == newName)) {
+          if (!CurCompilationUnit.IsUsingDeclaresExists(newName)) {
             newPrefix = newName;
+            return;
           }
         }
+      }
+
+      int index = 0;
+      while (true) {
+        string newName = Utility.GetNewIdentifierName(newPrefix, index);
+        if (!CurCompilationUnit.IsUsingDeclaresExists(newName)) {
+          newPrefix = newName;
+          return;
+        }
+        ++index;
       }
     }
 
