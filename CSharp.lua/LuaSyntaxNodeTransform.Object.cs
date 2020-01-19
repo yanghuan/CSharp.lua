@@ -458,7 +458,9 @@ namespace CSharpLua {
         var delegateInvokeMethod = type.DelegateInvokeMethod;
         var expression = body.AcceptExpression(this);
         if (delegateInvokeMethod.ReturnsVoid) {
-          function.AddStatement(expression);
+          if (expression != LuaExpressionSyntax.EmptyExpression) {
+            function.AddStatement(expression);
+          }
         } else {
           function.AddStatement(new LuaReturnStatementSyntax(expression));
         }
@@ -836,6 +838,21 @@ namespace CSharpLua {
       }
     }
 
+    private bool IsReturnVoidConditionalAccessExpression(ConditionalAccessExpressionSyntax node) {
+      switch (node.Parent.Kind()) {
+        case SyntaxKind.ExpressionStatement:
+        case SyntaxKind.ArrowExpressionClause:
+        case SyntaxKind.ParenthesizedLambdaExpression:
+        case SyntaxKind.SimpleLambdaExpression: {
+          if (CurMethodInfoOrNull.Symbol.ReturnsVoid) {
+            return true;
+          }
+          break;
+        }
+      }
+      return false;
+    }
+
     public override LuaSyntaxNode VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node) {
       bool isEmpty = functions_.Count == 0;
       if (isEmpty) {
@@ -868,8 +885,7 @@ namespace CSharpLua {
         ReleaseTempIdentifier(temp);
       }
 
-      bool isReturnVoidStatement = node.Parent.IsKind(SyntaxKind.ExpressionStatement) || (node.Parent.IsKind(SyntaxKind.ArrowExpressionClause) && CurMethodInfoOrNull.Symbol.ReturnsVoid);
-      if (isReturnVoidStatement) {
+      if (IsReturnVoidConditionalAccessExpression(node)) {
         if (isEmpty) {
           throw new InvalidOperationException();
         }
