@@ -815,7 +815,7 @@ namespace CSharpLua {
     }
 
     private bool AddImport(string prefix, string newPrefix, bool isFromCode) {
-      if (CurCompilationUnit.UsingDeclares.Exists(i => i.Prefix == prefix)) {
+      if (CurCompilationUnit.UsingDeclares.Exists(i => i.Prefix == prefix && i.IsFromCode == isFromCode)) {
         if (!IsLuaNewest && IsMoreThanUpvalues(newPrefix)) {
           return false;
         }
