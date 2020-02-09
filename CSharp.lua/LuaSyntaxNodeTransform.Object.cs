@@ -840,7 +840,9 @@ namespace CSharpLua {
 
     private bool IsReturnVoidConditionalAccessExpression(ConditionalAccessExpressionSyntax node) {
       switch (node.Parent.Kind()) {
-        case SyntaxKind.ExpressionStatement:
+        case SyntaxKind.ExpressionStatement: {
+          return true;
+        }
         case SyntaxKind.ArrowExpressionClause:
         case SyntaxKind.ParenthesizedLambdaExpression:
         case SyntaxKind.SimpleLambdaExpression: {
