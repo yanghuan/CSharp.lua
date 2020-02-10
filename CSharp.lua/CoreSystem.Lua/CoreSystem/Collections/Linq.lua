@@ -25,6 +25,7 @@ local is = System.is
 local cast = System.cast
 local Int32 = System.Int32
 local isArrayLike = System.isArrayLike
+local isDictLike = System.isDictLike
 local Array = System.Array
 local arrayEnumerator = Array.GetEnumerator
 
@@ -45,6 +46,7 @@ local assert = assert
 local getmetatable = getmetatable
 local setmetatable = setmetatable
 local select = select
+local pairs = pairs
 local tsort = table.sort
 
 local InternalEnumerable = define("System.Linq.InternalEnumerable", function(T) 
@@ -400,9 +402,16 @@ local function ordered(source, compare)
     end, 
     function() 
       local count = 1
-      for _, v in each(source) do
-        t[count] = wrap(v)
-        count = count + 1
+      if isDictLike(source) then
+        for k, v in pairs(source) do
+          t[count] = setmetatable({ Key = k, Value = v }, T)
+          count = count + 1
+        end
+      else
+        for _, v in each(source) do
+          t[count] = wrap(v)
+          count = count + 1
+        end
       end
       if count > 1 then
         tsort(t, function(x, y)

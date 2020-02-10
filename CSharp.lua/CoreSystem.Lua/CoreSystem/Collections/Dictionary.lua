@@ -398,6 +398,10 @@ function System.dictionaryFromTable(t, TKey, TValue)
   return setmetatable(t, Dictionary(TKey, TValue))
 end
 
+function System.isDictLike(t)
+  return type(t) == "table" and t.GetEnumerator == dictionaryEnumerator
+end
+
 System.Dictionary = define("System.Collections.Generic.Dictionary", function(TKey, TValue) 
   return { 
     base = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
