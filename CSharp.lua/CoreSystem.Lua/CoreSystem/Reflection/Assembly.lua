@@ -905,16 +905,19 @@ end
 local function createInstance(T, nonPublic)
   local metadata = rawget(T, "__metadata__")
   if metadata then
-    local ctorMetadata = metadata.methods[1]
-    if ctorMetadata[1] == ".ctor" then
-      local flags = ctorMetadata[2]
-      if nonPublic or hasPublicFlag(flags) then
-        local parameterCount = getMethodParameterCount(flags)
-        if parameterCount == 0 then
-          return T()
+    local methods = metadata.methods
+    if methods then
+      local ctorMetadata = methods[1]
+      if ctorMetadata[1] == ".ctor" then
+        local flags = ctorMetadata[2]
+        if nonPublic or hasPublicFlag(flags) then
+          local parameterCount = getMethodParameterCount(flags)
+          if parameterCount == 0 then
+            return T()
+          end
         end
+        throw(MissingMethodException())
       end
-      throw(MissingMethodException())
     end
   end
   return T()
