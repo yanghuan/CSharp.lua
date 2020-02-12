@@ -1793,10 +1793,18 @@ namespace CSharpLua {
           goto Fail;
         }
 
-        var accessor = propertyDeclaration.AccessorList.Accessors.First(i => i.IsKind(SyntaxKind.GetAccessorDeclaration));
-        declarationNode = accessor;
-        bodyNode = accessor.Body;
-        expressionBodyNode = accessor.ExpressionBody;
+        if (propertyDeclaration.AccessorList != null) {
+          var accessor = propertyDeclaration.AccessorList.Accessors.First(i => i.IsKind(SyntaxKind.GetAccessorDeclaration));
+          declarationNode = accessor;
+          bodyNode = accessor.Body;
+          expressionBodyNode = accessor.ExpressionBody;
+        } else if (propertyDeclaration.ExpressionBody != null) {
+          declarationNode = propertyDeclaration.ExpressionBody;
+          bodyNode = null;
+          expressionBodyNode = propertyDeclaration.ExpressionBody;
+        } else {
+          goto Fail;
+        }
         parameterList = null;
       } else {
         if (!(symbol.GetDeclaringSyntaxNode() is MethodDeclarationSyntax methodDeclaration)) {
@@ -2047,29 +2055,41 @@ namespace CSharpLua {
         return false;
       }
 
-      if (!(symbol.GetDeclaringSyntaxNode() is PropertyDeclarationSyntax propertyDeclaration) || propertyDeclaration.AccessorList == null) {
+      if (!(symbol.GetDeclaringSyntaxNode() is PropertyDeclarationSyntax propertyDeclaration)) {
         return false;
       }
 
-      var accessor = propertyDeclaration.AccessorList.Accessors.First(i => i.IsKind(SyntaxKind.GetAccessorDeclaration));
       ExpressionSyntax expressionBody;
-      if (accessor.Body != null) {
-        if (accessor.Body.Statements.Count > 1) {
-          return false;
-        }
+      if (propertyDeclaration.AccessorList != null) {
+        var accessor = propertyDeclaration.AccessorList.Accessors.First(i => i.IsKind(SyntaxKind.GetAccessorDeclaration));
+        if (accessor.Body != null) {
+          if (accessor.Body.Statements.Count > 1) {
+            return false;
+          }
 
-        if (!(accessor.Body.Statements.First() is ReturnStatementSyntax returnStatement)) {
-          return false;
+          if (!(accessor.Body.Statements.First() is ReturnStatementSyntax returnStatement)) {
+            return false;
+          }
+          expressionBody = returnStatement.Expression;
+        } else {
+          expressionBody = accessor.ExpressionBody.Expression;
         }
-
-        expressionBody = returnStatement.Expression;
+      } else if (propertyDeclaration.ExpressionBody != null) {
+        expressionBody = propertyDeclaration.ExpressionBody.Expression;
       } else {
-        expressionBody = accessor.ExpressionBody.Expression;
+        return false;
       }
 
       var kind = expressionBody.Kind();
       switch (kind) {
-        case SyntaxKind.IdentifierName:
+        case SyntaxKind.IdentifierName: {
+          var semanticModel = generator_.GetSemanticModel(expressionBody.SyntaxTree);
+          var identifierSymbol = semanticModel.GetSymbolInfo(expressionBody).Symbol;
+          if (identifierSymbol != null && identifierSymbol.IsStatic && identifierSymbol.IsPrivate()) {
+            return false;
+          }
+          break;
+        }
         case SyntaxKind.SimpleMemberAccessExpression: {
           break;
         }

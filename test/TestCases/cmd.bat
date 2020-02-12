@@ -35,12 +35,6 @@ if not %errorlevel%==0 (
   goto:Fail 
 )
 
-:Fail
-if not %errorlevel%==0 (
-  pause
-  exit -1
-)
-
 echo **********************************************
 echo ********  test with no debug obejct  ********
 echo **********************************************
