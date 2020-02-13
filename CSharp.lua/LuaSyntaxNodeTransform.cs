@@ -1443,6 +1443,8 @@ namespace CSharpLua {
           var blockStatement = new LuaBlockStatementSyntax();
           blockStatement.Statements.Add(result);
           result = blockStatement;
+        } else if (expression == null) {
+          result = LuaStatementSyntax.Empty;
         }
       }
       return result;
