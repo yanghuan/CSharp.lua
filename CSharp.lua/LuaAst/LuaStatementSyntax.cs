@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 namespace CSharpLua.LuaAst {
   public abstract class LuaStatementSyntax : LuaSyntaxNode {
     public Semicolon SemicolonToken => Tokens.Semicolon;
+    public bool ForceSemicolon { get; set; }
 
     private sealed class EmptyLuaStatementSyntax : LuaStatementSyntax {
       internal override void Render(LuaRenderer renderer) {
@@ -35,7 +36,6 @@ namespace CSharpLua.LuaAst {
     }
 
     public static readonly LuaStatementSyntax Empty = new EmptyLuaStatementSyntax();
-    public static readonly LuaStatementSyntax Colon = (LuaIdentifierNameSyntax)Semicolon.kSemicolon;
   }
 
   public sealed class LuaExpressionStatementSyntax : LuaStatementSyntax {

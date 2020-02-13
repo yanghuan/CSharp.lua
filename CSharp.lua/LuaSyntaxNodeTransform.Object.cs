@@ -645,7 +645,7 @@ namespace CSharpLua {
 
         var temp1 = GetTempIdentifier();
         var temp2 = isReturnVoid ? null : GetTempIdentifier();
-        var localVariables = new LuaLocalVariablesStatementSyntax();
+        var localVariables = new LuaLocalVariablesSyntax();
         localVariables.Variables.Add(temp1);
         if (temp2 != null) {
           localVariables.Variables.Add(temp2);

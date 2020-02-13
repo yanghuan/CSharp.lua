@@ -68,7 +68,7 @@ namespace CSharpLua.LuaAst {
     public readonly LuaRepeatStatementSyntax RepeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
     public LuaIdentifierNameSyntax Temp { get; }
     private LuaBlockSyntax defaultBock_;
-    private readonly LuaLocalVariablesStatementSyntax caseLabelVariables_ = new LuaLocalVariablesStatementSyntax();
+    private readonly LuaLocalVariablesSyntax caseLabelVariables_ = new LuaLocalVariablesSyntax();
     public LuaIdentifierNameSyntax DefaultLabel { get; set; }
     public readonly Dictionary<int, LuaIdentifierNameSyntax> CaseLabels = new Dictionary<int, LuaIdentifierNameSyntax>();
     private LuaIfStatementSyntax headIfStatement_;

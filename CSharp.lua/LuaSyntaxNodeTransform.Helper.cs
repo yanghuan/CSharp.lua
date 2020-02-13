@@ -1861,7 +1861,7 @@ namespace CSharpLua {
           }
         }
         var parameterValues = invocation.ArgumentList.Arguments.Where(i => i != LuaIdentifierNameSyntax.This);
-        block.AddStatement(new LuaLocalVariablesStatementSyntax(parameters, parameterValues));
+        block.AddStatement(new LuaLocalVariablesSyntax(parameters, parameterValues));
       }
 
       var prevSemanticModel_ = semanticModel_;
@@ -1903,7 +1903,7 @@ namespace CSharpLua {
 
       CurBlock.AddStatement(new LuaShortCommentStatement($" inline {symbol}"));
       if (methodInfo.InliningReturnVars.Count > 0) {
-        CurBlock.AddStatement(new LuaLocalVariablesStatementSyntax(methodInfo.InliningReturnVars));
+        CurBlock.AddStatement(new LuaLocalVariablesSyntax(methodInfo.InliningReturnVars));
       }
 
       if (block.Statements.Count == 1) {
