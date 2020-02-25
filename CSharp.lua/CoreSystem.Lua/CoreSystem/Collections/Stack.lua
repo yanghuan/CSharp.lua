@@ -34,9 +34,12 @@ function System.stackFromTable(t, T)
   return setmetatable(t, Stack(T))
 end
 
-System.Stack = System.define("System.Collections.Generic.Stack", function(T) 
+local StackFn = System.define("System.Collections.Generic.Stack", function(T) 
   return {
     base = { System.IEnumerable_1(T), System.ICollection },
     __genericT__ = T,
   }
 end, Stack)
+
+System.Stack = StackFn
+System.stack = StackFn(System.Object)

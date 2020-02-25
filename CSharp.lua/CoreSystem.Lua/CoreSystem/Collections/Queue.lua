@@ -35,9 +35,12 @@ function System.queueFromTable(t, T)
   return setmetatable(t, Queue(T))
 end
 
-System.Queue = System.define("System.Collections.Generic.Queue", function(T) 
+local QueueFn = System.define("System.Collections.Generic.Queue", function(T) 
   return {
     base = { System.IEnumerable_1(T), System.ICollection },
     __genericT__ = T,
   }
 end, Queue)
+
+System.Queue = QueueFn
+System.queue = QueueFn(System.Object)

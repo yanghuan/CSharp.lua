@@ -402,7 +402,7 @@ function System.isDictLike(t)
   return type(t) == "table" and t.GetEnumerator == dictionaryEnumerator
 end
 
-System.Dictionary = define("System.Collections.Generic.Dictionary", function(TKey, TValue) 
+local DictionaryFn = define("System.Collections.Generic.Dictionary", function(TKey, TValue) 
   return { 
     base = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
     __genericT__ = KeyValuePairFn(TKey, TValue),
@@ -411,3 +411,8 @@ System.Dictionary = define("System.Collections.Generic.Dictionary", function(TKe
     __len = getCount
   }
 end, Dictionary)
+
+System.Dictionary = DictionaryFn
+
+local Object = System.Object
+System.Hashtable = DictionaryFn(Object, Object)

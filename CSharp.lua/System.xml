@@ -467,10 +467,8 @@ limitations under the License.
       <class name="IList">
         <method name="Add" Name="AddObj" />
       </class>
-      <class name="ArrayList" Baned="should use generic collection instead" />
-      <class name="Hashtable" Baned="should use generic collection instead" />
-      <class name="Queue" Baned="should use generic collection instead" />
-      <class name="Stack" Baned="should use generic collection instead" />
+      <class name="Queue" Name="queue" />
+      <class name="Stack" Name="stack" />
     </namespace>
     <namespace name="System.Collections.Generic" Name="System">
       <class name="List`1" Name="System.List">
