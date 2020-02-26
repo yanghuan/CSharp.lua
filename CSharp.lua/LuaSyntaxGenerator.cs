@@ -1133,17 +1133,19 @@ namespace CSharpLua {
     private void UpdateName(ISymbol symbol, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {
       var memberName = memberNames_.GetOrDefault(symbol);
       if (memberName == null) {
-        ISymbol s = symbol;
+        var s = symbol;
         Utility.CheckOriginalDefinition(ref s);
-        memberName = memberNames_[s];
+        memberName = memberNames_.GetOrDefault(s);
       }
-      memberName.Update(newName);
-      GetRefactorCheckName(symbol, newName, out string checkName1, out string checkName2);
-      TryAddNewUsedName(symbol.ContainingType, checkName1);
-      if (checkName2 != null) {
-        TryAddNewUsedName(symbol.ContainingType, checkName2);
+      if (memberName != null) {
+        memberName.Update(newName);
+        GetRefactorCheckName(symbol, newName, out string checkName1, out string checkName2);
+        TryAddNewUsedName(symbol.ContainingType, checkName1);
+        if (checkName2 != null) {
+          TryAddNewUsedName(symbol.ContainingType, checkName2);
+        }
+        alreadyRefactorSymbols.Add(symbol);
       }
-      alreadyRefactorSymbols.Add(symbol);
     }
 
     private void GetRefactorCheckName(ISymbol symbol, string newName, out string checkName1, out string checkName2) {
