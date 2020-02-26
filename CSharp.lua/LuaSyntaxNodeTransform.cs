@@ -1874,7 +1874,7 @@ namespace CSharpLua {
             return BuildCommonAssignmentExpression(leftNode, rightNode, boolOperatorToken, null);
           }
 
-          if (containingType.IsIntegerType(false)) {
+          if (containingType.IsIntegerType(false) || containingType.TypeKind == TypeKind.Enum) {
             if (IsLuaClassic) {
               if (IsNullableAssignmentExpression(leftNode, rightNode, null, out var result, methodName)) {
                 return result;
@@ -3905,7 +3905,7 @@ namespace CSharpLua {
             return BuildBinaryExpression(node, boolOperatorToken);
           }
 
-          if (containingType.IsIntegerType(false)) {
+          if (containingType.IsIntegerType(false) || containingType.TypeKind == TypeKind.Enum) {
             if (IsLuaClassic) {
               if (IsNullableBinaryExpression(node, null, out var result, bitMethodName)) {
                 return result;
