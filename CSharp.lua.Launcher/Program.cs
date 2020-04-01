@@ -40,6 +40,7 @@ Options
 -c              : support classic lua version(5.1), default support 5.3
 -a              : attributes need to export, use ';' to separate, if ""-a"" only, all attributes will be exported
 -e              : enums need to export, use ';' to separate, if ""-e"" only, all enums will be exported
+-ei             : enums is represented by a variable reference rather than a constant value, need to be used with -e
 -p              : do not use debug.setmetatable, in some Addon/Plugin environment debug object cannot be used
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
@@ -75,11 +76,13 @@ Options
           bool isExportMetadata = cmds.ContainsKey("-metadata");
           bool isModule = cmds.ContainsKey("-module");
           bool isInlineSimpleProperty = cmds.ContainsKey("-inline-property");
+          bool isNotConstantForEnum = cmds.ContainsKey("-ei");
           Compiler c = new Compiler(input, output, lib, meta, csc, isClassic, atts, enums) {
             IsExportMetadata = isExportMetadata,
             IsModule = isModule,
             IsInlineSimpleProperty = isInlineSimpleProperty,
             IsPreventDebugObject = isPreventDebugObject,
+            IsNotConstantForEnum = isNotConstantForEnum,
           };
           c.Compile();
           Console.WriteLine($"Compiled Success, cost {sw.Elapsed.TotalSeconds}s");

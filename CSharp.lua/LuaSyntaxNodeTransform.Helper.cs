@@ -453,11 +453,16 @@ namespace CSharpLua {
       }
     }
 
-    private LuaLiteralExpressionSyntax GetConstLiteralExpression(IFieldSymbol constField) {
+    private LuaExpressionSyntax GetConstLiteralExpression(IFieldSymbol constField) {
       Contract.Assert(constField.HasConstantValue);
       if (constField.Type.SpecialType == SpecialType.System_Char) {
         return new LuaCharacterLiteralExpression((char)constField.ConstantValue);
       } else {
+        if (constField.Type.TypeKind == TypeKind.Enum && !generator_.IsConstantEnum(constField.Type)) {
+          var typeName = GetTypeName(constField.Type);
+          return typeName.MemberAccess(constField.Name);
+        }
+
         var literalExpression = GetLiteralExpression(constField.ConstantValue);
         string identifierToken = constField.ContainingType.Name + '.' + constField.Name;
         return new LuaConstLiteralExpression(literalExpression, identifierToken);

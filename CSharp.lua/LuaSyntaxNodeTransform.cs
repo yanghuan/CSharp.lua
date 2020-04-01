@@ -733,10 +733,22 @@ namespace CSharpLua {
       return base.VisitMethodDeclaration(node);
     }
 
-    private static LuaExpressionSyntax GetPredefinedValueTypeDefaultValue(ITypeSymbol typeSymbol) {
+    private LuaExpressionSyntax BuildEnumNoConstantDefaultValue(ITypeSymbol typeSymbol) {
+      var typeName = GetTypeName(typeSymbol);
+      var field = typeSymbol.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(i => i.ConstantValue.Equals(0));
+      if (field != null) {
+        return typeName.MemberAccess(field.Name);
+      }
+      return typeName.Invocation(LuaNumberLiteralExpressionSyntax.Zero);
+    }
+
+    private LuaExpressionSyntax GetPredefinedValueTypeDefaultValue(ITypeSymbol typeSymbol) {
       switch (typeSymbol.SpecialType) {
         case SpecialType.None: {
           if (typeSymbol.TypeKind == TypeKind.Enum) {
+            if (!generator_.IsConstantEnum(typeSymbol)) {
+              return BuildEnumNoConstantDefaultValue(typeSymbol);
+            }
             return LuaNumberLiteralExpressionSyntax.Zero;
           } else if (typeSymbol.IsTimeSpanType()) {
             return BuildDefaultValue(LuaIdentifierNameSyntax.TimeSpan);
@@ -896,7 +908,7 @@ namespace CSharpLua {
           var defalutValue = GetPredefinedValueTypeDefaultValue(typeSymbol);
           if (defalutValue != null) {
             valueExpression = defalutValue;
-            valueIsLiteral = true;
+            valueIsLiteral = defalutValue is LuaLiteralExpressionSyntax;
           } else {
             valueExpression = GetDefaultValueExpression(typeSymbol);
           }
@@ -4804,15 +4816,23 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax BuildEnumCastExpression(LuaExpressionSyntax expression, ITypeSymbol originalType, ITypeSymbol targetType) {
       if (targetType.TypeKind == TypeKind.Enum) {
+        LuaExpressionSyntax result = null;
         var targetEnumUnderlyingType = ((INamedTypeSymbol)targetType).EnumUnderlyingType;
         if (originalType.TypeKind == TypeKind.Enum || originalType.IsCastIntegerType()) {
           var originalIntegerType = originalType.TypeKind == TypeKind.Enum ? ((INamedTypeSymbol)originalType).EnumUnderlyingType : originalType;
           if (targetEnumUnderlyingType.IsNumberTypeAssignableFrom(originalIntegerType)) {
-            return expression;
+            result = expression;
+          } else {
+            result = GetCastToNumberExpression(expression, targetEnumUnderlyingType, false);
           }
-          return GetCastToNumberExpression(expression, targetEnumUnderlyingType, false);
         } else if (originalType.IsDoubleOrFloatType(false)) {
-          return GetCastToNumberExpression(expression, targetEnumUnderlyingType, true);
+          result = GetCastToNumberExpression(expression, targetEnumUnderlyingType, true);
+        }
+        if (result != null) {
+          if (!generator_.IsConstantEnum(targetType) && !originalType.EQ(targetType)) {
+            result = GetTypeName(targetType).Invocation(expression);
+          }
+          return result;
         }
       } else if (originalType.TypeKind == TypeKind.Enum) {
         var originalEnumUnderlyingType = ((INamedTypeSymbol)originalType).EnumUnderlyingType;

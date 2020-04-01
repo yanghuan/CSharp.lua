@@ -20,9 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-
 namespace CSharpLua {
   public sealed class Compiler {
     private const string kDllSuffix = ".dll";
@@ -42,6 +39,8 @@ namespace CSharpLua {
     public bool IsModule { get; set; }
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
+    public bool IsNotConstantForEnum { get; set; }
+
     public Compiler(string input, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
       input_ = input;
       output_ = output;
@@ -149,6 +148,7 @@ namespace CSharpLua {
         IsModule = IsModule,
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
+        IsNotConstantForEnum = IsNotConstantForEnum,
       };
       return new LuaSyntaxGenerator(codes, libs, cscArguments_, Metas, setting);
     }

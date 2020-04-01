@@ -69,6 +69,7 @@ namespace CSharpLua {
       public HashSet<string> LuaModuleLibs;
       public bool IsInlineSimpleProperty { get; set; }
       public bool IsPreventDebugObject { get; set; }
+      public bool IsNotConstantForEnum { get; set; }
 
       public SettingInfo() {
         Indent = 2;
@@ -357,6 +358,14 @@ namespace CSharpLua {
       }
     }
 
+    internal bool IsConstantEnum(ITypeSymbol enumType) { 
+      if (enumType.TypeKind == TypeKind.Enum) {
+        bool isNot = Setting.IsNotConstantForEnum && IsTypeEnableExport(enumType);
+        return !isNot;
+      }
+      return false;
+    }
+
     internal void AddEnumDeclaration(INamedTypeSymbol type, LuaEnumDeclarationSyntax enumDeclaration) {
       if (type.IsProtobufNetDeclaration()) {
         AddExportEnum(type);      // protobuf-net enum is always export
@@ -467,7 +476,7 @@ namespace CSharpLua {
       return symbol.TypeKind != TypeKind.Interface;
     }
 
-    private bool IsTypeEnableExport(INamedTypeSymbol type) {
+    private bool IsTypeEnableExport(ITypeSymbol type) {
       bool isExport = true;
       if (type.TypeKind == TypeKind.Enum) {
         isExport = IsEnumExport(type.ToString());
@@ -1866,7 +1875,7 @@ namespace CSharpLua {
       }
 
       var namedTypeSymbol = (INamedTypeSymbol)symbol;
-      if (namedTypeSymbol.TypeKind == TypeKind.Enum) {
+      if (IsConstantEnum(namedTypeSymbol)) {
         return GetTypeName(namedTypeSymbol.EnumUnderlyingType, transfor);
       }
 

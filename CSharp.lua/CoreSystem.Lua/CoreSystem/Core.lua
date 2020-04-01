@@ -176,7 +176,7 @@ local function genericName(name, ...)
   return tconcat(t)
 end
 
-local enumMetatable = { class = "E", default = zeroFn, __index = false, interface = false }
+local enumMetatable = { class = "E", default = zeroFn, __index = false, interface = false, __call = function (_, v) return v or 0 end }
 enumMetatable.__index = enumMetatable
 
 local interfaceMetatable = { class = "I", default = nilFn, __index = false }
