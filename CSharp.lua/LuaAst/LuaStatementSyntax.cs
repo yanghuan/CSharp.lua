@@ -96,7 +96,7 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaBreakStatementSyntax Statement = new LuaBreakStatementSyntax();
+    public static readonly LuaBreakStatementSyntax Instance = new LuaBreakStatementSyntax();
   }
 
   public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
@@ -106,9 +106,9 @@ namespace CSharpLua.LuaAst {
     public LuaContinueAdapterStatementSyntax(bool isWithinTry) {
       Assignment = LuaIdentifierNameSyntax.Continue.Assignment(LuaIdentifierNameSyntax.True);
       if (isWithinTry) {
-        Statement = new LuaReturnStatementSyntax();
+        Statement = new LuaReturnStatementSyntax(LuaIdentifierLiteralExpressionSyntax.False);
       } else {
-        Statement = LuaBreakStatementSyntax.Statement;
+        Statement = LuaBreakStatementSyntax.Instance;
       }
     }
 

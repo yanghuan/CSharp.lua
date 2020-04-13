@@ -1406,41 +1406,49 @@ namespace CSharpLua {
       return block;
     }
 
+    private LuaReturnStatementSyntax BuildLoopControlReturnStatement(LuaExpressionSyntax expression) {
+      var returnStatement = new LuaReturnStatementSyntax(LuaIdentifierLiteralExpressionSyntax.True);
+      if (expression != null) {
+        returnStatement.Expressions.Add(expression);
+      }
+      return returnStatement;
+    }
+
     private LuaStatementSyntax InternalVisitReturnStatement(LuaExpressionSyntax expression) {
+      if (CurFunction is LuaCheckLoopControlExpressionSyntax check) {
+        check.HasReturn = true;
+        return BuildLoopControlReturnStatement(expression);
+      }
+
+      if (CurBlock.HasUsingDeclarations) {
+        return BuildLoopControlReturnStatement(expression);
+      }
+
       LuaStatementSyntax result;
-      if (CurFunction is LuaCheckReturnFunctionExpressionSyntax || CurBlock.HasUsingDeclarations) {
-        var returnStatement = new LuaReturnStatementSyntax();
-        returnStatement.Expressions.Add(LuaIdentifierNameSyntax.True);
-        if (expression != null) {
-          returnStatement.Expressions.Add(expression);
-        }
-        result = returnStatement;
-      } else {
-        var curMethodInfo = CurMethodInfoOrNull;
-        if (curMethodInfo != null && curMethodInfo.RefOrOutParameters.Count > 0) {
-          if (curMethodInfo.IsInlining) {
-            var multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
-            multipleAssignment.Lefts.AddRange(curMethodInfo.InliningReturnVars);
-            if (expression != null) {
-              multipleAssignment.Rights.Add(expression);
-            }
-            multipleAssignment.Rights.AddRange(curMethodInfo.RefOrOutParameters);
-            result = multipleAssignment;
-          } else {
-            var returnStatement = new LuaReturnStatementSyntax();
-            if (expression != null) {
-              returnStatement.Expressions.Add(expression);
-            }
-            returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
-            result = returnStatement;
+      var curMethodInfo = CurMethodInfoOrNull;
+      if (curMethodInfo != null && curMethodInfo.RefOrOutParameters.Count > 0) {
+        if (curMethodInfo.IsInlining) {
+          var multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
+          multipleAssignment.Lefts.AddRange(curMethodInfo.InliningReturnVars);
+          if (expression != null) {
+            multipleAssignment.Rights.Add(expression);
           }
+          multipleAssignment.Rights.AddRange(curMethodInfo.RefOrOutParameters);
+          result = multipleAssignment;
         } else {
-          if (curMethodInfo != null && curMethodInfo.IsInlining) {
-            Contract.Assert(curMethodInfo.InliningReturnVars.Count == 1);
-            result = curMethodInfo.InliningReturnVars.First().Assignment(expression);
-          } else {
-            result = new LuaReturnStatementSyntax(expression);
+          var returnStatement = new LuaReturnStatementSyntax();
+          if (expression != null) {
+            returnStatement.Expressions.Add(expression);
           }
+          returnStatement.Expressions.AddRange(curMethodInfo.RefOrOutParameters);
+          result = returnStatement;
+        }
+      } else {
+        if (curMethodInfo != null && curMethodInfo.IsInlining) {
+          Contract.Assert(curMethodInfo.InliningReturnVars.Count == 1);
+          result = curMethodInfo.InliningReturnVars.First().Assignment(expression);
+        } else {
+          result = new LuaReturnStatementSyntax(expression);
         }
       }
       return result;
@@ -3770,14 +3778,18 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitBreakStatement(BreakStatementSyntax node) {
       if (IsParnetTryStatement(node)) {
-        return new LuaReturnStatementSyntax();
+        var check = (LuaCheckLoopControlExpressionSyntax)CurFunction;
+        check.HasBreak = true;
+        return new LuaReturnStatementSyntax(LuaIdentifierLiteralExpressionSyntax.False);
       }
+
       if (CheckBreakLastBlockStatement(node)) {
         var blockStatement = new LuaBlockStatementSyntax();
-        blockStatement.Statements.Add(LuaBreakStatementSyntax.Statement);
+        blockStatement.Statements.Add(LuaBreakStatementSyntax.Instance);
         return blockStatement;
       }
-      return LuaBreakStatementSyntax.Statement;
+
+      return LuaBreakStatementSyntax.Instance;
     }
 
     private LuaExpressionSyntax BuildEnumToStringExpression(ITypeSymbol typeInfo, bool isNullable, LuaExpressionSyntax original, ExpressionSyntax node) {
@@ -4575,7 +4587,12 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitContinueStatement(ContinueStatementSyntax node) {
-      return new LuaContinueAdapterStatementSyntax(IsParnetTryStatement(node));
+      bool isWithinTry = IsParnetTryStatement(node);
+      if (isWithinTry) {
+        var check = (LuaCheckLoopControlExpressionSyntax)CurFunction;
+        check.HasContinue = true;
+      }
+      return new LuaContinueAdapterStatementSyntax(isWithinTry);
     }
 
     private void VisitLoopBody(StatementSyntax bodyStatement, LuaBlockSyntax block) {
@@ -4587,7 +4604,7 @@ namespace CSharpLua {
         LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
         WriteStatementOrBlock(bodyStatement, repeatStatement.Body);
         var lastStatement = repeatStatement.Body.Statements.Last();
-        if (lastStatement is LuaBaseReturnStatementSyntax || (IsLuaClassic && lastStatement == LuaBreakStatementSyntax.Statement)) {
+        if (lastStatement is LuaBaseReturnStatementSyntax || (IsLuaClassic && lastStatement == LuaBreakStatementSyntax.Instance)) {
           LuaBlockStatementSyntax returnBlock = new LuaBlockStatementSyntax();
           returnBlock.Statements.Add(lastStatement);
           repeatStatement.Body.Statements[repeatStatement.Body.Statements.Count - 1] = returnBlock;
@@ -4595,7 +4612,7 @@ namespace CSharpLua {
         repeatStatement.Body.Statements.Add(continueIdentifier.Assignment(LuaIdentifierNameSyntax.True));
         block.Statements.Add(repeatStatement);
         LuaIfStatementSyntax IfStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(continueIdentifier, LuaSyntaxNode.Tokens.Not));
-        IfStatement.Body.Statements.Add(LuaBreakStatementSyntax.Statement);
+        IfStatement.Body.Statements.Add(LuaBreakStatementSyntax.Instance);
         block.Statements.Add(IfStatement);
       } else {
         WriteStatementOrBlock(bodyStatement, block);
@@ -4661,7 +4678,7 @@ namespace CSharpLua {
           condition = condition.Parenthesized();
         }
         LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not));
-        ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Statement);
+        ifStatement.Body.AddStatement(LuaBreakStatementSyntax.Instance);
         whileStatement.Body.Statements.AddRange(conditionBody.Statements);
         whileStatement.Body.Statements.Add(ifStatement);
       }

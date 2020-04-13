@@ -638,32 +638,54 @@ namespace CSharpLua {
       return functionExpress;
     }
 
-    private LuaStatementSyntax BuildCheckReturnInvocationExpression(LuaInvocationExpressionSyntax invocationExpression, SyntaxNode node) {
-      if (IsReturnExists(node)) {
-        var curMethodInfo = CurMethodInfoOrNull;
-        bool isReturnVoid = curMethodInfo != null && curMethodInfo.Symbol.ReturnsVoid;
+    private LuaStatementSyntax BuildCheckLoopControlInvocationExpression(LuaInvocationExpressionSyntax invocationExpression, LuaCheckLoopControlExpressionSyntax check) {
+      return BuildCheckLoopControlInvocationExpression(invocationExpression, check.HasReturn, check.HasBreak, check.HasContinue);
+    }
 
-        var temp1 = GetTempIdentifier();
-        var temp2 = isReturnVoid ? null : GetTempIdentifier();
-        var localVariables = new LuaLocalVariablesSyntax();
-        localVariables.Variables.Add(temp1);
-        if (temp2 != null) {
-          localVariables.Variables.Add(temp2);
-        }
-        var initializer = new LuaEqualsValueClauseListSyntax();
-        initializer.Values.Add(invocationExpression);
-        localVariables.Initializer = initializer;
+    private LuaStatementSyntax BuildCheckLoopControlInvocationExpression(LuaInvocationExpressionSyntax invocationExpression, IEnumerable<LuaCheckLoopControlExpressionSyntax> checks) {
+      return BuildCheckLoopControlInvocationExpression(invocationExpression, checks.Any(i => i.HasReturn), checks.Any(i => i.HasBreak), checks.Any(i => i.HasContinue));
+    }
 
-        var ifStatement = new LuaIfStatementSyntax(temp1);
-        var statement = InternalVisitReturnStatement(temp2);
-        ifStatement.Body.Statements.Add(statement);
-        var statements = new LuaStatementListSyntax();
-        statements.Statements.Add(localVariables);
-        statements.Statements.Add(ifStatement);
-        return statements;
-      } else {
-        return new LuaExpressionStatementSyntax(invocationExpression);
+    private LuaStatementSyntax BuildCheckLoopControlInvocationExpression(LuaInvocationExpressionSyntax invocationExpression, bool hasReturn, bool hasBreak, bool hasContinue) {
+      if (!hasReturn && !hasBreak && !hasContinue) {
+        return invocationExpression;
       }
+
+      var curMethodInfo = CurMethodInfoOrNull;
+      bool isReturnValueExists = hasReturn && curMethodInfo != null && !curMethodInfo.Symbol.ReturnsVoid;
+      var status = GetTempIdentifier();
+      var returnValue = isReturnValueExists ? GetTempIdentifier() : null;
+      var localVariables = new LuaLocalVariablesSyntax();
+      localVariables.Variables.Add(status);
+      if (isReturnValueExists) {
+        localVariables.Variables.Add(returnValue);
+      }
+      localVariables.Initializer = new LuaEqualsValueClauseListSyntax(invocationExpression);
+
+      var statements = new LuaStatementListSyntax();
+      statements.Statements.Add(localVariables);
+      LuaIfStatementSyntax ifStatement = null;
+
+      if (hasReturn) {
+        ifStatement = new LuaIfStatementSyntax(status);
+        var statement = InternalVisitReturnStatement(returnValue);
+        ifStatement.Body.Statements.Add(statement);
+      }
+
+      if (hasBreak || hasContinue) {
+        var condition = status.EqualsEquals(LuaIdentifierLiteralExpressionSyntax.False);
+        if (ifStatement != null) {
+          var elseIfStatement = new LuaElseIfStatementSyntax(condition);
+          elseIfStatement.Body.AddStatement(LuaBreakStatementSyntax.Instance);
+          ifStatement.ElseIfStatements.Add(elseIfStatement);
+        } else {
+          ifStatement = new LuaIfStatementSyntax(condition);
+          ifStatement.Body.Statements.Add(LuaBreakStatementSyntax.Instance);
+        }
+      }
+
+      statements.Statements.Add(ifStatement);
+      return statements;
     }
 
     public override LuaSyntaxNode VisitFinallyClause(FinallyClauseSyntax node) {
@@ -678,12 +700,12 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitTryStatement(TryStatementSyntax node) {
       var tryInvocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Try);
 
-      var tryBlockFunctionExpress = new LuaTryAdapterExpressionSyntax();
-      PushFunction(tryBlockFunctionExpress);
+      var tryExpress = new LuaTryAdapterExpressionSyntax();
+      PushFunction(tryExpress);
       var block = node.Block.Accept<LuaBlockSyntax>(this);
       PopFunction();
-      tryBlockFunctionExpress.AddStatements(block.Statements);
-      tryInvocationExpression.AddArgument(tryBlockFunctionExpress);
+      tryExpress.AddStatements(block.Statements);
+      tryInvocationExpression.AddArgument(tryExpress);
 
       if (node.Catches.Count > 0) {
         var catchesExpress = VisitTryCatchesExpress(node.Catches);
@@ -692,12 +714,13 @@ namespace CSharpLua {
         tryInvocationExpression.AddArgument(LuaIdentifierNameSyntax.Nil);
       }
 
+      var tryExpresses = tryInvocationExpression.ArgumentList.Arguments.OfType<LuaTryAdapterExpressionSyntax>();
       if (node.Finally != null) {
         var finallyfunctionExpress = node.Finally.Accept<LuaFunctionExpressionSyntax>(this);
         tryInvocationExpression.AddArgument(finallyfunctionExpress);
       }
 
-      return BuildCheckReturnInvocationExpression(tryInvocationExpression, node);
+      return BuildCheckLoopControlInvocationExpression(tryInvocationExpression, tryExpresses);
     }
 
     private LuaStatementSyntax BuildUsingStatement(SyntaxNode node, List<LuaIdentifierNameSyntax> variableIdentifiers, List<LuaExpressionSyntax> variableExpressions, Action<LuaBlockSyntax> writeStatements) {
@@ -713,12 +736,12 @@ namespace CSharpLua {
         var usingInvocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Using);
         usingInvocationExpression.AddArgument(variableExpressions.First());
         usingInvocationExpression.AddArgument(usingAdapterExpress);
-        return BuildCheckReturnInvocationExpression(usingInvocationExpression, node);
+        return BuildCheckLoopControlInvocationExpression(usingInvocationExpression, usingAdapterExpress);
       } else {
         var usingInvocationExpression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.UsingX);
         usingInvocationExpression.AddArgument(usingAdapterExpress);
         usingInvocationExpression.ArgumentList.Arguments.AddRange(variableExpressions);
-        return BuildCheckReturnInvocationExpression(usingInvocationExpression, node);
+        return BuildCheckLoopControlInvocationExpression(usingInvocationExpression, usingAdapterExpress);
       }
     }
 

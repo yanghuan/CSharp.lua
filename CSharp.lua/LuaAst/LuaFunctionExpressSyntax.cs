@@ -67,13 +67,16 @@ namespace CSharpLua.LuaAst {
     public bool IsStatic { get; set; }
   }
 
-  public abstract class LuaCheckReturnFunctionExpressionSyntax : LuaFunctionExpressionSyntax {
+  public abstract class LuaCheckLoopControlExpressionSyntax : LuaFunctionExpressionSyntax {
+    public bool HasReturn { get; set; }
+    public bool HasBreak { get; set; }
+    public bool HasContinue { get; set; }
   }
 
-  public sealed class LuaTryAdapterExpressionSyntax : LuaCheckReturnFunctionExpressionSyntax {
+  public sealed class LuaTryAdapterExpressionSyntax : LuaCheckLoopControlExpressionSyntax {
     public LuaIdentifierNameSyntax CatchTemp { get; set; }
   }
 
-  public sealed class LuaUsingAdapterExpressionSyntax : LuaCheckReturnFunctionExpressionSyntax {
+  public sealed class LuaUsingAdapterExpressionSyntax : LuaCheckLoopControlExpressionSyntax {
   }
 }

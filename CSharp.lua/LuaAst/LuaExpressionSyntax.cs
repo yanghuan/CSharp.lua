@@ -90,6 +90,10 @@ namespace CSharpLua.LuaAst {
     public LuaInvocationExpressionSyntax Invocation(IEnumerable<LuaExpressionSyntax> arguments) {
       return new LuaInvocationExpressionSyntax(this, arguments);
     }
+
+    public LuaPrefixUnaryExpressionSyntax Not() {
+      return new LuaPrefixUnaryExpressionSyntax(this, LuaSyntaxNode.Tokens.Not);
+    }
   }
 
   public sealed class LuaAssignmentExpressionSyntax : LuaExpressionSyntax {

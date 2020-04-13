@@ -51,6 +51,10 @@ namespace CSharpLua.LuaAst {
 
     }
 
+    public LuaEqualsValueClauseListSyntax(LuaExpressionSyntax value) {
+      Values.Add(value);
+    }
+
     public LuaEqualsValueClauseListSyntax(IEnumerable<LuaExpressionSyntax> values) {
       Values.AddRange(values);
     }
