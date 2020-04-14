@@ -4854,6 +4854,10 @@ namespace CSharpLua {
       } else if (originalType.TypeKind == TypeKind.Enum) {
         var originalEnumUnderlyingType = ((INamedTypeSymbol)originalType).EnumUnderlyingType;
         if (targetType.IsCastIntegerType()) {
+          if (!generator_.IsConstantEnum(originalType)) {
+            return GetEnumNoConstantToNumberExpression(expression, targetType);
+          }
+
           if (targetType.IsNumberTypeAssignableFrom(originalEnumUnderlyingType)) {
             return expression;
           }
@@ -4971,6 +4975,11 @@ namespace CSharpLua {
         invocation.AddArgument(LuaIdentifierNameSyntax.True);
       }
       return invocation;
+    }
+
+    private LuaExpressionSyntax GetEnumNoConstantToNumberExpression(LuaExpressionSyntax expression, ITypeSymbol targetType) {
+      string methodName = "System.Convert.To" + targetType.Name;
+      return new LuaInvocationExpressionSyntax(methodName, expression);
     }
 
     private LuaExpressionSyntax GetCastToNumberExpression(LuaExpressionSyntax expression, ITypeSymbol targetType, bool isFromFloat) {
