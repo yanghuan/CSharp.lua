@@ -902,6 +902,20 @@ function Type.GetGenericArguments(this)
   return arrayFromTable(t, Type)
 end
 
+local Attribute = System.Attribute
+
+function Attribute.GetCustomAttribute(element, attributeType, inherit)
+  return element:GetCustomAttribute(attributeType, inherit)
+end
+
+function Attribute.GetCustomAttributes(element, attributeType, inherit)
+  return element:GetCustomAttributes(attributeType, inherit)
+end
+
+function Attribute.IsDefined(element, attributeType, inherit)
+	return element:IsDefined(attributeType, inherit)
+end
+
 local function createInstance(T, nonPublic)
   local metadata = rawget(T, "__metadata__")
   if metadata then
