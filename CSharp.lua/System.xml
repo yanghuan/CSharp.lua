@@ -737,6 +737,11 @@ limitations under the License.
       </class>
     </namespace>
     <namespace name="System.Threading.Tasks" Name="System">
+      <class name="Task">
+        <method name="WhenAll" GenericArgCount="0" Template="System.Task.WhenAll(nil, {*0})" />
+        <method name="WhenAll" GenericArgCount="1" Template="System.Task.WhenAll({`0}, {*0})" />
+        <method name="WhenAny" IgnoreGeneric="true" />
+      </class>
       <class name="Task`1" IgnoreGeneric="true" />
       <class name="TaskCompletionSource`1" IgnoreGeneric="true" />
     </namespace>
