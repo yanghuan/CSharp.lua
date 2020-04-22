@@ -632,7 +632,7 @@ limitations under the License.
         <method name="FirstOrDefault" Template="Linq.FirstOrDefault({0}, {1})" />
         <method name="Last" Template="Linq.Last({0}, {1})" />
         <method name="LastOrDefault" Template="Linq.LastOrDefault({0}, {1})" />
-        <method name="Single" Template="Linq.Single({0, {1}})" />
+        <method name="Single" Template="Linq.Single({0}, {1})" />
         <method name="SingleOrDefault" Template="Linq.SingleOrDefault({0}, {1})" />
         <method name="ElementAt" Template="Linq.ElementAt({0}, {1})" />
         <method name="ElementAtOrDefault" Template="Linq.ElementAtOrDefault({0}, {1})" />
