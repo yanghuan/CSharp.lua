@@ -40,6 +40,7 @@ limitations under the License.
         <property name="Length">
           <get Template="#{this}" />
         </property>
+        <method name="Concat" GenericArgCount="1" IgnoreGeneric="true" />
         <method name="Join" GenericArgCount="1" Name="JoinEnumerable" IgnoreGeneric="true" />
         <method name="Join" Name="JoinEnumerable">
           <arg type="System.String" />

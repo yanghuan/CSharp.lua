@@ -15,10 +15,11 @@ limitations under the License.
 --]]
 
 local System = System
+local Char = System.Char
 local throw = System.throw
 local emptyFn = System.emptyFn
 local lengthFn = System.lengthFn
-local toString = System.toString
+local systemToString = System.toString
 local debugsetmetatable = System.debugsetmetatable
 local ArgumentException = System.ArgumentException
 local ArgumentNullException = System.ArgumentNullException
@@ -44,6 +45,11 @@ local setmetatable = setmetatable
 local select = select
 local type = type
 local String
+
+local function toString(t, isch)
+  if isch then return char(t) end
+  return systemToString(t)
+end
 
 local function checkIndex(value, startIndex, count)
   if value == nil then throw(ArgumentNullException("value")) end
@@ -139,17 +145,18 @@ local function concat(...)
   if len == 1 then
     local v = ...
     if System.isEnumerableLike(v) then
+      local isch = v.__genericT__ == Char
       for _, v in System.each(v) do
-        t[count] = v ~= nil and toString(v) or ""
+        t[count] = toString(v, isch)
         count = count + 1
       end
     else
-      return v ~= nil and toString(v) or ""
+      return toString(v)
     end
   else
     for i = 1, len do
       local v = select(i, ...)
-      t[count] = v ~= nil and toString(v) or ""
+      t[count] = toString(v)
       count = count + 1
     end
   end
@@ -216,7 +223,7 @@ local function formatBuild(format, len, select, ...)
     s = s + 1
     if s > len then throwFormatError() end
     s = select(s, ...)
-    s = (s ~= nil and s ~= System.null) and toString(s) or ""
+    s = (s ~= nil and s ~= System.null) and toString(s)
     t[count] = s
     count = count + 1
     i = j + 1
@@ -252,11 +259,12 @@ local function joinEnumerable(separator, values)
   if type(separator) == "number" then
     separator = char(separator)
   end
+  local isch = values.__genericT__ == Char
   local t = {}
   local len = 1
   for _, v in System.each(values) do
     if v ~= nil then
-      t[len] = toString(v)
+      t[len] = toString(v, isch)
       len = len + 1
     end
   end
