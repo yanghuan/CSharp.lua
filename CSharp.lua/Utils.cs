@@ -860,7 +860,6 @@ namespace CSharpLua {
 
     public static int GetTupleElementIndex(this IFieldSymbol fieldSymbol) {
       Contract.Assert(fieldSymbol.ContainingType.IsTupleType);
-      var tupleFieldSymbol = fieldSymbol.CorrespondingTupleField;
       var fields = fieldSymbol.ContainingType.GetMembers().OfType<IFieldSymbol>().Where(i => i.CorrespondingTupleField.EQ(i));
       int index = fields.IndexOf(fieldSymbol.CorrespondingTupleField);
       Contract.Assert(index != -1);
