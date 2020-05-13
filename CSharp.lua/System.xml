@@ -40,6 +40,7 @@ limitations under the License.
         <property name="Length">
           <get Template="#{this}" />
         </property>
+        <method name="Concat" GenericArgCount="1" IgnoreGeneric="true" />
         <method name="Join" GenericArgCount="1" Name="JoinEnumerable" IgnoreGeneric="true" />
         <method name="Join" Name="JoinEnumerable">
           <arg type="System.String" />
@@ -632,7 +633,7 @@ limitations under the License.
         <method name="FirstOrDefault" Template="Linq.FirstOrDefault({0}, {1})" />
         <method name="Last" Template="Linq.Last({0}, {1})" />
         <method name="LastOrDefault" Template="Linq.LastOrDefault({0}, {1})" />
-        <method name="Single" Template="Linq.Single({0, {1}})" />
+        <method name="Single" Template="Linq.Single({0}, {1})" />
         <method name="SingleOrDefault" Template="Linq.SingleOrDefault({0}, {1})" />
         <method name="ElementAt" Template="Linq.ElementAt({0}, {1})" />
         <method name="ElementAtOrDefault" Template="Linq.ElementAtOrDefault({0}, {1})" />
@@ -737,6 +738,11 @@ limitations under the License.
       </class>
     </namespace>
     <namespace name="System.Threading.Tasks" Name="System">
+      <class name="Task">
+        <method name="WhenAll" GenericArgCount="0" Template="System.Task.WhenAll(nil, {*0})" />
+        <method name="WhenAll" GenericArgCount="1" Template="System.Task.WhenAll({`0}, {*0})" />
+        <method name="WhenAny" IgnoreGeneric="true" />
+      </class>
       <class name="Task`1" IgnoreGeneric="true" />
       <class name="TaskCompletionSource`1" IgnoreGeneric="true" />
     </namespace>

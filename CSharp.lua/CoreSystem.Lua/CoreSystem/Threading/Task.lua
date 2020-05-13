@@ -426,7 +426,7 @@ Task = define("System.Threading.Tasks.Task", {
     t:Start()
     return t
   end,
-  WhenAll = function (...)
+  WhenAll = function (T, ...)
     local tasks = checkTasks(...)
     local count = #tasks
     if count == 0 then
@@ -451,7 +451,10 @@ Task = define("System.Threading.Tasks.Task", {
         elseif cancelled then
           trySetCanceled(t)
         else
-          trySetResult(arrayFromTable(result, System.getClassFromObj(result[1])))
+          if T then
+            trySetResult(t, arrayFromTable(result, T))
+          end
+            trySetResult(t)
         end
       end
     end

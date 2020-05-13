@@ -70,7 +70,7 @@ define("System.IO.File", {
     end
     return System.arrayFromTable(t, System.String)
   end,  
-  WriteWriteAllBytes = function (path, contents)
+  WriteAllBytes = function (path, contents)
     writeAll(path, contents, "wb")
   end,
   WriteAllText = function (path, contents)

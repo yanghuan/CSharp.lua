@@ -860,7 +860,10 @@ namespace CSharpLua {
 
     public static int GetTupleElementIndex(this IFieldSymbol fieldSymbol) {
       Contract.Assert(fieldSymbol.ContainingType.IsTupleType);
-      return fieldSymbol.DynamicGetProperty<int>("TupleElementIndex") + 1;
+      var fields = fieldSymbol.ContainingType.GetMembers().OfType<IFieldSymbol>().Where(i => i.CorrespondingTupleField.EQ(i));
+      int index = fields.IndexOf(fieldSymbol.CorrespondingTupleField);
+      Contract.Assert(index != -1);
+      return index + 1;
     }
 
     public static bool IsIndexerProperty(this ISymbol symbol) {
