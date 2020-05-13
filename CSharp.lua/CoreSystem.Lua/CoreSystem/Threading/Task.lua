@@ -45,6 +45,7 @@ local type = type
 local table = table
 local select = select
 local assert = assert
+local getmetatable = getmetatable
 local setmetatable = setmetatable
 local tremove = table.remove
 local pack = table.pack
@@ -533,12 +534,12 @@ Task = define("System.Threading.Tasks.Task", {
   Await = function (this, t)
     local a = t:GetAwaiter()
     if a:getIsCompleted() then
-      return a:getResult()
+      return a:GetResult()
     end
     a:OnCompleted(function ()
       local ok, v
       try(function ()
-        ok, v = true, a:getResult()
+        ok, v = true, a:GetResult()
       end, function (e)
         ok, v = false, e
       end)
@@ -555,6 +556,10 @@ Task = define("System.Threading.Tasks.Task", {
     end
   end,
   await = function (this, task)
+    if getmetatable(task) ~= Task then
+      return this:Await(task)
+    end
+
     local result = getResult(task, true)
     if result ~= waitToken then
       return result
