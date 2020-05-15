@@ -169,7 +169,7 @@ local function dictionaryEnumerator(t, kind)
   local current
   if not kind then
     local TKey, TValue = t.__genericTKey__, t.__genericTValue__
-    kind = setmetatable({ Key = TKey:default(), Value = TValue:default() }, KeyValuePairFn(TKey, TValue))
+    kind = setmetatable({ Key = TKey:default(), Value = TValue:default() }, t.__genericT__)
     current = kind
   elseif kind == 1 then
     local TKey = t.__genericTKey__
@@ -317,7 +317,7 @@ local Dictionary = {
     local count = getCount(this)
     checkIndexAndCount(array, index, count)
     if count > 0 then
-      local KeyValuePair = KeyValuePairFn(this.__genericTKey__, this.__genericTValue__)
+      local KeyValuePair = this.__genericT__
       index = index + 1
       for k, v in pairs(this) do
         if v == null then v = nil end
@@ -491,7 +491,7 @@ local ValueKeyDictionary = (function ()
       local count = #this
       checkIndexAndCount(array, index, count)
       if count > 0 then
-        local KeyValuePair = KeyValuePairFn(this.__genericTKey__, this.__genericTValue__)
+        local KeyValuePair = this.__genericT__
         index = index + 1
         for i = 1, count do
           local t = this[i]
