@@ -19,12 +19,15 @@ local define = System.define
 local throw = System.throw
 local null = System.null
 local falseFn = System.falseFn
+local each = System.each
+local Array = System.Array
 local checkIndexAndCount = System.checkIndexAndCount
 local throwFailedVersion = System.throwFailedVersion
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentException = System.ArgumentException
 local KeyNotFoundException = System.KeyNotFoundException
 local EqualityComparer = System.EqualityComparer
+local NotSupportedException = System.NotSupportedException
 
 local assert = assert
 local pairs = pairs
@@ -38,17 +41,9 @@ local type = type
 local counts = setmetatable({}, { __mode = "k" })
 System.counts = counts
 
-local function buildFromCapacity(this, capacity, comparer)
-  if comparer ~= nil then
-    assert(false, "no support")
-  end
-end
-
 local function buildFromDictionary(this, dictionary, comparer)
-  buildFromCapacity(this, 0, comparer)
-  if dictionary == nil then
-    throw(ArgumentNullException("dictionary"))
-  end
+  if comparer ~= nil then throw(NotSupportedException()) end
+  if dictionary == nil then throw(ArgumentNullException("dictionary")) end
   local count = 0
   for k, v in pairs(dictionary) do
     this[k] = v
@@ -242,25 +237,23 @@ local Dictionary = {
   getIsFixedSize = falseFn,
   getIsReadOnly = falseFn,
   __ctor__ = function (this, ...) 
-    local len = select("#", ...)
-    if len == 0 then
-      buildFromCapacity(this, 0)
-    elseif len == 1 then
+    local n = select("#", ...)
+    if n == 0 then
+    elseif n == 1 then
       local comparer = ...
       if comparer == nil or type(comparer) == "number" then  
-        buildFromCapacity(this, comparer)
       else
         local getHashCode = comparer.getHashCode
         if getHashCode == nil then
           buildFromDictionary(this, comparer)
         else
-          buildFromCapacity(this, 0, comparer)
+          throw(NotSupportedException())
         end
       end
     else
       local dictionary, comparer = ...
       if type(dictionary) == "number" then 
-        buildFromCapacity(this, dictionary, comparer)
+        if comparer ~= nil then throw(NotSupportedException()) end
       else
         buildFromDictionary(this, dictionary, comparer)
       end
@@ -270,8 +263,8 @@ local Dictionary = {
   Add = function (this, ...)
     local k, v
     if select("#", ...) == 1 then
-      local keyValuePair = ... 
-      k, v = keyValuePair.Key, keyValuePair.Value
+      local pair = ... 
+      k, v = pair.Key, pair.Value
     else
       k, v = ...
     end
@@ -307,14 +300,14 @@ local Dictionary = {
     end
     return false
   end,
-  Contains = function (this, keyValuePair)
-    local key = keyValuePair.Key
+  Contains = function (this, pair)
+    local key = pair.Key
     if key == nil then throw(ArgumentNullException("key")) end
     local value = this[key]
     if value ~= nil then
       if value == null then value = nil end
       local comparer = EqualityComparer(this.__genericTValue__).getDefault()
-      if comparer:EqualsOf(value, keyValuePair.Value) then
+      if comparer:EqualsOf(value, pair.Value) then
         return true
       end
     end
@@ -393,6 +386,122 @@ local Dictionary = {
     return DictionaryCollection(this.__genericTValue__)(this, 2)
   end
 }
+
+local ValueKeyDictionary = (function ()
+  local function buildFromDictionary(this, dictionary, comparer)
+    if comparer ~= nil then throw(NotSupportedException()) end
+    if dictionary == nil then throw(ArgumentNullException("dictionary")) end
+    local count = 1
+    for _, pair in each(dictionary) do
+      local k, v = pair.Key, pair.Value
+      this[count] = { k:__clone__(), v }
+      count = count + 1
+    end
+  end 
+  
+  local function add(this, key, value)
+    local len = #this
+    for i = 1, len do
+      local k = this[i][1]
+      if k:EqualsObj(key) then
+        throw(ArgumentException("key already exists"))
+      end
+    end
+    this[len + 1] = { key, value }
+    this.version = this.version + 1
+  end
+  
+  return {
+    version = 0,
+    getIsFixedSize = falseFn,
+    getIsReadOnly = falseFn,
+    __ctor__ = function (this, ...)
+      local n = select("#", ...)
+      if n == 0 then
+      elseif n == 1 then
+        local comparer = ...
+        if comparer == nil or type(comparer) == "number" then  
+        else
+          local getHashCode = comparer.getHashCode
+          if getHashCode == nil then
+            buildFromDictionary(this, comparer)
+          else
+            throw(NotSupportedException())
+          end
+        end
+      else
+        local dictionary, comparer = ...
+        if type(dictionary) == "number" then 
+          if comparer ~= nil then throw(NotSupportedException()) end
+        else
+          buildFromDictionary(this, dictionary, comparer)
+        end
+      end
+    end,
+    AddKeyValue = add,
+    Add = function (this, ...)
+      local k, v
+      if select("#", ...) == 1 then
+        local pair = ... 
+        k, v = pair.Key, pair.Value
+      else
+        k, v = ...
+      end
+      add(this, k ,v)
+    end,
+    Clear = function (this)
+      for i = 1, #this do
+        this[i] = nil
+      end
+      this.version = this.version + 1
+    end,
+    ContainsKey = function (this, key)
+      for i = 1, #this do
+        local k = this[i][1]
+        if k:EqualsObj(key) then
+          return true
+        end
+      end
+      return false
+    end,
+    ContainsValue = function (this, value)
+      local comparer = EqualityComparer(this.__genericTValue__).getDefault()
+      local equals = comparer.EqualsOf
+      for i = 1, #this do
+        local v = this[i][2]
+        if equals(comparer, value, v ) then
+          return true
+        end
+      end
+      return false
+    end,
+    Contains = function (this, pair)
+      for i = 1, #this do
+        local t = this[i]
+        if t[1]:EqualsObj(pair.Key) then
+          local comparer = EqualityComparer(this.__genericTValue__).getDefault()
+          if comparer:EqualsOf(t[2], pair.Value) then
+            return true
+          end 
+        end
+      end
+      return false
+    end,
+    CopyTo = function (this, array, index)
+      local count = #this
+      checkIndexAndCount(array, index, count)
+      if count > 0 then
+        local KeyValuePair = KeyValuePairFn(this.__genericTKey__, this.__genericTValue__)
+        index = index + 1
+        for i = 1, count do
+          local t = this[i]
+          array[index] = setmetatable({ Key = t.Key:__clone__(), Value = t.Value }, KeyValuePair)
+          index = index + 1
+        end
+      end
+    end,
+  }
+end)()
 
 function System.dictionaryFromTable(t, TKey, TValue)
   return setmetatable(t, Dictionary(TKey, TValue))
