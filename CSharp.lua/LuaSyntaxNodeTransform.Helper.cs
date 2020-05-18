@@ -280,6 +280,10 @@ namespace CSharpLua {
       return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, null, null);
     }
 
+    private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, LuaIdentifierNameSyntax targetExpression) {
+      return InternalBuildCodeTemplateExpression(codeTemplate, null, null, null, targetExpression);
+    }
+
     private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<LuaExpressionSyntax> arguments, IList<ITypeSymbol> typeArguments) {
       return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, arguments.Select<LuaExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => i), typeArguments);
     }

@@ -3099,7 +3099,7 @@ namespace CSharpLua {
           var fieldSymbol = (IFieldSymbol)symbol;
           var codeTemplate = fieldSymbol.GetCodeTemplateFromAttribute();
           if (codeTemplate != null) {
-            identifier = BuildCodeTemplateExpression(codeTemplate, null);
+            identifier = BuildCodeTemplateExpression(codeTemplate, fieldSymbol.IsStatic ? null : LuaIdentifierNameSyntax.This);
             break;
           }
 
