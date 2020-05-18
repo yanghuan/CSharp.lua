@@ -56,6 +56,7 @@ local arrayEnumerator
 local arrayFromTable
 
 local versions = setmetatable({}, { __mode = "k" })
+System.versions = versions
 
 local function throwFailedVersion()
   throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))

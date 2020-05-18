@@ -325,9 +325,10 @@ local function def(name, kind, cls, generic)
       local gt, gk = multiKey(mt, ...)
       local t = gt[gk]
       if t == nil then
-        t = defCore(genericName(name, ...), kind, cls(...) or {}, true)
+        local class, super  = cls(...) or {}
+        t = defCore(genericName(name, ...), kind, class, true)
         if generic then
-          setmetatable(t, generic)
+          setmetatable(t, super or generic)
         end
         gt[gk] = t
       end

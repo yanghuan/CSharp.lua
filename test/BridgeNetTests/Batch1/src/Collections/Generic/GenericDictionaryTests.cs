@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Bridge.ClientTest.Collections.Generic
 {
@@ -108,7 +109,6 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(EqualityComparer<int>.Default, d.Comparer);
         }
 
-#if false
         [Test]
         public void CapacityAndEqualityComparerWorks()
         {
@@ -118,7 +118,6 @@ namespace Bridge.ClientTest.Collections.Generic
 
             Assert.AreStrictEqual(c, d.Comparer);
         }
-#endif
 
         // #NoSupport
         //[Test]
@@ -173,7 +172,6 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(EqualityComparer<string>.Default, d2.Comparer);
         }
 
-#if false
         [Test]
         public void EqualityComparerOnlyConstructorWorks()
         {
@@ -199,7 +197,6 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreEqual(2, d2["b"]);
             Assert.AreStrictEqual(c, d2.Comparer);
         }
-#endif
 
         [Test]
         public void CountWorks()
@@ -395,7 +392,6 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreStrictEqual(null, o);
         }
 
-#if false
         [Test]
         public void CanUseCustomComparer()
         {
@@ -404,7 +400,6 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreEqual(100, d["a3"]);
             Assert.AreEqual(2, d.Count);
         }
-#endif
 
         [Test]
         public void DictionaryAsIEnumerableWorks()
@@ -722,6 +717,51 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreEqual(2, el.Key, "Enumerable second key");
             Assert.AreEqual("b", el.Value, "Enumerable second value");
             Assert.False(en.MoveNext(), "Enumerable MoveNext false");
+        }
+
+        private struct ValueKeyStruct
+        {
+            public int v;
+
+            public ValueKeyStruct(int v)
+            {
+                this.v = v;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is ValueKeyStruct other)
+                {
+                    return v == other.v;
+                }
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                return v.GetHashCode();
+            }
+
+            public override string ToString()
+            {
+                return v.ToString();
+            }
+        }
+
+        public void DictionaryValueKeyWorks()
+        {
+            ValueKeyStruct a = new ValueKeyStruct(1);
+            ValueKeyStruct b = new ValueKeyStruct(2);
+            Dictionary<ValueKeyStruct, int> dict = new Dictionary<ValueKeyStruct, int>();
+            dict.Add(a, a.v);
+            dict.Add(b, b.v);
+
+            Assert.AreEqual(a.v, dict[a]);
+            Assert.AreEqual(b.v, dict[b]);
+
+            var find = dict.First(i => i.Key.v == a.v);
+            Assert.AreEqual(a, find);
+            Assert.True(dict.Values.Any(i => i == a.v));
         }
     }
 }
