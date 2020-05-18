@@ -618,10 +618,16 @@ local ArrayDictionary = (function ()
       return false
     end,
     TryGetValue = function (this, key)
-      for i = 1, #this do
-        local pair = this[i]
-        if pair.Key:EqualsObj(key) then
-          return true, pair.Value
+      if key == nil then throw(ArgumentNullException("key")) end
+      local len = #this
+      if len > 0 then
+        local comparer = this.comparer
+        local equals = comparer.EqualsOf
+        for i = 1, len do
+          local pair = this[i]
+          if equals(comparer, pair.Key, key) then
+            return true, pair.Value
+          end
         end
       end
       return false, this.__genericTValue__:default()
