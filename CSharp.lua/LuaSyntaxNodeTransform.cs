@@ -3474,10 +3474,8 @@ namespace CSharpLua {
         block.Statements.AddRange(luaBlock.Statements);
       } else {
         PushBlock(block);
-        foreach (var statement in node.Statements) {
-          var luaStatement = statement.Accept<LuaStatementSyntax>(this);
-          block.Statements.Add(luaStatement);
-        }
+        var statements = VisitTriviaAndNode(node, node.Statements);
+        block.AddStatements(statements);
         PopBlock();
       }
     }
