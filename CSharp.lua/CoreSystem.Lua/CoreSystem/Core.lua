@@ -1279,7 +1279,8 @@ local ValueTuple = defStc("System.ValueTuple", {
 local valueTupleMetaTable = setmetatable({ __index  = ValueType, __call = tupleCreate }, ValueType)
 setmetatable(ValueTuple, valueTupleMetaTable)
 
-defCls("System.Attribute")
+local Attribute = defCls("System.Attribute")
+defCls("System.FlagsAttribute", { base = { Attribute } })
 
 local Nullable = { 
   default = nilFn,
