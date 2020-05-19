@@ -682,16 +682,18 @@ function System.isDictLike(t)
 end
 
 local DictionaryFn = define("System.Collections.Generic.Dictionary", function(TKey, TValue)
-  local array
-  if type(TKey) == "table" and TKey.class == 'S' then
+  local array, len
+  if TKey.class == 'S' and type(TKey:default()) == "table" then
     array = ArrayDictionary
+  else
+    len = getCount
   end
   return { 
     base = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
     __genericT__ = KeyValuePairFn(TKey, TValue),
     __genericTKey__ = TKey,
     __genericTValue__ = TValue,
-    __len = getCount
+    __len = len
   }, array
 end, Dictionary)
 
