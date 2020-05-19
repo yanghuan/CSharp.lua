@@ -393,14 +393,12 @@ namespace CSharpLua {
         generator_.AddIgnoreExportType(typeSymbol);
       }
 
-      if (typeSymbol.TypeKind == TypeKind.Class) {
-        if (IsCurTypeExportMetadataAll || attributes.Count > 0 || typeDeclaration.IsExportMetadata) {
-          var data = new LuaTableExpression() { IsSingleLine = true };
-          data.Add(typeSymbol.GetMetaDataAttributeFlags());
-          data.AddRange(typeDeclaration.TypeParameterExpressions);
-          data.AddRange(attributes);
-          typeDeclaration.AddClassMetaData(data);
-        }
+      if (IsCurTypeExportMetadataAll || attributes.Count > 0 || typeDeclaration.IsExportMetadata) {
+        var data = new LuaTableExpression() { IsSingleLine = true };
+        data.Add(typeSymbol.GetMetaDataAttributeFlags());
+        data.AddRange(typeDeclaration.TypeParameterExpressions);
+        data.AddRange(attributes);
+        typeDeclaration.AddClassMetaData(data);
       }
     }
 
@@ -518,18 +516,24 @@ namespace CSharpLua {
       return interfaceDeclaration;
     }
 
-    public override LuaSyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node) {
-      GetTypeDeclarationName(node, out var name, out var typeSymbol);
-      LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(typeSymbol.ToString(), name, CurCompilationUnit);
+    private void VisitEnumDeclaration(INamedTypeSymbol typeSymbol, EnumDeclarationSyntax node, LuaEnumDeclarationSyntax enumDeclaration) {
       typeDeclarations_.Push(new TypeDeclarationInfo(typeSymbol, enumDeclaration));
       var document = BuildDocumentationComment(node);
       enumDeclaration.AddDocument(document);
+      var attributes = BuildAttributes(node.AttributeLists);
       foreach (var member in node.Members) {
         var statement = member.Accept<LuaKeyValueTableItemSyntax>(this);
         enumDeclaration.Add(statement);
       }
+      CheckTypeDeclaration(typeSymbol, enumDeclaration, attributes);
       typeDeclarations_.Pop();
       generator_.AddEnumDeclaration(typeSymbol, enumDeclaration);
+    }
+
+    public override LuaSyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node) {
+      GetTypeDeclarationName(node, out var name, out var typeSymbol);
+      LuaEnumDeclarationSyntax enumDeclaration = new LuaEnumDeclarationSyntax(typeSymbol.ToString(), name, CurCompilationUnit);
+      VisitEnumDeclaration(typeSymbol, node, enumDeclaration);
       return enumDeclaration;
     }
 
@@ -1153,7 +1157,9 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitEnumMemberDeclaration(EnumMemberDeclarationSyntax node) {
       IFieldSymbol symbol = semanticModel_.GetDeclaredSymbol(node);
       Contract.Assert(symbol.HasConstantValue);
+      var attributes = BuildAttributes(node.AttributeLists);
       LuaIdentifierNameSyntax identifier = node.Identifier.ValueText;
+      AddFieldMetaData(symbol, identifier, attributes);
       var value = new LuaIdentifierLiteralExpressionSyntax(symbol.ConstantValue.ToString());
       return new LuaKeyValueTableItemSyntax(identifier, value);
     }
