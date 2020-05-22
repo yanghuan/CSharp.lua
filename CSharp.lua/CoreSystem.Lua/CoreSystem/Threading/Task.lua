@@ -328,7 +328,7 @@ local function getAwaitResult(task)
 end
 
 local factory = {
-  StartNew = function (f, state)
+  StartNew = function (_, f, state)
     local t = newWaitingTask()
     post(function ()
       try(function ()
