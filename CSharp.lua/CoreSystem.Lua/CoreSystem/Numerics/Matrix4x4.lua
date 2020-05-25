@@ -1601,8 +1601,7 @@ Matrix4x4.Decompose = function(matrix, scale, rotation, translation)
 
     rotation = SystemNumerics.Quaternion.CreateFromRotationMatrix(matTemp)
 
-    return true
-
+    return true, scale, rotation, translation
 end
 
 System.defStc("System.Numerics.Matrix4x4", Matrix4x4)
