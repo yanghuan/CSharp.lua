@@ -17,6 +17,13 @@ limitations under the License.
 local System = System
 local Array = System.Array
 
+local function tryDequeue(this)
+  if #this == 0 then
+    return false
+  end
+  return true, this:Dequeue()
+end
+
 local Queue = {
   __ctor__ = Array.ctorList,
   getCount = Array.getLength,
@@ -28,7 +35,8 @@ local Queue = {
   GetEnumerator = Array.GetEnumerator,
   Peek = Array.first,
   ToArray = Array.toArray,
-  TrimExcess = System.emptyFn
+  TrimExcess = System.emptyFn,
+  TryDequeue = tryDequeue
 }
 
 function System.queueFromTable(t, T)
