@@ -11,8 +11,4 @@
     <ProjectReference Include="..\BridgeTestNUnit\BridgeTestNUnit.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ProjectDir)run.bat" />
-  </Target>
-
 </Project>

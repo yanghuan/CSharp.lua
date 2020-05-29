@@ -8,8 +8,4 @@
     <StartupObject />
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ProjectDir)cmd.bat" />
-  </Target>
-
 </Project>
