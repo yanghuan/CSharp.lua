@@ -4599,6 +4599,22 @@ namespace CSharpLua {
       return new LuaContinueAdapterStatementSyntax(isWithinTry);
     }
 
+    private static bool IsLastBreakStatement(LuaStatementSyntax lastStatement) {
+      if (lastStatement == LuaBreakStatementSyntax.Instance) {
+        return true;
+      }
+
+      if (lastStatement is LuaContinueAdapterStatementSyntax) {
+        return true;
+      }
+
+      if (lastStatement is LuaLabeledStatement labeledStatement && IsLastBreakStatement(labeledStatement.Statement)) {
+        return true;
+      }
+
+      return false;
+    }
+
     private void VisitLoopBody(StatementSyntax bodyStatement, LuaBlockSyntax block) {
       bool hasContinue = IsContinueExists(bodyStatement);
       if (hasContinue) {
@@ -4608,12 +4624,10 @@ namespace CSharpLua {
         LuaRepeatStatementSyntax repeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
         WriteStatementOrBlock(bodyStatement, repeatStatement.Body);
         var lastStatement = repeatStatement.Body.Statements.Last();
-        if (lastStatement is LuaBaseReturnStatementSyntax || (IsLuaClassic && lastStatement == LuaBreakStatementSyntax.Instance)) {
-          LuaBlockStatementSyntax returnBlock = new LuaBlockStatementSyntax();
-          returnBlock.Statements.Add(lastStatement);
-          repeatStatement.Body.Statements[repeatStatement.Body.Statements.Count - 1] = returnBlock;
+        bool isLastFinal = lastStatement is LuaBaseReturnStatementSyntax || IsLastBreakStatement(lastStatement);
+        if (!isLastFinal) {
+          repeatStatement.Body.Statements.Add(continueIdentifier.Assignment(LuaIdentifierNameSyntax.True));
         }
-        repeatStatement.Body.Statements.Add(continueIdentifier.Assignment(LuaIdentifierNameSyntax.True));
         block.Statements.Add(repeatStatement);
         LuaIfStatementSyntax IfStatement = new LuaIfStatementSyntax(new LuaPrefixUnaryExpressionSyntax(continueIdentifier, LuaSyntaxNode.Tokens.Not));
         IfStatement.Body.Statements.Add(LuaBreakStatementSyntax.Instance);
