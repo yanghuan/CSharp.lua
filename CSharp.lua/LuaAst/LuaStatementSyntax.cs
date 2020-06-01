@@ -239,43 +239,16 @@ namespace CSharpLua.LuaAst {
         .Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
         .Select(i => i.Trim()).ToList();
 
-      int curIndex = 0;
-      while (curIndex < items.Count) {
-        int beginIndex = items.FindIndex(curIndex, i => i == Tokens.OpenSummary);
-        if (beginIndex != -1) {
-          AddLineText(items, curIndex, beginIndex);
-          int endIndex = items.FindIndex(beginIndex + 1, it => it == Tokens.CloseSummary);
-          if (endIndex != -1) {
-            var summary = new LuaSummaryDocumentStatement();
-            bool hasAttr = false;
-            for (int i = beginIndex + 1; i < endIndex; ++i) {
-              string text = items[i];
-              if (IsAttribute(text, out AttributeFlags arrt)) {
-                attr_ |= arrt;
-                hasAttr = true;
-              } else {
-                summary.Texts.Add(text);
-              }
-            }
-            if (summary.Texts.Count > 0 || !hasAttr) {
-              Statements.Add(summary);
-            }
-            curIndex = endIndex + 1;
-          } else {
-            AddLineText(items, curIndex, items.Count);
-            curIndex = items.Count;
-          }
+      var document = new LuaSummaryDocumentStatement();
+      foreach (var item in items) {
+        if (IsAttribute(item, out AttributeFlags arrt)) {
+          attr_ |= arrt;
         } else {
-          AddLineText(items, curIndex, items.Count);
-          curIndex = items.Count;
+          document.Texts.Add(item);
         }
       }
-    }
-
-    private void AddLineText(List<string> items, int beginIndex, int endIndex) {
-      for (int i = beginIndex + 1; i < endIndex; ++i) {
-        string text = items[i];
-        Statements.Add(new LuaLineDocumentStatement(text));
+      if (document.Texts.Count > 0) {
+        Statements.Add(document);
       }
     }
 
@@ -323,8 +296,6 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaSummaryDocumentStatement : LuaStatementSyntax {
-    public string OpenSummary = Tokens.OpenSummary;
-    public string CloseSummary = Tokens.CloseSummary;
     public readonly List<string> Texts = new List<string>();
 
     internal override void Render(LuaRenderer renderer) {

@@ -605,11 +605,9 @@ namespace CSharpLua {
     }
 
     internal void Render(LuaSummaryDocumentStatement node) {
-      WriteWithShortComment(node.OpenSummary);
       foreach (string text in node.Texts) {
         WriteWithShortComment(text);
       }
-      WriteWithShortComment(node.CloseSummary);
     }
 
     internal void Render(LuaLineDocumentStatement node) {
