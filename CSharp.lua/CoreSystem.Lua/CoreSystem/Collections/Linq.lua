@@ -259,17 +259,25 @@ function Enumerable.SkipWhile(source, predicate)
   end)
 end
 
-local IGrouping = System.defInf("System.Linq.IGrouping")
-local Grouping = define("System.Linq.Grouping", {
-  base = { IGrouping },
-  GetEnumerator = arrayEnumerator,
-  getKey = function (this)
-    return this.key
-  end,
-  getCount = function (this)
-    return #this
-  end
-})
+local IGrouping = System.defInf("System.Linq.IGrouping_2", function (TKey, TElement)
+  return {
+    base = { IEnumerable_1(TElement) } 
+  }
+end)
+
+local Grouping = define("System.Linq.Grouping", function (TKey, TElement)
+  return {
+    __genericT__ = TElement,
+    base = { IGrouping(TKey, TElement) },
+    GetEnumerator = arrayEnumerator,
+    getKey = function (this)
+      return this.key
+    end,
+    getCount = function (this)
+      return #this
+    end
+  }
+end)
 
 local function getGrouping(this, key)
   local hashCode = this.comparer:GetHashCodeOf(key)
@@ -314,7 +322,7 @@ local function addToLookup(this, key, value)
   if groupIndex == nil then
 	  groupIndex = #this.groups + 1
 	  this.indexs[hashCode] = groupIndex
-	  group = setmetatable({ key = key, __genericT__ = this.__genericTElement__ }, Grouping)
+	  group = setmetatable({ key = key }, Grouping(this.__genericTKey__, this.__genericTElement__))
 	  this.groups[groupIndex] = group
   else
 	  group = this.groups[groupIndex]
