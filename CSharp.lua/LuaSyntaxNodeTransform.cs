@@ -215,6 +215,13 @@ namespace CSharpLua {
       return name;
     }
 
+    private void ReleaseTempIdentifiers(int prevTempCount) {
+      for (int i = prevTempCount; i < CurFunction.TempCount; ++i) {
+        --CurBlock.TempCount;
+        --CurFunction.TempCount;
+      }
+    }
+
     private void ReleaseTempIdentifier(LuaIdentifierNameSyntax tempName) {
       Contract.Assert(CurBlock.TempCount >= 1 && CurFunction.TempCount >= 1);
       Contract.Assert(LuaSyntaxNode.TempIdentifiers.Contains(tempName.ValueText));
@@ -3762,7 +3769,6 @@ namespace CSharpLua {
       });
       return isTry;
     }
-
 
     private bool CheckBreakLastBlockStatement(BreakStatementSyntax node) {
       if (IsLuaClassic) {

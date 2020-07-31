@@ -83,9 +83,11 @@ namespace CSharpLua {
       if (node.Initializer == null) {
         return creationExpression;
       } else {
+        int prevTempCount = CurFunction.TempCount;
         var temp = GetTempIdentifier();
         CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
         FillObjectInitializerExpression(temp, node.Initializer);
+        ReleaseTempIdentifiers(prevTempCount);
         return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
       }
     }
