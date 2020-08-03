@@ -216,7 +216,9 @@ namespace CSharpLua {
     }
 
     private void ReleaseTempIdentifiers(int prevTempCount) {
-      for (int i = prevTempCount; i < CurFunction.TempCount; ++i) {
+      int count = CurFunction.TempCount - prevTempCount;
+      for (int i = 0; i < count; ++i) {
+        Contract.Assert(CurBlock.TempCount >= 1 && CurFunction.TempCount >= 1);
         --CurBlock.TempCount;
         --CurFunction.TempCount;
       }
