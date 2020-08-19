@@ -3,7 +3,7 @@ The C# to Lua compiler.
 
 ## Introduction
 CSharp.lua is a C# to Lua compiler. Write C# then run on lua VM.
-* Build on [Microsoft Roslyn](https://github.com/dotnet/roslyn). Support for C# 7.0.
+* Build on [Microsoft Roslyn](https://github.com/dotnet/roslyn). Support for C# 8.0.
 
 * Highly readable code generation. C# AST ---> Lua AST ---> Lua Code.
 
@@ -13,7 +13,7 @@ CSharp.lua is a C# to Lua compiler. Write C# then run on lua VM.
 
 * Self-Compiling, run "./test/self-compiling/self.bat".
 
-* Used by dotnet Standard 2.1, Ability to use across platforms.
+* Used by .NET Core, Ability to across platforms.
 
 ## Sample
 C# code
