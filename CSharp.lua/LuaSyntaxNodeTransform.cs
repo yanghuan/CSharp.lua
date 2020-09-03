@@ -2343,8 +2343,8 @@ namespace CSharpLua {
         foreach (IParameterSymbol parameter in optionalParameters) {
           if (parameter.IsParams) {
             var arrayType = (IArrayTypeSymbol)parameter.Type;
-            LuaExpressionSyntax emptyArray = BuildArray(arrayType.ElementType);
-            arguments.Add(emptyArray);
+            var elementType = GetTypeName(arrayType.ElementType);
+            arguments.Add(LuaIdentifierNameSyntax.EmptyArray.Invocation(elementType));
           } else {
             LuaExpressionSyntax defaultValue = GetDefaultParameterValue(parameter, node, isCheckCallerAttribute);
             arguments.Add(defaultValue);
