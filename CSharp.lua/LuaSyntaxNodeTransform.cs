@@ -884,7 +884,8 @@ namespace CSharpLua {
                 }
                 var attributes = BuildAttributes(node.AttributeLists);
                 var fieldName = GetMemberName(variableSymbol);
-                AddField(fieldName, typeSymbol, variable.Initializer.Value, true, true, isPrivate, true, attributes);
+                bool isMoreThanLocalVariables = IsMoreThanLocalVariables(variableSymbol);
+                AddField(fieldName, typeSymbol, variable.Initializer.Value, true, true, isPrivate, true, attributes, isMoreThanLocalVariables);
               }
             }
           }
@@ -931,9 +932,9 @@ namespace CSharpLua {
       return valueExpression;
     }
 
-    private void AddField(LuaIdentifierNameSyntax name, ITypeSymbol typeSymbol, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaExpressionSyntax> _) {
+    private void AddField(LuaIdentifierNameSyntax name, ITypeSymbol typeSymbol, ExpressionSyntax expression, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaExpressionSyntax> attributes, bool isMoreThanLocalVariables = false) {
       var valueExpression = GetFieldValueExpression(typeSymbol, expression, out bool valueIsLiteral, out var statements);
-      CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly, statements);
+      CurType.AddField(name, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, isReadOnly, statements, isMoreThanLocalVariables);
     }
 
     private sealed class PropertyMethodResult {
@@ -2465,7 +2466,9 @@ namespace CSharpLua {
         }
 
         if (fieldSymbol.HasConstantValue) {
-          return GetConstLiteralExpression(fieldSymbol);
+          if (!fieldSymbol.IsStringConstNotInline()) {
+            return GetConstLiteralExpression(fieldSymbol);
+          }
         }
 
         if (XmlMetaProvider.IsFieldForceProperty(fieldSymbol)) {

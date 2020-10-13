@@ -241,7 +241,7 @@ namespace CSharpLua.LuaAst {
       initStatements_.Add(LuaIdentifierNameSyntax.This.MemberAccess(name).Assignment(value));
     }
 
-    public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaStatementSyntax> statements) {
+    public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaStatementSyntax> statements, bool isMoreThanLocalVariables) {
       if (isStatic) {
         if (isPrivate) {
           local_.Variables.Add(name);
@@ -258,18 +258,25 @@ namespace CSharpLua.LuaAst {
           }
         } else {
           if (isReadOnly) {
-            local_.Variables.Add(name);
-            if (value != null) {
-              var assignment = name.Assignment(value);
-              if (isImmutable) {
-                methodList_.Statements.Add(assignment);
-                AddResultTable(name);
-              } else {
-                if (statements != null) {
-                  staticInitStatements_.AddRange(statements);
+            if (isMoreThanLocalVariables && value != null && isImmutable) {
+              CheckTooManyVariables(true);
+              var left = LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(name);
+              methodList_.Statements.Add(left.Assignment(value));
+              AddResultTable(name, left);
+            } else {
+              local_.Variables.Add(name);
+              if (value != null) {
+                var assignment = name.Assignment(value);
+                if (isImmutable) {
+                  methodList_.Statements.Add(assignment);
+                  AddResultTable(name);
+                } else {
+                  if (statements != null) {
+                    staticInitStatements_.AddRange(statements);
+                  }
+                  staticInitStatements_.Add(assignment);
+                  staticInitStatements_.Add(LuaIdentifierNameSyntax.This.MemberAccess(name).Assignment(name));
                 }
-                staticInitStatements_.Add(assignment);
-                staticInitStatements_.Add(LuaIdentifierNameSyntax.This.MemberAccess(name).Assignment(name));
               }
             }
           } else {

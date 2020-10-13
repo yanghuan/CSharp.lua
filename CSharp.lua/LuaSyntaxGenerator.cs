@@ -1664,18 +1664,11 @@ namespace CSharpLua {
 
               return true;
             }
-            case SymbolKind.Field when !i.IsImplicitlyDeclared: {
+            case SymbolKind.Field: {
               var field = (IFieldSymbol)i;
-              if (!field.IsConst) {
-                return field.IsStatic && (field.IsPrivate() || field.IsReadOnly);
+              if (field.IsStringConstNotInline()) {
+                return true;
               }
-
-              if (field.Type.SpecialType == SpecialType.System_String) {
-                if (((string)field.ConstantValue).Length > LuaSyntaxNodeTransform.kStringConstInlineCount) {
-                  return true;
-                }
-              }
-
               break;
             }
           }
@@ -1684,6 +1677,7 @@ namespace CSharpLua {
 
         int index = 0;
         switch (symbol.Kind) {
+          case SymbolKind.Field:
           case SymbolKind.Method: {
             index = methods.FindIndex(i => i.EQ(symbol));
             break;

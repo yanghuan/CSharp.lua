@@ -871,6 +871,27 @@ namespace CSharpLua {
       return index + 1;
     }
 
+    public static bool IsStringConstNotInline(this IFieldSymbol field) {
+      if (field.IsConst && field.Type.SpecialType == SpecialType.System_String && field.ConstantValue != null) {
+        if (((string)field.ConstantValue).Length > LuaSyntaxNodeTransform.kStringConstInlineCount) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    public static bool IsLocalVariableField(this IFieldSymbol field) {
+      if (!field.IsImplicitlyDeclared) {
+        if (!field.IsConst) {
+          return field.IsStatic && (field.IsPrivate() || field.IsReadOnly);
+        }
+        if (field.IsStringConstNotInline()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     public static bool IsIndexerProperty(this ISymbol symbol) {
       if (symbol.Kind == SymbolKind.Property) {
         var propertySymbol = (IPropertySymbol)symbol;
