@@ -1518,8 +1518,16 @@ function System.init(t)
     imports[i](global)
   end
 
-  for i = 1, #metadatas do
-    metadatas[i](global)
+  local b, e = 1, #metadatas
+  while true do
+    for i = b, e do
+      metadatas[i](global)
+    end
+    local len = #metadatas
+    if len == e then
+      break
+    end
+    b, e = e + 1, len
   end
 
   local main = t.Main
