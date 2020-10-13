@@ -165,7 +165,7 @@ namespace CSharpLua {
 
     private static (CSharpCompilation, CSharpCommandLineArguments) BuildCompilation(IEnumerable<(string Text, string Path)> codes, IEnumerable<string> libs, IEnumerable<string> cscArguments, LuaSyntaxGenerator.SettingInfo setting) {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
-      var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.CSharp8).WithDocumentationMode(DocumentationMode.Parse);
+      var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.Preview).WithDocumentationMode(DocumentationMode.Parse);
       var syntaxTrees = BuildSyntaxTrees(codes, parseOptions);
       var references = libs.Select(i => MetadataReference.CreateFromFile(i)).ToList();
       var compilation = CSharpCompilation.Create("_", syntaxTrees, references, WithOptions(commandLineArguments.CompilationOptions));
@@ -1096,7 +1096,7 @@ namespace CSharpLua {
         if (childrens != null) {
           foreach (INamedTypeSymbol children in childrens) {
             if (children.TypeKind != TypeKind.Interface) {
-              ISymbol implementationSymbol = null;
+              ISymbol implementationSymbol;
               if (!IsImplicitExtend(typeSymbol, children)) {
                 implementationSymbol = children.FindImplementationForInterfaceMember(symbol);
                 Contract.Assert(implementationSymbol != null);
@@ -1361,6 +1361,11 @@ namespace CSharpLua {
       }
 
       public override void VisitEnumDeclaration(EnumDeclarationSyntax node) {
+        var typeSymbol = GetDeclaredSymbol(node);
+        classTypes_.Add(typeSymbol);
+      }
+
+      public override void VisitRecordDeclaration(RecordDeclarationSyntax node) {
         var typeSymbol = GetDeclaredSymbol(node);
         classTypes_.Add(typeSymbol);
       }

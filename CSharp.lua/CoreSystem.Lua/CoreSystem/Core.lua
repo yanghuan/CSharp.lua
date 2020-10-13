@@ -35,6 +35,7 @@ local string = string
 local sfind = string.find
 local ssub = string.sub
 local debug = debug
+local next = next
 local global = _G
 local prevSystem = rawget(global, "System")
 
@@ -695,7 +696,7 @@ else
     return v
   end
 
-  local function toUInt (v, max, mask, checked)  
+  local function toUInt(v, max, mask, checked)  
     if v >= 0 and v <= max then
       return v
     end
@@ -1272,12 +1273,67 @@ local ValueTuple = defStc("System.ValueTuple", {
   CompareToObj = tupleCompareToObj,
   getLength = tupleLength,
   get = tupleGet,
-  default = function()
+  default = function ()
     throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
   end
 })
 local valueTupleMetaTable = setmetatable({ __index  = ValueType, __call = tupleCreate }, ValueType)
 setmetatable(ValueTuple, valueTupleMetaTable)
+
+local function recordToString(t)
+  local a = { t.__name__, "{" }
+  local count = 3
+  local k, v
+  while true do
+    k, v = next(t, k)
+    if k == nil then
+      break
+    end
+    a[count] = k
+    a[count + 1] = '='
+    local i = v
+    k, v = next(t, k)
+    if i ~= nil then
+      if k ~= nil then
+        a[count + 2] = i:ToString() .. ','
+        count = count + 3
+      else
+        a[count + 2] = i:ToString()
+        count = count + 3
+        break
+      end
+    else
+      if k ~= nil then
+        a[count + 2] = ','
+        count = count + 3
+      else
+        count = count + 2
+        break
+      end
+    end
+  end
+  a[count] = "}"
+  return tconcat(a, ' ')
+end
+
+local function recordEquals(t, other)
+  if getmetatable(t) == getmetatable(other) then
+    for k, v in pairs(t) do
+      if not equalsObj(v, other[k]) then
+        return false
+      end
+    end
+    return true
+  end
+  return false
+end
+
+local RecordType
+RecordType = defCls("System.RecordType", {
+  ToString = recordToString,
+  __eq = recordEquals,
+  Equals = recordEquals,
+})
 
 local Attribute = defCls("System.Attribute")
 defCls("System.FlagsAttribute", { base = { Attribute } })

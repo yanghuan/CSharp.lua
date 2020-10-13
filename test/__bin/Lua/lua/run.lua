@@ -11,7 +11,7 @@ local luaVersions = {
 }
 
 local function compile(arg)
-  local CSharpLua = ("../"):rep(arg.depth) .. "CSharp.lua.Launcher/bin/Debug/netcoreapp3.0/CSharp.lua.Launcher.dll"
+  local CSharpLua = ("../"):rep(arg.depth) .. "CSharp.lua.Launcher/bin/Debug/net5.0/CSharp.lua.Launcher.dll"
   local cmd = ("dotnet %s -s %s -d %s"):format(CSharpLua, arg.input, arg.output)
   if arg.libs then
     cmd = cmd .. " -l " .. arg.libs

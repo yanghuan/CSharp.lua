@@ -9,7 +9,7 @@ local function out(module)
 end
 
 local function lib(module)
-  return ("../%s/bin/Debug/netcoreapp3.0/%s.dll!"):format(module, module)
+  return ("../%s/bin/Debug/net5.0/%s.dll!"):format(module, module)
 end
 
 local function libs(...)

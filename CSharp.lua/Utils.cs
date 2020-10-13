@@ -68,7 +68,7 @@ namespace CSharpLua {
   }
 
   public sealed class ConcurrentHashSet<T> : IEnumerable<T> {
-    private ConcurrentDictionary<T, bool> dict_ = new ConcurrentDictionary<T, bool>();
+    private readonly ConcurrentDictionary<T, bool> dict_ = new ConcurrentDictionary<T, bool>();
 
     public bool Add(T v) {
       return dict_.TryAdd(v, true);
@@ -189,6 +189,10 @@ namespace CSharpLua {
 
     public static T[] ArrayOf<T>(this T t) {
       return new T[] { t };
+    }
+
+    public static T[] ArrayOf<T>(this T t, T a) {
+      return new T[] { t, a };
     }
 
     public static Dictionary<string, string[]> GetCommandLines(string[] args) {
@@ -439,6 +443,11 @@ namespace CSharpLua {
 
     public static bool IsBasicTypInterface(this INamedTypeSymbol type) {
       return type.TypeKind == TypeKind.Interface && (type.IsSystemIComparableT() || type.IsSystemIEquatableT() || type.IsSystemIFormattable());
+    }
+
+    public static bool IsRecordType(this INamedTypeSymbol type) {
+      var methods = type.GetMembers("<>Clone");
+      return methods.Length == 1;
     }
 
     public static bool IsSystemTask(this ITypeSymbol symbol) {
@@ -847,10 +856,6 @@ namespace CSharpLua {
     public static ITypeSymbol GetIAsyncEnumerableElementType(this ITypeSymbol symbol) {
       var interfaceType = symbol.IsGenericIAsyncEnumerableType() ? (INamedTypeSymbol)symbol : symbol.AllInterfaces.FirstOrDefault(i => i.IsGenericIAsyncEnumerableType());
       return interfaceType?.TypeArguments.First();
-    }
-
-    private static T DynamicGetProperty<T>(this ISymbol symbol, string name) {
-      return (T)symbol.GetType().GetProperty(name).GetValue(symbol);
     }
 
     public static IEnumerable<ITypeSymbol> GetTupleElementTypes(this ITypeSymbol typeSymbol) {
