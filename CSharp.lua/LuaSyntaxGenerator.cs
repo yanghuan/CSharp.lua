@@ -1566,6 +1566,9 @@ namespace CSharpLua {
           case SyntaxKind.AnonymousObjectMemberDeclarator: {
             return true;
           }
+          case SyntaxKind.Parameter: {
+            return true;
+          }
           default: {
             throw new InvalidOperationException();
           }

@@ -38,7 +38,11 @@ namespace CSharpLua.LuaAst {
       LuaNumberLiteralExpressionSyntax numberLiteral = number;
       return numberLiteral;
     }
-    
+
+    public LuaExpressionStatementSyntax ToStatementSyntax() {
+      return this;
+    }
+
     public LuaBinaryExpressionSyntax Plus(LuaExpressionSyntax right) {
       return Binary(Tokens.Plus, right);
     }

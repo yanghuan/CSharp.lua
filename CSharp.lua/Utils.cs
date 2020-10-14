@@ -195,6 +195,13 @@ namespace CSharpLua {
       return new T[] { t, a };
     }
 
+    public static T[] ArrayOf<T>(this T t, params T[] args) {
+      T[] array = new T[args.Length + 1];
+      array[0] = t;
+      Array.Copy(args, 0, array, 1, args.Length);
+      return array;
+    }
+
     public static Dictionary<string, string[]> GetCommandLines(string[] args) {
       Dictionary<string, string[]> cmds = new Dictionary<string, string[]>();
 
@@ -273,6 +280,10 @@ namespace CSharpLua {
         return s.Remove(s.Length - v.Length);
       }
       return s;
+    }
+
+    public static LuaStringLiteralExpressionSyntax ToStringLiteral(this string s) {
+      return new LuaStringLiteralExpressionSyntax(s);
     }
 
     public static bool IsPrivate(this ISymbol symbol) {

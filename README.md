@@ -72,8 +72,8 @@ Options
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
 ```
-Make sure that the. NET core 3.0+ is installed.
-https://dotnet.microsoft.com/download
+Make sure that .NET 5.0 is installed.
+https://dotnet.microsoft.com/download/dotnet/5.0
 
 ### Download
 https://github.com/yanghuan/CSharp.lua/releases

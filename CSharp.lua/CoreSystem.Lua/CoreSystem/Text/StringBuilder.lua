@@ -210,6 +210,3 @@ local StringBuilder = System.define("System.Text.StringBuilder", {
   end
 })
 System.StringBuilder = StringBuilder
-
-System.RecordType.PrintMembers = function (t, sb)
-end

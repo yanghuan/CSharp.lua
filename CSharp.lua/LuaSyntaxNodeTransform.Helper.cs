@@ -1793,7 +1793,9 @@ namespace CSharpLua {
             }
           } else {
             if (typeSymbol.IsRecordType()) {
-              ctors.RemoveAt(0);
+              int posIndex = ctors.FindIndex(i => i.Parameters.Length == 1 && i.Parameters[0].Type.EQ(typeSymbol));
+              Contract.Assert(posIndex != -1);
+              ctors.RemoveAt(posIndex);
               if (ctors.Count <= 1) {
                 return 0;
               }

@@ -27,12 +27,11 @@ using CSharpLua.LuaAst;
 
 namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform : CSharpSyntaxVisitor<LuaSyntaxNode> {
-    public const int kStringConstInlineCount = 15;
+    public const int kStringConstInlineCount = 27;
 
     private sealed class MethodInfo {
       public IMethodSymbol Symbol { get; }
       public IList<LuaExpressionSyntax> RefOrOutParameters { get; }
-
       public List<LuaIdentifierNameSyntax> InliningReturnVars { get; set; }
       public bool IsInlining => InliningReturnVars != null;
       public bool HasYield;
@@ -375,14 +374,15 @@ namespace CSharpLua {
         BuildBaseTypes(typeSymbol, typeDeclaration, node.BaseList.Types, false);
       }
 
-      BuildTypeMembers(typeDeclaration, node); 
-      CheckTypeDeclaration(typeSymbol, typeDeclaration, attributes);
-
+      CheckRecordParameterCtor(typeSymbol, node, typeDeclaration);
+      BuildTypeMembers(typeDeclaration, node);
+      CheckTypeDeclaration(typeSymbol, typeDeclaration, attributes, node);
+  
       typeDeclarations_.Pop();
       CurCompilationUnit.AddTypeDeclarationCount();
     }
 
-    private void CheckTypeDeclaration(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration, List<LuaExpressionSyntax> attributes) {
+    private void CheckTypeDeclaration(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration, List<LuaExpressionSyntax> attributes, BaseTypeDeclarationSyntax node) {
       if (typeDeclaration.IsNoneCtros) {
         var baseTypeSymbol = typeSymbol.BaseType;
         if (baseTypeSymbol != null) {
@@ -408,8 +408,11 @@ namespace CSharpLua {
         typeDeclaration.AddCtor(function, true);
       }
 
-      if (typeSymbol.BaseType != null && typeSymbol.BaseType.SpecialType == SpecialType.System_Object && typeSymbol.IsRecordType()) {
-        typeDeclaration.AddBaseTypes(LuaIdentifierNameSyntax.RecordType.ArrayOf(GetRecordInerfaceTypeName(typeSymbol)), null, null);
+      if (typeSymbol.IsRecordType()) {
+        if (typeSymbol.BaseType != null && typeSymbol.BaseType.SpecialType == SpecialType.System_Object) {
+          typeDeclaration.AddBaseTypes(LuaIdentifierNameSyntax.RecordType.ArrayOf(GetRecordInerfaceTypeName(typeSymbol)), null, null);
+        }
+        BuildRecordMembers(typeSymbol, typeDeclaration);
       }
 
       if (typeDeclaration.IsIgnoreExport) {
@@ -423,6 +426,42 @@ namespace CSharpLua {
         data.AddRange(attributes);
         typeDeclaration.AddClassMetaData(data);
       }
+    }
+
+    private void CheckRecordParameterCtor(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
+      if (typeSymbol.IsRecordType()) {
+        var recordDeclaration = (RecordDeclarationSyntax)node;
+        if (recordDeclaration.ParameterList != null) {
+          BuildRecordParameterCtor(typeSymbol, typeDeclaration, recordDeclaration);
+        }
+      }
+    }
+
+    private void BuildRecordParameterCtor(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration, RecordDeclarationSyntax recordDeclaration) {
+      var parameterList = recordDeclaration.ParameterList.Accept<LuaParameterListSyntax>(this);
+      var function = new LuaConstructorAdapterExpressionSyntax();
+      function.AddParameter(LuaIdentifierNameSyntax.This);
+      function.AddParameters(parameterList.Parameters);
+      function.AddStatements(parameterList.Parameters.Select(i => LuaIdentifierNameSyntax.This.MemberAccess(i).Assignment(i).ToStatementSyntax()));
+      typeDeclaration.AddCtor(function, false);
+      var ctor = typeSymbol.InstanceConstructors.First();
+      int index = 0;
+      foreach (var p in ctor.Parameters) {
+        var expression = GetFieldValueExpression(p.Type, null, out bool isLiteral, out _);
+        if (expression != null) {
+          typeDeclaration.AddField(parameterList.Parameters[index], expression, p.Type.IsImmutable() && isLiteral, false, false, true, null, false);
+        }
+        ++index;
+      }
+    }
+
+    private void BuildRecordMembers(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration) {
+      var propertys = typeSymbol.GetMembers().OfType<IPropertySymbol>().Skip(1);
+      var exprssions = new List<LuaExpressionSyntax>() { typeSymbol.Name.ToStringLiteral() };
+      exprssions.AddRange(propertys.Select(i => GetMemberName(i).ToStringLiteral()));
+      var function = new LuaFunctionExpressionSyntax();
+      function.AddStatement(new LuaReturnStatementSyntax(exprssions));
+      typeDeclaration.AddMethod(LuaIdentifierNameSyntax.RecordMembers, function, false);
     }
 
     private INamedTypeSymbol VisitTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
@@ -485,7 +524,7 @@ namespace CSharpLua {
         BuildTypeMembers(major.TypeDeclaration, typeDeclaration.Node);
       }
 
-      CheckTypeDeclaration(major.Symbol, major.TypeDeclaration, attributes);
+      CheckTypeDeclaration(major.Symbol, major.TypeDeclaration, attributes, major.Node);
       typeDeclarations_.Pop();
       compilationUnits_.Pop();
 
@@ -528,7 +567,7 @@ namespace CSharpLua {
         var statement = member.Accept<LuaKeyValueTableItemSyntax>(this);
         enumDeclaration.Add(statement);
       }
-      CheckTypeDeclaration(typeSymbol, enumDeclaration, attributes);
+      CheckTypeDeclaration(typeSymbol, enumDeclaration, attributes, node);
       typeDeclarations_.Pop();
       generator_.AddEnumDeclaration(typeSymbol, enumDeclaration);
     }

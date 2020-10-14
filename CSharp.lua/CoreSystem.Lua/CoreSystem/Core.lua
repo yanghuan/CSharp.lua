@@ -942,7 +942,7 @@ function System.base(this)
   return getmetatable(getmetatable(this))
 end
 
-local equalsObj, compareObj
+local equalsObj, compareObj, toString
 if debugsetmetatable then
   equalsObj = function (x, y)
     if x == y then
@@ -977,7 +977,7 @@ if debugsetmetatable then
     throw(System.ArgumentException("Argument_ImplementIComparable"))
   end
 
-  function System.toString(t)
+  toString = function (t)
     return t ~= nil and t:ToString() or ""
   end
 
@@ -1075,7 +1075,7 @@ else
     throw(System.ArgumentException("Argument_ImplementIComparable"))
   end
 
-  function System.toString(obj)
+  toString = function (obj)
     if obj == nil then return "" end
     local t = type(obj) 
     if t == "table" then
@@ -1091,6 +1091,7 @@ end
 
 System.equalsObj = equalsObj
 System.compareObj = compareObj
+System.toString = toString
 
 Object = defCls("System.Object", {
   __call = new,
@@ -1280,42 +1281,6 @@ local ValueTuple = defStc("System.ValueTuple", {
 local valueTupleMetaTable = setmetatable({ __index  = ValueType, __call = tupleCreate }, ValueType)
 setmetatable(ValueTuple, valueTupleMetaTable)
 
-local function recordToString(t)
-  local a = { t.__name__, "{" }
-  local count = 3
-  local k, v
-  while true do
-    k, v = next(t, k)
-    if k == nil then
-      break
-    end
-    a[count] = k
-    a[count + 1] = '='
-    local i = v
-    k, v = next(t, k)
-    if i ~= nil then
-      if k ~= nil then
-        a[count + 2] = i:ToString() .. ','
-        count = count + 3
-      else
-        a[count + 2] = i:ToString()
-        count = count + 3
-        break
-      end
-    else
-      if k ~= nil then
-        a[count + 2] = ','
-        count = count + 3
-      else
-        count = count + 2
-        break
-      end
-    end
-  end
-  a[count] = "}"
-  return tconcat(a, ' ')
-end
-
 local function recordEquals(t, other)
   if getmetatable(t) == getmetatable(other) then
     for k, v in pairs(t) do
@@ -1328,11 +1293,55 @@ local function recordEquals(t, other)
   return false
 end
 
-local RecordType
-RecordType = defCls("System.RecordType", {
-  ToString = recordToString,
+defCls("System.RecordType", {
   __eq = recordEquals,
   Equals = recordEquals,
+  PrintMembers = function (this, builder)
+    local p = pack(this.__members__())
+    local n = p.n
+    for i = 2, n do
+      local k = p[i]
+      local v = this[k]
+      builder:Append(k)
+      builder:Append(" = ")
+      if v ~= nil then
+        builder:Append(toString(v))
+      end
+      if i ~= n then
+        builder:Append(", ")
+      end
+    end
+  end,
+  ToString = function (this)
+    local p = pack(this.__members__())
+    local n = p.n
+    local t = { p[1], "{" }
+    local count = 3
+    for i = 2, n do
+      local k = p[i]
+      local v = this[k]
+      t[count] = k
+      t[count + 1] = "="
+      if v ~= nil then
+        if i ~= n then
+          t[count + 2] = toString(v) .. ','
+        else
+          t[count + 2] = toString(v)
+        end
+      else
+        if i ~= n then
+          t[count + 2] = ','
+        end
+      end
+      if v == nil and i == n then
+        count = count + 2
+      else
+        count = count + 3
+      end
+    end
+    t[count] = "}"
+    return tconcat(t, ' ')
+  end
 })
 
 local Attribute = defCls("System.Attribute")

@@ -28,6 +28,39 @@ namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform {
     private readonly Stack<LuaIdentifierNameSyntax> conditionalTemps_ = new Stack<LuaIdentifierNameSyntax>();
 
+    private LuaExpressionSyntax GetObjectCreationExpression(IMethodSymbol symbol, BaseObjectCreationExpressionSyntax node) {
+      LuaExpressionSyntax creationExpression;
+      var expression = GetTypeName(symbol.ContainingType);
+      var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
+      if (node.ArgumentList != null) {
+        var refOrOutArguments = new List<RefOrOutArgument>();
+        var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
+        TryRemoveNilArgumentsAtTail(symbol, arguments);
+        invokeExpression.AddArguments(arguments);
+        if (refOrOutArguments.Count > 0) {
+          creationExpression = BuildInvokeRefOrOut(node, invokeExpression, refOrOutArguments);
+        } else {
+          creationExpression = invokeExpression;
+        }
+      } else {
+        creationExpression = invokeExpression;
+      }
+      return creationExpression;
+    }
+
+    private LuaExpressionSyntax GetObjectCreationInitializer(LuaExpressionSyntax creationExpression, BaseObjectCreationExpressionSyntax node) {
+      if (node.Initializer == null) {
+        return creationExpression;
+      } else {
+        int prevTempCount = CurFunction.TempCount;
+        var temp = GetTempIdentifier();
+        CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
+        FillObjectInitializerExpression(temp, node.Initializer);
+        ReleaseTempIdentifiers(prevTempCount);
+        return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
+      }
+    }
+
     public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
       var constExpression = GetConstExpression(node);
       if (constExpression != null) {
@@ -48,21 +81,7 @@ namespace CSharpLua {
           var expressions = node.ArgumentList.Arguments.Select(i => i.Expression.AcceptExpression(this));
           creationExpression = BuildValueTupleCreateExpression(expressions);
         } else {
-          var expression = node.Type.AcceptExpression(this);
-          var invokeExpression = BuildObjectCreationInvocation(symbol, expression);
-          if (node.ArgumentList != null) {
-            var refOrOutArguments = new List<RefOrOutArgument>();
-            var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
-            TryRemoveNilArgumentsAtTail(symbol, arguments);
-            invokeExpression.AddArguments(arguments);
-            if (refOrOutArguments.Count > 0) {
-              creationExpression = BuildInvokeRefOrOut(node, invokeExpression, refOrOutArguments);
-            } else {
-              creationExpression = invokeExpression;
-            }
-          } else {
-            creationExpression = invokeExpression;
-          }
+          creationExpression = GetObjectCreationExpression(symbol, node);
         }
       } else {
         var type = semanticModel_.GetSymbolInfo(node.Type).Symbol;
@@ -80,16 +99,7 @@ namespace CSharpLua {
         creationExpression = new LuaInvocationExpressionSyntax(expression);
       }
 
-      if (node.Initializer == null) {
-        return creationExpression;
-      } else {
-        int prevTempCount = CurFunction.TempCount;
-        var temp = GetTempIdentifier();
-        CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
-        FillObjectInitializerExpression(temp, node.Initializer);
-        ReleaseTempIdentifiers(prevTempCount);
-        return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
-      }
+      return GetObjectCreationInitializer(creationExpression, node);
     }
 
     private void FillObjectInitializerExpression(LuaIdentifierNameSyntax temp, InitializerExpressionSyntax node) {
@@ -151,6 +161,12 @@ namespace CSharpLua {
         table.Items.Add(item);
       }
       return LuaIdentifierNameSyntax.AnonymousType.Invocation(table);
+    }
+
+    public override LuaSyntaxNode VisitImplicitObjectCreationExpression(ImplicitObjectCreationExpressionSyntax node) {
+      var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
+      var creationExpression = GetObjectCreationExpression(symbol, node);
+      return GetObjectCreationInitializer(creationExpression, node);
     }
 
     public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
