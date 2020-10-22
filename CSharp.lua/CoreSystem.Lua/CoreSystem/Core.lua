@@ -1295,6 +1295,14 @@ end
 
 defCls("System.RecordType", {
   __eq = recordEquals,
+  __clone__ = function (this)
+    local cls = getmetatable(this)
+    local t = {}
+    for k, v in pairs(this) do
+      t[k] = v
+    end
+    return setmetatable(t, cls)
+  end,
   Equals = recordEquals,
   PrintMembers = function (this, builder)
     local p = pack(this.__members__())

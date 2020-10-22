@@ -1865,7 +1865,7 @@ namespace CSharpLua {
       BlockSyntax bodyNode;
       ArrowExpressionClauseSyntax expressionBodyNode;
       if (symbol.MethodKind == MethodKind.PropertyGet) {
-        if (!(symbol.AssociatedSymbol.GetDeclaringSyntaxNode() is PropertyDeclarationSyntax propertyDeclaration)) {
+        if (symbol.AssociatedSymbol.GetDeclaringSyntaxNode() is not PropertyDeclarationSyntax propertyDeclaration) {
           goto Fail;
         }
 
@@ -1883,7 +1883,7 @@ namespace CSharpLua {
         }
         parameterList = null;
       } else {
-        if (!(symbol.GetDeclaringSyntaxNode() is MethodDeclarationSyntax methodDeclaration)) {
+        if (symbol.GetDeclaringSyntaxNode() is not MethodDeclarationSyntax methodDeclaration) {
           goto Fail;
         }
 
@@ -2040,11 +2040,11 @@ namespace CSharpLua {
         }
       }
 
-      if (!(block.Statements.Last() is LuaExpressionStatementSyntax expressionStatement)) {
+      if (block.Statements.Last() is not LuaExpressionStatementSyntax expressionStatement) {
         return null;
       }
 
-      if (!(expressionStatement.Expression is LuaAssignmentExpressionSyntax assignment)) {
+      if (expressionStatement.Expression is not LuaAssignmentExpressionSyntax assignment) {
         return null;
       }
 
@@ -2131,7 +2131,7 @@ namespace CSharpLua {
         return false;
       }
 
-      if (!(symbol.GetDeclaringSyntaxNode() is PropertyDeclarationSyntax propertyDeclaration)) {
+      if (symbol.GetDeclaringSyntaxNode() is not PropertyDeclarationSyntax propertyDeclaration) {
         return false;
       }
 
@@ -2143,7 +2143,7 @@ namespace CSharpLua {
             return false;
           }
 
-          if (!(accessor.Body.Statements.First() is ReturnStatementSyntax returnStatement)) {
+          if (accessor.Body.Statements.First() is not ReturnStatementSyntax returnStatement) {
             return false;
           }
           expressionBody = returnStatement.Expression;

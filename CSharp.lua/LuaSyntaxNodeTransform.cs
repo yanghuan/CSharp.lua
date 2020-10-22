@@ -2716,8 +2716,10 @@ namespace CSharpLua {
         case SyntaxKind.SimpleAssignmentExpression: {
           AssignmentExpressionSyntax parent = (AssignmentExpressionSyntax)parentNode;
           if (parent.Right != node) {
-            if (parent.Parent.IsKind(SyntaxKind.ObjectInitializerExpression)) {
-              return false;
+            switch (parent.Parent.Kind()) {
+              case SyntaxKind.ObjectInitializerExpression:
+              case SyntaxKind.WithInitializerExpression:
+                return false;
             }
           }
           break;
@@ -4226,7 +4228,8 @@ namespace CSharpLua {
 
           var constValue = semanticModel_.GetConstantValue(node.Right);
           if (constValue.HasValue) {
-            return BuildIsConstantExpression(node.Left, node.Right, constValue);
+            var leftExpression = node.Left.AcceptExpression(this);
+            return BuildIsConstantExpression(leftExpression, node.Right, constValue);
           }
 
           return BuildBinaryInvokeExpression(node, LuaIdentifierNameSyntax.Is);
