@@ -349,7 +349,7 @@ namespace CSharpLua {
           }
         } else {
           if (int.TryParse(key, out int argumentIndex)) {
-            var argument = arguments.ElementAtOrDefault(argumentIndex);
+            var argument = arguments?.ElementAtOrDefault(argumentIndex);
             if (argument != null) {
               var argumentExpression = argument();
               AddCodeTemplateExpression(argumentExpression, comma, codeTemplateExpression);
