@@ -71,6 +71,8 @@ Options
 -p              : do not use debug.setmetatable, in some Addon/Plugin environment debug object cannot be used
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
+-inline-property: inline some single-line properties
+-include        : the root directory of the CoreSystem library, adds all the dependencies to a single file named out.lua
 ```
 Make sure that .NET 5.0 is installed.
 https://dotnet.microsoft.com/download/dotnet/5.0

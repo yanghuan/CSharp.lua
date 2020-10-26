@@ -45,6 +45,7 @@ Options
 -metadata       : export all metadata, use @CSharpLua.Metadata annotations for precise control
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
 -inline-property: inline some single-line properties
+-include        : the root directory of the CoreSystem library, adds all the dependencies to a single file named out.lua
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -77,12 +78,14 @@ Options
           bool isModule = cmds.ContainsKey("-module");
           bool isInlineSimpleProperty = cmds.ContainsKey("-inline-property");
           bool isNotConstantForEnum = cmds.ContainsKey("-ei");
+          string include = cmds.GetArgument("-include", true);
           Compiler c = new Compiler(input, output, lib, meta, csc, isClassic, atts, enums) {
             IsExportMetadata = isExportMetadata,
             IsModule = isModule,
             IsInlineSimpleProperty = isInlineSimpleProperty,
             IsPreventDebugObject = isPreventDebugObject,
             IsNotConstantForEnum = isNotConstantForEnum,
+            Include = include,
           };
           c.Compile();
           Console.WriteLine($"Compiled Success, cost {sw.Elapsed.TotalSeconds}s");

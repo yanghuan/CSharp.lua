@@ -1569,9 +1569,11 @@ function System.init(t)
 end
 
 System.config = rawget(global, "CSharpLuaSystemConfig") or {}
-
-return function (config)
-  if config then
-    System.config = config 
+local isSingleFile = rawget(global, "CSharpLuaSingleFile")
+if not isSingleFile then
+  return function (config)
+    if config then
+      System.config = config 
+    end
   end
 end

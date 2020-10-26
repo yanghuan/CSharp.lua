@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -40,6 +41,7 @@ namespace CSharpLua {
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
     public bool IsNotConstantForEnum { get; set; }
+    public string Include { get; set; }
 
     public Compiler(string input, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
       input_ = input;
@@ -117,11 +119,36 @@ namespace CSharpLua {
     }
 
     public void Compile() {
-      GetGenerator().Generate(output_);
+      if (Include == null) {
+        GetGenerator().Generate(output_);
+      } else {
+        var luaSystemLibs = GetIncludeCorSysemPaths(Include);
+        GetGenerator().GenerateSingleFile("out.lua", output_, luaSystemLibs);
+      }
     }
 
-    public void CompileSingleFile(string fileName, IEnumerable<string> luaSystemLibs) {
-      GetGenerator().GenerateSingleFile(fileName, output_, luaSystemLibs);
+    private static IEnumerable<string> GetIncludeCorSysemPaths(string dir) {
+      const string kBeinMark = "load(\"";
+
+      string allFilePath = Path.Combine(dir, "All.lua");
+      if (!File.Exists(allFilePath)) {
+        throw new ArgumentException($"-include: {dir} is not root directory of the CoreSystem library");
+      }
+
+      List<string> luaSystemLibs = new();
+      var lines = File.ReadAllLines(allFilePath);
+      foreach (string line in lines) {
+        int i = line.IndexOf(kBeinMark);
+        if (i != -1) {
+          int begin = i + kBeinMark.Length;
+          int end = line.IndexOf('"', begin);
+          Contract.Assert(end != -1);
+          string name = line[begin..end].Replace('.', '/');
+          string path = Path.Combine(dir, "CoreSystem", $"{name}.lua");
+          luaSystemLibs.Add(path);
+        }
+      }
+      return luaSystemLibs;
     }
 
     private IEnumerable<string> GetSourceFiles(out bool isDirectory) {

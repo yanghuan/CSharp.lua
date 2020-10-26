@@ -230,8 +230,8 @@ namespace CSharpLua {
       --CurFunction.TempCount;
     }
 
-    public override LuaSyntaxNode VisitCompilationUnit(CompilationUnitSyntax node) {
-      LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax(node.SyntaxTree.FilePath);
+    public LuaCompilationUnitSyntax VisitCompilationUnit(CompilationUnitSyntax node, bool isSingleFile = false) {
+      LuaCompilationUnitSyntax compilationUnit = new LuaCompilationUnitSyntax(node.SyntaxTree.FilePath, !isSingleFile);
       compilationUnits_.Push(compilationUnit);
 
       var statements = VisitTriviaAndNode(node, node.Members, false);
