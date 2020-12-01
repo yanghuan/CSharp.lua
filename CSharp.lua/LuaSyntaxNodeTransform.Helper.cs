@@ -1261,7 +1261,7 @@ namespace CSharpLua {
 
     private void TryRemoveNilArgumentsAtTail(ISymbol symbol, List<LuaExpressionSyntax> arguments) {
       if (arguments.Count > 0) {
-        if (generator_.IsFromLuaModule(symbol) || symbol.ContainingType.GetMembers(symbol.Name).Length == 1) {
+        if (generator_.IsFromLuaModule(symbol)) {
           arguments.RemoveNilAtTail();
         }
       }
