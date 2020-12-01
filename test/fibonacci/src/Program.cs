@@ -18,6 +18,7 @@ namespace Test {
                 Console.Write(v);
                 Console.Write(',');
             }
+	    Console.WriteLine("");
         }
 
         private static int FibonacciN(int n) {

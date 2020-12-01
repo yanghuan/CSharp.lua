@@ -13,6 +13,8 @@ CSharp.lua is a C# to Lua compiler. Write C# then run on lua VM.
 
 * Self-Compiling, run "./test/self-compiling/self.bat".
 
+* Self-Compiling (linux), run "./make" (if no errors, will prompt for fibbonacci 'N' value and generate fib sequence in lua)
+
 * Used by .NET Core, Ability to across platforms.
 
 ## Sample
@@ -76,6 +78,7 @@ Options
 ```
 Make sure that .NET 5.0 is installed.
 https://dotnet.microsoft.com/download/dotnet/5.0
+
 
 ### Download
 https://github.com/yanghuan/CSharp.lua/releases
