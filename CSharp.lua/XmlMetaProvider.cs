@@ -414,26 +414,24 @@ namespace CSharpLua {
     private readonly Dictionary<string, XmlMetaModel.NamespaceModel> namespaceNameMaps_ = new Dictionary<string, XmlMetaModel.NamespaceModel>();
     private readonly Dictionary<string, TypeMetaInfo> typeMetas_ = new Dictionary<string, TypeMetaInfo>();
 
-    public XmlMetaProvider(IEnumerable<string> files) {
-      foreach (string file in files) {
+    public XmlMetaProvider(IEnumerable<Stream> streams) {
+      foreach (Stream stream in streams) {
         XmlSerializer xmlSeliz = new XmlSerializer(typeof(XmlMetaModel));
         try {
-          using (Stream stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-            XmlMetaModel model = (XmlMetaModel)xmlSeliz.Deserialize(stream);
-            var assembly = model.Assembly;
-            if (assembly != null) {
-              if (assembly.Namespaces != null) {
-                foreach (var namespaceModel in assembly.Namespaces) {
-                  LoadNamespace(namespaceModel);
-                }
+          XmlMetaModel model = (XmlMetaModel)xmlSeliz.Deserialize(stream);
+          var assembly = model.Assembly;
+          if (assembly != null) {
+            if (assembly.Namespaces != null) {
+              foreach (var namespaceModel in assembly.Namespaces) {
+                LoadNamespace(namespaceModel);
               }
-              if (assembly.Classes != null) {
-                LoadType(string.Empty, assembly.Classes);
-              }
+            }
+            if (assembly.Classes != null) {
+              LoadType(string.Empty, assembly.Classes);
             }
           }
         } catch (Exception e) {
-          throw new Exception($"load xml file wrong at {file}", e);
+          throw new Exception($"load xml file wrong {0}", e);
         }
       }
     }

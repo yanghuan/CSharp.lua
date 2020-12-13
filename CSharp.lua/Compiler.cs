@@ -185,5 +185,14 @@ namespace CSharpLua {
       var generator = new LuaSyntaxGenerator(codes, GetSystemLibs(), null, GetMetas(null), new LuaSyntaxGenerator.SettingInfo());
       return generator.GenerateSingle();
     }
+
+    /// <summary>
+    /// for Blazor to use
+    /// </summary>
+    public static string CompileSingleCode(string code, IEnumerable<Stream> libs, IEnumerable<Stream> metas) {
+      var codes = new (string, string)[] { (code, "") };
+      var generator = new LuaSyntaxGenerator(codes, libs, null, metas, new LuaSyntaxGenerator.SettingInfo(), false);
+      return generator.GenerateSingle();
+    }
   }
 }

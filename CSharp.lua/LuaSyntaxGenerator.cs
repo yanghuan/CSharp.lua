@@ -113,7 +113,7 @@ namespace CSharpLua {
     }
 
     private const string kLuaSuffix = ".lua";
-    private static readonly bool kIsConcurrent = true;
+    private bool isConcurrent_ = true;
     private static readonly Encoding Encoding = new UTF8Encoding(false);
 
     private readonly CSharpCompilation compilation_;
@@ -139,9 +139,9 @@ namespace CSharpLua {
       };
     }
 
-    private static CSharpCompilationOptions WithOptions(CSharpCompilationOptions compilationOptions) {
+    private CSharpCompilationOptions WithOptions(CSharpCompilationOptions compilationOptions) {
       return compilationOptions
-        .WithConcurrentBuild(true)
+        .WithConcurrentBuild(isConcurrent_)
         .WithOutputKind(OutputKind.DynamicallyLinkedLibrary)
         .WithMetadataImportOptions(MetadataImportOptions.All);
     }
@@ -154,8 +154,8 @@ namespace CSharpLua {
       return Task.Factory.StartNew(o => ParseText(code, parseOptions), null);
     }
 
-    private static IEnumerable<SyntaxTree> BuildSyntaxTrees(IEnumerable<(string Text, string Path)> codes, CSharpParseOptions parseOptions) {
-      if (kIsConcurrent) {
+    private IEnumerable<SyntaxTree> BuildSyntaxTrees(IEnumerable<(string Text, string Path)> codes, CSharpParseOptions parseOptions) {
+      if (isConcurrent_) {
         var tasks = codes.Select(i => BuildSyntaxTreeAsync(i, parseOptions));
         return Task.WhenAll(tasks).Result;
       } else {
@@ -163,11 +163,11 @@ namespace CSharpLua {
       }
     }
 
-    private static (CSharpCompilation, CSharpCommandLineArguments) BuildCompilation(IEnumerable<(string Text, string Path)> codes, IEnumerable<string> libs, IEnumerable<string> cscArguments, LuaSyntaxGenerator.SettingInfo setting) {
+    private (CSharpCompilation, CSharpCommandLineArguments) BuildCompilation(IEnumerable<(string Text, string Path)> codes, IEnumerable<Stream> libs, IEnumerable<string> cscArguments, SettingInfo setting) {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new string[] { "-define:__CSharpLua__" }), null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.Preview).WithDocumentationMode(DocumentationMode.Parse);
       var syntaxTrees = BuildSyntaxTrees(codes, parseOptions);
-      var references = libs.Select(i => MetadataReference.CreateFromFile(i)).ToList();
+      var references = libs.Select(i => MetadataReference.CreateFromStream(i)).ToList();
       var compilation = CSharpCompilation.Create("_", syntaxTrees, references, WithOptions(commandLineArguments.CompilationOptions));
       using (MemoryStream ms = new MemoryStream()) {
         EmitResult result = compilation.Emit(ms);
@@ -180,7 +180,16 @@ namespace CSharpLua {
       return (compilation, commandLineArguments);
     }
 
-    public LuaSyntaxGenerator(IEnumerable<(string Text, string Path)> codes, IEnumerable<string> libs, IEnumerable<string> cscArguments, IEnumerable<string> metas, LuaSyntaxGenerator.SettingInfo setting) {
+    private static IEnumerable<Stream> ToFileStreams(IEnumerable<string> paths) {
+      return paths.Select(i => new FileStream(i, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+    }
+
+    public LuaSyntaxGenerator(IEnumerable<(string Text, string Path)> codes, IEnumerable<string> libs, IEnumerable<string> cscArguments, IEnumerable<string> metas, SettingInfo setting)
+      : this(codes, ToFileStreams(libs), cscArguments, ToFileStreams(metas), setting) {
+    }
+
+    public LuaSyntaxGenerator(IEnumerable<(string Text, string Path)> codes, IEnumerable<Stream> libs, IEnumerable<string> cscArguments, IEnumerable<Stream> metas, SettingInfo setting, bool isConcurrent = true) {
+      isConcurrent_ = isConcurrent;
       (compilation_, CommandLineArguments) = BuildCompilation(codes, libs, cscArguments, setting);
       XmlMetaProvider = new XmlMetaProvider(metas);
       Setting = setting;
@@ -210,7 +219,7 @@ namespace CSharpLua {
 
     private IEnumerable<LuaCompilationUnitSyntax> Create(bool isSingleFile = false) {
       List<LuaCompilationUnitSyntax> luaCompilationUnits;
-      if (kIsConcurrent) {
+      if (isConcurrent_) {
         try {
           var tasks = compilation_.SyntaxTrees.Select(i => CreateCompilationUnitAsync(i, isSingleFile));
           luaCompilationUnits = Task.WhenAll(tasks).Result.ToList();
