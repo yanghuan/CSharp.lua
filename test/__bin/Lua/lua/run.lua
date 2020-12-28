@@ -7,7 +7,7 @@ end
 local luaVersions = {
   "Lua5.3",
   "LuaJIT-2.0.2",
-  -- "MoonJIT-2.2.0"
+  --"MoonJIT-2.2.0"
 }
 
 local function compile(arg)

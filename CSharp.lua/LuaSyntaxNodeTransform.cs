@@ -2178,6 +2178,37 @@ namespace CSharpLua {
       return false;
     }
 
+    private List<Func<LuaExpressionSyntax>> FillCodeTemplateInvocationArguments(IMethodSymbol symbol, ArgumentListSyntax argumentList, List<Func<LuaExpressionSyntax>> argumentExpressions) {
+      argumentExpressions ??= new();
+      foreach (var argument in argumentList.Arguments) {
+        if (argument.NameColon != null) {
+          string name = argument.NameColon.Name.Identifier.ValueText;
+          int index = symbol.Parameters.IndexOf(i => i.Name == name);
+          if (index == -1) {
+            throw new InvalidOperationException();
+          }
+          argumentExpressions.AddAt(index, () => VisitExpression(argument.Expression));
+        } else {
+          argumentExpressions.Add(() => VisitExpression(argument.Expression));
+        }
+      }
+
+      for (int i = 0; i < argumentExpressions.Count; ++i) {
+        if (argumentExpressions[i] == null) {
+          argumentExpressions[i] = () => GetDefaultParameterValue(symbol.Parameters[i], argumentList.Parent, true);
+        }
+      }
+
+      if (symbol.Parameters.Length > argumentList.Arguments.Count) {
+        argumentExpressions.AddRange(symbol.Parameters.Skip(argumentList.Arguments.Count).Where(i => !i.IsParams).Select(i => {
+          Func<LuaExpressionSyntax> func = () => GetDefaultParameterValue(i, argumentList.Parent, true);
+          return func;
+        }));
+      }
+
+      return argumentExpressions;
+    }
+
     private LuaExpressionSyntax CheckCodeTemplateInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node) {
       var kind = node.Expression.Kind();
       if (kind == SyntaxKind.SimpleMemberAccessExpression || kind == SyntaxKind.MemberBindingExpression || kind == SyntaxKind.IdentifierName) {
@@ -2203,17 +2234,7 @@ namespace CSharpLua {
             }
           }
 
-          argumentExpressions.AddRange(node.ArgumentList.Arguments.Select(i => {
-            Func<LuaExpressionSyntax> func = () => VisitExpression(i.Expression);
-            return func;
-          }));
-          if (symbol.Parameters.Length > node.ArgumentList.Arguments.Count) {
-            argumentExpressions.AddRange(symbol.Parameters.Skip(node.ArgumentList.Arguments.Count).Where(i => !i.IsParams).Select(i => {
-              Func<LuaExpressionSyntax> func = () => GetDefaultParameterValue(i, node, true);
-              return func;
-            }));
-          }
-
+          FillCodeTemplateInvocationArguments(symbol, node.ArgumentList, argumentExpressions);
           var invocationExpression = InternalBuildCodeTemplateExpression(
             codeTemplate,
             memberAccessExpression?.Expression,
