@@ -543,6 +543,14 @@ namespace CSharpLua {
       return false;
     }
 
+    public static bool HasParamsAttribute(this ISymbol symbol) {
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
+        return node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Params);
+      }
+      return false;
+    }
+
     public static bool HasCSharpLuaAttribute(this SyntaxNode node, LuaDocumentStatement.AttributeFlags attribute) {
       return node.HasCSharpLuaAttribute(attribute, out _);
     }

@@ -717,6 +717,8 @@ namespace CSharpLua {
         function.AddParameter(parameter);
         if (parameterNode.Modifiers.IsOutOrRef()) {
           refOrOutParameters.Add(parameter);
+        } else if (parameterNode.Modifiers.IsParams() && symbol.HasParamsAttribute()) {
+          function.ParameterList.Parameters[^1] = LuaSyntaxNode.Tokens.Params;
         }
       }
 
@@ -2414,7 +2416,7 @@ namespace CSharpLua {
         }
       } else if (!parameters.IsEmpty) {
         IParameterSymbol last = parameters.Last();
-        if (last.IsParams && generator_.IsFromLuaModule(symbol)) {
+        if (last.IsParams && generator_.IsFromLuaModule(symbol) && !symbol.HasParamsAttribute()) {
           if (parameters.Length == arguments.Count) {
             var paramsArgument = argumentNodeInfos.Last();
             if (paramsArgument.Name != null) {

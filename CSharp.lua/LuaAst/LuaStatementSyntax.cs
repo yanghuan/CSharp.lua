@@ -222,6 +222,7 @@ namespace CSharpLua.LuaAst {
       Metadata = 1 << 2,
       MetadataAll = 1 << 3,
       Template = 1 << 4,
+      Params = 1 << 5,
     }
 
     public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();

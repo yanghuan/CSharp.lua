@@ -80,6 +80,7 @@ namespace CSharpLua.LuaAst {
       public const string Index = "index";
       public const string Label = "::";
       public const string Concatenation = "..";
+      public const string Params = "...";
     }
 
     public class Keyword {
