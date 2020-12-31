@@ -1141,9 +1141,10 @@ namespace CSharpLua {
             if (isStatic) {
               typeExpression = GetTypeName(symbol.ContainingType);
             }
-            var (getName, setName) = CurType.AddProperty(propertyName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, typeExpression, statements);
+            bool isGetOnly = symbol.SetMethod == null;
+            var (getName, setName) = CurType.AddProperty(propertyName, innerName, valueExpression, isImmutable && valueIsLiteral, isStatic, isPrivate, typeExpression, statements, isGetOnly);
             getMethod = new PropertyMethodResult(getName);
-            setMethod = new PropertyMethodResult(setName);
+            setMethod = isGetOnly ? null : new PropertyMethodResult(setName);
           }
         }
 

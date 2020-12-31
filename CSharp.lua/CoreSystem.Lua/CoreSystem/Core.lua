@@ -923,9 +923,12 @@ function System.default(T)
   return T:default()
 end
 
-function System.property(name)
+function System.property(name, onlyget)
   local function g(this)
     return this[name]
+  end
+  if onlyget then
+    return g
   end
   local function s(this, v)
     this[name] = v
