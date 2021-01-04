@@ -1093,7 +1093,7 @@ namespace CSharpLua {
           while (true) {
             var parent = current.Parent;
             var kind = parent.Kind();
-            if (kind == SyntaxKind.SimpleAssignmentExpression) {
+            if (kind.IsAssignment()) {
               var assignment = (AssignmentExpressionSyntax)parent;
               if (assignment.Left == current) {
                 need = false;
