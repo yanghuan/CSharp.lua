@@ -456,10 +456,7 @@ namespace CSharpLua {
         var attributeSymbol = attrbute.AttributeClass;
         if (attributeSymbol.IsConditionalAttribute()) {
           string conditionString = (string)attrbute.ConstructorArguments.First().Value;
-          bool has = CommandLineArguments.ParseOptions.PreprocessorSymbolNames.Contains(conditionString);
-          if (has) {
-            return true;
-          }
+          return !CommandLineArguments.ParseOptions.PreprocessorSymbolNames.Contains(conditionString);
         }
       }
       return false;
