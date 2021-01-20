@@ -1332,24 +1332,6 @@ namespace CSharpLua {
       return node.Accept<LuaExpressionSyntax>(transform);
     }
 
-    public static int CompareStrings(string x, string y) {
-
-      for (var i = 0; i < x.Length && i < y.Length; i++) {
-        var cmp = ((int)x[i]).CompareTo(y[i]);
-        if (cmp != 0) {
-          return cmp;
-        }
-      }
-
-      if (x.Length > y.Length) {
-        return 1;
-      } else if (x.Length == y.Length) {
-        return 0;
-      } else {
-        return -1;
-      }
-    }
-
 #region hard code for protobuf-net
 
     public static bool IsProtobufNetDeclaration(this INamedTypeSymbol type) {
