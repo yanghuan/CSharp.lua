@@ -461,7 +461,11 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
         end
         for i = 4, 3 + parameterCount do
           local j = #t
-          t[j + 1] = checkValue(parameters:get(j), metadata[i])
+          local paramValue, mtData = parameters:get(j), metadata[i]
+          if mtData ~= nil then
+            paramValue = checkValue(paramValue, mtData)
+          end
+          t[j + 1] = paramValue
         end
       end
       local f = metadata[3]
