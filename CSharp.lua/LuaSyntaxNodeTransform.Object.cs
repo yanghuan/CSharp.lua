@@ -1200,7 +1200,9 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitOperatorDeclaration(OperatorDeclarationSyntax node) {
-      BuildOperatorMethodDeclaration(node);
+      if (IsExportMethodDeclaration(node)) {
+        BuildOperatorMethodDeclaration(node);
+      } 
       return base.VisitOperatorDeclaration(node);
     }
 
