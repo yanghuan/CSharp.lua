@@ -1203,14 +1203,7 @@ namespace CSharpLua {
       return null;
     }
 
-    private LuaExpressionSyntax BuildInheritTypeName(BaseTypeSyntax baseType) {
-      ++noImportTypeNameCounter_;
-      var baseTypeName = baseType.AcceptExpression(this);
-      --noImportTypeNameCounter_;
-      return baseTypeName;
-    }
-
-    private LuaExpressionSyntax BuildInheritTypeName(INamedTypeSymbol baseType) {
+    private LuaExpressionSyntax BuildInheritTypeName(ITypeSymbol baseType) {
       ++noImportTypeNameCounter_;
       var baseTypeName = GetTypeName(baseType);
       --noImportTypeNameCounter_;

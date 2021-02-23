@@ -343,7 +343,7 @@ namespace CSharpLua {
         }
         var baseTypeSymbol = semanticModel_.GetTypeInfo(baseType.Type).Type;
         if (!IsBaseTypeIgnore(baseTypeSymbol)) {
-          var baseTypeName = BuildInheritTypeName(baseType);
+          var baseTypeName = BuildInheritTypeName(baseTypeSymbol);
           baseTypes.Add(baseTypeName);
           CheckBaseTypeGenericKind(ref hasExtendSelf, typeSymbol, baseType);
         }
