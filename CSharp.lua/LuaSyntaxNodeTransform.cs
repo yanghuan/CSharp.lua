@@ -77,6 +77,8 @@ namespace CSharpLua {
     private readonly Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
     private readonly Stack<LuaIfStatementSyntax> ifStatements_ = new Stack<LuaIfStatementSyntax>();
     private readonly Stack<LuaSwitchAdapterStatementSyntax> switchs_ = new Stack<LuaSwitchAdapterStatementSyntax>();
+
+    private int releaseTempIdentifierCount_;
     private int noImportTypeNameCounter_;
     public bool IsNoImportTypeName => noImportTypeNameCounter_ > 0;
     private int genericTypeCounter_;
@@ -189,6 +191,7 @@ namespace CSharpLua {
       if (block.TempCount > 0) {
         Contract.Assert(CurFunction.TempCount >= block.TempCount);
         CurFunction.TempCount -= block.TempCount;
+        releaseTempIdentifierCount_ = 0;
       }
     }
 
@@ -216,18 +219,24 @@ namespace CSharpLua {
 
     private void ReleaseTempIdentifiers(int prevTempCount) {
       int count = CurFunction.TempCount - prevTempCount;
-      for (int i = 0; i < count; ++i) {
-        Contract.Assert(CurBlock.TempCount >= 1 && CurFunction.TempCount >= 1);
-        --CurBlock.TempCount;
-        --CurFunction.TempCount;
-      }
+      PopTempCount(count);
     }
 
-    private void ReleaseTempIdentifier(LuaIdentifierNameSyntax tempName) {
-      Contract.Assert(CurBlock.TempCount >= 1 && CurFunction.TempCount >= 1);
-      Contract.Assert(LuaSyntaxNode.TempIdentifiers.Contains(tempName.ValueText));
-      --CurBlock.TempCount;
-      --CurFunction.TempCount;
+    private void PopTempCount(int count) {
+      Contract.Assert(CurBlock.TempCount >= count && CurFunction.TempCount >= count);
+      CurBlock.TempCount -= count;
+      CurFunction.TempCount -= count;
+    }
+
+    private void AddReleaseTempIdentifier(LuaIdentifierNameSyntax tempName) {
+      ++releaseTempIdentifierCount_;
+    }
+
+    private void ReleaseTempIdentifiers() {
+      if (releaseTempIdentifierCount_ > 0) {
+        PopTempCount(releaseTempIdentifierCount_);
+        releaseTempIdentifierCount_ = 0;
+      }
     }
 
     public LuaCompilationUnitSyntax VisitCompilationUnit(CompilationUnitSyntax node, bool isSingleFile = false) {
@@ -1535,6 +1544,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitExpressionStatement(ExpressionStatementSyntax node) {
       var expression = node.Expression.AcceptExpression(this);
+      ReleaseTempIdentifiers();
       if (expression != LuaExpressionSyntax.EmptyExpression) {
         if (expression is LuaLiteralExpressionSyntax) {
           return new LuaShortCommentExpressionStatement(expression);
@@ -4297,7 +4307,7 @@ namespace CSharpLua {
             var typeSymbol = semanticModel_.GetTypeInfo(node.Left).Type;
             bool isBool = typeSymbol != null && typeSymbol.IsBoolType();
             if (!isBool) {
-              ReleaseTempIdentifier(temp);
+              AddReleaseTempIdentifier(temp);
               return left.Binary(GetOperatorToken(node.OperatorToken), right);
             }
           }

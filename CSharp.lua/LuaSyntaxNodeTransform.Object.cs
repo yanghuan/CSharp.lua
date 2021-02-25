@@ -925,7 +925,7 @@ namespace CSharpLua {
 
       if (isRoot) {
         conditionalTemps_.Pop();
-        ReleaseTempIdentifier(temp);
+        AddReleaseTempIdentifier(temp);
       }
 
       if (IsReturnVoidConditionalAccessExpression(node)) {
