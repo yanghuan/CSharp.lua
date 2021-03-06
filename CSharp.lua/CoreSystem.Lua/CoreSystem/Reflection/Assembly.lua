@@ -893,15 +893,16 @@ function Type.GetGenericArguments(this)
   local name = cls.__name__ 
   local i = name:find("%[")
   if i then
+    i = i + 1
     while true do
-      i = i + 1
       local j = name:find(",", i) or -1
       local clsName = name:sub(i, j - 1)
       t[count] = typeof(System.getClass(clsName))
-      count = count + 1
       if j == -1 then
         break
       end
+      count = count + 1
+      i = j + 1
     end
   end
   return arrayFromTable(t, Type)
