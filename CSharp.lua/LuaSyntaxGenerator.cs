@@ -1080,7 +1080,11 @@ namespace CSharpLua {
         int indexOfA = members.IndexOf(a);
         Contract.Assert(indexOfA != -1);
         int indexOfB = members.IndexOf(b);
-        Contract.Assert(indexOfB != -1);
+        if (indexOfB == -1) {
+          var m = a.ContainingType.GetMembers();
+          indexOfA = m.IndexOf(a);
+          indexOfB = m.IndexOf(b);
+        }
         Contract.Assert(indexOfA != indexOfB);
         return indexOfA.CompareTo(indexOfB);
       } else {
