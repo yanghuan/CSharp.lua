@@ -20,6 +20,7 @@ local Object = System.Object
 local Boolean = System.Boolean
 local Delegate = System.Delegate
 local getClass = System.getClass
+local getGenericClass = System.getGenericClass
 local arrayFromTable = System.arrayFromTable
 
 local InvalidCastException = System.InvalidCastException
@@ -156,7 +157,8 @@ local function isAssignableFrom(this, c)
 end
 
 local function isGenericTypeDefinition(this)
-  return not rawget(this[1], "__name__")
+  local cls = this[1]
+  return getGenericClass(cls) == cls
 end
 
 Type = System.define("System.Type", {
@@ -169,14 +171,9 @@ Type = System.define("System.Type", {
   end,
   getIsGenericTypeDefinition = isGenericTypeDefinition,
   GetGenericTypeDefinition = function (this)
-    if isGenericTypeDefinition(this) then
-      return this
-    end
-    local name = this[1].__name__
-    local i = name:find('`')
-    if i then
-      local genericTypeName = name:sub(1, i - 1)
-      return typeof(System.getClass(genericTypeName))
+    local genericClass = getGenericClass(this[1])
+    if genericClass then
+      return typeof(genericClass)
     end
     throw(System.InvalidOperationException())
   end,

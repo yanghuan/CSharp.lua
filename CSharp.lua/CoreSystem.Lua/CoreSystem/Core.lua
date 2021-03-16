@@ -319,15 +319,32 @@ local function defCore(name, kind, cls, generic)
   return cls
 end
 
+local genericClassKey = {}
+local function getGenericClass(cls)
+  return cls[genericClassKey]
+end
+
 local function def(name, kind, cls, generic)
   if type(cls) == "function" then
+    local genericClass
+    if generic then
+      generic.__index = generic
+      generic.__call = new
+      genericClass = generic
+    else
+      genericClass = {}
+    end
+    genericClass[genericClassKey] = genericClass
+
     local mt = {}
     local fn = function(_, ...)
       local gt, gk = multiKey(mt, ...)
       local t = gt[gk]
       if t == nil then
         local class, super  = cls(...)
-        t = defCore(genericName(name, ...), kind, class or {}, true)
+        t = class or {}
+        t[genericClassKey] = genericClass
+        defCore(genericName(name, ...), kind, t, true)
         if generic then
           setmetatable(t, super or generic)
         end
@@ -338,11 +355,7 @@ local function def(name, kind, cls, generic)
 
     local base = kind ~= "S" and Object or ValueType
     local caller = setmetatable({ __call = fn, __index = base }, base)
-    if generic then
-      generic.__index = generic
-      generic.__call = new
-    end
-    return set(name, setmetatable(generic or {}, caller))
+    return set(name, setmetatable(genericClass, caller))
   else
     return defCore(name, kind, cls, generic)
   end
@@ -429,6 +442,7 @@ System = {
   throw = throw,
   getClass = set,
   multiKey = multiKey,
+  getGenericClass = getGenericClass,
   define = defCls,
   defInf = defInf,
   defStc = defStc,
