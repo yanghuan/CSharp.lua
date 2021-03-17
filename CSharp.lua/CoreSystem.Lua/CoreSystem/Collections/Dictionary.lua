@@ -114,7 +114,7 @@ KeyValuePairFn = System.defStc("System.Collections.Generic.KeyValuePair", functi
     __genericTValue__ = TValue,
   }
   return cls
-end, KeyValuePair)
+end, KeyValuePair, 2)
 System.KeyValuePair = KeyValuePairFn
 
 local function isKeyValuePair(t)
@@ -198,7 +198,7 @@ local DictionaryCollection = define("System.Collections.Generic.DictionaryCollec
   GetEnumerator = function (this)
     return dictionaryEnumerator(this.dict, this.kind)
   end
-})
+}, 1)
 
 local function add(this, key, value)
   if key == nil then throw(ArgumentNullException("key")) end
@@ -424,7 +424,7 @@ end, {
     this.current = nil
     return false
   end
-})
+}, 1)
 
 local arrayDictionaryEnumerator = function (t, kind, T)
   return setmetatable({ list = t, kind = kind, index = 1, version = versions[t], currnet = T:default() }, ArrayDictionaryEnumerator(T))
@@ -446,7 +446,7 @@ local ArrayDictionaryCollection = define("System.Collections.Generic.ArrayDictio
   GetEnumerator = function (this)
     return arrayDictionaryEnumerator(this.dict, this.kind, this.__genericT__)
   end
-})
+}, 1)
 
 local ArrayDictionary = (function ()
   local function buildFromDictionary(this, dictionary)
@@ -671,7 +671,7 @@ ArrayDictionaryFn = define("System.Collections.Generic.ArrayDictionary", functio
     __genericTKey__ = TKey,
     __genericTValue__ = TValue,
   }
-end, ArrayDictionary)
+end, ArrayDictionary, 2)
 
 function System.dictionaryFromTable(t, TKey, TValue)
   return setmetatable(t, Dictionary(TKey, TValue))
@@ -695,7 +695,7 @@ local DictionaryFn = define("System.Collections.Generic.Dictionary", function(TK
     __genericTValue__ = TValue,
     __len = len
   }, array
-end, Dictionary)
+end, Dictionary, 2)
 
 System.Dictionary = DictionaryFn
 

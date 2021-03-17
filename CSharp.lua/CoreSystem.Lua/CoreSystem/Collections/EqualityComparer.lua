@@ -84,7 +84,7 @@ EqualityComparer = define("System.EqualityComparer", function (T)
       return false
     end
   }
-end)
+end, nil, 1)
 
 local function compare(this, a, b)
   return compareObj(a, b)
@@ -116,7 +116,7 @@ ComparisonComparer = define("System.ComparisonComparer", function (T)
       return this.comparison(x, y)
     end
   }
-end)
+end, nil, 1)
 
 Comparer = define("System.Comparer_1", function (T)
   local Compare

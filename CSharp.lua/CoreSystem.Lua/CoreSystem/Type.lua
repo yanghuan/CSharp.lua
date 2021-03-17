@@ -55,7 +55,7 @@ local floor = math.floor
 local Type, typeof
 
 local function isGenericName(name)
-  return name:byte(#name) == 93
+  return name:find('`') ~= nil
 end
 
 local function getBaseType(this)

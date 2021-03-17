@@ -853,8 +853,8 @@ function System.async(f, void, ...)
 end
 
 local IAsyncDisposable = System.defInf("System.IAsyncDisposable")
-local IAsyncEnumerable = System.defInf("System.Collections.Generic.IAsyncEnumerable", System.emptyFn)
-local IAsyncEnumerator = System.defInf("System.Collections.Generic.IAsyncEnumerator", System.emptyFn)
+local IAsyncEnumerable = System.defInf("System.Collections.Generic.IAsyncEnumerable", System.emptyFn, nil, 1)
+local IAsyncEnumerator = System.defInf("System.Collections.Generic.IAsyncEnumerator", System.emptyFn, nil, 1)
 
 System.IAsyncEnumerable_1 =  IAsyncEnumerable
 System.IAsyncEnumerator_1 = IAsyncEnumerator
@@ -936,7 +936,7 @@ end, {
     checkYieldAsync(a, ok, v, current)
     return t
   end
-})
+}, 1)
 
 local function yieldIAsyncEnumerable(f, T, ...)
   return setmetatable({ f = f, args = pack(...) }, YieldAsyncEnumerable(T))

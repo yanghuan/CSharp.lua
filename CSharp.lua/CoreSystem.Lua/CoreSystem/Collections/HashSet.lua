@@ -313,4 +313,4 @@ System.HashSet = System.define("System.Collections.Generic.HashSet", function(T)
     __genericTKey__ = T,
     __len = HashSet.getCount
   }
-end, HashSet)
+end, HashSet, 1)

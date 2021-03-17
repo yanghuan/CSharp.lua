@@ -397,7 +397,7 @@ end, {
     this.current = nil
     return false
   end
-})
+}, 1)
 
 arrayEnumerator = function (t, T)
   if not T then T = t.__genericT__ end
@@ -434,7 +434,7 @@ end, {
     this.current = nil
     return false
   end
-})
+}, 1)
 
 local function reverseEnumerator(t)
   local T = t.__genericT__
@@ -1114,7 +1114,7 @@ end, {
       error(v)
     end
   end
-})
+}, 1)
 
 local function yieldIEnumerable(f, T, ...)
   return setmetatable({ f = f, args = pack(...) }, YieldEnumerable(T))
@@ -1156,4 +1156,4 @@ define("System.ReadOnlyCollection", function (T)
     base = { System.IList_1(T), System.IList, System.IReadOnlyList_1(T) }, 
     __genericT__ = T
   }
-end, ReadOnlyCollection)
+end, ReadOnlyCollection, 1)
