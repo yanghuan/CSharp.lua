@@ -598,7 +598,8 @@ namespace CSharpLua.LuaAst {
       if (genericUsingDeclares_.Count > 0) {
         genericUsingDeclares_.Sort();
         foreach (var import in genericUsingDeclares_) {
-          body.AddStatement(new LuaLocalVariableDeclaratorSyntax(import.NewName, import.InvocationExpression));
+          initStatements_.Insert(0, new LuaAssignmentExpressionSyntax(import.NewName, import.InvocationExpression));
+          local_.Variables.Add(import.NewName);
         }
       }
     }
