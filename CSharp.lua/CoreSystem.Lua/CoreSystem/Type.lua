@@ -161,6 +161,10 @@ local function isGenericTypeDefinition(this)
   return getGenericClass(cls) == cls
 end
 
+local function getIsArray(this)
+  return this[1].__name__:byte(-2) == 91
+end
+
 Type = System.define("System.Type", {
   Equals = System.equals,
   getIsGenericType = function (this)
@@ -243,6 +247,13 @@ Type = System.define("System.Type", {
       return false 
     end
     return isAssignableFrom(this, obj:GetType())
+  end,
+  getIsArray = getIsArray,
+  GetElementType = function (this)
+    if getIsArray(this) then
+      return typeof(this[1].__genericT__)
+    end
+    return nil
   end,
   ToString = function (this)
     return this[1].__name__
