@@ -62,10 +62,10 @@ local function runAll(t, args)
     for _, arg in ipairs(args) do
       if v:find("JIT") then
         t.classic = true
-        t.extra = "-csc /define:__JIT__"
+        t.extra = "-csc /define:__JIT__;DEBUG"
       else
         t.classic = false
-        t.extra = nil
+        t.extra = "-csc /define:DEBUG"
       end
       arg.__index = arg
       setmetatable(t, arg)

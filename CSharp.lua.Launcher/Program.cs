@@ -46,6 +46,7 @@ Options
 -module         : the currently compiled assembly needs to be referenced, it's useful for multiple module compiled
 -inline-property: inline some single-line properties
 -include        : the root directory of the CoreSystem library, adds all the dependencies to a single file named out.lua
+-noconcurrent   : close concurrent compile
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
@@ -78,6 +79,7 @@ Options
           bool isModule = cmds.ContainsKey("-module");
           bool isInlineSimpleProperty = cmds.ContainsKey("-inline-property");
           bool isNotConstantForEnum = cmds.ContainsKey("-ei");
+          bool isNoConcurrent = cmds.ContainsKey("-noconcurrent");
           string include = cmds.GetArgument("-include", true);
           Compiler c = new Compiler(input, output, lib, meta, csc, isClassic, atts, enums) {
             IsExportMetadata = isExportMetadata,
@@ -86,6 +88,7 @@ Options
             IsPreventDebugObject = isPreventDebugObject,
             IsNotConstantForEnum = isNotConstantForEnum,
             Include = include,
+            IsNoConcurrent = isNoConcurrent,
           };
           c.Compile();
           Console.WriteLine($"Compiled Success, cost {sw.Elapsed.TotalSeconds}s");

@@ -11,6 +11,7 @@ package.path = package.path .. ";../?.lua"
 
 package.path = package.path .. ";CSharp.lua/Coresystem.lua/?.lua"
 package.path = package.path .. ";test/BridgeNetTests/?.lua;"
+package.path = package.path .. ";../../CSharp.lua/Coresystem.lua/?.lua"
 
 local now = 0
 local timeoutQueue

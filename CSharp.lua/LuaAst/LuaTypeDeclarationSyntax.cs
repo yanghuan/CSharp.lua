@@ -121,9 +121,9 @@ namespace CSharpLua.LuaAst {
       typeParameters_.AddRange(typeParameters);
     }
 
-    internal bool AddGenericImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
+    internal (bool success, bool hasAdd) AddGenericImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
       if (genericUsingDeclares_.Exists(i => i.NewName == name)) {
-        return true;
+        return (true, false);
       }
 
       genericUsingDeclares_.Add(new GenericUsingDeclare() {
@@ -132,7 +132,7 @@ namespace CSharpLua.LuaAst {
         NewName = name,
         IsFromCode = isFromCode
       });
-      return true;
+      return (true, true);
     }
 
     internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument, List<LuaIdentifierNameSyntax> baseCopyFields) {

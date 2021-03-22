@@ -41,6 +41,7 @@ namespace CSharpLua {
     public bool IsInlineSimpleProperty { get; set; }
     public bool IsPreventDebugObject { get; set; }
     public bool IsNotConstantForEnum { get; set; }
+    public bool IsNoConcurrent { get; set; }
     public string Include { get; set; }
 
     public Compiler(string input, string output, string lib, string meta, string csc, bool isClassic, string atts, string enums) {
@@ -191,7 +192,9 @@ namespace CSharpLua {
     /// </summary>
     public static string CompileSingleCode(string code, IEnumerable<Stream> libs, IEnumerable<Stream> metas) {
       var codes = new (string, string)[] { (code, "") };
-      var generator = new LuaSyntaxGenerator(codes, libs, null, metas, new LuaSyntaxGenerator.SettingInfo(), false);
+      var generator = new LuaSyntaxGenerator(codes, libs, null, metas, new LuaSyntaxGenerator.SettingInfo() { 
+        IsNoConcurrent = true
+      });
       return generator.GenerateSingle();
     }
   }
