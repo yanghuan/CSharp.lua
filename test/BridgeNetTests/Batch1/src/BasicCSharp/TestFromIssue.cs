@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Bridge.ClientTest;
 using Bridge.Test.NUnit;
 
-namespace Batch1.src.BasicCSharp
+namespace Bridge.ClientTest.BasicCSharp
 {
     [Category(Constants.MODULE_BASIC_CSHARP)]
     [TestFixture(TestNameFormat = "From issues - {0}")]

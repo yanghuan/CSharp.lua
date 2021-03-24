@@ -904,10 +904,13 @@ namespace CSharpLua {
           if (!symbol.IsTypeParameterExists()) {
             success = AddGenericImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode());
           } else {
-            bool hasAdd;
-            (success, hasAdd) = CurTypeDeclaration.TypeDeclaration.AddGenericImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode());
-            if (hasAdd) {
-              generator_.AddGenericImportDepend(CurTypeDeclaration.TypeSymbol, symbol.OriginalDefinition as INamedTypeSymbol);
+            success = CurTypeDeclaration.TypeDeclaration.AddGenericImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode(), out var declare);
+            if (declare != null) {
+              bool hasAdd = generator_.AddGenericImportDepend(CurTypeDeclaration.TypeSymbol, symbol.OriginalDefinition as INamedTypeSymbol);
+              if (hasAdd && CurCompilationUnit.IsUsingDeclareConflict(invocationExpression)) {
+                declare.IsFromGlobal = true;
+                CurTypeDeclaration.TypeDeclaration.AddGlobalParameter();
+              }
             }
           }
           if (success) {

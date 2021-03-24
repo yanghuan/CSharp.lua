@@ -1512,7 +1512,7 @@ local function defIn(kind, name, f)
   end
   assert(modules[name] == nil, name)
   namespace[1], namespace[2] = name, kind == "C" or kind == "S"
-  local t = f(assembly)
+  local t = f(assembly, global)
   namespace[1], namespace[2] = namespaceName, isClass
   modules[isClass and name:gsub("+", ".") or name] = function()
     return def(name, kind, t)

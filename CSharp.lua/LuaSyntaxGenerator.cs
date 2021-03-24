@@ -662,11 +662,12 @@ namespace CSharpLua {
       }
     }
 
-    internal void AddGenericImportDepend(INamedTypeSymbol definition, INamedTypeSymbol type) {
+    internal bool AddGenericImportDepend(INamedTypeSymbol definition, INamedTypeSymbol type) {
       if (type != null && type.IsFromCode() && !definition.IsContainsInternalSymbol(type)) {
         var set = genericImportDepends_.GetOrAdd(definition, i => new ConcurrentHashSet<INamedTypeSymbol>());
-        set.Add(type);
+        return set.Add(type);
       }
+      return false;
     }
 
     #region     // member name refactor

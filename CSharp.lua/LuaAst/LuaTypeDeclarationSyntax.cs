@@ -121,18 +121,20 @@ namespace CSharpLua.LuaAst {
       typeParameters_.AddRange(typeParameters);
     }
 
-    internal (bool success, bool hasAdd) AddGenericImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
+    internal bool AddGenericImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode, out GenericUsingDeclare genericUsingDeclare) {
       if (genericUsingDeclares_.Exists(i => i.NewName == name)) {
-        return (true, false);
+        genericUsingDeclare = null;
+        return true;
       }
 
-      genericUsingDeclares_.Add(new GenericUsingDeclare() {
+      genericUsingDeclare = new GenericUsingDeclare() {
         InvocationExpression = invocationExpression,
         ArgumentTypeNames = argumentTypeNames,
         NewName = name,
         IsFromCode = isFromCode
-      });
-      return (true, true);
+      };
+      genericUsingDeclares_.Add(genericUsingDeclare);
+      return true;
     }
 
     internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument, List<LuaIdentifierNameSyntax> baseCopyFields) {
@@ -598,7 +600,11 @@ namespace CSharpLua.LuaAst {
       if (genericUsingDeclares_.Count > 0) {
         genericUsingDeclares_.Sort();
         foreach (var import in genericUsingDeclares_) {
-          body.AddStatement(new LuaLocalVariableDeclaratorSyntax(import.NewName, import.InvocationExpression));
+          LuaExpressionSyntax expression = import.InvocationExpression;
+          if (import.IsFromGlobal) {
+            expression = LuaIdentifierNameSyntax.Global.MemberAccess(expression);
+          }
+          body.AddStatement(new LuaLocalVariableDeclaratorSyntax(import.NewName, expression));
         }
       }
     }

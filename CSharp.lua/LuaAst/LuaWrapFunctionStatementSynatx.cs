@@ -23,7 +23,7 @@ using System.Text;
 namespace CSharpLua.LuaAst {
   public abstract class LuaWrapFunctionStatementSynatx : LuaStatementSyntax {
     public LuaExpressionStatementSyntax Statement { get; private set; }
-    private LuaFunctionExpressionSyntax function_ = new LuaFunctionExpressionSyntax();
+    private readonly LuaFunctionExpressionSyntax function_ = new();
 
     protected void UpdateIdentifiers(LuaIdentifierNameSyntax name, LuaIdentifierNameSyntax target, LuaIdentifierNameSyntax memberName, LuaIdentifierNameSyntax parameter = null) {
       var invoke = target.MemberAccess(memberName).Invocation();
@@ -38,6 +38,12 @@ namespace CSharpLua.LuaAst {
     public LuaBlockSyntax Body {
       get {
         return function_.Body;
+      }
+    }
+
+    public void AddGlobalParameter() {
+      if (function_.ParameterList.Count == 1) {
+        function_.ParameterList.Parameters.Add(LuaIdentifierNameSyntax.Global);
       }
     }
 

@@ -28,6 +28,7 @@ namespace CSharpLua.LuaAst {
     public string NewName;
     public List<string> ArgumentTypeNames;
     public bool IsFromCode;
+    public bool IsFromGlobal;
 
     public int CompareTo(GenericUsingDeclare other) {
       if (other.ArgumentTypeNames.Contains(NewName)) {
@@ -156,6 +157,17 @@ namespace CSharpLua.LuaAst {
       if (index != -1) {
         Statements.Insert(index, importAreaStatements);
       }
+    }
+
+    internal bool IsUsingDeclareConflict(LuaInvocationExpressionSyntax generic) {
+      if (generic.Expression is LuaIdentifierNameSyntax identifier) {
+        int pos = identifier.ValueText.IndexOf('.');
+        if (pos != -1) {
+          string prefix = identifier.ValueText.Substring(0, pos);
+          return UsingDeclares.Exists(i => i.NewPrefix == prefix);
+        }
+      }
+      return false;
     }
 
     internal override void Render(LuaRenderer renderer) {

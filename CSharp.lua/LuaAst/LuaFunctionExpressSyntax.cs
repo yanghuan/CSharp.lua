@@ -24,7 +24,8 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaParameterListSyntax : LuaSyntaxNode {
     public string OpenParenToken => Tokens.OpenParentheses;
     public string CloseParenToken => Tokens.CloseParentheses;
-    public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Parameters = new LuaSyntaxList<LuaIdentifierNameSyntax>();
+    public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Parameters = new();
+    public int Count => Parameters.Count;
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
