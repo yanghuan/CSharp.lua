@@ -4654,15 +4654,15 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node) {
+      var operand = node.Operand.AcceptExpression(this);
       SyntaxKind kind = node.Kind();
-      if (kind != SyntaxKind.PostIncrementExpression && kind != SyntaxKind.PostDecrementExpression) {
-        throw new NotSupportedException();
+      if (kind == SyntaxKind.SuppressNullableWarningExpression) {
+        return operand;
       }
 
+      Contract.Assert(kind == SyntaxKind.PostIncrementExpression || kind == SyntaxKind.PostDecrementExpression);
       bool isSingleLine = IsSingleLineUnary(node);
       string operatorToken = kind == SyntaxKind.PostIncrementExpression ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
-      var operand = node.Operand.AcceptExpression(this);
-
       if (operand is LuaMemberAccessExpressionSyntax memberAccess) {
         if (memberAccess.Expression != LuaIdentifierNameSyntax.This) {
           memberAccess = GetTempUnaryExpression(memberAccess, out var localTemp);
