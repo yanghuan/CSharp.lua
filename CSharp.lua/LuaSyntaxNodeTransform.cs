@@ -2591,11 +2591,17 @@ namespace CSharpLua {
           if (nameExpression is LuaPropertyAdapterExpressionSyntax propertyMethod) {
             if (baseExpression != LuaIdentifierNameSyntax.This) {
               propertyMethod.ArgumentList.AddArgument(LuaIdentifierNameSyntax.This);
+              propertyMethod.Update(baseExpression, false);
+            } else {
+              propertyMethod.Update(baseExpression, true);
             }
-            propertyMethod.Update(baseExpression, false);
             return propertyMethod;
           } else {
-            return baseExpression.MemberAccess(nameExpression);
+            if (nameExpression is LuaMemberAccessExpressionSyntax memberAccess && memberAccess.Expression == LuaIdentifierNameSyntax.This) {
+              return nameExpression;
+            } else {
+              return baseExpression.MemberAccess(nameExpression);
+            }
           }
         } else {
           if (baseExpression == LuaIdentifierNameSyntax.This) {
