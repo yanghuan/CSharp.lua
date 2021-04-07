@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using ILRuntimeTest.TestFramework;
 
 namespace TestCases
@@ -185,7 +185,7 @@ namespace TestCases
         public static void UnitTest_10030()
         {
         #if COMPILE_BUG
-            vecCls.Vector2 += TestVector3.One2 * (0.456f - vecCls.Vector2.Y * 2);//ÕâÑù»áÓÐ
+            vecCls.Vector2 += TestVector3.One2 * (0.456f - vecCls.Vector2.Y * 2);//è¿™æ ·ä¼šæœ‰
 
             Console.WriteLine(vecCls.Vector2);
 #endif
@@ -195,12 +195,12 @@ namespace TestCases
         {
             TestVector3 pos = TestVector3.One2;
             float offsetX = pos.X - 0.1f;
-            float offsetY = pos.Y - 0.1f;//±¨´íÐÐÊýÔÚÕâÀï
+            float offsetY = pos.Y - 0.1f;//æŠ¥é”™è¡Œæ•°åœ¨è¿™é‡Œ
             if (offsetX > 1)
                 Console.WriteLine("1");
             else if (offsetX < -1)
                 Console.WriteLine("2");
-            //×¢ÊÍÏÂÃæµÄ´úÂë¾Í²»»á³ö´íÁË
+            //æ³¨é‡Šä¸‹é¢çš„ä»£ç å°±ä¸ä¼šå‡ºé”™äº†
             else if (offsetY > 1)
                 Console.WriteLine("3");
             else if (offsetY < -1)
