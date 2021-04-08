@@ -14,7 +14,7 @@ jobs:
       with:
         dotnet-version: '5.0.x'
     - name: clear
-      run: dotnet clean --configuration Debug && dotnet nuget locals all --clear
+      run: dotnet clean ./CSharp.lua.sln --configuration Debug && dotnet nuget locals all --clear
     - name: Build with dotnet
       run: dotnet build --configuration Debug
     - name: Run Test Case
