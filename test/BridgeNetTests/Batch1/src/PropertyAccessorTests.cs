@@ -261,6 +261,62 @@ namespace Bridge.ClientTest
                 }
             }
         }
+		
+		public class B5
+		{
+			public int F1, F2, F3;
+
+            public int P1
+            {
+                get
+                {
+                    return F1;
+                }
+                set
+                {
+                    F1 = value;
+                }
+            }
+
+            public int P2
+            {
+                get
+                {
+                    return F2;
+                }
+            }
+
+            public int P3
+            {
+                set
+                {
+                    F3 = value;
+                }
+            }
+		}
+		
+		public class D5 : B5
+		{
+			public int GetP1()
+			{
+				return base.P1 + 1;
+			}
+			
+			public void SetP1(int value)
+			{
+				base.P1 = value - 1;
+			}
+			
+			public int GetP2()
+			{
+				return base.P2 + 1;
+			}
+			
+			public void SetP3(int value)
+			{
+				base.P3 = value - 1;
+			}
+		}
 
 #pragma warning restore 649
 
@@ -333,7 +389,7 @@ namespace Bridge.ClientTest
         }
 
         [Test]
-        public void BaseAccessorsCanBeInvoked()
+        public void BaseAccessorsCanBeInvokedOverride()
         {
             var d = new D3();
 
@@ -365,6 +421,24 @@ namespace Bridge.ClientTest
             Assert.AreEqual(18, d.P2, "P2 value");
 
             d.P3 = 12;
+            Assert.AreEqual(11, d.F3, "F3 value");
+        }
+
+        [Test]
+        public void BaseAccessorsCanBeInvoked()
+        {
+            var d = new D5();
+			
+			d.SetP1(42);
+            Assert.AreEqual(41, d.F1, "F1 value");
+
+            d.F1 = 15;
+            Assert.AreEqual(16, d.GetP1(), "P1 value");
+
+            d.F2 = 17;
+            Assert.AreEqual(18, d.GetP2(), "P2 value");
+
+            d.SetP3(12);
             Assert.AreEqual(11, d.F3, "F3 value");
         }
     }
