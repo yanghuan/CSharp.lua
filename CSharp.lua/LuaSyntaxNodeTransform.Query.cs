@@ -84,7 +84,7 @@ namespace CSharpLua {
       }
     }
 
-    private readonly List<QueryIdentifier> queryIdentifiers_ = new List<QueryIdentifier>();
+    private readonly List<QueryIdentifier> queryIdentifiers_ = new();
 
     private QueryIdentifier AddRangeIdentifier(SyntaxToken identifier) {
       string name = identifier.ValueText;

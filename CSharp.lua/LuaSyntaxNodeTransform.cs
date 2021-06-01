@@ -360,7 +360,7 @@ namespace CSharpLua {
 
       if (baseTypes.Count > 0) {
         if (typeSymbol.IsRecordType()) {
-          baseTypes.Add(GetRecordInerfaceTypeName(typeSymbol));
+          baseTypes.Add(GetRecordInterfaceTypeName(typeSymbol));
         }
         var genericArgument = CheckSpeaicalGenericArgument(typeSymbol);
         var baseCopyFields = GetBaseCopyFields(types.FirstOrDefault());
@@ -419,7 +419,7 @@ namespace CSharpLua {
 
       if (typeSymbol.IsRecordType()) {
         if (typeSymbol.BaseType != null && typeSymbol.BaseType.SpecialType == SpecialType.System_Object) {
-          typeDeclaration.AddBaseTypes(LuaIdentifierNameSyntax.RecordType.ArrayOf(GetRecordInerfaceTypeName(typeSymbol)), null, null);
+          typeDeclaration.AddBaseTypes(LuaIdentifierNameSyntax.RecordType.ArrayOf(GetRecordInterfaceTypeName(typeSymbol)), null, null);
         }
         BuildRecordMembers(typeSymbol, typeDeclaration);
       }
