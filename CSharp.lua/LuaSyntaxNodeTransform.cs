@@ -899,14 +899,6 @@ namespace CSharpLua {
               }
               continue;
             }
-          } else {
-            if (!isStatic && isPrivate) {
-              var fieldSymbol = (IFieldSymbol)variableSymbol;
-              if (fieldSymbol.IsProtobufNetSpecialField(out string name)) {
-                AddField(name, typeSymbol, variable.Initializer?.Value, isImmutable, isStatic, isPrivate, isReadOnly, attributes);
-                continue;
-              }
-            }
           }
           if (isPrivate && generator_.IsForcePublicSymbol(variableSymbol)) {
             isPrivate = false;
@@ -1059,9 +1051,6 @@ namespace CSharpLua {
     public override LuaSyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
       var symbol = semanticModel_.GetDeclaredSymbol(node);
       if (!symbol.IsAbstract) {
-        if (symbol.IsProtobufNetSpecialProperty()) {
-          return null;
-        }
         bool isStatic = symbol.IsStatic;
         bool isPrivate = symbol.IsPrivate() && symbol.ExplicitInterfaceImplementations.IsEmpty;
         bool hasGet = false;
@@ -3147,9 +3136,6 @@ namespace CSharpLua {
         return BuildStaticFieldName(symbol, symbol.IsReadOnly, node);
       } else {
         if (IsInternalNode(node)) {
-          if (symbol.IsProtobufNetSpecialField(out string name)) {
-            return LuaIdentifierNameSyntax.This.MemberAccess(name);
-          }
           return LuaIdentifierNameSyntax.This.MemberAccess(GetMemberName(symbol));
         } else {
           return GetMemberName(symbol);

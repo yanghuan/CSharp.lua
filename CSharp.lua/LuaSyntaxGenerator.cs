@@ -1573,10 +1573,6 @@ namespace CSharpLua {
         return false;
       }
 
-      if (symbol.IsProtobufNetSpecialProperty()) {
-        return true;
-      }
-
       var node = symbol.GetDeclaringSyntaxNode();
       if (node != null) {
         switch (node.Kind()) {

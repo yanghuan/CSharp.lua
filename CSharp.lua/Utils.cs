@@ -1360,8 +1360,6 @@ namespace CSharpLua {
       return node.Accept<LuaExpressionSyntax>(transform);
     }
 
-#region hard code for protobuf-net
-
     public static bool IsProtobufNetDeclaration(this INamedTypeSymbol type) {
       foreach (var attr in type.GetAttributes()) {
         var attribute = attr.AttributeClass;
@@ -1371,35 +1369,5 @@ namespace CSharpLua {
       }
       return false;
     }
-
-    public static bool IsProtobufNetSpecialField(this IFieldSymbol symbol, out string name) {
-      name = null;
-      if (!symbol.IsStatic && symbol.IsPrivate() && symbol.IsFromCode()) {
-        if (symbol.Name.StartsWith("_")) {
-          var containingType = symbol.ContainingType;
-          if (containingType.IsProtobufNetDeclaration()) {
-            name = symbol.Name.TrimStart('_');
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    public static bool IsProtobufNetSpecialProperty(this IPropertySymbol symbol) {
-      if (!symbol.IsStatic && symbol.IsPublic() && symbol.IsFromCode()) {
-        var containingType = symbol.ContainingType;
-        if (containingType.IsProtobufNetDeclaration()) {
-          string fieldName = "_" + symbol.Name;
-          var field = symbol.ContainingType.GetMembers(fieldName).OfType<IFieldSymbol>().FirstOrDefault();
-          if (field != null && !field.IsStatic && field.IsPrivate()) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-#endregion
   }
 }
