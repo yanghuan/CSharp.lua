@@ -987,7 +987,7 @@ namespace CSharpLua {
       var propertySymbol = typeSymbol.GetMembers("Count").Concat(typeSymbol.GetMembers("Length")).OfType<IPropertySymbol>().Where(i => {
         return !i.IsWriteOnly && i.Type.SpecialType == SpecialType.System_Int32;
       }).First();
-      string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, true);
+      string codeTemplate = XmlMetaProvider.GetPropertyCodeTemplate(propertySymbol, true);
       if (codeTemplate != null) {
         return InternalBuildCodeTemplateExpression(codeTemplate, null, null, null, target);
       }
@@ -1023,7 +1023,7 @@ namespace CSharpLua {
     private LuaExpressionSyntax InternalVisitElementAccessExpression(IPropertySymbol symbol, ElementAccessExpressionSyntax node) {
       if (symbol != null) {
         bool isGet = node.IsGetExpressionNode();
-        string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(symbol, isGet);
+        string codeTemplate = XmlMetaProvider.GetPropertyCodeTemplate(symbol, isGet);
         if (codeTemplate != null) {
           var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList);
           return BuildCodeTemplateExpression(codeTemplate, node.Expression, arguments, null);

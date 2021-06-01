@@ -2545,7 +2545,7 @@ namespace CSharpLua {
       } else if (symbol.Kind == SymbolKind.Property) {
         var propertySymbol = (IPropertySymbol)symbol;
         bool isGet = node.IsGetExpressionNode();
-        string codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, isGet);
+        string codeTemplate = XmlMetaProvider.GetPropertyCodeTemplate(propertySymbol, isGet);
         if (codeTemplate != null) {
           var result = BuildCodeTemplateExpression(codeTemplate, node.Expression);
           if (codeTemplate[0] == '#' && node.Parent.Parent.IsKind(SyntaxKind.InvocationExpression)) {
@@ -3691,7 +3691,7 @@ namespace CSharpLua {
         return governingIdentifier.MemberAccess(name);
       } else {
         var propertySymbol = (IPropertySymbol)symbol;
-        var codeTemplate = XmlMetaProvider.GetProertyCodeTemplate(propertySymbol, true);
+        var codeTemplate = XmlMetaProvider.GetPropertyCodeTemplate(propertySymbol, true);
         if (codeTemplate != null) {
           return InternalBuildCodeTemplateExpression(codeTemplate, null, null, null, governingIdentifier);
         }
