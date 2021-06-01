@@ -1159,6 +1159,34 @@ namespace CSharpLua {
       return false;
     }
 
+    public static bool IsDependExists(this INamedTypeSymbol type, INamedTypeSymbol other) {
+      if (type.EQ(other)) {
+        return true;
+      }
+
+      foreach (var typeArgument in type.TypeArguments) {
+        if (typeArgument.Kind != SymbolKind.TypeParameter) {
+          if (typeArgument.OriginalDefinition.EQ(other)) {
+            return true;
+          }
+        }
+      }
+
+      if (type.BaseType != null && !type.BaseType.IsSystemObjectOrValueType()) {
+        if (type.BaseType.IsDependExists(other)) {
+          return true;
+        }
+      }
+
+      foreach (var interfaceType in type.Interfaces) {
+        if (interfaceType.IsDependExists(other)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     public static bool IsRuntimeCompilerServices(this INamespaceSymbol symbol) {
       return symbol.Name == "CompilerServices" && symbol.ContainingNamespace.Name == "Runtime" && symbol.ContainingNamespace.ContainingNamespace.Name == "System";
     }

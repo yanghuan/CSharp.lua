@@ -21,7 +21,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -170,13 +169,12 @@ namespace CSharpLua {
       var syntaxTrees = BuildSyntaxTrees(codes, parseOptions);
       var references = libs.Select(i => MetadataReference.CreateFromStream(i)).ToList();
       var compilation = CSharpCompilation.Create("_", syntaxTrees, references, WithOptions(commandLineArguments.CompilationOptions));
-      using (MemoryStream ms = new MemoryStream()) {
-        EmitResult result = compilation.Emit(ms);
-        if (!result.Success) {
-          var errors = result.Diagnostics.Where(i => i.Severity == DiagnosticSeverity.Error);
-          string message = string.Join("\n", errors);
-          throw new CompilationErrorException(message);
-        }
+      MemoryStream ms = new MemoryStream(); 
+      EmitResult result = compilation.Emit(ms);
+      if (!result.Success) {
+        var errors = result.Diagnostics.Where(i => i.Severity == DiagnosticSeverity.Error);
+        string message = string.Join("\n", errors);
+        throw new CompilationErrorException(message);
       }
       return (compilation, commandLineArguments);
     }
@@ -200,7 +198,7 @@ namespace CSharpLua {
       if (compilation_.ReferencedAssemblyNames.Any(i => i.Name.Contains("UnityEngine"))) {
         monoBehaviourTypeSymbol_ = compilation_.GetTypeByMetadataName("UnityEngine.MonoBehaviour");
         if (monoBehaviourTypeSymbol_ != null) {
-          monoBehaviourSpecialMethodNames_ = new string[] { "Awake", "Start", "Update", "FixedUpdate", "LateUpdate" }.ToImmutableHashSet();
+          monoBehaviourSpecialMethodNames_ = new[] { "Awake", "Start", "Update", "FixedUpdate", "LateUpdate" }.ToImmutableHashSet();
         }
       }
       DoPretreatment();
@@ -209,8 +207,8 @@ namespace CSharpLua {
     private LuaCompilationUnitSyntax CreateCompilationUnit(SyntaxTree syntaxTree, bool isSingleFile) {
       var semanticModel = GetSemanticModel(syntaxTree);
       var compilationUnitSyntax = (CompilationUnitSyntax)syntaxTree.GetRoot();
-      var transfor = new LuaSyntaxNodeTransform(this, semanticModel);
-      return transfor.VisitCompilationUnit(compilationUnitSyntax, isSingleFile);
+      var transform = new LuaSyntaxNodeTransform(this, semanticModel);
+      return transform.VisitCompilationUnit(compilationUnitSyntax, isSingleFile);
     }
 
     private Task<LuaCompilationUnitSyntax> CreateCompilationUnitAsync(SyntaxTree syntaxTree, bool isSingleFile) {
@@ -227,7 +225,7 @@ namespace CSharpLua {
           if (e.InnerExceptions.Count > 0) {
             throw e.InnerExceptions.First();
           } else {
-            throw e;
+            throw;
           }
         }
       } else {
@@ -279,25 +277,25 @@ namespace CSharpLua {
 
     private static string GetSystemLibName(string path) {
       const string begin = "CoreSystem";
-      int index = path.LastIndexOf(begin);
+      int index = path.LastIndexOf(begin, StringComparison.InvariantCulture);
       return path.Substring(index + begin.Length + 1);
     }
 
     private static void RemoveLicenseComments(ref string code) {
       const string kBegin = "--[[";
       const string kEnd = "--]]";
-      int i = code.IndexOf(kBegin);
+      int i = code.IndexOf(kBegin, StringComparison.InvariantCulture);
       if (i != -1) {
         bool isSpace = code.Take(i).All(char.IsWhiteSpace);
         if (isSpace) {
-          int j = code.IndexOf(kEnd, i + kBegin.Length);
+          int j = code.IndexOf(kEnd, i + kBegin.Length, StringComparison.InvariantCulture);
           Contract.Assert(j != -1);
           code = code.Substring(j + kEnd.Length).Trim();
         }
       }
     }
 
-    private void WriteLuaSystemLib(string filePath, TextWriter writer, bool isFirst) {
+    private static void WriteLuaSystemLib(string filePath, TextWriter writer, bool isFirst) {
       writer.WriteLine();
       writer.WriteLine("-- CoreSystemLib: {0}", GetSystemLibName(filePath));
       writer.WriteLine(LuaSyntaxNode.Keyword.Do);
@@ -338,9 +336,8 @@ namespace CSharpLua {
     public string GenerateSingle() {
       foreach (var luaCompilationUnit in Create()) {
         StringBuilder sb = new StringBuilder();
-        using (var writer = new StringWriter(sb)) {
-          Write(luaCompilationUnit, writer);
-        }
+        var writer = new StringWriter(sb); 
+        Write(luaCompilationUnit, writer);
         return sb.ToString();
       }
       throw new InvalidProgramException();
@@ -357,7 +354,7 @@ namespace CSharpLua {
       return GetOutFileRelativePath(RemoveBaseFolder(inFilePath), output_, out module);
     }
 
-    private string GetOutFileRelativePath(string path, string output_, out string module) {
+    private static string GetOutFileRelativePath(string path, string output_, out string module) {
       string extend = Path.GetExtension(path);
       path = path.Remove(path.Length - extend.Length, extend.Length);
       path = path.Replace('.', '_');
@@ -452,10 +449,10 @@ namespace CSharpLua {
     }
 
     internal bool IsConditionalAttributeIgnore(ISymbol symbol) {
-      foreach (var attrbute in symbol.GetAttributes()) {
-        var attributeSymbol = attrbute.AttributeClass;
+      foreach (var attribute in symbol.GetAttributes()) {
+        var attributeSymbol = attribute.AttributeClass;
         if (attributeSymbol.IsConditionalAttribute()) {
-          string conditionString = (string)attrbute.ConstructorArguments.First().Value;
+          string conditionString = (string)attribute.ConstructorArguments.First().Value;
           return !CommandLineArguments.ParseOptions.PreprocessorSymbolNames.Contains(conditionString);
         }
       }
@@ -487,8 +484,8 @@ namespace CSharpLua {
         partialTypes_.Clear();
         foreach (var typeDeclarations in types) {
           var major = typeDeclarations.Min();
-          var transfor = new LuaSyntaxNodeTransform(this, null);
-          transfor.AcceptPartialType(major, typeDeclarations);
+          var transform = new LuaSyntaxNodeTransform(this, null);
+          transform.AcceptPartialType(major, typeDeclarations);
         }
       }
     }
@@ -516,7 +513,7 @@ namespace CSharpLua {
       return isExport;
     }
 
-    private void AddSuperTypeTo(HashSet<INamedTypeSymbol> parentTypes, INamedTypeSymbol rootType, INamedTypeSymbol superType) {
+    private static void AddSuperTypeTo(HashSet<INamedTypeSymbol> parentTypes, INamedTypeSymbol rootType, INamedTypeSymbol superType) {
       if (superType.IsGenericType) {
         if (superType.OriginalDefinition.IsFromCode()) {
           parentTypes.Add(superType.OriginalDefinition);
@@ -663,7 +660,7 @@ namespace CSharpLua {
     }
 
     internal bool AddGenericImportDepend(INamedTypeSymbol definition, INamedTypeSymbol type) {
-      if (type != null && type.IsFromCode() && !definition.IsContainsInternalSymbol(type)) {
+      if (type != null && type.IsFromCode() && !definition.IsContainsInternalSymbol(type) && !type.IsDependExists(definition)) {
         var set = genericImportDepends_.GetOrAdd(definition, i => new ConcurrentHashSet<INamedTypeSymbol>());
         return set.Add(type);
       }
@@ -1386,8 +1383,8 @@ namespace CSharpLua {
       }
 
       private INamedTypeSymbol GetDeclaredSymbol(BaseTypeDeclarationSyntax node) {
-        var semanticModel_ = generator_.compilation_.GetSemanticModel(node.SyntaxTree);
-        return semanticModel_.GetDeclaredSymbol(node);
+        var semanticModel = generator_.compilation_.GetSemanticModel(node.SyntaxTree);
+        return semanticModel.GetDeclaredSymbol(node);
       }
 
       public override void VisitClassDeclaration(ClassDeclarationSyntax node) {
@@ -1434,6 +1431,7 @@ namespace CSharpLua {
           foreach (var baseInterface in type.AllInterfaces) {
             foreach (var interfaceMember in baseInterface.GetMembers().Where(i => !i.IsStatic)) {
               var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
+              Contract.Assert(implementationMember != null);
               if (implementationMember.Kind == SymbolKind.Method) {
                 var methodSymbol = (IMethodSymbol)implementationMember;
                 if (methodSymbol.MethodKind != MethodKind.Ordinary) {
@@ -1457,7 +1455,7 @@ namespace CSharpLua {
         }
       }
 
-      private bool IsExtendSelf(INamedTypeSymbol typeSymbol) {
+      private static bool IsExtendSelf(INamedTypeSymbol typeSymbol) {
         if (typeSymbol.BaseType != null) {
           if (Utility.IsExtendSelf(typeSymbol, typeSymbol.BaseType)) {
             return true;
@@ -1498,7 +1496,7 @@ namespace CSharpLua {
         generator_.typeRefactorNames_.Add(type, newName);
       }
 
-      private string GetTypeOrNamespaceNewName(IEnumerable<ISymbol> allSymbols, ISymbol symbol, string name, int index = 0) {
+      private static string GetTypeOrNamespaceNewName(IEnumerable<ISymbol> allSymbols, ISymbol symbol, string name, int index = 0) {
         while (true) {
           string newName = Utility.GetNewIdentifierName(name, index);
           if (!CheckTypeNameExists(allSymbols, symbol, newName)) {
@@ -1532,32 +1530,32 @@ namespace CSharpLua {
     }
 
     private void DoPretreatment() {
-      new PretreatmentChecker(this);
+      _ = new PretreatmentChecker(this);
     }
 
     private void AddImplicitInterfaceImplementation(ISymbol implementationMember, ISymbol interfaceMember) {
       bool success = implicitInterfaceImplementations_.TryAdd(implementationMember, interfaceMember);
       if (success) {
         var containingType = implementationMember.ContainingType;
-        var mapps = implicitInterfaceTypes_.GetOrDefault(containingType);
-        if (mapps == null) {
-          mapps = new Dictionary<ISymbol, ISymbol>();
-          implicitInterfaceTypes_.Add(containingType, mapps);
+        var map = implicitInterfaceTypes_.GetOrDefault(containingType);
+        if (map == null) {
+          map = new Dictionary<ISymbol, ISymbol>();
+          implicitInterfaceTypes_.Add(containingType, map);
         }
-        mapps.Add(interfaceMember, implementationMember);
+        map.Add(interfaceMember, implementationMember);
       }
     }
 
     private ISymbol FindImplicitImplementationForInterfaceMember(INamedTypeSymbol typeSymbol, ISymbol interfaceMember) {
-      var mapps = implicitInterfaceTypes_.GetOrDefault(typeSymbol);
-      return mapps?.GetOrDefault(interfaceMember);
+      var map = implicitInterfaceTypes_.GetOrDefault(typeSymbol);
+      return map?.GetOrDefault(interfaceMember);
     }
 
     private bool IsImplicitInterfaceImplementation(ISymbol symbol) {
       return implicitInterfaceImplementations_.ContainsKey(symbol);
     }
 
-    private bool IsModuleAutoField(ISymbol symbol) {
+    private static bool IsModuleAutoField(ISymbol symbol) {
       var method = symbol.Kind == SymbolKind.Property ? ((IPropertySymbol)symbol).GetMethod : ((IEventSymbol)symbol).AddMethod;
       return method != null && method.GetAttributes().HasCompilerGeneratedAttribute();
     }
@@ -1784,7 +1782,7 @@ namespace CSharpLua {
 
     internal bool IsExtendExists(INamedTypeSymbol typeSymbol) {
       var set = extends_.GetOrDefault(typeSymbol);
-      return set != null && set.Count > 0;
+      return set?.Count > 0;
     }
 
     internal bool IsSealed(INamedTypeSymbol typeSymbol) {
@@ -1856,8 +1854,8 @@ namespace CSharpLua {
       return false;
     }
 
-    private bool IsInitFieldExists(INamedTypeSymbol symbol, bool isStatic) {
-      var members = symbol.GetMembers().Where(i => i.IsStatic == isStatic);
+    private static bool IsInitFieldExists(INamedTypeSymbol symbol, bool isStatic) {
+      var members = symbol.GetMembers().Where(i => i.IsStatic == isStatic).ToArray();
       var fields = members.OfType<IFieldSymbol>();
       if (IsInitFieldExists(fields, i => i.Type, node => ((VariableDeclaratorSyntax)node).Initializer?.Value)) {
         return true;
