@@ -518,7 +518,7 @@ local spack, sunpack, getBytesFromInt64, toInt64
 if System.luaVersion < 5.3 then
   local struct = rawget(global, "struct")
   if struct then
-    spack, sunpack = struct.pack, struct.upack
+    spack, sunpack = struct.pack, struct.unpack
   end
   if not spack then
     spack = function ()
