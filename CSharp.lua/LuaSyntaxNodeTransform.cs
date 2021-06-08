@@ -4494,7 +4494,9 @@ namespace CSharpLua {
     private LuaPropertyAdapterExpressionSyntax GetTempPropertyUnaryExpression(LuaPropertyAdapterExpressionSyntax propertyAdapter, out LuaLocalVariableDeclaratorSyntax localTemp) {
       var temp = GetTempIdentifier();
       localTemp = new LuaLocalVariableDeclaratorSyntax(temp, propertyAdapter.Expression);
-      return new LuaPropertyAdapterExpressionSyntax(temp, propertyAdapter.Name, propertyAdapter.IsObjectColon);
+      var result = new LuaPropertyAdapterExpressionSyntax(temp, propertyAdapter.Name, propertyAdapter.IsObjectColon);
+      result.ArgumentList.AddArguments(propertyAdapter.ArgumentList.Arguments);
+      return result;
     }
 
     private bool IsNullablePrefixUnaryExpression(PrefixUnaryExpressionSyntax node, LuaExpressionSyntax operand, string operatorToken, out LuaExpressionSyntax result, LuaIdentifierNameSyntax method = null) {
