@@ -101,6 +101,7 @@ https://github.com/yanghuan/CSharp.lua/wiki
 - [Bridge.NET](http://bridge.net/)
 - [WootzJs](https://github.com/kswoll/WootzJs)
 - [.NET referencesource](http://referencesource.microsoft.com/)
+- [Resharper](https://www.jetbrains.com/resharper/)
 
 ## Communication
 - [Issues](https://github.com/yanghuan/CSharp.lua/issues)
