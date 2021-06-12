@@ -494,7 +494,7 @@ if rawget(global, "jit") then
   end
 else 
   local dump = string.dump
-  if dump and sbyte(dump(System.emptyFn, 7)) == 0x00 then
+  if dump and sbyte(dump(System.emptyFn), 7) == 0x00 then
     isLittleEndian = false
   end
 end
