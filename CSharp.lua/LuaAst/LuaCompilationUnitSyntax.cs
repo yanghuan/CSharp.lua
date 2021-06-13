@@ -40,7 +40,7 @@ namespace CSharpLua.LuaAst {
         return NewName.Length.CompareTo(other.NewName.Length);
       }
 
-      return NewName.CompareTo(other.NewName);
+      return string.Compare(NewName, other.NewName, StringComparison.Ordinal);
     }
   }
 
@@ -50,7 +50,7 @@ namespace CSharpLua.LuaAst {
     public bool IsFromCode;
 
     public int CompareTo(UsingDeclare other) {
-      return Prefix.CompareTo(other.Prefix);
+      return string.Compare(Prefix, other.Prefix, StringComparison.Ordinal);
     }
   }
 

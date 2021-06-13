@@ -533,7 +533,7 @@ namespace CSharpLua {
     private List<INamedTypeSymbol> GetExportTypes() {
       List<INamedTypeSymbol> allTypes = new List<INamedTypeSymbol>();
       if (types_.Count > 0) {
-        types_.Sort((x, y) => x.ToString().CompareTo(y.ToString()));
+        types_.Sort((x, y) => string.Compare(x.ToString(), y.ToString(), StringComparison.Ordinal));
 
         List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>>() { types_ };
         while (true) {
