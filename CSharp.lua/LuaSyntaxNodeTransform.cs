@@ -88,7 +88,7 @@ namespace CSharpLua {
     private int metadataTypeNameCounter_;
     public bool IsMetadataTypeName => metadataTypeNameCounter_ > 0;
 
-    private static readonly Dictionary<string, string> operatorTokenMap_ = new Dictionary<string, string>() {
+    private static readonly Dictionary<string, string> operatorTokenMap_ = new Dictionary<string, string> {
       ["!="] = LuaSyntaxNode.Tokens.NotEquals,
       ["!"] = LuaSyntaxNode.Tokens.Not,
       ["&&"] = LuaSyntaxNode.Tokens.And,
@@ -303,7 +303,7 @@ namespace CSharpLua {
           var argumentType = interfaceType.TypeArguments.First();
           bool isLazy = argumentType.Kind != SymbolKind.TypeParameter && argumentType.IsFromCode();
           var typeName = isLazy ? GetTypeNameWithoutImport(argumentType) : GetTypeName(argumentType);
-          return new LuaSpecialGenericType() {
+          return new LuaSpecialGenericType {
             Name = LuaIdentifierNameSyntax.GenericT,
             Value = typeName,
             IsLazy = isLazy
@@ -429,7 +429,7 @@ namespace CSharpLua {
       }
 
       if (IsCurTypeExportMetadataAll || attributes.Count > 0 || typeDeclaration.IsExportMetadata) {
-        var data = new LuaTableExpression() { IsSingleLine = true };
+        var data = new LuaTableExpression { IsSingleLine = true };
         data.Add(typeSymbol.GetMetaDataAttributeFlags());
         data.AddRange(typeDeclaration.TypeParameterExpressions);
         data.AddRange(attributes);
@@ -466,7 +466,7 @@ namespace CSharpLua {
 
     private void BuildRecordMembers(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration) {
       var properties = typeSymbol.GetMembers().OfType<IPropertySymbol>().Skip(1);
-      var expressions = new List<LuaExpressionSyntax>() { typeSymbol.Name.ToStringLiteral() };
+      var expressions = new List<LuaExpressionSyntax> { typeSymbol.Name.ToStringLiteral() };
       expressions.AddRange(properties.Select(i => GetMemberName(i).ToStringLiteral()));
       var function = new LuaFunctionExpressionSyntax();
       function.AddStatement(new LuaReturnStatementSyntax(expressions));
@@ -658,7 +658,7 @@ namespace CSharpLua {
     }
 
     private void AddMethodMetaData(MethodDeclarationResult result, bool isMoreThanLocalVariables = false) {
-      var table = new LuaTableExpression() { IsSingleLine = true };
+      var table = new LuaTableExpression { IsSingleLine = true };
       table.Add(new LuaStringLiteralExpressionSyntax(result.Symbol.Name));
       table.Add(result.Symbol.GetMetaDataAttributeFlags());
       if (isMoreThanLocalVariables) {
@@ -858,7 +858,7 @@ namespace CSharpLua {
     }
 
     private void AddFieldMetaData(IFieldSymbol symbol, LuaIdentifierNameSyntax fieldName, List<LuaExpressionSyntax> attributes) {
-      var data = new LuaTableExpression() { IsSingleLine = true };
+      var data = new LuaTableExpression { IsSingleLine = true };
       data.Add(new LuaStringLiteralExpressionSyntax(symbol.Name));
       data.Add(symbol.GetMetaDataAttributeFlags());
       data.Add(GetTypeNameOfMetadata(symbol.Type));
@@ -1011,7 +1011,7 @@ namespace CSharpLua {
           kind = PropertyMethodKind.Field;
         }
       }
-      var data = new LuaTableExpression() { IsSingleLine = true };
+      var data = new LuaTableExpression { IsSingleLine = true };
       data.Add(new LuaStringLiteralExpressionSyntax(symbol.Name));
       data.Add(symbol.GetMetaDataAttributeFlags(kind));
       var type = isProperty ? ((IPropertySymbol)symbol).Type : ((IEventSymbol)symbol).Type;
@@ -2983,7 +2983,7 @@ namespace CSharpLua {
                 Contract.Assert(targetMethodSymbol.ReturnType != null && targetMethodSymbol.ReturnType.IsTypeParameterExists(typeArgument));
                 parameterIndex = kReturnParameterIndex;
               }
-              targetTypeParameters.Add(new TypeParameterPlaceholder() {
+              targetTypeParameters.Add(new TypeParameterPlaceholder {
                 Symbol = typeArgument,
                 ParameterIndex = parameterIndex,
               });
@@ -2996,20 +2996,20 @@ namespace CSharpLua {
             Contract.Assert(originalTypeArgument.TypeKind == TypeKind.TypeParameter);
             int parameterIndex = originalDefinition.Parameters.IndexOf(i => i.Type.IsTypeParameterExists(originalTypeArgument));
             if (parameterIndex != -1) {
-              originalTypeParameters.Add(new TypeParameterPlaceholder() {
+              originalTypeParameters.Add(new TypeParameterPlaceholder {
                 Symbol = originalTypeArgument,
                 ParameterIndex = parameterIndex,
               });
             } else {
               if (originalDefinition.ReturnType != null && originalDefinition.ReturnType.IsTypeParameterExists(originalTypeArgument)) {
-                originalTypeParameters.Add(new TypeParameterPlaceholder() {
+                originalTypeParameters.Add(new TypeParameterPlaceholder {
                   Symbol = originalTypeArgument,
                   ParameterIndex = kReturnParameterIndex,
                 });
               } else {
                 var typeArgument = symbol.TypeArguments[j];
                 Contract.Assert(typeArgument.TypeKind != TypeKind.TypeParameter);
-                originalTypeParameters.Add(new TypeParameterPlaceholder() {
+                originalTypeParameters.Add(new TypeParameterPlaceholder {
                   Symbol = typeArgument,
                   ParameterIndex = -1,
                 });

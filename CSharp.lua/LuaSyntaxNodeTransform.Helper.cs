@@ -843,7 +843,7 @@ namespace CSharpLua {
         }
       }
 
-      CurCompilationUnit.UsingDeclares.Add(new UsingDeclare() {
+      CurCompilationUnit.UsingDeclares.Add(new UsingDeclare {
         Prefix = prefix,
         NewPrefix = newPrefix,
         IsFromCode = isFromCode,
@@ -888,7 +888,7 @@ namespace CSharpLua {
         }
       }
 
-      CurCompilationUnit.GenericUsingDeclares.Add(new GenericUsingDeclare() {
+      CurCompilationUnit.GenericUsingDeclares.Add(new GenericUsingDeclare {
         InvocationExpression = invocationExpression,
         ArgumentTypeNames = argumentTypeNames,
         NewName = name,

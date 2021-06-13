@@ -471,7 +471,7 @@ namespace CSharpLua {
 
     internal void AddPartialTypeDeclaration(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax luaNode, LuaCompilationUnitSyntax compilationUnit) {
       var list = partialTypes_.GetOrAdd(typeSymbol, _ => new ConcurrentList<PartialTypeDeclaration>());
-      list.Add(new PartialTypeDeclaration() {
+      list.Add(new PartialTypeDeclaration {
         Symbol = typeSymbol,
         Node = node,
         TypeDeclaration = luaNode,
@@ -536,7 +536,7 @@ namespace CSharpLua {
       if (types_.Count > 0) {
         types_.Sort((x, y) => string.Compare(x.ToString(), y.ToString(), StringComparison.Ordinal));
 
-        List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>>() { types_ };
+        List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>> { types_ };
         while (true) {
           HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>();
           var lastTypes = typesList.Last();
@@ -2028,7 +2028,7 @@ namespace CSharpLua {
         return namespaceRefactorNames_.GetOrDefault(symbol, original);
       }
 
-      var namespaces = new List<INamespaceSymbol>() { symbol };
+      var namespaces = new List<INamespaceSymbol> { symbol };
       do {
         symbol = symbol.ContainingNamespace;
         namespaces.Add(symbol);

@@ -238,7 +238,7 @@ namespace CSharpLua {
           return BuildArray(arrayType, initializerExpressions);
         }
 
-        var rank = new LuaTableExpression() { IsSingleLine = true };
+        var rank = new LuaTableExpression { IsSingleLine = true };
         var expressions = new List<LuaExpressionSyntax>();
         FillMultiArrayInitializer(initializer, rank, expressions, true);
         return BuildMultiArray(arrayType, rank, expressions);
@@ -250,7 +250,7 @@ namespace CSharpLua {
           return BuildArray(arrayType, size);
         }
 
-        var rank = new LuaTableExpression() { IsSingleLine = true };
+        var rank = new LuaTableExpression { IsSingleLine = true };
         foreach (var size in arrayType.RankSpecifier.Sizes) {
           rank.Add(size);
         }
@@ -412,7 +412,7 @@ namespace CSharpLua {
           } else {
             name = LuaSyntaxNode.GetCtorNameString(ctorIndex);
           }
-          AddMethodMetaData(new MethodDeclarationResult() {
+          AddMethodMetaData(new MethodDeclarationResult {
             Symbol = symbol,
             Name = name,
             Function = function,

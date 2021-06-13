@@ -125,7 +125,7 @@ namespace CSharpLua.LuaAst {
         return true;
       }
 
-      genericUsingDeclare = new GenericUsingDeclare() {
+      genericUsingDeclare = new GenericUsingDeclare {
         InvocationExpression = invocationExpression,
         ArgumentTypeNames = argumentTypeNames,
         NewName = name,
@@ -397,7 +397,7 @@ namespace CSharpLua.LuaAst {
 
     public void SetStaticCtor(LuaConstructorAdapterExpressionSyntax function, LuaDocumentStatement document) {
       Contract.Assert(staticCtor_ == null);
-      staticCtor_ = new LuaConstructorDeclaration() {
+      staticCtor_ = new LuaConstructorDeclaration {
         Function = function,
         Document = document,
       };
@@ -417,12 +417,12 @@ namespace CSharpLua.LuaAst {
 
     public void AddCtor(LuaConstructorAdapterExpressionSyntax function, bool insertFirst, LuaDocumentStatement document = null) {
       if (insertFirst) {
-        ctors_.Insert(0, new LuaConstructorDeclaration() {
+        ctors_.Insert(0, new LuaConstructorDeclaration {
           Function = function,
           Document = document,
         });
       } else {
-        ctors_.Add(new LuaConstructorDeclaration() {
+        ctors_.Add(new LuaConstructorDeclaration {
           Function = function,
           Document = document,
         });
