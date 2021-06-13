@@ -3714,7 +3714,6 @@ namespace CSharpLua {
           } else {
             var fieldSymbol = (IFieldSymbol)semanticModel_.GetSymbolInfo(subpattern.NameColon.Name).Symbol;
             Contract.Assert(fieldSymbol.ContainingType.IsTupleType);
-            int elementIndex = fieldSymbol.GetTupleElementIndex();
             left = deconstruct.Variables[subpatternIndex];
           }
           subpatternExpressions.Add(left.EqualsEquals(expression));
