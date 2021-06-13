@@ -1881,7 +1881,7 @@ namespace CSharpLua {
         return resultExpression;
       }
 
-      string operatorToken = GetOperatorToken(node.OperatorToken.ValueText[0 ..^1]);
+      string operatorToken = GetOperatorToken(node.OperatorToken.ValueText[..^1]);
       return BuildCommonAssignmentExpression(leftNode, rightNode, operatorToken, node);
     }
 
@@ -4616,7 +4616,7 @@ namespace CSharpLua {
         }
         case SyntaxKind.LogicalNotExpression: {
           var symbol = semanticModel_.GetTypeInfo(node.Operand).Type;
-          if (symbol != null && symbol.IsNullableType() && symbol.IsBoolType(true)) {
+          if (symbol != null && symbol.IsNullableType() && symbol.IsBoolType()) {
             var temp = GetTempIdentifier();
             CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp));
             var identifier = BuildNullableExpressionIdentifier(operand, new List<LuaExpressionSyntax>());

@@ -298,7 +298,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public static string ToString(AttributeFlags attribute) {
-      return kAttributePrefix + attribute.ToString();
+      return kAttributePrefix + attribute;
     }
 
     internal override void Render(LuaRenderer renderer) {

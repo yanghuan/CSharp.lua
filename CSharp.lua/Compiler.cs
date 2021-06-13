@@ -159,7 +159,7 @@ namespace CSharpLua {
       }
 
       isDirectory = false;
-      return Utility.Split(input_, true);
+      return Utility.Split(input_);
     }
 
     private LuaSyntaxGenerator GetGenerator() {

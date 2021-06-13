@@ -173,7 +173,7 @@ namespace CSharpLua {
       }
 
       if (Utility.IsIdentifierIllegal(ref name)) {
-        name = GetUniqueIdentifier(name, node, 0);
+        name = GetUniqueIdentifier(name, node);
         return true;
       }
       return false;

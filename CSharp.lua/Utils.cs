@@ -576,7 +576,7 @@ namespace CSharpLua {
         if (symbol.Kind == SymbolKind.Field) {
           node = node.Parent.Parent;
         }
-        if (node.HasCSharpLuaAttribute(LuaAst.LuaDocumentStatement.AttributeFlags.Template, out string text)) {
+        if (node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Template, out string text)) {
           return GetCodeTemplateFromAttributeText(text);
         }
       }
