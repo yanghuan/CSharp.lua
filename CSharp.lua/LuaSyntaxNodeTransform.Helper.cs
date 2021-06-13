@@ -571,7 +571,7 @@ namespace CSharpLua {
     }
 
     private LuaVerbatimStringLiteralExpressionSyntax BuildVerbatimStringExpression(string value) {
-      return new LuaVerbatimStringLiteralExpressionSyntax(value);
+      return new(value);
     }
 
     private enum CallerAttributeKind {
@@ -1419,7 +1419,7 @@ namespace CSharpLua {
     private sealed class SymbolAssignmentSearcher : LuaSyntaxSearcher {
       private readonly LuaSyntaxGenerator generator_;
       private readonly ISymbol symbol_;
-      private readonly HashSet<IMethodSymbol> methods_ = new HashSet<IMethodSymbol>();
+      private readonly HashSet<IMethodSymbol> methods_ = new();
 
       public SymbolAssignmentSearcher(LuaSyntaxGenerator generator, ISymbol symbol) {
         generator_ = generator;

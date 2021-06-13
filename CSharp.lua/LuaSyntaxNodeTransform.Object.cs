@@ -275,7 +275,7 @@ namespace CSharpLua {
     }
 
     private LuaInvocationExpressionSyntax BuildBaseFromThis() {
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemBase, LuaIdentifierNameSyntax.This);
+      return new(LuaIdentifierNameSyntax.SystemBase, LuaIdentifierNameSyntax.This);
     }
 
     private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol type, ITypeSymbol baseType, int ctorCounter) {

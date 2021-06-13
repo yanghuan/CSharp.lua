@@ -70,13 +70,13 @@ namespace CSharpLua {
     private readonly LuaSyntaxGenerator generator_;
     private SemanticModel semanticModel_;
 
-    private readonly Stack<LuaCompilationUnitSyntax> compilationUnits_ = new Stack<LuaCompilationUnitSyntax>();
-    private readonly Stack<TypeDeclarationInfo> typeDeclarations_ = new Stack<TypeDeclarationInfo>();
-    private readonly Stack<LuaFunctionExpressionSyntax> functions_ = new Stack<LuaFunctionExpressionSyntax>();
-    private readonly Stack<MethodInfo> methodInfos_ = new Stack<MethodInfo>();
-    private readonly Stack<LuaBlockSyntax> blocks_ = new Stack<LuaBlockSyntax>();
-    private readonly Stack<LuaIfStatementSyntax> ifStatements_ = new Stack<LuaIfStatementSyntax>();
-    private readonly Stack<LuaSwitchAdapterStatementSyntax> switches_ = new Stack<LuaSwitchAdapterStatementSyntax>();
+    private readonly Stack<LuaCompilationUnitSyntax> compilationUnits_ = new();
+    private readonly Stack<TypeDeclarationInfo> typeDeclarations_ = new();
+    private readonly Stack<LuaFunctionExpressionSyntax> functions_ = new();
+    private readonly Stack<MethodInfo> methodInfos_ = new();
+    private readonly Stack<LuaBlockSyntax> blocks_ = new();
+    private readonly Stack<LuaIfStatementSyntax> ifStatements_ = new();
+    private readonly Stack<LuaSwitchAdapterStatementSyntax> switches_ = new();
 
     private int releaseTempIdentifierCount_;
     private int noImportTypeNameCounter_;
@@ -88,7 +88,7 @@ namespace CSharpLua {
     private int metadataTypeNameCounter_;
     public bool IsMetadataTypeName => metadataTypeNameCounter_ > 0;
 
-    private static readonly Dictionary<string, string> operatorTokenMap_ = new Dictionary<string, string> {
+    private static readonly Dictionary<string, string> operatorTokenMap_ = new() {
       ["!="] = LuaSyntaxNode.Tokens.NotEquals,
       ["!"] = LuaSyntaxNode.Tokens.Not,
       ["&&"] = LuaSyntaxNode.Tokens.And,
@@ -854,7 +854,7 @@ namespace CSharpLua {
     }
 
     private static LuaInvocationExpressionSyntax BuildDefaultValue(LuaExpressionSyntax typeExpression) {
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemDefault, typeExpression);
+      return new(LuaIdentifierNameSyntax.SystemDefault, typeExpression);
     }
 
     private void AddFieldMetaData(IFieldSymbol symbol, LuaIdentifierNameSyntax fieldName, List<LuaExpressionSyntax> attributes) {
@@ -2183,7 +2183,7 @@ namespace CSharpLua {
     }
 
     private List<Func<LuaExpressionSyntax>> FillCodeTemplateInvocationArguments(IMethodSymbol symbol, ArgumentListSyntax argumentList, List<Func<LuaExpressionSyntax>> argumentExpressions) {
-      argumentExpressions ??= new();
+      argumentExpressions ??= new List<Func<LuaExpressionSyntax>>();
       foreach (var argument in argumentList.Arguments) {
         if (argument.NameColon != null) {
           string name = argument.NameColon.Name.Identifier.ValueText;
