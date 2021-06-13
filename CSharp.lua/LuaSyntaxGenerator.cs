@@ -628,7 +628,7 @@ namespace CSharpLua {
               int count = type.Length - index - "Attribute".Length;
               string field = type.Substring(index, count);
               if (invocation.ArgumentList.Arguments.Count == 1) {
-                assemblyTable.Add(field, invocation.ArgumentList.Arguments.First());
+                assemblyTable.Add(field, invocation.ArgumentList.Arguments[0]);
               } else {
                 assemblyTable.Add(field, new LuaTableExpression(invocation.ArgumentList.Arguments) { IsSingleLine = true });
               }
