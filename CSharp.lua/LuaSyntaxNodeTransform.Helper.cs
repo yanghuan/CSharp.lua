@@ -2082,7 +2082,7 @@ namespace CSharpLua {
       } else {
         if (expression is LuaBinaryExpressionSyntax) {
           if (!root.Parent.IsKind(SyntaxKind.ExpressionStatement)) {
-            if (!root.Parent.IsKind(SyntaxKind.Argument) && !(root.Parent is AssignmentExpressionSyntax)) {
+            if (!root.Parent.IsKind(SyntaxKind.Argument) && root.Parent is not AssignmentExpressionSyntax) {
               expression = expression.Parenthesized();
             }
           }

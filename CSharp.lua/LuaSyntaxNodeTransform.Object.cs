@@ -1056,7 +1056,7 @@ namespace CSharpLua {
                 var argument = (ArgumentSyntax)parent;
                 if (argument.RefKindKeyword.IsKind(SyntaxKind.RefKeyword)) {
                   var first = propertyAdapter.ArgumentList.Arguments[0];
-                  if (!(first is LuaIdentifierNameSyntax)) {
+                  if (first is not LuaIdentifierNameSyntax) {
                     var temp = GetTempIdentifier();
                     CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, first));
                     propertyAdapter.ArgumentList.Arguments[0] = temp;

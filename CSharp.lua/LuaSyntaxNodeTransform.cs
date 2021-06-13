@@ -2487,7 +2487,7 @@ namespace CSharpLua {
 
       var curBlock = CurBlockOrNull;
       if (curBlock != null) {
-        var statement = curBlock.Statements.FindLast(i => !(i is LuaBlankLinesStatement) && !(i is LuaCommentStatement));
+        var statement = curBlock.Statements.FindLast(i => i is not LuaBlankLinesStatement && i is not LuaCommentStatement);
         if (statement != null) {
           statement.ForceSemicolon = true;
         }
