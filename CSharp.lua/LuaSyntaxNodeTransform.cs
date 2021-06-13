@@ -1558,9 +1558,7 @@ namespace CSharpLua {
         if (parent != null) {
           expression = GetUserDefinedOperatorExpression(parent, leftExpression, right);
         }
-        if (expression == null) {
-          expression = leftExpression.Binary(operatorToken, right);
-        }
+        expression ??= leftExpression.Binary(operatorToken, right);
         propertyAdapter.ArgumentList.AddArgument(expression);
         return propertyAdapter;
       } else {
@@ -2202,9 +2200,7 @@ namespace CSharpLua {
       }
 
       for (int i = 0; i < argumentExpressions.Count; ++i) {
-        if (argumentExpressions[i] == null) {
-          argumentExpressions[i] = () => GetDefaultParameterValue(symbol.Parameters[i], argumentList.Parent, true);
-        }
+        argumentExpressions[i] ??= () => GetDefaultParameterValue(symbol.Parameters[i], argumentList.Parent, true);
       }
 
       if (symbol.Parameters.Length > argumentList.Arguments.Count) {
@@ -3393,9 +3389,7 @@ namespace CSharpLua {
       var declaration = node.Declaration.Accept<LuaVariableDeclarationSyntax>(this);
       if (node.UsingKeyword.IsKeyword()) {
         var block = CurBlock;
-        if (block.UsingDeclarations == null) {
-          block.UsingDeclarations = new List<int>();
-        }
+        block.UsingDeclarations ??= new List<int>();
         block.UsingDeclarations.Add(block.Statements.Count);
       }
       return new LuaLocalDeclarationStatementSyntax(declaration);
@@ -3464,9 +3458,7 @@ namespace CSharpLua {
           if (!isConst) {
             var variableDeclarator = variable.Accept<LuaVariableDeclaratorSyntax>(this);
             if (variableDeclarator.Initializer == null) {
-              if (typeSymbol == null) {
-                typeSymbol = semanticModel_.GetTypeInfo(node.Type).Type;
-              }
+              typeSymbol ??= semanticModel_.GetTypeInfo(node.Type).Type;
               if (typeSymbol.IsCustomValueType() && IsValueTypeVariableDeclarationWithoutAssignment(variable)) {
                 var typeExpression = GetTypeName(typeSymbol);
                 variableDeclarator.Initializer = new LuaEqualsValueClauseSyntax(BuildDefaultValue(typeExpression));
@@ -4944,9 +4936,7 @@ namespace CSharpLua {
       if (node.CaseOrDefaultKeyword.IsKind(SyntaxKind.DefaultKeyword)) {
         const string kDefaultLabel = "defaultLabel";
         var switchStatement = switches_.Peek();
-        if (switchStatement.DefaultLabel == null) {
-          switchStatement.DefaultLabel = GetUniqueIdentifier(kDefaultLabel, node);
-        }
+        switchStatement.DefaultLabel ??= GetUniqueIdentifier(kDefaultLabel, node);
         return new LuaGotoCaseAdapterStatement(switchStatement.DefaultLabel);
       }
       var identifier = node.Expression.Accept<LuaIdentifierNameSyntax>(this);

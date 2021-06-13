@@ -82,9 +82,7 @@ namespace CSharpLua.LuaAst {
     }
 
     private void AddMetadata(ref LuaTableExpression table, LuaIdentifierNameSyntax name, LuaTableItemSyntax item) {
-      if (metadata_ == null) {
-        metadata_ = new LuaTableExpression();
-      }
+      metadata_ ??= new LuaTableExpression();
       if (table == null) {
         table = new LuaTableExpression();
         metadata_.Add(name, table);
@@ -93,9 +91,7 @@ namespace CSharpLua.LuaAst {
     }
 
     internal void AddClassMetaData(LuaTableExpression data) {
-      if (metadata_ == null) {
-        metadata_ = new LuaTableExpression();
-      }
+      metadata_ ??= new LuaTableExpression();
       metadata_.Add(LuaIdentifierNameSyntax.Class, data);
     }
 
