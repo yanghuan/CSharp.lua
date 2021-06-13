@@ -2003,14 +2003,15 @@ namespace CSharpLua {
         return true;
       }
 
-      if (memberAccess.Expression is LuaMemberAccessExpressionSyntax accessExpression) {
-        return InliningMemberAccessUpdateTarget(accessExpression, target);
-      }
-      if (memberAccess.Expression is LuaPropertyAdapterExpressionSyntax {IsProperty: true} propertyAdapter) {
-        return InlinePropertyAdapterUpdateTarget(propertyAdapter, target);
-      }
+      return memberAccess.Expression switch {
+        LuaMemberAccessExpressionSyntax accessExpression =>
+          InliningMemberAccessUpdateTarget(accessExpression, target),
 
-      return false;
+        LuaPropertyAdapterExpressionSyntax {IsProperty: true} propertyAdapter =>
+          InlinePropertyAdapterUpdateTarget(propertyAdapter, target),
+
+        _ => false
+      };
     }
 
     private static bool InlinePropertyAdapterUpdateTarget(LuaPropertyAdapterExpressionSyntax propertyAdapter, LuaExpressionSyntax target) {

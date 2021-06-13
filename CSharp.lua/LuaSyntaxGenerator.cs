@@ -1654,14 +1654,11 @@ namespace CSharpLua {
     }
 
     internal bool IsPropertyFieldOrEventField(ISymbol symbol) {
-      if (symbol is IPropertySymbol propertySymbol) {
-        return IsPropertyField(propertySymbol);
-      }
-
-      if (symbol is IEventSymbol eventSymbol) {
-        return IsEventField(eventSymbol);
-      }
-      return false;
+      return symbol switch {
+        IPropertySymbol propertySymbol => IsPropertyField(propertySymbol),
+        IEventSymbol eventSymbol => IsEventField(eventSymbol),
+        _ => false
+      };
     }
 
     public bool IsMoreThanLocalVariables(ISymbol symbol) {

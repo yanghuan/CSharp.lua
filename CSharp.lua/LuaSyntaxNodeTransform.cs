@@ -2612,17 +2612,15 @@ namespace CSharpLua {
       }
 
       var expression = BuildMemberAccessExpression(symbol, node.Expression);
-      if (symbol.Kind is SymbolKind.Property or SymbolKind.Event) {
-        return BuildFieldOrPropertyMemberAccessExpression(expression, name, symbol.IsStatic);
-      }
+      return symbol.Kind switch {
+        SymbolKind.Property or SymbolKind.Event =>
+          BuildFieldOrPropertyMemberAccessExpression(expression, name, symbol.IsStatic),
+        
+        SymbolKind.Method when IsDelegateExpression((IMethodSymbol)symbol, node, name, expression, out var delegateExpression) =>
+          delegateExpression,
 
-      if (symbol.Kind == SymbolKind.Method) {
-        if (IsDelegateExpression((IMethodSymbol)symbol, node, name, expression, out var delegateExpression)) {
-          return delegateExpression;
-        }
-      }
-
-      return expression.MemberAccess(name, !symbol.IsStatic && symbol.Kind == SymbolKind.Method);
+        _ => expression.MemberAccess(name, !symbol.IsStatic && symbol.Kind == SymbolKind.Method)
+      };
     }
 
     private bool IsDelegateExpression(IMethodSymbol symbol, MemberAccessExpressionSyntax node, LuaExpressionSyntax name, LuaExpressionSyntax expression, out LuaExpressionSyntax delegateExpression) {

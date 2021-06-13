@@ -1104,14 +1104,11 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax WrapInterpolatedString(object obj) {
-      if (obj is LuaIdentifierNameSyntax s) {
-        return new LuaStringLiteralExpressionSyntax(s);
-      }
-
-      if (obj is ExpressionSyntax e) {
-        return WrapStringConcatExpression(e);
-      }
-      return (LuaBinaryExpressionSyntax)obj;
+      return obj switch {
+        LuaIdentifierNameSyntax s => new LuaStringLiteralExpressionSyntax(s),
+        ExpressionSyntax e => WrapStringConcatExpression(e),
+        _ => (LuaBinaryExpressionSyntax)obj
+      };
     }
 
     private LuaBinaryExpressionSyntax ConcatInterpolatedString(object left, object right) {
