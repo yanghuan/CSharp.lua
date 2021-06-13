@@ -244,6 +244,11 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# JetBrains IDE
+.idea/
+
+# Custom
 test/**/out/*.lua
 test/**/out/**/*.lua
 /CSharp.lua/Properties/launchSettings.json
