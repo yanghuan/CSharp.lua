@@ -30,13 +30,10 @@ namespace CSharpLua.LuaAst {
     };
 
     public LuaForInStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression, bool isAsync = false) {
-      if (identifier == null) {
-        throw new ArgumentNullException(nameof(identifier));
-      }
       if (expression == null) {
         throw new ArgumentNullException(nameof(expression));
       }
-      Identifier = identifier;
+      Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
       if (isAsync) {
         Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AsyncEach, LuaIdentifierNameSyntax.Async, expression);
       } else {
