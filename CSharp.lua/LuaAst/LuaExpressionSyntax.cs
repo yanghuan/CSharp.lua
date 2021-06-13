@@ -206,7 +206,7 @@ namespace CSharpLua.LuaAst {
       RankSpecifier = rankSpecifier ?? throw new ArgumentNullException(nameof(rankSpecifier));
     }
 
-    public bool IsSimapleArray {
+    public bool IsSimpleArray {
       get {
         return RankSpecifier.Rank == 1;
       }

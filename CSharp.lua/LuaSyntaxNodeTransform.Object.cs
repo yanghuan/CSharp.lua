@@ -233,7 +233,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax BuildArrayCreationExpression(LuaArrayTypeAdapterExpressionSyntax arrayType, InitializerExpressionSyntax initializer) {
       if (initializer?.Expressions.Count > 0) {
-        if (arrayType.IsSimapleArray) {
+        if (arrayType.IsSimpleArray) {
           var initializerExpressions = initializer.Expressions.Select(i => i.AcceptExpression(this)).ToList();
           return BuildArray(arrayType, initializerExpressions);
         } else {
@@ -243,7 +243,7 @@ namespace CSharpLua {
           return BuildMultiArray(arrayType, rank, expressions);
         }
       } else {
-        if (arrayType.IsSimapleArray) {
+        if (arrayType.IsSimpleArray) {
           var size = arrayType.RankSpecifier.Sizes[0];
           return BuildArray(arrayType, size);
         } else {
