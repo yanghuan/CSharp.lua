@@ -139,7 +139,7 @@ namespace CSharpLua {
       List<string> luaSystemLibs = new();
       var lines = File.ReadAllLines(allFilePath);
       foreach (string line in lines) {
-        int i = line.IndexOf(kBeginMark);
+        int i = line.IndexOf(kBeginMark, StringComparison.Ordinal);
         if (i != -1) {
           int begin = i + kBeginMark.Length;
           int end = line.IndexOf('"', begin);

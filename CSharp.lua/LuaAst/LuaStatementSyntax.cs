@@ -264,7 +264,7 @@ namespace CSharpLua.LuaAst {
 
     private static bool IsAttribute(string text, out AttributeFlags attr) {
       attr = AttributeFlags.None;
-      int index = text.IndexOf(kAttributePrefix);
+      int index = text.IndexOf(kAttributePrefix, StringComparison.Ordinal);
       if (index != -1) {
         string prefix = text[(index + kAttributePrefix.Length)..];
         if (Enum.TryParse(prefix, out attr)) {

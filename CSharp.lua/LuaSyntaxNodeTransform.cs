@@ -1397,7 +1397,7 @@ namespace CSharpLua {
           if (commentContent[index] == openBracket) {
             string closeToken = LuaSyntaxNode.Tokens.CloseBracket + new string(equals, count) + LuaSyntaxNode.Tokens.CloseBracket;
             int begin = index + 1;
-            int end = commentContent.IndexOf(closeToken, begin);
+            int end = commentContent.IndexOf(closeToken, begin, StringComparison.Ordinal);
             if (end != -1) {
               string codeString = commentContent[begin..end];
               string[] lines = codeString.Split('\n');
