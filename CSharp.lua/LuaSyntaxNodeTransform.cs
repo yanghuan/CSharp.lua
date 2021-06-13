@@ -2871,13 +2871,12 @@ namespace CSharpLua {
 
     private static bool IsParentDelegateName(NameSyntax node) {
       var kind = node.Parent.Kind();
-      switch (kind) {
-        case SyntaxKind.SimpleMemberAccessExpression:
-        case SyntaxKind.InvocationExpression:
-        case SyntaxKind.MemberBindingExpression:
-          return false;
-      }
-      return true;
+      return kind switch {
+        SyntaxKind.SimpleMemberAccessExpression or
+        SyntaxKind.InvocationExpression or
+        SyntaxKind.MemberBindingExpression => false,
+        _ => true
+      };
     }
 
     private sealed class GenericPlaceholder {
