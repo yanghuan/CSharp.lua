@@ -123,12 +123,12 @@ namespace CSharpLua {
       if (Include == null) {
         GetGenerator().Generate(output_);
       } else {
-        var luaSystemLibs = GetIncludeCorSysemPaths(Include);
+        var luaSystemLibs = GetIncludeCorSystemPaths(Include);
         GetGenerator().GenerateSingleFile("out.lua", output_, luaSystemLibs);
       }
     }
 
-    private static IEnumerable<string> GetIncludeCorSysemPaths(string dir) {
+    private static IEnumerable<string> GetIncludeCorSystemPaths(string dir) {
       const string kBeginMark = "load(\"";
 
       string allFilePath = Path.Combine(dir, "All.lua");

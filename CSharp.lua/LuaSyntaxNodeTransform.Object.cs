@@ -783,16 +783,16 @@ namespace CSharpLua {
       return BuildUsingStatement(node, variableIdentifiers, variableExpressions, body => WriteStatementOrBlock(node.Statement, body));
     }
 
-    private void ApplyUsingDeclarations(LuaBlockSyntax block, List<int> indexs, BlockSyntax node) {
-      int position = indexs.Count - 1;
-      while (position >= 1 && indexs[position] == indexs[position - 1] + 1) {
+    private void ApplyUsingDeclarations(LuaBlockSyntax block, List<int> indexes, BlockSyntax node) {
+      int position = indexes.Count - 1;
+      while (position >= 1 && indexes[position] == indexes[position - 1] + 1) {
         --position;
       }
 
       var variableIdentifiers = new List<LuaIdentifierNameSyntax>();
       var variableExpressions = new List<LuaExpressionSyntax>();
-      for (int i = position; i < indexs.Count; ++i) {
-        int index = indexs[i];
+      for (int i = position; i < indexes.Count; ++i) {
+        int index = indexes[i];
         var localDeclaration = (LuaLocalDeclarationStatementSyntax)block.Statements[index];
         var variableList = (LuaVariableListDeclarationSyntax)localDeclaration.Declaration;
         foreach (var variable in variableList.Variables) {
@@ -801,15 +801,15 @@ namespace CSharpLua {
         }
       }
 
-      int lastIndex = indexs.Last();
+      int lastIndex = indexes.Last();
       var statements = block.Statements.Skip(lastIndex + 1);
       var usingStatement = BuildUsingStatement(node, variableIdentifiers, variableExpressions, body => body.Statements.AddRange(statements));
-      block.Statements.RemoveRange(indexs[position]);
+      block.Statements.RemoveRange(indexes[position]);
       block.AddStatement(usingStatement);
-      indexs.RemoveRange(position);
+      indexes.RemoveRange(position);
 
-      if (indexs.Count > 0) {
-        ApplyUsingDeclarations(block, indexs, node);
+      if (indexes.Count > 0) {
+        ApplyUsingDeclarations(block, indexes, node);
       }
     }
 
@@ -1265,7 +1265,7 @@ namespace CSharpLua {
       var body = FindParentMethodBody(node);
       bool isOnlyOne = body == null || body.Statements.OfType<LocalFunctionStatementSyntax>().Count() == 1;
       if (isOnlyOne) {
-        return new LuaLocalFunctionSyntx(result.Name, result.Function, result.Document);
+        return new LuaLocalFunctionSyntax(result.Name, result.Function, result.Document);
       }
 
       CurBlock.AddHeadVariable(result.Name);

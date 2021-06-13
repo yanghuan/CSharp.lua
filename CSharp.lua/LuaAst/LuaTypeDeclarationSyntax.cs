@@ -20,7 +20,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace CSharpLua.LuaAst {
-  public sealed class LuaSpeaicalGenericType {
+  public sealed class LuaSpecialGenericType {
     public LuaIdentifierNameSyntax Name;
     public LuaExpressionSyntax Value;
     public bool IsLazy;
@@ -31,7 +31,7 @@ namespace CSharpLua.LuaAst {
     public LuaDocumentStatement Document;
   }
 
-  public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSynatx {
+  public abstract class LuaTypeDeclarationSyntax : LuaWrapFunctionStatementSyntax {
     public bool IsPartialMark { get; set; }
     public bool IsClassUsed { get; set; }
     public bool IsForceStaticCtor { get; set; }
@@ -135,7 +135,7 @@ namespace CSharpLua.LuaAst {
       return true;
     }
 
-    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpeaicalGenericType genericArgument, List<LuaIdentifierNameSyntax> baseCopyFields) {
+    internal void AddBaseTypes(IEnumerable<LuaExpressionSyntax> baseTypes, LuaSpecialGenericType genericArgument, List<LuaIdentifierNameSyntax> baseCopyFields) {
       bool hasLazyGenericArgument = false;
       if (genericArgument != null) {
         if (genericArgument.IsLazy) {
@@ -403,7 +403,7 @@ namespace CSharpLua.LuaAst {
       };
     }
 
-    public bool IsNoneCtros {
+    public bool IsNoneCtors {
       get {
         return ctors_.Count == 0;
       }
@@ -467,10 +467,10 @@ namespace CSharpLua.LuaAst {
     }
 
     private LuaFunctionExpressionSyntax GetInitFunction() {
-      var initFuntion = new LuaFunctionExpressionSyntax();
-      initFuntion.AddParameter(LuaIdentifierNameSyntax.This);
-      initFuntion.Body.Statements.AddRange(initStatements_);
-      return initFuntion;
+      var initFunction = new LuaFunctionExpressionSyntax();
+      initFunction.AddParameter(LuaIdentifierNameSyntax.This);
+      initFunction.Body.Statements.AddRange(initStatements_);
+      return initFunction;
     }
 
     private void CheckCtorsFunction(LuaBlockSyntax body) {
@@ -502,7 +502,7 @@ namespace CSharpLua.LuaAst {
             AddInitFunction(body, LuaIdentifierNameSyntax.Ctor, ctor.Function);
           }
         } else {
-          LuaTableExpression ctrosTable = new LuaTableExpression();
+          LuaTableExpression ctorsTable = new LuaTableExpression();
           int index = 1;
           foreach (var ctor in ctors_) {
             if (ctor.Document != null) {
@@ -510,10 +510,10 @@ namespace CSharpLua.LuaAst {
             }
             LuaIdentifierNameSyntax nameIdentifier = GetCtorNameString(index);
             AddInitFunction(body, nameIdentifier, ctor.Function, false);
-            ctrosTable.Add(nameIdentifier);
+            ctorsTable.Add(nameIdentifier);
             ++index;
           }
-          AddResultTable(LuaIdentifierNameSyntax.Ctor, ctrosTable);
+          AddResultTable(LuaIdentifierNameSyntax.Ctor, ctorsTable);
         }
       } else {
         if (hasInit) {

@@ -146,13 +146,13 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaLocalFunctionSyntx : LuaStatementSyntax {
+  public sealed class LuaLocalFunctionSyntax : LuaStatementSyntax {
     public readonly LuaStatementListSyntax Comments = new();
     public string LocalKeyword => Keyword.Local;
     public LuaIdentifierNameSyntax IdentifierName { get; }
     public LuaFunctionExpressionSyntax FunctionExpression { get; }
 
-    public LuaLocalFunctionSyntx(LuaIdentifierNameSyntax identifierName, LuaFunctionExpressionSyntax functionExpression, LuaDocumentStatement documentation = null) {
+    public LuaLocalFunctionSyntax(LuaIdentifierNameSyntax identifierName, LuaFunctionExpressionSyntax functionExpression, LuaDocumentStatement documentation = null) {
       IdentifierName = identifierName ?? throw new ArgumentNullException(nameof(identifierName));
       FunctionExpression = functionExpression ?? throw new ArgumentNullException(nameof(functionExpression));
       if (documentation != null) {

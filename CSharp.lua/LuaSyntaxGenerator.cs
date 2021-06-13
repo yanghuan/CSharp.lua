@@ -240,8 +240,8 @@ namespace CSharpLua {
     }
 
     private void Write(LuaCompilationUnitSyntax luaCompilationUnit, TextWriter writer) {
-      LuaRenderer rener = new LuaRenderer(this, writer);
-      luaCompilationUnit.Render(rener);
+      LuaRenderer renderer = new LuaRenderer(this, writer);
+      luaCompilationUnit.Render(renderer);
     }
 
     private void Write(LuaCompilationUnitSyntax luaCompilationUnit, string outFile) {

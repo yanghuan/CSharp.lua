@@ -123,9 +123,9 @@ namespace CSharpLua.LuaAst {
         caseLabelVariables_.Variables.Add(DefaultLabel);
         LuaLabeledStatement labeledStatement = new LuaLabeledStatement(DefaultLabel);
         RepeatStatement.Body.Statements.Add(labeledStatement);
-        LuaIfStatementSyntax IfStatement = new LuaIfStatementSyntax(DefaultLabel);
-        IfStatement.Body.Statements.AddRange(defaultBock_.Statements);
-        RepeatStatement.Body.Statements.Add(IfStatement);
+        LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(DefaultLabel);
+        ifStatement.Body.Statements.AddRange(defaultBock_.Statements);
+        RepeatStatement.Body.Statements.Add(ifStatement);
       }
     }
 

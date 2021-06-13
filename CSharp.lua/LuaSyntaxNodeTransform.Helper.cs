@@ -2029,8 +2029,8 @@ namespace CSharpLua {
         return true;
       }
 
-      if (propertyAdapter.Expression is LuaMemberAccessExpressionSyntax proertyExpression) {
-        return InliningMemberAccessUpdateTarget(proertyExpression, target);
+      if (propertyAdapter.Expression is LuaMemberAccessExpressionSyntax propertyExpression) {
+        return InliningMemberAccessUpdateTarget(propertyExpression, target);
       }
       return false;
     }

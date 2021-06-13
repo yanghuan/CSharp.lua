@@ -333,7 +333,7 @@ namespace CSharpLua {
     private sealed class TypeMetaInfo {
       private readonly XmlMetaModel.ClassModel model_;
       private readonly Dictionary<string, XmlMetaModel.FieldModel> fields_ = new();
-      private readonly Dictionary<string, XmlMetaModel.PropertyModel> propertys_ = new();
+      private readonly Dictionary<string, XmlMetaModel.PropertyModel> properties_ = new();
       private readonly Dictionary<string, MethodMetaInfo> methods_ = new();
 
       public TypeMetaInfo(XmlMetaModel.ClassModel model) {
@@ -374,7 +374,7 @@ namespace CSharpLua {
             if (fields_.ContainsKey(propertyModel.name)) {
               throw new ArgumentException($"type [{model_.name}]'s property [{propertyModel.name}] is already exists");
             }
-            propertys_.Add(propertyModel.name, propertyModel);
+            properties_.Add(propertyModel.name, propertyModel);
           }
         }
       }
@@ -401,7 +401,7 @@ namespace CSharpLua {
       }
 
       public XmlMetaModel.PropertyModel GetPropertyModel(string name) {
-        return propertys_.GetOrDefault(name);
+        return properties_.GetOrDefault(name);
       }
 
       public MethodMetaInfo GetMethodMetaInfo(string name) {

@@ -401,12 +401,12 @@ namespace CSharpLua {
       return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
     }
 
-    public static bool IsNullableType(this ITypeSymbol type, out ITypeSymbol elemetType) {
-      elemetType = type.NullableElemetType();
-      return elemetType != null;
+    public static bool IsNullableType(this ITypeSymbol type, out ITypeSymbol elementType) {
+      elementType = type.NullableElementType();
+      return elementType != null;
     }
 
-    public static ITypeSymbol NullableElemetType(this ITypeSymbol type) {
+    public static ITypeSymbol NullableElementType(this ITypeSymbol type) {
       return type.IsNullableType() ? ((INamedTypeSymbol)type).TypeArguments.First() : null;
     }
 
@@ -417,9 +417,9 @@ namespace CSharpLua {
         return true;
       }
 
-      var nullableElemetType = type.NullableElemetType();
-      if (nullableElemetType != null && nullableElemetType.TypeKind == TypeKind.Enum) {
-        symbol = nullableElemetType;
+      var nullableElementType = type.NullableElementType();
+      if (nullableElementType != null && nullableElementType.TypeKind == TypeKind.Enum) {
+        symbol = nullableElementType;
         isNullable = true;
         return true;
       }
@@ -586,9 +586,9 @@ namespace CSharpLua {
     private static readonly Regex codeTemplateAttributeRegex_ = new(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
 
     private static string GetCodeTemplateFromAttributeText(string document) {
-      var matchs = codeTemplateAttributeRegex_.Matches(document);
-      if (matchs.Count > 0) {
-        string text = matchs[0].Groups[1].Value;
+      var matches = codeTemplateAttributeRegex_.Matches(document);
+      if (matches.Count > 0) {
+        string text = matches[0].Groups[1].Value;
         return text.Trim().Trim('"');
       }
       return null;

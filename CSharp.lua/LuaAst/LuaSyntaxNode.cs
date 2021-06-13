@@ -111,13 +111,13 @@ namespace CSharpLua.LuaAst {
     public const int kUpvaluesMaxCount = 60;
     public const int kLocalVariablesMaxCount = 200;
 
-    private static string SpecailWord(string s) {
+    private static string SpecialWord(string s) {
       return "__" + s + "__";
     }
 
     public static string GetCtorNameString(int ctorIndex) {
       Contract.Assert(ctorIndex > 0);
-      return SpecailWord(Tokens.Ctor + ctorIndex);
+      return SpecialWord(Tokens.Ctor + ctorIndex);
     }
 
     public static readonly string[] TempIdentifiers = {
