@@ -64,7 +64,7 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaSwitchAdapterStatementSyntax : LuaStatementSyntax {
     public readonly LuaRepeatStatementSyntax RepeatStatement = new(LuaIdentifierNameSyntax.One);
     public LuaIdentifierNameSyntax Temp { get; }
-    private LuaBlockSyntax defaultBock_;
+    private LuaBlockSyntax defaultBlock_;
     private readonly LuaLocalVariablesSyntax caseLabelVariables_ = new();
     public LuaIdentifierNameSyntax DefaultLabel { get; set; }
     public readonly Dictionary<int, LuaIdentifierNameSyntax> CaseLabels = new();
@@ -97,34 +97,34 @@ namespace CSharpLua.LuaAst {
             ifStatement.ElseIfStatements.Add(elseIfStatement);
           }
         } else {
-          Contract.Assert(defaultBock_ == null);
-          defaultBock_ = (LuaBlockSyntax)section;
+          Contract.Assert(defaultBlock_ == null);
+          defaultBlock_ = (LuaBlockSyntax)section;
         }
       }
 
       if (ifStatement != null) {
         body.Statements.Add(ifStatement);
-        if (defaultBock_ != null) {
+        if (defaultBlock_ != null) {
           LuaElseClauseSyntax elseClause = new LuaElseClauseSyntax();
-          elseClause.Body.Statements.AddRange(defaultBock_.Statements);
+          elseClause.Body.Statements.AddRange(defaultBlock_.Statements);
           ifStatement.Else = elseClause;
         }
         headIfStatement_ = ifStatement;
       } else {
-        if (defaultBock_ != null) {
-          body.Statements.AddRange(defaultBock_.Statements);
+        if (defaultBlock_ != null) {
+          body.Statements.AddRange(defaultBlock_.Statements);
         }
       }
     }
 
     private void CheckHasDefaultLabel() {
       if (DefaultLabel != null) {
-        Contract.Assert(defaultBock_ != null);
+        Contract.Assert(defaultBlock_ != null);
         caseLabelVariables_.Variables.Add(DefaultLabel);
         LuaLabeledStatement labeledStatement = new LuaLabeledStatement(DefaultLabel);
         RepeatStatement.Body.Statements.Add(labeledStatement);
         LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(DefaultLabel);
-        ifStatement.Body.Statements.AddRange(defaultBock_.Statements);
+        ifStatement.Body.Statements.AddRange(defaultBlock_.Statements);
         RepeatStatement.Body.Statements.Add(ifStatement);
       }
     }
