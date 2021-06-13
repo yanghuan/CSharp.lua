@@ -1354,7 +1354,7 @@ namespace CSharpLua {
           string content = SyntaxTrivia.ToString();
           switch (SyntaxTrivia.Kind()) {
             case SyntaxKind.SingleLineCommentTrivia: {
-              string commentContent = content.Substring(kCommentCharCount);
+              string commentContent = content[kCommentCharCount..];
               return new LuaShortCommentStatement(commentContent);
             }
             case SyntaxKind.MultiLineCommentTrivia: {
@@ -1407,7 +1407,7 @@ namespace CSharpLua {
                     indent = line.IndexOf(i => !char.IsWhiteSpace(i));
                   }
                   int space = line.IndexOf(i => !char.IsWhiteSpace(i));
-                  string code = space >= indent && indent != -1 ? line.Substring(indent) : line;
+                  string code = space >= indent && indent != -1 ? line[indent..] : line;
                   codeLines.Statements.Add((LuaIdentifierNameSyntax)code);
                 }
               }

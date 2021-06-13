@@ -278,7 +278,7 @@ namespace CSharpLua {
     private static string GetSystemLibName(string path) {
       const string kBegin = "CoreSystem";
       int index = path.LastIndexOf(kBegin, StringComparison.InvariantCulture);
-      return path.Substring(index + kBegin.Length + 1);
+      return path[(index + kBegin.Length + 1)..];
     }
 
     private static void RemoveLicenseComments(ref string code) {
@@ -290,7 +290,7 @@ namespace CSharpLua {
         if (isSpace) {
           int j = code.IndexOf(kEnd, i + kBegin.Length, StringComparison.InvariantCulture);
           Contract.Assert(j != -1);
-          code = code.Substring(j + kEnd.Length).Trim();
+          code = code[(j + kEnd.Length)..].Trim();
         }
       }
     }
@@ -1962,7 +1962,7 @@ namespace CSharpLua {
         string name = typeName.ValueText;
         int genericTokenPos = name.LastIndexOf('_');
         if (genericTokenPos != -1) {
-          return name.Substring(0, genericTokenPos);
+          return name[..genericTokenPos];
         } else {
           return typeName;
         }

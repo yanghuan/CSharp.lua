@@ -244,9 +244,9 @@ namespace CSharpLua {
       const string CurrentDirectorySign2 = "~\\";
 
       if (path.StartsWith(CurrentDirectorySign1)) {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path.Substring(CurrentDirectorySign1.Length));
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path[CurrentDirectorySign1.Length..]);
       } else if (path.StartsWith(CurrentDirectorySign2)) {
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path.Substring(CurrentDirectorySign2.Length));
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path[CurrentDirectorySign2.Length..]);
       }
 
       return Path.Combine(Environment.CurrentDirectory, path);
@@ -270,7 +270,7 @@ namespace CSharpLua {
     public static string LastName(this string s) {
       int pos = s.LastIndexOf('.');
       if (pos != -1) {
-        return s.Substring(pos + 1);
+        return s[(pos + 1)..];
       }
       return s;
     }

@@ -323,7 +323,7 @@ namespace CSharpLua {
           var typeName = GetTypeName(type);
           AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
         } else if (key[0] == '`') {
-          if (int.TryParse(key.Substring(1), out int typeIndex)) {
+          if (int.TryParse(key[1..], out int typeIndex)) {
             var typeArgument = typeArguments.GetOrDefault(typeIndex);
             if (typeArgument != null) {
               LuaExpressionSyntax typeName;
@@ -337,7 +337,7 @@ namespace CSharpLua {
             }
           }
         } else if (key[0] == '*') {
-          if (int.TryParse(key.Substring(1), out int paramsIndex)) {
+          if (int.TryParse(key[1..], out int paramsIndex)) {
             LuaSequenceListExpressionSyntax sequenceList = new LuaSequenceListExpressionSyntax();
             foreach (var argument in arguments.Skip(paramsIndex)) {
               var argumentExpression = argument();
@@ -360,7 +360,7 @@ namespace CSharpLua {
       }
 
       if (prevIndex < codeTemplate.Length) {
-        string last = codeTemplate.Substring(prevIndex);
+        string last = codeTemplate[prevIndex..];
         codeTemplateExpression.Expressions.Add(last);
       }
 
@@ -851,14 +851,14 @@ namespace CSharpLua {
       if (IsImportTypeNameEnable(symbol)) {
         int pos = name.LastIndexOf('.');
         if (pos != -1) {
-          string prefix = name.Substring(0, pos);
+          string prefix = name[..pos];
           if (prefix != LuaIdentifierNameSyntax.System.ValueText && prefix != LuaIdentifierNameSyntax.Class.ValueText) {
             string newPrefix = prefix.Replace(".", "");
             CheckNewPrefix(ref newPrefix, prefix);
             if (!IsLocalVarExistsInCurMethod(newPrefix)) {
               bool success = AddImport(prefix, newPrefix, symbol.IsFromCode());
               if (success) {
-                name = newPrefix + name.Substring(pos);
+                name = newPrefix + name[pos..];
               }
             }
           }

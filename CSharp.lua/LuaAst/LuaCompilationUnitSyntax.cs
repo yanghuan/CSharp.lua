@@ -160,7 +160,7 @@ namespace CSharpLua.LuaAst {
       if (generic.Expression is LuaIdentifierNameSyntax identifier) {
         int pos = identifier.ValueText.IndexOf('.');
         if (pos != -1) {
-          string prefix = identifier.ValueText.Substring(0, pos);
+          string prefix = identifier.ValueText[..pos];
           return UsingDeclares.Exists(i => i.NewPrefix == prefix);
         }
       }
