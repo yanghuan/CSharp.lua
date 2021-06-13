@@ -16,11 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace CSharpLua.LuaAst {
   public sealed class GenericUsingDeclare : IComparable<GenericUsingDeclare> {
