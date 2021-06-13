@@ -21,7 +21,7 @@ namespace CSharpLua.LuaAst {
   public sealed class LuaArgumentListSyntax : LuaSyntaxNode {
     public string OpenParenToken => Tokens.OpenParentheses;
     public string CloseParenToken => Tokens.CloseParentheses;
-    public readonly LuaSyntaxList<LuaExpressionSyntax> Arguments = new LuaSyntaxList<LuaExpressionSyntax>();
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Arguments = new();
     public bool IsCallSingleTable { get; set; }
 
     public void AddArgument(LuaExpressionSyntax argument) {
@@ -40,7 +40,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaInvocationExpressionSyntax : LuaExpressionSyntax {
-    public readonly LuaArgumentListSyntax ArgumentList = new LuaArgumentListSyntax();
+    public readonly LuaArgumentListSyntax ArgumentList = new();
     public LuaExpressionSyntax Expression { get; }
     public List<LuaExpressionSyntax> Arguments => ArgumentList.Arguments;
 

@@ -42,9 +42,9 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaIdentifierLiteralExpressionSyntax Nil = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.Nil);
-    public static readonly LuaIdentifierLiteralExpressionSyntax True = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.True);
-    public static readonly LuaIdentifierLiteralExpressionSyntax False = new LuaIdentifierLiteralExpressionSyntax(LuaIdentifierNameSyntax.False);
+    public static readonly LuaIdentifierLiteralExpressionSyntax Nil = new(LuaIdentifierNameSyntax.Nil);
+    public static readonly LuaIdentifierLiteralExpressionSyntax True = new(LuaIdentifierNameSyntax.True);
+    public static readonly LuaIdentifierLiteralExpressionSyntax False = new(LuaIdentifierNameSyntax.False);
   }
 
   public sealed class LuaStringLiteralExpressionSyntax : LuaLiteralExpressionSyntax {
@@ -66,7 +66,7 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaStringLiteralExpressionSyntax Empty = new LuaStringLiteralExpressionSyntax(LuaIdentifierNameSyntax.Empty);
+    public static readonly LuaStringLiteralExpressionSyntax Empty = new(LuaIdentifierNameSyntax.Empty);
   }
 
   public sealed class LuaVerbatimStringLiteralExpressionSyntax : LuaLiteralExpressionSyntax {

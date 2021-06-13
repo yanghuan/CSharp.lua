@@ -37,21 +37,21 @@ namespace CSharpLua.LuaAst {
     public bool IsForceStaticCtor { get; set; }
     private bool hasTooManyLocalVariables_;
 
-    private readonly LuaLocalAreaSyntax local_ = new LuaLocalAreaSyntax();
-    private readonly List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new List<LuaTypeDeclarationSyntax>();
-    private readonly LuaStatementListSyntax methodList_ = new LuaStatementListSyntax();
-    private readonly LuaTableExpression resultTable_ = new LuaTableExpression();
+    private readonly LuaLocalAreaSyntax local_ = new();
+    private readonly List<LuaTypeDeclarationSyntax> nestedTypeDeclarations_ = new();
+    private readonly LuaStatementListSyntax methodList_ = new();
+    private readonly LuaTableExpression resultTable_ = new();
 
-    private readonly List<LuaStatementSyntax> staticInitStatements_ = new List<LuaStatementSyntax>();
-    private readonly List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new List<LuaIdentifierNameSyntax>();
+    private readonly List<LuaStatementSyntax> staticInitStatements_ = new();
+    private readonly List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new();
     private LuaConstructorDeclaration staticCtor_;
 
-    private readonly List<LuaStatementSyntax> initStatements_ = new List<LuaStatementSyntax>();
-    private readonly List<LuaConstructorDeclaration> ctors_ = new List<LuaConstructorDeclaration>();
+    private readonly List<LuaStatementSyntax> initStatements_ = new();
+    private readonly List<LuaConstructorDeclaration> ctors_ = new();
 
-    private readonly List<LuaIdentifierNameSyntax> typeParameters_ = new List<LuaIdentifierNameSyntax>();
-    private readonly List<GenericUsingDeclare> genericUsingDeclares_ = new List<GenericUsingDeclare>();
-    private readonly LuaDocumentStatement document_ = new LuaDocumentStatement();
+    private readonly List<LuaIdentifierNameSyntax> typeParameters_ = new();
+    private readonly List<GenericUsingDeclare> genericUsingDeclares_ = new();
+    private readonly LuaDocumentStatement document_ = new();
     private LuaTableExpression interfaceDefaultMethods_;
 
     private LuaTableExpression metadata_;

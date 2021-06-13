@@ -34,7 +34,7 @@ namespace CSharpLua.LuaAst {
 
     public class Tokens : Keyword {
       public static string Empty => string.Empty;
-      public static readonly Semicolon Semicolon = new Semicolon();
+      public static readonly Semicolon Semicolon = new();
       public const string OpenParentheses = "(";
       public const string CloseParentheses = ")";
       public const string OpenBrace = "{";
@@ -127,7 +127,7 @@ namespace CSharpLua.LuaAst {
       "internal", "virtual",
     };
 
-    private static readonly HashSet<string> ReservedWords = new HashSet<string>() {            
+    private static readonly HashSet<string> ReservedWords = new() {            
       // compiler reserved words
       "System", "Linq",
     };
@@ -139,7 +139,7 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private static readonly HashSet<string> SpecialMethodReservedWords = new HashSet<string>() {
+    private static readonly HashSet<string> SpecialMethodReservedWords = new() {
       // lua metatable methods
       "__add", "__sub", "__mul", "__div", "__mod", "__pow", "__umm", "__idiv",
       "__band", "__bor", "__bxor", "__bnot", "__shl", "__shr", "__concat", "__len",

@@ -56,12 +56,12 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
     public string FilePath { get; }
-    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
-    private readonly LuaStatementListSyntax importAreaStatements = new LuaStatementListSyntax();
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new();
+    private readonly LuaStatementListSyntax importAreaStatements = new();
     private bool isImportLinq_;
     private int typeDeclarationCount_;
-    internal readonly List<UsingDeclare> UsingDeclares = new List<UsingDeclare>();
-    internal readonly List<GenericUsingDeclare> GenericUsingDeclares = new List<GenericUsingDeclare>();
+    internal readonly List<UsingDeclare> UsingDeclares = new();
+    internal readonly List<GenericUsingDeclare> GenericUsingDeclares = new();
 
     public LuaCompilationUnitSyntax(string filePath = "", bool hasGeneratedMark = true) {
       FilePath = filePath;

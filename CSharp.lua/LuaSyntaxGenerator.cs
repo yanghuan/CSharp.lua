@@ -1867,8 +1867,8 @@ namespace CSharpLua {
 
     #region type and namespace refactor
 
-    private readonly Dictionary<INamespaceSymbol, string> namespaceRefactorNames_ = new Dictionary<INamespaceSymbol, string>();
-    private readonly Dictionary<INamedTypeSymbol, string> typeRefactorNames_ = new Dictionary<INamedTypeSymbol, string>();
+    private readonly Dictionary<INamespaceSymbol, string> namespaceRefactorNames_ = new();
+    private readonly Dictionary<INamedTypeSymbol, string> typeRefactorNames_ = new();
 
     private string GetTypeRefactorName(INamedTypeSymbol symbol) {
       return typeRefactorNames_.GetOrDefault(symbol);

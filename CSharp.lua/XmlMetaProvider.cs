@@ -332,9 +332,9 @@ namespace CSharpLua {
 
     private sealed class TypeMetaInfo {
       private readonly XmlMetaModel.ClassModel model_;
-      private readonly Dictionary<string, XmlMetaModel.FieldModel> fields_ = new Dictionary<string, XmlMetaModel.FieldModel>();
-      private readonly Dictionary<string, XmlMetaModel.PropertyModel> propertys_ = new Dictionary<string, XmlMetaModel.PropertyModel>();
-      private readonly Dictionary<string, MethodMetaInfo> methods_ = new Dictionary<string, MethodMetaInfo>();
+      private readonly Dictionary<string, XmlMetaModel.FieldModel> fields_ = new();
+      private readonly Dictionary<string, XmlMetaModel.PropertyModel> propertys_ = new();
+      private readonly Dictionary<string, MethodMetaInfo> methods_ = new();
 
       public TypeMetaInfo(XmlMetaModel.ClassModel model) {
         model_ = model;

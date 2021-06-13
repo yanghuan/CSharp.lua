@@ -21,7 +21,7 @@ using System.Linq;
 namespace CSharpLua.LuaAst {
   public sealed class LuaTableExpression : LuaExpressionSyntax {
     public string OpenBraceToken => Tokens.OpenBrace;
-    public readonly LuaSyntaxList<LuaTableItemSyntax> Items = new LuaSyntaxList<LuaTableItemSyntax>();
+    public readonly LuaSyntaxList<LuaTableItemSyntax> Items = new();
     public string CloseBraceToken => Tokens.CloseBrace;
     public bool IsSingleLine { get; set; }
 
@@ -48,7 +48,7 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaTableExpression Empty = new LuaTableExpression();
+    public static readonly LuaTableExpression Empty = new();
 
     public LuaExpressionSyntax GetSingleExpression(int index) {
       var item = (LuaSingleTableItemSyntax)Items[index];

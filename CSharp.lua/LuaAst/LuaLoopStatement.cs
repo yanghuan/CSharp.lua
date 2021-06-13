@@ -24,7 +24,7 @@ namespace CSharpLua.LuaAst {
     public string InKeyword => Tokens.In;
     public LuaExpressionSyntax Placeholder => LuaIdentifierNameSyntax.Placeholder;
 
-    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
+    public LuaBlockSyntax Body { get; } = new() {
       OpenToken = Tokens.Do,
       CloseToken = Tokens.End,
     };
@@ -57,7 +57,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax LimitExpression { get; }
     public LuaExpressionSyntax StepExpression { get; }
 
-    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
+    public LuaBlockSyntax Body { get; } = new() {
       OpenToken = Tokens.Do,
       CloseToken = Tokens.End,
     };
@@ -78,7 +78,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Condition { get; }
     public string WhileKeyword => LuaSyntaxNode.Tokens.While;
 
-    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
+    public LuaBlockSyntax Body { get; } = new() {
       OpenToken = Tokens.Do,
       CloseToken = Tokens.End,
     };

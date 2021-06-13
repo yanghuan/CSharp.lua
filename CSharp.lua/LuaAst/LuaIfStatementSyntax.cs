@@ -23,8 +23,8 @@ namespace CSharpLua.LuaAst {
     public string IfKeyword => Tokens.If;
     public LuaExpressionSyntax Condition { get; }
     public string OpenParenToken => Tokens.Then;
-    public readonly LuaBlockSyntax Body = new LuaBlockSyntax();
-    public readonly LuaSyntaxList<LuaElseIfStatementSyntax> ElseIfStatements = new LuaSyntaxList<LuaElseIfStatementSyntax>();
+    public readonly LuaBlockSyntax Body = new();
+    public readonly LuaSyntaxList<LuaElseIfStatementSyntax> ElseIfStatements = new();
     public LuaElseClauseSyntax Else { get; set; }
     public string CloseParenToken => Tokens.End;
 
@@ -41,7 +41,7 @@ namespace CSharpLua.LuaAst {
     public string ElseIfKeyword => Tokens.ElseIf;
     public LuaExpressionSyntax Condition { get; }
     public string OpenParenToken => Tokens.Then;
-    public readonly LuaBlockSyntax Body = new LuaBlockSyntax();
+    public readonly LuaBlockSyntax Body = new();
 
     public LuaElseIfStatementSyntax(LuaExpressionSyntax condition) {
       Condition = condition ?? throw new ArgumentNullException(nameof(condition)); ;
@@ -54,7 +54,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaElseClauseSyntax : LuaSyntaxNode {
     public string ElseKeyword => Tokens.Else;
-    public readonly LuaBlockSyntax Body = new LuaBlockSyntax();
+    public readonly LuaBlockSyntax Body = new();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
@@ -62,12 +62,12 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaSwitchAdapterStatementSyntax : LuaStatementSyntax {
-    public readonly LuaRepeatStatementSyntax RepeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
+    public readonly LuaRepeatStatementSyntax RepeatStatement = new(LuaIdentifierNameSyntax.One);
     public LuaIdentifierNameSyntax Temp { get; }
     private LuaBlockSyntax defaultBock_;
-    private readonly LuaLocalVariablesSyntax caseLabelVariables_ = new LuaLocalVariablesSyntax();
+    private readonly LuaLocalVariablesSyntax caseLabelVariables_ = new();
     public LuaIdentifierNameSyntax DefaultLabel { get; set; }
-    public readonly Dictionary<int, LuaIdentifierNameSyntax> CaseLabels = new Dictionary<int, LuaIdentifierNameSyntax>();
+    public readonly Dictionary<int, LuaIdentifierNameSyntax> CaseLabels = new();
     private LuaIfStatementSyntax headIfStatement_;
 
     public LuaSwitchAdapterStatementSyntax(LuaIdentifierNameSyntax temp) {

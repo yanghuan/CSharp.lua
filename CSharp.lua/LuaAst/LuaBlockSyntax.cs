@@ -21,7 +21,7 @@ namespace CSharpLua.LuaAst {
   public class LuaBlockSyntax : LuaStatementSyntax {
     public string OpenToken { get; set; }
     public string CloseToken { get; set; }
-    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new();
     private LuaLocalAreaSyntax headVariables_;
 
     public int TempCount;

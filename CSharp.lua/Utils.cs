@@ -68,7 +68,7 @@ namespace CSharpLua {
   }
 
   public sealed class ConcurrentHashSet<T> : IEnumerable<T> {
-    private readonly ConcurrentDictionary<T, bool> dict_ = new ConcurrentDictionary<T, bool>();
+    private readonly ConcurrentDictionary<T, bool> dict_ = new();
 
     public bool Add(T v) {
       return dict_.TryAdd(v, true);
@@ -283,7 +283,7 @@ namespace CSharpLua {
     }
 
     public static LuaStringLiteralExpressionSyntax ToStringLiteral(this string s) {
-      return new LuaStringLiteralExpressionSyntax(s);
+      return new(s);
     }
 
     public static bool IsPrivate(this ISymbol symbol) {
@@ -581,7 +581,7 @@ namespace CSharpLua {
       return null;
     }
 
-    private static readonly Regex codeTemplateAttributeRegex_ = new Regex(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
+    private static readonly Regex codeTemplateAttributeRegex_ = new(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
 
     private static string GetCodeTemplateFromAttributeText(string document) {
       var matchs = codeTemplateAttributeRegex_.Matches(document);
@@ -919,7 +919,7 @@ namespace CSharpLua {
       return false;
     }
 
-    private static readonly Regex identifierRegex_ = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_]*$", RegexOptions.Compiled);
+    private static readonly Regex identifierRegex_ = new(@"^[a-zA-Z_][a-zA-Z0-9_]*$", RegexOptions.Compiled);
 
     public static bool IsIdentifierIllegal(ref string identifierName) {
       if (!identifierRegex_.IsMatch(identifierName)) {

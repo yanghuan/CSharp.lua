@@ -47,12 +47,12 @@ namespace CSharpLua.LuaAst {
     }
 
     public static implicit operator LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
-      return new LuaExpressionStatementSyntax(expression);
+      return new(expression);
     }
   }
 
   public sealed class LuaStatementListSyntax : LuaStatementSyntax {
-    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
@@ -64,7 +64,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaReturnStatementSyntax : LuaBaseReturnStatementSyntax {
-    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new();
 
     public LuaReturnStatementSyntax() {
     }
@@ -93,7 +93,7 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaBreakStatementSyntax Instance = new LuaBreakStatementSyntax();
+    public static readonly LuaBreakStatementSyntax Instance = new();
   }
 
   public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
@@ -125,7 +125,7 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaBlankLinesStatement One = new LuaBlankLinesStatement(1);
+    public static readonly LuaBlankLinesStatement One = new(1);
   }
 
   public abstract class LuaCommentStatement : LuaStatementSyntax {
@@ -222,7 +222,7 @@ namespace CSharpLua.LuaAst {
       Params = 1 << 5,
     }
 
-    public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();
+    public readonly List<LuaStatementSyntax> Statements = new();
     public bool IsEmpty => Statements.Count == 0;
     private AttributeFlags attr_;
     public bool HasIgnoreAttribute => HasAttribute(AttributeFlags.Ignore);
@@ -306,7 +306,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaSummaryDocumentStatement : LuaStatementSyntax {
-    public readonly List<string> Texts = new List<string>();
+    public readonly List<string> Texts = new();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);

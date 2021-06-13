@@ -138,14 +138,14 @@ namespace CSharpLua.LuaAst {
     }
 
     public static implicit operator LuaIdentifierNameSyntax(string valueText) {
-      return new LuaIdentifierNameSyntax(valueText);
+      return new(valueText);
     }
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
 
-    internal LuaStringLiteralExpressionSyntax ToStringLiteral() => new LuaStringLiteralExpressionSyntax(this);
+    internal LuaStringLiteralExpressionSyntax ToStringLiteral() => new(this);
   }
 
   public sealed class LuaPropertyOrEventIdentifierNameSyntax : LuaIdentifierNameSyntax {
@@ -173,7 +173,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaPropertyOrEventIdentifierNameSyntax GetClone() {
-      return new LuaPropertyOrEventIdentifierNameSyntax(IsProperty, Name) { IsGetOrAdd = IsGetOrAdd };
+      return new(IsProperty, Name) { IsGetOrAdd = IsGetOrAdd };
     }
 
     internal override void Render(LuaRenderer renderer) {

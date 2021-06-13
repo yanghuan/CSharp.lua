@@ -29,11 +29,11 @@ namespace CSharpLua.LuaAst {
   }
 
   public class LuaFunctionExpressionSyntax : LuaExpressionSyntax {
-    public readonly LuaParameterListSyntax ParameterList = new LuaParameterListSyntax();
+    public readonly LuaParameterListSyntax ParameterList = new();
     public string FunctionKeyword => Tokens.Function;
     public int TempCount;
 
-    public readonly LuaBlockSyntax Body = new LuaBlockSyntax() {
+    public readonly LuaBlockSyntax Body = new() {
       OpenToken = Tokens.Empty,
       CloseToken = Tokens.End,
     };
