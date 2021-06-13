@@ -978,32 +978,43 @@ namespace CSharpLua {
 
     private List<string> GetSymbolNames(ISymbol symbol) {
       List<string> names = new List<string>();
-      if (symbol.Kind == SymbolKind.Property) {
-        var propertySymbol = (IPropertySymbol)symbol;
-        if (IsPropertyField(propertySymbol)) {
-          names.Add(symbol.Name);
-        } else {
-          string baseName = GetSymbolBaseName(symbol);
-          if (propertySymbol.IsReadOnly) {
-            names.Add(LuaSyntaxNode.Tokens.Get + baseName);
-          } else if (propertySymbol.IsWriteOnly) {
-            names.Add(LuaSyntaxNode.Tokens.Set + baseName);
+      switch (symbol.Kind)
+      {
+        case SymbolKind.Property:
+        {
+          var propertySymbol = (IPropertySymbol)symbol;
+          if (IsPropertyField(propertySymbol)) {
+            names.Add(symbol.Name);
           } else {
-            names.Add(LuaSyntaxNode.Tokens.Get + baseName);
-            names.Add(LuaSyntaxNode.Tokens.Set + baseName);
+            string baseName = GetSymbolBaseName(symbol);
+            if (propertySymbol.IsReadOnly) {
+              names.Add(LuaSyntaxNode.Tokens.Get + baseName);
+            } else if (propertySymbol.IsWriteOnly) {
+              names.Add(LuaSyntaxNode.Tokens.Set + baseName);
+            } else {
+              names.Add(LuaSyntaxNode.Tokens.Get + baseName);
+              names.Add(LuaSyntaxNode.Tokens.Set + baseName);
+            }
           }
+
+          break;
         }
-      } else if (symbol.Kind == SymbolKind.Event) {
-        var eventSymbol = (IEventSymbol)symbol;
-        if (IsEventField(eventSymbol)) {
-          names.Add(symbol.Name);
-        } else {
-          string baseName = GetSymbolBaseName(symbol);
-          names.Add(LuaSyntaxNode.Tokens.Add + baseName);
-          names.Add(LuaSyntaxNode.Tokens.Remove + baseName);
+        case SymbolKind.Event:
+        {
+          var eventSymbol = (IEventSymbol)symbol;
+          if (IsEventField(eventSymbol)) {
+            names.Add(symbol.Name);
+          } else {
+            string baseName = GetSymbolBaseName(symbol);
+            names.Add(LuaSyntaxNode.Tokens.Add + baseName);
+            names.Add(LuaSyntaxNode.Tokens.Remove + baseName);
+          }
+
+          break;
         }
-      } else {
-        names.Add(GetSymbolBaseName(symbol));
+        default:
+          names.Add(GetSymbolBaseName(symbol));
+          break;
       }
       return names;
     }
@@ -1207,19 +1218,29 @@ namespace CSharpLua {
     private void GetRefactorCheckName(ISymbol symbol, string newName, out string checkName1, out string checkName2) {
       checkName1 = newName;
       checkName2 = null;
-      if (symbol.Kind == SymbolKind.Property) {
-        var property = (IPropertySymbol)symbol;
-        bool isField = IsPropertyField(property);
-        if (!isField) {
-          checkName1 = LuaSyntaxNode.Tokens.Get + newName;
-          checkName2 = LuaSyntaxNode.Tokens.Set + newName;
+      switch (symbol.Kind)
+      {
+        case SymbolKind.Property:
+        {
+          var property = (IPropertySymbol)symbol;
+          bool isField = IsPropertyField(property);
+          if (!isField) {
+            checkName1 = LuaSyntaxNode.Tokens.Get + newName;
+            checkName2 = LuaSyntaxNode.Tokens.Set + newName;
+          }
+
+          break;
         }
-      } else if (symbol.Kind == SymbolKind.Event) {
-        var eventSymbol = (IEventSymbol)symbol;
-        bool isField = IsEventField(eventSymbol);
-        if (!isField) {
-          checkName1 = LuaSyntaxNode.Tokens.Add + newName;
-          checkName2 = LuaSyntaxNode.Tokens.Remove + newName;
+        case SymbolKind.Event:
+        {
+          var eventSymbol = (IEventSymbol)symbol;
+          bool isField = IsEventField(eventSymbol);
+          if (!isField) {
+            checkName1 = LuaSyntaxNode.Tokens.Add + newName;
+            checkName2 = LuaSyntaxNode.Tokens.Remove + newName;
+          }
+
+          break;
         }
       }
     }
