@@ -19,14 +19,14 @@ using System;
 namespace CSharpLua.LuaAst {
   public sealed class LuaForInStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Expression { get; }
-    public string ForKeyword => Tokens.For;
+    public string ForKeyword => Keyword.For;
     public LuaIdentifierNameSyntax Identifier { get; }
-    public string InKeyword => Tokens.In;
+    public string InKeyword => Keyword.In;
     public LuaExpressionSyntax Placeholder => LuaIdentifierNameSyntax.Placeholder;
 
     public LuaBlockSyntax Body { get; } = new() {
-      OpenToken = Tokens.Do,
-      CloseToken = Tokens.End,
+      OpenToken = Keyword.Do,
+      CloseToken = Keyword.End,
     };
 
     public LuaForInStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression, bool isAsync = false) {
@@ -50,7 +50,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaNumericalForStatementSyntax : LuaStatementSyntax {
-    public string ForKeyword => Tokens.For;
+    public string ForKeyword => Keyword.For;
     public LuaIdentifierNameSyntax Identifier { get; }
     public string EqualsToken => Tokens.Equals;
     public LuaExpressionSyntax StartExpression { get; }
@@ -58,8 +58,8 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax StepExpression { get; }
 
     public LuaBlockSyntax Body { get; } = new() {
-      OpenToken = Tokens.Do,
-      CloseToken = Tokens.End,
+      OpenToken = Keyword.Do,
+      CloseToken = Keyword.End,
     };
 
     public LuaNumericalForStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax startExpression, LuaExpressionSyntax limitExpression, LuaExpressionSyntax stepExpression) {
@@ -76,11 +76,11 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaWhileStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Condition { get; }
-    public string WhileKeyword => LuaSyntaxNode.Tokens.While;
+    public string WhileKeyword => LuaSyntaxNode.Keyword.While;
 
     public LuaBlockSyntax Body { get; } = new() {
-      OpenToken = Tokens.Do,
-      CloseToken = Tokens.End,
+      OpenToken = Keyword.Do,
+      CloseToken = Keyword.End,
     };
 
     public LuaWhileStatementSyntax(LuaExpressionSyntax condition) {
@@ -94,8 +94,8 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaRepeatStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Condition { get; }
-    public string RepeatKeyword => Tokens.Repeat;
-    public string UntilKeyword => Tokens.Until;
+    public string RepeatKeyword => Keyword.Repeat;
+    public string UntilKeyword => Keyword.Until;
     public LuaBlockSyntax Body { get; }
 
     public LuaRepeatStatementSyntax(LuaExpressionSyntax condition, LuaBlockSyntax body = null) {

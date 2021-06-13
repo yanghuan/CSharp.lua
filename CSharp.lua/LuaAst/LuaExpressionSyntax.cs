@@ -49,11 +49,11 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaBinaryExpressionSyntax And(LuaExpressionSyntax right) {
-      return Binary(Tokens.And, right);
+      return Binary(Keyword.And, right);
     }
 
     public LuaBinaryExpressionSyntax Or(LuaExpressionSyntax right) {
-      return Binary(Tokens.Or, right);
+      return Binary(Keyword.Or, right);
     }
 
     public LuaBinaryExpressionSyntax EqualsEquals(LuaExpressionSyntax right) {
@@ -93,7 +93,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaPrefixUnaryExpressionSyntax Not() {
-      return new(this, LuaSyntaxNode.Tokens.Not);
+      return new(this, LuaSyntaxNode.Keyword.Not);
     }
   }
 

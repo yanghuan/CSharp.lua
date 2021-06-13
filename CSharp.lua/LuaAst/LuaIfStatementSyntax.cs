@@ -20,13 +20,13 @@ using System.Diagnostics.Contracts;
 
 namespace CSharpLua.LuaAst {
   public sealed class LuaIfStatementSyntax : LuaStatementSyntax {
-    public string IfKeyword => Tokens.If;
+    public string IfKeyword => Keyword.If;
     public LuaExpressionSyntax Condition { get; }
-    public string OpenParenToken => Tokens.Then;
+    public string OpenParenToken => Keyword.Then;
     public readonly LuaBlockSyntax Body = new();
     public readonly LuaSyntaxList<LuaElseIfStatementSyntax> ElseIfStatements = new();
     public LuaElseClauseSyntax Else { get; set; }
-    public string CloseParenToken => Tokens.End;
+    public string CloseParenToken => Keyword.End;
 
     public LuaIfStatementSyntax(LuaExpressionSyntax condition) {
       Condition = condition ?? throw new ArgumentNullException(nameof(condition));
@@ -38,9 +38,9 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaElseIfStatementSyntax : LuaStatementSyntax {
-    public string ElseIfKeyword => Tokens.ElseIf;
+    public string ElseIfKeyword => Keyword.ElseIf;
     public LuaExpressionSyntax Condition { get; }
-    public string OpenParenToken => Tokens.Then;
+    public string OpenParenToken => Keyword.Then;
     public readonly LuaBlockSyntax Body = new();
 
     public LuaElseIfStatementSyntax(LuaExpressionSyntax condition) {
@@ -53,7 +53,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaElseClauseSyntax : LuaSyntaxNode {
-    public string ElseKeyword => Tokens.Else;
+    public string ElseKeyword => Keyword.Else;
     public readonly LuaBlockSyntax Body = new();
 
     internal override void Render(LuaRenderer renderer) {

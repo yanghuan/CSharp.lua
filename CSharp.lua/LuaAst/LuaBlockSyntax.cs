@@ -55,8 +55,8 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaBlockStatementSyntax : LuaBlockSyntax {
     public LuaBlockStatementSyntax() {
-      OpenToken = Tokens.Do;
-      CloseToken = Tokens.End;
+      OpenToken = Keyword.Do;
+      CloseToken = Keyword.End;
     }
 
     internal override void Render(LuaRenderer renderer) {

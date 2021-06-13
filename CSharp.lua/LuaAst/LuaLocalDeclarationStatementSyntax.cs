@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace CSharpLua.LuaAst {
   public sealed class LuaLocalVariablesSyntax : LuaVariableDeclarationSyntax {
-    public string LocalKeyword => Tokens.Local;
+    public string LocalKeyword => Keyword.Local;
     public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new();
     public LuaEqualsValueClauseListSyntax Initializer { get; set; }
 
@@ -92,7 +92,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaVariableDeclaratorSyntax : LuaSyntaxNode {
-    public string LocalKeyword => Tokens.Local;
+    public string LocalKeyword => Keyword.Local;
     public LuaIdentifierNameSyntax Identifier { get; }
     public LuaEqualsValueClauseSyntax Initializer { get; set; }
 
@@ -138,7 +138,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaLocalAreaSyntax : LuaStatementSyntax {
-    public string LocalKeyword => Tokens.Local;
+    public string LocalKeyword => Keyword.Local;
     public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new();
 
     internal override void Render(LuaRenderer renderer) {
@@ -148,7 +148,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaLocalFunctionSyntx : LuaStatementSyntax {
     public readonly LuaStatementListSyntax Comments = new();
-    public string LocalKeyword => Tokens.Local;
+    public string LocalKeyword => Keyword.Local;
     public LuaIdentifierNameSyntax IdentifierName { get; }
     public LuaFunctionExpressionSyntax FunctionExpression { get; }
 
@@ -166,7 +166,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaLocalTupleVariableExpression : LuaExpressionSyntax {
-    public string LocalKeyword => Tokens.Local;
+    public string LocalKeyword => Keyword.Local;
     public readonly LuaSyntaxList<LuaIdentifierNameSyntax> Variables = new();
 
     internal override void Render(LuaRenderer renderer) {

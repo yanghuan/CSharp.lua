@@ -60,7 +60,7 @@ namespace CSharpLua.LuaAst {
   }
   
   public abstract class LuaBaseReturnStatementSyntax : LuaStatementSyntax {
-    public string ReturnKeyword => Tokens.Return;
+    public string ReturnKeyword => Keyword.Return;
   }
 
   public sealed class LuaReturnStatementSyntax : LuaBaseReturnStatementSyntax {
@@ -85,7 +85,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaBreakStatementSyntax : LuaStatementSyntax {
-    public string BreakKeyword => Tokens.Break;
+    public string BreakKeyword => Keyword.Break;
 
     private LuaBreakStatementSyntax() { }
 
@@ -164,7 +164,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaGotoStatement : LuaStatementSyntax {
     public LuaIdentifierNameSyntax Identifier { get; }
-    public string GotoKeyword => Tokens.Goto;
+    public string GotoKeyword => Keyword.Goto;
 
     public LuaGotoStatement(LuaIdentifierNameSyntax identifier) {
       Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
