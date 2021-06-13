@@ -2673,7 +2673,7 @@ namespace CSharpLua {
       if (symbol == null) {  // dynamic
         var expressSymbol = semanticModel_.GetSymbolInfo(node.Expression).Symbol;
         var expression = node.Expression.AcceptExpression(this);
-        bool isObjectColon = node.Parent.IsKind(SyntaxKind.InvocationExpression) && (expressSymbol == null || expressSymbol.Kind != SymbolKind.NamedType);
+        bool isObjectColon = node.Parent.IsKind(SyntaxKind.InvocationExpression) && (expressSymbol is not {Kind: SymbolKind.NamedType});
         LuaIdentifierNameSyntax name = node.Name.Identifier.ValueText;
         return expression.MemberAccess(name, isObjectColon);
       }
