@@ -245,7 +245,9 @@ namespace CSharpLua {
 
       if (path.StartsWith(CurrentDirectorySign1)) {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path[CurrentDirectorySign1.Length..]);
-      } else if (path.StartsWith(CurrentDirectorySign2)) {
+      }
+
+      if (path.StartsWith(CurrentDirectorySign2)) {
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path[CurrentDirectorySign2.Length..]);
       }
 
@@ -413,13 +415,13 @@ namespace CSharpLua {
         symbol = type;
         isNullable = false;
         return true;
-      } else {
-        var nullableElemetType = type.NullableElemetType();
-        if (nullableElemetType != null && nullableElemetType.TypeKind == TypeKind.Enum) {
-          symbol = nullableElemetType;
-          isNullable = true;
-          return true;
-        }
+      }
+
+      var nullableElemetType = type.NullableElemetType();
+      if (nullableElemetType != null && nullableElemetType.TypeKind == TypeKind.Enum) {
+        symbol = nullableElemetType;
+        isNullable = true;
+        return true;
       }
 
       symbol = null;
@@ -761,7 +763,9 @@ namespace CSharpLua {
         if (symbol.ReturnsVoid || symbol.ReturnType.SpecialType == SpecialType.System_Int32) {
           if (symbol.Parameters.IsEmpty) {
             return true;
-          } else if (symbol.Parameters.Length == 1) {
+          }
+
+          if (symbol.Parameters.Length == 1) {
             var parameterType = symbol.Parameters[0].Type;
             if (parameterType.TypeKind == TypeKind.Array) {
               var arrayType = (IArrayTypeSymbol)parameterType;
@@ -1141,9 +1145,9 @@ namespace CSharpLua {
             return false;
           }
         }
-      } else {
-        return !symbol.GetMembers(memberName).IsEmpty;
       }
+
+      return !symbol.GetMembers(memberName).IsEmpty;
     }
 
     public static bool IsContainsInternalSymbol(this INamedTypeSymbol type, ISymbol symbol) {

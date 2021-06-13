@@ -166,9 +166,9 @@ namespace CSharpLua.LuaAst {
       get {
         if (IsProperty) {
           return IsGetOrAdd ? Tokens.Get : Tokens.Set;
-        } else {
-          return IsGetOrAdd ? Tokens.Add : Tokens.Remove;
         }
+
+        return IsGetOrAdd ? Tokens.Add : Tokens.Remove;
       }
     }
 

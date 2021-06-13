@@ -132,9 +132,9 @@ namespace CSharpLua.LuaAst {
     private LuaBlockSyntax FindMatchIfStatement(int index) {
       if (index == 0) {
         return headIfStatement_.Body;
-      } else {
-        return headIfStatement_.ElseIfStatements[index - 1].Body;
       }
+
+      return headIfStatement_.ElseIfStatements[index - 1].Body;
     }
 
     private void CheckHasCaseLabel() {

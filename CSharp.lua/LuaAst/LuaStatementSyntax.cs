@@ -269,12 +269,13 @@ namespace CSharpLua.LuaAst {
         string prefix = text[(index + kAttributePrefix.Length)..];
         if (Enum.TryParse(prefix, out attr)) {
           return true;
-        } else if (prefix.Contains(AttributeFlags.Template.ToString())) {
+        }
+
+        if (prefix.Contains(AttributeFlags.Template.ToString())) {
           attr = AttributeFlags.Template;
           return true;
-        } else {
-          throw new CompilationErrorException($"{prefix} is not define attribute");
         }
+        throw new CompilationErrorException($"{prefix} is not define attribute");
       }
       return false;
     }

@@ -241,10 +241,10 @@ namespace CSharpLua {
           var typeSymbol = (IArrayTypeSymbol)symbol;
           string elementTypeName = GetTypeString(typeSymbol.ElementType);
           return elementTypeName + "[]" == typeString;
-        } else {
-          string name = GetTypeString(symbol);
-          return name == typeString;
         }
+
+        string name = GetTypeString(symbol);
+        return name == typeString;
       }
 
       private static bool IsArgMatch(ITypeSymbol symbol, XmlMetaModel.ArgumentModel parameterModel) {
