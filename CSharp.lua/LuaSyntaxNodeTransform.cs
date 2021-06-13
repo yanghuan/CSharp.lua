@@ -881,7 +881,7 @@ namespace CSharpLua {
 
           if (node.IsKind(SyntaxKind.EventFieldDeclaration)) {
             var eventSymbol = (IEventSymbol)variableSymbol;
-            if (!IsEventFiled(eventSymbol)) {
+            if (!IsEventField(eventSymbol)) {
               var eventName = GetMemberName(eventSymbol);
               var innerName = AddInnerName(eventSymbol);
               LuaExpressionSyntax valueExpression = GetFieldValueExpression(typeSymbol, variable.Initializer?.Value, out bool valueIsLiteral, out var statements);
@@ -2589,7 +2589,7 @@ namespace CSharpLua {
           }
           case SymbolKind.Property:
           case SymbolKind.Event: {
-            if (!generator_.IsPropertyFieldOrEventFiled(symbol)) {
+            if (!generator_.IsPropertyFieldOrEventField(symbol)) {
               isOnlyName = true;
             }
             break;
@@ -2786,7 +2786,7 @@ namespace CSharpLua {
         isReadOnly = propertySymbol.IsReadOnly;
       } else {
         var eventSymbol = (IEventSymbol)symbol;
-        isField = IsEventFiled(eventSymbol);
+        isField = IsEventField(eventSymbol);
         isReadOnly = false;
         if (!isField) {
           if (!IsEventAddOrRemoveIdentifierName(node)) {

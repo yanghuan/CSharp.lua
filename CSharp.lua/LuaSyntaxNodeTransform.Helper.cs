@@ -377,12 +377,12 @@ namespace CSharpLua {
       return generator_.IsPropertyField(symbol);
     }
 
-    private bool IsEventFiled(IEventSymbol symbol) {
-      return generator_.IsEventFiled(symbol);
+    private bool IsEventField(IEventSymbol symbol) {
+      return generator_.IsEventField(symbol);
     }
 
-    private bool IsPropertyFieldOrEventFiled(ISymbol symbol) {
-      return generator_.IsPropertyFieldOrEventFiled(symbol);
+    private bool IsPropertyFieldOrEventField(ISymbol symbol) {
+      return generator_.IsPropertyFieldOrEventField(symbol);
     }
 
     private bool IsMoreThanLocalVariables(ISymbol symbol) {

@@ -233,7 +233,7 @@ namespace CSharpLua.LuaAst {
       }
     }
 
-    private void AddInitFiled(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
+    private void AddInitField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
       initStatements_.Add(LuaIdentifierNameSyntax.This.MemberAccess(name).Assignment(value));
     }
 
@@ -296,7 +296,7 @@ namespace CSharpLua.LuaAst {
             if (statements  != null) {
               initStatements_.AddRange(statements);
             }
-            AddInitFiled(name, value);
+            AddInitField(name, value);
           }
         }
       }
@@ -368,7 +368,7 @@ namespace CSharpLua.LuaAst {
             if (statements != null) {
               initStatements_.AddRange(statements);
             }
-            AddInitFiled(innerName, value);
+            AddInitField(innerName, value);
           }
         }
       }

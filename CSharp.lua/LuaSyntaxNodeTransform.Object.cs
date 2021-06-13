@@ -280,9 +280,7 @@ namespace CSharpLua {
       var typeName = !generator_.IsSealed(type) ? GetTypeName(baseType) : BuildBaseFromThis();
       var memberAccess = typeName.MemberAccess(LuaIdentifierNameSyntax.Ctor);
       LuaInvocationExpressionSyntax otherCtorInvoke;
-      otherCtorInvoke = ctorCounter > 0
-        ? new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, ctorCounter))
-        : new LuaInvocationExpressionSyntax(memberAccess);
+      otherCtorInvoke = ctorCounter > 0 ? new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, ctorCounter)) : new LuaInvocationExpressionSyntax(memberAccess);
       return otherCtorInvoke;
     }
 
@@ -854,7 +852,7 @@ namespace CSharpLua {
         }
         case SymbolKind.Event: {
           var eventSymbol = (IEventSymbol)symbol;
-          if (!IsEventFiled(eventSymbol)) {
+          if (!IsEventField(eventSymbol)) {
             useType = CheckBaseVisitType(eventSymbol, i => i.OverriddenEvent);
           }
           break;
@@ -956,7 +954,7 @@ namespace CSharpLua {
         return conditionalTemps_.Peek();
       }
       var nameExpression = node.Name.AcceptExpression(this);
-      bool isObjectColon = symbol.Kind == SymbolKind.Method || (symbol.Kind == SymbolKind.Property && !IsPropertyFieldOrEventFiled(symbol));
+      bool isObjectColon = symbol.Kind == SymbolKind.Method || (symbol.Kind == SymbolKind.Property && !IsPropertyFieldOrEventField(symbol));
       return conditionalTemps_.Peek().MemberAccess(nameExpression, isObjectColon);
     }
 

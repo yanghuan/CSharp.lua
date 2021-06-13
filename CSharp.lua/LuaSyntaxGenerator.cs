@@ -746,7 +746,7 @@ namespace CSharpLua {
             break;
 
           case SymbolKind.Event:
-            if (IsEventFiled((IEventSymbol)symbol)) {
+            if (IsEventField((IEventSymbol)symbol)) {
               isCheckNeedReserved = true;
             }
             break;
@@ -995,7 +995,7 @@ namespace CSharpLua {
         }
       } else if (symbol.Kind == SymbolKind.Event) {
         var eventSymbol = (IEventSymbol)symbol;
-        if (IsEventFiled(eventSymbol)) {
+        if (IsEventField(eventSymbol)) {
           names.Add(symbol.Name);
         } else {
           string baseName = GetSymbolBaseName(symbol);
@@ -1216,7 +1216,7 @@ namespace CSharpLua {
         }
       } else if (symbol.Kind == SymbolKind.Event) {
         var eventSymbol = (IEventSymbol)symbol;
-        bool isField = IsEventFiled(eventSymbol);
+        bool isField = IsEventField(eventSymbol);
         if (!isField) {
           checkName1 = LuaSyntaxNode.Tokens.Add + newName;
           checkName2 = LuaSyntaxNode.Tokens.Remove + newName;
@@ -1637,7 +1637,7 @@ namespace CSharpLua {
       });
     }
 
-    private bool IsEventFiledInternal(IEventSymbol symbol) {
+    private bool IsEventFieldInternal(IEventSymbol symbol) {
       if (symbol.IsOverridable() || symbol.IsInterfaceImplementation()) {
         return false;
       }
@@ -1658,25 +1658,25 @@ namespace CSharpLua {
       return false;
     }
 
-    internal bool IsEventFiled(IEventSymbol symbol) {
+    internal bool IsEventField(IEventSymbol symbol) {
       return isFieldEvents_.GetOrAdd(symbol, symbol => {
         bool isField;
         if (IsImplicitInterfaceImplementation(symbol)) {
           isField = false;
         } else {
-          isField = IsEventFiledInternal(symbol);
+          isField = IsEventFieldInternal(symbol);
         }
         return isField;
       });
     }
 
-    internal bool IsPropertyFieldOrEventFiled(ISymbol symbol) {
+    internal bool IsPropertyFieldOrEventField(ISymbol symbol) {
       if (symbol is IPropertySymbol propertySymbol) {
         return IsPropertyField(propertySymbol);
       }
 
       if (symbol is IEventSymbol eventSymbol) {
-        return IsEventFiled(eventSymbol);
+        return IsEventField(eventSymbol);
       }
       return false;
     }
@@ -1703,7 +1703,7 @@ namespace CSharpLua {
                 case MethodKind.EventAdd:
                 case MethodKind.EventRaise:
                 case MethodKind.EventRemove: {
-                  if (IsEventFiled((IEventSymbol)method.AssociatedSymbol)) {
+                  if (IsEventField((IEventSymbol)method.AssociatedSymbol)) {
                     return false;
                   }
                   break;
