@@ -512,9 +512,7 @@ namespace CSharpLua {
 
     private TypeMetaInfo GetTypeMetaInfo(ISymbol symbol, string shortName) {
       var info = typeMetas_.GetOrDefault(shortName);
-      if (info != null) {
-        info.Model.CheckBaned(symbol);
-      }
+      info?.Model.CheckBaned(symbol);
       return info;
     }
 

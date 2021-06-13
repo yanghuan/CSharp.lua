@@ -320,9 +320,7 @@ namespace CSharpLua {
 
       var document = BuildDocumentationComment(node);
       var attributes = BuildAttributes(node.AttributeLists);
-      if (document != null) {
-        document.UnIgnore();
-      }
+      document?.UnIgnore();
 
       var refOrOutParameters = new List<LuaExpressionSyntax>();
       var function = new LuaConstructorAdapterExpressionSyntax();

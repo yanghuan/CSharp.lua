@@ -525,9 +525,7 @@ namespace CSharpLua.LuaAst {
     }
 
     private static void SortMetaData(LuaTableExpression metaData) {
-      if (metaData != null) {
-        metaData.Items.Sort((x, y) => string.Compare(MetaDataName(x), MetaDataName(y), StringComparison.Ordinal));
-      }
+      metaData?.Items.Sort((x, y) => string.Compare(MetaDataName(x), MetaDataName(y), StringComparison.Ordinal));
     }
 
     private static IEnumerable<LuaTableExpression> GetMetatables(LuaTableExpression metaMethods) {
