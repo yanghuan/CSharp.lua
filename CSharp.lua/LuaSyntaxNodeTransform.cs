@@ -3444,9 +3444,12 @@ namespace CSharpLua {
           bool isConst = false;
           if (node.Parent is LocalDeclarationStatementSyntax {IsConst: true}) {
             isConst = true;
-            if (variable.Initializer.Value is LiteralExpressionSyntax {Token: string str}) {
-              if (str.Length > kStringConstInlineCount) {
-                isConst = false;
+            if (variable.Initializer.Value is LiteralExpressionSyntax value) {
+              var token = value.Token;
+              if (token.Value is string str) {
+                if (str.Length > kStringConstInlineCount) {
+                  isConst = false;
+                }
               }
             }
           }
