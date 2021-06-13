@@ -375,10 +375,7 @@ namespace CSharpLua {
     }
 
     internal bool IsEnumExport(string enumTypeSymbol) {
-      if (Setting.IsExportEnumAll) {
-        return true;
-      }
-      return exportEnums_.Contains(enumTypeSymbol);
+      return Setting.IsExportEnumAll || exportEnums_.Contains(enumTypeSymbol);
     }
 
     internal void AddExportEnum(ITypeSymbol enumType) {
