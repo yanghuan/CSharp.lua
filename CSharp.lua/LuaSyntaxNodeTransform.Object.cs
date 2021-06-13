@@ -279,9 +279,9 @@ namespace CSharpLua {
     private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol type, ITypeSymbol baseType, int ctorCounter) {
       var typeName = !generator_.IsSealed(type) ? GetTypeName(baseType) : BuildBaseFromThis();
       var memberAccess = typeName.MemberAccess(LuaIdentifierNameSyntax.Ctor);
-      LuaInvocationExpressionSyntax otherCtorInvoke;
-      otherCtorInvoke = ctorCounter > 0 ? new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, ctorCounter)) : new LuaInvocationExpressionSyntax(memberAccess);
-      return otherCtorInvoke;
+      return ctorCounter > 0
+        ? new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, ctorCounter))
+        : new LuaInvocationExpressionSyntax(memberAccess);
     }
 
     private LuaInvocationExpressionSyntax BuildCallBaseConstructor(INamedTypeSymbol typeSymbol) {

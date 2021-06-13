@@ -1622,18 +1622,8 @@ namespace CSharpLua {
 
     internal bool IsPropertyField(IPropertySymbol symbol) {
       return isFieldProperties_.GetOrAdd(symbol, symbol => {
-        bool isField;
         bool? isMateField = XmlMetaProvider.IsPropertyField(symbol);
-        if (isMateField.HasValue) {
-          isField = isMateField.Value;
-        } else {
-          if (IsImplicitInterfaceImplementation(symbol)) {
-            isField = false;
-          } else {
-            isField = IsPropertyFieldInternal(symbol);
-          }
-        }
-        return isField;
+        return isMateField ?? (!IsImplicitInterfaceImplementation(symbol) && IsPropertyFieldInternal(symbol));
       });
     }
 
@@ -1659,15 +1649,8 @@ namespace CSharpLua {
     }
 
     internal bool IsEventField(IEventSymbol symbol) {
-      return isFieldEvents_.GetOrAdd(symbol, symbol => {
-        bool isField;
-        if (IsImplicitInterfaceImplementation(symbol)) {
-          isField = false;
-        } else {
-          isField = IsEventFieldInternal(symbol);
-        }
-        return isField;
-      });
+      return isFieldEvents_.GetOrAdd(symbol, symbol =>
+        !IsImplicitInterfaceImplementation(symbol) && IsEventFieldInternal(symbol));
     }
 
     internal bool IsPropertyFieldOrEventField(ISymbol symbol) {
