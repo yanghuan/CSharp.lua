@@ -353,7 +353,7 @@ namespace CSharpLua {
     }
 
     public static bool IsBasicType(this ITypeSymbol type) {
-      return type.SpecialType >= SpecialType.System_Enum && type.SpecialType <= SpecialType.System_Double;
+      return type.SpecialType is >= SpecialType.System_Enum and <= SpecialType.System_Double;
     }
 
     public static bool IsStringType(this ITypeSymbol type) {
@@ -368,18 +368,18 @@ namespace CSharpLua {
       if (withNullable && type.IsNullableType()) {
         type = ((INamedTypeSymbol)type).TypeArguments.First();
       }
-      return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_UInt64;
+      return type.SpecialType is >= SpecialType.System_SByte and <= SpecialType.System_UInt64;
     }
 
     public static bool IsCastIntegerType(this ITypeSymbol type) {
-      return type.SpecialType >= SpecialType.System_Char && type.SpecialType <= SpecialType.System_UInt64;
+      return type.SpecialType is >= SpecialType.System_Char and <= SpecialType.System_UInt64;
     }
 
     public static bool IsNumberType(this ITypeSymbol type, bool withNullable = true) {
       if (withNullable && type.IsNullableType()) {
         type = ((INamedTypeSymbol)type).TypeArguments.First();
       }
-      return type.SpecialType >= SpecialType.System_SByte && type.SpecialType <= SpecialType.System_Double;
+      return type.SpecialType is >= SpecialType.System_SByte and <= SpecialType.System_Double;
     }
 
     public static bool IsDoubleOrFloatType(this ITypeSymbol type, bool withNullable = true) {
@@ -418,7 +418,7 @@ namespace CSharpLua {
       }
 
       var nullableElementType = type.NullableElementType();
-      if (nullableElementType != null && nullableElementType.TypeKind == TypeKind.Enum) {
+      if (nullableElementType is {TypeKind: TypeKind.Enum}) {
         symbol = nullableElementType;
         isNullable = true;
         return true;
@@ -595,7 +595,7 @@ namespace CSharpLua {
     }
 
     public static bool IsAssignment(this SyntaxKind kind) {
-      return kind >= SyntaxKind.SimpleAssignmentExpression && kind <= SyntaxKind.RightShiftAssignmentExpression;
+      return kind is >= SyntaxKind.SimpleAssignmentExpression and <= SyntaxKind.RightShiftAssignmentExpression;
     }
 
     public static bool IsTupleDeclaration(this SyntaxKind kind) {
@@ -603,11 +603,11 @@ namespace CSharpLua {
     }
 
     public static bool IsTypeDeclaration(this SyntaxKind kind) {
-      return kind >= SyntaxKind.ClassDeclaration && kind <= SyntaxKind.EnumDeclaration;
+      return kind is >= SyntaxKind.ClassDeclaration and <= SyntaxKind.EnumDeclaration;
     }
 
     public static bool IsLiteralExpression(this SyntaxKind kind) {
-      return kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.DefaultLiteralExpression;
+      return kind is >= SyntaxKind.NumericLiteralExpression and <= SyntaxKind.DefaultLiteralExpression;
     }
 
     public static bool IsSystemLinqEnumerable(this INamedTypeSymbol symbol) {
@@ -667,7 +667,7 @@ namespace CSharpLua {
     }
 
     private static bool IsBaseNumberType(this SpecialType specialType) {
-      return specialType >= SpecialType.System_Char && specialType <= SpecialType.System_Double;
+      return specialType is >= SpecialType.System_Char and <= SpecialType.System_Double;
     }
 
     public static bool IsNumberTypeAssignableFrom(this ITypeSymbol left, ITypeSymbol right) {
@@ -835,10 +835,8 @@ namespace CSharpLua {
             if (property.GetMethod.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
               return true;
             }
-            if (property.SetMethod != null) {
-              if (property.SetMethod.MethodKind == MethodKind.ExplicitInterfaceImplementation) {
-                return true;
-              }
+            if (property.SetMethod is {MethodKind: MethodKind.ExplicitInterfaceImplementation}) {
+              return true;
             }
           }
           break;
@@ -988,7 +986,7 @@ namespace CSharpLua {
       LuaSyntaxNodeTransform transfor = null) {
       var externalType = typeSymbol.ContainingType;
       if (externalType != null) {
-        if (transfor != null && transfor.IsNoneGenericTypeCounter && !externalType.IsGenericType && !typeSymbol.IsGenericType) {
+        if (transfor is {IsNoneGenericTypeCounter: true} && !externalType.IsGenericType && !typeSymbol.IsGenericType) {
           var curTypeDeclaration = transfor.CurTypeDeclaration;
           if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(externalType, out var classIdentifier)) {
             sb.Append(classIdentifier.ValueText);
@@ -1156,7 +1154,7 @@ namespace CSharpLua {
       }
 
       var containingType = type.ContainingType;
-      if (containingType != null && !containingType.IsGenericType) {
+      if (containingType is {IsGenericType: false}) {
         return containingType.IsContainsInternalSymbol(symbol);
       }
 

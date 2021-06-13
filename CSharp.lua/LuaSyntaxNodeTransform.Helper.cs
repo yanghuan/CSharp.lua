@@ -1134,7 +1134,7 @@ namespace CSharpLua {
                 }
 
                 var parameter = GetParameterSymbol(symbol, argument);
-                if (parameter != null && parameter.RefKind == RefKind.In) {
+                if (parameter is {RefKind: RefKind.In}) {
                   break;
                 }
               }
@@ -1715,7 +1715,7 @@ namespace CSharpLua {
         }
       }
 
-      if (stepExpression is LuaNumberLiteralExpressionSyntax stepNumber && stepNumber.Number == 1) {
+      if (stepExpression is LuaNumberLiteralExpressionSyntax {Number: 1}) {
         stepExpression = null;
       }
 
@@ -1920,15 +1920,13 @@ namespace CSharpLua {
       bool isThisMemberAccess = false;
       var block = new LuaBlockStatementSyntax();
       PushBlock(block);
-      if (invocation.Expression is LuaMemberAccessExpressionSyntax memberAccess) {
-        if (memberAccess.IsObjectColon) {
-          var thisLocal = new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.This, memberAccess.Expression);
-          block.AddStatement(thisLocal);
-          isThisMemberAccess = true;
-        }
+      if (invocation.Expression is LuaMemberAccessExpressionSyntax {IsObjectColon: true} memberAccess) {
+        var thisLocal = new LuaLocalVariableDeclaratorSyntax(LuaIdentifierNameSyntax.This, memberAccess.Expression);
+        block.AddStatement(thisLocal);
+        isThisMemberAccess = true;
       }
 
-      if (parameterList != null && parameterList.Parameters.Count > 0) {
+      if (parameterList is {Parameters: {Count: > 0}}) {
         var parameters = new List<LuaIdentifierNameSyntax>();
         foreach (var parameterNode in parameterList.Parameters) {
           var parameter = parameterNode.Accept<LuaIdentifierNameSyntax>(this);
@@ -2016,7 +2014,7 @@ namespace CSharpLua {
       if (memberAccess.Expression is LuaMemberAccessExpressionSyntax accessExpression) {
         return InliningMemberAccessUpdateTarget(accessExpression, target);
       }
-      if (memberAccess.Expression is LuaPropertyAdapterExpressionSyntax propertyAdapter && propertyAdapter.IsProperty) {
+      if (memberAccess.Expression is LuaPropertyAdapterExpressionSyntax {IsProperty: true} propertyAdapter) {
         return InlinePropertyAdapterUpdateTarget(propertyAdapter, target);
       }
 
@@ -2073,7 +2071,7 @@ namespace CSharpLua {
             if (!InliningMemberAccessUpdateTarget(memberAccess, target)) {
               return null;
             }
-          } else if (expression is LuaPropertyAdapterExpressionSyntax propertyAdapter && propertyAdapter.IsProperty) {
+          } else if (expression is LuaPropertyAdapterExpressionSyntax {IsProperty: true} propertyAdapter) {
             if (!InlinePropertyAdapterUpdateTarget(propertyAdapter, target)) {
               return null;
             }
@@ -2171,7 +2169,7 @@ namespace CSharpLua {
         case SyntaxKind.IdentifierName: {
           var semanticModel = generator_.GetSemanticModel(expressionBody.SyntaxTree);
           var identifierSymbol = semanticModel.GetSymbolInfo(expressionBody).Symbol;
-          if (identifierSymbol != null && identifierSymbol.IsStatic && identifierSymbol.IsPrivate()) {
+          if (identifierSymbol is {IsStatic: true} && identifierSymbol.IsPrivate()) {
             return false;
           }
           break;
@@ -2180,7 +2178,7 @@ namespace CSharpLua {
           break;
         }
         default: {
-          if (kind >= SyntaxKind.NumericLiteralExpression && kind <= SyntaxKind.DefaultLiteralExpression) {
+          if (kind is >= SyntaxKind.NumericLiteralExpression and <= SyntaxKind.DefaultLiteralExpression) {
             break;
           }
           return false;

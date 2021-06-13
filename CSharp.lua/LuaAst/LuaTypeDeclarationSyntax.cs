@@ -141,7 +141,7 @@ namespace CSharpLua.LuaAst {
         }
       }
 
-      bool hasBaseCopyField = baseCopyFields != null && baseCopyFields.Count > 0;
+      bool hasBaseCopyField = baseCopyFields is {Count: > 0};
       LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
       functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
       if (hasLazyGenericArgument || hasBaseCopyField) {
@@ -201,13 +201,13 @@ namespace CSharpLua.LuaAst {
     private void AddInterfaceDefaultMethod(LuaIdentifierNameSyntax name) => AddInterfaceDefaultMethod(name, name);
 
     public void AddMethod(LuaIdentifierNameSyntax name, LuaFunctionExpressionSyntax method, bool isPrivate, LuaDocumentStatement document = null, bool isMoreThanLocalVariables = false, bool isInterfaceDefaultMethod = false) {
-      if (document != null && document.HasIgnoreAttribute) {
+      if (document is {HasIgnoreAttribute: true}) {
         return;
       }
 
       if (isMoreThanLocalVariables) {
         CheckTooManyVariables(true);
-        if (document != null && !document.IsEmpty) {
+        if (document is {IsEmpty: false}) {
           methodList_.Statements.Add(document);
         }
         var left = LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(name);
@@ -219,7 +219,7 @@ namespace CSharpLua.LuaAst {
         }
       } else {
         local_.Variables.Add(name);
-        if (document != null && !document.IsEmpty) {
+        if (document is {IsEmpty: false}) {
           methodList_.Statements.Add(document);
         }
         methodList_.Statements.Add(name.Assignment(method));
@@ -455,7 +455,7 @@ namespace CSharpLua.LuaAst {
         staticCtor.AddParameter(LuaIdentifierNameSyntax.This);
         staticCtor.Body.Statements.AddRange(statements);
         AddStaticAssignmentNames(staticCtor.Body);
-        if (staticCtor_ != null && staticCtor_.Document != null) {
+        if (staticCtor_ is not null && staticCtor_.Document is not null) {
           body.AddStatement(staticCtor_.Document);
         }
         AddInitFunction(body, LuaIdentifierNameSyntax.StaticCtor, staticCtor);
