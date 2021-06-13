@@ -43,7 +43,7 @@ namespace CSharpLua {
         } else {
           var symbol = (ISymbol)nameStringOrSymbol;
           if (symbols_.Add(symbol.OriginalDefinition)) {
-            Count += symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Event ? 2 : 1;
+            Count += symbol.Kind is SymbolKind.Property or SymbolKind.Event ? 2 : 1;
           }
         }
       }
@@ -735,7 +735,7 @@ namespace CSharpLua {
         return method.TypeArguments.Any(i => symbol.IsTypeParameterExists(i));
       }
 
-      if (method.MethodKind == MethodKind.LambdaMethod || method.MethodKind == MethodKind.LocalFunction) {
+      if (method.MethodKind is MethodKind.LambdaMethod or MethodKind.LocalFunction) {
         return IsMethodTypeArgument((IMethodSymbol)method.ContainingSymbol, symbol);
       }
       return false;
@@ -1354,7 +1354,7 @@ namespace CSharpLua {
         if (typeSymbol != null) {
           if (typeSymbol.TypeKind != TypeKind.Enum
             && typeSymbol.TypeKind != TypeKind.Delegate
-            && (typeSymbol.SpecialType == SpecialType.None || typeSymbol.SpecialType == SpecialType.System_DateTime)) {
+            && (typeSymbol.SpecialType is SpecialType.None or SpecialType.System_DateTime)) {
             return true;
           }
         }
@@ -1612,7 +1612,7 @@ namespace CSharpLua {
       }
 
       var conditionKind = node.Condition.Kind();
-      if (conditionKind < SyntaxKind.NotEqualsExpression || conditionKind > SyntaxKind.GreaterThanOrEqualExpression) {
+      if (conditionKind is < SyntaxKind.NotEqualsExpression or > SyntaxKind.GreaterThanOrEqualExpression) {
         goto Fail;
       }
 

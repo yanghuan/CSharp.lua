@@ -1742,7 +1742,7 @@ namespace CSharpLua {
               }
 
               bool isPlus = kind == SyntaxKind.AddAssignmentExpression;
-              if (containingType.IsDelegateType() || (symbol.MethodKind == MethodKind.EventAdd || symbol.MethodKind == MethodKind.EventRemove)) {
+              if (containingType.IsDelegateType() || symbol.MethodKind is MethodKind.EventAdd or MethodKind.EventRemove) {
                 var left = leftNode.AcceptExpression(this);
                 var right = rightNode.AcceptExpression(this);
                 return BuildDelegateAssignmentExpression(left, right, isPlus);
@@ -2213,7 +2213,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax CheckCodeTemplateInvocationExpression(IMethodSymbol symbol, InvocationExpressionSyntax node) {
       var kind = node.Expression.Kind();
-      if (kind == SyntaxKind.SimpleMemberAccessExpression || kind == SyntaxKind.MemberBindingExpression || kind == SyntaxKind.IdentifierName) {
+      if (kind is SyntaxKind.SimpleMemberAccessExpression or SyntaxKind.MemberBindingExpression or SyntaxKind.IdentifierName) {
         if (IsEnumToStringInvocationExpression(symbol, node, out var result)) {
           return result;
         }
@@ -2572,7 +2572,7 @@ namespace CSharpLua {
       if (node.Expression.IsKind(SyntaxKind.BaseExpression)) {
         var baseExpression = node.Expression.AcceptExpression(this);
         var nameExpression = node.Name.AcceptExpression(this);
-        if (symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Event) {
+        if (symbol.Kind is SymbolKind.Property or SymbolKind.Event) {
           if (nameExpression is LuaPropertyAdapterExpressionSyntax propertyMethod) {
             if (baseExpression != LuaIdentifierNameSyntax.This) {
               propertyMethod.ArgumentList.AddArgument(LuaIdentifierNameSyntax.This);
@@ -2629,7 +2629,7 @@ namespace CSharpLua {
       }
 
       var expression = BuildMemberAccessExpression(symbol, node.Expression);
-      if (symbol.Kind == SymbolKind.Property || symbol.Kind == SymbolKind.Event) {
+      if (symbol.Kind is SymbolKind.Property or SymbolKind.Event) {
         return BuildFieldOrPropertyMemberAccessExpression(expression, name, symbol.IsStatic);
       }
 
@@ -2680,7 +2680,7 @@ namespace CSharpLua {
 
       if (symbol.Kind == SymbolKind.NamedType) {
         var expressionSymbol = semanticModel_.GetSymbolInfo(node.Expression).Symbol;
-        if (expressionSymbol.Kind == SymbolKind.Namespace || expressionSymbol.Kind == SymbolKind.NamedType) {
+        if (expressionSymbol.Kind is SymbolKind.Namespace or SymbolKind.NamedType) {
           return node.Name.Accept(this);
         }
       }
@@ -2775,7 +2775,7 @@ namespace CSharpLua {
         }
 
         var kind = parent.Kind();
-        if (kind == SyntaxKind.AddAssignmentExpression || kind == SyntaxKind.SubtractAssignmentExpression) {
+        if (kind is SyntaxKind.AddAssignmentExpression or SyntaxKind.SubtractAssignmentExpression) {
           var assignment = (AssignmentExpressionSyntax)parent;
           return assignment.Left == current;
         }
@@ -3301,7 +3301,7 @@ namespace CSharpLua {
 
     private bool IsExtremelyZero(LiteralExpressionSyntax node, string value) {
       object v = semanticModel_.GetConstantValue(node).Value;
-      var isFloatZero = (v is float and 0) || (v is double and 0);
+      var isFloatZero = (v is float and 0 or double and 0);
       return isFloatZero && value.Length > 5;
     }
 
@@ -4571,7 +4571,7 @@ namespace CSharpLua {
           bool isLocalVar = false;
           if (!isSingleLine) {
             SymbolKind symbolKind = semanticModel_.GetSymbolInfo(node.Operand).Symbol.Kind;
-            if (symbolKind == SymbolKind.Parameter || symbolKind == SymbolKind.Local) {
+            if (symbolKind is SymbolKind.Parameter or SymbolKind.Local) {
               isLocalVar = true;
             }
           }
@@ -4671,7 +4671,7 @@ namespace CSharpLua {
         return operand;
       }
 
-      Contract.Assert(kind == SyntaxKind.PostIncrementExpression || kind == SyntaxKind.PostDecrementExpression);
+      Contract.Assert(kind is SyntaxKind.PostIncrementExpression or SyntaxKind.PostDecrementExpression);
       bool isSingleLine = IsSingleLineUnary(node);
       string operatorToken = kind == SyntaxKind.PostIncrementExpression ? LuaSyntaxNode.Tokens.Plus : LuaSyntaxNode.Tokens.Sub;
       if (operand is LuaMemberAccessExpressionSyntax memberAccess) {
@@ -4872,7 +4872,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
       var expression = node.Expression.AcceptExpression(this);
-      if (expression is LuaIdentifierNameSyntax || expression is LuaMemberAccessExpressionSyntax) {
+      if (expression is LuaIdentifierNameSyntax or LuaMemberAccessExpressionSyntax) {
         return expression;
       }
 

@@ -386,7 +386,7 @@ namespace CSharpLua {
       if (withNullable && type.IsNullableType()) {
         type = ((INamedTypeSymbol)type).TypeArguments.First();
       }
-      return type.SpecialType == SpecialType.System_Double || type.SpecialType == SpecialType.System_Single;
+      return type.SpecialType is SpecialType.System_Double or SpecialType.System_Single;
     }
 
 
@@ -464,7 +464,7 @@ namespace CSharpLua {
     }
 
     public static bool IsSystemTask(this ITypeSymbol symbol) {
-      return (symbol.Name == "Task" || symbol.Name == "ValueTask")
+      return (symbol.Name is "Task" or "ValueTask")
         && symbol.ContainingNamespace.Name == "Tasks"
         && symbol.ContainingNamespace.ContainingNamespace.Name == "Threading"
         && symbol.ContainingNamespace.ContainingNamespace.ContainingNamespace.Name == "System";
@@ -599,7 +599,7 @@ namespace CSharpLua {
     }
 
     public static bool IsTupleDeclaration(this SyntaxKind kind) {
-      return kind == SyntaxKind.DeclarationExpression || kind == SyntaxKind.TupleExpression;
+      return kind is SyntaxKind.DeclarationExpression or SyntaxKind.TupleExpression;
     }
 
     public static bool IsTypeDeclaration(this SyntaxKind kind) {
@@ -1242,7 +1242,7 @@ namespace CSharpLua {
     }
 
     public static bool IsSystemObjectOrValueType(this INamedTypeSymbol symbol) {
-      return symbol.SpecialType == SpecialType.System_Object || symbol.SpecialType == SpecialType.System_ValueType;
+      return symbol.SpecialType is SpecialType.System_Object or SpecialType.System_ValueType;
     }
 
     public static bool IsCombineImplicitlyCtor(this INamedTypeSymbol symbol) {
