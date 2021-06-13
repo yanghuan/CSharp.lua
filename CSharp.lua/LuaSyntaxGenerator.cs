@@ -1301,10 +1301,9 @@ namespace CSharpLua {
     }
 
     private void CheckRefactorInnerNames() {
-      foreach (var innerName in propertyOrEventInnerFieldNames_) {
-        var symbol = innerName.Key;
+      foreach (var (symbol, value) in propertyOrEventInnerFieldNames_) {
         string newName = GetInnerGetRefactorName(symbol);
-        innerName.Value.Update(newName);
+        value.Update(newName);
         TryAddNewUsedName(symbol.ContainingType, newName);
       }
     }

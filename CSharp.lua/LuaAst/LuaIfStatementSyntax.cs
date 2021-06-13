@@ -141,9 +141,8 @@ namespace CSharpLua.LuaAst {
       if (CaseLabels.Count > 0) {
         Contract.Assert(headIfStatement_ != null);
         caseLabelVariables_.Variables.AddRange(CaseLabels.Values);
-        foreach (var pair in CaseLabels) {
-          var caseLabelStatement = FindMatchIfStatement(pair.Key);
-          LuaIdentifierNameSyntax labelIdentifier = pair.Value;
+        foreach (var (index, labelIdentifier) in CaseLabels) {
+          var caseLabelStatement = FindMatchIfStatement(index);
           RepeatStatement.Body.Statements.Add(new LuaLabeledStatement(labelIdentifier));
           LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(labelIdentifier);
           ifStatement.Body.Statements.AddRange(caseLabelStatement.Statements);

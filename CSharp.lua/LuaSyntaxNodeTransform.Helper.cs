@@ -1056,9 +1056,9 @@ namespace CSharpLua {
         var temp = GetTempIdentifier();
         function.AddParameter(temp);
 
-        foreach (var initializer in initializers) {
-          var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, initializer.Name, false);
-          var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, initializer.Expression);
+        foreach (var (name, initializerExpression) in initializers) {
+          var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, name, false);
+          var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, initializerExpression);
           function.AddStatement(assignmentExpression);
         }
 
