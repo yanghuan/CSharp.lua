@@ -234,7 +234,7 @@ namespace CSharpLua.LuaAst {
 
     public LuaDocumentStatement(string triviaText) {
       var items = triviaText.Replace("///", string.Empty)
-        .Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+        .Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
         .Select(i => i.Trim()).ToList();
 
       var document = new LuaSummaryDocumentStatement();

@@ -498,7 +498,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {
-      return VisitLambdaExpression(new ParameterSyntax[] { node.Parameter }, node.Body);
+      return VisitLambdaExpression(new[] { node.Parameter }, node.Body);
     }
 
     public override LuaSyntaxNode VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node) {

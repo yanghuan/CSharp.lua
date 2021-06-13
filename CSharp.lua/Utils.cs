@@ -188,11 +188,11 @@ namespace CSharpLua {
     }
 
     public static T[] ArrayOf<T>(this T t) {
-      return new T[] { t };
+      return new[] { t };
     }
 
     public static T[] ArrayOf<T>(this T t, T a) {
-      return new T[] { t, a };
+      return new[] { t, a };
     }
 
     public static T[] ArrayOf<T>(this T t, params T[] args) {

@@ -1320,7 +1320,7 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildConversionExpression(IMethodSymbol methodSymbol, LuaExpressionSyntax expression) {
       var codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(methodSymbol);
       if (codeTemplate != null) {
-        return BuildCodeTemplateExpression(codeTemplate, null, new LuaExpressionSyntax[] { expression }, null);
+        return BuildCodeTemplateExpression(codeTemplate, null, new[] { expression }, null);
       }
 
       var memberAccess = GetOperatorMemberAccessExpression(methodSymbol);
