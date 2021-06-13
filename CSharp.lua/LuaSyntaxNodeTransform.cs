@@ -2886,12 +2886,9 @@ namespace CSharpLua {
       public bool IsTypeParameter => index_ != -1;
       public bool IsSwapped { get; private set; }
 
-      public GenericPlaceholder(ITypeSymbol symbol, int index) {
+      public GenericPlaceholder(ITypeSymbol symbol, int index = -1) {
         Symbol = symbol;
         index_ = index;
-      }
-
-      public GenericPlaceholder(ITypeSymbol symbol) : this(symbol, -1) {
       }
 
       public LuaExpressionSyntax Build(LuaSyntaxNodeTransform transform) {
