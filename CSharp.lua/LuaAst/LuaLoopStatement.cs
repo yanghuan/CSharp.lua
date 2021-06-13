@@ -76,7 +76,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaWhileStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Condition { get; }
-    public string WhileKeyword => LuaSyntaxNode.Keyword.While;
+    public string WhileKeyword => Keyword.While;
 
     public LuaBlockSyntax Body { get; } = new() {
       OpenToken = Keyword.Do,

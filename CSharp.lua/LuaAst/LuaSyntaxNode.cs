@@ -21,7 +21,7 @@ using System.Diagnostics.Contracts;
 namespace CSharpLua.LuaAst {
   public class LuaSyntaxNode {
     internal virtual void Render(LuaRenderer renderer) {
-      throw new NotSupportedException($"{this.GetType().Name} is not override");
+      throw new NotSupportedException($"{GetType().Name} is not override");
     }
 
     public sealed class Semicolon {

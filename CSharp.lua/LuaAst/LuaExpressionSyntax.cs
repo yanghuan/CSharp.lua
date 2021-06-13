@@ -93,7 +93,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaPrefixUnaryExpressionSyntax Not() {
-      return new(this, LuaSyntaxNode.Keyword.Not);
+      return new(this, Keyword.Not);
     }
   }
 
