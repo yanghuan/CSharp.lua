@@ -1322,10 +1322,7 @@ namespace CSharpLua {
         if (SyntaxNode != null) {
           try {
             var node = SyntaxNode.Accept(transfor);
-            if (node == null) {
-              throw new InvalidOperationException();
-            }
-            return node;
+            return node ?? throw new InvalidOperationException();
           } catch (CompilationErrorException e) {
             throw e.With(SyntaxNode);
           } catch (BugErrorException) {
