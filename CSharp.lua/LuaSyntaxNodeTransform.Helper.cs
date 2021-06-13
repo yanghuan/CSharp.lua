@@ -1193,11 +1193,9 @@ namespace CSharpLua {
         }
 
         if (need) {
-          if (typeSymbol.IsNullableType()) {
-            expression = LuaIdentifierNameSyntax.NullableClone.Invocation(expression);
-          } else {
-            expression = expression.MemberAccess(LuaIdentifierNameSyntax.Clone, true).Invocation();
-          }
+          expression = typeSymbol.IsNullableType()
+            ? LuaIdentifierNameSyntax.NullableClone.Invocation(expression)
+            : expression.MemberAccess(LuaIdentifierNameSyntax.Clone, true).Invocation();
         }
       }
     }
@@ -1704,11 +1702,9 @@ namespace CSharpLua {
           }
         } else {
           if (stepExpression is LuaNumberLiteralExpressionSyntax numberLiteral) {
-            if (numberLiteral.Number > 0) {
-              limitExpression = limitExpression.Sub(stepExpression);
-            } else {
-              limitExpression = limitExpression.Plus((-numberLiteral.Number).ToString());
-            }
+            limitExpression = numberLiteral.Number > 0
+              ? limitExpression.Sub(stepExpression)
+              : limitExpression.Plus((-numberLiteral.Number).ToString());
           } else {
             limitExpression = limitExpression.Sub(stepExpression);
           }
@@ -1984,11 +1980,7 @@ namespace CSharpLua {
         CurBlock.AddStatement(new LuaLocalVariablesSyntax(methodInfo.InliningReturnVars));
       }
 
-      if (block.Statements.Count == 1) {
-        CurBlock.AddStatement(block.Statements.First());
-      } else {
-        CurBlock.AddStatement(block);
-      }
+      CurBlock.AddStatement(block.Statements.Count == 1 ? block.Statements.First() : block);
 
       if (methodInfo.InliningReturnVars.Count > 0) {
         inlineExpression = new LuaSequenceListExpressionSyntax(methodInfo.InliningReturnVars);

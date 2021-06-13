@@ -37,11 +37,9 @@ namespace CSharpLua {
         var arguments = BuildArgumentList(symbol, symbol.Parameters, node.ArgumentList, refOrOutArguments);
         TryRemoveNilArgumentsAtTail(symbol, arguments);
         invokeExpression.AddArguments(arguments);
-        if (refOrOutArguments.Count > 0) {
-          creationExpression = BuildInvokeRefOrOut(node, invokeExpression, refOrOutArguments);
-        } else {
-          creationExpression = invokeExpression;
-        }
+        creationExpression = refOrOutArguments.Count > 0
+          ? BuildInvokeRefOrOut(node, invokeExpression, refOrOutArguments)
+          : invokeExpression;
       } else {
         creationExpression = invokeExpression;
       }
@@ -282,11 +280,9 @@ namespace CSharpLua {
       var typeName = !generator_.IsSealed(type) ? GetTypeName(baseType) : BuildBaseFromThis();
       var memberAccess = typeName.MemberAccess(LuaIdentifierNameSyntax.Ctor);
       LuaInvocationExpressionSyntax otherCtorInvoke;
-      if (ctorCounter > 0) {
-        otherCtorInvoke = new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, ctorCounter));
-      } else {
-        otherCtorInvoke = new LuaInvocationExpressionSyntax(memberAccess);
-      }
+      otherCtorInvoke = ctorCounter > 0
+        ? new LuaInvocationExpressionSyntax(new LuaTableIndexAccessExpressionSyntax(memberAccess, ctorCounter))
+        : new LuaInvocationExpressionSyntax(memberAccess);
       return otherCtorInvoke;
     }
 

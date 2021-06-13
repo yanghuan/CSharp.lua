@@ -313,12 +313,9 @@ namespace CSharpLua {
       }
 
       private XmlMetaModel.MethodModel GetMethodModel(IMethodSymbol symbol, bool isCheckBaned) {
-        XmlMetaModel.MethodModel methodModel;
-        if (isSingleModel_) {
-          methodModel = models_.First();
-        } else {
-          methodModel = models_.Find(i => IsMethodMatch(i, symbol));
-        }
+        var methodModel = isSingleModel_
+          ? models_.First()
+          : models_.Find(i => IsMethodMatch(i, symbol));
         if (methodModel != null && isCheckBaned) {
           methodModel.CheckBaned(symbol);
         }

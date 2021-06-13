@@ -627,11 +627,10 @@ namespace CSharpLua {
               int index = kAssemblyFields.Length;
               int count = type.Length - index - "Attribute".Length;
               string field = type.Substring(index, count);
-              if (invocation.ArgumentList.Arguments.Count == 1) {
-                assemblyTable.Add(field, invocation.ArgumentList.Arguments[0]);
-              } else {
-                assemblyTable.Add(field, new LuaTableExpression(invocation.ArgumentList.Arguments) { IsSingleLine = true });
-              }
+              assemblyTable.Add(field,
+                invocation.ArgumentList.Arguments.Count == 1
+                  ? invocation.ArgumentList.Arguments[0]
+                  : new LuaTableExpression(invocation.ArgumentList.Arguments) {IsSingleLine = true});
               continue;
             }
           }
@@ -1744,11 +1743,10 @@ namespace CSharpLua {
     }
 
     internal void AddInlineSymbol(IMethodSymbol symbol) {
-      if (symbol.MethodKind == MethodKind.PropertyGet) {
-        inlineSymbols_.Add(symbol.AssociatedSymbol);
-      } else {
-        inlineSymbols_.Add(symbol);
-      }
+      inlineSymbols_.Add(
+        symbol.MethodKind == MethodKind.PropertyGet
+          ? symbol.AssociatedSymbol
+          : symbol);
     }
 
     internal bool IsInlineSymbol(ISymbol symbol) {

@@ -135,11 +135,10 @@ namespace CSharpLua.LuaAst {
         functionExpression.AddParameter(global);
         foreach (var usingDeclare in usingDeclares) {
           LuaIdentifierNameSyntax newPrefixIdentifier = usingDeclare.NewPrefix;
-          if (usingDeclare.Prefix != usingDeclare.NewPrefix) {
-            functionExpression.Body.AddStatement(newPrefixIdentifier.Assignment(usingDeclare.Prefix));
-          } else {
-            functionExpression.Body.AddStatement(newPrefixIdentifier.Assignment(global.MemberAccess(usingDeclare.Prefix)));
-          }
+          functionExpression.Body.AddStatement(
+            usingDeclare.Prefix != usingDeclare.NewPrefix
+              ? newPrefixIdentifier.Assignment(usingDeclare.Prefix)
+              : newPrefixIdentifier.Assignment(global.MemberAccess(usingDeclare.Prefix)));
         }
 
         foreach (var usingDeclare in genericDeclares) {

@@ -34,11 +34,9 @@ namespace CSharpLua.LuaAst {
         throw new ArgumentNullException(nameof(expression));
       }
       Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
-      if (isAsync) {
-        Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AsyncEach, LuaIdentifierNameSyntax.Async, expression);
-      } else {
-        Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each, expression);
-      }
+      Expression = isAsync
+        ? new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AsyncEach, LuaIdentifierNameSyntax.Async, expression)
+        : new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each, expression);
     }
 
     internal override void Render(LuaRenderer renderer) {
