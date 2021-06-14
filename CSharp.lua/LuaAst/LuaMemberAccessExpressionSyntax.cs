@@ -15,11 +15,7 @@ limitations under the License.
 */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public sealed class LuaMemberAccessExpressionSyntax : LuaExpressionSyntax {
@@ -52,7 +48,7 @@ namespace CSharpLua.LuaAst {
     public LuaExpressionSyntax Expression { get; private set; }
     public string OperatorToken { get; private set; }
     public LuaPropertyOrEventIdentifierNameSyntax Name { get; }
-    public readonly LuaArgumentListSyntax ArgumentList = new LuaArgumentListSyntax();
+    public readonly LuaArgumentListSyntax ArgumentList = new();
 
     public LuaPropertyAdapterExpressionSyntax(LuaPropertyOrEventIdentifierNameSyntax name) {
       Name = name;

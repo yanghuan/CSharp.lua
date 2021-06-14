@@ -16,11 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace CSharpLua.LuaAst {
   public sealed class GenericUsingDeclare : IComparable<GenericUsingDeclare> {
@@ -43,7 +40,7 @@ namespace CSharpLua.LuaAst {
         return NewName.Length.CompareTo(other.NewName.Length);
       }
 
-      return NewName.CompareTo(other.NewName);
+      return string.Compare(NewName, other.NewName, StringComparison.Ordinal);
     }
   }
 
@@ -53,18 +50,18 @@ namespace CSharpLua.LuaAst {
     public bool IsFromCode;
 
     public int CompareTo(UsingDeclare other) {
-      return Prefix.CompareTo(other.Prefix);
+      return string.Compare(Prefix, other.Prefix, StringComparison.Ordinal);
     }
   }
 
   public sealed class LuaCompilationUnitSyntax : LuaSyntaxNode {
     public string FilePath { get; }
-    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
-    private readonly LuaStatementListSyntax importAreaStatements = new LuaStatementListSyntax();
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new();
+    private readonly LuaStatementListSyntax importAreaStatements = new();
     private bool isImportLinq_;
     private int typeDeclarationCount_;
-    internal readonly List<UsingDeclare> UsingDeclares = new List<UsingDeclare>();
-    internal readonly List<GenericUsingDeclare> GenericUsingDeclares = new List<GenericUsingDeclare>();
+    internal readonly List<UsingDeclare> UsingDeclares = new();
+    internal readonly List<GenericUsingDeclare> GenericUsingDeclares = new();
 
     public LuaCompilationUnitSyntax(string filePath = "", bool hasGeneratedMark = true) {
       FilePath = filePath;
@@ -138,11 +135,10 @@ namespace CSharpLua.LuaAst {
         functionExpression.AddParameter(global);
         foreach (var usingDeclare in usingDeclares) {
           LuaIdentifierNameSyntax newPrefixIdentifier = usingDeclare.NewPrefix;
-          if (usingDeclare.Prefix != usingDeclare.NewPrefix) {
-            functionExpression.Body.AddStatement(newPrefixIdentifier.Assignment(usingDeclare.Prefix));
-          } else {
-            functionExpression.Body.AddStatement(newPrefixIdentifier.Assignment(global.MemberAccess(usingDeclare.Prefix)));
-          }
+          functionExpression.Body.AddStatement(
+            usingDeclare.Prefix != usingDeclare.NewPrefix
+              ? newPrefixIdentifier.Assignment(usingDeclare.Prefix)
+              : newPrefixIdentifier.Assignment(global.MemberAccess(usingDeclare.Prefix)));
         }
 
         foreach (var usingDeclare in genericDeclares) {
@@ -163,7 +159,7 @@ namespace CSharpLua.LuaAst {
       if (generic.Expression is LuaIdentifierNameSyntax identifier) {
         int pos = identifier.ValueText.IndexOf('.');
         if (pos != -1) {
-          string prefix = identifier.ValueText.Substring(0, pos);
+          string prefix = identifier.ValueText[..pos];
           return UsingDeclares.Exists(i => i.NewPrefix == prefix);
         }
       }

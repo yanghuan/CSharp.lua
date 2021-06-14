@@ -241,10 +241,10 @@ namespace CSharpLua {
           var typeSymbol = (IArrayTypeSymbol)symbol;
           string elementTypeName = GetTypeString(typeSymbol.ElementType);
           return elementTypeName + "[]" == typeString;
-        } else {
-          string name = GetTypeString(symbol);
-          return name == typeString;
         }
+
+        string name = GetTypeString(symbol);
+        return name == typeString;
       }
 
       private static bool IsArgMatch(ITypeSymbol symbol, XmlMetaModel.ArgumentModel parameterModel) {
@@ -313,12 +313,9 @@ namespace CSharpLua {
       }
 
       private XmlMetaModel.MethodModel GetMethodModel(IMethodSymbol symbol, bool isCheckBaned) {
-        XmlMetaModel.MethodModel methodModel;
-        if (isSingleModel_) {
-          methodModel = models_.First();
-        } else {
-          methodModel = models_.Find(i => IsMethodMatch(i, symbol));
-        }
+        var methodModel = isSingleModel_
+          ? models_.First()
+          : models_.Find(i => IsMethodMatch(i, symbol));
         if (methodModel != null && isCheckBaned) {
           methodModel.CheckBaned(symbol);
         }
@@ -332,9 +329,9 @@ namespace CSharpLua {
 
     private sealed class TypeMetaInfo {
       private readonly XmlMetaModel.ClassModel model_;
-      private readonly Dictionary<string, XmlMetaModel.FieldModel> fields_ = new Dictionary<string, XmlMetaModel.FieldModel>();
-      private readonly Dictionary<string, XmlMetaModel.PropertyModel> propertys_ = new Dictionary<string, XmlMetaModel.PropertyModel>();
-      private readonly Dictionary<string, MethodMetaInfo> methods_ = new Dictionary<string, MethodMetaInfo>();
+      private readonly Dictionary<string, XmlMetaModel.FieldModel> fields_ = new();
+      private readonly Dictionary<string, XmlMetaModel.PropertyModel> properties_ = new();
+      private readonly Dictionary<string, MethodMetaInfo> methods_ = new();
 
       public TypeMetaInfo(XmlMetaModel.ClassModel model) {
         model_ = model;
@@ -374,7 +371,7 @@ namespace CSharpLua {
             if (fields_.ContainsKey(propertyModel.name)) {
               throw new ArgumentException($"type [{model_.name}]'s property [{propertyModel.name}] is already exists");
             }
-            propertys_.Add(propertyModel.name, propertyModel);
+            properties_.Add(propertyModel.name, propertyModel);
           }
         }
       }
@@ -401,7 +398,7 @@ namespace CSharpLua {
       }
 
       public XmlMetaModel.PropertyModel GetPropertyModel(string name) {
-        return propertys_.GetOrDefault(name);
+        return properties_.GetOrDefault(name);
       }
 
       public MethodMetaInfo GetMethodMetaInfo(string name) {
@@ -512,9 +509,7 @@ namespace CSharpLua {
 
     private TypeMetaInfo GetTypeMetaInfo(ISymbol symbol, string shortName) {
       var info = typeMetas_.GetOrDefault(shortName);
-      if (info != null) {
-        info.Model.CheckBaned(symbol);
-      }
+      info?.Model.CheckBaned(symbol);
       return info;
     }
 

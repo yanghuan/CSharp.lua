@@ -16,10 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public abstract class LuaStatementSyntax : LuaSyntaxNode {
@@ -50,12 +47,12 @@ namespace CSharpLua.LuaAst {
     }
 
     public static implicit operator LuaExpressionStatementSyntax(LuaExpressionSyntax expression) {
-      return new LuaExpressionStatementSyntax(expression);
+      return new(expression);
     }
   }
 
   public sealed class LuaStatementListSyntax : LuaStatementSyntax {
-    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
@@ -63,11 +60,11 @@ namespace CSharpLua.LuaAst {
   }
   
   public abstract class LuaBaseReturnStatementSyntax : LuaStatementSyntax {
-    public string ReturnKeyword => Tokens.Return;
+    public string ReturnKeyword => Keyword.Return;
   }
 
   public sealed class LuaReturnStatementSyntax : LuaBaseReturnStatementSyntax {
-    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new();
 
     public LuaReturnStatementSyntax() {
     }
@@ -88,7 +85,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaBreakStatementSyntax : LuaStatementSyntax {
-    public string BreakKeyword => Tokens.Break;
+    public string BreakKeyword => Keyword.Break;
 
     private LuaBreakStatementSyntax() { }
 
@@ -96,7 +93,7 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaBreakStatementSyntax Instance = new LuaBreakStatementSyntax();
+    public static readonly LuaBreakStatementSyntax Instance = new();
   }
 
   public sealed class LuaContinueAdapterStatementSyntax : LuaStatementSyntax {
@@ -128,7 +125,7 @@ namespace CSharpLua.LuaAst {
       renderer.Render(this);
     }
 
-    public static readonly LuaBlankLinesStatement One = new LuaBlankLinesStatement(1);
+    public static readonly LuaBlankLinesStatement One = new(1);
   }
 
   public abstract class LuaCommentStatement : LuaStatementSyntax {
@@ -167,7 +164,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaGotoStatement : LuaStatementSyntax {
     public LuaIdentifierNameSyntax Identifier { get; }
-    public string GotoKeyword => Tokens.Goto;
+    public string GotoKeyword => Keyword.Goto;
 
     public LuaGotoStatement(LuaIdentifierNameSyntax identifier) {
       Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
@@ -225,7 +222,7 @@ namespace CSharpLua.LuaAst {
       Params = 1 << 5,
     }
 
-    public readonly List<LuaStatementSyntax> Statements = new List<LuaStatementSyntax>();
+    public readonly List<LuaStatementSyntax> Statements = new();
     public bool IsEmpty => Statements.Count == 0;
     private AttributeFlags attr_;
     public bool HasIgnoreAttribute => HasAttribute(AttributeFlags.Ignore);
@@ -237,7 +234,7 @@ namespace CSharpLua.LuaAst {
 
     public LuaDocumentStatement(string triviaText) {
       var items = triviaText.Replace("///", string.Empty)
-        .Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+        .Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
         .Select(i => i.Trim()).ToList();
 
       var document = new LuaSummaryDocumentStatement();
@@ -267,17 +264,18 @@ namespace CSharpLua.LuaAst {
 
     private static bool IsAttribute(string text, out AttributeFlags attr) {
       attr = AttributeFlags.None;
-      int index = text.IndexOf(kAttributePrefix);
+      int index = text.IndexOf(kAttributePrefix, StringComparison.Ordinal);
       if (index != -1) {
-        string prefix = text.Substring(index + kAttributePrefix.Length);
+        string prefix = text[(index + kAttributePrefix.Length)..];
         if (Enum.TryParse(prefix, out attr)) {
           return true;
-        } else if (prefix.Contains(AttributeFlags.Template.ToString())) {
+        }
+
+        if (prefix.Contains(AttributeFlags.Template.ToString())) {
           attr = AttributeFlags.Template;
           return true;
-        } else {
-          throw new CompilationErrorException($"{prefix} is not define attribute");
         }
+        throw new CompilationErrorException($"{prefix} is not define attribute");
       }
       return false;
     }
@@ -300,7 +298,7 @@ namespace CSharpLua.LuaAst {
     }
 
     public static string ToString(AttributeFlags attribute) {
-      return kAttributePrefix + attribute.ToString();
+      return kAttributePrefix + attribute;
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -309,7 +307,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaSummaryDocumentStatement : LuaStatementSyntax {
-    public readonly List<string> Texts = new List<string>();
+    public readonly List<string> Texts = new();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
