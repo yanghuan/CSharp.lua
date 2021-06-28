@@ -474,8 +474,13 @@ namespace CSharpLua {
         function.AddStatements(block.Statements);
       } else {
         var type = (INamedTypeSymbol)semanticModel_.GetTypeInfo(body.Parent).ConvertedType;
-        var delegateInvokeMethod = type.DelegateInvokeMethod;
         var expression = body.AcceptExpression(this);
+        var delegateInvokeMethod = type.DelegateInvokeMethod;
+        if (delegateInvokeMethod == null) {
+          // is System.Linq.Expressions
+          var delegateType = (INamedTypeSymbol)type.TypeArguments.First();
+          delegateInvokeMethod = delegateType.DelegateInvokeMethod;
+        }
         if (delegateInvokeMethod!.ReturnsVoid) {
           if (expression != LuaExpressionSyntax.EmptyExpression) {
             function.AddStatement(expression);
