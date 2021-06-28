@@ -15,37 +15,28 @@ limitations under the License.
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public sealed class LuaForInStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Expression { get; }
-    public string ForKeyword => Tokens.For;
+    public string ForKeyword => Keyword.For;
     public LuaIdentifierNameSyntax Identifier { get; }
-    public string InKeyword => Tokens.In;
+    public string InKeyword => Keyword.In;
     public LuaExpressionSyntax Placeholder => LuaIdentifierNameSyntax.Placeholder;
 
-    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenToken = Tokens.Do,
-      CloseToken = Tokens.End,
+    public LuaBlockSyntax Body { get; } = new() {
+      OpenToken = Keyword.Do,
+      CloseToken = Keyword.End,
     };
 
     public LuaForInStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax expression, bool isAsync = false) {
-      if (identifier == null) {
-        throw new ArgumentNullException(nameof(identifier));
-      }
       if (expression == null) {
         throw new ArgumentNullException(nameof(expression));
       }
-      Identifier = identifier;
-      if (isAsync) {
-        Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AsyncEach, LuaIdentifierNameSyntax.Async, expression);
-      } else {
-        Expression = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each, expression);
-      }
+      Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
+      Expression = isAsync
+        ? new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.AsyncEach, LuaIdentifierNameSyntax.Async, expression)
+        : new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Each, expression);
     }
 
     internal override void Render(LuaRenderer renderer) {
@@ -54,16 +45,16 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaNumericalForStatementSyntax : LuaStatementSyntax {
-    public string ForKeyword => Tokens.For;
+    public string ForKeyword => Keyword.For;
     public LuaIdentifierNameSyntax Identifier { get; }
     public string EqualsToken => Tokens.Equals;
     public LuaExpressionSyntax StartExpression { get; }
     public LuaExpressionSyntax LimitExpression { get; }
     public LuaExpressionSyntax StepExpression { get; }
 
-    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenToken = Tokens.Do,
-      CloseToken = Tokens.End,
+    public LuaBlockSyntax Body { get; } = new() {
+      OpenToken = Keyword.Do,
+      CloseToken = Keyword.End,
     };
 
     public LuaNumericalForStatementSyntax(LuaIdentifierNameSyntax identifier, LuaExpressionSyntax startExpression, LuaExpressionSyntax limitExpression, LuaExpressionSyntax stepExpression) {
@@ -80,11 +71,11 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaWhileStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Condition { get; }
-    public string WhileKeyword => LuaSyntaxNode.Tokens.While;
+    public string WhileKeyword => Keyword.While;
 
-    public LuaBlockSyntax Body { get; } = new LuaBlockSyntax() {
-      OpenToken = Tokens.Do,
-      CloseToken = Tokens.End,
+    public LuaBlockSyntax Body { get; } = new() {
+      OpenToken = Keyword.Do,
+      CloseToken = Keyword.End,
     };
 
     public LuaWhileStatementSyntax(LuaExpressionSyntax condition) {
@@ -98,8 +89,8 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaRepeatStatementSyntax : LuaStatementSyntax {
     public LuaExpressionSyntax Condition { get; }
-    public string RepeatKeyword => Tokens.Repeat;
-    public string UntilKeyword => Tokens.Until;
+    public string RepeatKeyword => Keyword.Repeat;
+    public string UntilKeyword => Keyword.Until;
     public LuaBlockSyntax Body { get; }
 
     public LuaRepeatStatementSyntax(LuaExpressionSyntax condition, LuaBlockSyntax body = null) {

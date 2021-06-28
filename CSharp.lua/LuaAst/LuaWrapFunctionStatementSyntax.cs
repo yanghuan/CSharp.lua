@@ -14,14 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace CSharpLua.LuaAst {
-  public abstract class LuaWrapFunctionStatementSynatx : LuaStatementSyntax {
+  public abstract class LuaWrapFunctionStatementSyntax : LuaStatementSyntax {
     public LuaExpressionStatementSyntax Statement { get; private set; }
     private readonly LuaFunctionExpressionSyntax function_ = new();
 
@@ -60,7 +56,7 @@ namespace CSharpLua.LuaAst {
     }
   }
 
-  public sealed class LuaNamespaceDeclarationSyntax : LuaWrapFunctionStatementSynatx {
+  public sealed class LuaNamespaceDeclarationSyntax : LuaWrapFunctionStatementSyntax {
     public LuaNamespaceDeclarationSyntax(LuaIdentifierNameSyntax name, bool isContained = false) {
       UpdateIdentifiers(name, isContained ? LuaIdentifierNameSyntax.Namespace : LuaIdentifierNameSyntax.System, LuaIdentifierNameSyntax.Namespace, LuaIdentifierNameSyntax.Namespace);
     }

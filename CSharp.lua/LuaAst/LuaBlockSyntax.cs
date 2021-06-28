@@ -14,17 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public class LuaBlockSyntax : LuaStatementSyntax {
     public string OpenToken { get; set; }
     public string CloseToken { get; set; }
-    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new LuaSyntaxList<LuaStatementSyntax>();
+    public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new();
     private LuaLocalAreaSyntax headVariables_;
 
     public int TempCount;
@@ -58,8 +55,8 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaBlockStatementSyntax : LuaBlockSyntax {
     public LuaBlockStatementSyntax() {
-      OpenToken = Tokens.Do;
-      CloseToken = Tokens.End;
+      OpenToken = Keyword.Do;
+      CloseToken = Keyword.End;
     }
 
     internal override void Render(LuaRenderer renderer) {

@@ -14,11 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public sealed class LuaParameterListSyntax : LuaSyntaxNode {
@@ -33,13 +29,13 @@ namespace CSharpLua.LuaAst {
   }
 
   public class LuaFunctionExpressionSyntax : LuaExpressionSyntax {
-    public readonly LuaParameterListSyntax ParameterList = new LuaParameterListSyntax();
-    public string FunctionKeyword => Tokens.Function;
+    public readonly LuaParameterListSyntax ParameterList = new();
+    public string FunctionKeyword => Keyword.Function;
     public int TempCount;
 
-    public readonly LuaBlockSyntax Body = new LuaBlockSyntax() {
+    public readonly LuaBlockSyntax Body = new() {
       OpenToken = Tokens.Empty,
-      CloseToken = Tokens.End,
+      CloseToken = Keyword.End,
     };
 
     public void AddParameter(LuaIdentifierNameSyntax parameter) {

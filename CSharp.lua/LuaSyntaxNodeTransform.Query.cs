@@ -308,12 +308,12 @@ namespace CSharpLua {
         var typeSymbol = semanticModel_.GetTypeInfo(selectClause.Expression).Type;
         resultSelectorType = GetTypeName(typeSymbol);
         return true;
-      } else {
-        resultSelectorExpression = CreateQueryAnonymousType(rangeVariable.Name, rangeVariable.Name, queryIdentifier.Name, queryIdentifier.Name);
-        resultSelectorType = LuaIdentifierNameSyntax.AnonymousType;
-        rangeVariable = new QueryPackVariable(rangeVariable, queryIdentifier);
-        return false;
       }
+
+      resultSelectorExpression = CreateQueryAnonymousType(rangeVariable.Name, rangeVariable.Name, queryIdentifier.Name, queryIdentifier.Name);
+      resultSelectorType = LuaIdentifierNameSyntax.AnonymousType;
+      rangeVariable = new QueryPackVariable(rangeVariable, queryIdentifier);
+      return false;
     }
 
     private LuaExpressionSyntax BuildJoinClause(LuaExpressionSyntax collection, JoinClauseSyntax node, ref IQueryRangeVariable rangeVariable, out bool isOver) {

@@ -60,7 +60,7 @@ namespace CSharpLua {
     }
 
     private static IEnumerable<string> GetMetas(IEnumerable<string> additionalMetas) {
-      List<string> metas = new List<string>() { Utility.GetCurrentDirectory(kSystemMeta) };
+      List<string> metas = new List<string> { Utility.GetCurrentDirectory(kSystemMeta) };
       if (additionalMetas != null) {
         metas.AddRange(additionalMetas);
       }
@@ -80,7 +80,7 @@ namespace CSharpLua {
 
     private static List<string> GetSystemLibs() {
       string privateCorePath = typeof(object).Assembly.Location;
-      List<string> libs = new List<string>() { privateCorePath };
+      List<string> libs = new List<string> { privateCorePath };
 
       string systemDir = Path.GetDirectoryName(privateCorePath);
       foreach (string path in Directory.EnumerateFiles(systemDir, "*.dll")) {
@@ -123,12 +123,12 @@ namespace CSharpLua {
       if (Include == null) {
         GetGenerator().Generate(output_);
       } else {
-        var luaSystemLibs = GetIncludeCorSysemPaths(Include);
+        var luaSystemLibs = GetIncludeCorSystemPaths(Include);
         GetGenerator().GenerateSingleFile("out.lua", output_, luaSystemLibs);
       }
     }
 
-    private static IEnumerable<string> GetIncludeCorSysemPaths(string dir) {
+    private static IEnumerable<string> GetIncludeCorSystemPaths(string dir) {
       const string kBeginMark = "load(\"";
 
       string allFilePath = Path.Combine(dir, "All.lua");
@@ -139,7 +139,7 @@ namespace CSharpLua {
       List<string> luaSystemLibs = new();
       var lines = File.ReadAllLines(allFilePath);
       foreach (string line in lines) {
-        int i = line.IndexOf(kBeginMark);
+        int i = line.IndexOf(kBeginMark, StringComparison.Ordinal);
         if (i != -1) {
           int begin = i + kBeginMark.Length;
           int end = line.IndexOf('"', begin);
@@ -159,14 +159,14 @@ namespace CSharpLua {
       }
 
       isDirectory = false;
-      return Utility.Split(input_, true);
+      return Utility.Split(input_);
     }
 
     private LuaSyntaxGenerator GetGenerator() {
       var files = GetSourceFiles(out bool isDirectory);
       var codes = files.Select(i => (File.ReadAllText(i), i));
       var libs = GetLibs(libs_, out var luaModuleLibs);
-      var setting = new LuaSyntaxGenerator.SettingInfo() {
+      var setting = new LuaSyntaxGenerator.SettingInfo {
         IsClassic = isClassic_,
         IsExportMetadata = IsExportMetadata,
         BaseFolder = isDirectory ? input_ : null,
@@ -192,7 +192,7 @@ namespace CSharpLua {
     /// </summary>
     public static string CompileSingleCode(string code, IEnumerable<Stream> libs, IEnumerable<Stream> metas) {
       var codes = new (string, string)[] { (code, "") };
-      var generator = new LuaSyntaxGenerator(codes, libs, null, metas, new LuaSyntaxGenerator.SettingInfo() { 
+      var generator = new LuaSyntaxGenerator(codes, libs, null, metas, new LuaSyntaxGenerator.SettingInfo { 
         IsNoConcurrent = true
       });
       return generator.GenerateSingle();

@@ -16,9 +16,6 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpLua.LuaAst {
   public abstract class LuaExpressionSyntax : LuaSyntaxNode {
@@ -52,11 +49,11 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaBinaryExpressionSyntax And(LuaExpressionSyntax right) {
-      return Binary(Tokens.And, right);
+      return Binary(Keyword.And, right);
     }
 
     public LuaBinaryExpressionSyntax Or(LuaExpressionSyntax right) {
-      return Binary(Tokens.Or, right);
+      return Binary(Keyword.Or, right);
     }
 
     public LuaBinaryExpressionSyntax EqualsEquals(LuaExpressionSyntax right) {
@@ -68,35 +65,35 @@ namespace CSharpLua.LuaAst {
     }
 
     public LuaBinaryExpressionSyntax Binary(string operatorToken, LuaExpressionSyntax right) {
-      return new LuaBinaryExpressionSyntax(this, operatorToken, right);
+      return new(this, operatorToken, right);
     }
 
     public LuaMemberAccessExpressionSyntax MemberAccess(LuaExpressionSyntax name, bool isObjectColon = false) {
-      return new LuaMemberAccessExpressionSyntax(this, name, isObjectColon);
+      return new(this, name, isObjectColon);
     }
 
     public LuaAssignmentExpressionSyntax Assignment(LuaExpressionSyntax right) {
-      return new LuaAssignmentExpressionSyntax(this, right);
+      return new(this, right);
     }
 
     public LuaParenthesizedExpressionSyntax Parenthesized() {
-      return new LuaParenthesizedExpressionSyntax(this);
+      return new(this);
     }
 
     public LuaInvocationExpressionSyntax Invocation() {
-      return new LuaInvocationExpressionSyntax(this);
+      return new(this);
     }
 
     public LuaInvocationExpressionSyntax Invocation(params LuaExpressionSyntax[] arguments) {
-      return new LuaInvocationExpressionSyntax(this, arguments);
+      return new(this, arguments);
     }
 
     public LuaInvocationExpressionSyntax Invocation(IEnumerable<LuaExpressionSyntax> arguments) {
-      return new LuaInvocationExpressionSyntax(this, arguments);
+      return new(this, arguments);
     }
 
     public LuaPrefixUnaryExpressionSyntax Not() {
-      return new LuaPrefixUnaryExpressionSyntax(this, LuaSyntaxNode.Tokens.Not);
+      return new(this, Keyword.Not);
     }
   }
 
@@ -116,9 +113,9 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaMultipleAssignmentExpressionSyntax : LuaExpressionSyntax {
-    public LuaSyntaxList<LuaExpressionSyntax> Lefts { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+    public LuaSyntaxList<LuaExpressionSyntax> Lefts { get; } = new();
     public string OperatorToken => Tokens.Equals;
-    public LuaSyntaxList<LuaExpressionSyntax> Rights { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+    public LuaSyntaxList<LuaExpressionSyntax> Rights { get; } = new();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
@@ -126,7 +123,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaLineMultipleExpressionSyntax : LuaExpressionSyntax {
-    public LuaSyntaxList<LuaExpressionSyntax> Assignments { get; } = new LuaSyntaxList<LuaExpressionSyntax>();
+    public LuaSyntaxList<LuaExpressionSyntax> Assignments { get; } = new();
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
@@ -178,7 +175,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaCodeTemplateExpressionSyntax : LuaExpressionSyntax {
-    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new();
 
     public LuaCodeTemplateExpressionSyntax() { }
 
@@ -193,7 +190,7 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaArrayRankSpecifierSyntax : LuaSyntaxNode {
     public int Rank { get; }
-    public readonly List<LuaExpressionSyntax> Sizes = new List<LuaExpressionSyntax>();
+    public readonly List<LuaExpressionSyntax> Sizes = new();
 
     public LuaArrayRankSpecifierSyntax(int rank) {
       Rank = rank;
@@ -209,7 +206,7 @@ namespace CSharpLua.LuaAst {
       RankSpecifier = rankSpecifier ?? throw new ArgumentNullException(nameof(rankSpecifier));
     }
 
-    public bool IsSimapleArray {
+    public bool IsSimpleArray {
       get {
         return RankSpecifier.Rank == 1;
       }
@@ -233,7 +230,7 @@ namespace CSharpLua.LuaAst {
   }
 
   public sealed class LuaSequenceListExpressionSyntax : LuaExpressionSyntax {
-    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new LuaSyntaxList<LuaExpressionSyntax>();
+    public readonly LuaSyntaxList<LuaExpressionSyntax> Expressions = new();
 
     public LuaSequenceListExpressionSyntax() {
     }
