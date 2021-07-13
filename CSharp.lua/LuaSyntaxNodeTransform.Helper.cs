@@ -107,7 +107,7 @@ namespace CSharpLua {
       return searcher.Find(root);
     }
 
-    private SyntaxNode FindParent(SyntaxNode node, Func<SyntaxNode, bool> match) {
+    private static SyntaxNode FindParent(SyntaxNode node, Func<SyntaxNode, bool> match) {
       var parent = node.Parent;
       while (true) {
         if (match(parent)) {
@@ -117,11 +117,11 @@ namespace CSharpLua {
       }
     }
 
-    private SyntaxNode FindParent(SyntaxNode node, SyntaxKind kind) {
+    private static SyntaxNode FindParent(SyntaxNode node, SyntaxKind kind) {
       return FindParent(node, i => i.IsKind(kind));
     }
 
-    private (SyntaxNode node, BlockSyntax body) FindParentMethodDeclaration(SyntaxNode node) {
+    private static (SyntaxNode node, BlockSyntax body) FindParentMethodDeclaration(SyntaxNode node) {
       BlockSyntax body = null;
       var parent = FindParent(node, i => {
         switch (i.Kind()) {
@@ -150,11 +150,15 @@ namespace CSharpLua {
       return (parent, body);
     }
 
-    private BlockSyntax FindParentMethodBody(SyntaxNode node) {
+    private static BlockSyntax FindParentMethodBody(SyntaxNode node) {
       return FindParentMethodDeclaration(node).body;
     }
 
-    private string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
+    private static bool IsLastStatement(StatementSyntax statement) {
+      return FindParentMethodBody(statement)?.Statements.Last() == statement;
+    }
+
+    private static string GetUniqueIdentifier(string name, SyntaxNode node, int index = 0) {
       var (root, _) = FindParentMethodDeclaration(node);
       while (true) {
         string newName = Utility.GetNewIdentifierName(name, index);
@@ -1929,6 +1933,7 @@ namespace CSharpLua {
         goto Fail;
       }
 
+      var prevMethodInfo = CurMethodInfoOrNull;
       var invocation = invocationFn();
       List<LuaExpressionSyntax> refOrOutParameters = new List<LuaExpressionSyntax>();
       MethodInfo methodInfo = new MethodInfo(symbol, refOrOutParameters) {
@@ -1950,8 +1955,11 @@ namespace CSharpLua {
         isThisMemberAccess = true;
       }
 
-      if (parameterList is {Parameters: {Count: > 0}}) {
+      if (parameterList?.Parameters.Count > 0) {
         var parameters = new List<LuaIdentifierNameSyntax>();
+        if (invocation.Expression is LuaInternalMethodExpressionSyntax && prevMethodInfo.Symbol.IsStatic) {
+          parameters.Add(LuaIdentifierNameSyntax.This);
+        }
         foreach (var parameterNode in parameterList.Parameters) {
           var parameter = parameterNode.Accept<LuaIdentifierNameSyntax>(this);
           if (parameter != LuaIdentifierNameSyntax.This) {
@@ -1970,7 +1978,7 @@ namespace CSharpLua {
       semanticModel_ = generator_.GetSemanticModel(declarationNode.SyntaxTree);
       if (bodyNode != null) {
         var body = (LuaBlockSyntax)Visit(bodyNode);
-        block.Statements.AddRange(body.Statements);
+        block.Statements.AddRange(body!.Statements);
       } else {
         var assignment = new LuaMultipleAssignmentExpressionSyntax();
         assignment.Lefts.AddRange(methodInfo.InliningReturnVars);
@@ -2008,6 +2016,9 @@ namespace CSharpLua {
         CurBlock.AddStatement(new LuaLocalVariablesSyntax(methodInfo.InliningReturnVars));
       }
 
+      if (methodInfo.HasInlineGoto) {
+        block.Statements.Add(new LuaLabeledStatement(LuaIdentifierNameSyntax.InlineReturnLabel));
+      }
       CurBlock.AddStatement(block.Statements.Count == 1 ? block.Statements.First() : block);
 
       if (methodInfo.InliningReturnVars.Count > 0) {

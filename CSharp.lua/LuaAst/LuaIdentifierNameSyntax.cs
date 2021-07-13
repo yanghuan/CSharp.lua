@@ -115,9 +115,10 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax AwaitAnything = "Await";
     public static readonly LuaIdentifierNameSyntax Async = "async";
     public static readonly LuaIdentifierNameSyntax AsyncEach = "System.asynceach";
-    public static readonly LuaIdentifierNameSyntax MorenManyLocalVarTempTable = "const";
+    public static readonly LuaIdentifierNameSyntax MoreManyLocalVarTempTable = "const";
     public static readonly LuaIdentifierNameSyntax InterfaceDefaultMethodVar = "extern";
     public static readonly LuaIdentifierNameSyntax SystemInit = "System.init";
+    public static readonly LuaIdentifierNameSyntax InlineReturnLabel = "out";
 
     #region QueryExpression
     public static readonly LuaIdentifierNameSyntax LinqCast = "Linq.Cast";

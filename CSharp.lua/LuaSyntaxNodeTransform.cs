@@ -34,6 +34,7 @@ namespace CSharpLua {
       public IList<LuaExpressionSyntax> RefOrOutParameters { get; }
       public List<LuaIdentifierNameSyntax> InliningReturnVars { get; set; }
       public bool IsInlining => InliningReturnVars != null;
+      public bool HasInlineGoto;
       public bool HasYield;
 
       public MethodInfo(IMethodSymbol symbol) {
@@ -659,7 +660,7 @@ namespace CSharpLua {
       table.Add(new LuaStringLiteralExpressionSyntax(result.Symbol.Name));
       table.Add(result.Symbol.GetMetaDataAttributeFlags());
       if (isMoreThanLocalVariables) {
-        table.Add(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(result.Name));
+        table.Add(LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(result.Name));
       } else {
         table.Add(result.Name);
       }
@@ -1458,7 +1459,7 @@ namespace CSharpLua {
       return returnStatement;
     }
 
-    private LuaStatementSyntax InternalVisitReturnStatement(LuaExpressionSyntax expression) {
+    private LuaStatementSyntax InternalVisitReturnStatement(LuaExpressionSyntax expression, ReturnStatementSyntax node = null) {
       if (CurFunction is LuaCheckLoopControlExpressionSyntax check) {
         check.HasReturn = true;
         return BuildLoopControlReturnStatement(expression);
@@ -1488,9 +1489,18 @@ namespace CSharpLua {
           result = returnStatement;
         }
       } else {
-        if (curMethodInfo is {IsInlining: true}) {
+        if (curMethodInfo?.IsInlining == true) {
           Contract.Assert(curMethodInfo.InliningReturnVars.Count == 1);
-          result = curMethodInfo.InliningReturnVars.First().Assignment(expression);
+          var assignment = curMethodInfo.InliningReturnVars.First().Assignment(expression);
+          if (node != null && !IsLastStatement(node)) {
+            var statements = new LuaStatementListSyntax();
+            statements.Statements.Add(assignment);
+            statements.Statements.Add(new LuaGotoStatement(LuaIdentifierNameSyntax.InlineReturnLabel));
+            result = statements;
+            curMethodInfo.HasInlineGoto = true;
+          } else {
+            result = assignment;
+          }
         } else {
           result = new LuaReturnStatementSyntax(expression);
         }
@@ -1500,7 +1510,7 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitReturnStatement(ReturnStatementSyntax node) {
       var expression = node.Expression != null ? VisitExpression(node.Expression) : null;
-      var result = InternalVisitReturnStatement(expression);
+      var result = InternalVisitReturnStatement(expression, node);
       if (node.Parent.IsKind(SyntaxKind.Block) && node.Parent.Parent is MemberDeclarationSyntax) {
         var block = (BlockSyntax)node.Parent;
         if (block.Statements.Last() != node) {
@@ -2617,7 +2627,7 @@ namespace CSharpLua {
       }
 
       var name = node.Name.AcceptExpression(this);
-      if (generator_.IsInlineSymbol(symbol)) {
+      if (generator_.IsInlineSymbol(symbol) && symbol.Kind == SymbolKind.Property) {
         return name;
       }
 
@@ -3088,7 +3098,7 @@ namespace CSharpLua {
           return new LuaInternalMethodExpressionSyntax(methodName);
         }
         if (CurTypeSymbol.IsContainsInternalSymbol(symbol) && IsMoreThanLocalVariables(symbol)) {
-          return LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(methodName);
+          return LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(methodName);
         }
         return methodName;
       }

@@ -183,9 +183,9 @@ namespace CSharpLua.LuaAst {
 
     private void CheckTooManyVariables(bool isLocalOrUpvalues) {
       if (!hasTooManyLocalVariables_) {
-        local_.Variables.Add(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable);
+        local_.Variables.Add(LuaIdentifierNameSyntax.MoreManyLocalVarTempTable);
         methodList_.Statements.Add(new LuaShortCommentStatement(isLocalOrUpvalues ? " too many local variables (limit is 200)" : "too many upvalues (limit is 60)"));
-        methodList_.Statements.Add(LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.Assignment(LuaTableExpression.Empty));
+        methodList_.Statements.Add(LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.Assignment(LuaTableExpression.Empty));
         hasTooManyLocalVariables_ = true;
       }
     }
@@ -210,7 +210,7 @@ namespace CSharpLua.LuaAst {
         if (document is {IsEmpty: false}) {
           methodList_.Statements.Add(document);
         }
-        var left = LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(name);
+        var left = LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(name);
         methodList_.Statements.Add(left.Assignment(method));
         if (isInterfaceDefaultMethod) {
           AddInterfaceDefaultMethod(name, left);
@@ -256,7 +256,7 @@ namespace CSharpLua.LuaAst {
           if (isReadOnly) {
             if (isMoreThanLocalVariables && value != null && isImmutable) {
               CheckTooManyVariables(true);
-              var left = LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(name);
+              var left = LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(name);
               methodList_.Statements.Add(left.Assignment(value));
               AddResultTable(name, left);
             } else {
@@ -538,7 +538,7 @@ namespace CSharpLua.LuaAst {
       if (expression is LuaIdentifierNameSyntax name) {
         if (upvalueCount >= kMaxUpvalueCount) {
           CheckTooManyVariables(false);
-          var left = LuaIdentifierNameSyntax.MorenManyLocalVarTempTable.MemberAccess(name);
+          var left = LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(name);
           methodList_.Statements.Add(left.Assignment(name));
           table.Items[nameIndex] = new LuaSingleTableItemSyntax(left);
         } else {
