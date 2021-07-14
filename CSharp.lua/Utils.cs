@@ -59,8 +59,13 @@ namespace CSharpLua {
   }
 
   public sealed class BugErrorException : Exception {
+    private const string kIssueAddress = "Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue";
+
     public BugErrorException(SyntaxNode node, Exception e)
-      : base($"{node.GetLocationString()}: Compiler has a bug, thanks to commit issue at https://github.com/yanghuan/CSharp.lua/issue", e) {
+      : base($"{node.GetLocationString()}: {kIssueAddress}", e) {
+    }
+
+    public BugErrorException(string message) : base($"{message}: {kIssueAddress}") {
     }
   }
 

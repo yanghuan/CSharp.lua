@@ -529,11 +529,14 @@ namespace CSharpLua {
     }
 
     private List<INamedTypeSymbol> GetExportTypes() {
+      const int kMaxLoopCount = 10000;
+
       List<INamedTypeSymbol> allTypes = new List<INamedTypeSymbol>();
       if (types_.Count > 0) {
         types_.Sort((x, y) => string.Compare(x.ToString(), y.ToString(), StringComparison.Ordinal));
 
         List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>> { types_ };
+        int count = 0;
         while (true) {
           HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>();
           var lastTypes = typesList.Last();
@@ -557,7 +560,12 @@ namespace CSharpLua {
             break;
           }
 
+          if (count >= kMaxLoopCount) {
+            throw new BugErrorException($"check depend failed, {string.Join(',', lastTypes)}");
+          }
+
           typesList.Add(parentTypes.ToList());
+          ++count;
         }
 
         typesList.Reverse();
@@ -1154,7 +1162,7 @@ namespace CSharpLua {
               ISymbol implementationSymbol;
               if (!IsImplicitExtend(typeSymbol, child)) {
                 implementationSymbol = child.FindImplementationForInterfaceMember(symbol);
-                Contract.Assert(implementationSymbol != null);
+                //Contract.Assert(implementationSymbol != null);
               } else {
                 implementationSymbol = FindImplicitImplementationForInterfaceMember(child, symbol);
               }
