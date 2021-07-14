@@ -46,17 +46,20 @@ namespace CSharpLua {
       return creationExpression;
     }
 
+    private LuaExpressionSyntax GetObjectCreationInitializer(LuaExpressionSyntax creationExpression, InitializerExpressionSyntax initializer, ExpressionSyntax node) {
+      int prevTempCount = CurFunction.TempCount;
+      var temp = GetTempIdentifier();
+      CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
+      FillObjectInitializerExpression(temp, initializer);
+      ReleaseTempIdentifiers(prevTempCount);
+      return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
+    }
+
     private LuaExpressionSyntax GetObjectCreationInitializer(LuaExpressionSyntax creationExpression, BaseObjectCreationExpressionSyntax node) {
       if (node.Initializer == null) {
         return creationExpression;
       }
-
-      int prevTempCount = CurFunction.TempCount;
-      var temp = GetTempIdentifier();
-      CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
-      FillObjectInitializerExpression(temp, node.Initializer);
-      ReleaseTempIdentifiers(prevTempCount);
-      return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
+      return GetObjectCreationInitializer(creationExpression, node.Initializer, node);
     }
 
     public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
@@ -105,18 +108,23 @@ namespace CSharpLua {
         if (expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
           var assignment = (AssignmentExpressionSyntax)expression;
           var left = assignment.Left.Accept(this);
-          var right = assignment.Right.AcceptExpression(this);
-          if (assignment.Left.IsKind(SyntaxKind.ImplicitElementAccess)) {
-            var argumentList = (LuaArgumentListSyntax)left;
-            LuaIdentifierNameSyntax methodName = LuaSyntaxNode.Tokens.Set;
-            var invocation = temp.MemberAccess(methodName, true).Invocation();
-            invocation.ArgumentList.Arguments.AddRange(argumentList!.Arguments);
-            invocation.AddArgument(right);
-            CurBlock.AddStatement(invocation);
+          if (assignment.Right.IsKind(SyntaxKind.CollectionInitializerExpression)) {
+            var rightNode = (InitializerExpressionSyntax)assignment.Right;
+            GetObjectCreationInitializer(new LuaMemberAccessExpressionSyntax(temp, (LuaExpressionSyntax)left, true), rightNode, expression);
           } else {
-            var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, (LuaExpressionSyntax)left, false);
-            var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, right);
-            CurBlock.AddStatement(assignmentExpression);
+            var right = assignment.Right.AcceptExpression(this);
+            if (assignment.Left.IsKind(SyntaxKind.ImplicitElementAccess)) {
+              var argumentList = (LuaArgumentListSyntax)left;
+              LuaIdentifierNameSyntax methodName = LuaSyntaxNode.Tokens.Set;
+              var invocation = temp.MemberAccess(methodName, true).Invocation();
+              invocation.ArgumentList.Arguments.AddRange(argumentList!.Arguments);
+              invocation.AddArgument(right);
+              CurBlock.AddStatement(invocation);
+            } else {
+              var memberAccess = BuildFieldOrPropertyMemberAccessExpression(temp, (LuaExpressionSyntax)left, false);
+              var assignmentExpression = BuildLuaSimpleAssignmentExpression(memberAccess, right);
+              CurBlock.AddStatement(assignmentExpression);
+            }
           }
         } else {
           var symbol = semanticModel_.GetCollectionInitializerSymbolInfo(expression).Symbol;

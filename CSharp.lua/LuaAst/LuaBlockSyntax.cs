@@ -23,8 +23,8 @@ namespace CSharpLua.LuaAst {
     public string CloseToken { get; set; }
     public readonly LuaSyntaxList<LuaStatementSyntax> Statements = new();
     private LuaLocalAreaSyntax headVariables_;
-
     public int TempCount;
+    public int ReleaseCount;
     public List<int> UsingDeclarations;
     public bool HasUsingDeclarations => UsingDeclarations != null;
 

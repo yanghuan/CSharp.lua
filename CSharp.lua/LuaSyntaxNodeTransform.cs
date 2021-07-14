@@ -230,13 +230,13 @@ namespace CSharpLua {
     }
 
     private void AddReleaseTempIdentifier(LuaIdentifierNameSyntax tempName) {
-      ++releaseTempIdentifierCount_;
+      CurBlock.ReleaseCount++;
     }
 
     private void ReleaseTempIdentifiers() {
-      if (releaseTempIdentifierCount_ > 0) {
-        PopTempCount(releaseTempIdentifierCount_);
-        releaseTempIdentifierCount_ = 0;
+      if (CurBlock.ReleaseCount > 0) {
+        PopTempCount(CurBlock.ReleaseCount);
+        CurBlock.ReleaseCount = 0;
       }
     }
 
