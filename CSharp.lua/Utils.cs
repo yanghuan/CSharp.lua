@@ -1159,11 +1159,24 @@ namespace CSharpLua {
       }
 
       var containingType = type.ContainingType;
-      if (containingType is {IsGenericType: false}) {
+      if (containingType?.IsGenericType == false) {
         return containingType.IsContainsInternalSymbol(symbol);
       }
 
       return false;
+    }
+
+    public static bool IsContainsType(this INamedTypeSymbol definition, ISymbol type) {
+      if (definition.EQ(type.ContainingType)) {
+        return true;
+      }
+
+      var containingType = type.ContainingType;
+      if (containingType == null) {
+        return false;
+      }
+
+      return definition.IsContainsType(containingType);
     }
 
     public static bool IsDependExists(this INamedTypeSymbol type, INamedTypeSymbol other) {

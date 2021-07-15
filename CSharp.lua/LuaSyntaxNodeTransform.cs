@@ -79,7 +79,6 @@ namespace CSharpLua {
     private readonly Stack<LuaIfStatementSyntax> ifStatements_ = new();
     private readonly Stack<LuaSwitchAdapterStatementSyntax> switches_ = new();
 
-    private int releaseTempIdentifierCount_;
     private int noImportTypeNameCounter_;
     public bool IsNoImportTypeName => noImportTypeNameCounter_ > 0;
     private int genericTypeCounter_;
@@ -192,7 +191,6 @@ namespace CSharpLua {
       if (block.TempCount > 0) {
         Contract.Assert(CurFunction.TempCount >= block.TempCount);
         CurFunction.TempCount -= block.TempCount;
-        releaseTempIdentifierCount_ = 0;
       }
     }
 
