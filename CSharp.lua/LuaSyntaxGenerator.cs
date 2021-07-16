@@ -233,8 +233,8 @@ namespace CSharpLua {
         luaCompilationUnits = compilation_.SyntaxTrees.Select(i => CreateCompilationUnit(i, isSingleFile)).ToList();
       }
 
-      CheckExportEnums();
       CheckPartialTypes();
+      CheckExportEnums();
       CheckRefactorNames();
       return luaCompilationUnits.Where(i => !i.IsEmpty);
     }
