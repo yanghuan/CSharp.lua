@@ -155,7 +155,8 @@ namespace CSharpLua {
       if (node.NameEquals != null) {
         name = node.NameEquals.Accept<LuaIdentifierNameSyntax>(this);
       } else {
-        name = (LuaIdentifierNameSyntax)expression;
+        var property = semanticModel_.GetDeclaredSymbol(node);
+        name = property!.Name;
       }
       return new LuaKeyValueTableItemSyntax(name, expression);
     }
