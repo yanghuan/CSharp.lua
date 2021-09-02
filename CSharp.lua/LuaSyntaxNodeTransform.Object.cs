@@ -253,7 +253,10 @@ namespace CSharpLua {
 
       {
         if (arrayType.IsSimpleArray) {
-          var size = arrayType.RankSpecifier.Sizes[0];
+          var size = arrayType.RankSpecifier.Sizes.FirstOrDefault() ?? LuaNumberLiteralExpressionSyntax.Zero;
+          if (size is LuaNumberLiteralExpressionSyntax { Number: 0 }) {
+            return BuildArray(arrayType, Array.Empty<LuaExpressionSyntax>());
+          }
           return BuildArray(arrayType, size);
         }
 
