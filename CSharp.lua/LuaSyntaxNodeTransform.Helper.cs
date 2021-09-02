@@ -785,11 +785,13 @@ namespace CSharpLua {
 
     private static bool IsMethodTypeArgument(IMethodSymbol method, ITypeSymbol symbol) {
       if (method.TypeArguments.Length > 0) {
-        return method.TypeArguments.Any(i => symbol.IsTypeParameterExists(i));
+        return method.TypeArguments.Any(symbol.IsTypeParameterExists);
       }
 
       if (method.MethodKind is MethodKind.LambdaMethod or MethodKind.LocalFunction) {
-        return IsMethodTypeArgument((IMethodSymbol)method.ContainingSymbol, symbol);
+        if (method.ContainingSymbol is IMethodSymbol containingMethod) {
+          return IsMethodTypeArgument(containingMethod, symbol);
+        }
       }
       return false;
     }
