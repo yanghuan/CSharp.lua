@@ -59,6 +59,7 @@ namespace CSharpLua.LuaAst {
     private LuaTableExpression metaEvents_;
     private LuaTableExpression metaFields_;
     private LuaTableExpression metaMethods_;
+    private List<LuaStatementSyntax> maxUpvalueFields_;
 
     public bool IsIgnoreExport => document_.HasIgnoreAttribute;
     public bool IsExportMetadata => document_.HasMetadataAttribute;
@@ -607,6 +608,7 @@ namespace CSharpLua.LuaAst {
       CheckGenericUsingDeclares(body);
       CheckStaticCtorFunction(body);
       CheckCtorsFunction(body);
+      CheckMaxUpvalues();
       body.Statements.Add(methodList_);
       CheckMetadata(renderer);
       if (IsClassUsed) {
@@ -644,6 +646,18 @@ namespace CSharpLua.LuaAst {
         AddAllStatementsTo(Body, renderer);
       }
       base.Render(renderer);
+    }
+
+    private void CheckMaxUpvalues() {
+      if (maxUpvalueFields_ != null) {
+        CheckTooManyVariables(false);
+        methodList_.Statements.AddRange(maxUpvalueFields_);
+      }
+    }
+
+    internal void AddMaxUpvalue(LuaMemberAccessExpressionSyntax left, LuaIdentifierNameSyntax right) {
+      maxUpvalueFields_ ??= new();
+      maxUpvalueFields_.Add(left.Assignment(right));
     }
   }
 

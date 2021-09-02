@@ -3077,7 +3077,7 @@ namespace CSharpLua {
       return BuildDelegateNameExpression(symbol, LuaIdentifierNameSyntax.This, name, node);
     }
 
-    private LuaExpressionSyntax GetMethodNameExpression(IMethodSymbol symbol, NameSyntax node) {
+    private LuaExpressionSyntax GetMethodNameExpression(IMethodSymbol symbol, NameSyntax node, bool isFromIdentifier) {
       LuaIdentifierNameSyntax methodName = GetMemberName(symbol);
       if (symbol.IsStatic) {
         if (CheckUsingStaticNameSyntax(symbol, node, methodName, out var outExpression)) {
@@ -3098,6 +3098,15 @@ namespace CSharpLua {
         if (CurTypeSymbol.IsContainsInternalSymbol(symbol) && IsMoreThanLocalVariables(symbol)) {
           return LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(methodName);
         }
+
+        if (isFromIdentifier && IsMaxUpValues(symbol, out bool isNeedImport)) {
+          var name = LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(methodName);
+          if (isNeedImport) {
+            CurType.AddMaxUpvalue(name, methodName);
+          }
+          return name;
+        }
+
         return methodName;
       }
 
@@ -3209,7 +3218,7 @@ namespace CSharpLua {
           var methodSymbol = (IMethodSymbol)symbol;
           identifier = methodSymbol.MethodKind == MethodKind.LocalFunction
             ? GetLocalMethodName(methodSymbol, node)
-            : GetMethodNameExpression(methodSymbol, node);
+            : GetMethodNameExpression(methodSymbol, node, true);
           break;
         }
         case SymbolKind.Property: {

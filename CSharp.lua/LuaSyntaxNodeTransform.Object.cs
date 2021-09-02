@@ -194,9 +194,8 @@ namespace CSharpLua {
       ISymbol symbol = semanticModel_.GetSymbolInfo(node).Symbol;
       Contract.Assert(symbol != null);
       if (symbol.Kind == SymbolKind.Method) {
-        return GetMethodNameExpression((IMethodSymbol)symbol, node);
+        return GetMethodNameExpression((IMethodSymbol)symbol, node, false);
       }
-
       return GetTypeName(symbol);
     }
 

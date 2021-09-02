@@ -32,6 +32,7 @@ namespace CSharpLua {
     private sealed class FunctionUpValuesInfo {
       private readonly HashSet<string> strings_ = new();
       private readonly HashSet<ISymbol> symbols_ = new();
+      private readonly Dictionary<ISymbol, bool> maxSymbols_ = new();
 
       public int Count { get; private set; }
 
@@ -53,6 +54,28 @@ namespace CSharpLua {
           return strings_.Contains(name);
         }
         return symbols_.Contains((ISymbol)nameStringOrSymbol);
+      }
+
+      internal void AddMaxSymbol(object nameStringOrSymbol) {
+        if (nameStringOrSymbol is ISymbol symbol) {
+          symbol = symbol.OriginalDefinition;
+          if (!maxSymbols_.ContainsKey(symbol)) {
+            maxSymbols_.Add(symbol, false);
+          }
+        }
+      }
+
+      internal bool ContainsMaxSymbol(ISymbol symbol, out bool isNeedImport) {
+        isNeedImport = false;
+        symbol = symbol.OriginalDefinition;
+        if (maxSymbols_.TryGetValue(symbol, out bool isAssignment)) {
+          if (!isAssignment) {
+            isNeedImport = true;
+            maxSymbols_[symbol] = true;
+          }
+          return true;
+        }
+        return false;
       }
     }
 
@@ -170,7 +193,7 @@ namespace CSharpLua {
       }
     }
 
-    private bool CheckLocalBadWord(ref string name, SyntaxNode node) {
+    private static bool CheckLocalBadWord(ref string name, SyntaxNode node) {
       if (LuaSyntaxNode.IsReservedWord(name)) {
         name = GetUniqueIdentifier(name, node, 1);
         return true;
@@ -858,6 +881,7 @@ namespace CSharpLua {
         if (upValues != null) {
           if (!upValues.Contains(nameStringOrSymbol)) {
             if (upValues.Count >= kMaxCountUpValues) {
+              upValues.AddMaxSymbol(nameStringOrSymbol);
               return true;
             }
             upValues.Add(nameStringOrSymbol);
@@ -868,6 +892,21 @@ namespace CSharpLua {
           upValues.Add(nameStringOrSymbol);
         }
       }
+      return false;
+    }
+
+    private bool IsMaxUpValues(ISymbol symbol, out bool isNeedImport) {
+      isNeedImport = false;
+      if (IsLuaNewest) {
+        return false;
+      }
+
+      var current = CurFunctionOrNull;
+      if (current != null) {
+        var upValues = functionUpValues_.GetOrDefault(current);
+        return upValues != null && upValues.ContainsMaxSymbol(symbol, out isNeedImport);
+      }
+
       return false;
     }
 
