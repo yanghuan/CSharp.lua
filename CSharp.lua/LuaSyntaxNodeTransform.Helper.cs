@@ -644,8 +644,29 @@ namespace CSharpLua {
           return lineSpan.StartLinePosition.Line + 1;
         }
         case CallerAttributeKind.Member: {
-          var parentMethod = (MethodDeclarationSyntax)FindParent(node, SyntaxKind.MethodDeclaration);
-          return new LuaStringLiteralExpressionSyntax(parentMethod.Identifier.ValueText);
+          string memberName = null;
+          FindParent(node, i => {
+            switch (i.Kind()) {
+              case SyntaxKind.MethodDeclaration: {
+                var method = (MethodDeclarationSyntax)i;
+                memberName = method.Identifier.ValueText;
+                return true;
+              }
+              case SyntaxKind.PropertyDeclaration: {
+                var property = (PropertyDeclarationSyntax)i;
+                memberName = property.Identifier.ValueText;
+                return true;
+              }
+              case SyntaxKind.EventDeclaration: {
+                var @event = (EventDeclarationSyntax)i;
+                memberName = @event.Identifier.ValueText;
+                return true;
+              }
+            }
+            return false;
+          });
+          Contract.Assert(memberName != null);
+          return new LuaStringLiteralExpressionSyntax(memberName);
         }
         case CallerAttributeKind.FilePath: {
           return BuildStringLiteralExpression(generator_.RemoveBaseFolder(node.SyntaxTree.FilePath));
