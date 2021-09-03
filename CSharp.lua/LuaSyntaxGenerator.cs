@@ -1724,6 +1724,9 @@ namespace CSharpLua {
               if (field.IsStringConstNotInline()) {
                 return true;
               }
+              if (field.IsStatic && field.IsPrivate()) {
+                return true;
+              }
               break;
             }
           }

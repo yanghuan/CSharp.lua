@@ -869,18 +869,29 @@ namespace CSharpLua {
       }
     }
 
+    private int MaxUpValueCount {
+      get {
+        int count = LuaSyntaxNode.kUpvaluesMaxCount - 2;
+        var methodSymbol = CurMethodInfoOrNull?.Symbol;
+        if (methodSymbol?.MethodKind == MethodKind.SharedConstructor) {
+          int fieldCount = methodSymbol.ContainingType.GetMembers().Count(i => i.IsStatic && i.IsPrivate() && i.Kind == SymbolKind.Field);
+          count -= fieldCount;
+        }
+        return count;
+      }
+    }
+
     private bool IsMoreThanUpValues(object nameStringOrSymbol) {
       if (IsLuaNewest) {
         return false;
       }
 
-      const int kMaxCountUpValues = LuaSyntaxNode.kUpvaluesMaxCount - 2;
       var current = CurFunctionOrNull;
       if (current != null) {
         var upValues = functionUpValues_.GetOrDefault(current);
         if (upValues != null) {
           if (!upValues.Contains(nameStringOrSymbol)) {
-            if (upValues.Count >= kMaxCountUpValues) {
+            if (upValues.Count >= MaxUpValueCount) {
               upValues.AddMaxSymbol(nameStringOrSymbol);
               return true;
             }
