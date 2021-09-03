@@ -1319,12 +1319,14 @@ namespace CSharpLua {
       Contract.Assert(methodSymbol.MethodKind == MethodKind.SharedConstructor);
       int initializerCount = 0;
       HashSet<ITypeSymbol> types = new();
-      var fields = methodSymbol.ContainingType.GetMembers().Where(i => i.Kind == SymbolKind.Field && i.IsStatic && i.IsPrivate()).ToArray();
+      var fields = methodSymbol.ContainingType.GetMembers().Where(i => i.Kind == SymbolKind.Field && i.IsStatic);
       foreach (IFieldSymbol field in fields) {
         var node = (VariableDeclaratorSyntax)field.GetDeclaringSyntaxNode();
         var valueExpression = node.Initializer?.Value;
         if (!valueExpression.IsNull()) {
-          ++initializerCount;
+          if (field.IsPrivate()) {
+            ++initializerCount;
+          }
           if (valueExpression.IsKind(SyntaxKind.ArrayCreationExpression) || valueExpression.IsKind(SyntaxKind.ObjectCreationExpression)) {
             types.Add(field.Type);
           } else {
