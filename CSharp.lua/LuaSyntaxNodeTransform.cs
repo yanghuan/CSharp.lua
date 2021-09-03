@@ -1068,7 +1068,9 @@ namespace CSharpLua {
                 if (isGet) {
                   functionExpression.AddStatement(new LuaReturnStatementSyntax(bodyExpression));
                 } else {
-                  functionExpression.AddStatement(bodyExpression);
+                  if (bodyExpression != LuaExpressionSyntax.EmptyExpression) {
+                    functionExpression.AddStatement(bodyExpression);
+                  }
                 }
               }
               if (methodInfo.HasYield) {
@@ -2132,7 +2134,8 @@ namespace CSharpLua {
           return multipleAssignment;
         }
         default: {
-          var temp = GetTempIdentifier();
+          bool isReturnsVoid = CurMethodInfoOrNull?.Symbol.ReturnsVoid == true;
+          var temp = !isReturnsVoid ? GetTempIdentifier() : LuaIdentifierNameSyntax.Placeholder;
           locals.Variables.Add(temp);
           multipleAssignment.Lefts.Add(temp);
           FillRefOrOutArguments();
@@ -2146,7 +2149,7 @@ namespace CSharpLua {
           if (propertyStatements.Statements.Count > 0) {
             CurBlock.Statements.Add(propertyStatements);
           }
-          return temp;
+          return !isReturnsVoid ? temp : LuaExpressionSyntax.EmptyExpression;
         }
       }
     }
