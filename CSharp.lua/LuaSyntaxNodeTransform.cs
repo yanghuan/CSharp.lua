@@ -2134,7 +2134,10 @@ namespace CSharpLua {
           return multipleAssignment;
         }
         default: {
-          bool isReturnsVoid = CurMethodInfoOrNull?.Symbol.ReturnsVoid == true;
+          bool isReturnsVoid = false;
+          if (node.Parent.IsKind(SyntaxKind.ArrowExpressionClause)) {
+            isReturnsVoid = CurMethodInfoOrNull?.Symbol.ReturnsVoid == true;
+          }
           var temp = !isReturnsVoid ? GetTempIdentifier() : LuaIdentifierNameSyntax.Placeholder;
           locals.Variables.Add(temp);
           multipleAssignment.Lefts.Add(temp);
