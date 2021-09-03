@@ -874,8 +874,7 @@ namespace CSharpLua {
         int count = LuaSyntaxNode.kUpvaluesMaxCount - 2;
         var methodSymbol = CurMethodInfoOrNull?.Symbol;
         if (methodSymbol?.MethodKind == MethodKind.SharedConstructor) {
-          int fieldCount = methodSymbol.ContainingType.GetMembers().Count(i => i.IsStatic && i.IsPrivate() && i.Kind == SymbolKind.Field);
-          count -= fieldCount;
+          count -= methodSymbol.GetSharedConstructorFieldNeedUpValueCount();
         }
         return count;
       }

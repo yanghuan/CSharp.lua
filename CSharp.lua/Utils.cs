@@ -636,6 +636,10 @@ namespace CSharpLua {
       return isGet;
     }
 
+    public static bool IsNull(this ExpressionSyntax node) {
+      return node == null || node.IsKind(SyntaxKind.NullLiteralExpression);
+    }
+
     public static bool IsSubclassOf(this ITypeSymbol child, ITypeSymbol parent) {
       if (parent.SpecialType == SpecialType.System_Object) {
         return true;
@@ -1310,6 +1314,27 @@ namespace CSharpLua {
     public static bool IsInterfaceDefaultMethod(this IMethodSymbol symbol) {
       return symbol.ContainingType.TypeKind == TypeKind.Interface && !symbol.IsStatic && !symbol.IsAbstract;
     }
+
+    public static int GetSharedConstructorFieldNeedUpValueCount(this IMethodSymbol methodSymbol) {
+      Contract.Assert(methodSymbol.MethodKind == MethodKind.SharedConstructor);
+      int initializerCount = 0;
+      HashSet<ITypeSymbol> types = new();
+      var fields = methodSymbol.ContainingType.GetMembers().Where(i => i.Kind == SymbolKind.Field && i.IsStatic && i.IsPrivate()).ToArray();
+      foreach (IFieldSymbol field in fields) {
+        var node = (VariableDeclaratorSyntax)field.GetDeclaringSyntaxNode();
+        var valueExpression = node.Initializer?.Value;
+        if (!valueExpression.IsNull()) {
+          ++initializerCount;
+          if (valueExpression.IsKind(SyntaxKind.ArrayCreationExpression) || valueExpression.IsKind(SyntaxKind.ObjectCreationExpression)) {
+            types.Add(field.Type);
+          } else {
+            ++initializerCount;
+          }
+        }
+      }
+      return initializerCount + types.Count;
+    }
+
 
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {
       const int kParametersMaxCount = 256;
