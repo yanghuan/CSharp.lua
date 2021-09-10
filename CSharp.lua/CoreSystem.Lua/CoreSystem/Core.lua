@@ -635,7 +635,7 @@ if version < 5.3 then
   end
 
   function System.toInt64(v, checked) 
-    if v >= -9223372036854775808 and v <= 9223372036854775807 then
+    if v >= (-9223372036854775807 - 1) and v <= 9223372036854775807 then
       return v
     end
     if checked then
@@ -809,7 +809,7 @@ else
   end
 
   function System.toInt64(v, checked)
-    return toInt(v, -9223372036854775808, 9223372036854775807, 0xffffffffffffffff, 0x7fffffffffffffff, checked)
+    return toInt(v, (-9223372036854775807 - 1), 9223372036854775807, 0xffffffffffffffff, 0x7fffffffffffffff, checked)
   end
 
   function System.toUInt64(v, checked)
@@ -891,13 +891,13 @@ end
 
 function System.ToInt64(v, checked)
   v = trunc(v)
-  if v >= -9223372036854775808 and v <= 9223372036854775807 then
+  if v >= (-9223372036854775807 - 1) and v <= 9223372036854775807 then
     return v
   end
   if checked then
     throw(System.OverflowException(), 1) 
   end
-  return -9223372036854775808
+  return (-9223372036854775807 - 1)
 end
 
 function System.ToSingle(v, checked)

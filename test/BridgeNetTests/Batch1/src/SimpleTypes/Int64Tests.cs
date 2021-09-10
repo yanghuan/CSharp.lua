@@ -36,7 +36,7 @@ namespace Bridge.ClientTest.SimpleTypes
         }
 #endif
 
-#if !__JIT__
+#if false
         [Test]
         public void MinMaxValuesAreCorrect()
         {

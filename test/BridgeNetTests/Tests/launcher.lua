@@ -30,6 +30,12 @@ local conf = {
 }
 require("All")("", conf)          -- coresystem.lua/All.lua
 
+
+local function InnerTest()   
+end
+
+InnerTest()
+
 local modules = {
   "BridgeAttributes",
   "BridgeTestNUnit",

@@ -838,7 +838,7 @@ Array = {
       end
     end
     local i, j = index + 1, index + count
-    while i <= j do
+    while i < j do
       t[i], t[j] = t[j], t[i]
       i = i + 1
       j = j - 1

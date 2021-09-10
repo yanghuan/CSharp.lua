@@ -87,7 +87,7 @@ namespace Bridge.ClientTest.SimpleTypes
         }
 #endif
 
-#if !__JIT__
+#if !__JIT__ && !__LUA54__
         [Test]
         public void OverflowWorks()
         {

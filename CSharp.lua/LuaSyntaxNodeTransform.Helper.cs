@@ -499,10 +499,15 @@ namespace CSharpLua {
             double v = (double)constantValue;
             return (LuaDoubleLiteralExpressionSyntax)v;
           }
-          default: {
-            return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
+          case TypeCode.Int64: {
+            if (constantValue is long.MinValue) {
+              const long kMinInteger = long.MinValue + 1;     // in lua5.4 long.MinValue will be float
+              return new LuaIdentifierLiteralExpressionSyntax($"({kMinInteger} - 1)");
+            }
+            break;
           }
         }
+        return new LuaIdentifierLiteralExpressionSyntax(constantValue.ToString());
       }
 
       return LuaIdentifierLiteralExpressionSyntax.Nil;

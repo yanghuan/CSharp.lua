@@ -320,6 +320,7 @@ namespace Bridge.ClientTest
             Assert.AreStrictEqual(false, d != e);
         }
 
+#if !__MOONJIT220__
         [Test]
         public void LiftedLessThanWorks()
         {
@@ -359,6 +360,7 @@ namespace Bridge.ClientTest
             Assert.AreStrictEqual(false, a >= d);
             Assert.AreStrictEqual(false, d >= e);
         }
+#endif
 
         [Test]
         public void LiftedSubtractionWorks()

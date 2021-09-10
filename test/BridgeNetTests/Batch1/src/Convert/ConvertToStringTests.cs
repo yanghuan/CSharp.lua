@@ -12,6 +12,9 @@ namespace Bridge.ClientTest.ConvertTests
     [TestFixture(TestNameFormat = "Convert.ToString - {0}")]
     public class ConvertToStringTests
     {
+        private static readonly string FloatNanString = float.NaN.ToString();
+        private static readonly string DoubleNanString = double.NaN.ToString();
+
         [Test]
         public static void FromBoxedObject()
         {
@@ -123,12 +126,12 @@ namespace Bridge.ClientTest.ConvertTests
             // Double
             "-12.2364",
             "-12.236465923406",
-            "-1.7753e-083",
+            double.Parse("-1.7753e-83").ToString(),
             "1.2345e+235",
             "120",
             "-inf",
             "inf",
-            "nan",
+            DoubleNanString,
 
             // Single
             "-12.2364",
@@ -136,7 +139,7 @@ namespace Bridge.ClientTest.ConvertTests
             "120",
             "-inf",
             "inf",
-            "nan",
+            FloatNanString,
 
             // TODO : Uncomment when IConvertible is implemented. #822
             //"-12.23647",
@@ -589,8 +592,8 @@ namespace Bridge.ClientTest.ConvertTests
         public static void FromSingleArray()
         {
             float[] testValues = new float[] { float.MinValue, 0f, 1f, 1000f, float.MaxValue, float.NegativeInfinity, float.PositiveInfinity, float.Epsilon, float.NaN };
-            string[] expectedValues1 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
-            string[] expectedValues2 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, "nan" };
+            string[] expectedValues1 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, FloatNanString };
+            string[] expectedValues2 = new string[] { ConvertConstants.SINGLE_MIN_STRING, "0", "1", "1000", ConvertConstants.SINGLE_MAX_STRING, "-inf", "inf", ConvertConstants.SINGLE_EPSILON_STRING, FloatNanString };
 
             for (int i = 0; i < testValues.Length; i++)
             {
@@ -606,7 +609,7 @@ namespace Bridge.ClientTest.ConvertTests
         public static void FromDoubleArray()
         {
             double[] testValues = new double[] { -double.MaxValue, 0, 1, 1000, double.MaxValue, double.NegativeInfinity, double.PositiveInfinity, double.Epsilon, double.NaN };
-            string[] expectedValues = new string[] { ConvertConstants.DOUBLE_MIN_STRING, "0", "1", "1000", ConvertConstants.DOUBLE_MAX_STRING, "-inf", "inf", ConvertConstants.DOUBLE_EPSILON_STRING, "nan" };
+            string[] expectedValues = new string[] { ConvertConstants.DOUBLE_MIN_STRING, "0", "1", "1000", ConvertConstants.DOUBLE_MAX_STRING, "-inf", "inf", ConvertConstants.DOUBLE_EPSILON_STRING, DoubleNanString };
 
             // Vanila Test Cases
             for (int i = 0; i < testValues.Length; i++)

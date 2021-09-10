@@ -44,6 +44,7 @@ local getmetatable = getmetatable
 local setmetatable = setmetatable
 local select = select
 local type = type
+local tonumber = tonumber
 local String
 
 local function toString(t, isch)
@@ -220,7 +221,7 @@ local function formatBuild(format, len, select, ...)
     end
     i, j, s = find(format, "^(%d+)}", i)
     if not i then throwFormatError() end
-    s = s + 1
+    s = tonumber(s) + 1
     if s > len then throwFormatError() end
     s = select(s, ...)
     s = (s ~= nil and s ~= System.null) and toString(s)

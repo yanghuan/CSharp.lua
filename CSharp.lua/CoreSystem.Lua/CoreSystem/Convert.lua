@@ -87,7 +87,7 @@ local function toChar(value)
   if value == nil then return 0 end
   local typename = type(value)
   if typename == "number" then
-    if value ~= floor(value) or value > 9223372036854775807 or value < -9223372036854775808 then
+    if value ~= floor(value) or value > 9223372036854775807 or value < (-9223372036854775807 - 1) then
       throw(InvalidCastException("InvalidCast_FromTo_Char"))
     end
     if value < 0 or value > 65535 then 
@@ -254,7 +254,7 @@ local function objectToInt64(value)
 end
 
 local function toInt64(value, fromBase)
-  return toNumber(value, -9223372036854775808, 9223372036854775807, ParseInt64, objectToInt64, fromBase) 
+  return toNumber(value, (-9223372036854775807 - 1), 9223372036854775807, ParseInt64, objectToInt64, fromBase) 
 end
 
 local function objectToUInt64(value)
@@ -341,9 +341,23 @@ local function changeType(value, conversionType)
   return ic.ToType(conversionType)
 end
 
+local rexp
+if math.frexp then
+  rexp = function (x)
+    local _, v = math.frexp(x)
+    return v
+  end
+else
+  local abs, log = math.abs, math.log
+  local log2 = log(2)
+  rexp = function (x)
+    return floor(log(abs(x)) / log2) + 1
+  end
+end
+
 local function toBits(num, bits)
   -- returns a table of bits, most significant first.
-  bits = bits or math.max(1, select(2, math.frexp(num)))
+  bits = bits or math.max(1, rexp(num))
   local t = {} -- will contain the bits        
   for b = bits, 1, -1 do
     local i =  num % 2

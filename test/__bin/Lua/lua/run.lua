@@ -5,9 +5,10 @@ local function execute(cmd)
 end
 
 local luaVersions = {
-  "Lua5.3",
-  "LuaJIT-2.0.2",
-  --"MoonJIT-2.2.0"
+  { "Lua5.3", "__LUA53__" },
+  { "LuaJIT-2.0.2", "__LUAJIT202__" },
+  { "MoonJIT-2.2.0", "__MOONJIT220__" },
+  { "Lua5.4", "__LUA54__" },
 }
 
 local function compile(arg)
@@ -58,6 +59,10 @@ end
 
 local function runAll(t, args)
   for _, v in ipairs(luaVersions) do
+    local define
+    if type(v) == "table" then
+      v, define = v[1], v[2]
+    end
     print("--------------------", v, "--------------------")
     for _, arg in ipairs(args) do
       if v:find("JIT") then
@@ -66,6 +71,9 @@ local function runAll(t, args)
       else
         t.classic = false
         t.extra = "-csc /define:DEBUG"
+      end
+      if define then
+        t.extra = t.extra .. ';' .. define
       end
       arg.__index = arg
       setmetatable(t, arg)
