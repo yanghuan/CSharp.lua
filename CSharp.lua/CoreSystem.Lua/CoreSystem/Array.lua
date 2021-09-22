@@ -18,6 +18,7 @@ local System = System
 local define = System.define
 local throw = System.throw
 local div = System.div
+local bnot = System.bnot
 local trueFn = System.trueFn
 local falseFn = System.falseFn
 local lengthFn = System.lengthFn
@@ -31,6 +32,7 @@ local IndexOutOfRangeException = System.IndexOutOfRangeException
 local NotSupportedException = System.NotSupportedException
 local EqualityComparer = System.EqualityComparer
 local Comparer_1 = System.Comparer_1
+local IEnumerable_1 = System.IEnumerable_1
 local IEnumerator_1 = System.IEnumerator_1
 
 local assert = assert
@@ -196,6 +198,35 @@ local function addRange(t, collection)
   versions[t] = (versions[t] or 0) + 1
 end
 
+local function clear(t)
+  local size = #t
+  if size > 0 then
+    for i = 1, size do
+      t[i] = nil
+    end
+    versions[t] = (versions[t] or 0) + 1
+  end
+end
+
+local function first(t)
+  local v = t[1]
+  if v == nil then throw(InvalidOperationException())  end
+  if v ~= null then
+    return v
+  end
+  return nil
+end
+
+local function last(t)
+  local n = #t
+  if n == 0 then throw(InvalidOperationException()) end
+  local v = t[n]
+  if v ~= null then
+    return v
+  end
+  return nil
+end
+
 local function unset()
   throw(NotSupportedException("Collection is read-only."))
 end
@@ -335,7 +366,42 @@ local function findAll(t, match)
   return list
 end
 
-local function getComp(t, comparer)
+local function binarySearch(t, ...)
+  if t == nil then throw(ArgumentNullException("array")) end
+  local len = #t
+  local index, count, v, comparer
+  local n = select("#", ...)
+  if n == 1 or n == 2 then
+    index, count, v, comparer = 0, len, ...
+  else
+    index, count, v, comparer = ...
+  end
+  checkIndexAndCount(t, index, count)
+  local compare
+  if comparer == nil then
+    comparer = Comparer_1(t.__genericT__).getDefault()
+    compare = comparer.Compare 
+  else
+    compare = comparer.Compare
+  end
+  local lo = index
+  local hi = index + count - 1
+  while lo <= hi do
+    local i = lo + div(hi - lo, 2)
+    local item = t[i + 1]
+    if item == null then item = nil end
+    local order = compare(comparer, item, v);
+    if order == 0 then return i end
+    if order < 0 then
+      lo = i + 1
+    else
+      hi = i - 1
+    end
+  end
+  return bnot(lo)
+end
+
+local function getSortComp(t, comparer)
   local compare
   if comparer then
     if type(comparer) == "function" then
@@ -362,10 +428,328 @@ end
 
 local function sort(t, comparer)
   if #t > 1 then
-    tsort(t, getComp(t, comparer))
+    tsort(t, getSortComp(t, comparer))
     versions[t] = (versions[t] or 0) + 1
   end
 end
+
+local function addOrder(t, v, comparer)
+  local i = binarySearch(t, v, comparer)
+  if i >= 0 then return false end
+  tinsert(t, bnot(i) + 1, v == nil and null or v)
+  return true
+end
+
+local function addOrderRange(t, collection)
+  if collection == nil then throw(ArgumentNullException("collection")) end
+  local comparer, n = t.comparer, #t
+  if collection.GetEnumerator == arrayEnumerator then
+    for i = 1, #collection do
+      local v = collection[i]
+      if v == null then v = nil end
+      addOrder(t, v, comparer)
+    end
+  else
+    for _, v in each(collection) do
+      addOrder(t, v, comparer)
+    end
+  end
+  if #t ~= n then
+    versions[t] = (versions[t] or 0) + 1
+  end
+end
+
+local function exceptWithOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  if #t == 0 then return end
+  if t == other then
+    clear(t)
+    return
+  end
+  local comparer, n = t.comparer, #t
+  if other.GetEnumerator == arrayEnumerator then
+    for i = 1, n do
+      local v = t[i]
+      if v == null then v = nil end
+      local i = binarySearch(t, v, comparer)
+      if i >= 0 then
+        tremove(t, i + 1)
+      end
+    end
+  else
+    for _, v in each(other) do
+      local i = binarySearch(t, v, comparer)
+      if i >= 0 then
+        tremove(t, i + 1)
+      end
+    end
+  end
+  if #t ~= n then
+    versions[t] = (versions[t] or 0) + 1
+  end
+end
+
+local function intersectWithOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  if #t == 0 then return end
+  if t == other then return end
+  local comparer = t.comparer
+  local array = arrayFromTable({}, t.__genericT__)
+  for _, v in each(other) do
+    local i = binarySearch(t, v, comparer)
+    if i >= 0 then
+      array[#array + 1] = v == nil and null or v
+    end
+  end
+  clear(t)
+  addOrderRange(t, array)
+end
+
+local function isSubsetOfOrderWithSameEC(t, n, comparer, set)
+  for i = 1, n do
+    local v = t[i]
+    if v == null then v = nil end
+    local j = binarySearch(set, v, comparer)
+    if j < 0 then
+      return false
+    end
+  end
+  return true
+end
+
+local function checkOrderUniqueAndUnfoundElements(t, n, comparer, other, returnIfUnfound)
+  if n == 0 then
+    local numElementsInOther = 0
+    for _, v in each(other) do
+      numElementsInOther = numElementsInOther + 1
+      break
+    end
+    return 0, numElementsInOther
+  end
+  local uniqueFoundCount, unfoundCount, mark = 0, 0, {}
+  for _, v in each(other) do
+    local i = binarySearch(t, v, comparer)
+    if i >= 0 then
+      if not mark[i] then
+        mark[i] = true
+        uniqueFoundCount = uniqueFoundCount + 1
+      end
+    else
+      unfoundCount = unfoundCount + 1
+      if returnIfUnfound then
+        break
+      end
+    end
+  end
+  return uniqueFoundCount, unfoundCount
+end
+
+local function isProperSubsetOfOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  if t == other then return false end
+  local comparer, n = t.comparer, #t
+  if System.is(other, System.SortedSet(t.__genericT__)) then
+    if comparer == other.comparer then
+      if n >= #other then return false end
+      return isSubsetOfOrderWithSameEC(t, n, comparer, set)
+    end
+  end
+  local uniqueCount, unfoundCount = checkOrderUniqueAndUnfoundElements(t, n, comparer, other)
+  return uniqueCount == n and unfoundCount > 0
+end
+
+local function isProperSupersetOfOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  local n = #t
+  if n == 0 then return false end
+  if System.is(other, System.ICollection) then
+    if other:getCount() == 0 then
+      return true
+    end
+  end
+  local comparer = t.comparer
+  if System.is(other, System.SortedSet(t.__genericT__)) then
+    if comparer == other.comparer then
+      local n1 = #other
+      if n1 >= n then return false end
+      return isSubsetOfOrderWithSameEC(other, n1, comparer, t)
+    end
+  end
+  local uniqueCount, unfoundCount = checkOrderUniqueAndUnfoundElements(t, n, comparer, other, true)
+  return uniqueCount < n and unfoundCount == 0
+end
+
+local function isSubsetOfOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  local n = #t
+  if n == 0 then return true end
+  local comparer = t.comparer
+  if System.is(other, System.SortedSet(t.__genericT__)) then
+    if comparer == other.comparer then
+      if n > #other then return false end
+      return isSubsetOfOrderWithSameEC(t, n, comparer, set)
+    end
+  end
+  local uniqueCount, unfoundCount = checkOrderUniqueAndUnfoundElements(t, n, comparer, other)
+  return uniqueCount == n and unfoundCount >= 0
+end
+
+local function isSupersetOfOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  if System.is(other, System.ICollection) then
+    if other:getCount() == 0 then
+      return true
+    end
+  end
+  local comparer, n = t.comparer, #t
+  if System.is(other, System.SortedSet(t.__genericT__)) then
+    if comparer == other.comparer then
+      local n1 = #other
+      if n < n1 then return false end
+      return isSubsetOfOrderWithSameEC(other, n1, comparer, t)
+    end
+  end
+  for _, v in each(other) do
+    local i = binarySearch(t, v, comparer)
+    if i < 0 then
+      return false
+    end
+  end
+  return true
+end
+
+local function isOverlapsOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  local n = #t
+  if n == 0 then return false end
+  if System.is(other, System.ICollection) and other:getCount() == 0 then return false end
+  local comparer = t.comparer
+  if System.is(other, System.SortedSet(t.__genericT__)) and comparer == other.comparer then
+    local c = comparer.Compare
+    if c(comparer, first(t), last(other)) > 0 or c(comparer, last(t), first(other)) < 0 then
+      return false
+    end
+  end
+  for _, v in each(other) do
+    local i = binarySearch(t, v, comparer)
+    if i >= 0 then
+      return true
+    end
+  end
+  return false
+end
+
+local function equalsOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  local comparer, n = t.comparer, #t
+  if System.is(other, System.SortedSet(t.__genericT__)) and comparer == other.comparer then
+    local n1 = #other
+    if n ~= n1 then return false end
+    local c = comparer.Compare
+    for i = 1, n do
+      local v, v1 = t[i], other[i]
+      if v == null then v = nil end
+      if v1 == null then v1 = nil end
+      if c(comparer, v, v1) ~= 0 then
+        return false
+      end
+    end
+    return true
+  end
+  local uniqueCount, unfoundCount = checkOrderUniqueAndUnfoundElements(t, n, comparer, other, true)
+  return uniqueCount == n and unfoundCount == 0
+end
+
+local function symmetricExceptWithOrder(t, other)
+  if other == nil then throw(ArgumentNullException("other")) end
+  local n = #t
+  if n == 0 then
+    addOrderRange(other)
+    return
+  end
+  if t == other then
+    clear(t)
+    return
+  end
+  for _, v in each(other) do
+    local i = binarySearch(t, v, comparer)
+    if i >= 0 then
+      tremove(t, i + 1)
+    else
+      addOrder(t, v, comparer)
+    end
+  end
+end
+
+local function tryGetValueOrder(t, equalValue)
+  local i = binarySearch(t, equalValue, t.comparer)
+  if i >= 0 then
+    local v = t[i]
+    if v == null then v = nil end
+    return true, v
+  end
+  return false, t.__genericT__:default()
+end
+
+local function getViewBetweenOrder(t, lowerValue, upperValue)
+  local comparer = t.comparer
+  if comparer:Compare(lowerValue, upperValue) > 0 then
+    throw(ArgumentException("lowerBound is greater than upperBound"))
+  end
+  local n = #t
+  local i = binarySearch(t, lowerValue, comparer)
+  if i < 0 then i = bnot(i) end
+  local set = { comparer = comparer }
+  if i < n then
+    local j = binarySearch(t, upperValue, comparer)
+    if j < 0 then j = bnot(j) - 1 end
+    if i <= j then
+      tmove(t, i + 1, j + 1, 1, set)
+    end
+  end
+  return setmetatable(set, System.SortedSet(t.__genericT__))
+end
+
+local SortedSetEqualityComparerFn
+local SortedSetEqualityComparer = {
+  __ctor__ = function (this, equalityComparer, comparer)
+    local T = this.__genericT__
+    this.comparer = comparer or Comparer_1(T).getDefault()
+    this.equalityComparer = equalityComparer or EqualityComparer(T).getDefault()
+  end,
+  EqualsOf = function (this, x, y)
+    if x == nil then return y == nil end
+    if y == nil then return false end
+    return equalsOrder(x, y)
+  end,
+  GetHashCodeOf = function (this, set)
+    local hashCode = 0
+    if set ~= nil then
+      for i = 1, #set do
+        local v = set[i]
+        if v == null then v = nil end
+        hashCode = System.xor(hashCode, System.band(this.equalityComparer:GetHashCodeOf(v), 0x7FFFFFFF))
+      end
+    end
+    return hashCode
+  end,
+  EqualsObj = function (this, obj)
+    if System.is(obj, SortedSetEqualityComparerFn(this.__genericT__)) then
+      return this.comparer == obj.comparer
+    end
+    return false
+  end,
+  GetHashCode = function (this)
+    return System.xor(this.comparer:GetHashCode(), this.equalityComparer:GetHashCode())
+  end
+}
+
+SortedSetEqualityComparerFn = define("System.SortedSetEqualityComparer", function (T)
+  return {
+    base = { System.IEqualityComparer_1(T) },
+    __genericT__ = T
+  }
+end, SortedSetEqualityComparer, 1)
 
 local ArrayEnumerator = define("System.ArrayEnumerator", function (T)
   return {
@@ -404,13 +788,23 @@ arrayEnumerator = function (t, T)
   return setmetatable({ list = t, index = 1, version = versions[t], currnet = T:default() }, ArrayEnumerator(T))
 end
 
-local ArrayReverseEnumerator = define("System.ArrayReverseEnumerator", function (T)
+local ArrayReverseEnumerable 
+
+local function reverseEnumerator(t)
+  local T = t.__genericT__
+  return setmetatable({ list = t, index = #t, version = versions[t], currnet = T:default() }, ArrayReverseEnumerable(T))
+end
+
+ArrayReverseEnumerable = define("System.ArrayReverseEnumerable", function (T)
   return {
-    base = { IEnumerator_1(T) }
+    base = { IEnumerable_1(T), IEnumerator_1(T) }
   }
 end, {
   getCurrent = System.getCurrent, 
   Dispose = System.emptyFn,
+  GetEnumerator = function (this)
+    return reverseEnumerator(this.list)
+  end,
   Reset = function (this)
     this.index = #this.list
     this.current = nil
@@ -436,9 +830,8 @@ end, {
   end
 }, 1)
 
-local function reverseEnumerator(t)
-  local T = t.__genericT__
-  return setmetatable({ list = t, index = #t, version = versions[t], currnet = T:default() }, ArrayReverseEnumerator(T))
+local function reverseEnumerable(t)
+  return setmetatable({ list = t }, ArrayReverseEnumerable(t.__genericT__))
 end
 
 local function checkArrayIndex(index1, index2)
@@ -460,11 +853,24 @@ Array = {
   set = set,
   get = get,
   ctorList = function (t, ...)
-    local len = select("#", ...)
-    if len == 0 then return end
+    local n = select("#", ...)
+    if n == 0 then return end
     local collection = ...
     if type(collection) == "number" then return end
     addRange(t, collection)
+  end,
+  ctorOrderList = function(t, ...)
+    local n = select("#", ...)
+    if n == 0 then
+      t.comparer = Comparer_1(t.__genericT__).getDefault()
+    else
+      local collection, comparer = ...
+      if collection == nil then throw(ArgumentNullException("collection")) end
+      t.comparer = comparer or Comparer_1(t.__genericT__).getDefault()
+      if collection then
+        addOrderRange(t, collection)
+      end
+    end
   end,
   add = add,
   addObj = function (this, item)
@@ -474,28 +880,38 @@ Array = {
     return add(this, item)
   end,
   addRange = addRange,
+  addOrder = function (t, v)
+    local success = addOrder(t, v, t.comparer)
+    if success then
+      versions[t] = (versions[t] or 0) + 1
+    end
+    return success
+  end,
+  addOrderRange = addOrderRange,
   AsReadOnly = function (t)
     return System.ReadOnlyCollection(t.__genericT__)(t)
   end,
-  clear = function (t)
-    local size = #t
-    if size > 0 then
-      for i = 1, size do
-        t[i] = nil
-      end
-      versions[t] = (versions[t] or 0) + 1
-    end
+  clear = clear,
+  containsOrder = function (t, v)
+    return binarySearch(t, v, t.comparer) >= 0
   end,
+  createSetComparer = function (T, equalityComparer)
+    return SortedSetEqualityComparerFn(T)(equalityComparer)
+  end,
+  exceptWithOrder = exceptWithOrder,
   findAll = function (t, match)
     return setmetatable(findAll(t, match), System.List(t.__genericT__))
   end,
-  first = function (t)
-    if #t == 0 then throw(InvalidOperationException()) end
+  first = first,
+  firstOrDefault = function (t)
     local v = t[1]
-    if v ~= null then
+    if v == nil then
+      return t.__genericT__:default()
+    elseif v == null then
+      return nil
+    else
       return v
     end
-    return nil
   end,
   insert = function (t, index, v)
     if index < 0 or index > #t then
@@ -531,14 +947,27 @@ Array = {
     end
     versions[t] = (versions[t] or 0) + 1
   end,
-  last = function (t)
+  getViewBetweenOrder = getViewBetweenOrder,
+  intersectWithOrder = intersectWithOrder,
+  isProperSubsetOfOrder = isProperSubsetOfOrder,
+  isProperSupersetOfOrder = isProperSupersetOfOrder,
+  isSubsetOfOrder = isSubsetOfOrder,
+  isSupersetOfOrder = isSupersetOfOrder,
+  isOverlapsOrder = isOverlapsOrder,
+  equalsOrder = equalsOrder,
+  symmetricExceptWithOrder = symmetricExceptWithOrder,
+  tryGetValueOrder = tryGetValueOrder,
+  last = last,
+  lastOrDefault = function (t)
     local n = #t
-    if n == 0 then throw(InvalidOperationException()) end
     local v = t[n]
-    if v ~= null then
+    if v == nil then
+      return t.__genericT__:default()
+    elseif v == null then
+      return nil
+    else
       return v
     end
-    return nil
   end,
   popFirst = function (t)
     if #t == 0 then throw(InvalidOperationException()) end
@@ -612,6 +1041,15 @@ Array = {
     end
     versions[t] = (versions[t] or 0) + 1
   end,
+  removeOrder = function (t, v)
+    local i = binarySearch(t, v, t.comparer)
+    if i >= 0 then
+      tremove(t, i + 1)
+      versions[t] = (versions[t] or 0) + 1
+      return true
+    end
+    return false
+  end,
   getRange = function (t, index, count)
     if count < 0 or index > #t - count then
       throw(ArgumentOutOfRangeException("index or count"))
@@ -621,6 +1059,7 @@ Array = {
     return setmetatable(list, System.List(t.__genericT__))
   end,
   reverseEnumerator = reverseEnumerator,
+  reverseEnumerable = reverseEnumerable,
   getCount = lengthFn,
   getSyncRoot = System.identityFn,
   getLongLength = lengthFn,
@@ -634,40 +1073,7 @@ Array = {
   Insert = unset,
   Remove = unset,
   RemoveAt = unset,
-  BinarySearch = function (t, ...)
-    if t == nil then throw(ArgumentNullException("array")) end
-    local len = #t
-    local index, count, v, comparer
-    local n = select("#", ...)
-    if n == 1 or n == 2 then
-      index, count, v, comparer = 0, len, ...
-    else
-      index, count, v, comparer = ...
-    end
-    checkIndexAndCount(t, index, count)
-    local compare
-    if comparer == nil then
-      comparer = Comparer_1(t.__genericT__).getDefault()
-      compare = comparer.Compare 
-    else
-      compare = comparer.Compare
-    end
-    local lo = index
-    local hi = index + count - 1
-    while lo <= hi do
-      local i = lo + div(hi - lo, 2)
-      local item = t[i + 1]
-      if item == null then item = nil end
-      local order = compare(comparer, item, v);
-      if order == 0 then return i end
-      if order < 0 then
-        lo = i + 1
-      else
-        hi = i - 1
-      end
-    end
-    return -1
-  end,
+  BinarySearch = binarySearch,
   ClearArray = function (t, index, length)
     if t == nil then throw(ArgumentNullException("array")) end
     if index < 0 or length < 0 or index + length > #t then
@@ -856,7 +1262,7 @@ Array = {
     else
       local index, count, comparer = ...
       if count > 1 then
-        local comp = getComp(t, comparer)
+        local comp = getSortComp(t, comparer)
         if index == 0 and count == #t then
           tsort(t, comp)
         else
@@ -900,20 +1306,37 @@ Array = {
     tmove(this, 1, #this, 1, t)
     return t
   end,
-  CopyTo = function (this, array, index)
-    local n = #this
-    checkIndexAndCount(array, index, n)
-    local T = this.__genericT__
+  CopyTo = function (t, ...)
+    local n = select("#", ...)
+    local sourceIndex, array, arrayIndex, len
+    if n == 1 then
+      sourceIndex, arrayIndex, len, array = 0, 0, #t, ...
+      checkIndexAndCount(array, 0, len)
+    elseif n == 2 then
+      sourceIndex, len, array, arrayIndex = 0, #t, ...
+      checkIndexAndCount(array, arrayIndex, len)
+    elseif n == 3 then
+      sourceIndex, array, arrayIndex, len = 0, ...
+      checkIndexAndCount(t, sourceIndex, len)
+      checkIndexAndCount(array, arrayIndex, len)
+    else
+      sourceIndex, array, arrayIndex, len = ...
+      checkIndexAndCount(t, sourceIndex, len)
+      checkIndexAndCount(array, arrayIndex, len)
+    end
+
+    local T = t.__genericT__
     if T.class == "S" then
       local default = T:default()
       if type(default) == "table" then
-        for i = 1, n do
-          array[i + index] = this[i]:__clone__()
+        for i = 1, len do
+          array[arrayIndex + i] = t[sourceIndex + i]:__clone__()
         end
         return
       end
     end
-    tmove(this, 1, n, index + 1, array)
+
+    tmove(t, sourceIndex + 1, sourceIndex + len, arrayIndex + 1, array)
   end,
   GetEnumerator = arrayEnumerator,
   GetLength = function (this, dimension)
@@ -1075,7 +1498,7 @@ System.yield = cyield
 local YieldEnumerable
 YieldEnumerable = define("System.YieldEnumerable", function (T)
   return {
-    base = { System.IEnumerable_1(T), System.IEnumerator_1(T), System.IDisposable },
+    base = { IEnumerable_1(T), IEnumerator_1(T), System.IDisposable },
     __genericT__ = T
   }
 end, {

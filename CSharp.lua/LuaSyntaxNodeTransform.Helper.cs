@@ -361,7 +361,16 @@ namespace CSharpLua {
             switch (key[0])
             {
               case '`': {
-                if (int.TryParse(key[1..], out int typeIndex)) {
+                if (key.StartsWith("``")) {
+                  if (int.TryParse(key[2..], out int classTypeIndex)) {
+                    var classType = (INamedTypeSymbol)semanticModel_.GetTypeInfo(targetExpression).Type;
+                    var typeArgument = classType.TypeArguments.GetOrDefault(classTypeIndex);
+                    if (typeArgument != null) {
+                      var typeName = GetTypeName(typeArgument);
+                      AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
+                    }
+                  }
+                } else if (int.TryParse(key[1..], out int typeIndex)) {
                   var typeArgument = typeArguments.GetOrDefault(typeIndex);
                   if (typeArgument != null) {
                     LuaExpressionSyntax typeName;
@@ -374,7 +383,6 @@ namespace CSharpLua {
                     AddCodeTemplateExpression(typeName, comma, codeTemplateExpression);
                   }
                 }
-
                 break;
               }
               case '*': {
@@ -388,7 +396,6 @@ namespace CSharpLua {
                     AddCodeTemplateExpression(sequenceList, comma, codeTemplateExpression);
                   }
                 }
-
                 break;
               }
               default: {
@@ -399,7 +406,6 @@ namespace CSharpLua {
                     AddCodeTemplateExpression(argumentExpression, comma, codeTemplateExpression);
                   }
                 }
-
                 break;
               }
             }

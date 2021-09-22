@@ -31,7 +31,7 @@ local conf = {
 require("All")("", conf)          -- coresystem.lua/All.lua
 
 
-local function InnerTest()   
+local function InnerTest()
 end
 
 InnerTest()

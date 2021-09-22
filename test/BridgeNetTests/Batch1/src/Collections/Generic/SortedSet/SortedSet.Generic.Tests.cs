@@ -4,7 +4,7 @@ using Bridge.Test.NUnit;
 using System;
 using Bridge.ClientTest.Collections.Generic.Base;
 
-#if false
+#if true
 namespace Bridge.ClientTest.Collections.Generic
 {
     public enum EnumerableType

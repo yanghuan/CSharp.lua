@@ -301,7 +301,7 @@ namespace Bridge.ClientTest.Collections.Generic.Base
             return set;
         }
 
-#if false
+#if true
         /// <summary>
         /// Helper function to create an SortedSet fulfilling the given specific parameters. The function will
         /// create an SortedSet using the Comparer constructor and then add values

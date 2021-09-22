@@ -513,6 +513,15 @@ limitations under the License.
         <property name="List" IsField="true" />
       </class>
       <class name="HashSet`1" Name="System.HashSet" />
+      <class name="SortedSet`1" Name="System.SortedSet" >
+        <method name=".ctor" Template="{class}(false, {0})">
+          <arg type="System.Collections.Generic.IComparer`1" />
+        </method>
+        <method name="CreateSetComparer" Template="System.SortedSet.CreateSetComparer({``0}, {0})" />
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+      </class>
       <class name="KeyValuePair`2" Name="System.KeyValuePair">
         <property name="Key" IsField="true" />
         <property name="Value" IsField="true" />

@@ -5,7 +5,6 @@
 using Bridge.Test.NUnit;
 using System;
 
-#if false
 namespace Bridge.ClientTest.ConvertTests
 {
     [Category(Constants.MODULE_CONVERT)]
@@ -119,4 +118,3 @@ namespace Bridge.ClientTest.ConvertTests
         }
     }
 }
-#endif

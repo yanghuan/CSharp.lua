@@ -20,9 +20,15 @@ local cast = System.cast
 local as = System.as
 local trunc = System.trunc
 local define = System.define
+local band = System.band
+local bor = System.bor
+local sl = System.sl
+local sr = System.sr
+local div = System.div
 local identityFn = System.identityFn
 local IConvertible = System.IConvertible
 local systemToString = System.toString
+local checkIndex = System.checkIndexAndCount
 
 local OverflowException = System.OverflowException
 local FormatException = System.FormatException
@@ -66,8 +72,10 @@ local sbyte = string.byte
 local math = math
 local floor = math.floor
 local tconcat = table.concat
+local setmetatable = setmetatable
 local getmetatable = getmetatable
 local tonumber = tonumber
+local select = select
 
 local function toBoolean(value)
   if value == nil then return false end
@@ -362,7 +370,7 @@ local function toBits(num, bits)
   for b = bits, 1, -1 do
     local i =  num % 2
     t[b] = i
-    num = System.div(num - i, 2)
+    num = div(num - i, 2)
   end
   if bits == 64 and t[1] == 0 then
     return tconcat(t, nil, 2, bits)
@@ -397,6 +405,197 @@ local function toString(value, toBaseOrProvider, cast)
   return systemToString(value)
 end
 
+local base64Table = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
+                      'P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d',
+                      'e','f','g','h','i','j','k','l','m','n','o','p','q','r','s',
+                      't','u','v','w','x','y','z','0','1','2','3','4','5','6','7',
+                      '8','9','+','/','=' };
+
+local function toBase64String(t, ...)
+  if t == nil then throw(ArgumentNullException("inArray")) end
+  local n = select("#", ...)
+  local offset, length, options
+  if n == 0 then
+    offset, length, options = 0, #t, 0
+  elseif n == 1 then
+    offset, length, options = 0, #t, ...
+  elseif n == 2 then
+    options, offset, length = 0, ...
+    checkIndex(t, offset, length)
+  else
+    offset, length, options = ...
+    checkIndex(t, offset, length)
+  end
+  local insertLineBreaks, lengthmod3, outChars  = options == 1, length % 3, {}
+  local calcLength, j, charcount = offset + (length - lengthmod3), 1, 0
+  local i = offset
+  while i < calcLength do
+    if insertLineBreaks then
+      if charcount == 76 then
+        outChars[j] = "\r\n"
+        j = j + 1
+        charcount = 0
+      end
+      charcount = charcount + 4
+    end
+    local a, b, c = t:get(i), t:get(i + 1), t:get(i + 2)
+    outChars[j] =  base64Table[sr(band(a, 0xfc), 2) + 1]
+    outChars[j + 1] = base64Table[bor(sl(band(a, 0x03), 4), sr(band(b, 0xf0), 4)) + 1]
+    outChars[j + 2] = base64Table[bor(sl(band(b, 0x0f), 2), sr(band(c, 0xc0), 6)) + 1]
+    outChars[j + 3] = base64Table[band(c, 0x3f) + 1]
+    j = j + 4
+    i = i + 3
+  end
+
+  i = calcLength
+  if insertLineBreaks and lengthmod3 ~= 0 and charcount == 76 then
+    outChars[j] = "\r\n"
+    j = j + 1
+  end
+  
+  if lengthmod3 == 2 then
+    local a, b = t:get(i), t:get(i + 1)
+    outChars[j] =  base64Table[sr(band(a, 0xfc), 2) + 1]
+    outChars[j + 1] = base64Table[bor(sl(band(a, 0x03), 4), sr(band(b, 0xf0), 4)) + 1]
+    outChars[j + 2] = base64Table[sl(band(b, 0x0f), 2) + 1]
+    outChars[j + 3] = '='
+  elseif lengthmod3 == 1 then
+    local a = t:get(i)
+    outChars[j] =  base64Table[sr(band(a, 0xfc), 2) + 1]
+    outChars[j + 1] = base64Table[sl(band(a, 0x03), 4) + 1]
+    outChars[j + 2] = '='
+    outChars[j + 3] = '='
+  end
+  return tconcat(outChars)
+end
+
+local function fromBase64ComputeResultLength(s, len)
+  local usefulInputLength, padding = len, 0
+  for i = 1, len do
+    local c = sbyte(s, i)
+    if c <= 32 then
+      usefulInputLength = usefulInputLength - 1
+    elseif c == 61 then
+      usefulInputLength = usefulInputLength - 1
+      padding = padding + 1
+    end
+  end
+  if padding ~= 0 then
+    if padding == 1 then
+      padding = 2
+    elseif padding == 2 then
+      padding = 1
+    else
+      throw(FormatException("Format_BadBase64Char"))
+    end
+  end
+  return div(usefulInputLength, 4) * 3 + padding
+end
+
+local function FromBase64Decode(s, len, t, resultLength)
+  local i, j, codes, c = 1, 0, 0x000000ff
+  while true do
+    if i > len then
+      goto AllInputConsumed
+    end
+    c = sbyte(s, i)
+    i = i + 1
+    if c >= 65 then
+      if c <= 90 then
+        c = c - 65
+      elseif c <= 122 then
+        c = c - 71 
+      end
+    else
+      if c == 43 then
+        c = 62
+      elseif c == 47 then
+        c = 63
+      elseif c == 13 or c == 10 or c == 32 or c == 9 then
+      elseif c == 61 then
+        goto EqualityCharEncountered
+      else
+        throw(FormatException("Format_BadBase64Char"))
+      end
+    end
+    codes = bor(sl(codes, 6), c)
+    if (band(codes, 0x80000000)) ~= 0 then
+      if resultLength - j < 3 then
+        return - 1
+      end
+      t[j + 1] = band(sr(codes, 16), 0xff)
+      t[j + 2] = band(sr(codes, 8), 0xff)
+      t[j + 3] = band(codes, 0xff)
+      j = j + 3
+      codes = 0x000000ff
+    end
+  end
+
+::EqualityCharEncountered::
+  if i > len then
+    codes = sl(codes, 6)
+    if (band(codes, 0x80000000)) == 0 then
+      throw(FormatException("Format_BadBase64CharArrayLength"))
+    end
+
+    if j < 2 then
+      return - 1
+    end
+
+    t[j + 1] = band(sr(codes, 16), 0xff)
+    t[j + 2] = band(sr(codes, 8), 0xff)
+    j = j + 2
+    codes = 0x000000ff
+  else
+    while i < len do
+      c = sbyte(s, i)
+      if c ~= 32 and c ~= 10 and c ~= 13 and c ~= 9 then
+        break
+      end
+      i = i + 1
+    end
+
+    if i == len and sbyte(s, i) == 61 then
+      codes = sl(codes, 12)
+      if (band(codes, 0x80000000)) == 0 then
+        throw(FormatException(("Format_BadBase64CharArrayLength")))
+      end
+
+      if resultLength - j < 1 then
+        return - 1
+      end
+
+      t[j + 1] = band(sr(codes, 16), 0xff)
+      j = j + 1
+      codes = 0x000000ff
+    else
+      System.throw(System.FormatException(("Format_BadBase64Char")))
+    end
+  end
+
+::AllInputConsumed::
+  if codes ~= 0x000000ff then
+    throw(FormatException(("Format_BadBase64CharArrayLength")))
+  end
+  return j
+end
+
+local function fromBase64String(s)
+  if s == nil then throw(ArgumentNullException("s")) end
+  local len = #s
+  while len > 0 do
+    local lastChar = sbyte(s, len)
+    if lastChar ~= 32 and lastChar ~= 10 and lastChar ~= 13 and lastChar ~= 9 then
+      break
+    end
+    len = len - 1
+  end
+  local resultLength = fromBase64ComputeResultLength(s, len)
+  local t = {}
+  FromBase64Decode(s, len, t, resultLength)
+  return System.arrayFromTable(t, Byte)
+end
+
 define("System.Convert", {
   ToBoolean = toBoolean,
   ToChar = toChar,
@@ -411,6 +610,8 @@ define("System.Convert", {
   ToSingle = toSingle,
   ToDouble = toDouble,
   ToDateTime = toDateTime,
+  ToBase64String = toBase64String,
+  FromBase64String = fromBase64String,
   ChangeType = changeType,
   ToString = toString,
   ToStringFromChar = string.char
@@ -481,13 +682,7 @@ DateTime.ToDouble = throwInvalidCastException
 DateTime.ToDateTime = identityFn
 DateTime.ToType = defaultToType
 
-
 -- BitConverter
-local band = System.band
-local bor = System.bor
-local sl = System.sl
-local sr = System.sr
-local div = System.div
 local global = System.global
 local systemToInt16 = System.toInt16
 local systemToInt32 = System.toInt32
