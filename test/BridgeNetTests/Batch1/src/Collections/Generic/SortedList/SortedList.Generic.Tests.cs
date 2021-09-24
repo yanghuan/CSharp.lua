@@ -8,7 +8,6 @@ using System.Linq;
 using Bridge.ClientTest.Collections.Generic.Base;
 using Bridge.Test.NUnit;
 
-#if false
 namespace Bridge.ClientTest.Collections.Generic
 {
     /// <summary>
@@ -71,4 +70,3 @@ namespace Bridge.ClientTest.Collections.Generic
     }
 }
 
-#endif

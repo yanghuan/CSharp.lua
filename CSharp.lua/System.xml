@@ -528,6 +528,14 @@ limitations under the License.
           <get Template="#{this}" />
         </property>
       </class>
+      <class name="SortedList`2" Name="System.SortedList">
+        <method name=".ctor" Template="{class}(false, {0})">
+          <arg type="System.Collections.Generic.IComparer`1" />
+        </method>
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+      </class>
       <class name="SortedDictionary`2" Name="System.SortedDictionary">
         <method name=".ctor" Template="{class}(false, {0})">
           <arg type="System.Collections.Generic.IComparer`1" />

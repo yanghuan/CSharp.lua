@@ -443,7 +443,21 @@ local ArrayDictionaryCollection = define("System.Collections.Generic.ArrayDictio
     this.kind = kind
   end,
   getCount = function (this)
-    return getCount(this.dict)
+    return #this.dict
+  end,
+  get = function (this, index)
+    local p = this.dict[index + 1]
+    if p == nil then throw(System.ArgumentOutOfRangeException()) end
+    if this.kind then
+      return p.Value
+    end
+    return p.Key
+  end,
+  Contains = function (this, v)
+    if this.kind then
+      return this.dict:ContainsValue(v)
+    end 
+    return this.dict:ContainsKey(v)
   end,
   GetEnumerator = function (this)
     return arrayDictionaryEnumerator(this.dict, this.kind, this.__genericT__)
@@ -561,7 +575,7 @@ local ArrayDictionary = (function ()
       if len > 0 then
         local comparer = EqualityComparer(this.__genericTValue__).getDefault()
         local equals = comparer.EqualsOf
-        for i = 1, #this do
+        for i = 1, len do
           if equals(comparer, value, this[i].Value) then
             return true
           end

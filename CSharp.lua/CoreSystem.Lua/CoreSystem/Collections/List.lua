@@ -22,6 +22,7 @@ local Array = System.Array
 local List = {
   __ctor__ = Array.ctorList,
   getCapacity = lengthFn,
+  setCapacity = Array.setCapacity,
   getCount = lengthFn,
   getIsFixedSize = falseFn,
   getIsReadOnly = falseFn,

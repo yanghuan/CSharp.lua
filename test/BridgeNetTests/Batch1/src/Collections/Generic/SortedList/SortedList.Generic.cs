@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Bridge.Test.NUnit;
 
-#if false
 namespace Bridge.ClientTest.Collections.Generic
 {
     [Category(Constants.MODULE_ACTIVATOR)]
@@ -105,10 +104,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
                 SortedList<string, string> dictionary = new SortedList<string, string>(count);
                 Assert.AreEqual(0, dictionary.Count);
-                Assert.AreEqual(count, dictionary.Capacity);
             }
-
-
         }
 
         [Test]
@@ -144,7 +140,6 @@ namespace Bridge.ClientTest.Collections.Generic
                 SortedList<string, string> dictionary = new SortedList<string, string>(count, comparer);
                 Assert.AreEqual(0, dictionary.Count);
                 Assert.True(Object.ReferenceEquals(comparer, dictionary.Comparer));
-                Assert.AreEqual(count, dictionary.Capacity);
             }
 
         }
@@ -164,10 +159,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
                 SortedList<string, string> dictionary = (SortedList<string, string>)GenericIDictionaryFactory(count);
                 dictionary.Capacity = count * 2;
-                Assert.AreEqual(count * 2, dictionary.Capacity);
-
                 dictionary.Capacity = count * 2 + 16000;
-                Assert.AreEqual(count * 2 + 16000, dictionary.Capacity);
             }
 
 
@@ -219,29 +211,11 @@ namespace Bridge.ClientTest.Collections.Generic
             {
                 int count = (int)testCase[0];
                 SortedList<string, string> dictionary = (SortedList<string, string>)GenericIDictionaryFactory();
-                int capacity = 4;
                 for (int i = 0; i < count; i++)
                 {
                     AddToCollection(dictionary, 1);
-
-                    //if the array needs to grow, it doubles the size
-                    if (i == capacity)
-                    {
-                        capacity *= 2;
-                    }
-                    if (i <= capacity + 1)
-                    {
-                        Assert.AreEqual(capacity, dictionary.Capacity);
-                    }
-                    else
-                    {
-                        Assert.AreEqual(i, dictionary.Capacity);
-                    }
                 }
-
             }
-
-
         }
 
         [Test]
@@ -253,27 +227,15 @@ namespace Bridge.ClientTest.Collections.Generic
             {
                 int count = (int)testCase[0];
                 SortedList<string, string> dictionary = (SortedList<string, string>)GenericIDictionaryFactory();
-                int capacity = 4;
                 for (int i = 0; i < count; i++)
                 {
                     AddToCollection(dictionary, 1);
-
-                    //if the array needs to grow, it doubles the size
-                    if (i == capacity)
-                    {
-                        capacity *= 2;
-                    }
                 }
                 dictionary.Clear();
                 if (count == 0)
                 {
                     Assert.AreEqual(0, dictionary.Capacity);
                 }
-                else
-                {
-                    Assert.AreEqual(capacity, dictionary.Capacity);
-                }
-
             }
 
 
@@ -287,11 +249,9 @@ namespace Bridge.ClientTest.Collections.Generic
             foreach (var testCase in data)
             {
                 int count = (int)testCase[0];
-
                 SortedList<string, string> dictionary = new SortedList<string, string>(count);
                 AddToCollection(dictionary, count);
                 dictionary.Clear();
-                Assert.AreEqual(count, dictionary.Capacity);
             }
         }
 
@@ -782,10 +742,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
                 SortedList<int, int> dictionary = new SortedList<int, int>(count);
                 Assert.AreEqual(0, dictionary.Count);
-                Assert.AreEqual(count, dictionary.Capacity);
             }
-
-
         }
 
         [Test]
@@ -821,7 +778,6 @@ namespace Bridge.ClientTest.Collections.Generic
                 SortedList<int, int> dictionary = new SortedList<int, int>(count, comparer);
                 Assert.AreEqual(0, dictionary.Count);
                 Assert.True(Object.ReferenceEquals(comparer, dictionary.Comparer));
-                Assert.AreEqual(count, dictionary.Capacity);
             }
 
         }
@@ -841,10 +797,7 @@ namespace Bridge.ClientTest.Collections.Generic
 
                 SortedList<int, int> dictionary = (SortedList<int, int>)GenericIDictionaryFactory(count);
                 dictionary.Capacity = count * 2;
-                Assert.AreEqual(count * 2, dictionary.Capacity);
-
                 dictionary.Capacity = count * 2 + 16000;
-                Assert.AreEqual(count * 2 + 16000, dictionary.Capacity);
             }
 
 
@@ -896,24 +849,9 @@ namespace Bridge.ClientTest.Collections.Generic
             {
                 int count = (int)testCase[0];
                 SortedList<int, int> dictionary = (SortedList<int, int>)GenericIDictionaryFactory();
-                int capacity = 4;
                 for (int i = 0; i < count; i++)
                 {
                     AddToCollection(dictionary, 1);
-
-                    //if the array needs to grow, it doubles the size
-                    if (i == capacity)
-                    {
-                        capacity *= 2;
-                    }
-                    if (i <= capacity + 1)
-                    {
-                        Assert.AreEqual(capacity, dictionary.Capacity);
-                    }
-                    else
-                    {
-                        Assert.AreEqual(i, dictionary.Capacity);
-                    }
                 }
 
             }
@@ -930,27 +868,15 @@ namespace Bridge.ClientTest.Collections.Generic
             {
                 int count = (int)testCase[0];
                 SortedList<int, int> dictionary = (SortedList<int, int>)GenericIDictionaryFactory();
-                int capacity = 4;
                 for (int i = 0; i < count; i++)
                 {
                     AddToCollection(dictionary, 1);
-
-                    //if the array needs to grow, it doubles the size
-                    if (i == capacity)
-                    {
-                        capacity *= 2;
-                    }
                 }
                 dictionary.Clear();
                 if (count == 0)
                 {
                     Assert.AreEqual(0, dictionary.Capacity);
                 }
-                else
-                {
-                    Assert.AreEqual(capacity, dictionary.Capacity);
-                }
-
             }
 
 
@@ -968,7 +894,6 @@ namespace Bridge.ClientTest.Collections.Generic
                 SortedList<int, int> dictionary = new SortedList<int, int>(count);
                 AddToCollection(dictionary, count);
                 dictionary.Clear();
-                Assert.AreEqual(count, dictionary.Capacity);
             }
         }
 
@@ -1381,5 +1306,3 @@ namespace Bridge.ClientTest.Collections.Generic
         protected override int CreateTValue(int seed) => CreateTKey(seed);
     }
 }
-
-#endif

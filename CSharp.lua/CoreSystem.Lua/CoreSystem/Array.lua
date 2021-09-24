@@ -908,6 +908,9 @@ Array = {
   new = buildArray,
   set = set,
   get = get,
+  setCapacity = function (t, len)
+    if len < #t then throw(ArgumentOutOfRangeException("Value", er.ArgumentOutOfRange_SmallCapacity())) end
+  end,
   ctorList = function (t, ...)
     local n = select("#", ...)
     if n == 0 then return end
@@ -941,7 +944,7 @@ Array = {
       return c(comparer, p.Key, v)
     end
     t.comparer, t.keyComparer = comparer, keyComparer
-    if dictionary then
+    if type(dictionary) == "table" then
       local T = t.__genericT__
       for _, p in each(dictionary) do
         local k, v = p.Key, p.Value
@@ -1137,10 +1140,9 @@ Array = {
     return count
   end,
   removeAt = function (t, index)
-    local v = tremove(t, index + 1)
-    if v == nil then
-      throw(ArgumentOutOfRangeException("index"))
-    end
+    index = index + 1
+    if t[index] == nil then throw(ArgumentOutOfRangeException("index"))  end
+    tremove(t, index)
     versions[t] = (versions[t] or 0) + 1
   end,
   removeOrder = function (t, v)
@@ -1198,6 +1200,24 @@ Array = {
   setOrderDictObj = function (t, k, v)
     checkOrderDictKeyValueObj(t, k, v)
     setOrderDict(t, k, v)
+  end,
+  indexKeyOrderDict = function (t, k)
+    local i = getOrderDictIndex(t, k)
+    if i < 0 then i = -1 end
+    return i
+  end, 
+  indexOfValue = function (t, v)
+    local len = #t
+    if len > 0 then
+      local comparer = EqualityComparer(t.__genericTValue__).getDefault()
+      local equals = comparer.EqualsOf
+      for i = 1, len do
+        if equals(comparer, v, t[i].Value) then
+          return i - 1
+        end
+      end
+    end
+    return -1
   end,
   reverseEnumerator = reverseEnumerator,
   reverseEnumerable = reverseEnumerable,

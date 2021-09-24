@@ -29,11 +29,12 @@ local traceback = (debug and debug.traceback) or System.config.traceback or func
 System.traceback = traceback
 
 local resource = {
-  Argument_AddingDuplicate = "An item with the same key has already been added. Key: %s",
   Arg_KeyNotFound = "The given key was not present in the dictionary.",
   Arg_KeyNotFoundWithKey = "The given key '%s' was not present in the dictionary.",
   Arg_WrongType = "The value '%s' is not of type '%s' and cannot be used in this generic collection.",
-  Arg_ParamName_Name = "(Parameter '%s')"
+  Arg_ParamName_Name = "(Parameter '%s')",
+  Argument_AddingDuplicate = "An item with the same key has already been added. Key: %s",
+  ArgumentOutOfRange_SmallCapacity = "capacity was less than the current size.",
 }
 
 local function getResource(t, k)
@@ -50,6 +51,8 @@ local function getResource(t, k)
       f = function (x1, x2) return s:format(toString(x1), toString(x2)) end
     elseif n == 3 then
       f = function (x1, x2, x3) return s:format(toString(x1), toString(x2), toString(x3)) end
+    else
+      assert(false)
     end
     t[k] = f
     return f(...)

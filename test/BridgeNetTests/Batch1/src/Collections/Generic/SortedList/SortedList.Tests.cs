@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using Bridge.ClientTest.Collections.Generic.Base;
 using Bridge.Test.NUnit;
 
-#if false
 namespace Bridge.ClientTest.Collections.Generic
 {
     [Category(Constants.MODULE_ACTIVATOR)]
@@ -75,7 +74,7 @@ namespace Bridge.ClientTest.Collections.Generic
                 int count = (int)testCase[0];
 
                 IDictionary dictionary = new SortedList<string, string>();
-                Assert.Throws<ArgumentNullException>(() => dictionary[23] = CreateTValue(12345));
+                Assert.Throws<ArgumentException>(() => dictionary[23] = CreateTValue(12345));
                 Assert.True(dictionary.Count == 0);
             }
         }
@@ -161,4 +160,3 @@ namespace Bridge.ClientTest.Collections.Generic
     }
 }
 
-#endif
