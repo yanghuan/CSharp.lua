@@ -413,7 +413,7 @@ end, {
     local index = this.index
     local pair = t[index]
     if pair ~= nil then
-      if t.kind then
+      if this.kind then
         this.current = pair.Value
       else
         this.current = pair.Key
@@ -698,6 +698,7 @@ local DictionaryFn = define("System.Collections.Generic.Dictionary", function(TK
 end, Dictionary, 2)
 
 System.Dictionary = DictionaryFn
+System.ArrayDictionary = ArrayDictionaryFn
 
 local Object = System.Object
 System.Hashtable = DictionaryFn(Object, Object)

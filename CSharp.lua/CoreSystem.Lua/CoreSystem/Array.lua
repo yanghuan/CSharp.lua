@@ -22,6 +22,7 @@ local bnot = System.bnot
 local trueFn = System.trueFn
 local falseFn = System.falseFn
 local lengthFn = System.lengthFn
+local er = System.er
 
 local InvalidOperationException = System.InvalidOperationException
 local NullReferenceException = System.NullReferenceException
@@ -378,7 +379,9 @@ local function binarySearch(t, ...)
   end
   checkIndexAndCount(t, index, count)
   local compare
-  if comparer == nil then
+  if type(comparer) == "function" then
+    compare = comparer
+  elseif comparer == nil then
     comparer = Comparer_1(t.__genericT__).getDefault()
     compare = comparer.Compare 
   else
@@ -684,11 +687,64 @@ end
 local function tryGetValueOrder(t, equalValue)
   local i = binarySearch(t, equalValue, t.comparer)
   if i >= 0 then
-    local v = t[i]
+    local v = t[i + 1]
     if v == null then v = nil end
     return true, v
   end
   return false, t.__genericT__:default()
+end
+
+local function checkOrderDictKeyValueObj(t, k, v)
+  if k == nil then throw(ArgumentNullException("key")) end
+  local TValue = t.__genericTValue__
+  if v == nil and TValue:default() ~= nil then throw(ArgumentNullException("value")) end
+  local TKey = t.__genericTKey__
+  if not System.is(k, TKey) then 
+    throw(ArgumentException(er.Arg_WrongType(k, TKey.__name__), "key")) 
+  end
+  if not System.is(v, TValue) then
+    throw(ArgumentException(er.Arg_WrongType(v, TValue.__name__), "value")) 
+  end
+end
+
+local function getOrderDictIndex(t, k, isObj)
+  if k == nil then throw(ArgumentNullException("key")) end
+  if isObj and not System.is(k, t.__genericTKey__) then
+    return -1
+  end
+  return binarySearch(t, k, t.keyComparer)
+end
+
+local function addOrderDict(t, k, v, keyComparer, T, version)
+  local i = binarySearch(t, k, keyComparer)
+  if i >= 0 then
+    throw(ArgumentException(er.Argument_AddingDuplicate(k)))
+  end
+  tinsert(t, bnot(i) + 1, setmetatable({ Key = k, Value = v }, T))
+  if version then
+    versions[t] = (versions[t] or 0) + 1
+  end
+end
+
+local function getOrderDict(t, k, isObj)
+  local i = getOrderDictIndex(t, k)
+  if i >= 0 then
+    return t[i + 1].Value
+  end
+  if isObj then
+    return nil
+  end
+  throw(System.KeyNotFoundException(er.Arg_KeyNotFoundWithKey(k)))
+end
+
+local function setOrderDict(t, k, v)
+  local i = getOrderDictIndex(t, k)
+  if i >= 0 then
+    t[i + 1].Value = v
+  else
+    tinsert(t, bnot(i) + 1, setmetatable({ Key = k, Value = v }, t.__genericT__))
+    versions[t] = (versions[t] or 0) + 1
+  end
 end
 
 local function getViewBetweenOrder(t, lowerValue, upperValue)
@@ -859,7 +915,7 @@ Array = {
     if type(collection) == "number" then return end
     addRange(t, collection)
   end,
-  ctorOrderList = function(t, ...)
+  ctorOrderSet = function(t, ...)
     local n = select("#", ...)
     if n == 0 then
       t.comparer = Comparer_1(t.__genericT__).getDefault()
@@ -869,6 +925,27 @@ Array = {
       t.comparer = comparer or Comparer_1(t.__genericT__).getDefault()
       if collection then
         addOrderRange(t, collection)
+      end
+    end
+  end,
+  ctorOrderDict = function (t, ...)
+    local n = select("#", ...)
+    local dictionary, comparer
+    if n ~= 0 then
+      dictionary, comparer = ...
+      if dictionary == nil then throw(ArgumentNullException("dictionary")) end
+    end
+    if comparer == nil then comparer = Comparer_1(t.__genericT__).getDefault() end
+    local c = comparer.Compare
+    local keyComparer = function (_, p, v)
+      return c(comparer, p.Key, v)
+    end
+    t.comparer, t.keyComparer = comparer, keyComparer
+    if dictionary then
+      local T = t.__genericT__
+      for _, p in each(dictionary) do
+        local k, v = p.Key, p.Value
+        addOrderDict(t, k, v, keyComparer, T)
       end
     end
   end,
@@ -888,12 +965,37 @@ Array = {
     return success
   end,
   addOrderRange = addOrderRange,
+  addOrderDict = function (t, k, v)
+    if k == nil then throw(ArgumentNullException("key")) end
+    addOrderDict(t, k, v, t.keyComparer, t.__genericT__, true)
+  end,
+  addPairOrderDict = function (t, ...)
+    local k, v
+    if select("#", ...) == 1 then
+      local pair = ... 
+      k, v = pair.Key, pair.Value
+    else
+      k, v = ...
+    end
+    if k == nil then throw(ArgumentNullException("key")) end
+    addOrderDict(t, k ,v, t.keyComparer, t.__genericT__, true)
+  end,
+  addOrderDictObj = function (t, k, v)
+    checkOrderDictKeyValueObj(t, k, v)
+    addOrderDict(t, k ,v, t.keyComparer, t.__genericT__, true)
+  end,
   AsReadOnly = function (t)
     return System.ReadOnlyCollection(t.__genericT__)(t)
   end,
   clear = clear,
   containsOrder = function (t, v)
     return binarySearch(t, v, t.comparer) >= 0
+  end,
+  containsOrderDict = function (t, k)
+    return getOrderDictIndex(t, k) >= 0
+  end,
+  containsOrderDictObj = function (t, k)
+    return getOrderDictIndex(t, k, true) >= 0
   end,
   createSetComparer = function (T, equalityComparer)
     return SortedSetEqualityComparerFn(T)(equalityComparer)
@@ -948,6 +1050,7 @@ Array = {
     versions[t] = (versions[t] or 0) + 1
   end,
   getViewBetweenOrder = getViewBetweenOrder,
+  getOrderComparer = function (t) return t.comparer end,
   intersectWithOrder = intersectWithOrder,
   isProperSubsetOfOrder = isProperSubsetOfOrder,
   isProperSupersetOfOrder = isProperSupersetOfOrder,
@@ -956,7 +1059,6 @@ Array = {
   isOverlapsOrder = isOverlapsOrder,
   equalsOrder = equalsOrder,
   symmetricExceptWithOrder = symmetricExceptWithOrder,
-  tryGetValueOrder = tryGetValueOrder,
   last = last,
   lastOrDefault = function (t)
     local n = #t
@@ -1050,6 +1152,36 @@ Array = {
     end
     return false
   end,
+  removeOrderDict = function (t, k)
+    local i = getOrderDictIndex(t, k)
+    if i >= 0 then
+      tremove(t, i + 1)
+      versions[t] = (versions[t] or 0) + 1
+      return true
+    end
+    return false
+  end,
+  removePairOrderDict = function (t, p)
+    local i = getOrderDictIndex(t, p.Key)
+    if i >= 0 then
+      local v = t[i + 1].Value
+      local comparer = EqualityComparer(this.__genericTValue__).getDefault()
+      if comparer:EqualsOf(p.Value, v) then
+        tremove(this, i)
+        return true
+      end
+    end
+    return false
+  end,
+  tryGetValueOrder = tryGetValueOrder,
+  tryGetValueOrderDict = function (t, k)
+    local i = getOrderDictIndex(t, k)
+    if i >= 0 then
+      local p = t[i + 1]
+      return true, p.Value
+    end
+    return false, t.__genericTValue__:default()
+  end,
   getRange = function (t, index, count)
     if count < 0 or index > #t - count then
       throw(ArgumentOutOfRangeException("index or count"))
@@ -1057,6 +1189,15 @@ Array = {
     local list = {}
     tmove(t, index + 1, index + count, 1, list)
     return setmetatable(list, System.List(t.__genericT__))
+  end,
+  getOrderDict = getOrderDict,
+  getOrderDictObj = function (t, k)
+    return getOrderDict(t, k, true)
+  end,
+  setOrderDict = setOrderDict,
+  setOrderDictObj = function (t, k, v)
+    checkOrderDictKeyValueObj(t, k, v)
+    setOrderDict(t, k, v)
   end,
   reverseEnumerator = reverseEnumerator,
   reverseEnumerable = reverseEnumerable,

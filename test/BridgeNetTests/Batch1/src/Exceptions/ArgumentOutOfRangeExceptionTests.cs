@@ -1,4 +1,4 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 
 namespace Bridge.ClientTest.Exceptions
@@ -41,7 +41,7 @@ namespace Bridge.ClientTest.Exceptions
             Assert.AreEqual("someParam", ex.ParamName, "ParamName");
             Assert.AreEqual(null, ex.InnerException, "InnerException");
             Assert.AreEqual(null, ex.ActualValue, "ActualValue");
-            Assert.AreEqual("Specified argument was out of the range of valid values.\nParameter name: someParam", ex.Message);
+            Assert.AreEqual("Specified argument was out of the range of valid values. (Parameter 'someParam')", ex.Message);
         }
 
         [Test]

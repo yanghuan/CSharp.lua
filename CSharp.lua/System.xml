@@ -468,6 +468,12 @@ limitations under the License.
       <class name="IList">
         <method name="Add" Name="AddObj" />
       </class>
+      <class name="IDictionary">
+        <method name="Add" Name="AddKeyValueObj" />
+        <method name="Contains" Name="ContainsKeyObj" />
+        <method name="Remove" Name="RemoveObj" />
+        <property name="this[]" Name="Obj" />
+      </class>
       <class name="Queue" Name="queue" />
       <class name="Stack" Name="stack" />
     </namespace>
@@ -513,11 +519,19 @@ limitations under the License.
         <property name="List" IsField="true" />
       </class>
       <class name="HashSet`1" Name="System.HashSet" />
-      <class name="SortedSet`1" Name="System.SortedSet" >
+      <class name="SortedSet`1" Name="System.SortedSet">
         <method name=".ctor" Template="{class}(false, {0})">
           <arg type="System.Collections.Generic.IComparer`1" />
         </method>
         <method name="CreateSetComparer" Template="System.SortedSet.CreateSetComparer({``0}, {0})" />
+        <property name="Count">
+          <get Template="#{this}" />
+        </property>
+      </class>
+      <class name="SortedDictionary`2" Name="System.SortedDictionary">
+        <method name=".ctor" Template="{class}(false, {0})">
+          <arg type="System.Collections.Generic.IComparer`1" />
+        </method>
         <property name="Count">
           <get Template="#{this}" />
         </property>

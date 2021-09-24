@@ -539,7 +539,9 @@ namespace CSharpLua {
 
     private XmlMetaModel.PropertyModel GetPropertyMetaInfo(IPropertySymbol symbol) {
       if (MayHaveCodeMeta(symbol)) {
-        return GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
+        var info = GetTypeMetaInfo(symbol)?.GetPropertyModel(symbol.Name);
+        info?.CheckBaned(symbol);
+        return info;
       }
       return null;
     }
@@ -551,10 +553,13 @@ namespace CSharpLua {
     public string GetPropertyCodeTemplate(IPropertySymbol symbol, bool isGet) {
       var info = GetPropertyMetaInfo(symbol);
       if (info != null) {
-        info.CheckBaned(symbol);
         return isGet ? info.get?.Template : info.set?.Template;
       }
       return null;
+    }
+
+    public string GetPropertyMapName(IPropertySymbol symbol) {
+      return GetPropertyMetaInfo(symbol)?.Name;
     }
 
     private string GetInternalMethodMetaInfo(IMethodSymbol symbol, MethodMetaType metaType) {

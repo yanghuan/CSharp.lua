@@ -1,4 +1,4 @@
-﻿using Bridge.Test.NUnit;
+using Bridge.Test.NUnit;
 using System;
 
 namespace Bridge.ClientTest.Exceptions
@@ -39,7 +39,7 @@ namespace Bridge.ClientTest.Exceptions
             Assert.True((object)ex is ArgumentNullException, "is ArgumentNullException");
             Assert.AreEqual("someParam", ex.ParamName, "ParamName");
             Assert.AreEqual(null, ex.InnerException, "InnerException");
-            Assert.AreEqual("Value cannot be null.\nParameter name: someParam", ex.Message);
+            Assert.AreEqual("Value cannot be null. (Parameter 'someParam')", ex.Message);
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace Bridge.ClientTest.Exceptions
             Assert.AreEqual("someParam", ex.ParamName, "ParamName");
             Assert.AreEqual(null, ex.InnerException, "InnerException");
             //Assert.AreEqual("The message", ex.Message);
-            Assert.AreEqual("The message\nParameter name: someParam", ex.Message);
+            Assert.AreEqual("The message (Parameter 'someParam')", ex.Message);
         }
 
         [Test]

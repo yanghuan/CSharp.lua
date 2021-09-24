@@ -780,6 +780,11 @@ namespace CSharpLua {
         if (name != null) {
           return name;
         }
+      } else if (symbol.Kind == SymbolKind.Property) {
+        string name = XmlMetaProvider.GetPropertyMapName((IPropertySymbol)symbol);
+        if (name != null) {
+          return name;
+        }
       }
 
       if (!IsFromLuaModule(symbol)) {

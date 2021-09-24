@@ -15,15 +15,14 @@ limitations under the License.
 --]]
 
 local System = System
-local define = System.define
 local Array = System.Array
 
 local SortedSet = {
-  __ctor__ = Array.ctorOrderList,
+  __ctor__ = Array.ctorOrderSet,
   getMin = Array.firstOrDefault,
   getMax = Array.lastOrDefault,
   getCount = System.lengthFn,
-  getComparer = function (this) return this.comparer end,
+  getComparer = Array.getOrderComparer,
   CreateSetComparer = Array.createSetComparer,
   Add = Array.addOrder,
   Clear = Array.clear,
