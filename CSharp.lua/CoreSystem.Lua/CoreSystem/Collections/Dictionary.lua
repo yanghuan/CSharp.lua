@@ -23,6 +23,8 @@ local each = System.each
 local lengthFn = System.lengthFn
 local versions = System.versions
 local Array = System.Array
+local toString = System.toString
+
 local checkIndexAndCount = System.checkIndexAndCount
 local throwFailedVersion = System.throwFailedVersion
 local ArgumentNullException = System.ArgumentNullException
@@ -94,13 +96,13 @@ local KeyValuePair = {
     local count = 2
     local k, v = this.Key, this.Value
     if k ~= nil then
-      t[count] = k:ToString()
+      t[count] = toString(k)
       count = count + 1
     end
     t[count] = ", "
     count = count + 1
     if v ~= nil then
-      t[count] = v:ToString()
+      t[count] = toString(v)
       count = count + 1
     end
     t[count] = "]"
