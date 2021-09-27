@@ -35,13 +35,15 @@ local resource = {
   Arg_ParamName_Name = "(Parameter '%s')",
   Argument_AddingDuplicate = "An item with the same key has already been added. Key: %s",
   ArgumentOutOfRange_SmallCapacity = "capacity was less than the current size.",
+  InvalidOperation_EmptyQueue = "Queue empty.",
+  ArgumentOutOfRange_NeedNonNegNum = "Non-negative number required.",
 }
 
 local function getResource(t, k)
   local s = resource[k]
   assert(s, k)
   return function (...)
-	  local n = select("#", ...)
+	local n = select("#", ...)
     local f
     if n == 0 then
       f = function () return s end

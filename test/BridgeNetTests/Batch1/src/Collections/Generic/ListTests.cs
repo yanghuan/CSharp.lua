@@ -163,17 +163,17 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreEqual(0, l.Count);
         }
 
-        // Not C# API
-        //[Test]
-        //public void ParamArrayConstructorWorks()
-        //{
-        //    var l = new List<int>(1, 4, 7, 8);
-        //    Assert.AreEqual(l, new[] { 1, 4, 7, 8 });
+        [Test]
+        public void ParamArrayConstructorWorks()
+        {
+            var l = new List<int> { 1, 4, 7, 8 };
+            Assert.AreEqual(l, new[] { 1, 4, 7, 8 });
 
-        //    var arr = new[] { 4, 7, 8 };
-        //    l = new List<int>(1, arr);
-        //    Assert.AreEqual(l, new[] { 1, 4, 7, 8 });
-        //}
+            var arr = new[] { 4, 7, 8 };
+            l = new List<int>() { 1 };
+            l.AddRange(arr);
+            Assert.AreEqual(l, new[] { 1, 4, 7, 8 });
+        }
 
         [Test]
         public void ConstructingFromArrayWorks()

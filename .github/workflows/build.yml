@@ -12,7 +12,7 @@ jobs:
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 6.0.100-rc.1.21463.6
     - name: clear
       run: dotnet clean --configuration Debug && dotnet nuget locals all --clear
     - name: Build with dotnet
