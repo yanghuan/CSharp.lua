@@ -2423,14 +2423,14 @@ namespace CSharpLua {
             bool isLastParamsArrayType = paramsType is {TypeKind: TypeKind.Array};
             if (!isLastParamsArrayType) {
               var arrayTypeSymbol = (IArrayTypeSymbol)last.Type;
-              var array = BuildArray(arrayTypeSymbol.ElementType, arguments.Last());
+              var array = BuildArray(arrayTypeSymbol, arguments.Last());
               arguments[^1] = array;
             }
           } else {
             int otherParameterCount = parameters.Length - 1;
             var arrayTypeSymbol = (IArrayTypeSymbol)last.Type;
             var paramsArguments = arguments.Skip(otherParameterCount).ToArray();
-            var array = BuildArray(arrayTypeSymbol.ElementType, paramsArguments);
+            var array = BuildArray(arrayTypeSymbol, paramsArguments);
             arguments.RemoveRange(otherParameterCount, arguments.Count - otherParameterCount);
             arguments.Add(array);
           }

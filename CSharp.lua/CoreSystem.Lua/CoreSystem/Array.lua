@@ -1262,7 +1262,7 @@ Array = {
   Empty = function (T)
     local t = emptys[T]
     if t == nil then
-      t = Array(T)()
+      t = Array(T){}
       emptys[T] = t
     end
     return t
@@ -1527,8 +1527,32 @@ Array = {
   end
 }
 
-function Array.__call(T, ...)
-  return buildArray(T, select("#", ...), { ... })
+function Array.__call(ArrayT, n, t)
+  if type(n) == "table" then
+    t = n
+  elseif t ~= nil then
+    for i = 1, n  do
+      if t[i] == nil then
+        t[i] = null
+      end
+    end
+  else
+    t = {}
+    if n > 0 then
+      local T = ArrayT.__genericT__
+      local default = T:default()
+      if default == nil then
+        fill(t, 1, n, null)
+      elseif type(default) ~= "table" then
+        fill(t, 1, n, default)
+      else
+        for i = 1, n do
+          t[i] = T:default()
+        end
+      end
+    end
+  end
+  return setmetatable(t, ArrayT)
 end
 
 function System.arrayFromList(t)

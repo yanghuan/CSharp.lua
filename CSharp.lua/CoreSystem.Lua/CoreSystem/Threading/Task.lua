@@ -273,13 +273,20 @@ local function checkTasks(...)
     elseif System.isEnumerableLike(args) then
       tasks = System.Array.toArray(args)
     end
+    if tasks ~= nil then
+      for i = 1, #tasks do
+        if tasks[i] == System.null then
+          throw(ArgumentNullException())
+        end
+      end
+    end
   end
-  if not tasks then
-    tasks = System.Array(Task)(...)
-  end
-  for i = 1, #tasks do
-    if tasks[i] == System.null then
-      throw(ArgumentNullException())
+  if tasks == nil then
+    tasks = { ... }
+    for i = 1, n do
+      if tasks[i] == nil then
+        throw(ArgumentNullException())
+      end
     end
   end
   return tasks
