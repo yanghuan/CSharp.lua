@@ -1318,14 +1318,7 @@ local ValueTuple = defStc("System.ValueTuple", {
   end
 })
 
-local function valueTupleCreate(T, ...)
-  
-
-
-  return setmetatable(pack(...), T)
-end
-
-local valueTupleMetaTable = setmetatable({ __index  = ValueType, __call = valueTupleCreate }, ValueType)
+local valueTupleMetaTable = setmetatable({ __index  = ValueType, __call = tupleCreate }, ValueType)
 setmetatable(ValueTuple, valueTupleMetaTable)
 
 local function recordEquals(t, other)

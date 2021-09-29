@@ -73,7 +73,6 @@ EqualityComparer = define("System.EqualityComparer", function (T)
       if obj == nil then return 0 end
       if System.is(obj, T) then return getHashCode(obj) end
       throw(ArgumentException("Type of argument is not compatible with the generic comparer."))
-      return false
     end,
     EqualsObjOf = function (this, x, y)
       if x == y then return true end
@@ -81,7 +80,6 @@ EqualityComparer = define("System.EqualityComparer", function (T)
       local is = System.is
       if is(x, T) and is(y, T) then return equals(x, y) end
       throw(ArgumentException("Type of argument is not compatible with the generic comparer."))
-      return false
     end
   }
 end, nil, 1)

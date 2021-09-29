@@ -136,8 +136,8 @@ local TimeoutQueue = define("System.TimeoutQueue", (function ()
     RunLoop = RunLoop,
     getCount = getCount,
     Contains = Contains,
-    __ctor__ = __ctor__,
-		IsNext = IsNext
+    IsNext = IsNext,
+    __ctor__ = __ctor__
   }
 end)())
 
@@ -168,12 +168,12 @@ end
 
 local function removeTimer(id)
   local isNext = timerQueue:IsNext(id)
-	timerQueue:Erase(id)
-	if isNext then
-		clearTimeout(driverTimer)
-		local delay = timerQueue:getNextExpiration() - currentTimeMillis()
-		driverTimer = setTimeout(runTimerQueue, delay)
-	end
+  timerQueue:Erase(id)
+  if isNext then
+	clearTimeout(driverTimer)
+	local delay = timerQueue:getNextExpiration() - currentTimeMillis()
+	driverTimer = setTimeout(runTimerQueue, delay)
+  end
 end
 
 System.addTimer = addTimer
