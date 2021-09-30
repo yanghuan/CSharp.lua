@@ -553,8 +553,12 @@ limitations under the License.
         </property>
       </class>
       <class name="KeyValuePair`2" Name="System.KeyValuePair">
-        <property name="Key" IsField="true" />
-        <property name="Value" IsField="true" />
+        <property name="Key">
+          <get Template="{this}[1]" />
+        </property>
+        <property name="Value">
+          <get Template="{this}[2]" />
+        </property>
       </class>
       <class name="IDictionary`2">
         <method name="Add" Name="AddKeyValue" />

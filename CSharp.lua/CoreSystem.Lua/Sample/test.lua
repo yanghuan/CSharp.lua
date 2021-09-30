@@ -1,6 +1,5 @@
-require('mobdebug').coro()
 require("strict")
-local socket = require("socket")
+local _, socket = pcall(require, "socket")
 
 local now = 0
 local timeoutQueue

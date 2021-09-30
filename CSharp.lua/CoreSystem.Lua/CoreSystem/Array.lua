@@ -720,7 +720,7 @@ local function addOrderDict(t, k, v, keyComparer, T, version)
   if i >= 0 then
     throw(ArgumentException(er.Argument_AddingDuplicate(k)))
   end
-  tinsert(t, bnot(i) + 1, setmetatable({ Key = k, Value = v }, T))
+  tinsert(t, bnot(i) + 1, setmetatable({ k, v }, T))
   if version then
     versions[t] = (versions[t] or 0) + 1
   end
@@ -729,7 +729,7 @@ end
 local function getOrderDict(t, k, isObj)
   local i = getOrderDictIndex(t, k)
   if i >= 0 then
-    return t[i + 1].Value
+    return t[i + 1][2]
   end
   if isObj then
     return nil
@@ -740,9 +740,9 @@ end
 local function setOrderDict(t, k, v)
   local i = getOrderDictIndex(t, k)
   if i >= 0 then
-    t[i + 1].Value = v
+    t[i + 1][2] = v
   else
-    tinsert(t, bnot(i) + 1, setmetatable({ Key = k, Value = v }, t.__genericT__))
+    tinsert(t, bnot(i) + 1, setmetatable({ k, v }, t.__genericT__))
     versions[t] = (versions[t] or 0) + 1
   end
 end
@@ -941,13 +941,13 @@ Array = {
     if comparer == nil then comparer = Comparer_1(t.__genericT__).getDefault() end
     local c = comparer.Compare
     local keyComparer = function (_, p, v)
-      return c(comparer, p.Key, v)
+      return c(comparer, p[1], v)
     end
     t.comparer, t.keyComparer = comparer, keyComparer
     if type(dictionary) == "table" then
       local T = t.__genericT__
       for _, p in each(dictionary) do
-        local k, v = p.Key, p.Value
+        local k, v = p[1], p[2]
         addOrderDict(t, k, v, keyComparer, T)
       end
     end
@@ -976,7 +976,7 @@ Array = {
     local k, v
     if select("#", ...) == 1 then
       local pair = ... 
-      k, v = pair.Key, pair.Value
+      k, v = pair[1], pair[2]
     else
       k, v = ...
     end
@@ -1164,11 +1164,11 @@ Array = {
     return false
   end,
   removePairOrderDict = function (t, p)
-    local i = getOrderDictIndex(t, p.Key)
+    local i = getOrderDictIndex(t, p[1])
     if i >= 0 then
-      local v = t[i + 1].Value
+      local v = t[i + 1][2]
       local comparer = EqualityComparer(this.__genericTValue__).getDefault()
-      if comparer:EqualsOf(p.Value, v) then
+      if comparer:EqualsOf(p[2], v) then
         tremove(this, i)
         return true
       end
@@ -1180,7 +1180,7 @@ Array = {
     local i = getOrderDictIndex(t, k)
     if i >= 0 then
       local p = t[i + 1]
-      return true, p.Value
+      return true, p[2]
     end
     return false, t.__genericTValue__:default()
   end,
@@ -1212,7 +1212,7 @@ Array = {
       local comparer = EqualityComparer(t.__genericTValue__).getDefault()
       local equals = comparer.EqualsOf
       for i = 1, len do
-        if equals(comparer, v, t[i].Value) then
+        if equals(comparer, v, t[i][2]) then
           return i - 1
         end
       end
