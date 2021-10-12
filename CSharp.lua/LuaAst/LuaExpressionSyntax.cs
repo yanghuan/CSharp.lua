@@ -144,6 +144,8 @@ namespace CSharpLua.LuaAst {
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
     }
+
+    public bool IsLogic => OperatorToken == Tokens.And || OperatorToken == Tokens.Or;
   }
 
   public sealed class LuaPrefixUnaryExpressionSyntax : LuaExpressionSyntax {

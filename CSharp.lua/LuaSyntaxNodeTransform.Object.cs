@@ -1371,6 +1371,12 @@ namespace CSharpLua {
               var expression = BuildIsPatternExpression(targetNode, declarationPattern.Type, name);
               return expression.Not();
             }
+            case SyntaxKind.RecursivePattern: { 
+               var recursivePattern = (RecursivePatternSyntax)notPattern.Pattern;
+               var governingIdentifier = GetIdentifierNameFromExpression(targetExpression);
+               var expression = BuildRecursivePatternExpression(recursivePattern, governingIdentifier, null, targetNode);
+               return expression.Parenthesized().Not();
+            }
             default: {
               var expression = notPattern.Pattern.AcceptExpression(this);
               return targetExpression.NotEquals(expression);
@@ -1382,7 +1388,9 @@ namespace CSharpLua {
           var binaryPattern = (BinaryPatternSyntax)pattern;
           var name = GetIdentifierNameFromExpression(targetExpression);
           var left = BuildPatternExpression(name, binaryPattern.Left, targetNode);
+          CheckBinaryParenthesized(ref left);
           var right = BuildPatternExpression(name, binaryPattern.Right, targetNode);
+          CheckBinaryParenthesized(ref right);
           return pattern.IsKind(SyntaxKind.AndPattern) ? left.And(right) : left.Or(right);
         }
         case SyntaxKind.RelationalPattern: {
@@ -1390,6 +1398,10 @@ namespace CSharpLua {
           var right = relationalPattern.Expression.AcceptExpression(this);
           string token = relationalPattern.OperatorToken.ValueText;
           return targetExpression.Binary(token, right);
+        }
+        case SyntaxKind.TypePattern: {
+          var typePattern = (TypePatternSyntax)pattern;
+          return BuildIsPatternExpression(targetNode, typePattern.Type, targetExpression);
         }
         default: {
           var recursivePattern = (RecursivePatternSyntax)pattern;
@@ -1475,8 +1487,8 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitRangeExpression(RangeExpressionSyntax node) {
-      var left = node.LeftOperand.AcceptExpression(this);
-      var right = node.RightOperand.AcceptExpression(this);
+      var left = node.LeftOperand?.AcceptExpression(this) ?? LuaIdentifierLiteralExpressionSyntax.Nil;
+      var right = node.RightOperand?.AcceptExpression(this) ?? LuaIdentifierLiteralExpressionSyntax.Nil;
       return LuaIdentifierNameSyntax.Range.Invocation(left, right);
     }
 

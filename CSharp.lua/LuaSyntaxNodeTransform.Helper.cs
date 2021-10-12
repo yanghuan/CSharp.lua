@@ -2187,20 +2187,17 @@ namespace CSharpLua {
         } else {
           var thisLocal = (LuaLocalVariableDeclaratorSyntax)block.Statements.First();
           var target = thisLocal.Declarator.Initializer.Value;
-          switch (expression)
-          {
+          switch (expression) {
             case LuaMemberAccessExpressionSyntax memberAccess: {
               if (!InliningMemberAccessUpdateTarget(memberAccess, target)) {
                 return null;
               }
-
               break;
             }
-            case LuaPropertyAdapterExpressionSyntax {IsProperty: true} propertyAdapter: {
+            case LuaPropertyAdapterExpressionSyntax { IsProperty: true } propertyAdapter: {
               if (!InlinePropertyAdapterUpdateTarget(propertyAdapter, target)) {
                 return null;
               }
-
               break;
             }
             default:
@@ -2347,6 +2344,12 @@ namespace CSharpLua {
       }
 
       AddLocalVariableMapping(new LuaSymbolNameSyntax(target.MemberAccess(name)), node);
+    }
+
+    private static void CheckBinaryParenthesized(ref LuaExpressionSyntax binary) {
+      if (binary is LuaBinaryExpressionSyntax i && i.IsLogic) {
+        binary = binary.Parenthesized();
+      }
     }
   }
 }

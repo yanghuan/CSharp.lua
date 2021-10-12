@@ -142,7 +142,7 @@ namespace CSharpLua.LuaAst {
         }
       }
 
-      bool hasBaseCopyField = baseCopyFields is {Count: > 0};
+      bool hasBaseCopyField = baseCopyFields.Count > 0;
       LuaFunctionExpressionSyntax functionExpression = new LuaFunctionExpressionSyntax();
       functionExpression.AddParameter(LuaIdentifierNameSyntax.Global);
       if (hasLazyGenericArgument || hasBaseCopyField) {

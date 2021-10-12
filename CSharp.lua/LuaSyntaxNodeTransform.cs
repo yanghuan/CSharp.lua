@@ -2678,7 +2678,7 @@ namespace CSharpLua {
       if (symbol == null) {  // dynamic
         var expressSymbol = semanticModel_.GetSymbolInfo(node.Expression).Symbol;
         var expression = node.Expression.AcceptExpression(this);
-        bool isObjectColon = node.Parent.IsKind(SyntaxKind.InvocationExpression) && (expressSymbol is not {Kind: SymbolKind.NamedType});
+        bool isObjectColon = node.Parent.IsKind(SyntaxKind.InvocationExpression) && expressSymbol.Kind != SymbolKind.NamedType;
         LuaIdentifierNameSyntax name = node.Name.Identifier.ValueText;
         return expression.MemberAccess(name, isObjectColon);
       }
@@ -3613,9 +3613,14 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildSwitchLabelWhenClause(LuaExpressionSyntax expression, WhenClauseSyntax whenClause) {
       if (whenClause != null) {
         var whenExpression = whenClause.AcceptExpression(this);
-        return expression != null ? expression.And(whenExpression) : whenExpression;
+        if (expression != null) {
+          CheckBinaryParenthesized(ref expression);
+          CheckBinaryParenthesized(ref whenExpression);
+          return expression.And(whenExpression);
+        } else {
+          return whenExpression;
+        }
       }
-
       return expression;
     }
 
@@ -3643,6 +3648,18 @@ namespace CSharpLua {
           var varPattern = (VarPatternSyntax)node.Pattern;
           AddLocalVariableMapping(left, varPattern.Designation);
           return BuildSwitchLabelWhenClause(null, node.WhenClause);
+        }
+        case SyntaxKind.RecursivePattern: {
+          var recursivePattern = (RecursivePatternSyntax)node.Pattern;
+          var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
+          var expression = BuildRecursivePatternExpression(recursivePattern, left, null, switchStatement.Expression);
+          return BuildSwitchLabelWhenClause(expression, node.WhenClause);
+        }
+        case SyntaxKind.AndPattern:
+        case SyntaxKind.OrPattern: {
+          var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
+          var expression = BuildPatternExpression(left, node.Pattern, switchStatement.Expression);
+          return BuildSwitchLabelWhenClause(expression, node.WhenClause);
         }
         default: {
           var patternExpression = node.Pattern.AcceptExpression(this);
@@ -3712,6 +3729,10 @@ namespace CSharpLua {
       }
     }
 
+    public override LuaSyntaxNode VisitRelationalPattern(RelationalPatternSyntax node) {
+      return node.Expression.AcceptExpression(this);
+    }
+
     private LuaExpressionSyntax BuildRecursivePatternExpression(RecursivePatternSyntax recursivePattern, LuaIdentifierNameSyntax governingIdentifier, LuaLocalVariablesSyntax deconstruct, ExpressionSyntax governingExpression) {
       var subpatterns = recursivePattern.PropertyPatternClause?.Subpatterns ?? recursivePattern.PositionalPatternClause.Subpatterns;
       var subpatternExpressions = new List<LuaExpressionSyntax>();
@@ -3727,7 +3748,14 @@ namespace CSharpLua {
             Contract.Assert(fieldSymbol.ContainingType.IsTupleType);
             left = deconstruct.Variables[subpatternIndex];
           }
-          subpatternExpressions.Add(left.EqualsEquals(expression));
+          string operatorToken;
+          if (subpattern.Pattern.IsKind(SyntaxKind.RelationalPattern)) {
+            var relational = (RelationalPatternSyntax)subpattern.Pattern;
+            operatorToken = GetOperatorToken(relational.OperatorToken);
+          } else {
+            operatorToken = LuaSyntaxNode.Tokens.EqualsEquals;
+          }
+          subpatternExpressions.Add(left.Binary(operatorToken, expression));
         } else if (!subpattern.Pattern.IsKind(SyntaxKind.DiscardPattern)) {
           CheckSwitchDeconstruct(ref deconstruct, governingIdentifier, recursivePattern.Type ?? governingExpression, subpatterns.Count);
           var variable = deconstruct.Variables[subpatternIndex];
@@ -3808,6 +3836,11 @@ namespace CSharpLua {
             }
             FillSwitchPatternSyntax(ref ifStatement, null, arm.WhenClause, result, arm.Expression);
             break;
+          }
+          case SyntaxKind.OrPattern: {
+            var condition = BuildPatternExpression(governingIdentifier, arm.Pattern, node.GoverningExpression);
+            FillSwitchPatternSyntax(ref ifStatement, condition, arm.WhenClause, result, arm.Expression);
+            break; 
           }
           case SyntaxKind.DiscardPattern: {
             var elseClause = new LuaElseClauseSyntax();
@@ -3919,10 +3952,8 @@ namespace CSharpLua {
         return original;
       }
 
-      switch (typeInfo.SpecialType)
-      {
-        case SpecialType.System_Char:
-        {
+      switch (typeInfo.SpecialType) {
+        case SpecialType.System_Char: {
           var constValue = semanticModel_.GetConstantValue(expression);
           if (constValue.HasValue) {
             string text = SyntaxFactory.Literal((char)constValue.Value).Text;
