@@ -1016,8 +1016,8 @@ if debugsetmetatable then
     throw(System.ArgumentException("Argument_ImplementIComparable"))
   end
 
-  toString = function (t)
-    return t ~= nil and t:ToString() or ""
+  toString = function (t, format)
+    return t ~= nil and t:ToString(format) or ""
   end
 
   debugsetmetatable(nil, {
@@ -1114,15 +1114,17 @@ else
     throw(System.ArgumentException("Argument_ImplementIComparable"))
   end
 
-  toString = function (obj)
+  toString = function (obj, format)
     if obj == nil then return "" end
     local t = type(obj) 
     if t == "table" then
-      return obj:ToString()
+      return obj:ToString(format)
     elseif t == "boolean" then
       return obj and "True" or "False"
     elseif t == "function" then
       return "System.Delegate"
+    elseif t == "Number" and format then
+      return System.Number.ToString(obj, format)
     end
     return tostring(obj)
   end
