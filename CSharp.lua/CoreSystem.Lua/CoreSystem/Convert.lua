@@ -494,9 +494,11 @@ end
 
 local function FromBase64Decode(s, len, t, resultLength)
   local i, j, codes, c = 1, 0, 0x000000ff
+  local gotoEqualityCharEncountered = false
+  
   while true do
     if i > len then
-      goto AllInputConsumed
+      break
     end
     c = sbyte(s, i)
     i = i + 1
@@ -513,7 +515,8 @@ local function FromBase64Decode(s, len, t, resultLength)
         c = 63
       elseif c == 13 or c == 10 or c == 32 or c == 9 then
       elseif c == 61 then
-        goto EqualityCharEncountered
+	gotoEqualityCharEncountered = true
+	break
       else
         throw(FormatException("Format_BadBase64Char"))
       end
@@ -531,8 +534,7 @@ local function FromBase64Decode(s, len, t, resultLength)
     end
   end
 
-::EqualityCharEncountered::
-  if i > len then
+  if gotoEqualityCharEncountered and  i > len then
     codes = sl(codes, 6)
     if (band(codes, 0x80000000)) == 0 then
       throw(FormatException("Format_BadBase64CharArrayLength"))
@@ -573,7 +575,6 @@ local function FromBase64Decode(s, len, t, resultLength)
     end
   end
 
-::AllInputConsumed::
   if codes ~= 0x000000ff then
     throw(FormatException(("Format_BadBase64CharArrayLength")))
   end
