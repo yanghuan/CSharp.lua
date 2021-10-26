@@ -917,7 +917,7 @@ namespace CSharpLua {
             var constValue = semanticModel_.GetConstantValue(variable.Initializer.Value);
             Contract.Assert(constValue.HasValue);
             string v = (string)constValue.Value;
-            if (v is {Length: > kStringConstInlineCount}) {
+            if (v?.Length > kStringConstInlineCount) {
               var variableSymbol = semanticModel_.GetDeclaredSymbol(variable);
               if (isPrivate && generator_.IsForcePublicSymbol(variableSymbol)) {
                 isPrivate = false;

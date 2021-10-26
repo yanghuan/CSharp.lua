@@ -1041,8 +1041,7 @@ namespace CSharpLua {
     }
 
     public static string GetNewIdentifierName(string name, int index) {
-      return index switch
-      {
+      return index switch {
         0 => name,
         1 => name + "_",
         2 => "_" + name,
