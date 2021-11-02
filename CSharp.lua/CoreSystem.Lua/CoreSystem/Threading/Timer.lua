@@ -30,16 +30,16 @@ local setTimeout = config.setTimeout
 local clearTimeout = config.clearTimeout
 
 if setTimeout and clearTimeout then
-	System.post = function (fn) 
-		setTimeout(fn, 0) 
-	end
+  System.post = function (fn) 
+    setTimeout(fn, 0) 
+  end
 else
-	System.post = function (fn)
-		fn()
-	end
-	local function notset()
-		throw(NotImplementedException("System.config.setTimeout or clearTimeout is not registered."))
-	end
+  System.post = function (fn)
+    fn()
+  end
+  local function notset()
+    throw(NotImplementedException("System.config.setTimeout or clearTimeout is not registered."))
+  end
   setTimeout = notset
   clearTimeout = notset
 end
@@ -120,11 +120,11 @@ local TimeoutQueue = define("System.TimeoutQueue", (function ()
   Contains = function (this, id)
     return this.ids_[id] ~= nil
   end
-	IsNext = function (this, id)
-		local first = this.events_:getFirst()
-		local nextId = first and first.Value.Id
-		return nextId == id
-	end
+  IsNext = function (this, id)
+    local first = this.events_:getFirst()
+    local nextId = first and first.Value.Id
+    return nextId == id
+  end
   return {
     MaxExpiration = maxExpiration,
     nextId_ = 1,
