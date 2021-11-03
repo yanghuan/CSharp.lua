@@ -766,6 +766,59 @@ local function getViewBetweenOrder(t, lowerValue, upperValue)
   return setmetatable(set, System.SortedSet(t.__genericT__))
 end
 
+local function heapDown(t, k, n, c)
+  local j
+  while true do
+    j = k * 2
+    if j <= n and j > 0 then
+      if j < n and c(t[j], t[j + 1]) > 0 then
+        j = j + 1
+      end
+      if c(t[k], t[j]) <= 0 then
+        break
+      end
+      t[j], t[k] = t[k], t[j]
+      k = j
+    else
+      break
+    end
+  end
+end
+
+local function heapUp(t, k, n, c)
+  while k > 1 do
+    local j = div(k, 2)
+    if c(t[j], t[k]) <= 0 then
+      break
+    end
+    t[j], t[k] = t[k], t[j]
+    k = j
+  end
+end
+
+local function heapify(t, c)
+  local n = #t
+  for i = div(n, 2), 1, -1 do
+    heapDown(t, i, n, c)  
+  end
+end
+
+local function heapAdd(t, v, c)
+  local n = #t + 1
+  t[n] = v
+  heapUp(t, n, n, c)
+end
+
+local function heapPop(t, c)
+  local n = #t
+  if n == 0 then return end
+  local v = t[1]
+  t[1] = t[n]
+  t[n] = nil
+  heapDown(t, 1, n - 1, c)
+  return v
+end
+
 local SortedSetEqualityComparerFn
 local SortedSetEqualityComparer = {
   __ctor__ = function (this, equalityComparer, comparer)
@@ -1062,6 +1115,11 @@ Array = {
   isOverlapsOrder = isOverlapsOrder,
   equalsOrder = equalsOrder,
   symmetricExceptWithOrder = symmetricExceptWithOrder,
+  heapDown = heapDown,
+  heapUp = heapUp,
+  heapify = heapify,
+  heapAdd = heapAdd,
+  heapPop = heapPop,
   last = last,
   lastOrDefault = function (t)
     local n = #t

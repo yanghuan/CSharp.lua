@@ -15,11 +15,15 @@ limitations under the License.
 --]]
 
 local System = System
-local div = System.div
 local throw = System.throw
 local each = System.each
 local er = System.er 
 local Array = System.Array
+local heapDown = Array.heapDown
+local heapUp = Array.heapUp
+local heapify = Array.heapify
+local heapAdd = Array.heapAdd
+local heapPop = Array.heapPop
 local Comparer_1 = System.Comparer_1
 
 local ArgumentNullException = System.ArgumentNullException
@@ -28,44 +32,6 @@ local InvalidOperationException = System.InvalidOperationException
 
 local select = select
 local type = type
-
-local function down(t, k, n, c)
-  local j
-  while true do
-    j = k * 2
-    if j <= n and j > 0 then
-      if j < n and c(t[j], t[j + 1]) > 0 then
-        j = j + 1
-      end
-      if c(t[k], t[j]) <= 0 then
-        break
-      end
-      t[j], t[k] = t[k], t[j]
-      k = j
-    else
-      break
-    end
-  end
-end
-
-local function up(t, k, n, c)
-  while k > 1 do
-    local j = div(k, 2)
-    if c(t[j], t[k]) <= 0 then
-      break
-    end
-    t[j], t[k] = t[k], t[j]
-    k = j
-  end
-end
-
-local function heapify(t)
-  local c = t.c
-  local n = #t
-  for i = div(n, 2), 1, -1 do
-    down(t, i, n, c)  
-  end
-end
 
 local function __ctor__(t, ...)
   local items, comparer
@@ -77,7 +43,8 @@ local function __ctor__(t, ...)
   end
   if comparer == nil then comparer = Comparer_1(t.__genericTPriority__).getDefault() end
   local compare = comparer.Compare
-  t.comparer, t.c = comparer, function (a, b) return compare(comparer, a[2], b[2]) end
+  local c = function (a, b) return compare(comparer, a[2], b[2]) end
+  t.comparer, t.c = comparer, c
   if type(items) == "table" then
     local i = 1
     for _, tuple in each(items) do
@@ -86,34 +53,30 @@ local function __ctor__(t, ...)
       i = i + 1
     end
     if i > 1 then
-      heapify(t)
+      heapify(t, c)
     end
   end
 end
 
 local function dequeue(t, n)
-  local v = t[1][1]
-  t[1] = t[n]
-  t[n] = nil
-  down(t, 1, n - 1, t.c)
-  return v
+  local v = heapPop(t, t.c)
+  if v == nil then throw(InvalidOperationException(er.InvalidOperation_EmptyQueue())) end
+  return v[1]
 end
 
-local function enqueue(t, element, priority)
-  local n = #t + 1
-  t[n] = { element, priority }
-  up(t, n, n, t.c)
+local function enqueue(t, element, priority) 
+  heapAdd(t, { element, priority }, t.c)
 end
 
 local function enqueueDequeue(t, element, priority)
   local n = #t
   if n ~= 0 then
     local c = t.c
-    local item = { element, priority }
+    local v = { element, priority }
     local root = t[1]
-    if c(item, root) > 0 then
-      t[1] = item
-      down(t, 1, n, c)
+    if c(v, root) > 0 then
+      t[1] = v
+      heapDown(t, 1, n, c)
       return root[1]
     end
   end
@@ -140,7 +103,7 @@ local function enqueueRange(t, ...)
       end
     end
     if i > 1 then
-      heapify(t)
+      heapify(t, t.c)
     end
   else
     local c = t.c
@@ -150,14 +113,14 @@ local function enqueueRange(t, ...)
         local element, priority = tuple[1], tuple[2]
         n = n + 1
         t[n] = { element, priority }
-        up(t, n, n, c)
+        heapUp(t, n, n, c)
       end
     else
       local elements, priority = ...
       for _, element in each(elements) do
         n = n + 1
         t[n] = { element, priority }
-        up(t, n, n, c)
+        heapUp(t, n, n, c)
       end
     end
   end
@@ -181,9 +144,8 @@ local function peek(t)
 end
 
 local function tryDequeue(t)
-  local n = #t
-  if n == 0 then 
-    local v = dequeue(t, n)
+  local v = heapPop(t, t.c)
+  if v then
     return true, v[1], v[2]
   end
   return false, t.__genericTElement__:default(), t.__genericTPriority__:default()
@@ -202,11 +164,7 @@ local PriorityQueue = {
   getCount = System.lengthFn,
   getComparer = Array.getOrderComparer,
   Clear = Array.clear,
-  Dequeue = function (t)
-    local n = #t
-    if n == 0 then throw(InvalidOperationException(er.InvalidOperation_EmptyQueue())) end
-    return dequeue(t, n)
-  end,
+  Dequeue = dequeue,
   Enqueue = enqueue,
   EnqueueDequeue = enqueueDequeue,
   EnqueueRange = enqueueRange,

@@ -17,6 +17,10 @@ limitations under the License.
 local System = System
 local define = System.define
 local throw = System.throw
+local Array = System.Array
+local heapAdd = Array.heapAdd
+local heapPop = Array.heapPop
+local heapDown = Array.heapDown
 local currentTimeMillis = System.currentTimeMillis
 local ArgumentNullException = System.ArgumentNullException
 local ArgumentOutOfRangeException  = System.ArgumentOutOfRangeException
@@ -44,31 +48,10 @@ else
   clearTimeout = notset
 end
 
-local maxExpiration = 9223372036854775807  --[[Int64.MaxValue]]
-local LinkedListEvent =  System.LinkedList(System.Object) 
 local TimeoutQueue = define("System.TimeoutQueue", (function ()
-  local getNextId, Insert, Add, AddRepeating, AddRepeating1, getNextExpiration, Erase, RunLoop, 
-  getCount, Contains, IsNext, __ctor__
+  local Add, AddRepeating, AddRepeating1, getNextExpiration, Erase, RunLoop, Contains, __ctor__
   __ctor__ = function (this)
-    this.ids_ = {}
-    this.events_ = LinkedListEvent()
-  end
-  getNextId = function (this)
-    local default = this.nextId_
-    this.nextId_ = default + 1
-    return default
-  end
-  Insert = function (this, e)
-    this.ids_[e.Id] = e
-    local next = this.events_:getFirst()
-    while next ~= nil and next.Value.Expiration <= e.Expiration do
-      next = next:getNext()
-    end
-    if next ~= nil then
-      e.LinkNode = this.events_:AddBefore(next, e)
-    else
-      e.LinkNode = this.events_:AddLast(e)
-    end
+	this.c = function (a, b) return a.Expiration - b.Expiration end
   end
   Add = function (this, now, delay, callback)
     return AddRepeating1(this, now, delay, 0, callback)
@@ -77,56 +60,50 @@ local TimeoutQueue = define("System.TimeoutQueue", (function ()
     return AddRepeating1(this, now, interval, interval, callback)
   end
   AddRepeating1 = function (this, now, delay, interval, callback)
-    local id = getNextId(this)
-    Insert(this, {
-      Id = id,
+    local id = {
       Expiration = now + delay,
       RepeatInterval = interval,
       Callback = callback
-    })
+    }
+    heapAdd(this, id, this.c)
     return id
   end
   getNextExpiration = function (this)
-    return this.events_.Count > 0 and this.events_:getFirst().Value.Expiration or maxExpiration
+    if #this > 0 then return this[1].Expiration end
   end
   Erase = function (this, id)
-    local e = this.ids_[id]
-    if e then
-      this.ids_[id] = nil
-      this.events_:RemoveNode(e.LinkNode)
+    if not id.cancel then
+      id.cancel = true
       return true
     end
     return false
   end
   RunLoop = function (this, now)
     while true do
-      local nextExp = getNextExpiration(this)
-      if nextExp <= now then
-        local e = this.events_:getFirst().Value
-        Erase(this, e.Id)
-        if e.RepeatInterval > 0 then
-          e.Expiration = now + e.RepeatInterval
-          Insert(this, e)
-        end
-        e.Callback(e.Id, now)
+      local e = this[1]
+      if e == nil then break end
+      if e.cancel then
+        heapPop(this, this.c)
       else
-        return nextExp
+        if e.Expiration <= now then
+          if e.RepeatInterval <= 0 then
+            heapPop(this, this.c)
+            e.cancel = true
+          else
+            e.Expiration = now + e.RepeatInterval
+            heapDown(this, 1, #this, this.c)
+          end
+          e.Callback(e, now)
+        else
+          return e.Expiration
+        end
       end
     end
   end
-  getCount = function (this)
-    return this.events_.Count
-  end
   Contains = function (this, id)
-    return this.ids_[id] ~= nil
-  end
-  IsNext = function (this, id)
-    local first = this.events_:getFirst()
-    local nextId = first and first.Value.Id
-    return nextId == id
+    return not id.cancel
   end
   return {
-    MaxExpiration = maxExpiration,
     nextId_ = 1,
     Add = Add,
     AddRepeating = AddRepeating,
@@ -134,9 +111,7 @@ local TimeoutQueue = define("System.TimeoutQueue", (function ()
     getNextExpiration = getNextExpiration,
     Erase = Erase,
     RunLoop = RunLoop,
-    getCount = getCount,
     Contains = Contains,
-    IsNext = IsNext,
     __ctor__ = __ctor__
   }
 end)())
@@ -147,7 +122,7 @@ local driverTimer
 local function runTimerQueue()
   local now = currentTimeMillis()
   local nextExpiration = timerQueue:RunLoop(now)
-  if nextExpiration ~= maxExpiration then
+  if nextExpiration then
     driverTimer = setTimeout(runTimerQueue, nextExpiration - now)
   else
     driverTimer = nil
@@ -157,7 +132,7 @@ end
 local function addTimer(fn, dueTime, period)
   local now = currentTimeMillis()
   local id = timerQueue:AddRepeating1(now, dueTime, period or 0, fn)
-  if timerQueue:IsNext(id) then
+  if timerQueue[1] == id then
     if driverTimer then
       clearTimeout(driverTimer)
     end
@@ -167,13 +142,7 @@ local function addTimer(fn, dueTime, period)
 end
 
 local function removeTimer(id)
-  local isNext = timerQueue:IsNext(id)
-  timerQueue:Erase(id)
-  if isNext then
-	clearTimeout(driverTimer)
-	local delay = timerQueue:getNextExpiration() - currentTimeMillis()
-	driverTimer = setTimeout(runTimerQueue, delay)
-  end
+  return timerQueue:Erase(id)
 end
 
 System.addTimer = addTimer
@@ -197,7 +166,7 @@ local function change(this, dueTime, period)
   if period < -1 or period > 0xfffffffe then
     throw(ArgumentOutOfRangeException("period"))
   end
-  if this.id == -1 then throw(ObjectDisposedException()) end
+  if this.id == false then throw(ObjectDisposedException()) end
   close(this)
   if dueTime ~= -1 then
     this.id = addTimer(this.callback, dueTime, period)
@@ -214,7 +183,16 @@ System.Timer = define("System.Threading.Timer", {
   Change = change,
   Dispose = function (this)
     close(this)
-    this.id = -1
+    this.id = false
+  end,
+  getActiveCount = function ()
+    local count = 0
+    for i = 1, #timerQueue do
+      if not timerQueue[i].cancel then
+        count = count + 1
+      end
+    end
+    return count
   end,
   __gc = close
 })

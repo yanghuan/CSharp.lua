@@ -21,7 +21,7 @@ local function runTimeout()
   if timeoutQueue then
     while true do
       local nextExpiration = timeoutQueue:getNextExpiration()
-      if nextExpiration ~= timeoutQueue.MaxExpiration then
+      if nextExpiration then
         now = nextExpiration
         timeoutQueue:RunLoop(now)
       else
@@ -348,10 +348,11 @@ local function testAsync()
 	end)
 
 	System.init({
-		"Test.Program",
-		"Test.TestAsync"
-	}, {
-		Main = "Test.Program.Main"
+    types = {
+      "Test.Program",
+      "Test.TestAsync"
+    },
+    Main = "Test.Program.Main"
 	})
 
 	Test.Program.Main() 
