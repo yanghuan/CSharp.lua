@@ -565,7 +565,7 @@ namespace CSharpLua {
     public static bool HasCSharpLuaAttribute(this SyntaxNode node, LuaDocumentStatement.AttributeFlags attribute, out string text) {
       text = null;
       var documentTrivia = node.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
-      if (documentTrivia != null) {
+      if (documentTrivia != default) {
         string document = documentTrivia.ToString();
         if (document.Contains(LuaDocumentStatement.ToString(attribute))) {
           text = document;

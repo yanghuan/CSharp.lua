@@ -2,20 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <RootNamespace>CSharpLua</RootNamespace>
     <Version>1.1.0</Version>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Copyright>Copyright ©  YANG Huan 2017</Copyright>
+      <Copyright>Copyright ©  YANG Huan 2017</Copyright>
     <Description>The C# to Lua compiler</Description>
     <Company>YANG Huan</Company>
     <Authors>YANG Huan</Authors>
     <PackageProjectUrl>https://github.com/yanghuan/CSharp.lua</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/yanghuan/CSharp.lua/master/LICENSE</PackageLicenseUrl>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>

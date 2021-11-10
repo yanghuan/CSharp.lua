@@ -1306,7 +1306,7 @@ namespace CSharpLua {
       public LuaBlankLinesStatement CheckBlankLine(ref int lastLine) {
         LuaBlankLinesStatement statement = null;
         if (lastLine != -1) {
-          if (SyntaxTrivia != null && SyntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia) {
+          if (SyntaxTrivia != default && SyntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia) {
             ++lastLine;
           }
           int count = LineSpan.StartLinePosition.Line - lastLine - 1;
