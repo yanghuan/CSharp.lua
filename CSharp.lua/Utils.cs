@@ -415,6 +415,11 @@ namespace CSharpLua {
       return type.IsNullableType() ? ((INamedTypeSymbol)type).TypeArguments.First() : null;
     }
 
+    public static bool IsNullableWithBasicElementType(this ITypeSymbol type) {
+      return type.IsNullableType(out var elementType)
+             && (elementType.IsBasicType() || type.SpecialType == SpecialType.System_DateTime || type.IsTimeSpanType());
+    }
+
     public static bool IsEnumType(this ITypeSymbol type, out ITypeSymbol symbol, out bool isNullable) {
       if (type.TypeKind == TypeKind.Enum) {
         symbol = type;

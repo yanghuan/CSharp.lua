@@ -1089,13 +1089,13 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
+      /*
       if (name is LuaInvocationExpressionSyntax luaInvocation && luaInvocation.Expression == LuaIdentifierNameSyntax.NullableClone) {
         for (var i = 0; i < luaInvocation.Arguments.Count; i++) {
           luaInvocation.Arguments[i] = BuildFieldOrPropertyMemberAccessExpression(expression, luaInvocation.Arguments[i], isStatic);
         }
-
         return name;
-      }
+      }*/
 
       if (name is LuaPropertyAdapterExpressionSyntax propertyMethod) {
         var arguments = propertyMethod.ArgumentList.Arguments;
@@ -1222,7 +1222,7 @@ namespace CSharpLua {
     }
 
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression, bool isPropertyField = false) {
-      if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol)) {
+      if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol) && !typeSymbol.IsNullableWithBasicElementType()) {
         bool need = false;
         if (isPropertyField) {
           need = true;
