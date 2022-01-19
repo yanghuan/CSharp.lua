@@ -15,6 +15,14 @@ namespace Bridge.ClientTest
             return value is T;
         }
 
+        public class PropertyTest
+        {
+            public int? field;
+            public static int? fieldStatic;
+            public int? Property { get; set; }
+            public static int? PropertyStatic { get; set; }
+        }
+
 #pragma warning disable 660, 661
 
         private struct MyType
@@ -653,6 +661,58 @@ namespace Bridge.ClientTest
 
             var s2 = boxed.ToString();
             Assert.AreEqual("Value2", s2);
+        }
+
+        [Test]
+        public void NullableFieldWorks()
+        {
+            var a = new PropertyTest();
+
+            Assert.False(a.field.HasValue);
+            a.field = 5;
+            Assert.True(a.field.HasValue);
+            Assert.AreEqual(5, a.field);
+            Assert.AreEqual(5, a.field.Value);
+            a.field = null;
+            Assert.False(a.field.HasValue);
+        }
+
+        [Test]
+        public void NullableFieldStaticWorks()
+        {
+            Assert.False(PropertyTest.fieldStatic.HasValue);
+            PropertyTest.fieldStatic = 5;
+            Assert.True(PropertyTest.fieldStatic.HasValue);
+            Assert.AreEqual(5, PropertyTest.fieldStatic);
+            Assert.AreEqual(5, PropertyTest.fieldStatic.Value);
+            PropertyTest.fieldStatic = null;
+            Assert.False(PropertyTest.fieldStatic.HasValue);
+        }
+
+        [Test]
+        public void NullablePropertyWorks()
+        {
+            var a = new PropertyTest();
+
+            Assert.False(a.Property.HasValue);
+            a.Property = 5;
+            Assert.True(a.Property.HasValue);
+            Assert.AreEqual(5, a.Property);
+            Assert.AreEqual(5, a.Property.Value);
+            a.Property = null;
+            Assert.False(a.Property.HasValue);
+        }
+
+        [Test]
+        public void NullablePropertyStaticWorks()
+        {
+            Assert.False(PropertyTest.PropertyStatic.HasValue);
+            PropertyTest.PropertyStatic = 5;
+            Assert.True(PropertyTest.PropertyStatic.HasValue);
+            Assert.AreEqual(5, PropertyTest.PropertyStatic);
+            Assert.AreEqual(5, PropertyTest.PropertyStatic.Value);
+            PropertyTest.PropertyStatic = null;
+            Assert.False(PropertyTest.PropertyStatic.HasValue);
         }
     }
 }
