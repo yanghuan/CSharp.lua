@@ -4896,8 +4896,8 @@ namespace CSharpLua {
         return new LuaReturnStatementSyntax();
       }
 
-      string yieldToken = node.YieldKeyword.ValueText;
-      var expression = node.Expression.AcceptExpression(this);
+      string yieldToken = node!.YieldKeyword.ValueText;
+      var expression = VisitExpression(node.Expression);
       LuaExpressionSyntax targetMethod = curMethod.Symbol.IsAsync
         ? LuaIdentifierNameSyntax.Async.MemberAccess(yieldToken, true)
         : LuaIdentifierNameSyntax.System.MemberAccess(yieldToken);
