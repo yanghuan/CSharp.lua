@@ -567,7 +567,7 @@ local function binarySearchByName(metadata, name)
   local index = lowerBound(metadata, 1, last, name, metadataItemCompByName)
   if index ~= last then
     local item = metadata[index]
-    if (item[1] == name) then
+    if item[1] == name then
       return metadata[index], index
     end
   end
