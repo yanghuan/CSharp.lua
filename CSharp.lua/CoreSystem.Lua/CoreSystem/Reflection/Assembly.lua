@@ -566,7 +566,10 @@ local function binarySearchByName(metadata, name)
   local last = #metadata + 1
   local index = lowerBound(metadata, 1, last, name, metadataItemCompByName)
   if index ~= last then
-    return metadata[index], index
+    local item = metadata[index]
+    if item[1] == name then
+      return metadata[index], index
+    end
   end
   return nil
 end
