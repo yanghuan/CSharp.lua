@@ -183,9 +183,14 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
-      Contract.Assert(node.IsKind(SyntaxKind.ArrayInitializerExpression));
-      var arrayType = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
-      return BuildArrayTypeFromInitializer(arrayType, node);
+      if (node.IsKind(SyntaxKind.ArrayInitializerExpression)) {
+        var arrayType = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node).ConvertedType;
+        return BuildArrayTypeFromInitializer(arrayType, node);
+      }
+
+      var type = semanticModel_.GetTypeInfo(node!.Parent!).Type;
+      var expression = GetTypeName(type);
+      return expression.Invocation();
     }
 
     public override LuaSyntaxNode VisitBracketedArgumentList(BracketedArgumentListSyntax node) {
