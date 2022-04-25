@@ -804,9 +804,14 @@ namespace CSharpLua {
     }
 
     private bool MayBeNullOrFalse(ExpressionSyntax conditionalWhenTrue) {
-      if (conditionalWhenTrue.IsKind(SyntaxKind.NullLiteralExpression)) {
-        return true;
+      switch (conditionalWhenTrue.Kind()) {
+        case SyntaxKind.NullLiteralExpression:
+          return true;
+
+        case SyntaxKind.ParenthesizedLambdaExpression:
+          return false;
       }
+
       var type = semanticModel_.GetTypeInfo(conditionalWhenTrue!).Type;
       return MayBeNull(conditionalWhenTrue, type) || MayBeFalse(conditionalWhenTrue, type);
     }
