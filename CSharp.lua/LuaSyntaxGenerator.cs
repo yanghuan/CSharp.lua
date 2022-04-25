@@ -1604,52 +1604,7 @@ namespace CSharpLua {
         return false;
       }
 
-      var node = symbol.GetDeclaringSyntaxNode();
-      if (node != null) {
-        switch (node.Kind()) {
-          case SyntaxKind.PropertyDeclaration: {
-            var property = (PropertyDeclarationSyntax)node;
-            bool hasGet = false;
-            bool hasSet = false;
-            if (property.AccessorList != null) {
-              foreach (var accessor in property.AccessorList.Accessors) {
-                if (accessor.Body != null || accessor.ExpressionBody != null) {
-                  if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
-                    Contract.Assert(!hasGet);
-                    hasGet = true;
-                  } else {
-                    Contract.Assert(!hasSet);
-                    hasSet = true;
-                  }
-                }
-              }
-            } else {
-              Contract.Assert(!hasGet);
-              hasGet = true;
-            }
-            bool isField = !hasGet && !hasSet;
-            if (isField) {
-              if (property.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.NoField)) {
-                isField = false;
-              }
-            }
-            return isField;
-          }
-          case SyntaxKind.IndexerDeclaration: {
-            return false;
-          }
-          case SyntaxKind.AnonymousObjectMemberDeclarator: {
-            return true;
-          }
-          case SyntaxKind.Parameter: {
-            return true;
-          }
-          default: {
-            throw new InvalidOperationException();
-          }
-        }
-      }
-      return false;
+      return symbol.IsAutoProperty();
     }
 
     internal bool IsPropertyField(IPropertySymbol symbol) {

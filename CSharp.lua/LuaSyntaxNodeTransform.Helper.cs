@@ -2289,7 +2289,10 @@ namespace CSharpLua {
           }
           expressionBody = returnStatement.Expression;
         } else {
-          expressionBody = accessor.ExpressionBody.Expression;
+          expressionBody = accessor.ExpressionBody?.Expression;
+          if (expressionBody == null) {
+            return false;
+          }
         }
       } else if (propertyDeclaration.ExpressionBody != null) {
         expressionBody = propertyDeclaration.ExpressionBody.Expression;

@@ -2800,11 +2800,15 @@ namespace CSharpLua {
       return false;
     }
 
+    private bool IsPropertyField(IdentifierNameSyntax node, IPropertySymbol propertySymbol) {
+      return IsPropertyField(propertySymbol) || (IsInternalNode(node) && propertySymbol.IsAutoProperty());
+    }
+
     private LuaExpressionSyntax VisitPropertyOrEventIdentifierName(IdentifierNameSyntax node, ISymbol symbol, bool isProperty, out bool isField) {
       bool isReadOnly;
       if (isProperty) {
         var propertySymbol = (IPropertySymbol)symbol;
-        isField = IsPropertyField(propertySymbol);
+        isField = IsPropertyField(node, propertySymbol);
         isReadOnly = propertySymbol.IsReadOnly;
       } else {
         var eventSymbol = (IEventSymbol)symbol;
