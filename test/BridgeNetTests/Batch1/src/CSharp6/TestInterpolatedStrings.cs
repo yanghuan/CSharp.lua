@@ -36,9 +36,7 @@ namespace Bridge.ClientTest.CSharp6
             var p = new Person();
 
             Assert.AreEqual("Jane is 10 year{s} old", $"{p.Name} is {p.Age} year{{s}} old");
-#if false
             Assert.AreEqual("                Jane is 010 year{s} old", $"{p.Name,20} is {p.Age:D3} year{{s}} old");
-#endif
 
             Assert.AreEqual("Jane is 10 years old", $"{p.Name} is {p.Age} year{(p.Age == 1 ? "" : "s")} old");
             p.Age = 1;
@@ -62,6 +60,9 @@ namespace Bridge.ClientTest.CSharp6
             Assert.AreEqual(2, f2.GetArguments().Length);
             Assert.AreEqual("i = 0, j = 1", f2.ToString());
 #endif
+
+            Assert.AreEqual($"Pi is equal to: {Math.PI:f2}", "Pi is equal to: 3.14");
+            Assert.AreEqual($"Pi is equal to: {Math.PI,8:f2}", "Pi is equal to:     3.14");
         }
     }
 }

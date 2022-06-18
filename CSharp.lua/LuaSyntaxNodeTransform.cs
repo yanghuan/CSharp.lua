@@ -3946,39 +3946,82 @@ namespace CSharpLua {
       return original.MemberAccess(LuaIdentifierNameSyntax.EnumToString, true).Invocation(typeName);
     }
 
-    private LuaExpressionSyntax WrapStringConcatExpression(ExpressionSyntax expression) {
+    private LuaExpressionSyntax WrapStringConcatExpression(ExpressionSyntax expression, LuaExpressionSyntax format = null, LuaExpressionSyntax alignment = null) {
       ITypeSymbol typeInfo = semanticModel_.GetTypeInfo(expression).Type;
       var original = expression.AcceptExpression(this);
-      if (typeInfo.IsStringType()) {
-        if (IsPreventDebug && !expression.IsKind(SyntaxKind.AddExpression) && !expression.IsKind(SyntaxKind.StringLiteralExpression)) {
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
-        }
-        return original;
-      }
-
       switch (typeInfo.SpecialType) {
+        case SpecialType.System_String: {
+            if ((IsPreventDebug 
+              && !expression.IsKind(SyntaxKind.AddExpression)
+              && !expression.IsKind(SyntaxKind.StringLiteralExpression)) || alignment != null) {
+              return FormatAlignment(original, null, alignment);
+            }
+
+            return original;
+        }
         case SpecialType.System_Char: {
           var constValue = semanticModel_.GetConstantValue(expression);
           if (constValue.HasValue) {
             string text = SyntaxFactory.Literal((char)constValue.Value).Text;
             return new LuaIdentifierLiteralExpressionSyntax(text);
           }
-
           return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StringChar, original);
         }
-        case >= SpecialType.System_Boolean and <= SpecialType.System_Double when IsPreventDebug && typeInfo.SpecialType == SpecialType.System_Boolean:
-          return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.SystemToString, original);
-        case >= SpecialType.System_Boolean and <= SpecialType.System_Double:
+        case SpecialType.System_Boolean: {
+          if (IsPreventDebug || alignment != null) {
+             return FormatAlignment(original, null, alignment);
+          }
+          return original;
+        }
+        case >= SpecialType.System_SByte and <= SpecialType.System_Double:
+          if (format != null || alignment != null) {
+            if (IsPreventDebug) {
+              return FormatAlignment(original, format, alignment);
+            } else {
+              if (alignment == null) {
+                if (original is LuaLiteralExpressionSyntax) {
+                  original = original.Parenthesized();
+                }
+                return original.MemberAccess(LuaIdentifierNameSyntax.ToStr, true).Invocation(format);
+              } else {
+                return FormatAlignment(original, format, alignment);
+              }
+            }
+          }
           return original;
       }
 
       if (typeInfo.IsEnumType(out var enumTypeSymbol, out bool isNullable)) {
         return BuildEnumToStringExpression(enumTypeSymbol, isNullable, original, expression);
       }
+
       if (typeInfo.IsValueType) {
-        return original.MemberAccess(LuaIdentifierNameSyntax.ToStr, true).Invocation();
+        if (alignment == null) {
+          var invocation = original.MemberAccess(LuaIdentifierNameSyntax.ToStr, true).Invocation();
+          if (format != null) {
+            invocation.AddArgument(format);
+          }
+          return invocation;
+        }
       }
-      return LuaIdentifierNameSyntax.SystemToString.Invocation(original);
+
+      return FormatAlignment(original, format, alignment);
+    }
+
+    private LuaInvocationExpressionSyntax FormatAlignment(LuaExpressionSyntax e, LuaExpressionSyntax format, LuaExpressionSyntax alignment) {
+      var invocation = LuaIdentifierNameSyntax.SystemToString.Invocation(e);
+      if (format != null) {
+        invocation.AddArgument(format);
+      }
+
+      if (alignment != null) {
+        if (format == null) {
+          invocation.AddArgument(LuaIdentifierLiteralExpressionSyntax.Nil);
+        }
+        invocation.AddArgument(alignment);
+      }
+
+      return invocation;
     }
 
     private LuaExpressionSyntax BuildStringConcatExpression(BinaryExpressionSyntax node) {

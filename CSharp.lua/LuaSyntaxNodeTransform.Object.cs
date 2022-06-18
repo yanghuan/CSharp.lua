@@ -1135,8 +1135,17 @@ namespace CSharpLua {
       return obj switch {
         LuaIdentifierNameSyntax s => new LuaStringLiteralExpressionSyntax(s),
         ExpressionSyntax e => WrapStringConcatExpression(e),
+        InterpolationSyntax e => WrapStringConcatExpression(e.Expression, e.FormatClause?.AcceptExpression(this), e.AlignmentClause?.AcceptExpression(this)),
         _ => (LuaBinaryExpressionSyntax)obj
       };
+    }
+
+    public override LuaSyntaxNode VisitInterpolationFormatClause(InterpolationFormatClauseSyntax node) {
+      return  new LuaStringLiteralExpressionSyntax(node.FormatStringToken.ValueText);
+    }
+
+    public override LuaSyntaxNode VisitInterpolationAlignmentClause(InterpolationAlignmentClauseSyntax node) {
+      return node.Value.AcceptExpression(this);
     }
 
     private LuaBinaryExpressionSyntax ConcatInterpolatedString(object left, object right) {
@@ -1149,8 +1158,7 @@ namespace CSharpLua {
         if (content.IsKind(SyntaxKind.InterpolatedStringText)) {
           expressions.Add(content.Accept(this));
         } else {
-          var interpolation = (InterpolationSyntax)content;
-          expressions.Add(interpolation.Expression);
+          expressions.Add((InterpolationSyntax)content);
         }
       }
 
