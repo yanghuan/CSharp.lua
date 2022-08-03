@@ -17,7 +17,7 @@ jobs:
         xpath: '//TargetFramework'
     - name: Get Project net version
       id: getnetversion
-      uses: bhowell2/github-substring-actionn@v1.0.0
+      uses: bhowell2/github-substring-action@v1.0.0
       with:
        value: '${{steps.getprojecttargetframework.outputs.info}}'
        index_of_str: 'net'
