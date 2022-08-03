@@ -222,28 +222,22 @@ local function setBase(cls, kind)
   cls.__index = cls 
   cls.__call = new
   
-  if kind == "S" then
-    if extends then
+  local object = kind ~= "S" and Object or ValueType
+  if extends then
+    local base = extends[1]
+    if not base then error(cls.__name__ .. "'s base is nil") end
+    if base.class == "I" then
       cls.interface = extends
-    end
-    setmetatable(cls, ValueType)
-  else
-    if extends then
-      local base = extends[1]
-      if not base then error(cls.__name__ .. "'s base is nil") end
-      if base.class == "I" then
-        cls.interface = extends
-        setmetatable(cls, Object)
-      else
-        setmetatable(cls, base)
-        if #extends > 1 then
-          tremove(extends, 1)
-          cls.interface = extends
-        end
-      end
+      setmetatable(cls, object)
     else
-      setmetatable(cls, Object)
+      setmetatable(cls, base)
+      if #extends > 1 then
+        tremove(extends, 1)
+        cls.interface = extends
+      end
     end
+  else
+    setmetatable(cls, object)
   end
 end
 
@@ -1352,63 +1346,78 @@ local function recordEquals(t, other)
   return false
 end
 
+local function recordPrintMembers(this, builder)
+  local p = pack(this.__members__())
+  local n = p.n
+  for i = 2, n do
+    local k = p[i]
+    local v = this[k]
+    builder:Append(k)
+    builder:Append(" = ")
+    if v ~= nil then
+    builder:Append(toString(v))
+    end
+    if i ~= n then
+    builder:Append(", ")
+    end
+  end
+  return true
+end
+
+local function recordToString(this)
+  local p = pack(this.__members__())
+  local n = p.n
+  local t = { p[1], "{" }
+  local count = 3
+  for i = 2, n do
+    local k = p[i]
+    local v = this[k]
+    t[count] = k
+    t[count + 1] = "="
+    if v ~= nil then
+      if i ~= n then
+        t[count + 2] = toString(v) .. ','
+      else
+        t[count + 2] = toString(v)
+      end
+    else
+      if i ~= n then
+        t[count + 2] = ','
+      end
+    end
+    if v == nil and i == n then
+      count = count + 2
+    else
+      count = count + 3
+    end
+  end
+  t[count] = "}"
+  return tconcat(t, ' ')
+end
+
+local function recordDeconstruct(this)
+  local t = pack(this.__members__())
+  for i = 2, t.n do
+    t[i] = this[t[i]]
+  end
+  return unpack(t, 2)
+end
+
 defCls("System.RecordType", {
   __eq = recordEquals,
-  __clone__ = function (this)
-    local cls = getmetatable(this)
-    local t = {}
-    for k, v in pairs(this) do
-      t[k] = v
-    end
-    return setmetatable(t, cls)
-  end,
+  __clone__ = ValueType.__clone__,
   Equals = recordEquals,
-  PrintMembers = function (this, builder)
-    local p = pack(this.__members__())
-    local n = p.n
-    for i = 2, n do
-      local k = p[i]
-      local v = this[k]
-      builder:Append(k)
-      builder:Append(" = ")
-      if v ~= nil then
-        builder:Append(toString(v))
-      end
-      if i ~= n then
-        builder:Append(", ")
-      end
-    end
-  end,
-  ToString = function (this)
-    local p = pack(this.__members__())
-    local n = p.n
-    local t = { p[1], "{" }
-    local count = 3
-    for i = 2, n do
-      local k = p[i]
-      local v = this[k]
-      t[count] = k
-      t[count + 1] = "="
-      if v ~= nil then
-        if i ~= n then
-          t[count + 2] = toString(v) .. ','
-        else
-          t[count + 2] = toString(v)
-        end
-      else
-        if i ~= n then
-          t[count + 2] = ','
-        end
-      end
-      if v == nil and i == n then
-        count = count + 2
-      else
-        count = count + 3
-      end
-    end
-    t[count] = "}"
-    return tconcat(t, ' ')
-  end
+  PrintMembers = recordPrintMembers,
+  ToString = recordToString,
+  Deconstruct = recordDeconstruct
+})
+
+defStc("System.RecordValueType", {
+  __eq = recordEquals,
+  Equals = recordEquals,
+  PrintMembers = recordPrintMembers,
+  ToString = recordToString,
+  Deconstruct = recordDeconstruct
 })
 
 local Attribute = defCls("System.Attribute")

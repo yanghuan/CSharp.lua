@@ -1925,7 +1925,7 @@ namespace CSharpLua {
               return 1;
             }
           } else {
-            if (typeSymbol.IsRecordType()) {
+            if (typeSymbol.IsRecord) {
               int posIndex = ctors.FindIndex(i => i.Parameters.Length == 1 && i.Parameters[0].Type.EQ(typeSymbol));
               Contract.Assert(posIndex != -1);
               ctors.RemoveAt(posIndex);

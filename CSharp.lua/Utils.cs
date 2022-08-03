@@ -468,11 +468,6 @@ namespace CSharpLua {
       return type.TypeKind == TypeKind.Interface && (type.IsSystemIComparableT() || type.IsSystemIEquatableT() || type.IsSystemIFormattable());
     }
 
-    public static bool IsRecordType(this INamedTypeSymbol type) {
-      var methods = type.GetMembers("<Clone>$");
-      return methods.Length == 1;
-    }
-
     public static bool IsSystemTask(this ITypeSymbol symbol) {
       return (symbol.Name is "Task" or "ValueTask")
         && symbol.ContainingNamespace.Name == "Tasks"

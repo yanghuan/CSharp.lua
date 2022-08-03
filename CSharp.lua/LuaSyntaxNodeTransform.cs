@@ -358,7 +358,7 @@ namespace CSharpLua {
       }
 
       if (baseTypes.Count > 0) {
-        if (typeSymbol.IsRecordType()) {
+        if (typeSymbol.IsRecord) {
           baseTypes.Add(GetRecordInterfaceTypeName(typeSymbol));
         }
         var genericArgument = CheckSpecialGenericArgument(typeSymbol);
@@ -413,9 +413,15 @@ namespace CSharpLua {
         typeDeclaration.AddCtor(function, true);
       }
 
-      if (typeSymbol.IsRecordType()) {
-        if (typeSymbol.BaseType is {SpecialType: SpecialType.System_Object}) {
-          typeDeclaration.AddBaseTypes(LuaIdentifierNameSyntax.RecordType.ArrayOf(GetRecordInterfaceTypeName(typeSymbol)), null, null);
+      if (typeSymbol.IsRecord) {
+        LuaIdentifierNameSyntax recordBaseType = null;
+        if (typeSymbol.BaseType?.SpecialType == SpecialType.System_Object) {
+          recordBaseType = LuaIdentifierNameSyntax.RecordType;
+        } else if (typeSymbol.BaseType?.SpecialType == SpecialType.System_ValueType) {
+          recordBaseType = LuaIdentifierNameSyntax.RecordValueType;
+        }
+        if (recordBaseType != null) {
+          typeDeclaration.AddBaseTypes(recordBaseType.ArrayOf(GetRecordInterfaceTypeName(typeSymbol)), null, null);
         }
         BuildRecordMembers(typeSymbol, typeDeclaration);
       }
@@ -434,7 +440,7 @@ namespace CSharpLua {
     }
 
     private void CheckRecordParameterCtor(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
-      if (typeSymbol.IsRecordType()) {
+      if (typeSymbol.IsRecord) {
         var recordDeclaration = (RecordDeclarationSyntax)node;
         if (recordDeclaration.ParameterList != null) {
           BuildRecordParameterCtor(typeSymbol, typeDeclaration, recordDeclaration);
@@ -461,7 +467,8 @@ namespace CSharpLua {
     }
 
     private void BuildRecordMembers(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration) {
-      var properties = typeSymbol.GetMembers().OfType<IPropertySymbol>().Skip(1);
+      int skipCount = typeSymbol.IsReferenceType ? 1 : 0;
+      var properties = typeSymbol.GetMembers().OfType<IPropertySymbol>().Skip(skipCount);
       var expressions = new List<LuaExpressionSyntax> { typeSymbol.Name.ToStringLiteral() };
       expressions.AddRange(properties.Select(i => GetMemberName(i).ToStringLiteral()));
       var function = new LuaFunctionExpressionSyntax();
@@ -1306,7 +1313,7 @@ namespace CSharpLua {
       public LuaBlankLinesStatement CheckBlankLine(ref int lastLine) {
         LuaBlankLinesStatement statement = null;
         if (lastLine != -1) {
-          if (SyntaxTrivia != default && SyntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia) {
+          if (SyntaxTrivia != default && SyntaxTrivia.IsKind(SyntaxKind.DisabledTextTrivia)) {
             ++lastLine;
           }
           int count = LineSpan.StartLinePosition.Line - lastLine - 1;
@@ -5199,7 +5206,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitCheckedStatement(CheckedStatementSyntax node) {
-      bool isChecked = node.Keyword.Kind() == SyntaxKind.CheckedKeyword;
+      bool isChecked = node.Keyword.IsKind(SyntaxKind.CheckedKeyword);
       PushChecked(isChecked);
       var statements = new LuaStatementListSyntax();
       statements.Statements.Add(new LuaShortCommentStatement(" " + node.Keyword.ValueText));
@@ -5210,7 +5217,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitCheckedExpression(CheckedExpressionSyntax node) {
-      bool isChecked = node.Keyword.Kind() == SyntaxKind.CheckedKeyword;
+      bool isChecked = node.Keyword.IsKind(SyntaxKind.CheckedKeyword);
       PushChecked(isChecked);
       var expression = node.Expression.Accept(this);
       PopChecked();

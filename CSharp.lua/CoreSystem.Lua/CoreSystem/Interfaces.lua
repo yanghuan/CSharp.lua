@@ -30,6 +30,9 @@ defInf("System.IEquatable_1", emptyFn)
 defInf("System.IPromise")
 defInf("System.IDisposable")
 
+defInf("System.IStructuralComparable")
+defInf("System.IStructuralEquatable")
+
 local IEnumerable = defInf("System.IEnumerable")
 local IEnumerator = defInf("System.IEnumerator")
 
