@@ -14,10 +14,10 @@ jobs:
       uses: mavrosxristoforos/get-xml-info@1.0
       with:
         xml-file: 'CSharp.lua.Launcher/CSharp.lua.Launcher.csproj'
-        xpath: '//TargetFramework'
+        xpath: "//TargetFramework/substring-after(., 'net')"
     
 
-    - run: echo "${{ steps.getxml.outputs.info}}"
+    - run: echo "${{ steps.getxml.outputs.info}}.x"
 
     
     - name: Setup dotnet
