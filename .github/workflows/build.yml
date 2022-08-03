@@ -11,10 +11,10 @@ jobs:
     - uses: actions/checkout@v1
     - name: Get XML
       id: getxml
-      uses: mavrosxristoforos/get-xml-info@1.0
+      uses: QwerMike/xpath-action@v1
       with:
-        xml-file: 'CSharp.lua.Launcher/CSharp.lua.Launcher.csproj'
-        xpath: "//TargetFramework/substring-after(., 'net')"
+        filename: 'CSharp.lua.Launcher/CSharp.lua.Launcher.csproj'
+        expression: "//TargetFramework/substring-after(., 'net')"
     
 
     - run: echo "${{ steps.getxml.outputs.info}}.x"
