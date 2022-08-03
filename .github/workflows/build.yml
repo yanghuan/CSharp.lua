@@ -9,21 +9,26 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Get XML
-      id: getxml
-      uses: QwerMike/xpath-action@v1
+    - name: Get Project TargetFramework name 
+      id: getprojecttargetframework
+      uses: mavrosxristoforos/get-xml-info@1.0
       with:
-        filename: 'CSharp.lua.Launcher/CSharp.lua.Launcher.csproj'
-        expression: "//TargetFramework/substring-after(., 'net')"
+        xml-file: 'CSharp.lua.Launcher/CSharp.lua.Launcher.csproj'
+        xpath: '//TargetFramework/'
     
-
-    - run: echo "${{ steps.getxml.outputs.info}}.x"
+    - name: Get  Project net version
+      id: getnetversion
+      with:
+       value: '${{steps.getprojecttargetframework.outputs.info}}'
+       index_of_str: 'net'
+    
+    - run: echo "${{steps.getnetversion.outputs.substring}}.x"
 
     
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: ${{steps.getnetversion.outputs.substring}}.x
     - name: clear
       run: dotnet clean --configuration Debug && dotnet nuget locals all --clear
     - name: Build with dotnet
