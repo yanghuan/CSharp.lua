@@ -9,16 +9,17 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Get Project TargetFramework name 
+    - name: Get Project TargetFramework Name
       id: getprojecttargetframework
       uses: mavrosxristoforos/get-xml-info@1.0
       with:
         xml-file: 'CSharp.lua.Launcher/CSharp.lua.Launcher.csproj'
         xpath: '//TargetFramework'
-        
-        
-    - run: echo "${{steps.getprojecttargetframework.outputs.info}}"
-    
+    - name: Get Project net version
+      id: getnetversion
+      with:
+       value: '${{steps.getprojecttargetframework.outputs.info}}'
+       index_of_str: 'net'
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
