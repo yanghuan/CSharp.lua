@@ -9,10 +9,22 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - uses: kzrnm/get-net-sdk-project-versions-action@v1
+      id: get-version
+      with:
+        proj-path: CSharp.lua.Launcher/CSharp.lua.Launcher.csproj
+    - run: echo "${{steps.get-version.outputs.version}}"
+    - run: echo "${{steps.get-version.outputs.version-prefix}}" 
+    - run: echo "${{steps.get-version.outputs.version-suffix}}" 
+    - run: echo "${{steps.get-version.outputs.package-version}}" 
+    - run: echo "${{steps.get-version.outputs.assembly-version}}" 
+    - run: echo "${{steps.get-version.outputs.file-version}}" 
+    - run: echo "${{steps.get-version.outputs.informational-version}}" 
+    
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.100-rc.1.21463.6
+        dotnet-version: 6.0.x
     - name: clear
       run: dotnet clean --configuration Debug && dotnet nuget locals all --clear
     - name: Build with dotnet
