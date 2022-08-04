@@ -9,10 +9,22 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - name: Get Project TargetFramework Name
+      id: getprojecttargetframework
+      uses: mavrosxristoforos/get-xml-info@1.0
+      with:
+        xml-file: 'CSharp.lua.Launcher/CSharp.lua.Launcher.csproj'
+        xpath: '//TargetFramework'
+    - name: Get Project net version
+      id: getnetversion
+      uses: bhowell2/github-substring-action@v1.0.0
+      with:
+       value: '${{steps.getprojecttargetframework.outputs.info}}'
+       index_of_str: 'net'
     - name: Setup dotnet
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.100-rc.1.21463.6
+        dotnet-version: ${{steps.getnetversion.outputs.substring}}.x
     - name: clear
       run: dotnet clean --configuration Debug && dotnet nuget locals all --clear
     - name: Build with dotnet
