@@ -2110,6 +2110,7 @@ namespace CSharpLua {
       }
 
       switch (node.Parent.Kind()) {
+        case SyntaxKind.ConditionalAccessExpression:
         case SyntaxKind.ExpressionStatement:
         case SyntaxKind.ConstructorDeclaration: {
           var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
