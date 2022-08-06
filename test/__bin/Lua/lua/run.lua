@@ -1,4 +1,4 @@
-local function execute(cmd)
+function execute(cmd)
   print("execute", cmd)
   local code = os.execute(cmd)
   assert(code == 0)
@@ -11,8 +11,20 @@ local luaVersions = {
   { "Lua5.4", "__LUA54__" },
 }
 
+publishOutputDir = "bin/Release/PublishOutput/"
+
+local function publish(depth)
+  local cmd = ("dotnet publish %s --configuration Release --output %s"):format(("../"):rep(depth), publishOutputDir)
+  execute(cmd)
+end
+
+local function deletePublishDir()
+  local cmd = ("rd /s /q %s"):format("bin")
+  execute(cmd)
+end
+
 local function compile(arg)
-  local CSharpLua = ("../"):rep(arg.depth) .. "CSharp.lua.Launcher/bin/Debug/net6.0/CSharp.lua.Launcher.dll"
+  local CSharpLua = publishOutputDir .. "CSharp.lua.Launcher.dll"
   local cmd = ("dotnet %s -s %s -d %s"):format(CSharpLua, arg.input, arg.output)
   if arg.libs then
     cmd = cmd .. " -l " .. arg.libs
@@ -83,14 +95,20 @@ local function runAll(t, args)
   end
 end
 
-
-function run(args)
-  execute("dotnet build --configuration Debug")
+function run(args, ignoreBuild, afterPublishFn)
+  if not ignoreBuild then
+    execute("dotnet build --configuration Debug")
+  end
   if args[1] == nil then
     args = { args }
+  end
+  publish(args.depth or args[1].depth)
+  if afterPublishFn then
+    afterPublishFn()
   end
   runAll({}, args)
   runAll({ inlineProperty = true }, args)
   runAll({ nodebug = true }, args)
   runAll({ inlineProperty = true, nodebug = true }, args)
+  deletePublishDir()
 end
