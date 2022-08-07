@@ -73,7 +73,15 @@ namespace CSharpLua {
   }
 
   public sealed class ConcurrentHashSet<T> : IEnumerable<T> {
-    private readonly ConcurrentDictionary<T, bool> dict_ = new();
+    private readonly ConcurrentDictionary<T, bool> dict_;
+
+    public ConcurrentHashSet() {
+      dict_ = new();
+    }
+
+    public ConcurrentHashSet(IEqualityComparer<T> comparer) {
+      dict_ = new(comparer);
+    }
 
     public bool Add(T v) {
       return dict_.TryAdd(v, true);
@@ -124,6 +132,10 @@ namespace CSharpLua {
 
     public static void RemoveRange<T>(this List<T> list, int index) {
       list.RemoveRange(index, list.Count - index);
+    }
+
+    public static void RemoveAtLast<T>(this List<T> list) {
+      list.RemoveAt(list.Count - 1);
     }
 
     public static T GetOrDefault<K, T>(this IDictionary<K, T> dict, K key, T t = default) {
@@ -318,31 +330,31 @@ namespace CSharpLua {
     }
 
     public static bool IsStatic(this SyntaxTokenList modifiers) {
-      return modifiers.Any(i => i.IsKind(SyntaxKind.StaticKeyword));
+      return modifiers.Any(SyntaxKind.StaticKeyword);
     }
 
     public static bool IsAbstract(this SyntaxTokenList modifiers) {
-      return modifiers.Any(i => i.IsKind(SyntaxKind.AbstractKeyword));
+      return modifiers.Any(SyntaxKind.AbstractKeyword);
     }
 
     public static bool IsExtern(this SyntaxTokenList modifiers) {
-      return modifiers.Any(i => i.IsKind(SyntaxKind.ExternKeyword));
+      return modifiers.Any(SyntaxKind.ExternKeyword);
     }
 
     public static bool IsReadOnly(this SyntaxTokenList modifiers) {
-      return modifiers.Any(i => i.IsKind(SyntaxKind.ReadOnlyKeyword));
+      return modifiers.Any(SyntaxKind.ReadOnlyKeyword);
     }
 
     public static bool IsConst(this SyntaxTokenList modifiers) {
-      return modifiers.Any(i => i.IsKind(SyntaxKind.ConstKeyword));
+      return modifiers.Any(SyntaxKind.ConstKeyword);
     }
 
     public static bool IsParams(this SyntaxTokenList modifiers) {
-      return modifiers.Any(i => i.IsKind(SyntaxKind.ParamsKeyword));
+      return modifiers.Any(SyntaxKind.ParamsKeyword);
     }
 
     public static bool IsPartial(this SyntaxTokenList modifiers) {
-      return modifiers.Any(i => i.IsKind(SyntaxKind.PartialKeyword));
+      return modifiers.Any(SyntaxKind.PartialKeyword);
     }
 
     public static bool IsOutOrRef(this SyntaxTokenList modifiers) {
@@ -1286,7 +1298,7 @@ namespace CSharpLua {
     public static bool HasNoInliningAttribute(this ISymbol symbol) {
       return symbol.GetAttributes().Any(i => i.IsMethodImplOptions(MethodImplOptions.NoInlining));
     }
-
+    
     private static bool IsMethodImplOptions(this AttributeData attributeData, MethodImplOptions option) {
       if (attributeData.AttributeClass.IsMethodImplAttribute()) {
         foreach (var constructorArgument in attributeData.ConstructorArguments) {
@@ -1363,29 +1375,6 @@ namespace CSharpLua {
       return symbol.ContainingType.TypeKind == TypeKind.Interface && !symbol.IsStatic && !symbol.IsAbstract;
     }
 
-    public static int GetSharedConstructorFieldNeedUpValueCount(this IMethodSymbol methodSymbol) {
-      Contract.Assert(methodSymbol.MethodKind == MethodKind.SharedConstructor);
-      int initializerCount = 0;
-      HashSet<ITypeSymbol> types = new();
-      var fields = methodSymbol.ContainingType.GetMembers().Where(i => i.Kind == SymbolKind.Field && i.IsStatic);
-      foreach (IFieldSymbol field in fields) {
-        var node = (VariableDeclaratorSyntax)field.GetDeclaringSyntaxNode();
-        var valueExpression = node.Initializer?.Value;
-        if (!valueExpression.IsNull()) {
-          if (field.IsPrivate()) {
-            ++initializerCount;
-          }
-          if (valueExpression.IsKind(SyntaxKind.ArrayCreationExpression) || valueExpression.IsKind(SyntaxKind.ObjectCreationExpression)) {
-            types.Add(field.Type);
-          } else {
-            ++initializerCount;
-          }
-        }
-      }
-      return initializerCount + types.Count;
-    }
-
-
     public static string GetMetaDataAttributeFlags(this ISymbol symbol, PropertyMethodKind propertyMethodKind = 0) {
       const int kParametersMaxCount = 256;
 
@@ -1433,6 +1422,17 @@ namespace CSharpLua {
     public static SyntaxNode GetDeclaringSyntaxNode(this ISymbol symbol) {
       return symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
     }
+
+    public static bool IsUserConversion(this SemanticModel semanticModel, ExpressionSyntax node, out IMethodSymbol methodSymbol) {
+      var conversion = semanticModel.GetConversion(node);
+      if (conversion.IsUserDefined && conversion.IsImplicit) {
+        methodSymbol = conversion.MethodSymbol;
+        return true;
+      }
+
+      methodSymbol = null;
+      return false;
+    } 
 
     public static bool IsNil(this LuaExpressionSyntax expression) {
       return expression == null || expression == LuaIdentifierNameSyntax.Nil || expression == LuaIdentifierLiteralExpressionSyntax.Nil;

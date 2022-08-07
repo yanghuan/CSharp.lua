@@ -5,6 +5,13 @@ if not %errorlevel%==0 (
 )
 cd ..
 
+cd self-compiling
+call test
+if not %errorlevel%==0 (
+  goto:Fail
+)
+cd ..
+
 cd BridgeNetTests/Tests
 call test
 if not %errorlevel%==0 (

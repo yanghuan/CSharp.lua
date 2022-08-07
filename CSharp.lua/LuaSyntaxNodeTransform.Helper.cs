@@ -31,8 +31,8 @@ namespace CSharpLua {
   public sealed partial class LuaSyntaxNodeTransform {
     private sealed class FunctionUpValuesInfo {
       private readonly HashSet<string> strings_ = new();
-      private readonly HashSet<ISymbol> symbols_ = new();
-      private readonly Dictionary<ISymbol, bool> maxSymbols_ = new();
+      private readonly HashSet<ISymbol> symbols_ = new(SymbolEqualityComparer.Default);
+      private readonly Dictionary<ISymbol, bool> maxSymbols_ = new(SymbolEqualityComparer.Default);
 
       public int Count { get; private set; }
 
@@ -81,7 +81,7 @@ namespace CSharpLua {
 
     private static readonly Regex codeTemplateRegex_ = new(@"(,?\s*)\{(\*?[\w|`]+)\}", RegexOptions.Compiled);
     private static readonly Regex unicodeRegex_ = new(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
-    private readonly Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new();
+    private readonly Dictionary<ISymbol, LuaIdentifierNameSyntax> localReservedNames_ = new(SymbolEqualityComparer.Default);
     private readonly Dictionary<LuaFunctionExpressionSyntax, FunctionUpValuesInfo> functionUpValues_ = new();
     private int localMappingCounter_;
     private readonly Stack<bool> checks_ = new();
@@ -441,6 +441,10 @@ namespace CSharpLua {
 
     private bool IsMoreThanLocalVariables(ISymbol symbol) {
       return generator_.IsMoreThanLocalVariables(symbol);
+    }
+
+    private bool IsMoreThanUpValueStaticInitField(ISymbol symbol) {
+      return generator_.IsMorenThanUpValueStaticCtorField(symbol);
     }
 
     private bool IsInternalMember(ISymbol symbol) {
@@ -892,12 +896,7 @@ namespace CSharpLua {
 
     private int MaxUpValueCount {
       get {
-        int count = LuaSyntaxNode.kUpvaluesMaxCount - 2;
-        var methodSymbol = CurMethodInfoOrNull?.Symbol;
-        if (methodSymbol?.MethodKind == MethodKind.SharedConstructor) {
-          count -= methodSymbol.GetSharedConstructorFieldNeedUpValueCount();
-        }
-        return count;
+        return generator_.GetMethodMaxUpValueCount(CurMethodInfoOrNull?.Symbol);
       }
     }
 
@@ -1426,9 +1425,8 @@ namespace CSharpLua {
     }
 
     private void CheckConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
-      var conversion = semanticModel_.GetConversion(node);
-      if (conversion.IsUserDefined && conversion.IsImplicit) {
-        expression = BuildConversionExpression(conversion.MethodSymbol, expression);
+      if (semanticModel_.IsUserConversion(node, out var methodSymbol)) {
+        expression = BuildConversionExpression(methodSymbol, expression);
       }
     }
 
@@ -1550,7 +1548,7 @@ namespace CSharpLua {
     private sealed class SymbolAssignmentSearcher : LuaSyntaxSearcher {
       private readonly LuaSyntaxGenerator generator_;
       private readonly ISymbol symbol_;
-      private readonly HashSet<IMethodSymbol> methods_ = new();
+      private readonly HashSet<IMethodSymbol> methods_ = new(SymbolEqualityComparer.Default);
 
       public SymbolAssignmentSearcher(LuaSyntaxGenerator generator, ISymbol symbol) {
         generator_ = generator;
@@ -1959,6 +1957,34 @@ namespace CSharpLua {
       return new YieldStatementSearcher().Find(root);
     }
 
+    private bool IsGotoStatementExists(LuaBlockSyntax block, string label) {
+      return block.Statements.Exists(i => IsGotoStatementExists(i, label));
+    }
+
+    private bool IsGotoStatementExists(LuaStatementSyntax statement, string label) {
+      if (statement is LuaGotoStatement labeledStatement && labeledStatement.Identifier.ValueText == label) {
+        return true;
+      }
+
+      if (statement is LuaIfStatementSyntax ifStatement) {
+        if (IsGotoStatementExists(ifStatement.Body, label)) {
+          return true;
+        }
+
+        if (ifStatement.Else != null && IsGotoStatementExists(ifStatement.Else.Body, label)) {
+          return true;
+        }
+      }
+
+      if (statement is LuaWhileStatementSyntax whileStatement) {
+        if (IsGotoStatementExists(whileStatement.Body, label)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     private sealed class RecursionCallSearcher : LuaSyntaxSearcher {
       private readonly LuaSyntaxGenerator generator_;
       private readonly IMethodSymbol symbol_;
@@ -2105,6 +2131,7 @@ namespace CSharpLua {
       methodInfos_.Pop();
       generator_.AddInlineSymbol(symbol);
 
+      CurBlock.AddStatement(new LuaShortCommentStatement($" inline {symbol}"));
       inlineExpression = CompressionInliningBlock(root, block, methodInfo, isThisMemberAccess);
       if (inlineExpression != null) {
         CurFunction.TempCount = prevFunctionTempCount;
@@ -2112,7 +2139,6 @@ namespace CSharpLua {
         return true;
       }
 
-      CurBlock.AddStatement(new LuaShortCommentStatement($" inline {symbol}"));
       if (methodInfo.InliningReturnVars.Count > 0) {
         CurBlock.AddStatement(new LuaLocalVariablesSyntax(methodInfo.InliningReturnVars));
       }
@@ -2120,8 +2146,8 @@ namespace CSharpLua {
       if (methodInfo.HasInlineGoto) {
         block.Statements.Add(new LuaLabeledStatement(LuaIdentifierNameSyntax.InlineReturnLabel));
       }
-      CurBlock.AddStatement(block.Statements.Count == 1 ? block.Statements.First() : block);
 
+      CurBlock.AddStatement(block.Statements.Count == 1 ? block.Statements.First() : block);
       if (methodInfo.InliningReturnVars.Count > 0) {
         inlineExpression = new LuaSequenceListExpressionSyntax(methodInfo.InliningReturnVars);
         if (refOrOutParameters.Count == 0 && root.Parent.IsKind(SyntaxKind.ExpressionStatement)) {

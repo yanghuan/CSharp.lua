@@ -19,6 +19,12 @@ namespace Bridge.ClientTest.BasicCSharp
             var a = new ExtendedClass();
             Assert.AreEqual(0, a.Property.Value);
         }
+
+        [Test]
+        public static void TestCallOutPrivate()
+        {
+            new Test<int>.A().RunTest();
+        }
     }
 
     public class BaseClass<T>
@@ -26,10 +32,27 @@ namespace Bridge.ClientTest.BasicCSharp
         public Test<T> Property { get; set; } = new Test<T>();
     }
 
-    public class ExtendedClass : BaseClass<int> { }
+    public class ExtendedClass : BaseClass<int> { 
+
+    }
 
     public class Test<T>
     {
+        public class A
+        {
+            public void RunTest()
+            {
+                Assert.AreEqual(100, a_);
+                Assert.AreEqual(100, b_);
+                Assert.AreEqual(d_, default(DateTime));
+                f();
+            }
+        }
+
         public T Value { get; set; }
+        private static int a_ = 100;
+        private static int b_ { get { return a_; } }
+        private static DateTime d_;
+        private static void f() {}
     }
 }

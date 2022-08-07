@@ -43,7 +43,7 @@ namespace CSharpLua.LuaAst {
     private readonly LuaTableExpression resultTable_ = new();
 
     private readonly List<LuaStatementSyntax> staticInitStatements_ = new();
-    private readonly List<LuaIdentifierNameSyntax> staticAssignmentNames_ = new();
+    private readonly List<(LuaIdentifierNameSyntax Identifier, bool IsMorenThanUpValueStaticInitField)> staticAssignmentNames_ = new();
     private LuaConstructorDeclaration staticCtor_;
 
     private readonly List<LuaStatementSyntax> initStatements_ = new();
@@ -66,9 +66,9 @@ namespace CSharpLua.LuaAst {
     public bool IsExportMetadataAll => document_.HasMetadataAllAttribute;
     public IEnumerable<LuaExpressionSyntax> TypeParameterExpressions => typeParameters_;
 
-    internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name) {
-      if (!staticAssignmentNames_.Contains(name)) {
-        staticAssignmentNames_.Add(name);
+    internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name, bool isMorenThanUpValueStaticInitField) {
+      if (!staticAssignmentNames_.Exists(i => i.Identifier == name)) {
+        staticAssignmentNames_.Add((name, isMorenThanUpValueStaticInitField));
       }
     }
 
@@ -182,6 +182,13 @@ namespace CSharpLua.LuaAst {
       resultTable_.Items.Add(item);
     }
 
+    private LuaAssignmentExpressionSyntax BuildTooManyVariablesAssignment(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isMoreThanLocalVariables) {
+      local_.Variables.RemoveAtLast();
+      CheckTooManyVariables(isMoreThanLocalVariables);
+      var left = LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(name);
+      return left.Assignment(value);
+    }
+
     private void CheckTooManyVariables(bool isLocalOrUpvalues) {
       if (!hasTooManyLocalVariables_) {
         local_.Variables.Add(LuaIdentifierNameSyntax.MoreManyLocalVarTempTable);
@@ -238,7 +245,7 @@ namespace CSharpLua.LuaAst {
       initStatements_.Add(LuaIdentifierNameSyntax.This.MemberAccess(name).Assignment(value));
     }
 
-    public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaStatementSyntax> statements, bool isMoreThanLocalVariables) {
+    public void AddField(LuaIdentifierNameSyntax name, LuaExpressionSyntax value, bool isImmutable, bool isStatic, bool isPrivate, bool isReadOnly, List<LuaStatementSyntax> statements, bool isMoreThanLocalVariables, bool isMoreThanUpValueStaticInit) {
       if (isStatic) {
         if (isPrivate) {
           local_.Variables.Add(name);
@@ -250,27 +257,37 @@ namespace CSharpLua.LuaAst {
               if (statements != null) {
                 staticInitStatements_.AddRange(statements);
               }
-              staticInitStatements_.Add(assignment);
+              if (isMoreThanLocalVariables || isMoreThanUpValueStaticInit) {
+                var variablesAssignment = BuildTooManyVariablesAssignment(name, value, isMoreThanLocalVariables);
+                staticInitStatements_.Add(variablesAssignment);
+              } else {
+                staticInitStatements_.Add(assignment);
+              }
             }
           }
         } else {
           if (isReadOnly) {
-            if (isMoreThanLocalVariables && value != null && isImmutable) {
-              CheckTooManyVariables(true);
-              var left = LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(name);
-              methodList_.Statements.Add(left.Assignment(value));
-              AddResultTable(name, left);
-            } else {
-              local_.Variables.Add(name);
-              if (value != null) {
-                var assignment = name.Assignment(value);
-                if (isImmutable) {
+            local_.Variables.Add(name);
+            if (value != null) {
+              var assignment = name.Assignment(value);
+              if (isImmutable) {
+                if (isMoreThanLocalVariables) {
+                  var variablesAssignment = BuildTooManyVariablesAssignment(name, value, true);
+                  methodList_.Statements.Add(variablesAssignment);
+                  AddResultTable(name, variablesAssignment.Left);
+                } else {
                   methodList_.Statements.Add(assignment);
                   AddResultTable(name);
+                }
+              } else {
+                if (statements != null) {
+                  staticInitStatements_.AddRange(statements);
+                }
+                if (isMoreThanUpValueStaticInit) {
+                  var variablesAssignment = BuildTooManyVariablesAssignment(name, value, false);
+                  staticInitStatements_.Add(variablesAssignment);
+                  staticInitStatements_.Add(LuaIdentifierNameSyntax.This.MemberAccess(name).Assignment(variablesAssignment.Left));
                 } else {
-                  if (statements != null) {
-                    staticInitStatements_.AddRange(statements);
-                  }
                   staticInitStatements_.Add(assignment);
                   staticInitStatements_.Add(LuaIdentifierNameSyntax.This.MemberAccess(name).Assignment(name));
                 }
@@ -437,9 +454,9 @@ namespace CSharpLua.LuaAst {
     private void AddStaticAssignmentNames(LuaBlockSyntax body) {
       if (staticAssignmentNames_.Count > 0) {
         var assignment = new LuaMultipleAssignmentExpressionSyntax();
-        foreach (var identifierName in staticAssignmentNames_) {
-          assignment.Lefts.Add(LuaIdentifierNameSyntax.This.MemberAccess(identifierName));
-          assignment.Rights.Add(identifierName);
+        foreach (var (identifier, isMorenThan) in staticAssignmentNames_) {
+          assignment.Lefts.Add(LuaIdentifierNameSyntax.This.MemberAccess(identifier));
+          assignment.Rights.Add(!isMorenThan ? identifier : LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(identifier));
         }
         body.Statements.Add(assignment);
       }

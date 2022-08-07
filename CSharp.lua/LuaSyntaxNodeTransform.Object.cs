@@ -982,8 +982,13 @@ namespace CSharpLua {
         return conditionalTemps_.Peek();
       }
       var nameExpression = node.Name.AcceptExpression(this);
+      var target = conditionalTemps_.Peek();
+      if (generator_.IsInlineSymbol(symbol)) {
+        return nameExpression;
+      }
+
       bool isObjectColon = symbol.Kind == SymbolKind.Method || (symbol.Kind == SymbolKind.Property && !IsPropertyFieldOrEventField(symbol));
-      return conditionalTemps_.Peek().MemberAccess(nameExpression, isObjectColon);
+      return target.MemberAccess(nameExpression, isObjectColon);
     }
 
     public override LuaSyntaxNode VisitElementBindingExpression(ElementBindingExpressionSyntax node) {
@@ -1342,9 +1347,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax BuildIsConstantExpression(LuaExpressionSyntax leftExpression, CSharpSyntaxNode right, Optional<object> constValue) {
       const string kIsNaNMethodName = "System.Double.IsNaN";
-
-      Contract.Assert(constValue.HasValue);
-      if (constValue.Value is double.NaN) {
+      if (constValue.HasValue && constValue.Value is double.NaN) {
         return new LuaInvocationExpressionSyntax(kIsNaNMethodName, leftExpression);
       }
 

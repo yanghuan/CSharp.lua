@@ -122,13 +122,13 @@ namespace CSharpLua {
     public SettingInfo Setting { get; set; }
     private bool IsConcurrent => !Setting.IsNoConcurrent;
     private readonly ConcurrentHashSet<string> exportEnums_ = new();
-    private readonly ConcurrentHashSet<INamedTypeSymbol> ignoreExportTypes_ = new();
-    private readonly ConcurrentHashSet<ISymbol> forcePublicSymbols_ = new();
+    private readonly ConcurrentHashSet<ITypeSymbol> ignoreExportTypes_ = new(SymbolEqualityComparer.Default);
+    private readonly ConcurrentHashSet<ISymbol> forcePublicSymbols_ = new(SymbolEqualityComparer.Default);
     private readonly ConcurrentList<LuaEnumDeclarationSyntax> enumDeclarations_ = new();
-    private readonly ConcurrentDictionary<INamedTypeSymbol, ConcurrentList<PartialTypeDeclaration>> partialTypes_ = new();
+    private readonly ConcurrentDictionary<INamedTypeSymbol, ConcurrentList<PartialTypeDeclaration>> partialTypes_ = new(SymbolEqualityComparer.Default);
     private readonly ImmutableHashSet<string> monoBehaviourSpecialMethodNames_;
     private ImmutableList<LuaExpressionSyntax> assemblyAttributes_ = ImmutableList<LuaExpressionSyntax>.Empty;
-    private readonly ConcurrentDictionary<INamedTypeSymbol, ConcurrentHashSet<INamedTypeSymbol>> genericImportDepends_ = new();
+    private readonly ConcurrentDictionary<INamedTypeSymbol, ConcurrentHashSet<INamedTypeSymbol>> genericImportDepends_ = new(SymbolEqualityComparer.Default);
     private IMethodSymbol mainEntryPoint_;
     public INamedTypeSymbol SystemExceptionTypeSymbol { get; }
     private readonly INamedTypeSymbol monoBehaviourTypeSymbol_;
@@ -412,6 +412,10 @@ namespace CSharpLua {
       return forcePublicSymbols_.Contains(symbol.OriginalDefinition);
     }
 
+    internal bool IsPrivate(ISymbol symbol) {
+      return symbol.IsPrivate() && !IsForcePublicSymbol(symbol);
+    }
+
     private static readonly HashSet<string> ignoreSystemAttributes_ = new() {
       "System.AttributeUsageAttribute",
       "System.ComponentModel.BrowsableAttribute",
@@ -538,7 +542,7 @@ namespace CSharpLua {
         List<List<INamedTypeSymbol>> typesList = new List<List<INamedTypeSymbol>> { types_ };
         int count = 0;
         while (true) {
-          HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>();
+          HashSet<INamedTypeSymbol> parentTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
           var lastTypes = typesList.Last();
           foreach (var type in lastTypes) {
             if (type.ContainingType != null) {
@@ -569,7 +573,10 @@ namespace CSharpLua {
         }
 
         typesList.Reverse();
-        var types = typesList.SelectMany(i => i).Distinct().Where(IsTypeEnableExport);
+        var types = typesList.SelectMany(i => i)
+          .Distinct(SymbolEqualityComparer.Default)
+          .OfType<INamedTypeSymbol>()
+          .Where(IsTypeEnableExport);
         allTypes.AddRange(types);
       }
       return allTypes;
@@ -666,7 +673,7 @@ namespace CSharpLua {
 
     internal bool AddGenericImportDepend(INamedTypeSymbol definition, INamedTypeSymbol type) {
       if (type != null && type.IsFromCode() && !definition.IsContainsType(type) && !type.IsDependExists(definition)) {
-        var set = genericImportDepends_.GetOrAdd(definition, _ => new ConcurrentHashSet<INamedTypeSymbol>());
+        var set = genericImportDepends_.GetOrAdd(definition, _ => new ConcurrentHashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default));
         return set.Add(type);
       }
       return false;
@@ -676,13 +683,13 @@ namespace CSharpLua {
     #region     // member name refactor
 
     private readonly List<INamedTypeSymbol> types_ = new();
-    private readonly Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new();
-    private readonly Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> implicitExtends_ = new();
+    private readonly Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> extends_ = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> implicitExtends_ = new(SymbolEqualityComparer.Default);
 
-    private readonly Dictionary<ISymbol, LuaSymbolNameSyntax> memberNames_ = new();
-    private readonly Dictionary<INamedTypeSymbol, HashSet<string>> typeUsedNames_ = new();
-    private readonly HashSet<ISymbol> refactorNames_ = new();
-    private readonly Dictionary<ISymbol, string> memberIllegalNames_ = new();
+    private readonly Dictionary<ISymbol, LuaSymbolNameSyntax> memberNames_ = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<INamedTypeSymbol, HashSet<string>> typeUsedNames_ = new(SymbolEqualityComparer.Default);
+    private readonly HashSet<ISymbol> refactorNames_ = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<ISymbol, string> memberIllegalNames_ = new(SymbolEqualityComparer.Default);
 
     internal bool IsNeedRefactorName(ISymbol symbol) => refactorNames_.Contains(symbol);
     private bool IsImplicitExtend(INamedTypeSymbol super, INamedTypeSymbol children) => implicitExtends_.GetOrDefault(super)?.Contains(children) ?? false;
@@ -989,10 +996,8 @@ namespace CSharpLua {
 
     private List<string> GetSymbolNames(ISymbol symbol) {
       List<string> names = new List<string>();
-      switch (symbol.Kind)
-      {
-        case SymbolKind.Property:
-        {
+      switch (symbol.Kind) {
+        case SymbolKind.Property:{
           var propertySymbol = (IPropertySymbol)symbol;
           if (IsPropertyField(propertySymbol)) {
             names.Add(symbol.Name);
@@ -1010,8 +1015,7 @@ namespace CSharpLua {
 
           break;
         }
-        case SymbolKind.Event:
-        {
+        case SymbolKind.Event:{
           var eventSymbol = (IEventSymbol)symbol;
           if (IsEventField(eventSymbol)) {
             names.Add(symbol.Name);
@@ -1130,7 +1134,7 @@ namespace CSharpLua {
     }
 
     private void CheckRefactorNames() {
-      HashSet<ISymbol> alreadyRefactorSymbols = new HashSet<ISymbol>();
+      HashSet<ISymbol> alreadyRefactorSymbols = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
       foreach (ISymbol symbol in refactorNames_) {
         if (symbol.ContainingType.TypeKind == TypeKind.Interface) {
           RefactorInterfaceSymbol(symbol, alreadyRefactorSymbols);
@@ -1229,10 +1233,8 @@ namespace CSharpLua {
     private void GetRefactorCheckName(ISymbol symbol, string newName, out string checkName1, out string checkName2) {
       checkName1 = newName;
       checkName2 = null;
-      switch (symbol.Kind)
-      {
-        case SymbolKind.Property:
-        {
+      switch (symbol.Kind) {
+        case SymbolKind.Property: {
           var property = (IPropertySymbol)symbol;
           bool isField = IsPropertyField(property);
           if (!isField) {
@@ -1242,8 +1244,7 @@ namespace CSharpLua {
 
           break;
         }
-        case SymbolKind.Event:
-        {
+        case SymbolKind.Event: {
           var eventSymbol = (IEventSymbol)symbol;
           bool isField = IsEventField(eventSymbol);
           if (!isField) {
@@ -1391,19 +1392,20 @@ namespace CSharpLua {
     }
 
     #endregion
-    private readonly Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new();
-    private readonly Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>> implicitInterfaceTypes_ = new();
-    private readonly HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new();
+    private readonly Dictionary<ISymbol, HashSet<ISymbol>> implicitInterfaceImplementations_ = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>> implicitInterfaceTypes_ = new(SymbolEqualityComparer.Default);
+    private readonly HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new(SymbolEqualityComparer.Default);
 
-    private readonly ConcurrentDictionary<IPropertySymbol, bool> isFieldProperties_ = new();
-    private readonly ConcurrentDictionary<IEventSymbol, bool> isFieldEvents_ = new();
-    private readonly ConcurrentDictionary<ISymbol, bool> isMoreThanLocalVariables_ = new();
-    private readonly ConcurrentDictionary<ISymbol, LuaSymbolNameSyntax> propertyOrEventInnerFieldNames_ = new();
-    private readonly ConcurrentHashSet<ISymbol> inlineSymbols_ = new();
+    private readonly ConcurrentDictionary<IPropertySymbol, bool> isFieldProperties_ = new(SymbolEqualityComparer.Default);
+    private readonly ConcurrentDictionary<IEventSymbol, bool> isFieldEvents_ = new(SymbolEqualityComparer.Default);
+    private readonly ConcurrentDictionary<ISymbol, bool> isMoreThanLocalVariables_ = new(SymbolEqualityComparer.Default);
+    private readonly ConcurrentDictionary<INamedTypeSymbol, HashSet<ISymbol>> isMoreThanUpValueStaticFields_ = new(SymbolEqualityComparer.Default);
+    private readonly ConcurrentDictionary<ISymbol, LuaSymbolNameSyntax> propertyOrEventInnerFieldNames_ = new(SymbolEqualityComparer.Default);
+    private readonly ConcurrentHashSet<ISymbol> inlineSymbols_ = new(SymbolEqualityComparer.Default);
 
     private sealed class PretreatmentChecker : CSharpSyntaxWalker {
       private readonly LuaSyntaxGenerator generator_;
-      private readonly HashSet<INamedTypeSymbol> classTypes_ = new();
+      private readonly HashSet<INamedTypeSymbol> classTypes_ = new(SymbolEqualityComparer.Default);
 
       public PretreatmentChecker(LuaSyntaxGenerator generator) {
         generator_ = generator;
@@ -1418,19 +1420,22 @@ namespace CSharpLua {
         return semanticModel.GetDeclaredSymbol(node);
       }
 
-      public override void VisitClassDeclaration(ClassDeclarationSyntax node) {
+      private void VisitBaseTypeDeclaration(BaseTypeDeclarationSyntax node, SyntaxList<MemberDeclarationSyntax> members) {
         var typeSymbol = GetDeclaredSymbol(node);
         classTypes_.Add(typeSymbol);
 
-        var types = node.Members.OfType<BaseTypeDeclarationSyntax>();
+        var types = members.OfType<BaseTypeDeclarationSyntax>();
         foreach (var type in types) {
           type.Accept(this);
         }
       }
 
+      public override void VisitClassDeclaration(ClassDeclarationSyntax node) {
+        VisitBaseTypeDeclaration(node, node.Members);
+      }
+
       public override void VisitStructDeclaration(StructDeclarationSyntax node) {
-        var typeSymbol = GetDeclaredSymbol(node);
-        classTypes_.Add(typeSymbol);
+        VisitBaseTypeDeclaration(node, node.Members);
       }
 
       public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node) {
@@ -1541,7 +1546,9 @@ namespace CSharpLua {
       }
 
       private void CheckNamespace() {
-        var all = classTypes_.SelectMany(i => i.ContainingNamespace.GetAllNamespaces()).Distinct().ToArray();
+        var all = classTypes_.SelectMany(i => i.ContainingNamespace.GetAllNamespaces())
+          .Distinct(SymbolEqualityComparer.Default)
+          .OfType<INamespaceSymbol>().ToArray();
         foreach (var symbol in all) {
           string name = symbol.Name;
           if (LuaSyntaxNode.IsReservedWord(name)) {
@@ -1570,7 +1577,7 @@ namespace CSharpLua {
         var containingType = implementationMember.ContainingType;
         var map = implicitInterfaceTypes_.GetOrDefault(containingType);
         if (map == null) {
-          map = new Dictionary<ISymbol, ISymbol>();
+          map = new Dictionary<ISymbol, ISymbol>(SymbolEqualityComparer.Default);
           implicitInterfaceTypes_.Add(containingType, map);
         }
         map.Add(interfaceMember, implementationMember);
@@ -1712,6 +1719,65 @@ namespace CSharpLua {
       });
     }
 
+    internal bool IsMorenThanUpValueStaticCtorField(ISymbol symbol) {
+      if (IsStaticCtorField(symbol)) {
+        var definitionType = symbol.ContainingType.OriginalDefinition;
+        var set = isMoreThanUpValueStaticFields_.GetOrAdd(definitionType, definitionType => {
+          var methodSymbol = (IMethodSymbol)definitionType.GetMembers().First(
+            i => i.Kind == SymbolKind.Method 
+            && ((IMethodSymbol)i).MethodKind == MethodKind.StaticConstructor);
+          int maxCount = GetMethodMaxUpValueCount(methodSymbol);
+          var others = definitionType.GetMembers().Where(IsStaticCtorField).Skip(maxCount);
+          return new HashSet<ISymbol>(others, SymbolEqualityComparer.Default);
+        });
+        return set.Contains(symbol.OriginalDefinition);
+      }
+      return false;
+    }
+
+    private bool IsStaticCtorField(ISymbol symbol) {
+      if (Setting.IsClassic && symbol.IsStatic && symbol.Kind == SymbolKind.Field) {
+        Contract.Assert(symbol.IsFromCode());
+        var field = (IFieldSymbol)symbol;
+        if (!field.IsConst && !field.Type.IsImmutable() && (field.IsReadOnly || IsPrivate(symbol))) {
+          var variableDeclarator = (VariableDeclaratorSyntax)field.GetDeclaringSyntaxNode();
+          if (variableDeclarator.Initializer?.Value.IsNull() == false) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    private int GetStaticCtorFieldNeedUpValueCount(IMethodSymbol methodSymbol) {
+      Contract.Assert(methodSymbol.MethodKind == MethodKind.StaticConstructor);
+      int initializerCount = 0;
+      HashSet<ISymbol> types = new(SymbolEqualityComparer.Default);
+      var fields = methodSymbol.ContainingType.GetMembers().Where(IsStaticCtorField);
+      foreach (IFieldSymbol field in fields) {
+        ++initializerCount;
+        var node = (VariableDeclaratorSyntax)field.GetDeclaringSyntaxNode();
+        var valueExpression = node.Initializer.Value;
+        if (valueExpression.IsKind(SyntaxKind.ArrayCreationExpression) || valueExpression.IsKind(SyntaxKind.ObjectCreationExpression)) {
+          types.Add(field.Type);
+        } else {
+          SemanticModel semanticModel = GetSemanticModel(valueExpression.SyntaxTree);
+          if (semanticModel.IsUserConversion(valueExpression, out var symbol)) {
+            types.Add(symbol);
+          }
+        }
+      }
+      return initializerCount + types.Count;
+    }
+
+    internal int GetMethodMaxUpValueCount(IMethodSymbol methodSymbol) {
+      int count = LuaSyntaxNode.kUpvaluesMaxCount - 2;
+      if (methodSymbol?.MethodKind == MethodKind.StaticConstructor) {
+        count -= GetStaticCtorFieldNeedUpValueCount(methodSymbol);
+      }
+      return count;
+    }
+
     internal void AddInlineSymbol(IMethodSymbol symbol) {
       inlineSymbols_.Add(
         symbol.MethodKind == MethodKind.PropertyGet
@@ -1837,8 +1903,8 @@ namespace CSharpLua {
 
     #region type and namespace refactor
 
-    private readonly Dictionary<INamespaceSymbol, string> namespaceRefactorNames_ = new();
-    private readonly Dictionary<INamedTypeSymbol, string> typeRefactorNames_ = new();
+    private readonly Dictionary<INamespaceSymbol, string> namespaceRefactorNames_ = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<INamedTypeSymbol, string> typeRefactorNames_ = new(SymbolEqualityComparer.Default);
 
     private string GetTypeRefactorName(INamedTypeSymbol symbol) {
       return typeRefactorNames_.GetOrDefault(symbol);

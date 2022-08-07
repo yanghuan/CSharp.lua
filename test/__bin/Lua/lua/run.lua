@@ -5,16 +5,16 @@ function execute(cmd)
 end
 
 local luaVersions = {
-  { "Lua5.3", "__LUA53__" },
   { "LuaJIT-2.0.2", "__LUAJIT202__" },
   { "MoonJIT-2.2.0", "__MOONJIT220__" },
+  { "Lua5.3", "__LUA53__" },
   { "Lua5.4", "__LUA54__" },
 }
 
-publishOutputDir = "bin/Release/PublishOutput/"
+publishOutputDir = "bin/Debug/PublishOutput/"
 
 local function publish(depth)
-  local cmd = ("dotnet publish %s --configuration Release --output %s"):format(("../"):rep(depth), publishOutputDir)
+  local cmd = ("dotnet publish %s --configuration Debug --output %s"):format(("../"):rep(depth), publishOutputDir)
   execute(cmd)
 end
 
