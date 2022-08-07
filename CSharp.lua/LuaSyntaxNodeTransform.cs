@@ -5047,50 +5047,53 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitLabeledStatement(LabeledStatementSyntax node) {
       string label = node.Identifier.ValueText;
+      CheckLabelJumpLocalVariables(label);
+      var luaStatement = node.Statement.Accept<LuaStatementSyntax>(this);
+      return new LuaLabeledStatement(label, luaStatement);
+    }
 
+    private void CheckLabelJumpLocalVariables(string label) {
       var jumpLocalVariables = new List<LuaIdentifierNameSyntax>();
       var luaBlock = CurBlock;
       int begin = luaBlock.Statements.FindIndex(i => IsGotoStatementExists(i, label));
-      int end = luaBlock.Statements.Count;
-
-      for (int i = begin + 1; i < end; ++i) {
-        var statement = luaBlock.Statements[i];
-        if (statement is LuaLocalDeclarationStatementSyntax declaration) {
-          LuaStatementSyntax replace = null;
-          if (declaration.Declaration is LuaVariableListDeclarationSyntax variableList) {
-            var multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
-            foreach (var variable in variableList.Variables) {
-              jumpLocalVariables.Add(variable.Identifier);
-              if (variable.Initializer != null) {
-                multipleAssignment.Lefts.Add(variable.Identifier);
-                multipleAssignment.Rights.Add(variable.Initializer.Value);
+      if (begin != -1) {
+        int end = luaBlock.Statements.Count;
+        for (int i = begin + 1; i < end; ++i) {
+          var statement = luaBlock.Statements[i];
+          if (statement is LuaLocalDeclarationStatementSyntax declaration) {
+            LuaStatementSyntax replace = null;
+            if (declaration.Declaration is LuaVariableListDeclarationSyntax variableList) {
+              var multipleAssignment = new LuaMultipleAssignmentExpressionSyntax();
+              foreach (var variable in variableList.Variables) {
+                jumpLocalVariables.Add(variable.Identifier);
+                if (variable.Initializer != null) {
+                  multipleAssignment.Lefts.Add(variable.Identifier);
+                  multipleAssignment.Rights.Add(variable.Initializer.Value);
+                }
               }
+              replace = multipleAssignment;
+            } else if (declaration.Declaration is LuaLocalVariablesSyntax localVariables) {
+              Contract.Assert(localVariables.Initializer == null);
+              jumpLocalVariables.AddRange(localVariables.Variables);
+              replace = LuaStatementSyntax.Empty;
+            } else {
+              Contract.Assert(false);
             }
-            replace = multipleAssignment;
-          } else if (declaration.Declaration is LuaLocalVariablesSyntax localVariables) {
-            Contract.Assert(localVariables.Initializer == null);
-            jumpLocalVariables.AddRange(localVariables.Variables);
-            replace = LuaStatementSyntax.Empty;
-          } else {
-            Contract.Assert(false);
-          }
-          luaBlock.Statements[i] = replace;
-        } else if (statement is LuaLocalVariableDeclaratorSyntax localVariable) {
-          jumpLocalVariables.Add(localVariable.Declarator.Identifier);
-          if (localVariable.Declarator.Initializer != null) {
-            luaBlock.Statements[i] = new LuaAssignmentExpressionSyntax(localVariable.Declarator.Identifier, localVariable.Declarator.Initializer.Value);
-          } else {
-            luaBlock.Statements[i] = LuaStatementSyntax.Empty;
+            luaBlock.Statements[i] = replace;
+          } else if (statement is LuaLocalVariableDeclaratorSyntax localVariable) {
+            jumpLocalVariables.Add(localVariable.Declarator.Identifier);
+            if (localVariable.Declarator.Initializer != null) {
+              luaBlock.Statements[i] = new LuaAssignmentExpressionSyntax(localVariable.Declarator.Identifier, localVariable.Declarator.Initializer.Value);
+            } else {
+              luaBlock.Statements[i] = LuaStatementSyntax.Empty;
+            }
           }
         }
-      }
 
-     if (jumpLocalVariables.Count > 0) {
-        luaBlock.Statements.Insert(0, new LuaLocalVariablesSyntax(jumpLocalVariables));
+        if (jumpLocalVariables.Count > 0) {
+          luaBlock.Statements.Insert(0, new LuaLocalVariablesSyntax(jumpLocalVariables));
+        }
       }
-
-      var luaStatement = node.Statement.Accept<LuaStatementSyntax>(this);
-      return new LuaLabeledStatement(label, luaStatement);
     }
 
     public override LuaSyntaxNode VisitEmptyStatement(EmptyStatementSyntax node) {

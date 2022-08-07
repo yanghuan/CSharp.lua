@@ -272,17 +272,6 @@ namespace CSharpLua {
       return searcher.Find(node);
     }
 
-    private sealed class ReturnStatementSearcher : LuaSyntaxSearcher {
-      public override void VisitReturnStatement(ReturnStatementSyntax node) {
-        Found();
-      }
-    }
-
-    private bool IsReturnExists(SyntaxNode node) {
-      ReturnStatementSearcher searcher = new ReturnStatementSearcher();
-      return searcher.Find(node);
-    }
-
     private int GetCaseLabelIndex(GotoStatementSyntax node) {
       var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
       int index = 0;
