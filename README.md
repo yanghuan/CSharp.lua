@@ -48,7 +48,7 @@ end)
 ```
 
 ## Try Live
-https://yanghuan.github.io/external/bridgelua-editor/index.html
+https://yanghuan.github.io/CSharpLuaWeb/
 
 ## How to Use 
 ### Command Line Parameters
