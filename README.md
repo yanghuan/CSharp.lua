@@ -48,7 +48,7 @@ end)
 ```
 
 ## Try Live
-https://yanghuan.github.io/CSharpLuaWeb/
+https://yanghuan.github.io/CSharpLuaWeb/index.html
 
 ## How to Use 
 ### Command Line Parameters
