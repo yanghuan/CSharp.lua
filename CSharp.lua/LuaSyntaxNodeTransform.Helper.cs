@@ -457,7 +457,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax BuildArray(IArrayTypeSymbol symbol, LuaExpressionSyntax arrayType, IList<LuaExpressionSyntax> elements) {
       var invocation = new LuaInvocationExpressionSyntax(arrayType);
-      var table = new LuaTableExpression(elements) { IsSingleLine = true };
+      var table = new LuaTableExpression(elements);
       bool isElementNotNull = (symbol.ElementType.IsValueType && !symbol.ElementType.IsNullableType()) 
         || elements.All(i => i is LuaLiteralExpressionSyntax && i != LuaIdentifierLiteralExpressionSyntax.Nil);
       if (isElementNotNull) {
@@ -467,6 +467,7 @@ namespace CSharpLua {
         invocation.AddArgument(elements.Count);
         invocation.AddArgument(table);
       }
+      table.IsSingleLine = elements.All(i => i is LuaLiteralExpressionSyntax || i is LuaIdentifierNameSyntax);
       return invocation;
     }
 

@@ -25,6 +25,34 @@ namespace Bridge.ClientTest.BasicCSharp
         {
             new Test<int>.A().RunTest();
         }
+
+        [Test]
+        public static void TestOf398()
+        {
+            var arr = new A[] 
+            {
+                new A(i => 
+                {
+                    if (i > 0) {
+                        // 注释测试
+                    }
+                }),
+                new A(i => 
+                {
+                }),
+                new A(i => 
+                {
+                }),
+            };
+        }
+
+        private class A
+        {
+            public A(Action<int> f)
+            {
+
+            }
+        }
     }
 
     public class BaseClass<T>
