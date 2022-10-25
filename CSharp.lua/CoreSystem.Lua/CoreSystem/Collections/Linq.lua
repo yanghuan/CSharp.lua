@@ -412,7 +412,7 @@ local function ordered(source, compare)
       local count = 1
       if isDictLike(source) then
         for k, v in pairs(source) do
-          t[count] = setmetatable({ Key = k, Value = v }, T)
+          t[count] = setmetatable({ k, v }, T)
           count = count + 1
         end
       else
