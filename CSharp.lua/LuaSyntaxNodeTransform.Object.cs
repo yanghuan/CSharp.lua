@@ -52,8 +52,15 @@ namespace CSharpLua {
       CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
       FillObjectInitializerExpression(temp, initializer);
       var grandparent = initializer!.Parent!.Parent;
-      if (grandparent?.IsKind(SyntaxKind.Argument) == false) {
-        ReleaseTempIdentifiers(prevTempCount);
+      if (grandparent != null) {
+        switch (grandparent.Kind()) {
+          case SyntaxKind.Argument:
+          case SyntaxKind.ArrayInitializerExpression:
+            break;
+          default:
+            ReleaseTempIdentifiers(prevTempCount);
+            break;
+        }
       }
       return !node.Parent.IsKind(SyntaxKind.ExpressionStatement) ? temp : LuaExpressionSyntax.EmptyExpression;
     }
