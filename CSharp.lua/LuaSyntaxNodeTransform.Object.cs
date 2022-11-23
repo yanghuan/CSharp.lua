@@ -1401,16 +1401,24 @@ namespace CSharpLua {
               return expression.Not();
             }
             case SyntaxKind.RecursivePattern: { 
-               var recursivePattern = (RecursivePatternSyntax)notPattern.Pattern;
-               var governingIdentifier = GetIdentifierNameFromExpression(targetExpression);
-               var expression = BuildRecursivePatternExpression(recursivePattern, governingIdentifier, null, targetNode);
-               return expression.Parenthesized().Not();
+              var recursivePattern = (RecursivePatternSyntax)notPattern.Pattern;
+              var governingIdentifier = GetIdentifierNameFromExpression(targetExpression);
+              var expression = BuildRecursivePatternExpression(recursivePattern, governingIdentifier, null, targetNode);
+              return expression.Parenthesized().Not();
             }
-            default: {
-              var expression = notPattern.Pattern.AcceptExpression(this);
-              return targetExpression.NotEquals(expression);
+            case SyntaxKind.ConstantPattern: {
+              var constantPattern = (ConstantPatternSyntax)notPattern.Pattern;
+              var symbol = semanticModel_.GetSymbolInfo(constantPattern.Expression).Symbol;
+              if (symbol != null && symbol.Kind == SymbolKind.NamedType) {
+                var expression = BuildIsPatternExpression(targetNode, constantPattern.Expression, targetExpression);
+                return expression.Not();
+              }
+              break;
             }
           }
+
+          var patternExpression = notPattern.Pattern.AcceptExpression(this);
+          return targetExpression.NotEquals(patternExpression);
         }
         case SyntaxKind.AndPattern:
         case SyntaxKind.OrPattern: {
