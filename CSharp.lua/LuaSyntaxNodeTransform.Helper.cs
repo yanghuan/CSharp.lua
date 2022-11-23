@@ -336,7 +336,8 @@ namespace CSharpLua {
         switch (key)
         {
           case "this":
-            AddCodeTemplateExpression(memberBindingIdentifier ?? BuildMemberAccessTargetExpression(targetExpression), comma, codeTemplateExpression);
+            var thisExpression = memberBindingIdentifier ?? (targetExpression != null ? BuildMemberAccessTargetExpression(targetExpression) : LuaIdentifierNameSyntax.This);
+            AddCodeTemplateExpression(thisExpression, comma, codeTemplateExpression);
             break;
           case "class":
           {
