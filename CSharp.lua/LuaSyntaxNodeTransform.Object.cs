@@ -118,9 +118,12 @@ namespace CSharpLua {
         if (expression.IsKind(SyntaxKind.SimpleAssignmentExpression)) {
           var assignment = (AssignmentExpressionSyntax)expression;
           var left = assignment.Left.Accept(this);
-          if (assignment.Right.IsKind(SyntaxKind.CollectionInitializerExpression)) {
+          if (assignment.Right.IsKind(SyntaxKind.CollectionInitializerExpression) || assignment.Right.IsKind(SyntaxKind.ObjectInitializerExpression)) {
             var rightNode = (InitializerExpressionSyntax)assignment.Right;
-            GetObjectCreationInitializer(new LuaMemberAccessExpressionSyntax(temp, (LuaExpressionSyntax)left, true), rightNode, expression);
+            if (rightNode.Expressions.Count > 0) {
+              var leftExpression = (LuaExpressionSyntax)left;
+              GetObjectCreationInitializer(new LuaMemberAccessExpressionSyntax(temp, leftExpression, leftExpression is not LuaIdentifierNameSyntax), rightNode, expression);
+            }
           } else {
             var right = assignment.Right.AcceptExpression(this);
             if (assignment.Left.IsKind(SyntaxKind.ImplicitElementAccess)) {
