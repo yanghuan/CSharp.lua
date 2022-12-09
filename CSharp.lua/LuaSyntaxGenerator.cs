@@ -168,7 +168,7 @@ namespace CSharpLua {
       var commandLineArguments = CSharpCommandLineParser.Default.Parse((cscArguments ?? Array.Empty<string>()).Concat(new [] { "-define:__CSharpLua__" }), null, null);
       var parseOptions = commandLineArguments.ParseOptions.WithLanguageVersion(LanguageVersion.Preview).WithDocumentationMode(DocumentationMode.Parse);
       var syntaxTrees = BuildSyntaxTrees(codes, parseOptions);
-      var references = libs.Select(i => MetadataReference.CreateFromStream(i)).ToList();
+      var references = libs.Select(LoadLib).ToList();
       var compilation = CSharpCompilation.Create("_", syntaxTrees, references, WithOptions(commandLineArguments.CompilationOptions));
       MemoryStream ms = new MemoryStream(); 
       EmitResult result = compilation.Emit(ms);
@@ -178,6 +178,19 @@ namespace CSharpLua {
         throw new CompilationErrorException(message);
       }
       return (compilation, commandLineArguments);
+    }
+
+    private static PortableExecutableReference LoadLib(Stream stream) {
+      DocumentationProvider documentation = null;
+      string filePath = null;
+      if (stream is FileStream f) {
+        filePath = f.Name;
+        string xmlDocCommentFilePath = filePath.TrimEnd("dll") + "xml";
+        if (File.Exists(xmlDocCommentFilePath)) {
+          documentation = new XmlDocumentationProvider(xmlDocCommentFilePath);
+        }
+      }
+      return MetadataReference.CreateFromStream(stream, default, documentation, filePath);
     }
 
     private static IEnumerable<Stream> ToFileStreams(IEnumerable<string> paths) {

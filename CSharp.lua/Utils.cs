@@ -596,6 +596,11 @@ namespace CSharpLua {
         if (node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Template, out string text)) {
           return GetCodeTemplateFromAttributeText(text);
         }
+      } else {
+        string xml = symbol.GetDocumentationCommentXml();
+        if (xml != null) {
+          return GetCodeTemplateFromAttributeText(xml);
+        }
       }
       return null;
     }
