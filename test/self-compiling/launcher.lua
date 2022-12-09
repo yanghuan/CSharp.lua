@@ -21,6 +21,7 @@ local codeAnalysisTypes = {
   "Microsoft.CodeAnalysis.IPropertySymbol", 
   "Microsoft.CodeAnalysis.Optional_1",
   "Microsoft.CodeAnalysis.SyntaxList_1",
+  "Microsoft.CodeAnalysis.DocumentationProvider",
   
   "Microsoft.CodeAnalysis.CSharp.CSharpSyntaxWalker",
   "Microsoft.CodeAnalysis.CSharp.Syntax.BaseTypeSyntax",
