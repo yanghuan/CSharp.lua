@@ -1487,14 +1487,28 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitTupleExpression(TupleExpressionSyntax node) {
-      var expressions = node.Arguments.Select(i => i.Expression.AcceptExpression(this));
+      var expressions = node.Arguments.Select(i => i.Expression.AcceptExpression(this)).ToArray();
       switch (node.Parent?.Kind()) {
         case SyntaxKind.SimpleAssignmentExpression: {
           var assignment = (AssignmentExpressionSyntax)node.Parent;
           if (assignment.Left == node) {
-            if (node.Arguments.Any(i => i.Expression.IsKind(SyntaxKind.DeclarationExpression))) {
+            int declarationArgumentCount = node.Arguments.Count(i => i.Expression.IsKind(SyntaxKind.DeclarationExpression));
+            if (declarationArgumentCount == node.Arguments.Count) {
               return new LuaLocalTupleVariableExpression(expressions.Cast<LuaIdentifierNameSyntax>());
             }
+
+            if (declarationArgumentCount > 0) {
+              var localVariables = new LuaLocalVariablesSyntax();
+              int index = 0;
+              foreach (var argument in node.Arguments) {
+                if (argument.Expression.IsKind(SyntaxKind.DeclarationExpression)) {
+                  localVariables.Variables.Add((LuaIdentifierNameSyntax)expressions[index]);
+                }
+                ++index;
+              }
+              CurBlock.Statements.Add(localVariables);
+            }
+
             return new LuaSequenceListExpressionSyntax(expressions);
           }
 
