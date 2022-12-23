@@ -261,10 +261,18 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
-      var symbol = semanticModel_.GetDeclaredSymbol(node);
+      return BuildNamespaceDeclaration(node);
+    }
+
+    public override LuaSyntaxNode VisitFileScopedNamespaceDeclaration(FileScopedNamespaceDeclarationSyntax node) {
+      return BuildNamespaceDeclaration(node);
+    }
+
+    private LuaNamespaceDeclarationSyntax BuildNamespaceDeclaration(BaseNamespaceDeclarationSyntax node) {
+      var symbol = (INamespaceSymbol)semanticModel_.GetDeclaredSymbol(node);
       bool isContained = node.Parent.IsKind(SyntaxKind.NamespaceDeclaration);
       string name = generator_.GetNamespaceDefineName(symbol, node);
-      LuaNamespaceDeclarationSyntax namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name, isContained);
+      var namespaceDeclaration = new LuaNamespaceDeclarationSyntax(name, isContained);
       var statements = VisitTriviaAndNode(node, node.Members);
       namespaceDeclaration.AddStatements(statements);
       return namespaceDeclaration;
