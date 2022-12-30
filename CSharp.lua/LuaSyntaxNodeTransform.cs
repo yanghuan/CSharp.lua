@@ -208,10 +208,7 @@ namespace CSharpLua {
 
     private LuaIdentifierNameSyntax GetTempIdentifier() {
       int index = CurFunction.TempCount++;
-      string name = LuaSyntaxNode.TempIdentifiers.GetOrDefault(index);
-      if (name == null) {
-        throw new CompilationErrorException($"Your code is startling,{LuaSyntaxNode.TempIdentifiers.Length} temporary variables is not enough");
-      }
+      string name = LuaSyntaxNode.TempIdentifiers.GetOrDefault(index) ?? $"__temp{index - LuaSyntaxNode.TempIdentifiers.Length}__";
       ++CurBlock.TempCount;
       return name;
     }
