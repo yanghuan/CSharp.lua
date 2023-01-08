@@ -25,7 +25,7 @@ using Microsoft.CodeAnalysis;
 
 namespace CSharpLua {
   internal class XmlDocumentationProvider : DocumentationProvider {
-    private string path_;
+    private readonly string path_;
     private Dictionary<string, string> comments_;
 
     internal XmlDocumentationProvider(string path) {

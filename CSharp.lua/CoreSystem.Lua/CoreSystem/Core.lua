@@ -35,7 +35,6 @@ local string = string
 local sfind = string.find
 local ssub = string.sub
 local debug = debug
-local next = next
 local global = _G
 local prevSystem = rawget(global, "System")
 
@@ -211,6 +210,20 @@ local function applyMetadata(cls)
   end
 end
 
+local function setInterface(cls, interfaces)
+  cls.interface = interfaces
+  for  i = 1, #interfaces do
+    local extern = interfaces[i].extern
+    if extern then
+      for k, v in pairs(extern) do
+        if cls[k] == nil then
+          cls[k] = v
+        end
+      end
+    end
+  end
+end
+
 local function setBase(cls, kind)
   local ctor = cls.__ctor__
   if ctor and type(ctor) == "table" then
@@ -219,21 +232,21 @@ local function setBase(cls, kind)
   local extends = applyExtends(cls)
   applyMetadata(cls)
 
-  cls.__index = cls 
+  cls.__index = cls
   cls.__call = new
-  
+
   local object = kind ~= "S" and Object or ValueType
   if extends then
     local base = extends[1]
     if not base then error(cls.__name__ .. "'s base is nil") end
     if base.class == "I" then
-      cls.interface = extends
       setmetatable(cls, object)
+      setInterface(cls, extends)
     else
       setmetatable(cls, base)
       if #extends > 1 then
         tremove(extends, 1)
-        cls.interface = extends
+        setInterface(cls, extends)
       end
     end
   else
@@ -301,8 +314,8 @@ local function defCore(name, kind, cls, generic)
     end
   elseif kind == "I" then
     local extends = applyExtends(cls)
-    if extends then 
-      cls.interface = extends 
+    if extends then
+      cls.interface = extends
     end
     applyMetadata(cls)
     setmetatable(cls, interfaceMetatable)
@@ -1161,7 +1174,7 @@ setmetatable(Object, { __call = new })
 
 ValueType = defCls("System.ValueType", {
   class = "S",
-  default = function(T) 
+  default = function(T)
     return T()
   end,
   __clone__ = function(this)
@@ -1641,7 +1654,7 @@ local isSingleFile = rawget(global, "CSharpLuaSingleFile")
 if not isSingleFile then
   return function (config)
     if config then
-      System.config = config 
+      System.config = config
     end
   end
 end

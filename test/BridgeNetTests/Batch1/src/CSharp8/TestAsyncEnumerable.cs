@@ -20,7 +20,7 @@ namespace Bridge.ClientTest.CSharp8
             }
         }
 
-        //[Test]
+        [Test]
         public async static void TestForeach()
         {
             List<int> l = new List<int>();

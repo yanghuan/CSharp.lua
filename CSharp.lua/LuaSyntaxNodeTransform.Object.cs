@@ -774,7 +774,7 @@ namespace CSharpLua {
       return BuildCheckLoopControlInvocationExpression(tryInvocationExpression, tryExpresses);
     }
 
-    private LuaStatementSyntax BuildUsingStatement(SyntaxNode node, List<LuaIdentifierNameSyntax> variableIdentifiers, List<LuaExpressionSyntax> variableExpressions, Action<LuaBlockSyntax> writeStatements) {
+    private LuaStatementSyntax BuildUsingStatement(List<LuaIdentifierNameSyntax> variableIdentifiers, List<LuaExpressionSyntax> variableExpressions, Action<LuaBlockSyntax> writeStatements) {
       var usingAdapterExpress = new LuaUsingAdapterExpressionSyntax();
       usingAdapterExpress.ParameterList.Parameters.AddRange(variableIdentifiers);
       PushFunction(usingAdapterExpress);
@@ -810,7 +810,7 @@ namespace CSharpLua {
         variableExpressions.Add(expression);
       }
 
-      return BuildUsingStatement(node, variableIdentifiers, variableExpressions, body => WriteStatementOrBlock(node.Statement, body));
+      return BuildUsingStatement(variableIdentifiers, variableExpressions, body => WriteStatementOrBlock(node.Statement, body));
     }
 
     private void ApplyUsingDeclarations(LuaBlockSyntax block, List<int> indexes, BlockSyntax node) {
@@ -833,7 +833,7 @@ namespace CSharpLua {
 
       int lastIndex = indexes.Last();
       var statements = block.Statements.Skip(lastIndex + 1);
-      var usingStatement = BuildUsingStatement(node, variableIdentifiers, variableExpressions, body => body.Statements.AddRange(statements));
+      var usingStatement = BuildUsingStatement(variableIdentifiers, variableExpressions, body => body.Statements.AddRange(statements));
       block.Statements.RemoveRange(indexes[position]);
       block.AddStatement(usingStatement);
       indexes.RemoveRange(position);
@@ -959,7 +959,7 @@ namespace CSharpLua {
 
       if (isRoot) {
         conditionalTemps_.Pop();
-        AddReleaseTempIdentifier(temp);
+        AddReleaseTempIdentifier();
       }
 
       if (IsReturnVoidConditionalAccessExpression(node)) {
@@ -1178,8 +1178,7 @@ namespace CSharpLua {
       }
 
       if (expressions.Count == 1) {
-        LuaIdentifierNameSyntax empty = "";
-        expressions.Add(empty);
+        expressions.Add(LuaIdentifierNameSyntax.Empty);
       }
 
       var resultExpression = (LuaExpressionSyntax)expressions.Aggregate(ConcatInterpolatedString);

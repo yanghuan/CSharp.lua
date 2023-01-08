@@ -1480,7 +1480,10 @@ namespace CSharpLua {
           foreach (var baseInterface in type.AllInterfaces) {
             foreach (var interfaceMember in baseInterface.GetMembers().Where(i => !i.IsStatic)) {
               var implementationMember = type.FindImplementationForInterfaceMember(interfaceMember);
-              Contract.Assert(implementationMember != null);
+              if (implementationMember == null) {
+                continue;
+              }
+              
               if (implementationMember.Kind == SymbolKind.Method) {
                 var methodSymbol = (IMethodSymbol)implementationMember;
                 if (methodSymbol.MethodKind != MethodKind.Ordinary) {
