@@ -4956,7 +4956,7 @@ namespace CSharpLua {
       PushBlock(body);
       VisitLoopBody(node.Statement, body);
       var condition = VisitExpression(node.Condition);
-      if (condition is LuaBinaryExpressionSyntax) {
+      if (node.Condition is BinaryExpressionSyntax) {
         condition = condition.Parenthesized();
       }
       var newCondition = new LuaPrefixUnaryExpressionSyntax(condition, LuaSyntaxNode.Tokens.Not);
