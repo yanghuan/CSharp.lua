@@ -182,11 +182,30 @@ Type = System.define("System.Type", {
     throw(System.InvalidOperationException())
   end,
   MakeGenericType = function (this, ...)
-    local args = { ... }
-    for i = 1, #args do
+    local T, n, args = this[1], select("#", ...)
+    if n == 0 then
+      return typeof(T())
+    end
+    if n == 1 then
+      args = ...
+      if System.isArrayLike(args) then
+        n = #args
+        if n == 0 then
+          return typeof(T())
+        end
+        if n == 1 then
+          return typeof(T(args[1][1]))
+        end
+      else
+         return typeof(T(args[1]))
+      end
+    else
+      args = { ... }
+    end
+    for i = 1, n do
       args[i] = args[i][1]
     end
-    return typeof(this[1](unpack(args)))
+    return typeof(T(unpack(args)))
   end,
   getIsEnum = function (this)
     return this[1].class == "E"
