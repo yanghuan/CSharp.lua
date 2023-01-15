@@ -46,6 +46,28 @@ namespace Bridge.ClientTest.BasicCSharp
             };
         }
 
+        [Test]
+        public static void TestOf408() {
+            var tList = typeof(List<>);
+            var tListArgs = new[]{ typeof(int) };
+            // tNew incorrect
+            var tNew = tList.MakeGenericType(tListArgs);
+            var tNewArgs = tNew.GetGenericArguments();
+            // fail, given 'System.Type'
+            Assert.AreEqual("System.Int32" , tNewArgs[0].FullName);
+        }
+
+        [Test]
+        public static void TestOf410() {
+            var type = typeof(IEnumerable<IEnumerable<int>>);
+            var genericType = type.GetGenericArguments();
+            Assert.AreEqual("System.Collections.Generic.IEnumerable`1[System.Int32]", genericType[0].FullName);
+
+            var type1 = typeof(IEnumerable<IEnumerable<IEnumerable<int>>>);
+            var genericType1 = type1.GetGenericArguments();
+            Assert.AreEqual("System.Collections.Generic.IEnumerable`1[System.Collections.Generic.IEnumerable`1[System.Int32]]", genericType1[0].FullName);
+        }
+
         private class A
         {
             public A(Action<int> f)

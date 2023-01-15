@@ -64,9 +64,9 @@ function System.listFromTable(t, T)
   return setmetatable(t, List(T))
 end
 
-local ListFn = System.define("System.Collections.Generic.List", function(T) 
-  return { 
-    base = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList }, 
+local ListFn = System.define("System.Collections.Generic.List", function(T)
+  return {
+    base = { System.IList_1(T), System.IReadOnlyList_1(T), System.IList },
     __genericT__ = T,
   }
 end, List, 1)

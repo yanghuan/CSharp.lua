@@ -49,7 +49,7 @@ local TargetException = define("System.Reflection.TargetException", {
 local TargetParameterCountException = define("System.Reflection.TargetParameterCountException", {
   __tostring = Exception.ToString,
   base = { Exception },
-  __ctor__ = function(this, message, innerException) 
+  __ctor__ = function(this, message, innerException)
     Exception.__ctor__(this, message or "Parameter count mismatch.", innerException)
   end,
 })
@@ -57,7 +57,7 @@ local TargetParameterCountException = define("System.Reflection.TargetParameterC
 local AmbiguousMatchException = define("System.Reflection.AmbiguousMatchException", {
   __tostring = Exception.ToString,
   base = { System.SystemException },
-  __ctor__ = function(this, message, innerException) 
+  __ctor__ = function(this, message, innerException)
     Exception.__ctor__(this, message or "Ambiguous match found.", innerException)
   end,
 })
@@ -65,7 +65,7 @@ local AmbiguousMatchException = define("System.Reflection.AmbiguousMatchExceptio
 local MissingMethodException = define("System.MissingMethodException", {
   __tostring = Exception.ToString,
   base = { Exception },
-  __ctor__ = function(this, message, innerException) 
+  __ctor__ = function(this, message, innerException)
     Exception.__ctor__(this, message or "Specified method could not be found.", innerException)
   end
 })
@@ -256,7 +256,7 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
       end
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
-    return arrayFromTable(t, System.Attribute) 
+    return arrayFromTable(t, System.Attribute)
   end
 })
 
@@ -285,7 +285,7 @@ local function getOrSetProperty(this, obj, isSet, value)
     else
       local index
       if kind == 0x100 then
-        index = isSet and 5 or 4      
+        index = isSet and 5 or 4
       elseif kind == 0x200 then
         if isSet then
           throw(ArgumentException("Property Set method was not found."))
@@ -294,7 +294,7 @@ local function getOrSetProperty(this, obj, isSet, value)
       else
         if not isSet then
           throw(ArgumentException("Property Get method was not found."))
-        end  
+        end
         index = 4
       end
       local fn = metadata[index]
@@ -306,7 +306,7 @@ local function getOrSetProperty(this, obj, isSet, value)
           fn(value)
         else
           fn(obj, value)
-        end  
+        end
       else
         return fn(obj)
       end
@@ -390,7 +390,7 @@ local PropertyInfo = define("System.Reflection.PropertyInfo", {
       local index = getPropertyAttributesIndex(metadata)
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
-    return arrayFromTable(t, System.Attribute) 
+    return arrayFromTable(t, System.Attribute)
   end
 })
 
@@ -622,7 +622,7 @@ function Type.GetFields(this)
       end
     end
     cls = getmetatable(cls)
-  until cls == nil 
+  until cls == nil
   return arrayFromTable(t, FieldInfo)
 end
 
@@ -666,7 +666,7 @@ function Type.GetProperties(this)
       end
     end
     cls = getmetatable(cls)
-  until cls == nil 
+  until cls == nil
   return arrayFromTable(t, PropertyInfo)
 end
 
@@ -723,7 +723,7 @@ function Type.GetMethods(this)
       end
     end
     cls = getmetatable(cls)
-  until cls == nil 
+  until cls == nil
   return arrayFromTable(t, MethodInfo)
 end
 
@@ -871,6 +871,38 @@ function Type.getAttributes(this)
   throwNoMatadata(cls.__name__)
 end
 
+local function getGenericClsFrom(name)
+  local _, i = name:find('.*`')
+  if i then
+    local genericBaseName = name:sub(1, i - 1)
+    local genericArgumentCount = name:sub(i + 1, i + 1)
+    name = genericBaseName .. '_' .. genericArgumentCount
+  end
+  return getClass(name)
+end
+
+local function getClsFrom(name)
+  local i = name:find("%[")
+  if i then
+    local t, count = {}, 1
+    local genericName = name:sub(1, i - 1)
+    local cls = getGenericClsFrom(genericName)
+    i = i + 1
+    while true do
+      local j = name:find(",", i) or -1
+      local clsName = name:sub(i, j - 1)
+      t[count] = getClsFrom(clsName)
+      if j == -1 then
+        break
+      end
+      count = count + 1
+      i = j + 1
+    end
+    return cls(unpack(t))
+  end
+  return getClass(name)
+end
+
 function Type.GetGenericArguments(this)
   local t = {}
   local count = 1
@@ -893,14 +925,14 @@ function Type.GetGenericArguments(this)
     end
   end
 
-  local name = cls.__name__ 
+  local name = cls.__name__
   local i = name:find("%[")
   if i then
     i = i + 1
     while true do
       local j = name:find(",", i) or -1
       local clsName = name:sub(i, j - 1)
-      t[count] = typeof(System.getClass(clsName))
+      t[count] = typeof(getClsFrom(clsName))
       if j == -1 then
         break
       end

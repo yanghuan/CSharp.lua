@@ -48,55 +48,57 @@ defInf("System.IDictionary", {
   base = { ICollection }
 })
 
-defInf("System.IEnumerator_1", function(T) 
+local IEnumerator_1 = defInf("System.Collections.Generic.IEnumerator_1", function(T)
   return {
     base = { IEnumerator }
   }
 end)
+System.IEnumerator_1 = IEnumerator_1
 
-local IEnumerable_1 = defInf("System.IEnumerable_1", function(T) 
+local IEnumerable_1 = defInf("System.Collections.Generic.IEnumerable_1", function(T)
   return {
     base = { IEnumerable }
   }
 end)
+System.IEnumerable_1 = IEnumerable_1
 
-local ICollection_1 = defInf("System.ICollection_1", function(T) 
-  return { 
-    base = { IEnumerable_1(T) } 
+local ICollection_1 = defInf("System.ICollection_1", function(T)
+  return {
+    base = { IEnumerable_1(T) }
   }
 end)
 
 local IReadOnlyCollection_1 = defInf("System.IReadOnlyCollection_1", function (T)
-  return { 
-    base = { IEnumerable_1(T) } 
+  return {
+    base = { IEnumerable_1(T) }
   }
 end)
 
 defInf("System.IReadOnlyList_1", function (T)
-  return { 
-    base = { IReadOnlyCollection_1(T) } 
+  return {
+    base = { IReadOnlyCollection_1(T) }
   }
 end)
 
-defInf('System.IDictionary_2', function(TKey, TValue) 
+defInf('System.IDictionary_2', function(TKey, TValue)
   return {
     base = { ICollection_1(System.KeyValuePair(TKey, TValue)) }
   }
 end)
 
-defInf("System.IReadOnlyDictionary_2", function(TKey, TValue) 
+defInf("System.IReadOnlyDictionary_2", function(TKey, TValue)
   return {
     base = { IReadOnlyCollection_1(System.KeyValuePair(TKey, TValue)) }
   }
 end)
 
-defInf("System.IList_1", function(T) 
+defInf("System.IList_1", function(T)
   return {
     base = { ICollection_1(T) }
   }
 end)
 
-defInf("System.ISet_1", function(T) 
+defInf("System.ISet_1", function(T)
   return {
     base = { ICollection_1(T) }
   }
