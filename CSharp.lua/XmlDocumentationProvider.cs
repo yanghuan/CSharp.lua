@@ -26,7 +26,7 @@ using Microsoft.CodeAnalysis;
 namespace CSharpLua {
   internal class XmlDocumentationProvider : DocumentationProvider {
     private readonly string path_;
-    private Dictionary<string, string> comments_;
+    private readonly Dictionary<string, string> comments_ = new();
 
     internal XmlDocumentationProvider(string path) {
       path_ = path;
@@ -34,11 +34,15 @@ namespace CSharpLua {
     }
 
     private void Load() {
-      comments_ = XElement.Load(path_).Descendants("member").Select(e => {
+      var comments = XElement.Load(path_).Descendants("member").Select(e => {
         var name = e.Attribute("name");
         var comment = e.Element("summary")?.Value;
         return new { name, comment };
-      }).Where(i => i.name != null && !string.IsNullOrEmpty(i.comment)).ToDictionary(i => i.name.Value, i => i.comment);
+      }).Where(i => i.name != null && !string.IsNullOrEmpty(i.comment));
+
+      foreach (var i in comments) {
+        comments_[i.name.Value] = i.comment;
+      }
     }
 
     public override bool Equals(object obj) {
