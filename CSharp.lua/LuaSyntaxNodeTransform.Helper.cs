@@ -812,6 +812,15 @@ namespace CSharpLua {
 
         case SyntaxKind.ParenthesizedLambdaExpression:
           return false;
+
+        case SyntaxKind.IdentifierName:
+          var symbol = semanticModel_.GetSymbolInfo(conditionalWhenTrue).Symbol;
+          if (symbol != null) {
+            if (symbol.Kind == SymbolKind.Method) {
+              return false;
+            }
+          }
+          break;
       }
 
       var type = semanticModel_.GetTypeInfo(conditionalWhenTrue!).Type;

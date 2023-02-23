@@ -68,6 +68,15 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual("System.Collections.Generic.IEnumerable`1[System.Collections.Generic.IEnumerable`1[System.Int32]]", genericType1[0].FullName);
         }
 
+        [Test]
+        public static void TestOf418() {
+            static void OnKickTeamMemberClick() {
+            }
+            bool isLeader = true;
+            Action kickAction = isLeader ? OnKickTeamMemberClick : null;
+            Assert.AreEqual(kickAction, OnKickTeamMemberClick);
+        }
+
         private class A
         {
             public A(Action<int> f)
