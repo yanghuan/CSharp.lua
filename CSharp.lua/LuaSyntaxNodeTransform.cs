@@ -213,9 +213,10 @@ namespace CSharpLua {
       return name;
     }
 
-    private void ReleaseTempIdentifiers(int prevTempCount) {
+    private void ReleaseTempIdentifiers(int prevTempCount, int prevReleaseCount) {
       int count = CurFunction.TempCount - prevTempCount;
       PopTempCount(count);
+      CurBlock.ReleaseCount = prevReleaseCount;
     }
 
     private void PopTempCount(int count) {

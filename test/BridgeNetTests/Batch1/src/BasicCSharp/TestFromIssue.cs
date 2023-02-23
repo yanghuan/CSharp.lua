@@ -68,6 +68,27 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual("System.Collections.Generic.IEnumerable`1[System.Collections.Generic.IEnumerable`1[System.Int32]]", genericType1[0].FullName);
         }
 
+        [Test]
+        public static void TestOf419() {
+            static string GetStr() {
+                return "";
+            }
+            var d = new Dictionary<int, BattleModelSlotPrototype>();
+            var b = new BattleModelSlotPrototype() {
+                a = GetStr() ?? "",
+                b = GetStr() ?? "",
+                c = GetStr() ?? "",
+            };
+            d.Add(1, b);
+            Assert.AreEqual(d.Count, 1);
+        }
+
+        private class BattleModelSlotPrototype {
+            public string a;
+            public string b;
+            public string c;
+        }
+
         private class A
         {
             public A(Action<int> f)

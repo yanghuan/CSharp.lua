@@ -48,6 +48,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax GetObjectCreationInitializer(LuaExpressionSyntax creationExpression, InitializerExpressionSyntax initializer, ExpressionSyntax node) {
       int prevTempCount = CurFunction.TempCount;
+      int prevReleaseCount = CurBlock.ReleaseCount;
       var temp = GetTempIdentifier();
       CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(temp, creationExpression));
       FillObjectInitializerExpression(temp, initializer);
@@ -58,7 +59,7 @@ namespace CSharpLua {
           case SyntaxKind.ArrayInitializerExpression:
             break;
           default:
-            ReleaseTempIdentifiers(prevTempCount);
+            ReleaseTempIdentifiers(prevTempCount, prevReleaseCount);
             break;
         }
       }
