@@ -69,6 +69,15 @@ namespace Bridge.ClientTest.BasicCSharp
         }
 
         [Test]
+        public static void TestOf418() {
+            static void OnKickTeamMemberClick() {
+            }
+            bool isLeader = true;
+            Action kickAction = isLeader ? OnKickTeamMemberClick : null;
+            Assert.AreEqual(kickAction, OnKickTeamMemberClick);
+        }
+
+        [Test]
         public static void TestOf419() {
             static string GetStr() {
                 return "";
