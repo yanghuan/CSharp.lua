@@ -1381,8 +1381,15 @@ namespace CSharpLua {
         }
         case SyntaxKind.DeclarationPattern: {
           var declarationPattern = (DeclarationPatternSyntax)pattern;
+          int count = declarationPattern.GetIsDeclarationInBinaryCount();
           var name = declarationPattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
-          CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+          if (count == 0) {
+            CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+          } else {
+            var block = GetBlock(count + 1);
+            block.AddStatement(new LuaLocalVariableDeclaratorSyntax(name));
+            CurBlock.AddStatement(name.Assignment(targetExpression));
+          }
           return BuildIsPatternExpression(targetNode, declarationPattern.Type, name);
         }
         case SyntaxKind.NotPattern: {

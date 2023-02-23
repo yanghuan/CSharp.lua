@@ -69,6 +69,15 @@ namespace Bridge.ClientTest.BasicCSharp
         }
 
         [Test]
+        public static void TestOf417() {
+            IEnumerable<string> a = new List<string>();
+            IEnumerable<string> b = new List<string>();
+            int result = (true && a is List<string> a1 && b is List<string> b1) 
+                ? a1.Count + b1.Count + 1 : 0;
+            Assert.AreEqual(result, 1);
+        }
+
+        [Test]
         public static void TestOf418() {
             static void OnKickTeamMemberClick() {
             }

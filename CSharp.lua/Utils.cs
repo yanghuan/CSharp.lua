@@ -1469,5 +1469,20 @@ namespace CSharpLua {
       }
       return false;
     }
+
+    public static int GetIsDeclarationInBinaryCount(this DeclarationPatternSyntax node) {
+      int count = 0;
+      var current = node.Parent;
+      while (true) {
+        var p = current.Parent;
+        if (p is BinaryExpressionSyntax b && b.Right == current) {
+          current = p;
+          ++count;
+        } else {
+          break;
+        }
+      }
+      return count;
+    }
   }
 }

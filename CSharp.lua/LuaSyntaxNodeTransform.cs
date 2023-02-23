@@ -206,6 +206,18 @@ namespace CSharpLua {
       }
     }
 
+    private LuaBlockSyntax GetBlock(int index) {
+      if (index == 0) {
+        return CurBlock;
+      } else {
+        var en = blocks_.GetEnumerator();
+        while (index-- > 0) {
+          en.MoveNext();
+        }
+        return en.Current;
+      }
+    }
+
     private LuaIdentifierNameSyntax GetTempIdentifier() {
       int index = CurFunction.TempCount++;
       string name = LuaSyntaxNode.TempIdentifiers.GetOrDefault(index) ?? $"__temp{index - LuaSyntaxNode.TempIdentifiers.Length}__";
@@ -4183,17 +4195,17 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildLogicAndBinaryExpression(BinaryExpressionSyntax node) {
+      var temp = GetTempIdentifier();
       var left = VisitExpression(node.Left);
       LuaBlockSyntax rightBody = new LuaBlockSyntax();
       PushBlock(rightBody);
       var right = VisitExpression(node.Right);
+      PopBlock();
       if (rightBody.Statements.Count == 0) {
-        PopBlock();
+        PopTempCount(1);
         return left.And(right);
       }
 
-      var temp = GetTempIdentifier();
-      PopBlock();
       CurBlock.Statements.Add(new LuaLocalVariableDeclaratorSyntax(temp));
       LuaIfStatementSyntax leftIfStatement = new LuaIfStatementSyntax(left);
       CurBlock.Statements.Add(leftIfStatement);
