@@ -3,19 +3,10 @@ The C# to Lua compiler.
 
 ## Introduction
 CSharp.lua is a C# to Lua compiler. Write C# then run on lua VM.
-* Build on [Microsoft Roslyn](https://github.com/dotnet/roslyn). Support for C# 9.0.
-
+* Build on [Microsoft Roslyn](https://github.com/dotnet/roslyn). Support for C# 10.
 * Highly readable code generation. C# AST ---> Lua AST ---> Lua Code.
-
-* Allowing almost all of the C# language features.
-
 * Provides [CoreSystem.lua](https://github.com/yanghuan/CSharp.lua/tree/master/CSharp.lua/CoreSystem.Lua/CoreSystem) library, can run away of CLR.
-
-* Self-Compiling, run "./test/self-compiling/self.bat".
-
-* Self-Compiling (linux), run "./make" (if no errors, will prompt for fibbonacci 'N' value and generate fib sequence in lua)
-
-* Used by .NET Core, Ability to across platforms.
+* Build by .NET Core, Ability to across platforms.
 
 ## Sample
 C# code
@@ -78,8 +69,8 @@ Options
 -include        : the root directory of the CoreSystem library, adds all the dependencies to a single file named out.lua
 -noconcurrent   : close concurrent compile
 ```
-Make sure that .NET 6.0 is installed.
-https://dotnet.microsoft.com/download/dotnet/6.0
+Make sure that .NET 7.0 is installed.
+https://dotnet.microsoft.com/download/dotnet/7.0
 
 
 ### Download
