@@ -434,7 +434,7 @@ namespace CSharpLua {
     }
 
     private bool IsMoreThanUpValueStaticInitField(ISymbol symbol) {
-      return generator_.IsMorenThanUpValueStaticCtorField(symbol);
+      return generator_.IsMoreThanUpValueStaticCtorField(symbol);
     }
 
     private bool IsInternalMember(ISymbol symbol) {

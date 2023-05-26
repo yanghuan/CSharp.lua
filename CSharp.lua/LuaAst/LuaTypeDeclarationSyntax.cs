@@ -43,7 +43,7 @@ namespace CSharpLua.LuaAst {
     private readonly LuaTableExpression resultTable_ = new();
 
     private readonly List<LuaStatementSyntax> staticInitStatements_ = new();
-    private readonly List<(LuaIdentifierNameSyntax Identifier, bool IsMorenThanUpValueStaticInitField)> staticAssignmentNames_ = new();
+    private readonly List<(LuaIdentifierNameSyntax Identifier, bool IsMoreThanUpValueStaticInitField)> staticAssignmentNames_ = new();
     private LuaConstructorDeclaration staticCtor_;
 
     private readonly List<LuaStatementSyntax> initStatements_ = new();
@@ -66,9 +66,9 @@ namespace CSharpLua.LuaAst {
     public bool IsExportMetadataAll => document_.HasMetadataAllAttribute;
     public IEnumerable<LuaExpressionSyntax> TypeParameterExpressions => typeParameters_;
 
-    internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name, bool isMorenThanUpValueStaticInitField) {
+    internal void AddStaticReadOnlyAssignmentName(LuaIdentifierNameSyntax name, bool isMoreThanUpValueStaticInitField) {
       if (!staticAssignmentNames_.Exists(i => i.Identifier == name)) {
-        staticAssignmentNames_.Add((name, isMorenThanUpValueStaticInitField));
+        staticAssignmentNames_.Add((name, isMoreThanUpValueStaticInitField));
       }
     }
 
@@ -454,9 +454,9 @@ namespace CSharpLua.LuaAst {
     private void AddStaticAssignmentNames(LuaBlockSyntax body) {
       if (staticAssignmentNames_.Count > 0) {
         var assignment = new LuaMultipleAssignmentExpressionSyntax();
-        foreach (var (identifier, isMorenThan) in staticAssignmentNames_) {
+        foreach (var (identifier, isMoreThan) in staticAssignmentNames_) {
           assignment.Lefts.Add(LuaIdentifierNameSyntax.This.MemberAccess(identifier));
-          assignment.Rights.Add(!isMorenThan ? identifier : LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(identifier));
+          assignment.Rights.Add(!isMoreThan ? identifier : LuaIdentifierNameSyntax.MoreManyLocalVarTempTable.MemberAccess(identifier));
         }
         body.Statements.Add(assignment);
       }

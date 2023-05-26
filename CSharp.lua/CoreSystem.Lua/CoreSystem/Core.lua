@@ -69,7 +69,7 @@ local function xpcallErr(e)
   elseif type(e) == "string" then
     if sfind(e, "attempt to index") then
       e = System.NullReferenceException(e)
-    elseif sfind(e, "attempt to divide by zero") then  
+    elseif sfind(e, "attempt to divide by zero") then
       e = System.DivideByZeroException(e)
     else
       e = System.Exception(e)
@@ -518,7 +518,7 @@ if version < 5.3 then
   System.sl = sl
   System.sr = sr
 
-  function System.div(x, y) 
+  function System.div(x, y)
     if y == 0 then throw(System.DivideByZeroException(), 1) end
     return trunc(x / y)
   end
@@ -545,7 +545,7 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     return band(v, mask)
   end
@@ -556,7 +556,7 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     if v < -2147483648 or v > 2147483647 then
       return 0
@@ -581,7 +581,7 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     return toInt(v, mask, umask)
   end
@@ -592,7 +592,7 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     if v < -2147483648 or v > 2147483647 then
       return 0
@@ -602,7 +602,7 @@ if version < 5.3 then
 
   local function toUInt32(v)
     if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
-      throw(System.InvalidCastException()) 
+      throw(System.InvalidCastException())
     end
     v = band(v, 0xffffffff)
     local uv = band(v, 0x7fffffff)
@@ -617,7 +617,7 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     return toUInt32(v)
   end
@@ -628,7 +628,7 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     return toUInt32(v)
   end
@@ -638,20 +638,20 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     if v <= -2251799813685248 or v >= 2251799813685248 then  -- 2 ^ 51, Lua BitOp used 51 and 52
-      throw(System.InvalidCastException()) 
+      throw(System.InvalidCastException())
     end
     return band(v, 0xffffffff)
   end
 
-  function System.toInt64(v, checked) 
+  function System.toInt64(v, checked)
     if v >= (-9223372036854775807 - 1) and v <= 9223372036854775807 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     throw(System.InvalidCastException()) -- 2 ^ 51, Lua BitOp used 51 and 52
   end
@@ -661,12 +661,12 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     if v >= -2147483648 then
       return band(v, 0x7fffffff) + 0xffffffff80000000
     end
-    throw(System.InvalidCastException()) 
+    throw(System.InvalidCastException())
   end
 
   function System.ToUInt64(v, checked)
@@ -675,7 +675,7 @@ if version < 5.3 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     if v >= -2147483648 and v <= 2147483647 then
       v = band(v, 0xffffffff)
@@ -685,7 +685,7 @@ if version < 5.3 then
       end
       return v
     end
-    throw(System.InvalidCastException()) 
+    throw(System.InvalidCastException())
   end
 
   if table.pack == nil then
@@ -722,8 +722,8 @@ else
   local System = System
   local throw = System.throw
   local trunc = System.trunc
-  
-  function System.bnot(x) return ~x end 
+
+  function System.bnot(x) return ~x end
   function System.band(x, y) return x & y end
   function System.bor(x, y) return x | y end
   function System.xor(x, y) return x ~ y end
@@ -739,12 +739,12 @@ else
     return v
   end
 
-  local function toUInt(v, max, mask, checked)  
+  local function toUInt(v, max, mask, checked)
     if v >= 0 and v <= max then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 2) 
+      throw(System.OverflowException(), 2)
     end
     return v & mask
   end
@@ -756,14 +756,14 @@ else
       return v
     end
     if checked then
-      throw(System.OverflowException(), 2) 
+      throw(System.OverflowException(), 2)
     end
     if v < -2147483648 or v > 2147483647 then
       return 0
     end
     return v & mask
   end
-  
+
   local function toSingedInt(v, mask, umask)
     v = v & mask
     local uv = v & umask
@@ -775,25 +775,25 @@ else
     end
     return v
   end
-  
+
   local function toInt(v, min, max, mask, umask, checked)
     if v >= min and v <= max then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 2) 
+      throw(System.OverflowException(), 2)
     end
     return toSingedInt(v, mask, umask)
   end
   System.toInt = toInt
-  
+
   function System.ToInt(v, min, max, mask, umask, checked)
     v = trunc(v)
     if v >= min and v <= max then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 2) 
+      throw(System.OverflowException(), 2)
     end
     if v < -2147483648 or v > 2147483647 then
       return 0
@@ -804,18 +804,18 @@ else
   function System.toUInt32(v, checked)
     return toUInt(v, 4294967295, 0xffffffff, checked)
   end
-  
+
   function System.ToUInt32(v, checked)
     v = trunc(v)
     if v >= 0 and v <= 4294967295 then
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     return v & 0xffffffff
   end
-  
+
   function System.toInt32(v, checked)
     return toInt(v, -2147483648, 2147483647, 0xffffffff, 0x7fffffff, checked)
   end
@@ -829,7 +829,7 @@ else
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     return (v & 0x7fffffffffffffff) + 0x8000000000000000
   end
@@ -840,7 +840,7 @@ else
       return v
     end
     if checked then
-      throw(System.OverflowException(), 1) 
+      throw(System.OverflowException(), 1)
     end
     v = v & 0xffffffffffffffff
     local uv = v & 0x7fffffffffffffff
@@ -896,7 +896,7 @@ function System.ToInt32(v, checked)
     return v
   end
   if checked then
-    throw(System.OverflowException(), 1) 
+    throw(System.OverflowException(), 1)
   end
   return -2147483648
 end
@@ -907,7 +907,7 @@ function System.ToInt64(v, checked)
     return v
   end
   if checked then
-    throw(System.OverflowException(), 1) 
+    throw(System.OverflowException(), 1)
   end
   return (-9223372036854775807 - 1)
 end
@@ -917,10 +917,10 @@ function System.ToSingle(v, checked)
     return v
   end
   if checked then
-    throw(System.OverflowException(), 1) 
+    throw(System.OverflowException(), 1)
   end
   if v > 0 then
-    return 1 / 0 
+    return 1 / 0
   else
     return -1 / 0
   end
@@ -929,14 +929,14 @@ end
 function System.using(t, f)
   local dispose = t and t.Dispose
   if dispose ~= nil then
-    local ok, status, ret = xpcall(f, xpcallErr, t)   
+    local ok, status, ret = xpcall(f, xpcallErr, t)
     dispose(t)
     if not ok then
       error(status)
     end
     return status, ret
   else
-    return f(t)    
+    return f(t)
   end
 end
 
@@ -1128,7 +1128,7 @@ else
   toString = function (obj, f, a)
     local s
     if obj ~= nil then
-      local t = type(obj) 
+      local t = type(obj)
       if t == "number" then
         if f then
           s = System.Number.ToString(obj, f)
@@ -1242,7 +1242,7 @@ setmetatable(AnonymousType, anonymousTypeMetaTable)
 
 local pack, unpack = table.pack, table.unpack
 
-local function tupleDeconstruct(t) 
+local function tupleDeconstruct(t)
   return unpack(t, 1, t.n)
 end
 
@@ -1436,7 +1436,7 @@ defStc("System.RecordValueType", {
 local Attribute = defCls("System.Attribute")
 defCls("System.FlagsAttribute", { base = { Attribute } })
 
-local Nullable = { 
+local Nullable = {
   default = nilFn,
   Value = function (this)
     if this == nil then
@@ -1463,8 +1463,8 @@ local Nullable = {
 }
 
 defStc("System.Nullable", function (T)
-  return { 
-    __genericT__ = T 
+  return {
+    __genericT__ = T
   }
 end, Nullable, 1)
 
@@ -1476,7 +1476,7 @@ local Index = defStc("System.Index", {
   End = -0.0,
   Start = 0,
   IsFromEnd = function (this)
-    return 1 / this < 0 
+    return 1 / this < 0
   end,
   GetOffset = function (this, length)
     if 1 / this < 0 then
@@ -1488,7 +1488,7 @@ local Index = defStc("System.Index", {
     return ((1 / this < 0) and '^' or '') .. this
   end
 })
-setmetatable(Index, { 
+setmetatable(Index, {
   __call = function (value, fromEnd)
     if value < 0 then
       throw(System.ArgumentOutOfRangeException("Non-negative number required."))
