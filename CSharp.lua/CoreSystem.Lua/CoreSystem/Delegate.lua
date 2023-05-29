@@ -43,7 +43,7 @@ local function appendFn(t, count, f)
   return count
 end
 
-local function combineImpl(fn1, fn2)    
+local function combineImpl(fn1, fn2)
   local t = setmetatable({}, multicast)
   local count = 1
   count = appendFn(t, count, fn1)
@@ -53,10 +53,10 @@ end
 
 local function combine(fn1, fn2)
   if fn1 ~= nil then
-    if fn2 ~= nil then 
-      return combineImpl(fn1, fn2) 
+    if fn2 ~= nil then
+      return combineImpl(fn1, fn2)
     end
-    return fn1 
+    return fn1
   end
   if fn2 ~= nil then return fn2 end
   return nil
@@ -108,10 +108,10 @@ local function removeImpl(fn1, fn2)
     local diff = count1 - count2
     for i = diff + 1, 1, -1 do
       if equalsMulticast(fn1, fn2, i - 1, count2) then
-        if diff == 0 then 
+        if diff == 0 then
           return nil
-        elseif diff == 1 then 
-          return fn1[i ~= 1 and 1 or count1] 
+        elseif diff == 1 then
+          return fn1[i ~= 1 and 1 or count1]
         else
           return delete(fn1, count1, i, count2)
         end
@@ -322,7 +322,7 @@ local function create2_1(f)
 end
 
 function System.bind2_1(f)
-  return bind(f, create2_1) 
+  return bind(f, create2_1)
 end
 
 local function create0_2(f)
@@ -332,7 +332,7 @@ local function create0_2(f)
 end
 
 function System.bind0_2(f)
-  return bind(f, create0_2) 
+  return bind(f, create0_2)
 end
 
 local EventArgs = System.define("System.EventArgs")

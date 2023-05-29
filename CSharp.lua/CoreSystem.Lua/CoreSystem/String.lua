@@ -499,7 +499,7 @@ local function lastIndexOf(this, value, startIndex, count, comparisonType)
   value = escape(value)
   local e = startIndex + 1
   local f = e - count + 1
-  local index = -1  
+  local index = -1
   while true do
     local i, j = find(this, value, f)
     if not i or j > e then
@@ -528,7 +528,7 @@ local function lastIndexOfAny(this, anyOf, startIndex, count)
   return index
 end
 
-local function padLeft(this, totalWidth, paddingChar) 
+local function padLeft(this, totalWidth, paddingChar)
   local len = #this;
   if len >= totalWidth then
     return this
@@ -538,7 +538,7 @@ local function padLeft(this, totalWidth, paddingChar)
   end
 end
 
-local function padRight(this, totalWidth, paddingChar) 
+local function padRight(this, totalWidth, paddingChar)
   local len = #this
   if len >= totalWidth then
     return this
@@ -548,7 +548,7 @@ local function padRight(this, totalWidth, paddingChar)
   end
 end
 
-local function remove(this, startIndex, count) 
+local function remove(this, startIndex, count)
   startIndex, count = checkIndex(this, startIndex, count)
   return sub(this, 1, startIndex) .. sub(this, startIndex + 1 + count)
 end
@@ -575,7 +575,7 @@ local function findAny(s, strings, startIndex)
   return findBegin, findEnd
 end
 
-local function split(this, strings, count, options) 
+local function split(this, strings, count, options)
   local t = {}
   local find = find
   if type(strings) == "table" then
@@ -590,8 +590,8 @@ local function split(this, strings, count, options)
       strings = escape(strings)
       strings = "[" .. strings .. "]"
     end
-  elseif type(strings) == "string" then       
-    strings = escape(strings)         
+  elseif type(strings) == "string" then
+    strings = escape(strings)
   else
     strings = char(strings)
     strings = escape(strings)
@@ -618,10 +618,10 @@ local function split(this, strings, count, options)
     end
     if posBegin == 0 then
       break
-    end 
+    end
     startIndex = posEnd + 1
-  end   
-  return System.arrayFromTable(t, String) 
+  end
+  return System.arrayFromTable(t, String)
 end
 
 local function startsWith(this, prefix)
@@ -751,12 +751,12 @@ if debugsetmetatable then
 else
   string.__call = ctor
   string.__index = string
-  
+
   String = getmetatable("")
   String.__genericT__ = System.Char
   String.base = inherits
   System.define("System.String", String)
   String.__index = string
   setmetatable(String, string)
-  setmetatable(string, System.Object)  
+  setmetatable(string, System.Object)
 end

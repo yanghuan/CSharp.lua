@@ -239,8 +239,8 @@ namespace CSharpLua.LuaAst {
 
       var document = new LuaSummaryDocumentStatement();
       foreach (var item in items) {
-        if (IsAttribute(item, out AttributeFlags arrt)) {
-          attr_ |= arrt;
+        if (IsAttribute(item, out AttributeFlags attr)) {
+          attr_ |= attr;
         } else {
           document.Texts.Add(item);
         }
