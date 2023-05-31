@@ -28,7 +28,7 @@ local function compareTo(this, v)
   if this == v then
     return 0
   elseif this == false then
-    return -1     
+    return -1
   end
   return 1
 end

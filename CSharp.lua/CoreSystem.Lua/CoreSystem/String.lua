@@ -309,7 +309,7 @@ local function joinParams(separator, ...)
           len = len + 1
         end
       end
-      return tconcat(t, separator) 
+      return tconcat(t, separator)
     end
   end
   for i = 1, n do
@@ -319,7 +319,7 @@ local function joinParams(separator, ...)
       len = len + 1
     end
   end
-  return tconcat(t, separator) 
+  return tconcat(t, separator)
 end
 
 local function join(separator, value, startIndex, count)
@@ -328,7 +328,7 @@ local function join(separator, value, startIndex, count)
   end
   local t = {}
   local len = 1
-  if startIndex then  
+  if startIndex then
     checkIndex(value, startIndex, count)
     for i = startIndex + 1, startIndex + count do
       local v = value[i]
@@ -370,7 +370,7 @@ local function contains(this, value, comparisonType)
     if ignoreCase then
       this, value = lower(this), lower(value)
     end
-  end 
+  end
   return find(this, escape(value)) ~= nil
 end
 

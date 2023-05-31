@@ -122,7 +122,7 @@ Int.__call = zeroFn
 
 local function parseInt(s, min, max)
   if s == nil then
-    return nil, 1        
+    return nil, 1
   end
   local v = tonumber(s)
   if v == nil or v ~= floor(v) then
@@ -145,7 +145,7 @@ end
 local function parseIntWithException(s, min, max)
   local v, err = parseInt(s, min, max)
   if v then
-    return v    
+    return v
   end
   if err == 1 then
     throw(ArgumentNullException())
@@ -252,7 +252,7 @@ local function compareDouble(this, v)
   if this == v then return 0 end
   if isNaN(this) then
     return isNaN(v) and 0 or -1
-  else 
+  else
     return 1
   end
 end
@@ -324,7 +324,7 @@ end
 local function parseDoubleWithException(s)
   local v, err = parseDouble(s)
   if v then
-    return v    
+    return v
   end
   if err == 1 then
     throw(ArgumentNullException())

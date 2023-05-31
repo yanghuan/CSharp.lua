@@ -134,10 +134,10 @@ local function implementInterface(this, ifaceType)
 end
 
 local function isAssignableFrom(this, c)
-  if c == nil then 
-    return false 
+  if c == nil then
+    return false
   end
-  if this == c then 
+  if this == c then
     return true
   end
   local left, right = this[1], c[1]

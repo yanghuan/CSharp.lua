@@ -124,7 +124,7 @@ System.define("System.Enum", {
     if not enumType:getIsEnum() then throw(ArgumentException("Arg_MustBeEnum")) end
     local t = {}
     local count = 1
-    for k, v in pairs(enumType[1]) do
+    for _, v in pairs(enumType[1]) do
       if type(v) == "number" then
         t[count] = v
         count = count + 1
@@ -141,7 +141,7 @@ System.define("System.Enum", {
     if t == "string" then
       return cls[value] ~= nil
     elseif t == "number" then
-      for k, v in pairs(cls) do
+      for _, v in pairs(cls) do
         if v == value then
           return true
         end
