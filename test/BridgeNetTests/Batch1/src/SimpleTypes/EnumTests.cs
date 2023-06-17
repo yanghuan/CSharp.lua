@@ -222,15 +222,12 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.True(values2.Contains(FlagsEnum.ThirdValue));
         }
 
-#if false
         [Test(ExpectedCount = 2)]
         public static void TestGetValues()
         {
             Assert.AreDeepEqual(new[] { Abc.A, Abc.B, Abc.C }, Enum.GetValues(typeof(Abc)), "Abc values");
             Assert.AreDeepEqual(new[] { Digits.Zero, Digits.One, Digits.Two }, Enum.GetValues(typeof(Digits)), "Digits values");
         }
-#endif
-
 
         [Test(ExpectedCount = 3)]
         public static void TestCompareTo()
@@ -280,15 +277,15 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.AreEqual(null, Enum.GetName(typeof(Digits), 100), "GetName 100");
         }
 
-#if false
         [Test(ExpectedCount = 2)]
         public static void TestGetNames()
         {
             Assert.AreDeepEqual(new[] { "A", "B", "C" }, Enum.GetNames(typeof(Abc)), "Abc names");
-
             Assert.AreDeepEqual(new[] { "Zero", "One", "Two" }, Enum.GetNames(typeof(Digits)), "Digits names");
+
+            Assert.AreDeepEqual(new[] { "A", "B", "C" }, Abc.GetNames(typeof(Abc)), "Abc names");
+            Assert.AreDeepEqual(new[] { "Zero", "One", "Two" }, Digits.GetNames(typeof(Digits)), "Digits names");
         }
-#endif
 
         [Test(ExpectedCount = 6)]
         public static void TestHasFlag()

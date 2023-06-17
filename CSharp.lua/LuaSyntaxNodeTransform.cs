@@ -2543,6 +2543,10 @@ namespace CSharpLua {
         return node.AcceptExpression(this);
       }
 
+      if (symbol.Kind == SymbolKind.Method && symbol.IsStatic && symbol.ContainingType?.SpecialType == SpecialType.System_Enum) {
+        return generator_.GetTypeName(symbol.ContainingType);
+      }
+
       return BuildMemberAccessTargetExpression(node);
     }
 

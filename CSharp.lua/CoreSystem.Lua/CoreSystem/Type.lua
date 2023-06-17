@@ -298,6 +298,7 @@ Type = System.define("System.Type", {
     return nil
   end
 })
+Type.GetEnumValues = System.Enum.GetValues
 
 local NumberType = {
   __index = Type,
