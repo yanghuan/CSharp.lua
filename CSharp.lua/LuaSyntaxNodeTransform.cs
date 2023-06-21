@@ -3949,11 +3949,26 @@ namespace CSharpLua {
         switch (node.Parent.Kind()) {
           case SyntaxKind.Block: {
             var block = (BlockSyntax)node.Parent;
-            return block.Statements.Last() != node;
+            if (block.Statements.Last() != node) {
+              return true;
+            } else if (block.Parent.IsKind(SyntaxKind.ForStatement)) {
+              var forStatement = (ForStatementSyntax)block.Parent;
+              if (forStatement.Incrementors.Count > 0) {
+                return true;
+              }
+            }
+            break;
           }
           case SyntaxKind.SwitchSection: {
             var switchSection = (SwitchSectionSyntax)node.Parent;
             return switchSection.Statements.Last() != node;
+          }
+          case SyntaxKind.ForStatement: {
+            var forStatement = (ForStatementSyntax)node.Parent;
+            if (forStatement.Incrementors.Count > 0) {
+              return true;
+            }
+            break;
           }
         }
       }
