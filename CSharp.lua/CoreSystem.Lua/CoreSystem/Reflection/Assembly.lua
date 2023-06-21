@@ -683,7 +683,7 @@ function Type.GetMethod(this, name)
         if next and next[1] == name then
           throw(AmbiguousMatchException())
         end
-        return buildMethodInfo(cls, name, item)
+        return buildMethodInfo(cls, name, item, item[3])
       end
       return nil
     end
@@ -706,7 +706,7 @@ function Type.GetMethods(this)
         for i = 1, #methods do
           local method = methods[i]
           if hasPublicFlag(method[2]) then
-            t[count] = buildMethodInfo(cls, method[1], method)
+            t[count] = buildMethodInfo(cls, method[1], method, method[3])
             count = count + 1
           end
         end
@@ -1069,3 +1069,38 @@ define("System.Reflection.CustomAttributeExtensions", {
     return element:IsDefined(attributeType, inherit)
   end
 })
+
+System.Delegate.CreateDelegate = function (delegateType, ...)
+  if delegateType == nil then throw(ArgumentNullException("delegateType")) end
+  local n = select("#", ...)
+  if n == 1 then
+    local method = ...
+    if method == nil then throw(ArgumentNullException("method")) end
+    return method.f
+  end
+  local target, method, ignoreCase, throwOnBindFailure = ...
+  if target == nil or method == nil then ArgumentNullException() end
+  if type(method) == "boolean" then
+    return method.f
+  end
+  if type(method) == "string" then
+    if getmetatable(target) == Type then
+      method = target:GetMethod(method, ignoreCase)
+      if method == nil then
+        if throwOnBindFailure == false then
+          return nil
+        end
+       throw(MissingMethodException()) 
+      end
+      return method.f
+    end
+    method = typeof(target):GetMethod(method)
+    if method == nil then
+      if ignoreCase == false then
+        return nil 
+      end
+      throw(MissingMethodException()) 
+    end
+  end
+  return System.fn(target, method.f)
+end
