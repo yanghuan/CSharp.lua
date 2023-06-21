@@ -946,7 +946,7 @@ end
 local Attribute = System.Attribute
 
 function Attribute.GetCustomAttribute(element, attributeType, inherit)
-  return element:GetCustomAttribute(attributeType, inherit)
+  return element:GetCustomAttributes(attributeType, inherit)
 end
 
 function Attribute.GetCustomAttributes(element, attributeType, inherit)
@@ -1049,5 +1049,23 @@ define("System.Activator", {
   CreateInstance1 = function (type, nonPublic)
     if type == nil then throw(ArgumentNullException("type")) end
     return createInstance(type[1], nonPublic)
+  end
+})
+
+define("System.Reflection.CustomAttributeExtensions", {
+  GetCustomAttribute = function (element, attributeType, inherit)
+    if element == nil then throw(ArgumentNullException("element")) end
+    if attributeType == nil then throw(ArgumentNullException("attributeType")) end
+    if type(attributeType) == "boolean" then
+      attributeType, inherit = inherit, attributeType
+    end
+    if getmetatable(attributeType) ~= Type then
+      attributeType = typeof(attributeType)
+    end
+    return element:GetCustomAttributes(attributeType, inherit)
+  end,
+  IsDefined = function (element, attributeType, inherit)
+    if element == nil then throw(ArgumentNullException("element")) end
+    return element:IsDefined(attributeType, inherit)
   end
 })
