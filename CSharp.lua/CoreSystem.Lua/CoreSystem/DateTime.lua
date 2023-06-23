@@ -638,7 +638,7 @@ minValue = DateTime(0)
 DateTime.MinValue = minValue
 DateTime.MaxValue = DateTime(3155378975999999999)
 
-System.DayOfWeek = System.defEnum("System.DayOfWeek", {
+System.defEnum("System.DayOfWeek", {
   Sunday = 0,
   Monday = 1,
   Tuesday = 2,
