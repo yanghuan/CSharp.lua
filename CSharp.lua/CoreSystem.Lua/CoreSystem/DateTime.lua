@@ -637,3 +637,13 @@ DateTime = System.defStc("System.DateTime", {
 minValue = DateTime(0)
 DateTime.MinValue = minValue
 DateTime.MaxValue = DateTime(3155378975999999999)
+
+System.DayOfWeek = System.defEnum("System.DayOfWeek", {
+  Sunday = 0,
+  Monday = 1,
+  Tuesday = 2,
+  Wednesday = 3,
+  Thursday = 4,
+  Friday = 5,
+  Saturday = 6
+})
