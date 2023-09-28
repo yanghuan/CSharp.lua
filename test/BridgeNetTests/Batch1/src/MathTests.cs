@@ -689,6 +689,45 @@ namespace Bridge.ClientTest
         }
 
         [Test]
+        public void RoundDoubleAround0Works()
+        {
+            NumberHelper.AssertDouble(-1, Math.Round(-0.7));
+            NumberHelper.AssertDouble(0, Math.Round(-0.5));
+            NumberHelper.AssertDouble(0, Math.Round(-0.3));
+            NumberHelper.AssertDouble(0, Math.Round(0.3));
+            NumberHelper.AssertDouble(0, Math.Round(0.5));
+            NumberHelper.AssertDouble(1, Math.Round(0.7));
+
+            NumberHelper.AssertDouble(-1, Math.Round(-0.7, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(-1, Math.Round(-0.5, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(0, Math.Round(-0.3, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(0, Math.Round(0.3, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(1, Math.Round(0.5, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(1, Math.Round(0.7, MidpointRounding.AwayFromZero));
+
+            //NumberHelper.AssertDouble(-1, Math.Round(-0.7, MidpointRounding.ToZero));
+            //NumberHelper.AssertDouble(0, Math.Round(-0.5, MidpointRounding.ToZero));
+            //NumberHelper.AssertDouble(0, Math.Round(-0.3, MidpointRounding.ToZero));
+            //NumberHelper.AssertDouble(0, Math.Round(0.3, MidpointRounding.ToZero));
+            //NumberHelper.AssertDouble(0, Math.Round(0.5, MidpointRounding.ToZero));
+            //NumberHelper.AssertDouble(1, Math.Round(0.7, MidpointRounding.ToZero));
+
+            //NumberHelper.AssertDouble(-1, Math.Round(-0.7, MidpointRounding.ToNegativeInfinity));
+            //NumberHelper.AssertDouble(-1, Math.Round(-0.5, MidpointRounding.ToNegativeInfinity));
+            //NumberHelper.AssertDouble(0, Math.Round(-0.3, MidpointRounding.ToNegativeInfinity));
+            //NumberHelper.AssertDouble(0, Math.Round(0.3, MidpointRounding.ToNegativeInfinity));
+            //NumberHelper.AssertDouble(0, Math.Round(0.5, MidpointRounding.ToNegativeInfinity));
+            //NumberHelper.AssertDouble(1, Math.Round(0.7, MidpointRounding.ToNegativeInfinity));
+
+            //NumberHelper.AssertDouble(-1, Math.Round(-0.7, MidpointRounding.ToPositiveInfinity));
+            //NumberHelper.AssertDouble(0, Math.Round(-0.5, MidpointRounding.ToPositiveInfinity));
+            //NumberHelper.AssertDouble(0, Math.Round(-0.3, MidpointRounding.ToPositiveInfinity));
+            //NumberHelper.AssertDouble(0, Math.Round(0.3, MidpointRounding.ToPositiveInfinity));
+            //NumberHelper.AssertDouble(1, Math.Round(0.5, MidpointRounding.ToPositiveInfinity));
+            //NumberHelper.AssertDouble(1, Math.Round(0.7, MidpointRounding.ToPositiveInfinity));
+        }
+
+        [Test]
         public void IEEERemainderWorks()
         {
             NumberHelper.AssertDoubleWithEpsilon8(Math.IEEERemainder(3.1, 4.0), -0.9);

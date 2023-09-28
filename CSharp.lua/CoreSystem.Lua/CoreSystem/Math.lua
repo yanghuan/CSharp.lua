@@ -42,7 +42,7 @@ local function round(value, digits, mode)
     value = trunc(i)
     if value ~= i then
       local dif = i - value
-      if value >= 0 then
+      if i >= 0 then
         if dif > 0.5 or (dif == 0.5 and value % 2 ~= 0) then
           value = value + 1  
         end
