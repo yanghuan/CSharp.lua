@@ -220,6 +220,8 @@ namespace CSharpLua.LuaAst {
       MetadataAll = 1 << 3,
       Template = 1 << 4,
       Params = 1 << 5,
+      Get = 1 << 6,
+      Set = 1 << 7
     }
 
     public readonly List<LuaStatementSyntax> Statements = new();

@@ -301,6 +301,10 @@ namespace CSharpLua {
       return InternalBuildCodeTemplateExpression(codeTemplate, null, null, null, targetExpression);
     }
 
+    private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, IEnumerable<LuaExpressionSyntax> targetExpressions) {
+      return InternalBuildCodeTemplateExpression(codeTemplate, null, targetExpressions.Select<LuaExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => i), null);
+    }
+
     private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<LuaExpressionSyntax> arguments, IList<ITypeSymbol> typeArguments) {
       return InternalBuildCodeTemplateExpression(codeTemplate, targetExpression, arguments.Select<LuaExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => i), typeArguments);
     }
@@ -415,6 +419,10 @@ namespace CSharpLua {
 
     private void AddExportEnum(ITypeSymbol enumType) {
       generator_.AddExportEnum(enumType);
+    }
+
+    private bool IsPropertyTemplate(IPropertySymbol symbol) {
+      return generator_.IsPropertyTemplate(symbol);
     }
 
     private bool IsPropertyField(IPropertySymbol symbol) {
@@ -1108,6 +1116,21 @@ namespace CSharpLua {
         return name;
       }*/
 
+      if (name is LuaPropertyTemplateExpressionSyntax propertyTemplate) {
+        if (isStatic) {
+          var getExpression = propertyTemplate.GetTemplate != null
+            ? new LuaCodeTemplateExpressionSyntax(propertyTemplate.GetTemplate)
+            : null;
+          propertyTemplate.Update(expression, getExpression, isStatic);
+        } else {
+          var getExpression = propertyTemplate.GetTemplate != null
+            ? (LuaCodeTemplateExpressionSyntax)BuildCodeTemplateExpression(propertyTemplate.GetTemplate, new[] { expression })
+            : null;
+          propertyTemplate.Update(expression, getExpression, isStatic);
+        }
+        return propertyTemplate;
+      }
+
       if (name is LuaPropertyAdapterExpressionSyntax propertyMethod) {
         var arguments = propertyMethod.ArgumentList.Arguments;
         if (arguments.Count == 1) {
@@ -1233,7 +1256,7 @@ namespace CSharpLua {
     }
 
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression, bool isPropertyField = false) {
-      if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol) && !typeSymbol.IsNullableWithBasicElementType()) {
+      if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol) && !typeSymbol.IsNullableWithBasicElementType() && expression is not LuaPropertyTemplateExpressionSyntax) {
         bool need = false;
         if (isPropertyField) {
           need = true;

@@ -594,21 +594,41 @@ namespace CSharpLua {
           node = node.Parent.Parent;
         }
         if (node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Template, out string text)) {
-          return GetCodeTemplateFromAttributeText(text);
+          return GetCodeTemplateFromAttributeText(text, codeTemplateAttributeRegex_);
         }
       } else {
         string xml = symbol.GetDocumentationCommentXml();
         if (xml != null) {
-          return GetCodeTemplateFromAttributeText(xml);
+          return GetCodeTemplateFromAttributeText(xml, codeTemplateAttributeRegex_);
         }
       }
       return null;
     }
 
-    private static readonly Regex codeTemplateAttributeRegex_ = new(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
+    public static (string get, string set) GetPropertyTemplateFromAttribute(this ISymbol symbol) {
+      var node = symbol.GetDeclaringSyntaxNode();
+      string get = null;
+      string set = null;
+      if (node != null) {
+        if (symbol.Kind == SymbolKind.Field) {
+          node = node.Parent.Parent;
+        }
+        if (node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Get, out string getText)) {
+          get = GetCodeTemplateFromAttributeText(getText, codeGetAttributeRegex_);
+        }
+        if (node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Set, out string setText)) {
+          set = GetCodeTemplateFromAttributeText(setText, codeSetAttributeRegex_);
+        }
+      }
+      return (get, set);
+    }
 
-    private static string GetCodeTemplateFromAttributeText(string document) {
-      var matches = codeTemplateAttributeRegex_.Matches(document);
+    private static readonly Regex codeTemplateAttributeRegex_ = new(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
+    private static readonly Regex codeGetAttributeRegex_ = new(@"@CSharpLua.Get\s*=\s*(.+)\s*", RegexOptions.Compiled);
+    private static readonly Regex codeSetAttributeRegex_ = new(@"@CSharpLua.Set\s*=\s*(.+)\s*", RegexOptions.Compiled);
+
+    private static string GetCodeTemplateFromAttributeText(string document, Regex regex) {
+      var matches = regex.Matches(document);
       if (matches.Count > 0) {
         string text = matches[0].Groups[1].Value;
         return text.Trim().Trim('"');

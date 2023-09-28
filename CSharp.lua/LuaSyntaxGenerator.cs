@@ -1012,7 +1012,7 @@ namespace CSharpLua {
       switch (symbol.Kind) {
         case SymbolKind.Property:{
           var propertySymbol = (IPropertySymbol)symbol;
-          if (IsPropertyField(propertySymbol)) {
+          if (IsPropertyField(propertySymbol) && !IsPropertyTemplate(propertySymbol)) {
             names.Add(symbol.Name);
           } else {
             string baseName = GetSymbolBaseName(symbol);
@@ -1409,6 +1409,7 @@ namespace CSharpLua {
     private readonly Dictionary<INamedTypeSymbol, Dictionary<ISymbol, ISymbol>> implicitInterfaceTypes_ = new(SymbolEqualityComparer.Default);
     private readonly HashSet<INamedTypeSymbol> typesOfExtendSelf_ = new(SymbolEqualityComparer.Default);
 
+    private readonly ConcurrentDictionary<IPropertySymbol, bool> isPropertyTemplates_ = new(SymbolEqualityComparer.Default);
     private readonly ConcurrentDictionary<IPropertySymbol, bool> isFieldProperties_ = new(SymbolEqualityComparer.Default);
     private readonly ConcurrentDictionary<IEventSymbol, bool> isFieldEvents_ = new(SymbolEqualityComparer.Default);
     private readonly ConcurrentDictionary<ISymbol, bool> isMoreThanLocalVariables_ = new(SymbolEqualityComparer.Default);
@@ -1628,6 +1629,18 @@ namespace CSharpLua {
       }
 
       return symbol.IsAutoProperty();
+    }
+
+    internal bool IsPropertyTemplate(IPropertySymbol symbol) {
+      return isPropertyTemplates_.GetOrAdd(symbol, symbol => {
+        var node = symbol.GetDeclaringSyntaxNode();
+        if (node == null) {
+          return false;
+        } else {
+          return node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Get)
+            || symbol.GetDeclaringSyntaxNode().HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Set);
+        }
+      });
     }
 
     internal bool IsPropertyField(IPropertySymbol symbol) {
