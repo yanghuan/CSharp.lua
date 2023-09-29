@@ -813,5 +813,260 @@ namespace Bridge.ClientTest
         //    // #1629
         //    Assert.AreEqual(Math.BigMul(214748364, 214748364), 46116859840676496L);
         //}
+
+        [Test]
+        public void RoundDoubleAround0Works()
+        {
+            // Test around 0 for all rounding modes
+            NumberHelper.AssertDouble(-1, Math.Round(-0.7, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(0, Math.Round(-0.5, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(0, Math.Round(-0.3, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(0, Math.Round(0.3, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(0, Math.Round(0.5, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(1, Math.Round(0.7, 0, MidpointRounding.ToEven));
+
+            NumberHelper.AssertDouble(-1, Math.Round(-0.7, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(-1, Math.Round(-0.5, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(0, Math.Round(-0.3, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(0, Math.Round(0.3, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(1, Math.Round(0.5, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(1, Math.Round(0.7, 0, MidpointRounding.AwayFromZero));
+
+            NumberHelper.AssertDouble(0, Math.Round(-0.7, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(0, Math.Round(-0.5, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(0, Math.Round(-0.3, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(0, Math.Round(0.3, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(0, Math.Round(0.5, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(0, Math.Round(0.7, 0, MidpointRounding.ToZero));
+
+            NumberHelper.AssertDouble(-1, Math.Round(-0.7, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(-1, Math.Round(-0.5, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(-1, Math.Round(-0.3, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(0, Math.Round(0.3, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(0, Math.Round(0.5, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(0, Math.Round(0.7, 0, MidpointRounding.ToNegativeInfinity));
+
+            NumberHelper.AssertDouble(0, Math.Round(-0.7, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(0, Math.Round(-0.5, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(0, Math.Round(-0.3, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(1, Math.Round(0.3, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(1, Math.Round(0.5, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(1, Math.Round(0.7, 0, MidpointRounding.ToPositiveInfinity));
+
+            // Test around the first even number as well
+            NumberHelper.AssertDouble(-2, Math.Round(-1.7, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(-2, Math.Round(-1.5, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(-1, Math.Round(-1.3, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(1, Math.Round(1.3, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(2, Math.Round(1.5, 0, MidpointRounding.ToEven));
+            NumberHelper.AssertDouble(2, Math.Round(1.7, 0, MidpointRounding.ToEven));
+
+            NumberHelper.AssertDouble(-2, Math.Round(-1.7, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(-2, Math.Round(-1.5, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(-1, Math.Round(-1.3, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(1, Math.Round(1.3, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(2, Math.Round(1.5, 0, MidpointRounding.AwayFromZero));
+            NumberHelper.AssertDouble(2, Math.Round(1.7, 0, MidpointRounding.AwayFromZero));
+
+            NumberHelper.AssertDouble(-1, Math.Round(-1.7, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(-1, Math.Round(-1.5, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(-1, Math.Round(-1.3, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(1, Math.Round(1.3, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(1, Math.Round(1.5, 0, MidpointRounding.ToZero));
+            NumberHelper.AssertDouble(1, Math.Round(1.7, 0, MidpointRounding.ToZero));
+
+            NumberHelper.AssertDouble(-2, Math.Round(-1.7, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(-2, Math.Round(-1.5, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(-2, Math.Round(-1.3, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(1, Math.Round(1.3, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(1, Math.Round(1.5, 0, MidpointRounding.ToNegativeInfinity));
+            NumberHelper.AssertDouble(1, Math.Round(1.7, 0, MidpointRounding.ToNegativeInfinity));
+
+            NumberHelper.AssertDouble(-1, Math.Round(-1.7, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(-1, Math.Round(-1.5, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(-1, Math.Round(-1.3, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(2, Math.Round(1.3, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(2, Math.Round(1.5, 0, MidpointRounding.ToPositiveInfinity));
+            NumberHelper.AssertDouble(2, Math.Round(1.7, 0, MidpointRounding.ToPositiveInfinity));
+        }
+
+        [Test]
+        public void AcoshWorks()
+        {
+            Assert.AreEqual(double.NaN, Math.Acosh(0));
+            Assert.AreEqual(double.NaN, Math.Acosh(0.5));
+            NumberHelper.AssertDouble(0, Math.Acosh(1));
+            NumberHelper.AssertDoubleWithEpsilon8(1.3169578969248166, Math.Acosh(2));
+            NumberHelper.AssertDoubleWithEpsilon8(1.762747174039086, Math.Acosh(3));
+            NumberHelper.AssertDoubleWithEpsilon8(2.0634370688955608, Math.Acosh(4));
+        }
+
+        [Test]
+        public void AsinhWorks()
+        {
+            NumberHelper.AssertDoubleWithEpsilon8(-1.4436354751788103, Math.Asinh(-2));
+            NumberHelper.AssertDoubleWithEpsilon8(-0.881373587019543, Math.Asinh(-1));
+            NumberHelper.AssertDouble(0, Math.Asinh(0));
+            NumberHelper.AssertDoubleWithEpsilon8(0.881373587019543, Math.Asinh(1));
+            NumberHelper.AssertDoubleWithEpsilon8(1.4436354751788103, Math.Asinh(2));
+            NumberHelper.AssertDoubleWithEpsilon8(1.8184464592320668, Math.Asinh(3));
+            NumberHelper.AssertDoubleWithEpsilon8(2.0947125472611012, Math.Asinh(4));
+        }
+
+        [Test]
+        public void AtanhWorks()
+        {
+            Assert.AreEqual(double.NegativeInfinity, Math.Atanh(-1));
+            NumberHelper.AssertDoubleWithEpsilon8(-0.9729550745276566, Math.Atanh(-0.75));
+            NumberHelper.AssertDouble(0, Math.Atanh(0));
+            NumberHelper.AssertDoubleWithEpsilon8(0.5493061443340548, Math.Atanh(0.5));
+            Assert.AreEqual(double.PositiveInfinity, Math.Atanh(1));
+        }
+
+        [Test]
+        public void CbrtWorks()
+        {
+            NumberHelper.AssertDoubleWithEpsilon8(-1.7099759466766968, Math.Cbrt(-5));
+            NumberHelper.AssertDouble(0, Math.Cbrt(0));
+            NumberHelper.AssertDoubleWithEpsilon8(0.7937005259840998, Math.Cbrt(0.5));
+            NumberHelper.AssertDouble(1, Math.Cbrt(1));
+            NumberHelper.AssertDoubleWithEpsilon8(2.1544346900318834, Math.Cbrt(10));
+            NumberHelper.AssertDouble(3, Math.Cbrt(27));
+        }
+
+        [Test]
+        public void CopySignWorks()
+        {
+            NumberHelper.AssertDouble(5, Math.CopySign(5, 7));
+            NumberHelper.AssertDouble(-5, Math.CopySign(5, -7));
+            NumberHelper.AssertDouble(5, Math.CopySign(-5, 7));
+            NumberHelper.AssertDouble(-5, Math.CopySign(-5, -7));
+
+            NumberHelper.AssertDouble(8, Math.CopySign(8, 4));
+            NumberHelper.AssertDouble(-8, Math.CopySign(8, -4));
+            NumberHelper.AssertDouble(8, Math.CopySign(-8, 4));
+            NumberHelper.AssertDouble(-8, Math.CopySign(-8, -4));
+        }
+
+        [Test]
+        public void FusedMultipleAddWorks()
+        {
+            NumberHelper.AssertDouble(26, Math.FusedMultiplyAdd(4, 5, 6));
+            NumberHelper.AssertDoubleWithEpsilon8(9.85, Math.FusedMultiplyAdd(2.5, 2.7, 3.1));
+            NumberHelper.AssertDoubleWithEpsilon8(35.507, Math.FusedMultiplyAdd(6.18, 4.15, 9.86));
+        }
+
+        [Test]
+        public void ILogBWorks()
+        {
+            NumberHelper.AssertDouble(4, Math.ILogB(-27));
+            NumberHelper.AssertDouble(1, Math.ILogB(-3));
+            NumberHelper.AssertDouble(-14, Math.ILogB(-0.0001));
+            NumberHelper.AssertDouble(int.MinValue, Math.ILogB(0));
+            NumberHelper.AssertDouble(-8, Math.ILogB(0.005));
+            NumberHelper.AssertDouble(2, Math.ILogB(6));
+            NumberHelper.AssertDouble(9, Math.ILogB(581));
+        }
+
+        [Test]
+        public void Log2Works()
+        {
+            Assert.AreEqual(double.NaN, Math.Log2(-27));
+            Assert.AreEqual(double.NaN, Math.Log2(-3));
+            Assert.AreEqual(double.NaN, Math.Log2(-0.0001));
+            Assert.AreEqual(double.NegativeInfinity, Math.Log2(0));
+            NumberHelper.AssertDoubleWithEpsilon8(-7.643856189774724, Math.Log2(0.005));
+            NumberHelper.AssertDoubleWithEpsilon8(2.584962500721156, Math.Log2(6));
+            NumberHelper.AssertDoubleWithEpsilon8(9.18239435340453, Math.Log2(581));
+        }
+
+        [Test]
+        public void MaxMagnitudeWorks()
+        {
+            NumberHelper.AssertDouble(40, Math.MaxMagnitude(40, 40));
+            NumberHelper.AssertDouble(40, Math.MaxMagnitude(40, -40));
+            NumberHelper.AssertDouble(40, Math.MaxMagnitude(-40, 40));
+            NumberHelper.AssertDouble(-40, Math.MaxMagnitude(-40, -40));
+
+            NumberHelper.AssertDouble(41, Math.MaxMagnitude(40, 41));
+            NumberHelper.AssertDouble(-41, Math.MaxMagnitude(40, -41));
+            NumberHelper.AssertDouble(41, Math.MaxMagnitude(-40, 41));
+            NumberHelper.AssertDouble(-41, Math.MaxMagnitude(-40, -41));
+
+            NumberHelper.AssertDouble(41, Math.MaxMagnitude(41, 40));
+            NumberHelper.AssertDouble(41, Math.MaxMagnitude(41, -40));
+            NumberHelper.AssertDouble(-41, Math.MaxMagnitude(-41, 40));
+            NumberHelper.AssertDouble(-41, Math.MaxMagnitude(-41, -40));
+        }
+
+        [Test]
+        public void MinMagnitudeWorks()
+        {
+            NumberHelper.AssertDouble(40, Math.MinMagnitude(40, 40));
+            NumberHelper.AssertDouble(-40, Math.MinMagnitude(40, -40));
+            NumberHelper.AssertDouble(-40, Math.MinMagnitude(-40, 40));
+            NumberHelper.AssertDouble(-40, Math.MinMagnitude(-40, -40));
+
+            NumberHelper.AssertDouble(39, Math.MinMagnitude(40, 39));
+            NumberHelper.AssertDouble(-39, Math.MinMagnitude(40, -39));
+            NumberHelper.AssertDouble(39, Math.MinMagnitude(-40, 39));
+            NumberHelper.AssertDouble(-39, Math.MinMagnitude(-40, -39));
+
+            NumberHelper.AssertDouble(39, Math.MinMagnitude(39, 40));
+            NumberHelper.AssertDouble(39, Math.MinMagnitude(39, -40));
+            NumberHelper.AssertDouble(-39, Math.MinMagnitude(-39, 40));
+            NumberHelper.AssertDouble(-39, Math.MinMagnitude(-39, -40));
+        }
+
+        [Test]
+        public void ReciprocalEstimateWorks()
+        {
+            NumberHelper.AssertDoubleWithEpsilon8(-0.14285714285714285, Math.ReciprocalEstimate(-7));
+            NumberHelper.AssertDouble(-2, Math.ReciprocalEstimate(-0.5));
+            Assert.AreEqual(double.PositiveInfinity, Math.ReciprocalEstimate(0));
+            NumberHelper.AssertDoubleWithEpsilon8(4.761904761904762, Math.ReciprocalEstimate(0.21));
+            NumberHelper.AssertDouble(1, Math.ReciprocalEstimate(1));
+            NumberHelper.AssertDoubleWithEpsilon8(0.3333333333333333, Math.ReciprocalEstimate(3));
+            NumberHelper.AssertDoubleWithEpsilon8(0.0022172949002217295, Math.ReciprocalEstimate(451));
+        }
+
+        [Test]
+        public void ReciprocalSqrtEstimateWorks()
+        {
+            Assert.AreEqual(double.NaN, Math.ReciprocalSqrtEstimate(-7));
+            Assert.AreEqual(double.NaN, Math.ReciprocalSqrtEstimate(-0.5));
+            Assert.AreEqual(double.PositiveInfinity, Math.ReciprocalSqrtEstimate(0));
+            NumberHelper.AssertDoubleWithEpsilon8(2.1821789023599236, Math.ReciprocalSqrtEstimate(0.21));
+            NumberHelper.AssertDouble(1, Math.ReciprocalSqrtEstimate(1));
+            NumberHelper.AssertDoubleWithEpsilon8(0.5773502691896258, Math.ReciprocalSqrtEstimate(3));
+            NumberHelper.AssertDoubleWithEpsilon8(0.04708816093480111, Math.ReciprocalSqrtEstimate(451));
+        }
+
+        [Test]
+        public void ScaleBWorks()
+        {
+            NumberHelper.AssertDouble(56, Math.ScaleB(7, 3));
+            NumberHelper.AssertDouble(9, Math.ScaleB(72, -3));
+            NumberHelper.AssertDouble(-139264, Math.ScaleB(-17, 13));
+            NumberHelper.AssertDoubleWithEpsilon8(-0.0032958984375, Math.ScaleB(-27, -13));
+        }
+
+        [Test]
+        public void SinCosWorks()
+        {
+            var (sin, cos) = Math.SinCos(5);
+            NumberHelper.AssertDoubleWithEpsilon8(-0.9589242746631385, sin);
+            NumberHelper.AssertDoubleWithEpsilon8(0.28366218546322625, cos);
+
+            (sin, cos) = Math.SinCos(-3);
+            NumberHelper.AssertDoubleWithEpsilon8(-0.1411200080598672, sin);
+            NumberHelper.AssertDoubleWithEpsilon8(-0.9899924966004454, cos);
+        }
+
+        [Test]
+        public void MathFWorks()
+        {
+            Assert.AreEqual(5, MathF.Abs(-5));
+        }
     }
 }
