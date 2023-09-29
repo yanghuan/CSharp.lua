@@ -1566,7 +1566,7 @@ namespace CSharpLua {
       bool isPreventDebugConcatenation = IsPreventDebug && operatorToken == LuaSyntaxNode.Tokens.Concatenation;
       if (left is LuaPropertyTemplateExpressionSyntax propertyTemplate) {
         var arguments = propertyTemplate.GetArguments(propertyTemplate.GetExpression.Binary(operatorToken, right));
-        return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, arguments);
+        return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, arguments, propertyTemplate.Name);
       } else if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
         LuaExpressionSyntax expression = null;
         var getter = propertyAdapter.GetCloneOfGet();
@@ -1621,7 +1621,7 @@ namespace CSharpLua {
         var expr = isPlus
           ? propertyTemplate.GetExpression.Plus(right)
           : propertyTemplate.GetExpression.Sub(right);
-        return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, propertyTemplate.GetArguments(expr));
+        return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, propertyTemplate.GetArguments(expr), propertyTemplate.Name);
       }
 
       if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
@@ -1642,7 +1642,7 @@ namespace CSharpLua {
       if (left is LuaPropertyTemplateExpressionSyntax propertyTemplate) {
         var invocation = new LuaInvocationExpressionSyntax(methodName, propertyTemplate.GetExpression, right);
         var arguments = propertyTemplate.GetArguments(invocation);
-        return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, arguments);
+        return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, arguments, propertyTemplate.Name);
       } else if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
         var invocation = new LuaInvocationExpressionSyntax(methodName, propertyAdapter.GetCloneOfGet(), right);
         propertyAdapter.ArgumentList.AddArgument(invocation);
@@ -1862,7 +1862,7 @@ namespace CSharpLua {
           var right = VisitExpression(rightNode);
           if (left is LuaPropertyTemplateExpressionSyntax propertyTemplate) {
               var arguments = propertyTemplate.GetArguments(right);
-              return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, arguments);
+              return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, arguments, propertyTemplate.Name);
           } else if (leftNode.Kind().IsTupleDeclaration()) {
             if (!rightNode.IsKind(SyntaxKind.TupleExpression)) {
               right = BuildDeconstructExpression(rightNode, right);
@@ -2874,7 +2874,6 @@ namespace CSharpLua {
         isReadOnly = propertySymbol.IsReadOnly;
         if (IsPropertyTemplate(propertySymbol)) {
           var (get, set) = Utility.GetPropertyTemplateFromAttribute(symbol);
-          LuaIdentifierNameSyntax fieldName = GetMemberName(symbol);
           return new LuaPropertyTemplateExpressionSyntax(get, set);
         }
       } else {

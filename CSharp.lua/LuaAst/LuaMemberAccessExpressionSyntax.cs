@@ -117,6 +117,7 @@ namespace CSharpLua.LuaAst {
     public string GetTemplate { get; private set; }
     public string SetTemplate { get; private set; }
     public LuaCodeTemplateExpressionSyntax GetExpression { get; private set; }
+    public LuaIdentifierNameSyntax Name { get; private set; }
     public readonly LuaArgumentListSyntax ArgumentList = new();
 
     public LuaPropertyTemplateExpressionSyntax(string getExpression, string setExpression) {
@@ -124,10 +125,8 @@ namespace CSharpLua.LuaAst {
       SetTemplate = setExpression;
     }
 
-    public void Update(LuaExpressionSyntax expression, LuaCodeTemplateExpressionSyntax getExpression, bool isStatic) {
-      if (!isStatic) {
-        ArgumentList.AddArgument(expression);
-      }
+    public void Update(LuaExpressionSyntax expression, LuaCodeTemplateExpressionSyntax getExpression) {
+      Name = new LuaSymbolNameSyntax(expression);
       GetExpression = getExpression;
     }
 

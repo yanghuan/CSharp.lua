@@ -301,8 +301,8 @@ namespace CSharpLua {
       return InternalBuildCodeTemplateExpression(codeTemplate, null, null, null, targetExpression);
     }
 
-    private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, IEnumerable<LuaExpressionSyntax> targetExpressions) {
-      return InternalBuildCodeTemplateExpression(codeTemplate, null, targetExpressions.Select<LuaExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => i), null);
+    private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, IEnumerable<LuaExpressionSyntax> arguments, LuaIdentifierNameSyntax memberBindingIdentifier) {
+      return InternalBuildCodeTemplateExpression(codeTemplate, null, arguments.Select<LuaExpressionSyntax, Func<LuaExpressionSyntax>>(i => () => i), null, memberBindingIdentifier);
     }
 
     private LuaExpressionSyntax BuildCodeTemplateExpression(string codeTemplate, ExpressionSyntax targetExpression, IEnumerable<LuaExpressionSyntax> arguments, IList<ITypeSymbol> typeArguments) {
@@ -1117,17 +1117,10 @@ namespace CSharpLua {
       }*/
 
       if (name is LuaPropertyTemplateExpressionSyntax propertyTemplate) {
-        if (isStatic) {
-          var getExpression = propertyTemplate.GetTemplate != null
-            ? new LuaCodeTemplateExpressionSyntax(propertyTemplate.GetTemplate)
-            : null;
-          propertyTemplate.Update(expression, getExpression, isStatic);
-        } else {
-          var getExpression = propertyTemplate.GetTemplate != null
-            ? (LuaCodeTemplateExpressionSyntax)BuildCodeTemplateExpression(propertyTemplate.GetTemplate, new[] { expression })
-            : null;
-          propertyTemplate.Update(expression, getExpression, isStatic);
-        }
+        var getExpression = propertyTemplate.GetTemplate != null
+          ? (LuaCodeTemplateExpressionSyntax)BuildCodeTemplateExpression(propertyTemplate.GetTemplate, new LuaSymbolNameSyntax(expression))
+          : null;
+        propertyTemplate.Update(expression, getExpression);
         return propertyTemplate;
       }
 

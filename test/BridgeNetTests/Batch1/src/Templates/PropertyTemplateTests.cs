@@ -202,22 +202,22 @@ namespace Batch1.src.Templates
             /// @CSharpLua.Set = "a = {0}"
             public static extern int StaticProp { get; set; }
 
-            /// @CSharpLua.Get = "{0}.CustomProp1"
-            /// @CSharpLua.Set = "{0}.CustomProp1 = {1}"
+            /// @CSharpLua.Get = "{this}.CustomProp1"
+            /// @CSharpLua.Set = "{this}.CustomProp1 = {0}"
             public extern int FullProp { get; set; }
-            /// @CSharpLua.Get = "{0}.CustomProp2"
+            /// @CSharpLua.Get = "{this}.CustomProp2"
             public extern int GetProp { get; set; }
-            /// @CSharpLua.Set = "{0}.CustomProp2 = {1}"
+            /// @CSharpLua.Set = "{this}.CustomProp2 = {0}"
             public extern int SetProp { get; set; }
             /// @CSharpLua.Get = "4"
             public extern int GetOnlyProp { get; }
 
-            /// @CSharpLua.Get = "{0}.StringProp"
-            /// @CSharpLua.Set = "{0}.StringProp = {1}"
+            /// @CSharpLua.Get = "{this}.CustomProp3"
+            /// @CSharpLua.Set = "{this}.CustomProp3 = {0}"
             public extern string StringProp { get; set; }
 
-            /// @CSharpLua.Get = "{0}.NullableProp"
-            /// @CSharpLua.Set = "{0}.NullableProp = {1}"
+            /// @CSharpLua.Get = "{this}.CustomProp4"
+            /// @CSharpLua.Set = "{this}.CustomProp4 = {0}"
             public extern int? NullableProp { get; set; }
         }
     }
