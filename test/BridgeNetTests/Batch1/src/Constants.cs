@@ -112,6 +112,8 @@
         public const string MODULE_RUNTIME = "Runtime helpers"; // + "Array";
         public const string MODULE_IO = "IO";
 
+        public const string MODULE_TEMPLATES = "@CSharpLua templates";
+
         public const string IGNORE_DATE = null;
     }
 }
