@@ -1384,8 +1384,12 @@ namespace CSharpLua {
       const int kParametersMaxCount = 256;
 
       int accessibility = (int)symbol.DeclaredAccessibility;
-      int isStatic = symbol.IsStatic ? 1 : 0;
-      int flags = accessibility | (isStatic << 3);
+      int flags = accessibility;
+      if (symbol.IsStatic) {
+        flags |= 1 << 3;
+      } else if (symbol.IsAbstract) {
+         flags |= 1 << 4;
+      }
       switch (symbol.Kind) {
         case SymbolKind.Method: {
           var methodSymbol = (IMethodSymbol)symbol;
@@ -1406,6 +1410,12 @@ namespace CSharpLua {
         }
         case SymbolKind.NamedType: {
           var nameType = (INamedTypeSymbol)symbol;
+          if (nameType.IsStatic) {
+            flags |= 1 << 4;
+            flags |= 1 << 5;
+          } else if (nameType.IsSealed) {
+            flags |= 1 << 5;
+          }
           if (nameType.IsGenericType) {
             int typeCount = nameType.TypeParameters.Length;
             Contract.Assert(typeCount < kParametersMaxCount);

@@ -82,16 +82,23 @@ local function getName(this)
   return this.name
 end
 
-local function isAccessibility(memberInfo, kind)
-  local metadata = memberInfo.metadata
-  if not metadata then
-    throwNoMatadata(memberInfo.c.__name__ .. "." .. memberInfo.name)
-  end
+local function isAccessibility(this, kind)
+  local metadata = this:getMetadata()
   return band(metadata[2], 0x7) == kind
 end
 
 local MemberInfo = define("System.Reflection.MemberInfo", {
   getName = getName,
+  getCls = function (this)
+    return this.c
+  end,
+  getMetadata = function (this)
+	  local metadata = this.metadata
+    if not metadata then
+      throwNoMatadata(this:getCls().__name__ .. "." .. this.name)
+    end
+    return metadata
+  end,
   EqualsObj = function (this, obj)
     if getmetatable(this) ~= getmetatable(obj) then
       return false
@@ -102,14 +109,15 @@ local MemberInfo = define("System.Reflection.MemberInfo", {
     return this.memberType
   end,
   getDeclaringType = function (this)
-    return typeof(this.c)
+    return typeof(this:getCls())
+  end,
+  getIsAbstract = function (this)
+	  local metadata = this:getMetadata()
+    return band(metadata[2], 0x10) ~= 0
   end,
   getIsStatic = function (this)
-    local metadata = this.metadata
-    if not metadata then
-      throwNoMatadata(this.c.__name__ .. "." .. this.name)
-    end
-    return band(metadata[2], 0x8) == 1
+    local metadata = this:getMetadata()
+    return band(metadata[2], 0x8) ~= 0
   end,
   getIsPrivate = function (this)
     return isAccessibility(this, 1)
@@ -853,7 +861,23 @@ function System.GetExecutingAssembly(assembly)
 	return setmetatable(assembly, Assembly)
 end
 
+setmetatable(Type, MemberInfo)
 Type.getAssembly = getAssembly
+
+Type.memberType = 32
+
+Type.getCls = function (this)
+  return this[1]
+end
+
+Type.getMetadata = function (this)
+  local cls = this[1]
+  local metadata = rawget(cls, "__metadata__")
+  if not metadata then
+    throwNoMatadata(cls.__name__)
+  end
+  return metadata.class
+end
 
 function Type.getAssemblyQualifiedName(this)
   return this:getName() .. ', ' .. getName(assembly)

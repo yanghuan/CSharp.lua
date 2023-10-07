@@ -450,6 +450,7 @@ namespace CSharpLua {
 
       if (IsCurTypeExportMetadataAll || attributes.Count > 0 || typeDeclaration.IsExportMetadata) {
         var data = new LuaTableExpression { IsSingleLine = true };
+        data.Add(new LuaStringLiteralExpressionSyntax(typeSymbol.Name));
         data.Add(typeSymbol.GetMetaDataAttributeFlags());
         data.AddRange(typeDeclaration.TypeParameterExpressions);
         data.AddRange(attributes);

@@ -235,12 +235,11 @@ local function setBase(cls, kind)
   cls.__index = cls
   cls.__call = new
 
-  local object = kind ~= "S" and Object or ValueType
   if extends then
     local base = extends[1]
     if not base then error(cls.__name__ .. "'s base is nil") end
     if base.class == "I" then
-      setmetatable(cls, object)
+      setmetatable(cls, kind ~= "S" and Object or ValueType)
       setInterface(cls, extends)
     else
       setmetatable(cls, base)
@@ -250,7 +249,7 @@ local function setBase(cls, kind)
       end
     end
   else
-    setmetatable(cls, object)
+    setmetatable(cls, kind ~= "S" and Object or ValueType)
   end
 end
 
