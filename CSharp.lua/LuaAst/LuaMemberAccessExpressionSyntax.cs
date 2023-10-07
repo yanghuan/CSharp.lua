@@ -15,7 +15,9 @@ limitations under the License.
 */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace CSharpLua.LuaAst {
   public sealed class LuaMemberAccessExpressionSyntax : LuaExpressionSyntax {
@@ -108,6 +110,32 @@ namespace CSharpLua.LuaAst {
 
     internal override void Render(LuaRenderer renderer) {
       renderer.Render(this);
+    }
+  }
+
+  public sealed class LuaPropertyTemplateExpressionSyntax : LuaExpressionSyntax {
+    public string GetTemplate { get; private set; }
+    public string SetTemplate { get; private set; }
+    public LuaCodeTemplateExpressionSyntax GetExpression { get; private set; }
+    public LuaIdentifierNameSyntax Name { get; private set; }
+    public readonly LuaArgumentListSyntax ArgumentList = new();
+
+    public LuaPropertyTemplateExpressionSyntax(string getExpression, string setExpression) {
+      GetTemplate = getExpression;
+      SetTemplate = setExpression;
+    }
+
+    public void Update(LuaExpressionSyntax expression, LuaCodeTemplateExpressionSyntax getExpression) {
+      Name = new LuaSymbolNameSyntax(expression);
+      GetExpression = getExpression;
+    }
+
+    internal override void Render(LuaRenderer renderer) {
+      renderer.Render(GetExpression);
+    }
+
+    internal IEnumerable<LuaExpressionSyntax> GetArguments(params LuaExpressionSyntax[] luaBinaryExpressionSyntax) {
+      return ArgumentList.Arguments.Concat(luaBinaryExpressionSyntax);
     }
   }
 }
