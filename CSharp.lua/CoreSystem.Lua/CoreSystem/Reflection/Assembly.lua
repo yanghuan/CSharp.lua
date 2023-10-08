@@ -751,7 +751,7 @@ function Type.IsDefined(this, attributeType, inherit)
     if metadata then
       local class  = metadata.class
       if class then
-        return isMetadataDefined(class, 2, attributeType)
+        return isMetadataDefined(class, 3, attributeType)
       end
     end
     return false
@@ -761,7 +761,7 @@ function Type.IsDefined(this, attributeType, inherit)
       if metadata then
         local class  = metadata.class
         if class then
-          if isMetadataDefined(class, 2, attributeType) then
+          if isMetadataDefined(class, 3, attributeType) then
             return true
           end
         end
@@ -785,7 +785,7 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
     if metadata then
       local class  = metadata.class
       if class then
-        fillMetadataCustomAttributes(t, class, 2, attributeType)
+        fillMetadataCustomAttributes(t, class, 3, attributeType)
       end
     end
   else
@@ -794,7 +794,7 @@ function Type.GetCustomAttributes(this, attributeType, inherit)
       if metadata then
         local class  = metadata.class
         if class then
-          fillMetadataCustomAttributes(t, class, 2, attributeType)
+          fillMetadataCustomAttributes(t, class, 3, attributeType)
         end
       end
       cls = getmetatable(cls)
@@ -889,7 +889,7 @@ function Type.getAttributes(this)
   if metadata then
     metadata = metadata.class
     if metadata then
-      return metadata[1]
+      return metadata[2]
     end
   end
   throwNoMatadata(cls.__name__)
@@ -936,11 +936,11 @@ function Type.GetGenericArguments(this)
   if metadata then
     metadata = metadata.class
     if metadata then
-      local flags = metadata[1]
+      local flags = metadata[2]
       local typeParameterCount = band(flags, 0xFF00)
       if typeParameterCount ~= 0 then
         typeParameterCount = typeParameterCount / 256
-        for i = 2, 1 + typeParameterCount do
+        for i = 3, 2 + typeParameterCount do
           t[count] = typeof(metadata[i])
           count = count + 1
         end
