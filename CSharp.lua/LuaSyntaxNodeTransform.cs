@@ -1604,6 +1604,9 @@ namespace CSharpLua {
     private LuaExpressionSyntax BuildCommonAssignmentExpression(ExpressionSyntax leftNode, ExpressionSyntax rightNode, string operatorToken, ExpressionSyntax parent) {
       var left = VisitExpression(leftNode);
       var right = VisitExpression(rightNode);
+      if (rightNode is BinaryExpressionSyntax) {
+        right = right.Parenthesized();
+      }
       return BuildCommonAssignmentExpression(left, right, operatorToken, rightNode, parent);
     }
 
