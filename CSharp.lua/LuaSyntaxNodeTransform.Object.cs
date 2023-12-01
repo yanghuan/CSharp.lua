@@ -74,6 +74,10 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
+      return VisitObjectCreationExpression(node, node.Type);
+    }
+
+    private LuaSyntaxNode VisitObjectCreationExpression(BaseObjectCreationExpressionSyntax node, TypeSyntax nodeType) {
       var constExpression = GetConstExpression(node);
       if (constExpression != null) {
         return constExpression;
@@ -85,18 +89,23 @@ namespace CSharpLua {
         string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
         if (codeTemplate != null) {
           creationExpression = BuildCodeTemplateExpression(codeTemplate, node, FillCodeTemplateInvocationArguments(symbol, node.ArgumentList, null), symbol.TypeArguments);
-        } else if (node.Type.IsKind(SyntaxKind.NullableType)) {
+        } else if (nodeType != null && nodeType.IsKind(SyntaxKind.NullableType)) {
           Contract.Assert(node.ArgumentList!.Arguments.Count == 1);
           var argument = node.ArgumentList.Arguments.First();
           return argument.Expression.Accept(this);
         } else if (symbol.ContainingType.IsTupleType) {
-          var expressions = node.ArgumentList!.Arguments.Select(i => i.Expression.AcceptExpression(this));
-          creationExpression = BuildValueTupleCreateExpression(expressions);
+          var arguments = node.ArgumentList!.Arguments;
+          if (arguments.Count == 0) {
+            creationExpression = GetValueTupleDefaultExpression(symbol.ContainingType);
+          } else {
+            var expressions = arguments.Select(i => i.Expression.AcceptExpression(this));
+            creationExpression = BuildValueTupleCreateExpression(expressions);
+          }
         } else {
           creationExpression = GetObjectCreationExpression(symbol, node);
         }
-      } else {
-        var type = semanticModel_.GetSymbolInfo(node.Type).Symbol;
+      } else if (nodeType != null) {
+        var type = semanticModel_.GetSymbolInfo(nodeType).Symbol;
         if (type?.Kind == SymbolKind.NamedType) {
           var nameType = (INamedTypeSymbol)type;
           if (nameType.IsDelegateType()) {
@@ -107,8 +116,11 @@ namespace CSharpLua {
         }
 
         Contract.Assert(!node.ArgumentList!.Arguments.Any());
-        var expression = node.Type.AcceptExpression(this);
+        var expression = nodeType.AcceptExpression(this);
         creationExpression = new LuaInvocationExpressionSyntax(expression);
+      } else {
+        Contract.Assert(false);
+        creationExpression = null;
       }
 
       return GetObjectCreationInitializer(creationExpression, node);
@@ -185,12 +197,7 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitImplicitObjectCreationExpression(ImplicitObjectCreationExpressionSyntax node) {
-      var symbol = (IMethodSymbol)semanticModel_.GetSymbolInfo(node).Symbol;
-      string codeTemplate = XmlMetaProvider.GetMethodCodeTemplate(symbol);
-      var creationExpression = codeTemplate != null 
-        ? BuildCodeTemplateExpression(codeTemplate, node, FillCodeTemplateInvocationArguments(symbol, node.ArgumentList, null), symbol.TypeArguments)
-        : GetObjectCreationExpression(symbol, node);
-      return GetObjectCreationInitializer(creationExpression, node);
+      return VisitObjectCreationExpression(node, null);
     }
 
     public override LuaSyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node) {
