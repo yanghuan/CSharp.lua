@@ -119,8 +119,11 @@ namespace CSharpLua {
         var expression = nodeType.AcceptExpression(this);
         creationExpression = new LuaInvocationExpressionSyntax(expression);
       } else {
-        Contract.Assert(false);
-        creationExpression = null;
+        var type = semanticModel_.GetTypeInfo(node).Type;
+        Contract.Assert(type != null);
+        Contract.Assert(!node.ArgumentList!.Arguments.Any());
+        var expression = generator_.GetTypeName(type);
+        creationExpression = new LuaInvocationExpressionSyntax(expression);
       }
 
       return GetObjectCreationInitializer(creationExpression, node);
