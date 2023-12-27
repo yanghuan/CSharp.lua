@@ -3956,6 +3956,7 @@ namespace CSharpLua {
           case SyntaxKind.DoStatement:
           case SyntaxKind.ForStatement:
           case SyntaxKind.ForEachStatement:
+          case SyntaxKind.ForEachVariableStatement:
           case SyntaxKind.SwitchStatement:
             return true;
 
