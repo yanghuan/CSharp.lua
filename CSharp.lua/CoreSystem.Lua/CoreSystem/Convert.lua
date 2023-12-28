@@ -493,7 +493,7 @@ local function fromBase64ComputeResultLength(s, len)
 end
 
 local function FromBase64Decode(s, len, t, resultLength)
-  local i, j, codes, c, gotoEqualityCharEncountered = 1, 0, 0x000000ff
+  local i, j, codes, c, gotoEqualityCharEncountered = 1, 0, 0x000000ff, 0, false
   while true do
     if i > len then
       break
@@ -506,6 +506,8 @@ local function FromBase64Decode(s, len, t, resultLength)
       elseif c <= 122 then
         c = c - 71 
       end
+    elseif c >= 48 then
+      c = c + 4
     else
       if c == 43 then
         c = 62
