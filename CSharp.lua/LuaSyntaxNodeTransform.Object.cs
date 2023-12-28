@@ -1273,10 +1273,23 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitStackAllocArrayCreationExpression(StackAllocArrayCreationExpressionSyntax node) {
-      var arrayType = node.Type.Accept<LuaArrayTypeAdapterExpressionSyntax>(this);
-      var symbol = (IArrayTypeSymbol)semanticModel_.GetTypeInfo(node.Type).Type;
-      var array = BuildArrayCreationExpression(symbol, arrayType, node.Initializer);
-      return new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.StackAlloc, array);
+      var typeInfo = semanticModel_.GetTypeInfo(node.Type);
+      var symbol = (INamedTypeSymbol)typeInfo.Type;
+      var elementTypeExp = GetTypeName(symbol.TypeArguments.Single());
+      var spanTypeExp = node.Type.Accept<LuaArrayTypeAdapterExpressionSyntax>(this);
+      
+      var arrayInvocationExp = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExp);
+      LuaExpressionSyntax arrayExp = arrayInvocationExp;
+      var newArrayExp = GetGenericTypeImportName(arrayInvocationExp, out var argumentTypeNames);
+      if (!IsLocalVarExistsInCurMethod(newArrayExp)) {
+        if (AddGenericImport(arrayInvocationExp, newArrayExp, argumentTypeNames, isFromCode: false)) {
+          arrayExp = newArrayExp;
+        }
+      }
+
+      var arraySizeExp = spanTypeExp.RankSpecifier.Sizes.Single();
+
+      return spanTypeExp.Invocation(arrayExp.Invocation(arraySizeExp));
     }
 
     public override LuaSyntaxNode VisitUnsafeStatement(UnsafeStatementSyntax node) {

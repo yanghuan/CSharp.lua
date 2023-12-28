@@ -345,6 +345,13 @@ limitations under the License.
         <method name="Create" ArgCount="7" Template="System.ValueTuple({0}, {1}, {2}, {3}, {4}, {5}, {6})" />
         <method name="Create" ArgCount="8" Template="System.ValueTuple({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})" />
       </class>
+      <class name="Span`1" Name="System.Span">
+        <method name=".ctor" Template="{0}" />
+      </class>
+      <class name="MemoryExtensions" Name="System.MemoryExtensions">
+        <method name="AsSpan" ArgCount="1" Template="System.MemoryExtensions.AsSpan({0})" />
+        <method name="AsSpan" ArgCount="3" Template="System.MemoryExtensions.AsBoundedSpan({0}, {1}, {2})" />
+      </class>
       <class name="ReadOnlySpan`1" Name="System.ReadOnlySpan">
         <method name=".ctor" Template="{0}" />
         <method name="op_Implicit" ArgCount="1" Name="ctorArray" />
