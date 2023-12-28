@@ -123,7 +123,7 @@ local HashSet = {
       throw(ArgumentNullException("other"))
     end
     local count = 0
-    for _, v in each(collection) do
+    for _, v in each(other) do
       v = wrap(v)
       if this[v] == nil then
         this[v] = true

@@ -352,6 +352,10 @@ limitations under the License.
         <method name="AsSpan" ArgCount="1" Template="System.MemoryExtensions.AsSpan({0})" />
         <method name="AsSpan" ArgCount="3" Template="System.MemoryExtensions.AsBoundedSpan({0}, {1}, {2})" />
       </class>
+      <class name="ReadOnlySpan`1" Name="System.ReadOnlySpan">
+        <method name=".ctor" Template="{0}" />
+        <method name="op_Implicit" ArgCount="1" Name="ctorArray" />
+      </class>
       <class name="Nullable`1" Name="System.Nullable">
         <method name=".ctor" Template="{0}" />
         <property name="HasValue">

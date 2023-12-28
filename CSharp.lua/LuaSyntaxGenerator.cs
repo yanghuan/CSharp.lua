@@ -1766,11 +1766,10 @@ namespace CSharpLua {
 
     private bool IsStaticCtorField(ISymbol symbol) {
       if (Setting.IsClassic && symbol.IsStatic && symbol.Kind == SymbolKind.Field) {
-        Contract.Assert(symbol.IsFromCode());
         var field = (IFieldSymbol)symbol;
         if (!field.IsConst && !field.Type.IsImmutable() && (field.IsReadOnly || IsPrivate(symbol))) {
           var variableDeclarator = (VariableDeclaratorSyntax)field.GetDeclaringSyntaxNode();
-          if (variableDeclarator.Initializer?.Value.IsNull() == false) {
+          if (variableDeclarator?.Initializer?.Value.IsNull() == false) {
             return true;
           }
         }

@@ -356,6 +356,15 @@ local Dictionary = {
     end
     return remove(this, key)
   end,
+  TryAdd = function (this, key, value)
+    if key == nil then throw(ArgumentNullException("key")) end
+    local exists, currentValue = this:TryGetValue(key)
+    if exists then
+      return false
+    end
+    this:set(key, value)
+    return true
+  end,
   TryGetValue = function (this, key)
     if key == nil then throw(ArgumentNullException("key")) end
     local value = this[key]
@@ -632,6 +641,15 @@ local ArrayDictionary = (function ()
         end
       end
       return false
+    end,
+    TryAdd = function (this, key, value)
+      if key == nil then throw(ArgumentNullException("key")) end
+      local exists, currentValue = this:TryGetValue(key)
+      if exists then
+        return false
+      end
+      this:set(key, value)
+      return true
     end,
     TryGetValue = function (this, key)
       if key == nil then throw(ArgumentNullException("key")) end
