@@ -496,9 +496,14 @@ if version < 5.3 then
   local bnot, band, bor, xor, sl, sr
   local bit = rawget(global, "bit")
   if not bit then
-    local ok, b = pcall(require, "bit")
-    if ok then
-      bit = b
+    local b32 = rawget(global, "bit32")
+    if not b32 then
+      local ok, b = pcall(require, "bit")
+      if ok then
+        bit = b
+      end
+    else
+      bit = b32
     end
   end
   if bit then
