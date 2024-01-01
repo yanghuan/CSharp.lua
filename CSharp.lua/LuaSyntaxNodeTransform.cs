@@ -2096,6 +2096,10 @@ namespace CSharpLua {
         }
         if (assignment is LuaAssignmentExpressionSyntax assignmentExpression) {
           assignment = assignmentExpression.Left;
+        } else if (assignment is LuaPropertyAdapterExpressionSyntax propertyAdapterExpression) {
+          var getter = propertyAdapterExpression.GetCloneOfGet();
+          getter.ArgumentList.Arguments.RemoveAtLast();
+          assignment = getter;
         } else {
           assignment = node.Left.AcceptExpression(this);
         }
