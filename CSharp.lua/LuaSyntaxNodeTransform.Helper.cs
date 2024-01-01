@@ -1928,6 +1928,10 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildDeconstructExpression(ITypeSymbol typeSymbol, LuaExpressionSyntax expression, SyntaxNode node) {
+      if (expression is LuaBinaryExpressionSyntax) {
+        expression = expression.Parenthesized();
+      }
+
       if (!typeSymbol.IsTupleType && !typeSymbol.IsSystemTuple()) {
         if (node.Parent is AssignmentExpressionSyntax assignment) {
           var methodSymbol = semanticModel_.GetDeconstructionInfo(assignment).Method;
