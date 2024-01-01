@@ -101,6 +101,18 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual(d.Count, 1);
         }
 
+        [Test]
+        public static void TestOf457()
+        {
+            var d = new Location[1];
+            // broken
+            var x = d.Select(c => (A: 1, c));
+            // broken
+            var y = d.Select(c => (A: 1, B: c));
+            // broken
+            var z = d.Select(c => new { A = 1, B = c });
+        }
+
         private class BattleModelSlotPrototype {
             public string a;
             public string b;
@@ -143,5 +155,15 @@ namespace Bridge.ClientTest.BasicCSharp
         private static int b_ { get { return a_; } }
         private static DateTime d_;
         private static void f() {}
+    }
+
+    public struct Location
+    {
+        public Location(int x)
+        {
+            X = x;
+        }
+
+        public int X;
     }
 }

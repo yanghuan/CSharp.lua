@@ -1248,27 +1248,43 @@ namespace CSharpLua {
       return parameter;
     }
 
+    private static IParameterSymbol GetValueTypeParameterSymbol(IMethodSymbol symbol, ArgumentSyntax argument) {
+      switch (argument.Parent.Kind()) {
+        case SyntaxKind.TupleExpression: {
+            if (argument.Expression.IsKind(SyntaxKind.IdentifierName)) {
+              var identifierName = (IdentifierNameSyntax)argument.Expression;
+              return symbol.Parameters.First(i => i.Name == identifierName.Identifier.ValueText);
+            }
+            return null;
+          }
+      }
+
+      return GetParameterSymbol(symbol, argument);
+    }
+
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression, bool isPropertyField = false) {
       if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol) && !typeSymbol.IsNullableWithBasicElementType() && expression is not LuaPropertyTemplateExpressionSyntax) {
         bool need = false;
         if (isPropertyField) {
-          need = true;
-          SyntaxNode current = node;
-          while (true) {
-            var parent = current.Parent;
-            var kind = parent.Kind();
-            if (kind.IsAssignment()) {
-              var assignment = (AssignmentExpressionSyntax)parent;
-              if (assignment.Left == current) {
-                need = false;
+          if (!node.Parent.IsKind(SyntaxKind.NameEquals)) {
+            need = true;
+            SyntaxNode current = node;
+            while (true) {
+              var parent = current.Parent;
+              var kind = parent.Kind();
+              if (kind.IsAssignment()) {
+                var assignment = (AssignmentExpressionSyntax)parent;
+                if (assignment.Left == current) {
+                  need = false;
+                }
+                break;
               }
-              break;
-            }
 
-            if (kind == SyntaxKind.SimpleMemberAccessExpression) {
-              current = parent;
-            } else {
-              break;
+              if (kind == SyntaxKind.SimpleMemberAccessExpression) {
+                current = parent;
+              } else {
+                break;
+              }
             }
           }
         } else {
@@ -1288,7 +1304,7 @@ namespace CSharpLua {
                   break;
                 }
 
-                var parameter = GetParameterSymbol(symbol, argument);
+                var parameter = GetValueTypeParameterSymbol(symbol, argument);
                 if (parameter is {RefKind: RefKind.In}) {
                   break;
                 }
@@ -1297,6 +1313,7 @@ namespace CSharpLua {
               need = true;
               break;
             }
+            case SyntaxKind.AnonymousObjectMemberDeclarator:
             case SyntaxKind.ReturnStatement: {
               need = true;
               break;
