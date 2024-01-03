@@ -1248,20 +1248,6 @@ namespace CSharpLua {
       return parameter;
     }
 
-    private static IParameterSymbol GetValueTypeParameterSymbol(IMethodSymbol symbol, ArgumentSyntax argument) {
-      switch (argument.Parent.Kind()) {
-        case SyntaxKind.TupleExpression: {
-            if (argument.Expression.IsKind(SyntaxKind.IdentifierName)) {
-              var identifierName = (IdentifierNameSyntax)argument.Expression;
-              return symbol.Parameters.First(i => i.Name == identifierName.Identifier.ValueText);
-            }
-            return null;
-          }
-      }
-
-      return GetParameterSymbol(symbol, argument);
-    }
-
     private void CheckValueTypeClone(ITypeSymbol typeSymbol, IdentifierNameSyntax node, ref LuaExpressionSyntax expression, bool isPropertyField = false) {
       if (typeSymbol.IsCustomValueType() && !generator_.IsReadOnlyStruct(typeSymbol) && !typeSymbol.IsNullableWithBasicElementType() && expression is not LuaPropertyTemplateExpressionSyntax) {
         bool need = false;
@@ -1299,17 +1285,18 @@ namespace CSharpLua {
                 }
               }
 
-              if (semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol is IMethodSymbol symbol) {
-                if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
-                  break;
-                }
+              if (argument.Parent.IsKind(SyntaxKind.ArgumentList)) {
+                if (semanticModel_.GetSymbolInfo(argument.Parent.Parent).Symbol is IMethodSymbol symbol) {
+                  if (symbol.IsFromAssembly() && !symbol.ContainingType.IsCollectionType()) {
+                    break;
+                  }
 
-                var parameter = GetValueTypeParameterSymbol(symbol, argument);
-                if (parameter is {RefKind: RefKind.In}) {
-                  break;
+                  var parameter = GetParameterSymbol(symbol, argument);
+                  if (parameter is { RefKind: RefKind.In }) {
+                    break;
+                  }
                 }
               }
-
               need = true;
               break;
             }

@@ -113,6 +113,16 @@ namespace Bridge.ClientTest.BasicCSharp
             var z = d.Select(c => new { A = 1, B = c });
         }
 
+        [Test]
+        public static void TestOf458()
+        {
+            var aLocations = new Location[0];
+            var bLocations = new Location[0];
+            var lines = aLocations
+                .SelectMany(al => bLocations.Where(bl => al.X == bl.X || al.Y == bl.Y).Select(bl => (A: al, B: bl)))
+                .ToList();
+        }
+
         private class BattleModelSlotPrototype {
             public string a;
             public string b;
@@ -159,11 +169,12 @@ namespace Bridge.ClientTest.BasicCSharp
 
     public struct Location
     {
-        public Location(int x)
-        {
+        public Location(int x, int y) {
             X = x;
+            Y = y;
         }
 
         public int X;
+        public int Y;
     }
 }
