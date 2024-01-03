@@ -743,6 +743,14 @@ else
     return v
   end
 
+  function System.modf(x, y)
+    local v = x % y
+    if v ~= 0 and x * y < 0 then
+      return v - y
+    end
+    return v
+  end
+
   local function toUInt(v, max, mask, checked)
     if v >= 0 and v <= max then
       return v
