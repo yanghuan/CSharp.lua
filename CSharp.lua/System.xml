@@ -347,6 +347,7 @@ limitations under the License.
       </class>
       <class name="Span`1" Name="System.Span">
         <method name=".ctor" Template="{0}" />
+        <method name="op_Implicit" ArgCount="1" Name="ctorArray" />
       </class>
       <class name="MemoryExtensions" Name="System.MemoryExtensions">
         <method name="AsSpan" ArgCount="1" Template="System.MemoryExtensions.AsSpan({0})" />
