@@ -714,8 +714,12 @@ limitations under the License.
         <method name="OfType" Template="Linq.OfType({0}, {`0})" />
         <method name="OrderBy" ArgCount="2" Template="Linq.OrderBy({0}, {1}, nil, {`1})" />
         <method name="OrderBy" ArgCount="3" Template="Linq.OrderBy({0}, {1}, {2}, {`1})" />
+        <method name="Order" ArgCount="1" Template="Linq.Order({0}, nil, {`0})" />
+        <method name="Order" ArgCount="2" Template="Linq.Order({0}, {1}, {`0})" />
         <method name="OrderByDescending" ArgCount="2" Template="Linq.OrderByDescending({0}, {1}, nil, {`1})" />
         <method name="OrderByDescending" ArgCount="3" Template="Linq.OrderByDescending({0}, {1}, {2}, {`1})" />
+        <method name="OrderDescending" ArgCount="1" Template="Linq.OrderDescending({0}, nil, {`0})" />
+        <method name="OrderDescending" ArgCount="2" Template="Linq.OrderDescending({0}, {1}, {`0})" />
         <method name="ThenBy" ArgCount="2" Template="Linq.ThenBy({0}, {1}, nil, {`1})" />
         <method name="ThenBy" ArgCount="3" Template="Linq.ThenBy({0}, {1}, {2}, {`1})" />
         <method name="ThenByDescending" ArgCount="2" Template="Linq.ThenByDescending({0}, {1}, nil, {`1})" />
