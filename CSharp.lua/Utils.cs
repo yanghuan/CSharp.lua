@@ -645,7 +645,15 @@ namespace CSharpLua {
     }
 
     public static bool IsTypeDeclaration(this SyntaxKind kind) {
-      return kind is >= SyntaxKind.ClassDeclaration and <= SyntaxKind.EnumDeclaration;
+      return kind switch {
+        SyntaxKind.ClassDeclaration 
+        or SyntaxKind.StructDeclaration 
+        or SyntaxKind.InterfaceDeclaration 
+        or SyntaxKind.EnumDeclaration 
+        or SyntaxKind.RecordDeclaration 
+        or SyntaxKind.RecordStructDeclaration => true,
+        _ => false,
+      };
     }
 
     public static bool IsLiteralExpression(this SyntaxKind kind) {
