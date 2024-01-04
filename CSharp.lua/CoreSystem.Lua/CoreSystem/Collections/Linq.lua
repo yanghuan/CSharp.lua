@@ -1272,6 +1272,46 @@ function Enumerable.Max(source, ...)
   return minOrMax(maxFn, source, ...)
 end
 
+local function minByOrMaxBy(compareFn, source, keySelector, comparer, TSource, TKey)
+  if source == nil then throw(ArgumentNullException("source")) end
+  if keySelector == nil then throw(ArgumentNullException("keySelector")) end
+  if comparer == nil then
+    comparer = Comparer_1(TKey).getDefault()
+  end
+  local compare = comparer.Compare
+  local key = TKey:default()
+  local item = TSource:default()
+  local hasItem = false
+  for _, x in each(source) do
+    local xKey = keySelector(x)
+    if hasItem then
+      if compareFn(compare, comparer, xKey, key) then
+        key = xKey
+        item = x
+      end
+    else
+      key = xKey
+      item = x
+      hasItem = true
+    end
+  end
+  if hasItem then
+    return item
+  elseif item == nil then
+    return nil
+  else
+    throw(InvalidOperationException("NoElements"))
+  end
+end
+
+function Enumerable.MinBy(source, keySelector, comparer, TSource, TKey)
+  return minByOrMaxBy(minFn, source, keySelector, comparer, TSource, TKey)
+end
+
+function Enumerable.MaxBy(source, keySelector, comparer, TSource, TKey)
+  return minByOrMaxBy(maxFn, source, keySelector, comparer, TSource, TKey)
+end
+
 function Enumerable.Average(source, ...)
   if source == nil then throw(ArgumentNullException("source")) end
   local sum, count = 0, 0
