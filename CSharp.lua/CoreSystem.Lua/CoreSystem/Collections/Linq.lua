@@ -464,7 +464,21 @@ function Enumerable.OrderBy(source, keySelector, comparer, TKey)
   return orderBy(source, keySelector, comparer, TKey, false)
 end
 
+function Enumerable.Order(source, comparer, TKey)
+  local function keySelector(x)
+    return x
+  end
+  return orderBy(source, keySelector, comparer, TKey, false)
+end
+
 function Enumerable.OrderByDescending(source, keySelector, comparer, TKey)
+  return orderBy(source, keySelector, comparer, TKey, true)
+end
+
+function Enumerable.OrderDescending(source, comparer, TKey)
+  local function keySelector(x)
+    return x
+  end
   return orderBy(source, keySelector, comparer, TKey, true)
 end
 
