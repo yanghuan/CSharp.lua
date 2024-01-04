@@ -182,6 +182,9 @@ namespace Bridge.ClientTest
             int? a = 3, b = null;
             Assert.AreEqual(3, a.GetValueOrDefault(1));
             Assert.AreEqual(1, b.GetValueOrDefault(1));
+
+            Values? c = null;
+            Assert.AreEqual(Values.Value1, c.GetValueOrDefault(Values.Value1));
         }
 
         [Test]
