@@ -156,9 +156,15 @@ namespace CSharpLua {
             }
           }
         } else {
-          var symbol = semanticModel_.GetCollectionInitializerSymbolInfo(expression).Symbol;
-          var name = GetMemberName(symbol);
-          var invocation = temp.MemberAccess(name, true).Invocation();
+          var symbol = (IMethodSymbol)semanticModel_.GetCollectionInitializerSymbolInfo(expression).Symbol;
+          Contract.Assert(symbol != null);
+          LuaInvocationExpressionSyntax invocation;
+          if (symbol.IsExtensionMethod) {
+            invocation = BuildExtensionMethodInvocation(symbol, temp);
+          } else {
+            var name = GetMemberName(symbol);
+            invocation = temp.MemberAccess(name, true).Invocation();
+          }
           var block = new LuaBlockSyntax();
           PushBlock(block);
           if (expression.IsKind(SyntaxKind.ComplexElementInitializerExpression)) {
