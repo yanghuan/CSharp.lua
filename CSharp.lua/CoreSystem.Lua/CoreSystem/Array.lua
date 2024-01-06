@@ -65,7 +65,7 @@ local function throwFailedVersion()
   throw(InvalidOperationException("Collection was modified; enumeration operation may not execute."))
 end
 
-local function checkIndex(t, index) 
+local function checkIndex(t, index)
   if index < 0 or index >= #t then
     throw(ArgumentOutOfRangeException("index"))
   end
@@ -79,15 +79,15 @@ local function checkIndexAndCount(t, index, count)
 end
 
 local function wrap(v)
-  if v == nil then 
-    return null 
+  if v == nil then
+    return null
   end
   return v
 end
 
 local function unWrap(v)
-  if v == null then 
-    return nil 
+  if v == null then
+    return nil
   end
   return v
 end
@@ -140,7 +140,7 @@ function System.toLuaTable(array)
     if item ~= null then
       t[i] = item
     end
-  end   
+  end
   return t
 end
 
