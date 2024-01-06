@@ -131,6 +131,13 @@ namespace Bridge.ClientTest.BasicCSharp
              Assert.AreEqual(input, Convert.ToBase64String(bytes));
         }
 
+        [Test]
+        public static void TestOf475() 
+        {
+            var result = new Result();
+            Assert.AreEqual(result.Goal.HasValue, false);
+        }
+
         private class BattleModelSlotPrototype {
             public string a;
             public string b;
@@ -184,5 +191,10 @@ namespace Bridge.ClientTest.BasicCSharp
 
         public int X;
         public int Y;
+    }
+
+    public class Result
+    {
+        public Location? Goal { get; set; }
     }
 }

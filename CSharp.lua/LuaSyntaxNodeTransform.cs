@@ -2646,10 +2646,8 @@ namespace CSharpLua {
         var baseExpression = node.Expression.AcceptExpression(this);
         var nameExpression = node.Name.AcceptExpression(this);
         if (symbol.Kind is SymbolKind.Property or SymbolKind.Event) {
-          switch (nameExpression)
-          {
-            case LuaPropertyAdapterExpressionSyntax propertyMethod:
-            {
+          switch (nameExpression)  {
+            case LuaPropertyAdapterExpressionSyntax propertyMethod:  {
               if (baseExpression != LuaIdentifierNameSyntax.This) {
                 propertyMethod.ArgumentList.AddArgument(LuaIdentifierNameSyntax.This);
                 propertyMethod.Update(baseExpression, false);
@@ -2704,6 +2702,13 @@ namespace CSharpLua {
       }
 
       var expression = BuildMemberAccessExpression(symbol, node.Expression);
+      if (name is LuaInvocationExpressionSyntax luaInvocation && luaInvocation.Expression == LuaIdentifierNameSyntax.NullableClone) {
+        for (var i = 0;i < luaInvocation.Arguments.Count;i++) {
+          luaInvocation.Arguments[i] = BuildFieldOrPropertyMemberAccessExpression(expression, luaInvocation.Arguments[i], symbol.IsStatic);
+        }
+        return name;
+      }
+
       return symbol.Kind switch {
         SymbolKind.Property or SymbolKind.Event =>
           BuildFieldOrPropertyMemberAccessExpression(expression, name, symbol.IsStatic),
