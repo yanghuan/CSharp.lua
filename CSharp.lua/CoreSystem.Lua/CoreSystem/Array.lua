@@ -163,7 +163,7 @@ local function get(t, index)
   if v == nil then
     throw(ArgumentOutOfRangeException("index"))
   end
-  if v ~= null then 
+  if v ~= null then
     return v
   end
   return nil

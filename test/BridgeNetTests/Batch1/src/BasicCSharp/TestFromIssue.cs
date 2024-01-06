@@ -123,6 +123,14 @@ namespace Bridge.ClientTest.BasicCSharp
                 .ToList();
         }
 
+        [Test]
+        public static void TestOf441() 
+        {
+             var input = "aGVsbG8gd29ybGQ=";
+             var bytes = Convert.FromBase64String(input);
+             Assert.AreEqual(input, Convert.ToBase64String(bytes));
+        }
+
         private class BattleModelSlotPrototype {
             public string a;
             public string b;
