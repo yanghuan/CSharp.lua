@@ -1019,7 +1019,7 @@ local function single(source, ...)
         found = true
       end
     end
-    if foun then return true, result end    
+    if found then return true, result end    
     return false, 0    
   end
 end
