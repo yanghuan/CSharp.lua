@@ -73,7 +73,7 @@ local HashSet = {
     elseif len == 1 then
       local collection = ...
       if collection == nil then return end
-      if collection.getEnumerator ~= nil then
+      if collection.GetEnumerator ~= nil then
         build(this, collection, nil)
       else
         assert(true)
