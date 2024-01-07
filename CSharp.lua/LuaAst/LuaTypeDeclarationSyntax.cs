@@ -473,7 +473,7 @@ namespace CSharpLua.LuaAst {
         staticCtor.AddParameter(LuaIdentifierNameSyntax.This);
         staticCtor.Body.Statements.AddRange(statements);
         AddStaticAssignmentNames(staticCtor.Body);
-        if (staticCtor_ is not null && staticCtor_.Document is not null) {
+        if (staticCtor_?.Document != null) {
           body.AddStatement(staticCtor_.Document);
         }
         AddInitFunction(body, LuaIdentifierNameSyntax.StaticCtor, staticCtor);

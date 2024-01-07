@@ -138,6 +138,17 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual(result.Goal.HasValue, false);
         }
 
+        [Test]
+        public static void TestOf472()
+        {
+            Assert.AreEqual(LuaContext.Instance, 1);
+            Assert.AreEqual(Context.Instance, 1);
+            LuaContext.Instance += 1;
+
+            Assert.AreEqual(LuaContext.Instance, 2);
+            Assert.AreEqual(Context.Instance, 2);
+        }
+
         private class BattleModelSlotPrototype {
             public string a;
             public string b;
@@ -196,5 +207,18 @@ namespace Bridge.ClientTest.BasicCSharp
     public class Result
     {
         public Location? Goal { get; set; }
+    }
+
+    public abstract class Context
+    {
+        internal static int Instance = 0;
+    }
+
+    public class LuaContext : Context
+    {
+        static LuaContext()
+        {
+            Instance = 1;
+        }
     }
 }

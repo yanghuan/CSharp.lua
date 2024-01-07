@@ -2568,8 +2568,22 @@ namespace CSharpLua {
         return node.AcceptExpression(this);
       }
 
-      if (symbol.Kind == SymbolKind.Method && symbol.IsStatic && symbol.ContainingType?.SpecialType == SpecialType.System_Enum) {
-        return generator_.GetTypeName(symbol.ContainingType);
+      if (symbol.IsStatic) {
+        if (symbol.Kind == SymbolKind.Method) {
+          if (symbol.ContainingType?.SpecialType == SpecialType.System_Enum) {
+            return generator_.GetTypeName(symbol.ContainingType);
+          }
+        } else if (symbol.Kind == SymbolKind.Field) {
+          if (node.Parent.Parent.Kind().IsAssignment()) {
+            var assignment = (AssignmentExpressionSyntax)node.Parent.Parent;
+            if (assignment.Left == node.Parent) {
+              var type = semanticModel_.GetTypeInfo(node).Type;
+              if (!symbol.ContainingType.EQ(type)) {
+                return generator_.GetTypeName(symbol.ContainingType);
+              }
+            }
+          }
+        }
       }
 
       return BuildMemberAccessTargetExpression(node);
@@ -2783,8 +2797,18 @@ namespace CSharpLua {
           }
         } else {
           if (IsInternalNode(node)) {
-            if (CurFunctionOrNull is LuaConstructorAdapterExpressionSyntax {IsStatic: true}) {
-              return LuaIdentifierNameSyntax.This.MemberAccess(name);
+            var methodInfo = CurMethodInfoOrNull;
+            if (methodInfo != null && methodInfo.Symbol.MethodKind == MethodKind.SharedConstructor) {
+              bool isThisType = true;
+              if (node.Parent.Kind().IsAssignment()) {
+                var assignment = (AssignmentExpressionSyntax)node.Parent;
+                if (assignment.Left == node && !symbol.ContainingType.EQ(methodInfo.Symbol.ContainingType)) {
+                  isThisType = false;
+                }
+              }
+              if (isThisType) {
+                return LuaIdentifierNameSyntax.This.MemberAccess(name);
+              }
             }
 
             var typeName = GetTypeName(symbol.ContainingType);
