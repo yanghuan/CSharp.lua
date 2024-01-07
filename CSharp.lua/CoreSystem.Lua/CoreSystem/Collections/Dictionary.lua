@@ -24,6 +24,7 @@ local lengthFn = System.lengthFn
 local versions = System.versions
 local Array = System.Array
 local toString = System.toString
+local hasHash = System.hasHash
 
 local checkIndexAndCount = System.checkIndexAndCount
 local throwFailedVersion = System.throwFailedVersion
@@ -31,9 +32,7 @@ local ArgumentNullException = System.ArgumentNullException
 local ArgumentException = System.ArgumentException
 local KeyNotFoundException = System.KeyNotFoundException
 local EqualityComparer = System.EqualityComparer
-local NotSupportedException = System.NotSupportedException
 
-local assert = assert
 local pairs = pairs
 local next = next
 local select = select
@@ -247,12 +246,12 @@ end
 local Dictionary = {
   getIsFixedSize = falseFn,
   getIsReadOnly = falseFn,
-  __ctor__ = function (this, ...) 
+  __ctor__ = function (this, ...)
     local n = select("#", ...)
     if n == 0 then
     elseif n == 1 then
       local comparer = ...
-      if comparer == nil or type(comparer) == "number" then  
+      if comparer == nil or type(comparer) == "number" then
       else
         local equals = comparer.EqualsOf
         if equals == nil then
@@ -263,10 +262,10 @@ local Dictionary = {
       end
     else
       local dictionary, comparer = ...
-      if comparer ~= nil then 
+      if comparer ~= nil then
         buildHasComparer(this, ...)
       end
-      if type(dictionary) ~= "number" then 
+      if type(dictionary) ~= "number" then
         buildFromDictionary(this, dictionary)
       end
     end
@@ -275,7 +274,7 @@ local Dictionary = {
   Add = function (this, ...)
     local k, v
     if select("#", ...) == 1 then
-      local pair = ... 
+      local pair = ...
       k, v = pair[1], pair[2]
     else
       k, v = ...
@@ -290,7 +289,7 @@ local Dictionary = {
   end,
   ContainsKey = function (this, key)
     if key == nil then throw(ArgumentNullException("key")) end
-    return this[key] ~= nil 
+    return this[key] ~= nil
   end,
   ContainsValue = function (this, value)
     if value == nil then
@@ -329,11 +328,11 @@ local Dictionary = {
     local count = getCount(this)
     checkIndexAndCount(array, index, count)
     if count > 0 then
-      local KeyValuePair = this.__genericT__
+      local T = this.__genericT__
       index = index + 1
       for k, v in pairs(this) do
         if v == null then v = nil end
-        array[index] = setmetatable({ k, v }, KeyValuePair)
+        array[index] = setmetatable({ k, v }, T)
         index = index + 1
       end
     end
@@ -358,7 +357,7 @@ local Dictionary = {
   end,
   TryAdd = function (this, key, value)
     if key == nil then throw(ArgumentNullException("key")) end
-    local exists, currentValue = this:TryGetValue(key)
+    local exists = this:TryGetValue(key)
     if exists then
       return false
     end
@@ -477,17 +476,17 @@ local ArrayDictionary = (function ()
   local function buildFromDictionary(this, dictionary)
     if dictionary == nil then throw(ArgumentNullException("dictionary")) end
     local count = 1
-    local KeyValuePair = this.__genericT__
+    local T = this.__genericT__
     for _, pair in each(dictionary) do
       local k, v = pair[1], pair[2]
       if type(k) == "table" and k.class == 'S' then
         k = k:__clone__()
       end
-      this[count] = setmetatable({ k, v }, KeyValuePair)
+      this[count] = setmetatable({ k, v }, T)
       count = count + 1
     end
-  end 
-  
+  end
+
   local function add(this, key, value, set)
     if key == nil then throw(ArgumentNullException("key")) end
     local len = #this
@@ -508,7 +507,7 @@ local ArrayDictionary = (function ()
     this[len + 1] = setmetatable({ key, value }, this.__genericT__)
     versions[this] = (versions[this] or 0) + 1
   end
-  
+
   local function remove(this, key)
     if key == nil then throw(ArgumentNullException("key")) end
     local len = #this
@@ -525,7 +524,7 @@ local ArrayDictionary = (function ()
     end
     return false
   end
- 
+
   return {
     getIsFixedSize = falseFn,
     getIsReadOnly = falseFn,
@@ -605,7 +604,7 @@ local ArrayDictionary = (function ()
             local comparer = EqualityComparer(this.__genericTValue__).getDefault()
             if comparer:EqualsOf(t[2], pair[2]) then
               return true
-            end 
+            end
           end
         end
       end
@@ -716,13 +715,22 @@ function System.isDictLike(t)
 end
 
 local DictionaryFn = define("System.Collections.Generic.Dictionary", function(TKey, TValue)
-  local array, len
-  if TKey.class == 'S' and type(TKey:default()) == "table" then
-    array = ArrayDictionary
-  else
+  local array
+  local c = TKey.class
+  if c == 'S'then
+    if type(TKey:default()) == "table" then
+      array = ArrayDictionary
+    end
+  elseif c == 'C' then
+    if hasHash(TKey) then
+      array = ArrayDictionary
+    end
+  end
+  local len
+  if not array then
     len = getCount
   end
-  return { 
+  return {
     base = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
     __genericT__ = KeyValuePairFn(TKey, TValue),
     __genericTKey__ = TKey,
