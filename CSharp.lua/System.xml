@@ -731,6 +731,7 @@ limitations under the License.
         <method name="ThenByDescending" ArgCount="3" Template="Linq.ThenByDescending({0}, {1}, {2}, {`1})" />
         <method name="Average" Template="Linq.Average({0}, {1})" />
         <method name="DefaultIfEmpty" Template="Linq.DefaultIfEmpty({0})" />
+        <method name="AsEnumerable" Template="Linq.AsEnumerable({0})" />
       </class>
     </namespace>
     <namespace name="System.Diagnostics" Name="System">

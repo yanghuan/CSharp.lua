@@ -895,6 +895,11 @@ function Enumerable.Cast(source, T)
   end)
 end
 
+function Enumerable.AsEnumerable(source)
+  if source == nil then throw(ArgumentNullException("source")) end
+  return source
+end
+
 local function first(source, ...)
   if source == nil then throw(ArgumentNullException("source")) end
   local len = select("#", ...)
