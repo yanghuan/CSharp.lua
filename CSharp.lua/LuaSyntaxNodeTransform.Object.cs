@@ -1444,7 +1444,7 @@ namespace CSharpLua {
             case SyntaxKind.RecursivePattern: { 
               var recursivePattern = (RecursivePatternSyntax)notPattern.Pattern;
               var governingIdentifier = GetIdentifierNameFromExpression(targetExpression);
-              var expression = BuildRecursivePatternExpression(recursivePattern, governingIdentifier, null, targetNode);
+              var expression = BuildRecursivePatternExpression(recursivePattern, governingIdentifier, targetNode);
               return expression.Parenthesized().Not();
             }
             case SyntaxKind.ConstantPattern: {
@@ -1490,7 +1490,7 @@ namespace CSharpLua {
           } else {
             name = GetIdentifierNameFromExpression(targetExpression);
           }
-          return BuildRecursivePatternExpression(recursivePattern, name, null, targetNode);
+          return BuildRecursivePatternExpression(recursivePattern, name, targetNode);
         }
       }
     }

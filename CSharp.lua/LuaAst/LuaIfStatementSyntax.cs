@@ -63,29 +63,26 @@ namespace CSharpLua.LuaAst {
 
   public sealed class LuaSwitchAdapterStatementSyntax : LuaStatementSyntax {
     public readonly LuaRepeatStatementSyntax RepeatStatement = new(LuaIdentifierNameSyntax.One);
-    public LuaIdentifierNameSyntax Temp { get; }
+    public LuaBlockSyntax Body => RepeatStatement.Body;
+    
+    public LuaIdentifierNameSyntax Temp { get; set; }
     private LuaBlockSyntax defaultBlock_;
     private readonly LuaLocalVariablesSyntax caseLabelVariables_ = new();
     public LuaIdentifierNameSyntax DefaultLabel { get; set; }
     public readonly Dictionary<int, LuaIdentifierNameSyntax> CaseLabels = new();
     private LuaIfStatementSyntax headIfStatement_;
 
-    public LuaSwitchAdapterStatementSyntax(LuaIdentifierNameSyntax temp) {
-      Temp = temp;
+    public LuaSwitchAdapterStatementSyntax() {
     }
 
-    public void Fill(LuaExpressionSyntax expression, IEnumerable<LuaStatementSyntax> sections) {
-      if (expression == null) {
-        throw new ArgumentNullException(nameof(expression));
-      }
+    public void Fill(IEnumerable<LuaStatementSyntax> sections) {
       if (sections == null) {
         throw new ArgumentNullException(nameof(sections));
       }
 
-      var body = RepeatStatement.Body;
+      var body = Body;
       body.Statements.Add(caseLabelVariables_);
-      body.Statements.Add(new LuaLocalVariableDeclaratorSyntax(Temp, expression));
-
+      
       LuaIfStatementSyntax ifStatement = null;
       foreach (var section in sections) {
         if (section is LuaIfStatementSyntax statement) {
@@ -122,10 +119,10 @@ namespace CSharpLua.LuaAst {
         Contract.Assert(defaultBlock_ != null);
         caseLabelVariables_.Variables.Add(DefaultLabel);
         LuaLabeledStatement labeledStatement = new LuaLabeledStatement(DefaultLabel);
-        RepeatStatement.Body.Statements.Add(labeledStatement);
+        Body.Statements.Add(labeledStatement);
         LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(DefaultLabel);
         ifStatement.Body.Statements.AddRange(defaultBlock_.Statements);
-        RepeatStatement.Body.Statements.Add(ifStatement);
+        Body.Statements.Add(ifStatement);
       }
     }
 
@@ -143,10 +140,10 @@ namespace CSharpLua.LuaAst {
         caseLabelVariables_.Variables.AddRange(CaseLabels.Values);
         foreach (var (index, labelIdentifier) in CaseLabels) {
           var caseLabelStatement = FindMatchIfStatement(index);
-          RepeatStatement.Body.Statements.Add(new LuaLabeledStatement(labelIdentifier));
+          Body.Statements.Add(new LuaLabeledStatement(labelIdentifier));
           LuaIfStatementSyntax ifStatement = new LuaIfStatementSyntax(labelIdentifier);
           ifStatement.Body.Statements.AddRange(caseLabelStatement.Statements);
-          RepeatStatement.Body.Statements.Add(ifStatement);
+          Body.Statements.Add(ifStatement);
         }
       }
     }
