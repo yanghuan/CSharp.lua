@@ -1108,14 +1108,6 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildFieldOrPropertyMemberAccessExpression(LuaExpressionSyntax expression, LuaExpressionSyntax name, bool isStatic) {
-      /*
-      if (name is LuaInvocationExpressionSyntax luaInvocation && luaInvocation.Expression == LuaIdentifierNameSyntax.NullableClone) {
-        for (var i = 0; i < luaInvocation.Arguments.Count; i++) {
-          luaInvocation.Arguments[i] = BuildFieldOrPropertyMemberAccessExpression(expression, luaInvocation.Arguments[i], isStatic);
-        }
-        return name;
-      }*/
-
       if (name is LuaPropertyTemplateExpressionSyntax propertyTemplate) {
         var getExpression = propertyTemplate.GetTemplate != null
           ? (LuaCodeTemplateExpressionSyntax)BuildCodeTemplateExpression(propertyTemplate.GetTemplate, new LuaSymbolNameSyntax(expression))

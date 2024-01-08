@@ -237,6 +237,7 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
   base = { MemberInfo },
   memberType = 4,
   getFieldType = getFieldOrPropertyType,
+  GetRawConstantValue = System.nilFn,
   GetValue = getOrSetField,
   SetValue = function (this, obj, value)
     getOrSetField(this, obj, true, value)
@@ -1114,16 +1115,16 @@ System.Delegate.CreateDelegate = function (delegateType, ...)
         if throwOnBindFailure == false then
           return nil
         end
-       throw(MissingMethodException()) 
+       throw(MissingMethodException())
       end
       return method.f
     end
     method = typeof(target):GetMethod(method)
     if method == nil then
       if ignoreCase == false then
-        return nil 
+        return nil
       end
-      throw(MissingMethodException()) 
+      throw(MissingMethodException())
     end
   end
   return System.fn(target, method.f)

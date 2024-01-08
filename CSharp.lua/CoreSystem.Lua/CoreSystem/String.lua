@@ -73,13 +73,50 @@ local function checkIndex(value, startIndex, count)
   return startIndex, count, len
 end
 
+-- https://stackoverflow.com/questions/7983574/how-to-write-a-unicode-symbol-in-lua
+local bytemarkers = { {0x7FF,192}, {0xFFFF,224}, {0x1FFFFF,240} }
+local function utf8(decimal)
+  if decimal < 128 then return char(decimal) end
+  local charbytes = {}
+  for i = 1, #bytemarkers do
+    local vals = bytemarkers[i]
+    if decimal<=vals[1] then
+      for b = i + 1, 2, -1 do
+        local mod = decimal%64
+        decimal = (decimal-mod)/64
+        charbytes[b] = char(128+mod)
+      end
+      charbytes[1] = char(vals[2]+decimal)
+      break
+    end
+  end
+  return tconcat(charbytes)
+end
+
 local function ctor(String, value, startIndex, count)
   if type(value) == "number" then
     if startIndex <= 0 then throw(ArgumentOutOfRangeException("count")) end
     return rep(char(value), startIndex)
   end
   startIndex, count = checkIndex(value, startIndex, count)
-  return char(unpack(value, startIndex + 1, startIndex + count))
+  local found
+  for i = startIndex + 1, startIndex + count do
+    local c = value[i]
+    if c >= 128 then
+      found = true
+      break
+    end
+  end
+  if not found then
+    return char(unpack(value, startIndex + 1, startIndex + count))
+  end
+  local t, index = {}, 1
+  for i = startIndex + 1, startIndex + count do
+    local c = value[i]
+    t[index] = utf8(c)
+    index = index + 1
+  end
+  return tconcat(t)
 end
 
 local function get(this, index)

@@ -748,6 +748,7 @@ namespace Bridge.ClientTest.Collections.Generic
             }
         }
 
+        [Test]
         public void DictionaryValueKeyWorks()
         {
             ValueKeyStruct a = new ValueKeyStruct(1);
@@ -760,8 +761,48 @@ namespace Bridge.ClientTest.Collections.Generic
             Assert.AreEqual(b.v, dict[b]);
 
             var find = dict.First(i => i.Key.v == a.v);
-            Assert.AreEqual(a, find);
+            Assert.AreEqual(a, find.Key);
             Assert.True(dict.Values.Any(i => i == a.v));
+        }
+
+        private class Location:IEquatable<Location?> 
+        {
+            public Location(int x, int y) {
+                X = x;
+                Y = y;
+            }
+
+            public int X { get; }
+            public int Y { get; }
+
+            public override bool Equals(object? obj) {
+                return Equals(obj as Location);
+            }
+
+            public bool Equals(Location? other) {
+            return other is not null &&
+                X == other.X &&
+                Y == other.Y;
+            }
+
+            public override int GetHashCode() {
+                return X + Y; // simple implementation to allow collisions
+            }
+        }
+
+        [Test]
+        public void DictionaryCustomHashCode()
+        {
+            var a = new Location(5, 10);
+            var b = new Location(10, 5);
+            var c = new Location(1, 14);
+            var d = new Location(1, 14);
+            var dictionary = new Dictionary<Location, string>();
+            dictionary.TryAdd(a, "a");
+            dictionary.TryAdd(b, "b");
+            dictionary.TryAdd(c, "c");
+            dictionary.TryAdd(d, "d");
+            Assert.AreEqual(string.Join(" ", dictionary.Values), "a b c"); // should be "a b c"
         }
     }
 }

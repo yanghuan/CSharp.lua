@@ -461,6 +461,7 @@ System = {
   trueFn = trueFn,
   identityFn = identityFn,
   lengthFn = lengthFn,
+  nilFn = nilFn,
   zeroFn = zeroFn,
   oneFn = oneFn,
   equals = equals,
@@ -1183,6 +1184,10 @@ Object = defCls("System.Object", {
   ToString = function(this) return this.__name__ end
 })
 setmetatable(Object, { __call = new })
+
+System.hasHash = function (T)
+  return T.GetHashCode ~= identityFn
+end
 
 ValueType = defCls("System.ValueType", {
   class = "S",

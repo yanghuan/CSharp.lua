@@ -501,13 +501,11 @@ local function fromBase64Decode(s, offset, len, t, resultLength)
     local coroutine
     local c = s:get(i + offset)
     i = i + 1
-    if c >= 65 then
-      if c <= 90 then
-        c = c - 65
-      elseif c <= 122 then
-        c = c - 71
-      end
-    elseif c >= 48 then
+    if c >= 65 and c <= 90 then
+      c = c - 65
+    elseif c >= 97 and c <= 122 then
+      c = c - 71
+    elseif c >= 48 and c <= 57 then
       c = c + 4
     else
       if c == 43 then
@@ -545,7 +543,7 @@ local function fromBase64Decode(s, offset, len, t, resultLength)
         throw(FormatException("Format_BadBase64CharArrayLength"))
       end
 
-      if j < 2 then
+      if resultLength - j < 2 then
         return - 1
       end
 
@@ -555,7 +553,7 @@ local function fromBase64Decode(s, offset, len, t, resultLength)
       codes = 0x000000ff
     else
       while i < len - 1 do
-        c = s:get(i + offset)
+        local c = s:get(i + offset)
         if c ~= 32 and c ~= 10 and c ~= 13 and c ~= 9 then
           break
         end
@@ -596,7 +594,6 @@ local function fromBase64CharPtr(s, i, n)
     n = n - 1
   end
   local resultLength = fromBase64ComputeResultLength(s, i, n)
-  print(resultLength .. " xxx")
   local t = {}
   fromBase64Decode(s, i, n, t, resultLength)
   return System.arrayFromTable(t, Byte)

@@ -135,7 +135,7 @@ namespace CSharpLua.LuaAst {
     static LuaSyntaxNode() {
       // lua reserved words
       foreach (var field in typeof(Keyword).GetFields()) {
-        ReservedWords.Add(field.GetRawConstantValue().ToString());
+        ReservedWords.Add(field.GetRawConstantValue()?.ToString());
       }
     }
 
