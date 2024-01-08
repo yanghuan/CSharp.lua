@@ -3684,8 +3684,14 @@ namespace CSharpLua {
 
     public override LuaSyntaxNode VisitCaseSwitchLabel(CaseSwitchLabelSyntax node) {
       var left = switches_.Peek().Temp;
-      var right = node.Value.AcceptExpression(this);
-      return left.EqualsEquals(right);
+      var symbol = semanticModel_.GetSymbolInfo(node.Value).Symbol;
+      if (symbol?.Kind == SymbolKind.NamedType) {
+        var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
+        return BuildTypePattern(node.Value, left, switchStatement.Expression, null); 
+      } else {
+        var right = node.Value.AcceptExpression(this);
+        return left.EqualsEquals(right);
+      }
     }
 
     private LuaExpressionSyntax BuildSwitchLabelWhenClause(LuaExpressionSyntax expression, WhenClauseSyntax whenClause) {
@@ -3706,14 +3712,19 @@ namespace CSharpLua {
       if (!declarationPattern.Designation.IsKind(SyntaxKind.DiscardDesignation)) {
         AddLocalVariableMapping(left, declarationPattern.Designation);
       }
-      var isExpression = BuildIsPatternExpression(expressionType, declarationPattern.Type, left);
+
+      return BuildTypePattern(declarationPattern.Type, left, expressionType, whenClause);
+    }
+
+    private LuaExpressionSyntax BuildTypePattern(ExpressionSyntax typePattern, LuaIdentifierNameSyntax left, ExpressionSyntax expressionType, WhenClauseSyntax whenClause) {
+      var isExpression = BuildIsPatternExpression(expressionType, typePattern, left);
       if (isExpression == LuaIdentifierLiteralExpressionSyntax.True) {
         return whenClause != null ? whenClause.AcceptExpression(this) : LuaIdentifierLiteralExpressionSyntax.True;
       }
 
       return BuildSwitchLabelWhenClause(isExpression, whenClause);
-    }
-
+    } 
+    
     public override LuaSyntaxNode VisitCasePatternSwitchLabel(CasePatternSwitchLabelSyntax node) {
       var left = switches_.Peek().Temp;
       switch (node.Pattern.Kind()) {
@@ -3738,6 +3749,11 @@ namespace CSharpLua {
           var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
           var expression = BuildPatternExpression(left, node.Pattern, switchStatement.Expression);
           return BuildSwitchLabelWhenClause(expression, node.WhenClause);
+        }
+        case SyntaxKind.TypePattern: {
+          var switchStatement = (SwitchStatementSyntax)FindParent(node, SyntaxKind.SwitchStatement);
+          var typePattern = (TypePatternSyntax)node.Pattern;
+          return BuildTypePattern(typePattern.Type, left, switchStatement.Expression, node.WhenClause);
         }
         default: {
           var patternExpression = node.Pattern.AcceptExpression(this);
