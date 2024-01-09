@@ -792,7 +792,10 @@ namespace CSharpLua {
     }
 
     private LuaStatementSyntax BuildUsingStatement(List<LuaIdentifierNameSyntax> variableIdentifiers, List<LuaExpressionSyntax> variableExpressions, Action<LuaBlockSyntax> writeStatements) {
-      var usingAdapterExpress = new LuaUsingAdapterExpressionSyntax();
+      return  BuildUsingStatement(new LuaUsingAdapterExpressionSyntax(), variableIdentifiers, variableExpressions, writeStatements);
+    }
+
+    private LuaStatementSyntax BuildUsingStatement(LuaUsingAdapterExpressionSyntax usingAdapterExpress, List<LuaIdentifierNameSyntax> variableIdentifiers, List<LuaExpressionSyntax> variableExpressions, Action<LuaBlockSyntax> writeStatements) {
       usingAdapterExpress.ParameterList.Parameters.AddRange(variableIdentifiers);
       PushFunction(usingAdapterExpress);
       var block = new LuaBlockSyntax();
@@ -850,7 +853,10 @@ namespace CSharpLua {
 
       int lastIndex = indexes.Last();
       var statements = block.Statements.Skip(lastIndex + 1);
-      var usingStatement = BuildUsingStatement(variableIdentifiers, variableExpressions, body => body.Statements.AddRange(statements));
+      var usingAdapterExpress = new LuaUsingAdapterExpressionSyntax() {
+        HasReturn = node.Statements.Any(i => i.IsKind((SyntaxKind.ReturnStatement))),
+      };
+      var usingStatement = BuildUsingStatement(usingAdapterExpress, variableIdentifiers, variableExpressions, body => body.Statements.AddRange(statements));
       block.Statements.RemoveRange(indexes[position]);
       block.AddStatement(usingStatement);
       indexes.RemoveRange(position);
