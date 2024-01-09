@@ -1239,7 +1239,9 @@ namespace CSharpLua {
         var indexName = GetMemberName(symbol);
         var parameterList = node.ParameterList.Accept<LuaParameterListSyntax>(this);
 
-        void Fill(Action<LuaFunctionExpressionSyntax, LuaPropertyOrEventIdentifierNameSyntax> action) {
+        void Fill(IMethodSymbol accessorSymbol, Action<LuaFunctionExpressionSyntax, LuaPropertyOrEventIdentifierNameSyntax> action) {
+          var methodInfo = new MethodInfo(accessorSymbol);
+          methodInfos_.Push(methodInfo);
           var function = new LuaFunctionExpressionSyntax();
           function.AddParameter(LuaIdentifierNameSyntax.This);
           function.ParameterList.Parameters.AddRange(parameterList.Parameters);
@@ -1247,12 +1249,14 @@ namespace CSharpLua {
           PushFunction(function);
           action(function, name);
           PopFunction();
+          methodInfos_.Pop();
           CurType.AddMethod(name, function, isPrivate);
         }
 
         if (node.AccessorList != null) {
           foreach (var accessor in node.AccessorList.Accessors) {
-            Fill((function, name) => {
+            var accessorSymbol = semanticModel_.GetDeclaredSymbol(accessor);
+            Fill(accessorSymbol, (function, name) => {
               bool isGet = accessor.IsKind(SyntaxKind.GetAccessorDeclaration);
               if (accessor.Body != null) {
                 var block = accessor.Body.Accept<LuaBlockSyntax>(this);
@@ -1272,7 +1276,7 @@ namespace CSharpLua {
             });
           }
         } else {
-          Fill((function, name) => {
+          Fill(symbol.GetMethod, (function, name) => {
             var bodyExpression = node.ExpressionBody.AcceptExpression(this);
             function.AddStatement(new LuaReturnStatementSyntax(bodyExpression));
           });
