@@ -1693,7 +1693,7 @@ local MultiArray = {
   Clone = function (this)
     local array = { __rank__ = this.__rank__ }
     tmove(this, 1, #this, 1, array)
-    return arrayFromTable(array, this.__genericT__)
+    return setmetatable(array, Array(this.__genericT__, #this.__rank__))
   end
 }
 
