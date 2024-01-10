@@ -459,15 +459,19 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildArray(IArrayTypeSymbol symbol, params LuaExpressionSyntax[] elements) {
-      var baseType = GetTypeName(symbol.ElementType);
-      var arrayType = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, baseType);
-      return BuildArray(symbol, arrayType, elements);
+      return BuildArray(symbol.ElementType, elements);
     }
 
-    private LuaExpressionSyntax BuildArray(IArrayTypeSymbol symbol, LuaExpressionSyntax arrayType, IList<LuaExpressionSyntax> elements) {
+    private LuaExpressionSyntax BuildArray(ITypeSymbol elementType, params LuaExpressionSyntax[] elements) {
+      var baseType = GetTypeName(elementType);
+      var arrayType = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, baseType);
+      return BuildArray(elementType, arrayType, elements);
+    }
+
+    private LuaExpressionSyntax BuildArray(ITypeSymbol elementType, LuaExpressionSyntax arrayType, IList<LuaExpressionSyntax> elements) {
       var invocation = new LuaInvocationExpressionSyntax(arrayType);
       var table = new LuaTableExpression(elements);
-      bool isElementNotNull = (symbol.ElementType.IsValueType && !symbol.ElementType.IsNullableType()) 
+      bool isElementNotNull = (elementType.IsValueType && !elementType.IsNullableType()) 
         || elements.All(i => i is LuaLiteralExpressionSyntax && i != LuaIdentifierLiteralExpressionSyntax.Nil);
       if (isElementNotNull) {
         invocation.AddArgument(table);

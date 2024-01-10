@@ -22,7 +22,8 @@ local IndexOutOfRangeException = System.IndexOutOfRangeException
 
 local Span = {
   __ctor__ = function (this, input, ...)
-    if type(input) == "table" then
+    local t = type(input)
+    if t == "table" then
       local argsLen = select("#", ...)
       local maxLength = input:getLength()
       local start, length
@@ -33,15 +34,19 @@ local Span = {
         end
         if start + length > maxLength then
           throw(ArgumentOutOfRangeException("length"))
-        end 
+        end
       else
         start, length = 0, maxLength
       end
       this._array = input
       this._min = start
       this._max = start + length - 1
+    elseif t == "number" then
+      this._array = System.Array(this.__genericT__)(input)
+      this._min = 0
+      this._max = input
     else
-      this._array = System.Array.new(this.__genericT__, 1)
+      this._array = System.Array(this.__genericT__)(1)
       this._array:set(0, input)
       this._min = 0
       this._max = 0

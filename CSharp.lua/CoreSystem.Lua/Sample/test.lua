@@ -51,27 +51,27 @@ local function printList(list)
   print(table.concat(t, " "))
 end
 
-local function testDateTimeAndTimeSpan() 
+local function testDateTimeAndTimeSpan()
   local date = System.DateTime.getNow()
   print(date:getTicks())
   print(date:ToString(), date:getYear(), date:getMonth(), date:getDay(), date:getHour(), date:getMinute(), date:getSecond())
-    
+
   local ts = System.TimeSpan.FromSeconds(20)
   print(ts:ToString())
-    
+
   date = date + System.TimeSpan.FromDays(2)
   print(date:ToString())
-  
+
   date = date:AddMonths(2);
   print(date:ToString())
-    
-  local baseTime = System.DateTime(1970, 1, 1) 
+
+  local baseTime = System.DateTime(1970, 1, 1)
   print(baseTime:ToString())
   print(baseTime:AddMilliseconds(1458032204643):ToString())
 end
 
-local function testArray() 
-  local arr = System.Array(System.Int32):new(10)
+local function testArray()
+  local arr = System.Array(System.Int32)(10)
   print(arr:ToString(), #arr)
   printList(arr)
   arr:set(0, 2)

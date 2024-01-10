@@ -41,7 +41,7 @@ local ReadOnlySpan = {
       this._min = start
       this._max = start + length - 1
     else
-      this._array = System.Array.new(this.__genericT__, 1)
+      this._array = System.Array(this.__genericT__)(1)
       this._array:set(0, input)
       this._min = 0
       this._max = 0

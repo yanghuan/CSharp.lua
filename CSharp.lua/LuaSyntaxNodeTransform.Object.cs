@@ -276,10 +276,14 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildArrayCreationExpression(IArrayTypeSymbol symbol, LuaArrayTypeAdapterExpressionSyntax arrayType, InitializerExpressionSyntax initializer) {
+      return BuildArrayCreationExpression(symbol.ElementType, arrayType, initializer);
+    }
+
+    private LuaExpressionSyntax BuildArrayCreationExpression(ITypeSymbol elementType, LuaArrayTypeAdapterExpressionSyntax arrayType, InitializerExpressionSyntax initializer) {
       if (initializer?.Expressions.Count > 0) {
         if (arrayType.IsSimpleArray) {
           var initializerExpressions = initializer.Expressions.Select(i => i.AcceptExpression(this)).ToList();
-          return BuildArray(symbol, arrayType, initializerExpressions);
+          return BuildArray(elementType, arrayType, initializerExpressions);
         }
 
         var rank = new LuaTableExpression { IsSingleLine = true };
@@ -292,7 +296,7 @@ namespace CSharpLua {
         if (arrayType.IsSimpleArray) {
           var size = arrayType.RankSpecifier.Sizes.FirstOrDefault() ?? LuaNumberLiteralExpressionSyntax.Zero;
           if (size is LuaNumberLiteralExpressionSyntax { Number: 0 }) {
-            return BuildArray(symbol, arrayType, Array.Empty<LuaExpressionSyntax>());
+            return BuildArray(elementType, arrayType, Array.Empty<LuaExpressionSyntax>());
           }
           return BuildArray(arrayType, size);
         }
@@ -1279,23 +1283,9 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitStackAllocArrayCreationExpression(StackAllocArrayCreationExpressionSyntax node) {
-      var typeInfo = semanticModel_.GetTypeInfo(node.Type);
-      var symbol = (INamedTypeSymbol)typeInfo.Type;
-      var elementTypeExp = GetTypeName(symbol.TypeArguments.Single());
+      var symbol = semanticModel_.GetTypeInfo(node.Type).Type;
       var spanTypeExp = node.Type.Accept<LuaArrayTypeAdapterExpressionSyntax>(this);
-      
-      var arrayInvocationExp = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeExp);
-      LuaExpressionSyntax arrayExp = arrayInvocationExp;
-      var newArrayExp = GetGenericTypeImportName(arrayInvocationExp, out var argumentTypeNames);
-      if (!IsLocalVarExistsInCurMethod(newArrayExp)) {
-        if (AddGenericImport(arrayInvocationExp, newArrayExp, argumentTypeNames, isFromCode: false)) {
-          arrayExp = newArrayExp;
-        }
-      }
-
-      var arraySizeExp = spanTypeExp.RankSpecifier.Sizes.Single();
-
-      return spanTypeExp.Invocation(arrayExp.Invocation(arraySizeExp));
+      return BuildArrayCreationExpression(symbol, spanTypeExp, node.Initializer);
     }
 
     public override LuaSyntaxNode VisitUnsafeStatement(UnsafeStatementSyntax node) {

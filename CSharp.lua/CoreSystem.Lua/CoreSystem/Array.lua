@@ -239,35 +239,32 @@ local function fill(t, f, e, v)
   end
 end
 
-local function buildArray(T, len, t)
-  if t == nil then 
-    t = {}
-    if len > 0 then
-      local genericT = T.__genericT__
-      local default = genericT:default()
-      if default == nil then
-        fill(t, 1, len, null)
-      elseif type(default) ~= "table" then
-        fill(t, 1, len, default)
-      else
-        for i = 1, len do
-          t[i] = genericT:default()
-        end
+local function buildArray(ArrayT, n, t)
+  if type(n) == "table" then
+    t = n
+  elseif t ~= nil then
+    for i = 1, n  do
+      if t[i] == nil then
+        t[i] = null
       end
     end
   else
-    if len > 0 then
-      local default = T.__genericT__:default()
+    t = {}
+    if n > 0 then
+      local T = ArrayT.__genericT__
+      local default = T:default()
       if default == nil then
-        for i = 1, len do
-          if t[i] == nil then
-            t[i] = null
-          end
+        fill(t, 1, n, null)
+      elseif type(default) ~= "table" then
+        fill(t, 1, n, default)
+      else
+        for i = 1, n do
+          t[i] = T:default()
         end
       end
     end
   end
-  return setmetatable(t, T)
+  return setmetatable(t, ArrayT)
 end
 
 local function indexOf(t, v, startIndex, count)
@@ -958,7 +955,7 @@ end
 
 Array = {
   version = 0,
-  new = buildArray,
+  __call = buildArray,
   set = set,
   get = get,
   setCapacity = function (t, len)
@@ -1172,19 +1169,18 @@ Array = {
       if match(item) then
         break
       end
-      freeIndex = freeIndex + 1 
+      freeIndex = freeIndex + 1
     end
     if freeIndex > size then return 0 end
-  
     local current = freeIndex + 1
-    while current <= size do 
+    while current <= size do
       while current <= size do
         local item = t[current]
         if item == null then item = nil end
         if not match(item) then
           break
         end
-        current = current + 1 
+        current = current + 1
       end
       if current <= size then
         t[freeIndex] = t[current]
@@ -1315,7 +1311,7 @@ Array = {
     end
   end,
   CreateInstance = function (elementType, length)
-    return buildArray(Array(elementType[1]), length)
+    return Array(elementType[1])(length)
   end,
   Empty = function (T)
     local t = emptys[T]
@@ -1441,7 +1437,7 @@ Array = {
   Resize = function (t, newSize, T)
     if newSize < 0 then throw(ArgumentOutOfRangeException("newSize")) end
     if t == nil then
-      return buildArray(Array(T), newSize)
+      return Array(T)(newSize)
     end
     local len = #t
     if len > newSize then
@@ -1584,34 +1580,6 @@ Array = {
     return arrayFromTable(array, this.__genericT__)
   end
 }
-
-function Array.__call(ArrayT, n, t)
-  if type(n) == "table" then
-    t = n
-  elseif t ~= nil then
-    for i = 1, n  do
-      if t[i] == nil then
-        t[i] = null
-      end
-    end
-  else
-    t = {}
-    if n > 0 then
-      local T = ArrayT.__genericT__
-      local default = T:default()
-      if default == nil then
-        fill(t, 1, n, null)
-      elseif type(default) ~= "table" then
-        fill(t, 1, n, default)
-      else
-        for i = 1, n do
-          t[i] = T:default()
-        end
-      end
-    end
-  end
-  return setmetatable(t, ArrayT)
-end
 
 function System.arrayFromList(t)
   return setmetatable(t, Array(t.__genericT__))

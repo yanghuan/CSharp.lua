@@ -9,7 +9,7 @@ System.define("System.Random", (function ()
   local Sample, InternalSample, GenerateSeed, Next, GetSampleForLargeRange, NextDouble, 
   NextBytes, internal, __ctor__, rnd
   internal = function (this)
-    this._seedArray = ArrayInt32:new(56)
+    this._seedArray = ArrayInt32(56)
   end
   __ctor__ = function (this, Seed)
     if not Seed then Seed = GenerateSeed() end
