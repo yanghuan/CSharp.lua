@@ -264,8 +264,22 @@ namespace CSharpLua {
 
     public void Generate(string outFolder) {
       List<string> modules = new List<string>();
+      HashSet<string> uniqueModules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
       foreach (var luaCompilationUnit in Create()) {
         string outFile = GetOutFileAbsolutePath(luaCompilationUnit.FilePath, outFolder, out string module);
+        string originalModule = module;
+        string outFileExtension = Path.GetExtension(outFile);
+        string outFileBase = outFile.Substring(0, outFile.Length - outFileExtension.Length);        
+        int suffix = 1;
+        while (true) {
+          if (uniqueModules.Add(module)) {
+            break;
+          }
+
+          suffix++;
+          module = originalModule + "_" + suffix;
+          outFile = outFileBase + "_" + suffix + outFileExtension;
+        }
         Write(luaCompilationUnit, outFile);
         modules.Add(module);
       }
