@@ -50,9 +50,14 @@ local pack = table.pack
 local unpack = table.unpack
 local error = error
 local coroutine = coroutine
-local ccreate = coroutine.create
-local cresume = coroutine.resume
-local cyield = coroutine.yield
+local ccreate
+local cresume
+local cyield
+if coroutine ~= nil then
+  ccreate = coroutine.create
+  cresume = coroutine.resume
+  cyield = coroutine.yield
+end
 
 local null = {}
 local arrayEnumerator
