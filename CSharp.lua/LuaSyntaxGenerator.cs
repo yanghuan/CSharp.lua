@@ -42,13 +42,11 @@ namespace CSharpLua {
       string filePath = CompilationUnit.FilePath;
       string otherFilePath = other.CompilationUnit.FilePath;
 
-      if (filePath.Contains(otherFilePath)) {
-        return 1;
+      int c = filePath.CompareTo(otherFilePath);
+      if (c != 0) {
+        return c;
       }
 
-      if (otherFilePath.Contains(filePath)) {
-        return -1;
-      }
       return other.Node.Members.Count.CompareTo(Node.Members.Count);
     }
   }
@@ -513,9 +511,10 @@ namespace CSharpLua {
         var types = partialTypes_.Values.ToArray();
         partialTypes_.Clear();
         foreach (var typeDeclarations in types) {
-          var major = typeDeclarations.Min();
+          var sortedTypeDeclarations = typeDeclarations.OrderBy(x => x).ToList();
+          var major = sortedTypeDeclarations[0];
           var transform = new LuaSyntaxNodeTransform(this, null);
-          transform.AcceptPartialType(major, typeDeclarations);
+          transform.AcceptPartialType(major, sortedTypeDeclarations);
         }
       }
     }
