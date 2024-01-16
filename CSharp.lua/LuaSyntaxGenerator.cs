@@ -283,7 +283,8 @@ namespace CSharpLua {
       }
       streamWriter.WriteLine();
       streamWriter.WriteLine(LuaSyntaxNode.Tokens.ShortComment + LuaCompilationUnitSyntax.GeneratedMarkString);
-      foreach (var luaCompilationUnit in Create(true)) {
+      var compilationUnits = Create(true).OrderBy(i => Path.GetFileName(i.FilePath));
+      foreach (var luaCompilationUnit in compilationUnits) {
         WriteCompilationUnit(luaCompilationUnit, streamWriter);
       }
       WriteSingleFileManifest(streamWriter);
@@ -2031,9 +2032,9 @@ namespace CSharpLua {
           if (genericTokenPos != -1) {
             return name[..genericTokenPos];
           }
-
           return typeName;
         }
+
         var invocationExpression = new LuaInvocationExpressionSyntax(typeName);
         invocationExpression.AddArguments(typeArguments);
         LuaExpressionSyntax luaExpression = invocationExpression;

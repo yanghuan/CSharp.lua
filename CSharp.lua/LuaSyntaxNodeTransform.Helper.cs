@@ -1051,15 +1051,46 @@ namespace CSharpLua {
           } else {
             success = CurTypeDeclaration.TypeDeclaration.AddGenericImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode(), out var declare);
             if (declare != null) {
+              CheckGenericDeclareTypeArgument(declare, invocationExpression, symbol);
               bool hasAdd = generator_.AddGenericImportDepend(CurTypeDeclaration.TypeSymbol, symbol.OriginalDefinition as INamedTypeSymbol);
               if (hasAdd && CurCompilationUnit.IsUsingDeclareConflict(invocationExpression)) {
                 declare.IsFromGlobal = true;
+                declare.InvocationExpression = new LuaInvocationExpressionSyntax(
+                  LuaIdentifierNameSyntax.Global.MemberAccess(invocationExpression.Expression),
+                  invocationExpression.ArgumentList.Arguments);
+              }
+              if (declare.IsFromGlobal) {
                 CurTypeDeclaration.TypeDeclaration.AddGlobalParameter();
               }
             }
           }
           if (success) {
             luaExpression = newName;
+          }
+        }
+      }
+    }
+
+    private void CheckGenericDeclareTypeArgument(GenericUsingDeclare declare, LuaInvocationExpressionSyntax invocation, ITypeSymbol symbol) {
+      if (declare.IsFromCode) {
+        if (symbol is INamedTypeSymbol nameTypeSymbol) {
+          int i = 0;
+          foreach (var typeArgument in nameTypeSymbol.TypeArguments) {
+            if (typeArgument.Kind != SymbolKind.TypeParameter && typeArgument.IsFromCode()) {
+              var argumentExpression = invocation.ArgumentList.Arguments[i];
+              if (argumentExpression is LuaIdentifierNameSyntax identifier) {
+                string name = identifier.ValueText;
+                int j = name.IndexOf('.');
+                if (j != -1) {
+                  name = name.Substring(0, j);
+                }
+                if (!CurTypeDeclaration.TypeDeclaration.IsGenericImportExists(name)) {
+                  invocation.ArgumentList.Arguments[i] = LuaIdentifierNameSyntax.Global.MemberAccess(argumentExpression);
+                  declare.IsFromGlobal = true;
+                }
+              }
+            }
+            ++i;
           }
         }
       }
