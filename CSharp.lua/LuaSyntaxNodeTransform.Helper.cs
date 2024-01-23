@@ -994,7 +994,7 @@ namespace CSharpLua {
       return true;
     }
 
-    internal void ImportTypeName(ref string name, INamedTypeSymbol symbol) {
+    internal LuaIdentifierNameSyntax ImportTypeName(string name, INamedTypeSymbol symbol) {
       if (IsImportTypeNameEnable(symbol)) {
         int pos = name.LastIndexOf('.');
         if (pos != -1) {
@@ -1005,12 +1005,14 @@ namespace CSharpLua {
             if (!IsLocalVarExistsInCurMethod(newPrefix)) {
               bool success = AddImport(prefix, newPrefix, symbol.IsFromCode());
               if (success) {
-                name = newPrefix + name[pos..];
+                string newName = newPrefix + name[pos..];
+                return new LuaImportNameSyntax(newName, name);
               }
             }
           }
         }
       }
+      return null;
     }
 
     internal bool AddGenericImport(LuaInvocationExpressionSyntax invocationExpression, string name, List<string> argumentTypeNames, bool isFromCode) {
@@ -1078,14 +1080,14 @@ namespace CSharpLua {
           foreach (var typeArgument in nameTypeSymbol.TypeArguments) {
             if (typeArgument.Kind != SymbolKind.TypeParameter && typeArgument.IsFromCode()) {
               var argumentExpression = invocation.ArgumentList.Arguments[i];
-              if (argumentExpression is LuaIdentifierNameSyntax identifier) {
+              if (argumentExpression is LuaImportNameSyntax identifier) {
                 string name = identifier.ValueText;
                 int j = name.IndexOf('.');
                 if (j != -1) {
                   name = name.Substring(0, j);
                 }
                 if (!CurTypeDeclaration.TypeDeclaration.IsGenericImportExists(name)) {
-                  invocation.ArgumentList.Arguments[i] = LuaIdentifierNameSyntax.Global.MemberAccess(argumentExpression);
+                  invocation.ArgumentList.Arguments[i] = LuaIdentifierNameSyntax.Global.MemberAccess(identifier.TypeName);
                   declare.IsFromGlobal = true;
                 }
               }

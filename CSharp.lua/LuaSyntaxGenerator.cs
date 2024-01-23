@@ -2131,7 +2131,10 @@ namespace CSharpLua {
             name = LuaIdentifierNameSyntax.Global.ValueText + '.' + name;
           }
         } else {
-          transform.ImportTypeName(ref name, (INamedTypeSymbol)symbol);
+          var newImportName = transform.ImportTypeName(name, (INamedTypeSymbol)symbol);
+          if (newImportName != null) {
+            return newImportName;
+          }
         }
       }
       return name;

@@ -196,4 +196,12 @@ namespace CSharpLua.LuaAst {
       NameExpression.Render(renderer);
     }
   }
+
+  public sealed class LuaImportNameSyntax : LuaIdentifierNameSyntax {
+    public string TypeName { get; }
+
+    public LuaImportNameSyntax(string shorName, string name) : base(shorName) {
+      TypeName = name;
+    }
+  }
 }
