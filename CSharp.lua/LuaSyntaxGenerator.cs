@@ -751,6 +751,13 @@ namespace CSharpLua {
       }
     }
 
+    private HashSet<INamedTypeSymbol> GetExtendChildren(INamedTypeSymbol typeSymbol) {
+      if (typeSymbol.IsGenericType) {
+        typeSymbol = typeSymbol.OriginalDefinition;
+      }
+      return extends_.GetOrDefault(typeSymbol);
+    }
+
     internal LuaIdentifierNameSyntax GetMemberName(ISymbol symbol) {
       Utility.CheckOriginalDefinition(ref symbol);
       var name = memberNames_.GetOrDefault(symbol);
@@ -1182,7 +1189,7 @@ namespace CSharpLua {
 
     private void RefactorCurTypeSymbol(ISymbol symbol, HashSet<ISymbol> alreadyRefactorSymbols) {
       INamedTypeSymbol typeSymbol = symbol.ContainingType;
-      var children = extends_.GetOrDefault(typeSymbol);
+      var children = GetExtendChildren(typeSymbol);
       string newName = GetRefactorName(typeSymbol, children, symbol);
       RefactorName(symbol, newName, alreadyRefactorSymbols);
     }
@@ -1191,7 +1198,7 @@ namespace CSharpLua {
       if (symbol.IsFromCode()) {
         INamedTypeSymbol typeSymbol = symbol.ContainingType;
         Contract.Assert(typeSymbol.TypeKind == TypeKind.Interface);
-        var children = extends_.GetOrDefault(typeSymbol);
+        var children = GetExtendChildren(typeSymbol);
         string newName = GetRefactorName(null, children, symbol);
         if (children != null) {
           foreach (INamedTypeSymbol child in children) {
@@ -1227,7 +1234,7 @@ namespace CSharpLua {
     }
 
     private void RefactorChildrenOverridden(ISymbol originalSymbol, INamedTypeSymbol curType, string newName, HashSet<ISymbol> alreadyRefactorSymbols) {
-      var children = extends_.GetOrDefault(curType);
+      var children = GetExtendChildren(curType);
       if (children != null) {
         foreach (INamedTypeSymbol child in children) {
           var curSymbol = child.GetMembers(originalSymbol.Name).FirstOrDefault(i => i.IsOverridden(originalSymbol));
@@ -1400,7 +1407,7 @@ namespace CSharpLua {
     }
 
     private bool IsInnerNameEnableOfChildren(INamedTypeSymbol typeSymbol, string newName, bool isPrivate) {
-      var children = extends_.GetOrDefault(typeSymbol);
+      var children = GetExtendChildren(typeSymbol);
       if (children != null) {
         foreach (INamedTypeSymbol child in children) {
           if (!IsNameEnableOfCurAndChildren(child, newName, isPrivate)) {
@@ -1855,7 +1862,7 @@ namespace CSharpLua {
     }
 
     internal bool IsExtendExists(INamedTypeSymbol typeSymbol) {
-      var set = extends_.GetOrDefault(typeSymbol);
+      var set = GetExtendChildren(typeSymbol);
       return set?.Count > 0;
     }
 

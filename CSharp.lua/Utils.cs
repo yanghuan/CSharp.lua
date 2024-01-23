@@ -783,7 +783,7 @@ namespace CSharpLua {
 
     private static void CheckSymbolDefinition<T>(ref T symbol) where T : class, ISymbol {
       var originalDefinition = (T)symbol.OriginalDefinition;
-      if (originalDefinition != symbol) {
+      if (!originalDefinition.EQ(symbol)) {
         symbol = originalDefinition;
       }
     }
