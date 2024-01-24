@@ -876,8 +876,12 @@ namespace CSharpLua {
         if (symbol.IsTypeParameterExists() && !IsCurMethodTypeArgument(symbol)) {
           return false;
         }
-        return true;
       }
+
+      if (!IsNoneGenericTypeCounter && CurTypeDeclaration?.TypeSymbol?.IsGenericType == true) {
+        return false;
+      }
+      
       return true;
     }
 
@@ -1046,29 +1050,29 @@ namespace CSharpLua {
       if (!IsNoImportTypeName && !CurTypeSymbol.EQ(symbol) && !IsCurMethodTypeArgument(symbol)) {
         var invocationExpression = (LuaInvocationExpressionSyntax)luaExpression;
         string newName = GetGenericTypeImportName(invocationExpression, out var argumentTypeNames);
-        if (!IsLocalVarExistsInCurMethod(newName)) {
-          bool success;
-          if (!symbol.IsTypeParameterExists()) {
+        bool success = false;
+        if (!symbol.IsTypeParameterExists()) {
+          if (!IsLocalVarExistsInCurMethod(newName)) {
             success = AddGenericImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode());
-          } else {
-            success = CurTypeDeclaration.TypeDeclaration.AddGenericImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode(), out var declare);
-            if (declare != null) {
-              CheckGenericDeclareTypeArgument(declare, invocationExpression, symbol);
-              bool hasAdd = generator_.AddGenericImportDepend(CurTypeDeclaration.TypeSymbol, symbol.OriginalDefinition as INamedTypeSymbol);
-              if (hasAdd && CurCompilationUnit.IsUsingDeclareConflict(invocationExpression)) {
-                declare.IsFromGlobal = true;
-                declare.InvocationExpression = new LuaInvocationExpressionSyntax(
-                  LuaIdentifierNameSyntax.Global.MemberAccess(invocationExpression.Expression),
-                  invocationExpression.ArgumentList.Arguments);
-              }
-              if (declare.IsFromGlobal) {
-                CurTypeDeclaration.TypeDeclaration.AddGlobalParameter();
-              }
+          }
+        } else {
+          success = CurTypeDeclaration.TypeDeclaration.AddGenericImport(invocationExpression, newName, argumentTypeNames, symbol.IsAbsoluteFromCode(), out var declare);
+          if (declare != null) {
+            CheckGenericDeclareTypeArgument(declare, invocationExpression, symbol);
+            bool hasAdd = generator_.AddGenericImportDepend(CurTypeDeclaration.TypeSymbol, symbol.OriginalDefinition as INamedTypeSymbol);
+            if (hasAdd && CurCompilationUnit.IsUsingDeclareConflict(invocationExpression)) {
+              declare.IsFromGlobal = true;
+              declare.InvocationExpression = new LuaInvocationExpressionSyntax(
+                LuaIdentifierNameSyntax.Global.MemberAccess(invocationExpression.Expression),
+                invocationExpression.ArgumentList.Arguments);
+            }
+            if (declare.IsFromGlobal) {
+              CurTypeDeclaration.TypeDeclaration.AddGlobalParameter();
             }
           }
-          if (success) {
-            luaExpression = newName;
-          }
+        }
+        if (success) {
+          luaExpression = newName;
         }
       }
     }
@@ -1080,14 +1084,14 @@ namespace CSharpLua {
           foreach (var typeArgument in nameTypeSymbol.TypeArguments) {
             if (typeArgument.Kind != SymbolKind.TypeParameter && typeArgument.IsFromCode()) {
               var argumentExpression = invocation.ArgumentList.Arguments[i];
-              if (argumentExpression is LuaImportNameSyntax identifier) {
+              if (argumentExpression is LuaIdentifierNameSyntax identifier) {
                 string name = identifier.ValueText;
                 int j = name.IndexOf('.');
                 if (j != -1) {
                   name = name.Substring(0, j);
                 }
                 if (!CurTypeDeclaration.TypeDeclaration.IsGenericImportExists(name)) {
-                  invocation.ArgumentList.Arguments[i] = LuaIdentifierNameSyntax.Global.MemberAccess(identifier.TypeName);
+                  invocation.ArgumentList.Arguments[i] = LuaIdentifierNameSyntax.Global.MemberAccess(identifier);
                   declare.IsFromGlobal = true;
                 }
               }
@@ -1401,10 +1405,7 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildInheritTypeName(ITypeSymbol baseType) {
-      ++noImportTypeNameCounter_;
-      var baseTypeName = GetTypeName(baseType);
-      --noImportTypeNameCounter_;
-      return baseTypeName;
+      return GetTypeNameWithoutImport(baseType);
     }
 
     private LuaExpressionSyntax GetRecordInterfaceTypeName(INamedTypeSymbol recordType) {

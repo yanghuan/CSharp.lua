@@ -177,6 +177,7 @@ namespace CSharpLua {
         IsInlineSimpleProperty = IsInlineSimpleProperty,
         IsPreventDebugObject = IsPreventDebugObject,
         IsNotConstantForEnum = IsNotConstantForEnum,
+        IsNoConcurrent = IsNoConcurrent,
       };
       return new LuaSyntaxGenerator(codes, libs, cscArguments_, Metas, setting);
     }
