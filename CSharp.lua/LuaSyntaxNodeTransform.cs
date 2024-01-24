@@ -400,7 +400,7 @@ namespace CSharpLua {
         BuildBaseTypes(typeSymbol, typeDeclaration, node.BaseList.Types, false);
       }
 
-      CheckRecordParameterCtor(typeSymbol, node, typeDeclaration);
+      CheckParameterCtor(typeSymbol, node, typeDeclaration);
       BuildTypeMembers(typeDeclaration, node);
       CheckTypeDeclaration(typeSymbol, typeDeclaration, attributes);
   
@@ -458,28 +458,29 @@ namespace CSharpLua {
       }
     }
 
-    private void CheckRecordParameterCtor(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
-      if (typeSymbol.IsRecord) {
-        var recordDeclaration = (RecordDeclarationSyntax)node;
-        if (recordDeclaration.ParameterList != null) {
-          BuildRecordParameterCtor(typeSymbol, typeDeclaration, recordDeclaration);
-        }
+    private void CheckParameterCtor(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax node, LuaTypeDeclarationSyntax typeDeclaration) {
+      if (node.ParameterList != null) {
+        BuildParameterCtor(typeSymbol, typeDeclaration, node);
       }
     }
 
-    private void BuildRecordParameterCtor(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration, RecordDeclarationSyntax recordDeclaration) {
-      var parameterList = recordDeclaration.ParameterList.Accept<LuaParameterListSyntax>(this);
+    private void BuildParameterCtor(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration, TypeDeclarationSyntax node) {
+      bool isRecord = node.IsKind(SyntaxKind.RecordDeclaration);
+      var parameterList = node!.ParameterList.Accept<LuaParameterListSyntax>(this);
       var function = new LuaConstructorAdapterExpressionSyntax();
       function.AddParameter(LuaIdentifierNameSyntax.This);
       function.AddParameters(parameterList.Parameters);
-      function.AddStatements(parameterList.Parameters.Select(i => LuaIdentifierNameSyntax.This.MemberAccess(i).Assignment(i).ToStatementSyntax()));
       typeDeclaration.AddCtor(function, false);
       var ctor = typeSymbol.InstanceConstructors.First();
       int index = 0;
       foreach (var p in ctor.Parameters) {
-        var expression = GetFieldValueExpression(p.Type, null, out bool isLiteral, out _);
-        if (expression != null) {
-          typeDeclaration.AddField(parameterList.Parameters[index], expression, p.Type.IsImmutable() && isLiteral, false, false, true, null, false, false);
+        if (isRecord || !typeSymbol.GetMembers($"<{p.Name}>P").IsEmpty) {
+          var parameterName = parameterList.Parameters[index];
+          function.AddStatement(LuaIdentifierNameSyntax.This.MemberAccess(parameterName).Assignment(parameterName));
+          var expression = GetFieldValueExpression(p.Type, null, out bool isLiteral, out _);
+          if (expression != null) {
+            typeDeclaration.AddField(parameterList.Parameters[index], expression, p.Type.IsImmutable() && isLiteral, false, false, true, null, false, false);
+          }
         }
         ++index;
       }
