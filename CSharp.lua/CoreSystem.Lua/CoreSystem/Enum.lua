@@ -96,6 +96,7 @@ System.define("System.Enum", {
   default = Int.default,
   ToString = toString,
   HasFlag = hasFlag,
+  GetHashCode = Int.GetHashCode,
   GetName = function (enumType, value)
     if enumType == nil then throw(ArgumentNullException("enumType")) end
     if value == nil then throw(ArgumentNullException("value")) end

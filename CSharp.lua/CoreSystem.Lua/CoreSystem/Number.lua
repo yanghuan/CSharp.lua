@@ -239,7 +239,6 @@ setmetatable(UInt64, Int)
 local nan = 0 / 0
 local posInf = 1 / 0
 local negInf = - 1 / 0
-local nanHashCode = {}
 
 --http://lua-users.org/wiki/InfAndNanComparisons
 local function isNaN(v)
@@ -269,8 +268,12 @@ local function equalsObj(this, v)
   return equalsDouble(this, v)
 end
 
-local function getHashCode(this)
-  return isNaN(this) and nanHashCode or this
+local function getHashCode(v)
+  if v % 1 == 0 and v >= -2147483648 and v <= 2147483647 then
+    return v
+  end
+  local s = tostring(v)
+  return s:GetHashCode()
 end
 
 local Number = define("System.Number", {
@@ -383,10 +386,25 @@ if not debugsetmetatable then
     local t = type(this)
     if t == "number" then
       return getHashCode(this)
-    elseif t == "table" then
-      return this:GetHashCode()
+    elseif t == "boolean" then
+      return this and 1 or 0
+    elseif t == "function" then
+      return System.addr(this, 11)
     end
-    return this
+    return this:GetHashCode()
+  end
+
+  System.Nullable.GetHashCode = function (this)
+    if this == nil then
+      return 0
+    end
+    local t = type(this)
+    if t == "number" then
+      return getHashCode(this)
+    elseif t == "boolean" then
+      return this and 1 or 0
+    end
+    return this:GetHashCode()
   end
 
   function System.ObjectToString(this)

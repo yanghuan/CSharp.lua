@@ -127,8 +127,8 @@ Comparer = define("System.Comparer_1", function (T)
     end
     Compare = function (this, x, y)
       if x ~= nil then
-        if y ~= nil then 
-          return compareTo(x, y) 
+        if y ~= nil then
+          return compareTo(x, y)
         end
         return 1
       end                 
@@ -141,7 +141,7 @@ Comparer = define("System.Comparer_1", function (T)
 
   local defaultComparer
   local function getDefault()
-    local comparer = defaultComparer 
+    local comparer = defaultComparer
     if comparer == nil then
       comparer = Comparer(T)()
       defaultComparer = comparer
@@ -156,7 +156,7 @@ Comparer = define("System.Comparer_1", function (T)
 
   return {
     __genericT__ = T,
-    base = { System.IComparer_1(T), System.IComparer }, 
+    base = { System.IComparer_1(T), System.IComparer },
     getDefault = getDefault,
     getDefaultInvariant = getDefault,
     Compare = Compare,

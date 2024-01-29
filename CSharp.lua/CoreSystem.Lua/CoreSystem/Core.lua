@@ -1167,9 +1167,21 @@ else
   end
 end
 
+local addr
+if version <= 5.1 then
+  addr = function (t, i)
+    return ssub(tostring(t), i or 8) + 0
+  end
+else
+  addr = function (t, i)
+    return tonumber("0x" .. ssub(tostring(t), i or 8))
+  end
+end
+
 System.equalsObj = equalsObj
 System.compareObj = compareObj
 System.toString = toString
+System.addr = addr
 
 Object = defCls("System.Object", {
   __call = new,
@@ -1178,7 +1190,7 @@ Object = defCls("System.Object", {
   class = "C",
   EqualsObj = equals,
   ReferenceEquals = rawequal,
-  GetHashCode = identityFn,
+  GetHashCode = addr,
   EqualsStatic = equalsObj,
   GetType = false,
   ToString = function(this) return this.__name__ end
@@ -1186,7 +1198,7 @@ Object = defCls("System.Object", {
 setmetatable(Object, { __call = new })
 
 System.hasHash = function (T)
-  return T.GetHashCode ~= identityFn
+  return T.GetHashCode ~= addr
 end
 
 ValueType = defCls("System.ValueType", {
@@ -1466,10 +1478,7 @@ local Nullable = {
     if this == nil then
       return 0
     end
-    if type(this) == "table" then
-      return this:GetHashCode()
-    end
-    return this
+    return this:GetHashCode()
   end,
   clone = function (t)
     if type(t) == "table" then
@@ -1523,7 +1532,7 @@ setmetatable(Index, {
 local function pointerAddress(p)
   local address = p[3]
   if address == nil then
-    address = ssub(tostring(p), 7)
+    address = addr(p)
     p[3] = address
   end
   return address + p[2]

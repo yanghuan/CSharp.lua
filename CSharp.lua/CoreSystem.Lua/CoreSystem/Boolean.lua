@@ -58,12 +58,14 @@ end
 
 local Boolean = System.defStc("System.Boolean", {
   default = System.falseFn,
-  GetHashCode = System.identityFn,
   Equals = System.equals,
   CompareTo = compareTo,
   ToString = toString,
   FalseString = falseString,
   TrueString = trueString,
+  GetHashCode = function (this)
+    return this and 1 or 0
+  end,
   CompareToObj = function (this, v)
     if v == nil then return 1 end
     if type(v) ~= "boolean" then

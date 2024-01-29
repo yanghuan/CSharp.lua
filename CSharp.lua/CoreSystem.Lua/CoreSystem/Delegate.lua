@@ -85,7 +85,7 @@ local function delete(fn, count, deleteIndex, deleteCount)
   return t
 end
 
-local function removeImpl(fn1, fn2) 
+local function removeImpl(fn1, fn2)
   if type(fn2) ~= "table" then
     if type(fn1) ~= "table" then
       if fn1 == fn2 then
@@ -161,7 +161,10 @@ Delegate = System.define("System.Delegate", {
   DynamicInvoke = function (this, ...)
     return this(...)
   end,
-  GetType = function (this)
+  GetHashCode = function (this)
+    return System.addr(this, 11)
+  end,
+  GetType = function ()
     return System.typeof(Delegate)
   end,
   GetInvocationList = function (this)
