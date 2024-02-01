@@ -1,4 +1,3 @@
-require("strict")
 local _, socket = pcall(require, "socket")
 
 local now = 0
@@ -421,6 +420,6 @@ test(testIO, "IO")
 --test(testAsyncForeach, "testAsyncForeach")
 
 
-
-      
-
+local dt = System.DateTime()
+local o = System.Nullable.clone(dt)
+print(System.Nullable.GetHashCode(dt), o:GetHashCode())

@@ -161,9 +161,6 @@ Delegate = System.define("System.Delegate", {
   DynamicInvoke = function (this, ...)
     return this(...)
   end,
-  GetHashCode = function (this)
-    return System.addr(this, 11)
-  end,
   GetType = function ()
     return System.typeof(Delegate)
   end,

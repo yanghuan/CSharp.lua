@@ -1178,10 +1178,39 @@ else
   end
 end
 
+local function hash(v)
+  if v == nil then return 0 end
+  local t = type(v)
+  if t == "number" then
+    if v % 1 == 0 and v >= -2147483648 and v <= 2147483647 then
+      return v
+    end
+    local s = tostring(v)
+    return s:GetHashCode()
+ elseif t == "string" then
+    local c = 0
+    for i = 1, #v do
+      local b = v:byte(i)
+      c = 31 * c + b
+      c = System.toInt32(c)
+    end
+    return c
+  elseif t == "boolean" then
+    return v and 1 or 0
+  elseif t == "function" then
+    return addr(v, 11)
+  end
+  return addr(v)
+end
+
+System.hasHash = function (t)
+  return t.GetHashCode ~= hash
+end
+
 System.equalsObj = equalsObj
 System.compareObj = compareObj
+System.hash = hash
 System.toString = toString
-System.addr = addr
 
 Object = defCls("System.Object", {
   __call = new,
@@ -1190,16 +1219,12 @@ Object = defCls("System.Object", {
   class = "C",
   EqualsObj = equals,
   ReferenceEquals = rawequal,
-  GetHashCode = addr,
+  GetHashCode = hash,
   EqualsStatic = equalsObj,
   GetType = false,
   ToString = function(this) return this.__name__ end
 })
 setmetatable(Object, { __call = new })
-
-System.hasHash = function (T)
-  return T.GetHashCode ~= addr
-end
 
 ValueType = defCls("System.ValueType", {
   class = "S",
@@ -1245,7 +1270,12 @@ ValueType = defCls("System.ValueType", {
     return true
   end,
   GetHashCode = function (this)
-    throw(System.NotSupportedException(this.__name__ .. " User-defined struct not support GetHashCode"), 1)
+    local c = 17
+    for _, v in pairs(this) do
+      c = c * 31 + hash(v)
+      c = System.toInt32(c)
+    end
+    return c
   end
 })
 
@@ -1478,7 +1508,10 @@ local Nullable = {
     if this == nil then
       return 0
     end
-    return this:GetHashCode()
+    if type(this) == "table" then
+      return this:GetHashCode()
+    end
+    return hash(this)
   end,
   clone = function (t)
     if type(t) == "table" then

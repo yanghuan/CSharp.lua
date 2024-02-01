@@ -143,10 +143,10 @@ local function selectMany(source, collectionSelector, resultSelector, T)
   if source == nil then throw(ArgumentNullException("source")) end
   if collectionSelector == nil then throw(ArgumentNullException("collectionSelector")) end
   if resultSelector == nil then throw(ArgumentNullException("resultSelector")) end
-  return createEnumerable(T, function() 
+  return createEnumerable(T, function()
     local element, midEn
     local index = -1
-    return createEnumerator(T, source, function(en) 
+    return createEnumerator(T, source, function(en)
       while true do
         if midEn and midEn:MoveNext() then
           return true, resultSelector(element, midEn:getCurrent())
@@ -159,7 +159,7 @@ local function selectMany(source, collectionSelector, resultSelector, T)
             throw(NullReferenceException())
           end
           element = current
-        end  
+        end
       end
     end)
   end)
@@ -223,7 +223,7 @@ function Enumerable.Skip(source, count)
       while count > 0 and en:MoveNext() do count = count - 1 end
       if count <= 0 then
         if en:MoveNext() then
-          return true, en:getCurrent() 
+          return true, en:getCurrent()
         end
       end
       return false
@@ -246,8 +246,8 @@ function Enumerable.SkipWhile(source, predicate)
           if not predicate(current, index) then
             isSkipEnd = true
             return true, current
-          end     
-        else 
+          end
+        else
           return false
         end
       end
@@ -261,7 +261,7 @@ end
 
 local IGrouping = System.defInf("System.Linq.IGrouping_2", function (TKey, TElement)
   return {
-    base = { IEnumerable_1(TElement) } 
+    base = { IEnumerable_1(TElement) }
   }
 end)
 
@@ -293,7 +293,7 @@ local Lookup = {
   end,
   get = function (this, key)
     local grouping = getGrouping(this, key)
-    if grouping ~= nil then return grouping end 
+    if grouping ~= nil then return grouping end
     return Empty(this.__genericTElement__)
   end,
   GetCount = function (this)

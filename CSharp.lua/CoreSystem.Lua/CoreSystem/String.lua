@@ -452,15 +452,6 @@ local CharEnumerator = System.define("System.CharEnumerator", {
   end
 })
 
-local function getHashCode(this)
-  local c = 0
-  for i = 1, #this do
-    local b = byte(this, i)
-    c = System.xor(c, System.band(b, 0x7FFFFFFF))
-  end
-  return c
-end
-
 local function getEnumerator(this)
   return setmetatable({ s = this, index = 1 }, CharEnumerator)
 end
@@ -760,7 +751,6 @@ string.Contains = contains
 string.CopyTo = copyTo
 string.EndsWith = endsWith
 string.EqualsObj = equalsObj
-string.GetHashCode = getHashCode
 string.GetEnumerator = getEnumerator
 string.GetTypeCode = getTypeCode
 string.IndexOf = indexOf

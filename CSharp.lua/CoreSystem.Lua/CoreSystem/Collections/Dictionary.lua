@@ -464,7 +464,7 @@ local ArrayDictionaryCollection = define("System.Collections.Generic.ArrayDictio
   Contains = function (this, v)
     if this.kind then
       return this.dict:ContainsValue(v)
-    end 
+    end
     return this.dict:ContainsKey(v)
   end,
   GetEnumerator = function (this)
@@ -534,7 +534,7 @@ local ArrayDictionary = (function ()
       if n == 0 then
       elseif n == 1 then
         local comparer = ...
-        if comparer == nil or type(comparer) == "number" then  
+        if comparer == nil or type(comparer) == "number" then
         else
           local equals = comparer.EqualsOf
           if equals == nil then
@@ -697,8 +697,8 @@ local ArrayDictionary = (function ()
   }
 end)()
 
-ArrayDictionaryFn = define("System.Collections.Generic.ArrayDictionary", function(TKey, TValue) 
-  return { 
+ArrayDictionaryFn = define("System.Collections.Generic.ArrayDictionary", function(TKey, TValue)
+  return {
     base = { System.IDictionary_2(TKey, TValue), System.IDictionary, System.IReadOnlyDictionary_2(TKey, TValue) },
     __genericT__ = KeyValuePairFn(TKey, TValue),
     __genericTKey__ = TKey,
@@ -715,19 +715,10 @@ function System.isDictLike(t)
 end
 
 local DictionaryFn = define("System.Collections.Generic.Dictionary", function(TKey, TValue)
-  local array
-  local c = TKey.class
-  if c == 'S'then
-    if type(TKey:default()) == "table" then
-      array = ArrayDictionary
-    end
-  elseif c == 'C' then
-    if hasHash(TKey) then
-      array = ArrayDictionary
-    end
-  end
-  local len
-  if not array then
+  local array, len
+  if hasHash(TKey) then
+    array = ArrayDictionary
+  else
     len = getCount
   end
   return {

@@ -19,7 +19,7 @@ local throw = System.throw
 local define = System.defStc
 local equals = System.equals
 local zeroFn = System.zeroFn
-local identityFn = System.identityFn
+local hash = System.hash
 local debugsetmetatable = System.debugsetmetatable
 
 local IComparable = System.IComparable
@@ -103,7 +103,7 @@ local Int = define("System.Int", {
   CompareTo = compareInt,
   Equals = equals,
   ToString = toString,
-  GetHashCode = identityFn,
+  GetHashCode = hash,
   CompareToObj = function (this, v)
     if v == nil then return 1 end
     if type(v) ~= "number" then
@@ -268,14 +268,6 @@ local function equalsObj(this, v)
   return equalsDouble(this, v)
 end
 
-local function getHashCode(v)
-  if v % 1 == 0 and v >= -2147483648 and v <= 2147483647 then
-    return v
-  end
-  local s = tostring(v)
-  return s:GetHashCode()
-end
-
 local Number = define("System.Number", {
   base = inherits,
   default = zeroFn,
@@ -287,7 +279,7 @@ local Number = define("System.Number", {
   NegativeInfinity = negInf,
   PositiveInfinity = posInf,
   EqualsObj = equalsObj,
-  GetHashCode = getHashCode,
+  GetHashCode = hash,
   CompareToObj = function (this, v)
     if v == nil then return 1 end
     if type(v) ~= "number" then
@@ -383,28 +375,10 @@ if not debugsetmetatable then
 
   function System.ObjectGetHashCode(this)
     if this == nil then throw(NullReferenceException()) end
-    local t = type(this)
-    if t == "number" then
-      return getHashCode(this)
-    elseif t == "boolean" then
-      return this and 1 or 0
-    elseif t == "function" then
-      return System.addr(this, 11)
+    if type(this) == "table" then
+      return this:GetHashCode()
     end
-    return this:GetHashCode()
-  end
-
-  System.Nullable.GetHashCode = function (this)
-    if this == nil then
-      return 0
-    end
-    local t = type(this)
-    if t == "number" then
-      return getHashCode(this)
-    elseif t == "boolean" then
-      return this and 1 or 0
-    end
-    return this:GetHashCode()
+    return hash(this)
   end
 
   function System.ObjectToString(this)

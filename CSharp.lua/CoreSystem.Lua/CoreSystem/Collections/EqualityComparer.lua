@@ -33,7 +33,7 @@ EqualityComparer = define("System.EqualityComparer", function (T)
       equals = Equals 
     else
       equals = function (x, y) 
-        return x:Equals(y) 
+        return x:Equals(y)
       end 
     end
   else
