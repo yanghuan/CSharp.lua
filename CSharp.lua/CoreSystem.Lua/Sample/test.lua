@@ -419,7 +419,3 @@ test(testIO, "IO")
 --test(testAsync, "Async")
 --test(testAsyncForeach, "testAsyncForeach")
 
-
-local dt = System.DateTime()
-local o = System.Nullable.clone(dt)
-print(System.Nullable.GetHashCode(dt), o:GetHashCode())

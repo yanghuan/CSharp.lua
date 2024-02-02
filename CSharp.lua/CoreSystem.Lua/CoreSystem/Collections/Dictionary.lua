@@ -545,7 +545,7 @@ local ArrayDictionary = (function ()
         end
       else
         local dictionary, comparer = ...
-        if type(dictionary) ~= "number" then 
+        if type(dictionary) ~= "number" then
            buildFromDictionary(this, dictionary)
         end
         Comparer = comparer
@@ -556,7 +556,7 @@ local ArrayDictionary = (function ()
     Add = function (this, ...)
       local k, v
       if select("#", ...) == 1 then
-        local pair = ... 
+        local pair = ...
         k, v = pair[1], pair[2]
       else
         k, v = ...
@@ -650,8 +650,8 @@ local ArrayDictionary = (function ()
       this:set(key, value)
       return true
     end,
-    TryGetValue = function (this, key)
-      if key == nil then throw(ArgumentNullException("key")) end
+    TryGetValue = function (this, key, hasNil)
+      if key == nil and not hasNil then throw(ArgumentNullException("key")) end
       local len = #this
       if len > 0 then
         local comparer = this.comparer

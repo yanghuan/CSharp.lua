@@ -279,17 +279,23 @@ local Grouping = define("System.Linq.Grouping", function (TKey, TElement)
   }
 end, nil, 2)
 
-local function getGrouping(this, key)
-  local hashCode = this.comparer:GetHashCodeOf(key)
-  local groupIndex = this.indexs[hashCode]
-  return this.groups[groupIndex]
+local function getGrouping(this, key, create)
+  local t = this.groups
+  local found, group = t:TryGetValue(key, true)
+  if found then return group end
+  if create then
+    group = setmetatable({ key = key }, Grouping(this.__genericTKey__, this.__genericTElement__))
+    t[#t + 1] = setmetatable({ key, group }, t.__genericT__)
+  end
+  return group
 end
 
 local Lookup = {
   __ctor__ = function (this, comparer)
-    this.comparer = comparer or EqualityComparer(this.__genericTKey__).getDefault()
-    this.groups = {}
-    this.indexs = {}
+    local TKey = this.__genericTKey__
+    comparer = comparer or EqualityComparer(TKey).getDefault()
+    local G = Grouping(TKey, this.__genericTElement__)
+    this.groups = System.Dictionary(TKey, G)(comparer)
   end,
   get = function (this, key)
     local grouping = getGrouping(this, key)
@@ -303,7 +309,7 @@ local Lookup = {
     return getGrouping(this, key) ~= nil
   end,
   GetEnumerator = function (this)
-    return arrayEnumerator(this.groups, IGrouping)
+    return this.groups:getValues():GetEnumerator()
   end
 }
 
@@ -316,18 +322,7 @@ local LookupFn = define("System.Linq.Lookup", function(TKey, TElement)
 end, Lookup, 2)
 
 local function addToLookup(this, key, value)
-  local hashCode = this.comparer:GetHashCodeOf(key)
-  local groupIndex = this.indexs[hashCode]
-  local group
-  if groupIndex == nil then
-	  groupIndex = #this.groups + 1
-	  this.indexs[hashCode] = groupIndex
-	  group = setmetatable({ key = key }, Grouping(this.__genericTKey__, this.__genericTElement__))
-	  this.groups[groupIndex] = group
-  else
-	  group = this.groups[groupIndex]
-	  assert(group)
-  end
+  local group = getGrouping(this, key, true)
   group[#group + 1] = wrap(value)
 end
 
@@ -400,15 +395,15 @@ local function ordered(source, compare)
   local orderedEnumerable = createEnumerable(T, function()
     local t = {}
     local index = 0
-    return createEnumerator(T, source, function() 
+    return createEnumerator(T, source, function()
       index = index + 1
       local v = t[index]
       if v ~= nil then
         return true, unWrap(v)
       end
       return false
-    end, 
-    function() 
+    end,
+    function()
       local count = 1
       if isDictLike(source) then
         for k, v in pairs(source) do
@@ -423,7 +418,7 @@ local function ordered(source, compare)
       end
       if count > 1 then
         tsort(t, function(x, y)
-          return compare(unWrap(x), unWrap(y)) < 0 
+          return compare(unWrap(x), unWrap(y)) < 0
         end)
       end
     end)
@@ -436,9 +431,9 @@ end
 local function orderBy(source, keySelector, comparer, TKey, descending)
   if source == nil then throw(ArgumentNullException("source")) end
   if keySelector == nil then throw(ArgumentNullException("keySelector")) end
-  if comparer == nil then comparer = Comparer_1(TKey).getDefault() end 
+  if comparer == nil then comparer = Comparer_1(TKey).getDefault() end
   local keys = {}
-  local function getKey(t) 
+  local function getKey(t)
     local k = keys[t]
     if k == nil then
       k = keySelector(t)
@@ -487,7 +482,7 @@ local function thenBy(source, keySelector, comparer, TKey, descending)
   if keySelector == nil then throw(ArgumentNullException("keySelector")) end
   if comparer == nil then comparer = Comparer_1(TKey).getDefault() end
   local keys = {}
-  local function getKey(t) 
+  local function getKey(t)
     local k = keys[t]
     if k == nil then
       k = keySelector(t)

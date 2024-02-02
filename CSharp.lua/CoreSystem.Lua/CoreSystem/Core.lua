@@ -1203,6 +1203,15 @@ local function hash(v)
   return addr(v)
 end
 
+local function hashObj(obj)
+  if obj == nil then return 0 end
+  local t = type(obj)
+  if t == "table" then
+    return obj:GetHashCode()
+  end
+  return hash(obj)
+end
+
 System.hasHash = function (t)
   return t.GetHashCode ~= hash
 end
@@ -1210,6 +1219,7 @@ end
 System.equalsObj = equalsObj
 System.compareObj = compareObj
 System.hash = hash
+System.hashObj = hashObj
 System.toString = toString
 
 Object = defCls("System.Object", {
@@ -1261,6 +1271,7 @@ ValueType = defCls("System.ValueType", {
     end
   end,
   EqualsObj = function (this, obj)
+    if this == obj then return true end
     if getmetatable(this) ~= getmetatable(obj) then return false end
     for k, v in pairs(this) do
       if not equalsObj(v, obj[k]) then
