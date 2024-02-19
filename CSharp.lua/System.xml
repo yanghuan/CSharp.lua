@@ -337,14 +337,22 @@ limitations under the License.
         </property>
       </class>
       <class name="ValueTuple">
-        <method name="Create" ArgCount="2" Template="System.ValueTuple({0}, {1})" />
-        <method name="Create" ArgCount="3" Template="System.ValueTuple({0}, {1}, {2})" />
-        <method name="Create" ArgCount="4" Template="System.ValueTuple({0}, {1}, {2}, {3})" />
-        <method name="Create" ArgCount="5" Template="System.ValueTuple({0}, {1}, {2}, {3}, {4})" />
-        <method name="Create" ArgCount="6" Template="System.ValueTuple({0}, {1}, {2}, {3}, {4}, {5})" />
-        <method name="Create" ArgCount="7" Template="System.ValueTuple({0}, {1}, {2}, {3}, {4}, {5}, {6})" />
-        <method name="Create" ArgCount="8" Template="System.ValueTuple({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})" />
+        <method name="Create" ArgCount="2" Template="System.ValueTuple({`0}, {`1})({0}, {1})" />
+        <method name="Create" ArgCount="3" Template="System.ValueTuple({`0}, {`1}, {`2})({0}, {1}, {2})" />
+        <method name="Create" ArgCount="4" Template="System.ValueTuple({`0}, {`1}, {`2}, {`3})({0}, {1}, {2}, {3})" />
+        <method name="Create" ArgCount="5" Template="System.ValueTuple({`0}, {`1}, {`2}, {`3}, {`4})({0}, {1}, {2}, {3}, {4})" />
+        <method name="Create" ArgCount="6" Template="System.ValueTuple({`0}, {`1}, {`2}, {`3}, {`4}, {`5})({0}, {1}, {2}, {3}, {4}, {5})" />
+        <method name="Create" ArgCount="7" Template="System.ValueTuple({`0}, {`1}, {`2}, {`3}, {`4}, {`5}, {`6})({0}, {1}, {2}, {3}, {4}, {5}, {6})" />
+        <method name="Create" ArgCount="8" Template="System.ValueTuple({`0}, {`1}, {`2}, {`3}, {`4}, {`5}, {`6}, {`7})({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})" />
       </class>
+	  <class name="ValueTuple`1" Name="System.ValueTuple" />
+      <class name="ValueTuple`2" Name="System.ValueTuple" />
+      <class name="ValueTuple`3" Name="System.ValueTuple" />
+      <class name="ValueTuple`4" Name="System.ValueTuple" />
+      <class name="ValueTuple`5" Name="System.ValueTuple" />
+      <class name="ValueTuple`6" Name="System.ValueTuple" />
+      <class name="ValueTuple`7" Name="System.ValueTuple" />
+      <class name="ValueTuple`8" Name="System.ValueTuple" />
       <class name="Span`1" Name="System.Span">
         <method name=".ctor" Template="{0}" />
         <method name="op_Implicit" ArgCount="1" Name="ctorArray" />

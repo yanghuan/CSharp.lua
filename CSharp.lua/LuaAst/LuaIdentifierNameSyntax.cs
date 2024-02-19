@@ -35,14 +35,12 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax Each = "System.each";
     public static readonly LuaIdentifierNameSyntax Object = "System.Object";
     public static readonly LuaIdentifierNameSyntax Array = "System.Array";
-    public static readonly LuaIdentifierNameSyntax MultiArray = "System.MultiArray";
     public static readonly LuaIdentifierNameSyntax EmptyArray = "System.Array.Empty";
     public static readonly LuaIdentifierNameSyntax Apply = "System.apply";
     public static readonly LuaIdentifierNameSyntax StaticCtor = "static";
     public static readonly LuaIdentifierNameSyntax Init = "internal";
     public static readonly LuaIdentifierNameSyntax Ctor = "__ctor__";
     public static readonly LuaIdentifierNameSyntax Inherits = "base";
-    public static readonly LuaIdentifierNameSyntax Default = "default";
     public static readonly LuaIdentifierNameSyntax SystemDefault = "System.default";
     public static readonly LuaIdentifierNameSyntax Property = "System.property";
     public static readonly LuaIdentifierNameSyntax Event = "System.event";
@@ -88,7 +86,6 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax NullableClone = "System.Nullable.clone";
     public static readonly LuaIdentifierNameSyntax CopyThis = "__copy__";
     public static readonly LuaIdentifierNameSyntax RecordMembers = "__members__";
-    public static readonly LuaIdentifierNameSyntax ValueType = "System.ValueType";
     public static readonly LuaIdentifierNameSyntax DateTime = "System.DateTime";
     public static readonly LuaIdentifierNameSyntax TimeSpan = "System.TimeSpan";
     public static readonly LuaIdentifierNameSyntax AnonymousType = "System.AnonymousType";
@@ -99,11 +96,9 @@ namespace CSharpLua.LuaAst {
     public static readonly LuaIdentifierNameSyntax Base = "base";
     public static readonly LuaIdentifierNameSyntax SystemBase = "System.base";
     public static readonly LuaIdentifierNameSyntax Tuple = "System.Tuple";
-    public static readonly LuaIdentifierNameSyntax ValueTuple = "System.ValueTuple";
     public static readonly LuaIdentifierNameSyntax RecordType = "System.RecordType";
     public static readonly LuaIdentifierNameSyntax RecordValueType = "System.RecordValueType";
     public static readonly LuaIdentifierNameSyntax Deconstruct = "Deconstruct";
-    public static readonly LuaIdentifierNameSyntax KeyValuePair = "System.KeyValuePair";
     public static readonly LuaIdentifierNameSyntax NullableType = "System.Nullable";
     public static readonly LuaIdentifierNameSyntax Range = "System.Range";
     public static readonly LuaIdentifierNameSyntax Index = "System.Index";

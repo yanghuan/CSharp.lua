@@ -1913,7 +1913,7 @@ namespace CSharpLua {
 
     private LuaExpressionSyntax GetValueTupleDefaultExpression(ITypeSymbol typeSymbol) {
       var elementTypes = typeSymbol.GetTupleElementTypes();
-      return BuildValueTupleCreateExpression(elementTypes.Select(GetDefaultValueExpression));
+      return BuildValueTupleCreateExpression(typeSymbol, elementTypes.Select(GetDefaultValueExpression));
     }
 
     private LuaExpressionSyntax GetDefaultValueExpression(ITypeSymbol typeSymbol) {

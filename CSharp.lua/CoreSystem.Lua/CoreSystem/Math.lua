@@ -104,7 +104,8 @@ local function scaleB(a, b)
 end
 
 local function sinCos(a)
-  return System.ValueTuple(math.sin(a), math.cos(a))
+  local Double = System.Double
+  return System.ValueTuple(Double, Double)(math.sin(a), math.cos(a))
 end
 
 local function bigMul(a, b)

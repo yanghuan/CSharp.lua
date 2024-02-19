@@ -21,10 +21,16 @@ local codeAnalysisTypes = {
   "Microsoft.CodeAnalysis.IPropertySymbol", 
   "Microsoft.CodeAnalysis.Optional_1",
   "Microsoft.CodeAnalysis.SyntaxList_1",
+  "Microsoft.CodeAnalysis.SyntaxNode",
   "Microsoft.CodeAnalysis.DocumentationProvider",
   
+  "Microsoft.CodeAnalysis.CSharp.CSharpCompilation",
+  "Microsoft.CodeAnalysis.CSharp.CSharpCommandLineArguments",
   "Microsoft.CodeAnalysis.CSharp.CSharpSyntaxWalker",
+  "Microsoft.CodeAnalysis.CSharp.Syntax.BlockSyntax",
   "Microsoft.CodeAnalysis.CSharp.Syntax.BaseTypeSyntax",
+  "Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax",
+  "Microsoft.CodeAnalysis.CSharp.Syntax.NameColonSyntax",
   "Microsoft.CodeAnalysis.CSharp.Syntax.ParameterSyntax",
   "Microsoft.CodeAnalysis.CSharp.Syntax.AttributeListSyntax",
 }

@@ -138,7 +138,8 @@ end
 local function multiKey(t, f, ...)
   local n, i, k = select("#", ...), 1
   while true do
-    local arg = assert(select(i, ...))
+    local arg = select(i, ...)
+    if not arg then error(i .. " is nil") end
     if f then
       k = f(arg)
     else
@@ -1399,23 +1400,34 @@ local Tuple = defCls("System.Tuple", {
 local tupleMetaTable = setmetatable({ __index  = Object, __call = tupleCreate }, Object)
 setmetatable(Tuple, tupleMetaTable)
 
-local ValueTuple = defStc("System.ValueTuple", {
+local ValueTuple = {
   Deconstruct = tupleDeconstruct,
   ToString = tupleToString,
-  __eq = tupleEquals,
   Equals = tupleEquals,
   EqualsObj = tupleEqualsObj,
   CompareTo = tupleCompareTo,
   CompareToObj = tupleCompareToObj,
   getLength = tupleLength,
   get = tupleGet,
-  default = function ()
-    throw(System.NotSupportedException("not support default(T) when T is ValueTuple"))
+  default = function (T)
+    local genericT = T.__genericT__
+    local t, n = {}, #genericT
+    for i = 1, n do
+      t[i] = genericT[i]:default()
+    end
+    t.n = n
+    return setmetatable(t, T)
   end
-})
+}
 
-local valueTupleMetaTable = setmetatable({ __index  = ValueType, __call = tupleCreate }, ValueType)
-setmetatable(ValueTuple, valueTupleMetaTable)
+local ValueTupleFn = defStc("System.ValueTuple", function (...)
+  return {
+    __eq = tupleEquals,
+    __genericT__ = { ... },
+  }
+end, ValueTuple, '')
+ValueTuple.__call = tupleCreate
+System.ValueTuple = ValueTupleFn
 
 local function recordEquals(t, other)
   if getmetatable(t) == getmetatable(other) then

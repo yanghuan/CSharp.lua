@@ -2023,11 +2023,7 @@ namespace CSharpLua {
       if (namedTypeSymbol.IsAnonymousType) {
         return LuaIdentifierNameSyntax.AnonymousType;
       }
-
-      if (namedTypeSymbol.IsTupleType) {
-        return LuaIdentifierNameSyntax.ValueTuple;
-      }
-
+      
       if (namedTypeSymbol.IsSystemTuple()) {
         return LuaIdentifierNameSyntax.Tuple;
       }

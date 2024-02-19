@@ -93,14 +93,6 @@ namespace CSharpLua {
           Contract.Assert(node.ArgumentList!.Arguments.Count == 1);
           var argument = node.ArgumentList.Arguments.First();
           return argument.Expression.Accept(this);
-        } else if (symbol.ContainingType.IsTupleType) {
-          var arguments = node.ArgumentList!.Arguments;
-          if (arguments.Count == 0) {
-            creationExpression = GetValueTupleDefaultExpression(symbol.ContainingType);
-          } else {
-            var expressions = arguments.Select(i => i.Expression.AcceptExpression(this));
-            creationExpression = BuildValueTupleCreateExpression(expressions);
-          }
         } else {
           creationExpression = GetObjectCreationExpression(symbol, node);
         }
@@ -1516,11 +1508,13 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitTupleType(TupleTypeSyntax node) {
-      return LuaIdentifierNameSyntax.ValueTuple;
+      var typeSymbol = semanticModel_.GetTypeInfo(node).Type;
+      return GetTypeName(typeSymbol);
     }
 
-    private LuaExpressionSyntax BuildValueTupleCreateExpression(IEnumerable<LuaExpressionSyntax> expressions) {
-      return LuaIdentifierNameSyntax.ValueTuple.Invocation(expressions);
+    private LuaExpressionSyntax BuildValueTupleCreateExpression(ITypeSymbol typeSymbol, IEnumerable<LuaExpressionSyntax> expressions) {
+      var typeName = GetTypeName(typeSymbol);
+      return typeName.Invocation(expressions);
     }
 
     public override LuaSyntaxNode VisitTupleExpression(TupleExpressionSyntax node) {
@@ -1558,7 +1552,9 @@ namespace CSharpLua {
           return new LuaLocalTupleVariableExpression(expressions.Cast<LuaIdentifierNameSyntax>());
         }
       }
-      return BuildValueTupleCreateExpression(expressions);
+      
+      var typeSymbol = semanticModel_.GetTypeInfo(node).Type;
+      return BuildValueTupleCreateExpression(typeSymbol, expressions);
     }
 
     public override LuaSyntaxNode VisitParenthesizedVariableDesignation(ParenthesizedVariableDesignationSyntax node) {
