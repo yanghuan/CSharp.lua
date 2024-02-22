@@ -675,7 +675,7 @@ function Enumerable.Union(first, second, comparer)
         while en:MoveNext() do
           local current = en:getCurrent()
           if addToSet(set, current, getHashCode, comparer) then
-            return true, current  
+            return true, current
           end
         end
         secondEn = second:GetEnumerator()
@@ -683,7 +683,7 @@ function Enumerable.Union(first, second, comparer)
       while secondEn:MoveNext() do
         local current = secondEn:getCurrent()
         if addToSet(set, current, getHashCode, comparer) then
-          return true, current  
+          return true, current
         end
       end
       return false
@@ -724,11 +724,11 @@ function Enumerable.Except(first, second, comparer)
     local set = {}
     comparer = getComparer(first, comparer)
     local getHashCode = comparer.GetHashCodeOf
-    return createEnumerator(T, first, function(en) 
+    return createEnumerator(T, first, function(en)
       while en:MoveNext() do
         local current = en:getCurrent()
         if addToSet(set, current, getHashCode, comparer) then
-          return true, current  
+          return true, current
         end
       end
       return false
@@ -745,9 +745,9 @@ function Enumerable.Reverse(source)
   if source == nil then throw(ArgumentNullException("source")) end
   local T = source.__genericT__
   return createEnumerable(T, function()
-    local t = {}    
+    local t = {}
     local index
-    return createEnumerator(T, nil, function() 
+    return createEnumerator(T, nil, function()
       if index > 1 then
         index = index - 1
         return true, t[index]
@@ -759,7 +759,7 @@ function Enumerable.Reverse(source)
       for _, v in each(source) do
         t[count] = v
         count = count + 1
-      end  
+      end
       index = count
     end)
   end)

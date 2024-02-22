@@ -123,7 +123,7 @@ local function isKeyValuePair(t)
 end
 
 local DictionaryEnumerator = define("System.Collections.Generic.DictionaryEnumerator", {
-  getCurrent = System.getCurrent, 
+  getCurrent = System.getCurrent,
   Dispose = System.emptyFn,
   MoveNext = function (this)
     local t, kind = this.dict, this.kind
@@ -282,7 +282,7 @@ local Dictionary = {
     add(this, k ,v)
   end,
   Clear = function (this)
-    for k, v in pairs(this) do
+    for k, _ in pairs(this) do
       this[k] = nil
     end
     counts[this] = nil
@@ -413,7 +413,7 @@ local ArrayDictionaryEnumerator = define("System.Collections.Generic.ArrayDictio
     base = { System.IEnumerator_1(T) }
   }
 end, {
-  getCurrent = System.getCurrent, 
+  getCurrent = System.getCurrent,
   Dispose = System.emptyFn,
   MoveNext = function (this)
     local t = this.list
