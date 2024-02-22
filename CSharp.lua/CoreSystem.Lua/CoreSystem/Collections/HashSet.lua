@@ -17,30 +17,15 @@ limitations under the License.
 local System = System
 local throw = System.throw
 local each = System.each
-local Dictionary = System.Dictionary
 local wrap = System.wrap
 local unWrap = System.unWrap
-local getEnumerator = Dictionary.GetEnumerator 
 local ArgumentNullException = System.ArgumentNullException
 
-local assert = assert
-local pairs = pairs
 local select = select
-
-local counts = System.counts
-
-local function build(this, collection, comparer)
-  if comparer ~= nil then
-    assert(false)
-  end
-  if collection == nil then
-    throw(ArgumentNullException("collection"))
-  end
-  this:UnionWith(collection)
-end
+local setmetatable = setmetatable
 
 local function checkUniqueAndUnfoundElements(this, other, returnIfUnfound)
-  if #this == 0 then
+  if this:getCount() == 0 then
     local numElementsInOther = 0
     for _, item in each(other) do
       numElementsInOther = numElementsInOther + 1
@@ -48,12 +33,11 @@ local function checkUniqueAndUnfoundElements(this, other, returnIfUnfound)
     end
     return 0, numElementsInOther
   end
-  local set, uniqueCount, unfoundCount = {}, 0, 0
+  local set, uniqueCount, unfoundCount = this:newSet(), 0, 0
   for _, item in each(other) do
-    item = wrap(item)
-    if this[item] ~= nil then
-      if set[item] == nil then
-        set[item] = true
+    if this:Contains(item) then
+      if not set:Contains(item) then
+        set:Add(item)
         uniqueCount = uniqueCount + 1
       end
     else
@@ -66,103 +50,92 @@ local function checkUniqueAndUnfoundElements(this, other, returnIfUnfound)
   return uniqueCount, unfoundCount
 end
 
-local HashSet = {
-  __ctor__ = function (this, ...)
-    local len = select("#", ...)
-    if len == 0 then
-    elseif len == 1 then
-      local collection = ...
-      if collection == nil then return end
-      if collection.GetEnumerator ~= nil then
-        build(this, collection, nil)
-      else
-        assert(true)
-      end
-    else 
-      build(this, ...)
-    end
-  end,
-  Clear = Dictionary.Clear,
-  getCount = Dictionary.getCount,
-  getIsReadOnly = System.falseFn,
-  Contains = function (this, item)
-    item = wrap(item)
-    return this[item] ~= nil
-  end,
-  Remove = function (this, item)
-    item = wrap(item)
-    if this[item] then
-      this[item] = nil
-      local t = counts[this]
-      t[1] = t[1] - 1
-      t[2] = t[2] + 1
+local HashSetEnumerator = System.define("System.Collections.Generic.HashSetEnumerator", function (T)
+  return {
+    __genericT__ = T,
+    base = { System.IEnumerator_1(T) }
+  }
+end, {
+  getCurrent = System.getCurrent,
+  Dispose = System.emptyFn,
+  MoveNext = function (this)
+    if this.en:MoveNext() then
+      local pair = this.en.current
+      this.current = unWrap(pair[1])
       return true
     end
+    this.current = this.__genericT__:default()
     return false
+  end
+}, 1)
+
+local HashSet = {
+  __ctor__ = function (this, ...)
+    local n = select("#", ...)
+    local collection, comparer
+    if n == 1 then
+      local c = ...
+      if type(c) == "table" then
+        if c.GetEnumerator then
+          collection = c
+        end
+          comparer = c
+      end
+    elseif n == 2 then
+      collection, comparer = ...
+    end
+    this.dict = System.Dictionary(this.__genericT__, System.Boolean)(comparer)
+    if collection then
+      this:UnionWith(collection)
+    end
+  end,
+  newSet = function (this)
+    return System.HashSet(this.__genericT__)(this.dict.comparer)
+  end,
+  Clear = function (this)
+    this.dict:Clear()
+  end,
+  getCount = function (this)
+    return this.dict:getCount()
+  end,
+  getIsReadOnly = System.falseFn,
+  Contains = function (this, v)
+    v = wrap(v)
+    return this.dict:ContainsKey(v)
+  end,
+  Remove = function (this, v)
+    v = wrap(v)
+    return this.dict:RemoveKey(v)
   end,
   GetEnumerator = function (this)
-    return getEnumerator(this, 1)
+    return setmetatable({ en = this.dict:GetEnumerator() }, HashSetEnumerator(this.__genericT__))
   end,
   Add = function (this, v)
     v = wrap(v)
-    if this[v] == nil then
-      this[v] = true
-      local t = counts[this]
-      if t then
-        t[1] = t[1] + 1
-        t[2] = t[2] + 1
-      else
-        counts[this] = { 1, 1 }
-      end
-      return true
-    end
-    return false
+    return this.dict:TryAdd(v, true)
   end,
   UnionWith = function (this, other)
     if other == nil then
       throw(ArgumentNullException("other"))
     end
-    local count = 0
     for _, v in each(other) do
-      v = wrap(v)
-      if this[v] == nil then
-        this[v] = true
-        count = count + 1
-      end
-    end
-    if count > 0 then
-      local t = counts[this]
-      if t then
-        t[1] = t[1] + count
-        t[2] = t[2] + 1
-      else
-        counts[this] = { count, 1 }  
-      end
+      this:Add(v)
     end
   end,
   IntersectWith = function (this, other)
     if other == nil then
       throw(ArgumentNullException("other"))
     end
-    local set = {}
+    if this == other or this:getCount() == 0 then
+      return
+    end
+    local set = this:newSet()
     for _, v in each(other) do
-      v = wrap(v)
-      if this[v] ~= nil then
-        set[v] = true
+      if this:Contains(v) then
+        set:Add(v)
       end
     end
-    local count = 0
-    for v, _ in pairs(this) do
-      if set[v] == nil then
-        this[v] = nil
-        count = count + 1
-      end
-    end
-    if count > 0 then
-      local t = counts[this]
-      t[1] = t[1] - count
-      t[2] = t[2] + 1
-    end
+    this.dict = set.dict
   end,
   ExceptWith = function (this, other)
     if other == nil then
@@ -172,49 +145,25 @@ local HashSet = {
       this:Clear()
       return
     end
-    local count = 0
     for _, v in each(other) do
-      v = wrap(v)
-      if this[v] ~= nil then
-        this[v] = nil
-        count = count + 1
-      end
-    end
-    if count > 0 then
-      local t = counts[this]
-      t[1] = t[1] - count
-      t[2] = t[2] + 1
+      this:Remove(v)
     end
   end,
   SymmetricExceptWith = function (this, other)
     if other == nil then throw(ArgumentNullException("other")) end
+    if this:getCount() == 0 then
+      this:UnionWith(other)
+      return
+    end
     if other == this then
       this:Clear()
       return
     end
-    local set = {}
-    local count = 0
-    local changed = false
     for _, v in each(other) do
-      v = wrap(v)
-      if this[v] == nil then
-        this[v] = true
-        count = count + 1
-        changed = true
-        set[v] = true
-      elseif set[v] == nil then 
-        this[v] = nil
-        count = count - 1
-        changed = true
-      end
-    end
-    if changed then
-      local t = counts[this]
-      if t then
-        t[1] = t[1] + count
-        t[2] = t[2] + 1
+      if this:Contains(v) then
+        this:Remove(v)
       else
-        counts[this] = { count, 1 }
+        this:Add(v)
       end
     end
   end,
@@ -222,7 +171,7 @@ local HashSet = {
     if other == nil then
       throw(ArgumentNullException("other"))
     end
-    local count = #this
+    local count = this:getCount()
     if count == 0 then
       return true
     end
@@ -241,8 +190,7 @@ local HashSet = {
       throw(ArgumentNullException("other"))
     end
     for _, element in each(other) do
-      element = wrap(element)
-      if this[element] == nil then
+      if not this:Contains(element) then
         return false
       end
     end
@@ -252,7 +200,7 @@ local HashSet = {
     if other == nil then
       throw(ArgumentNullException("other"))
     end
-    local count = #this
+    local count = this:getCount()
     if count == 0 then
       return false
     end
@@ -263,12 +211,11 @@ local HashSet = {
     if other == nil then
       throw(ArgumentNullException("other"))
     end
-    if #this == 0 then
+    if this:getCount() == 0 then
       return false
     end
     for _, element in each(other) do
-      element = wrap(element)
-      if this[element] ~= nil then
+      if this:Contains(element) then
         return true
       end
     end
@@ -285,19 +232,9 @@ local HashSet = {
     if match == nil then
       throw(ArgumentNullException("match"))
     end
-    local numRemoved = 0
-    for v, _ in pairs(this) do
-      if match(unWrap(v)) then
-        this[v] = nil
-        numRemoved = numRemoved + 1
-      end
-    end
-    if numRemoved > 0 then
-      local t = counts[this]
-      t[1] = t[1] - numRemoved
-      t[2] = t[2] + 1
-    end
-    return numRemoved
+    return this.dict:removeWhere(function (k, v)
+      return match(unWrap(k))
+    end)
   end,
   TrimExcess = System.emptyFn
 }
@@ -306,11 +243,10 @@ function System.hashSetFromTable(t, T)
   return setmetatable(t, HashSet(T))
 end
 
-System.HashSet = System.define("System.Collections.Generic.HashSet", function(T) 
-  return { 
-    base = { System.ICollection_1(T), System.ISet_1(T) }, 
+System.HashSet = System.define("System.Collections.Generic.HashSet", function(T)
+  return {
+    base = { System.ICollection_1(T), System.ISet_1(T) },
     __genericT__ = T,
     __genericTKey__ = T,
-    __len = HashSet.getCount
   }
 end, HashSet, 1)

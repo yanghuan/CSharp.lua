@@ -280,22 +280,24 @@ local Grouping = define("System.Linq.Grouping", function (TKey, TElement)
 end, nil, 2)
 
 local function getGrouping(this, key, create)
-  local t = this.groups
-  local found, group = t:TryGetValue(key, true)
-  if found then return group end
-  if create then
-    group = setmetatable({ key = key }, Grouping(this.__genericTKey__, this.__genericTElement__))
-    t[#t + 1] = setmetatable({ key, group }, t.__genericT__)
+  local comparer = this.comparer
+  for i = 1, #this do
+    local group = this[i]
+    if comparer:EqualsOf(group.key, key) then
+      return group
+    end
   end
-  return group
+  if create then
+    local group = setmetatable({ key = key }, this.__genericT__)
+    this[#this + 1] = group
+    return group
+  end
+  return nil
 end
 
 local Lookup = {
   __ctor__ = function (this, comparer)
-    local TKey = this.__genericTKey__
-    comparer = comparer or EqualityComparer(TKey).getDefault()
-    local G = Grouping(TKey, this.__genericTElement__)
-    this.groups = System.Dictionary(TKey, G)(comparer)
+    this.comparer = comparer or EqualityComparer(this.__genericTKey__).getDefault()
   end,
   get = function (this, key)
     local grouping = getGrouping(this, key)
@@ -303,20 +305,19 @@ local Lookup = {
     return Empty(this.__genericTElement__)
   end,
   GetCount = function (this)
-    return #this.groups
+    return #this
   end,
   Contains = function (this, key)
     return getGrouping(this, key) ~= nil
   end,
-  GetEnumerator = function (this)
-    return this.groups:getValues():GetEnumerator()
-  end
+  GetEnumerator = Array.GetEnumerator,
 }
 
 local LookupFn = define("System.Linq.Lookup", function(TKey, TElement)
   local cls = {
     __genericTKey__ = TKey,
     __genericTElement__ = TElement,
+    __genericT__ = Grouping(TKey, TElement),
   }
   return cls
 end, Lookup, 2)
@@ -613,7 +614,7 @@ function Enumerable.Zip(first, second, resultSelector, TResult)
       if e1:MoveNext() and e2:MoveNext() then
           return true, resultSelector(e1:getCurrent(), e2:getCurrent())
       end
-    end, 
+    end,
     function()
       e2 = second:GetEnumerator()
     end)
@@ -653,7 +654,7 @@ function Enumerable.Distinct(source, comparer)
       while en:MoveNext() do
         local current = en:getCurrent()
         if addToSet(set, current, getHashCode, comparer) then
-          return true, current  
+          return true, current
         end
       end
       return false
@@ -1185,7 +1186,7 @@ function Enumerable.Aggregate(source, ...)
       result = func(result, element)
     end
     return result
-  else 
+  else
     local seed, func, resultSelector = ...
     if func == nil then throw(ArgumentNullException("func")) end
     if resultSelector == nil then throw(ArgumentNullException("resultSelector")) end
