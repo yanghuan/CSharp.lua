@@ -79,8 +79,8 @@ local function xpcallErr(e)
   return e
 end
 
-local function try(try, catch, finally)
-  local ok, status, result = xpcall(try, xpcallErr)
+local function try(tryFn, catch, finally)
+  local ok, status, result = xpcall(tryFn, xpcallErr)
   if not ok then
     if catch then
       if finally then

@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --]]
 
-local System = System
+local System = _G.System
 local define = System.define
 local Object = System.Object
-local toString = System.toString
+local toStr = System.toString
 
 local tconcat = table.concat
 local type = type
@@ -48,11 +48,11 @@ local function getResource(t, k)
     if n == 0 then
       f = function () return s end
     elseif n == 1 then
-      f = function (x1) return s:format(toString(x1)) end
+      f = function (x1) return s:format(toStr(x1)) end
     elseif n == 2 then
-      f = function (x1, x2) return s:format(toString(x1), toString(x2)) end
+      f = function (x1, x2) return s:format(toStr(x1), toStr(x2)) end
     elseif n == 3 then
-      f = function (x1, x2, x3) return s:format(toString(x1), toString(x2), toString(x3)) end
+      f = function (x1, x2, x3) return s:format(toStr(x1), toStr(x2), toStr(x3)) end
     else
       assert(false)
     end
@@ -95,10 +95,10 @@ local Exception = define("System.Exception", {
   __ctor__ = ctorOfException,
   ToString = toString,
   getMessage = getMessage,
-  getInnerException = function(this) 
+  getInnerException = function(this)
     return this.innerException
   end,
-  getStackTrace = function(this) 
+  getStackTrace = function(this)
     return this.errorStack
   end,
   getData = function (this)
@@ -135,7 +135,7 @@ local ArgumentException = define("System.ArgumentException", {
       this.message = this.message .. " " .. resource.Arg_ParamName_Name:format(paramName)
     end
   end,
-  getParamName = function(this) 
+  getParamName = function(this)
     return this.paramName
   end
 })

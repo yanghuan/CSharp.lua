@@ -59,7 +59,7 @@ if coroutine ~= nil then
   cyield = coroutine.yield
 end
 
-local null = {}
+local null = { GetHashCode = System.zeroFn }
 local arrayEnumerator
 local arrayFromTable
 
@@ -527,9 +527,8 @@ end
 local function checkOrderUniqueAndUnfoundElements(t, n, comparer, other, returnIfUnfound)
   if n == 0 then
     local numElementsInOther = 0
-    for _, v in each(other) do
-      numElementsInOther = numElementsInOther + 1
-      break
+    if other:GetEnumerator():MoveNext() then
+      numElementsInOther = 1
     end
     return 0, numElementsInOther
   end
