@@ -514,7 +514,7 @@ DateTime = System.defStc("System.DateTime", {
   AddHours = function (this, hours)
     return add(this, hours, 3600000)
   end,
-  AddMinutes = function (this, minutes) 
+  AddMinutes = function (this, minutes)
     return add(this, minutes, 60000);
   end,
   AddSeconds = function (this, seconds)
@@ -527,7 +527,7 @@ DateTime = System.defStc("System.DateTime", {
   AddMonths = addMonths,
   AddYears = function (this, years)
     if years < - 10000 or years > 10000 then
-      throw(ArgumentOutOfRangeException("years")) 
+      throw(ArgumentOutOfRangeException("years"))
     end
     return addMonths(this, years * 12)
   end,
@@ -578,7 +578,7 @@ DateTime = System.defStc("System.DateTime", {
     return now():getDate()
   end,
   ToLocalTime = function (this)
-    if this.kind == 2 then 
+    if this.kind == 2 then
       return this
     end
     local ticks = this.ticks + timeZoneTicks + dstTicks
@@ -595,8 +595,8 @@ DateTime = System.defStc("System.DateTime", {
     return this.kind == 2 and dstTicks > 0
   end,
   ToString = function (this, format)
-    if format then 
-      return toStringWithFormat(this, format) 
+    if format then
+      return toStringWithFormat(this, format)
     end
     local year, month, day = getDatePart(this.ticks)
     return sformat("%d/%d/%d %02d:%02d:%02d", year, month, day, this:getHour(), this:getMinute(), this:getSecond())

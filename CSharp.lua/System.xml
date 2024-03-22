@@ -829,6 +829,22 @@ limitations under the License.
         <method name="op_Inequality" Template="{0} ~= {1}" />
         <method name="op_Implicit" Name="ToComplex" />
       </class>
+      <class name="Vector`1" Name="System.Numerics.Vector">
+        <property name="Count">
+          <get Template="{class}:Count()" />
+        </property>
+        <property name="One">
+          <get Template="{class}:One()" />
+        </property>
+        <property name="IsSupported">
+          <get Template="{class}:IsSupported()" />
+        </property>
+        <method name="op_Subtraction" Template="{0} - {1}" />
+        <method name="op_Multiply" Template="{0} * {1}" />
+        <method name="op_Division" Template="{0} / {1}" />
+        <method name="op_Equality" Template="{0} == {1}" />
+        <method name="op_Inequality" Template="{0} ~= {1}" />
+      </class>
     </namespace>
     <namespace name="System.Runtime.CompilerServices" Name="System" />
 </assembly>
