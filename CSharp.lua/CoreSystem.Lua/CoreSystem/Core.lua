@@ -1501,6 +1501,7 @@ end
 defCls("System.RecordType", {
   __eq = recordEquals,
   __clone__ = ValueType.__clone__,
+  GetHashCode = ValueType.GetHashCode,
   Equals = recordEquals,
   PrintMembers = recordPrintMembers,
   ToString = recordToString,
