@@ -1430,6 +1430,7 @@ ValueTuple.__call = tupleCreate
 System.ValueTuple = ValueTupleFn
 
 local function recordEquals(t, other)
+  if t == other then return true end
   if getmetatable(t) == getmetatable(other) then
     for k, v in pairs(t) do
       if not equalsObj(v, other[k]) then
@@ -1439,6 +1440,10 @@ local function recordEquals(t, other)
     return true
   end
   return false
+end
+
+local function recordNotEquals(t, other)
+  return not recordEquals(t, other)
 end
 
 local function recordPrintMembers(this, builder)
@@ -1501,6 +1506,8 @@ end
 defCls("System.RecordType", {
   __eq = recordEquals,
   __clone__ = ValueType.__clone__,
+  op_Equality = recordEquals,
+  op_Inequality = recordNotEquals,
   GetHashCode = ValueType.GetHashCode,
   Equals = recordEquals,
   PrintMembers = recordPrintMembers,
@@ -1510,6 +1517,8 @@ defCls("System.RecordType", {
 
 defStc("System.RecordValueType", {
   __eq = recordEquals,
+  op_Equality = recordEquals,
+  op_Inequality = recordNotEquals,
   Equals = recordEquals,
   PrintMembers = recordPrintMembers,
   ToString = recordToString,
