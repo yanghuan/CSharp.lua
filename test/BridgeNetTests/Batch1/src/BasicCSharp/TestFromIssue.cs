@@ -149,6 +149,17 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual(Context.Instance, 2);
         }
 
+        [Test]
+        public static void TestOf511() {
+            Assert.AreEqual(TestFlag.None.HasFlag(TestFlag.None), true);
+            Assert.AreEqual(TestFlag.None.HasFlag(TestFlag.A), false);
+            Assert.AreEqual(TestFlag.A.HasFlag(TestFlag.None), true);
+            Assert.AreEqual(TestFlag.A.HasFlag(TestFlag.A), true);
+            Assert.AreEqual(TestFlag.A.HasFlag(TestFlag.A | TestFlag.B), false);
+            Assert.AreEqual((TestFlag.A | TestFlag.B).HasFlag(TestFlag.A), true);
+            Assert.AreEqual((TestFlag.A | TestFlag.B).HasFlag(TestFlag.A | TestFlag.C), false);
+        }
+
         private class BattleModelSlotPrototype {
             public string a;
             public string b;
@@ -220,5 +231,14 @@ namespace Bridge.ClientTest.BasicCSharp
         {
             Instance = 1;
         }
+    }
+
+    [Flags]
+    public enum TestFlag
+    {
+        None = 0,
+        A = 1,
+        B = 2,
+        C = 4,
     }
 }

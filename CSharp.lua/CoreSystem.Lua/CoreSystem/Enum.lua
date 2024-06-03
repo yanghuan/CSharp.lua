@@ -44,7 +44,7 @@ local function hasFlag(this, flag)
   if this == flag then
     return true
   end
-  return band(this, flag) ~= 0
+  return band(this, flag) == flag
 end
 
 Number.EnumToString = toString
