@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace CSharpLua {
@@ -44,11 +45,12 @@ Options
 -inline-property: inline some single-line properties
 -include        : the root directory of the CoreSystem library, adds all the dependencies to a single file named out.lua
 -noconcurrent   : close concurrent compile
+@file           : read more options from the file
 ";
     public static void Main(string[] args) {
       if (args.Length > 0) {
         try {
-          var cmds = Utility.GetCommandLines(args);
+          var cmds = Utility.GetCommandLines(ExpandResponseFiles(args));
           if (cmds.ContainsKey("-h")) {
             ShowHelpInfo();
             return;
@@ -137,6 +139,26 @@ Options
         return string.Join(" ", remains);
       }
       return null;
+    }
+
+    private static string[] ExpandResponseFiles(string[] args) {
+      List<string> list = new List<string>();
+      foreach (string arg in args) {
+        if (arg.StartsWith("@")) {
+          string file = arg.Substring(1);
+          string[] lines = File.ReadAllLines(file);
+          foreach (string line in lines) {
+            string trimLine = line.Trim();
+            if (!string.IsNullOrEmpty(trimLine)) {
+              string[] parts = trimLine.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+              list.AddRange(parts);
+            }
+          }
+        } else {
+          list.Add(arg);
+        }
+      }
+      return list.ToArray();
     }
   }
 }

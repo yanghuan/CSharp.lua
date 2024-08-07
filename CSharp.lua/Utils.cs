@@ -1086,11 +1086,11 @@ namespace CSharpLua {
       INamedTypeSymbol typeSymbol,
       Func<INamespaceSymbol, string, string> funcOfNamespace,
       Func<INamedTypeSymbol, string> funcOfTypeName,
-      LuaSyntaxNodeTransform transfor = null) {
+      LuaSyntaxNodeTransform transform = null) {
       var externalType = typeSymbol.ContainingType;
       if (externalType != null) {
-        if (transfor is {IsNoneGenericTypeCounter: true} && !externalType.IsGenericType && !typeSymbol.IsGenericType) {
-          var curTypeDeclaration = transfor.CurTypeDeclaration;
+        if (transform?.IsNoneGenericTypeCounter == true && !externalType.IsGenericType && !typeSymbol.IsGenericType) {
+          var curTypeDeclaration = transform.CurTypeDeclaration;
           if (curTypeDeclaration != null && curTypeDeclaration.CheckTypeName(externalType, out var classIdentifier)) {
             sb.Append(classIdentifier.ValueText);
             sb.Append('.');
@@ -1116,9 +1116,9 @@ namespace CSharpLua {
       this INamedTypeSymbol typeSymbol,
       Func<INamespaceSymbol, string, string> funcOfNamespace = null,
       Func<INamedTypeSymbol, string> funcOfTypeName = null,
-      LuaSyntaxNodeTransform transfor = null) {
+      LuaSyntaxNodeTransform transform = null) {
       StringBuilder sb = new StringBuilder();
-      FillExternalTypeName(sb, typeSymbol, funcOfNamespace, funcOfTypeName, transfor);
+      FillExternalTypeName(sb, typeSymbol, funcOfNamespace, funcOfTypeName, transform);
       string typeName = funcOfTypeName?.Invoke(typeSymbol);
       if (typeName != null) {
         sb.Append(typeName);
