@@ -971,7 +971,7 @@ end
 local Attribute = System.Attribute
 
 function Attribute.GetCustomAttribute(element, attributeType, inherit)
-  return element:GetCustomAttributes(attributeType, inherit)
+  return element:GetCustomAttribute(attributeType, inherit)
 end
 
 function Attribute.GetCustomAttributes(element, attributeType, inherit)
@@ -1078,16 +1078,35 @@ define("System.Activator", {
 })
 
 define("System.Reflection.CustomAttributeExtensions", {
-  GetCustomAttribute = function (element, attributeType, inherit)
+  GetCustomAttributes = function (element, attributeType, inherit)
     if element == nil then throw(ArgumentNullException("element")) end
-    if attributeType == nil then throw(ArgumentNullException("attributeType")) end
     if type(attributeType) == "boolean" then
-      attributeType, inherit = inherit, attributeType
+      attributeType, inherit = nil, attributeType
+    elseif inherit == nil then
+      inherit = true
+    end
+    if attributeType == nil then
+      return element:GetCustomAttributes(inherit)
     end
     if getmetatable(attributeType) ~= Type then
       attributeType = typeof(attributeType)
     end
     return element:GetCustomAttributes(attributeType, inherit)
+  end,
+  GetCustomAttribute = function (element, attributeType, inherit)
+    if element == nil then throw(ArgumentNullException("element")) end
+    if attributeType == nil then throw(ArgumentNullException("attributeType")) end
+    if getmetatable(attributeType) ~= Type then
+      attributeType = typeof(attributeType)
+    end
+    local attributes = element:GetCustomAttributes(attributeType, inherit)
+    local size = #attributes
+    if size == 0 then
+      return nil
+    elseif size > 1 then
+      throw(AmbiguousMatchException())
+    end
+    return attributes:get(0)
   end,
   IsDefined = function (element, attributeType, inherit)
     if element == nil then throw(ArgumentNullException("element")) end
