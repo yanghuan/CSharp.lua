@@ -266,6 +266,25 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
+  end,
+  GetCustomAttribute = function (this, attributeType, inherit)
+    if attributeType == nil then throw(ArgumentNullException()) end
+    local t = {}
+    local metadata = this.metadata
+    if metadata then
+      local index = 4
+      if type(metadata[index]) == "string" then
+        index = 5
+      end
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
+    end
+    local size = #t
+    if size == 0 then
+      return nil
+    elseif size > 1 then
+      throw(AmbiguousMatchException())
+    end
+    return t[1]
   end
 })
 
@@ -400,7 +419,23 @@ local PropertyInfo = define("System.Reflection.PropertyInfo", {
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
-  end
+  end,
+  GetCustomAttribute = function (this, attributeType, inherit)
+    if attributeType == nil then throw(ArgumentNullException()) end
+    local t = {}
+    local metadata = this.metadata
+    if metadata then
+      local index = getPropertyAttributesIndex(metadata)
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
+    end
+    local size = #t
+    if size == 0 then
+      return nil
+    elseif size > 1 then
+      throw(AmbiguousMatchException())
+    end
+    return t[1]
+   end
 })
 
 local function hasPublicFlag(flags)
@@ -533,7 +568,23 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
-  end
+  end,
+  GetCustomAttribute = function (this, attributeType, inherit)
+    if attributeType == nil then throw(ArgumentNullException()) end
+    local t = {}
+    local metadata = this.metadata
+    if metadata then
+      local index = getMethodAttributesIndex(metadata)
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
+    end
+    local size = #t
+    if size == 0 then
+      return nil
+    elseif size > 1 then
+      throw(AmbiguousMatchException())
+    end
+    return t[1]
+   end
 })
 
 local function buildFieldInfo(cls, name, metadata)
@@ -1099,14 +1150,7 @@ define("System.Reflection.CustomAttributeExtensions", {
     if getmetatable(attributeType) ~= Type then
       attributeType = typeof(attributeType)
     end
-    local attributes = element:GetCustomAttributes(attributeType, inherit)
-    local size = #attributes
-    if size == 0 then
-      return nil
-    elseif size > 1 then
-      throw(AmbiguousMatchException())
-    end
-    return attributes:get(0)
+    return element:GetCustomAttribute(attributeType, inherit)
   end,
   IsDefined = function (element, attributeType, inherit)
     if element == nil then throw(ArgumentNullException("element")) end
