@@ -266,6 +266,25 @@ local FieldInfo = define("System.Reflection.FieldInfo", {
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
+  end,
+  GetCustomAttribute = function (this, attributeType, inherit)
+    if attributeType == nil then throw(ArgumentNullException()) end
+    local t = {}
+    local metadata = this.metadata
+    if metadata then
+      local index = 4
+      if type(metadata[index]) == "string" then
+        index = 5
+      end
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
+    end
+    local size = #t
+    if size == 0 then
+      return nil
+    elseif size > 1 then
+      throw(AmbiguousMatchException())
+    end
+    return t[1]
   end
 })
 
@@ -400,7 +419,23 @@ local PropertyInfo = define("System.Reflection.PropertyInfo", {
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
-  end
+  end,
+  GetCustomAttribute = function (this, attributeType, inherit)
+    if attributeType == nil then throw(ArgumentNullException()) end
+    local t = {}
+    local metadata = this.metadata
+    if metadata then
+      local index = getPropertyAttributesIndex(metadata)
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
+    end
+    local size = #t
+    if size == 0 then
+      return nil
+    elseif size > 1 then
+      throw(AmbiguousMatchException())
+    end
+    return t[1]
+   end
 })
 
 local function hasPublicFlag(flags)
@@ -533,7 +568,23 @@ local MethodInfo = define("System.Reflection.MethodInfo", {
       fillMetadataCustomAttributes(t, metadata, index, attributeType)
     end
     return arrayFromTable(t, System.Attribute)
-  end
+  end,
+  GetCustomAttribute = function (this, attributeType, inherit)
+    if attributeType == nil then throw(ArgumentNullException()) end
+    local t = {}
+    local metadata = this.metadata
+    if metadata then
+      local index = getMethodAttributesIndex(metadata)
+      fillMetadataCustomAttributes(t, metadata, index, attributeType)
+    end
+    local size = #t
+    if size == 0 then
+      return nil
+    elseif size > 1 then
+      throw(AmbiguousMatchException())
+    end
+    return t[1]
+   end
 })
 
 local function buildFieldInfo(cls, name, metadata)
@@ -971,7 +1022,7 @@ end
 local Attribute = System.Attribute
 
 function Attribute.GetCustomAttribute(element, attributeType, inherit)
-  return element:GetCustomAttributes(attributeType, inherit)
+  return element:GetCustomAttribute(attributeType, inherit)
 end
 
 function Attribute.GetCustomAttributes(element, attributeType, inherit)
@@ -1078,16 +1129,28 @@ define("System.Activator", {
 })
 
 define("System.Reflection.CustomAttributeExtensions", {
-  GetCustomAttribute = function (element, attributeType, inherit)
+  GetCustomAttributes = function (element, attributeType, inherit)
     if element == nil then throw(ArgumentNullException("element")) end
-    if attributeType == nil then throw(ArgumentNullException("attributeType")) end
     if type(attributeType) == "boolean" then
-      attributeType, inherit = inherit, attributeType
+      attributeType, inherit = nil, attributeType
+    elseif inherit == nil then
+      inherit = true
+    end
+    if attributeType == nil then
+      return element:GetCustomAttributes(inherit)
     end
     if getmetatable(attributeType) ~= Type then
       attributeType = typeof(attributeType)
     end
     return element:GetCustomAttributes(attributeType, inherit)
+  end,
+  GetCustomAttribute = function (element, attributeType, inherit)
+    if element == nil then throw(ArgumentNullException("element")) end
+    if attributeType == nil then throw(ArgumentNullException("attributeType")) end
+    if getmetatable(attributeType) ~= Type then
+      attributeType = typeof(attributeType)
+    end
+    return element:GetCustomAttribute(attributeType, inherit)
   end,
   IsDefined = function (element, attributeType, inherit)
     if element == nil then throw(ArgumentNullException("element")) end
