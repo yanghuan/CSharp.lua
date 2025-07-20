@@ -249,7 +249,8 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.False(result);
             Assert.AreEqual(0UL, numberResult);
 
-            result = ulong.TryParse(null, out numberResult);
+            string nullStr = null;
+            result = ulong.TryParse(nullStr, out numberResult);
             Assert.False(result);
             Assert.AreEqual(0UL, numberResult);
 

@@ -226,7 +226,8 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.False(result);
             Assert.AreEqual(0L, numberResult);
 
-            result = long.TryParse(null, out numberResult);
+            string nullStr = null;
+            result = long.TryParse(nullStr, out numberResult);
             Assert.False(result);
             Assert.AreEqual(0L, numberResult);
 

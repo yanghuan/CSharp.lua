@@ -164,7 +164,8 @@ namespace Bridge.ClientTest.SimpleTypes
             Assert.False(result);
             Assert.AreEqual(0, numberResult);
 
-            result = sbyte.TryParse(null, out numberResult);
+            string nullStr = null;
+            result = sbyte.TryParse(nullStr, out numberResult);
             Assert.False(result);
             Assert.AreEqual(0, numberResult);
 
