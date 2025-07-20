@@ -439,7 +439,7 @@ namespace CSharpLua {
         CurType.SetStaticCtor(function, document);
       } else {
         CurType.AddCtor(function, node.ParameterList.Parameters.Count == 0 || isCombineImplicitlyCtorMethod, document);
-        bool isExportMetadata = IsCurTypeExportMetadataAll || attributes.Count > 0 || symbol.HasMetadataAttribute();
+        bool isExportMetadata = IsCurTypeExportMetadataAll || attributes.Count > 0 || generator_.HasMetadataAttribute(symbol);
         if (isExportMetadata) {
           int ctorIndex = GetConstructorIndex(symbol);
           LuaIdentifierNameSyntax name;

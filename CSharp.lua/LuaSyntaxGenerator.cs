@@ -30,6 +30,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 
 using CSharpLua.LuaAst;
+using System.Text.RegularExpressions;
 
 namespace CSharpLua {
   internal sealed class PartialTypeDeclaration : IComparable<PartialTypeDeclaration> {
@@ -202,7 +203,7 @@ namespace CSharpLua {
     public LuaSyntaxGenerator(IEnumerable<(string Text, string Path)> codes, IEnumerable<Stream> libs, IEnumerable<string> cscArguments, IEnumerable<Stream> metas, SettingInfo setting) {
       Setting = setting;
       (compilation_, CommandLineArguments) = BuildCompilation(codes, libs, cscArguments);
-      XmlMetaProvider = new XmlMetaProvider(metas);
+      XmlMetaProvider = new XmlMetaProvider(this, metas);
       if (Setting.ExportEnums != null) {
         exportEnums_.UnionWith(Setting.ExportEnums);
       }
@@ -1649,7 +1650,7 @@ namespace CSharpLua {
         return false;
       }
 
-      return symbol.IsAutoProperty();
+      return IsAutoProperty(symbol);
     }
 
     internal bool IsPropertyTemplate(IPropertySymbol symbol) {
@@ -1658,8 +1659,8 @@ namespace CSharpLua {
         if (node == null) {
           return false;
         } else {
-          return node.HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Get)
-            || symbol.GetDeclaringSyntaxNode().HasCSharpLuaAttribute(LuaDocumentStatement.AttributeFlags.Set);
+          return HasCSharpLuaAttribute(node, LuaDocumentStatement.AttributeFlags.Get)
+            || HasCSharpLuaAttribute(symbol.GetDeclaringSyntaxNode(), LuaDocumentStatement.AttributeFlags.Set);
         }
       });
     }
@@ -2141,6 +2142,148 @@ namespace CSharpLua {
         }
       }
       return name;
+    }
+
+    #endregion
+
+
+    #region HasCSharpLuaAttribute 
+
+    private readonly ConcurrentDictionary<SyntaxNode, string> syntaxNodeDocumentTrivia_ = new ();
+
+    public bool HasMetadataAttribute(ISymbol symbol) {
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
+        return HasCSharpLuaAttribute(node, LuaDocumentStatement.AttributeFlags.Metadata);
+      }
+      return false;
+    }
+
+    public bool HasParamsAttribute(ISymbol symbol) {
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
+        return HasCSharpLuaAttribute(node, LuaDocumentStatement.AttributeFlags.Params);
+      }
+      return false;
+    }
+
+    public bool HasCSharpLuaAttribute(SyntaxNode node, LuaDocumentStatement.AttributeFlags attribute) {
+      return HasCSharpLuaAttribute(node, attribute, out _);
+    }
+
+    private string GetSyntaxNodeDocumentTriviaStr(SyntaxNode node) {
+      return syntaxNodeDocumentTrivia_.GetOrAdd(node, node => {
+        var documentTrivia = node.GetLeadingTrivia().FirstOrDefault(i => i.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
+        return documentTrivia != default ? documentTrivia.ToString() : null;
+      });
+    }
+
+    public bool HasCSharpLuaAttribute(SyntaxNode node, LuaDocumentStatement.AttributeFlags attribute, out string text) {
+      text = null;
+      string document = GetSyntaxNodeDocumentTriviaStr(node);
+      if (document != null && document.Contains(LuaDocumentStatement.ToString(attribute))) {
+        text = document;
+        return true;
+      }
+      return false;
+    }
+
+    public string GetCodeTemplateFromAttribute(ISymbol symbol) {
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
+        if (symbol.Kind == SymbolKind.Field) {
+          node = node.Parent.Parent;
+        }
+        if (HasCSharpLuaAttribute(node, LuaDocumentStatement.AttributeFlags.Template, out string text)) {
+          return GetCodeTemplateFromAttributeText(text, codeTemplateAttributeRegex_);
+        }
+      } else {
+        string xml = symbol.GetDocumentationCommentXml();
+        if (xml != null) {
+          return GetCodeTemplateFromAttributeText(xml, codeTemplateAttributeRegex_);
+        }
+      }
+      return null;
+    }
+
+    public (string get, string set) GetPropertyTemplateFromAttribute(ISymbol symbol) {
+      var node = symbol.GetDeclaringSyntaxNode();
+      string get = null;
+      string set = null;
+      if (node != null) {
+        if (symbol.Kind == SymbolKind.Field) {
+          node = node.Parent.Parent;
+        }
+        if (HasCSharpLuaAttribute(node, LuaDocumentStatement.AttributeFlags.Get, out string getText)) {
+          get = GetCodeTemplateFromAttributeText(getText, codeGetAttributeRegex_);
+        }
+        if (HasCSharpLuaAttribute(node, LuaDocumentStatement.AttributeFlags.Set, out string setText)) {
+          set = GetCodeTemplateFromAttributeText(setText, codeSetAttributeRegex_);
+        }
+      }
+      return (get, set);
+    }
+
+    private static readonly Regex codeTemplateAttributeRegex_ = new(@"@CSharpLua.Template\s*=\s*(.+)\s*", RegexOptions.Compiled);
+    private static readonly Regex codeGetAttributeRegex_ = new(@"@CSharpLua.Get\s*=\s*(.+)\s*", RegexOptions.Compiled);
+    private static readonly Regex codeSetAttributeRegex_ = new(@"@CSharpLua.Set\s*=\s*(.+)\s*", RegexOptions.Compiled);
+
+    private static string GetCodeTemplateFromAttributeText(string document, Regex regex) {
+      var matches = regex.Matches(document);
+      if (matches.Count > 0) {
+        string text = matches[0].Groups[1].Value;
+        return text.Trim().Trim('"');
+      }
+      return null;
+    }
+
+    public bool IsAutoProperty(IPropertySymbol symbol) {
+      var node = symbol.GetDeclaringSyntaxNode();
+      if (node != null) {
+        switch (node.Kind()) {
+          case SyntaxKind.PropertyDeclaration: {
+              var property = (PropertyDeclarationSyntax)node;
+              bool hasGet = false;
+              bool hasSet = false;
+              if (property.AccessorList != null) {
+                foreach (var accessor in property.AccessorList.Accessors) {
+                  if (accessor.Body != null || accessor.ExpressionBody != null) {
+                    if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) {
+                      Contract.Assert(!hasGet);
+                      hasGet = true;
+                    } else {
+                      Contract.Assert(!hasSet);
+                      hasSet = true;
+                    }
+                  }
+                }
+              } else {
+                Contract.Assert(!hasGet);
+                hasGet = true;
+              }
+              bool isField = !hasGet && !hasSet;
+              if (isField) {
+                if (HasCSharpLuaAttribute(property, LuaDocumentStatement.AttributeFlags.NoField)) {
+                  isField = false;
+                }
+              }
+              return isField;
+            }
+          case SyntaxKind.IndexerDeclaration: {
+              return false;
+            }
+          case SyntaxKind.AnonymousObjectMemberDeclarator: {
+              return true;
+            }
+          case SyntaxKind.Parameter: {
+              return true;
+            }
+          default: {
+              throw new InvalidOperationException();
+            }
+        }
+      }
+      return false;
     }
 
     #endregion
