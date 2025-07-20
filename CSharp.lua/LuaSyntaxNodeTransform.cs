@@ -2469,8 +2469,15 @@ namespace CSharpLua {
         var optionalParameters = parameters.Skip(arguments.Count);
         foreach (IParameterSymbol parameter in optionalParameters) {
           if (parameter.IsParams) {
-            var arrayType = (IArrayTypeSymbol)parameter.Type;
-            var elementType = GetTypeName(arrayType.ElementType);
+            ITypeSymbol arrayElemnetType;
+            if (parameter.Type.IsValueType) {
+              var namedTypeSymbol = (INamedTypeSymbol)parameter.Type;
+              arrayElemnetType = namedTypeSymbol.TypeArguments.First();
+            } else {
+              var arrayType = (IArrayTypeSymbol)parameter.Type;
+              arrayElemnetType = arrayType.ElementType;
+            }
+            var elementType = GetTypeName(arrayElemnetType);
             arguments.Add(LuaIdentifierNameSyntax.EmptyArray.Invocation(elementType));
           } else {
             LuaExpressionSyntax defaultValue = GetDefaultParameterValue(parameter, node, isCheckCallerAttribute);
