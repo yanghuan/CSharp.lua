@@ -194,6 +194,12 @@ local DictionaryCollection = define("System.Collections.Generic.DictionaryCollec
   getCount = function (this)
     return getCount(this.dict)
   end,
+  Contains = function (this, v)
+    if this.kind == 2 then
+      return this.dict:ContainsValue(v)
+    end
+    return this.dict:ContainsKey(v)
+  end,
   GetEnumerator = function (this)
     return dictionaryEnumerator(this.dict, this.kind)
   end
