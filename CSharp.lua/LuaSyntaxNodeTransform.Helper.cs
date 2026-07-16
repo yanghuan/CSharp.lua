@@ -1261,6 +1261,12 @@ namespace CSharpLua {
       var expressions = new List<LuaExpressionSyntax>();
       var attributes = attributeLists.SelectMany(i => i.Attributes);
       foreach (var node in attributes) {
+        // `MethodImplAttribute` is a compile-only hint with no runtime meaning in Lua and
+        // is not defined by CoreSystem, so skip it to avoid emitting a reference to an
+        // undefined symbol in the generated metadata.
+        if (semanticModel_.GetTypeInfo(node.Name).Type is INamedTypeSymbol attributeType && attributeType.IsMethodImplAttribute()) {
+          continue;
+        }
         var expression = node.AcceptExpression(this);
         if (expression != null) {
           expressions.Add(expression);
@@ -2157,7 +2163,9 @@ namespace CSharpLua {
 
       if (parameterList?.Parameters.Count > 0) {
         var parameters = new List<LuaIdentifierNameSyntax>();
-        if (invocation.Expression is LuaInternalMethodExpressionSyntax && prevMethodInfo.Symbol.IsStatic) {
+        if (symbol.IsStatic) {
+          // A static method has no `this` receiver, so do not bind one.
+        } else if (invocation.Expression is LuaInternalMethodExpressionSyntax && prevMethodInfo.Symbol.IsStatic) {
           parameters.Add(LuaIdentifierNameSyntax.This);
         }
         foreach (var parameterNode in parameterList.Parameters) {
@@ -2170,7 +2178,13 @@ namespace CSharpLua {
             }
           }
         }
-        var parameterValues = invocation.ArgumentList.Arguments.Where(i => i != LuaIdentifierNameSyntax.This);
+        // Bind the formal parameters to the actual arguments. Trailing `nil` arguments
+        // may have been trimmed (TryRemoveNilArgumentsAtTail) for an ordinary call, but
+        // here they are local initializers and must be present, so pad with `nil`.
+        var parameterValues = invocation.ArgumentList.Arguments.Where(i => i != LuaIdentifierNameSyntax.This).ToList();
+        while (parameterValues.Count < parameters.Count) {
+          parameterValues.Add(LuaIdentifierLiteralExpressionSyntax.Nil);
+        }
         block.AddStatement(new LuaLocalVariablesSyntax(parameters, parameterValues));
       }
 
@@ -2217,10 +2231,19 @@ namespace CSharpLua {
       }
 
       if (methodInfo.HasInlineGoto) {
-        block.Statements.Add(new LuaLabeledStatement(LuaIdentifierNameSyntax.InlineReturnLabel));
+        if (IsLuaClassic) {
+          // Lua 5.1 / LuaJIT does not support `goto`. Wrap the inline body in
+          // `repeat … until true` so the early-return `break` jumps to its end.
+          var repeatStatement = new LuaRepeatStatementSyntax(LuaIdentifierNameSyntax.One);
+          repeatStatement.Body.Statements.AddRange(block.Statements);
+          CurBlock.AddStatement(repeatStatement);
+        } else {
+          block.Statements.Add(new LuaLabeledStatement(LuaIdentifierNameSyntax.InlineReturnLabel));
+          CurBlock.AddStatement(block.Statements.Count == 1 ? block.Statements.First() : block);
+        }
+      } else {
+        CurBlock.AddStatement(block.Statements.Count == 1 ? block.Statements.First() : block);
       }
-
-      CurBlock.AddStatement(block.Statements.Count == 1 ? block.Statements.First() : block);
       if (methodInfo.InliningReturnVars.Count > 0) {
         inlineExpression = new LuaSequenceListExpressionSyntax(methodInfo.InliningReturnVars);
         if (refOrOutParameters.Count == 0 && root.Parent.IsKind(SyntaxKind.ExpressionStatement)) {

@@ -1213,7 +1213,7 @@ namespace CSharpLua {
       return false;
     }
 
-    private static bool IsMethodImplAttribute(this INamedTypeSymbol symbol) {
+    public static bool IsMethodImplAttribute(this INamedTypeSymbol symbol) {
       return symbol.Name == "MethodImplAttribute" && symbol.ContainingNamespace.IsRuntimeCompilerServices();
     }
 

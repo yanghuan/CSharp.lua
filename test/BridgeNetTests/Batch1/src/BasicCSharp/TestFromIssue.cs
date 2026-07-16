@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -158,6 +159,33 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual(TestFlag.A.HasFlag(TestFlag.A | TestFlag.B), false);
             Assert.AreEqual((TestFlag.A | TestFlag.B).HasFlag(TestFlag.A), true);
             Assert.AreEqual((TestFlag.A | TestFlag.B).HasFlag(TestFlag.A | TestFlag.C), false);
+        }
+
+        [Test]
+        public static void TestOf529()
+        {
+            // Regression for issue #529: inlining a void method that contains an
+            // early `return;` used to crash the compiler (ArgumentOutOfRangeException on
+            // an empty InliningReturnVars list). The void method below is aggressively
+            // inlined, and its `return;` must be turned into a jump to the inline return
+            // label (or be a no-op when it is the last statement).
+            s_processed529 = 0;
+            Check529Inline(null);    // hits the early `return;`
+            Check529Inline("item");  // runs the full body
+            Check529Inline(null);    // hits the early `return;` again
+            Assert.AreEqual(1, s_processed529);
+        }
+
+        private static int s_processed529 = 0;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Check529Inline(object obj)
+        {
+            if (obj == null)
+            {
+                return; // early return inside a void method being inlined (#529)
+            }
+            s_processed529++;
         }
 
         private class BattleModelSlotPrototype {
