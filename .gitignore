@@ -247,6 +247,7 @@ ModelManifest.xml
 
 # JetBrains IDE
 .idea/
+.vscode
 
 # Custom
 test/**/out/*.lua
