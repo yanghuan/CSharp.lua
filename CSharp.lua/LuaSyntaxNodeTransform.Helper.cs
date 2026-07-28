@@ -1490,7 +1490,34 @@ namespace CSharpLua {
     private void CheckConversion(ExpressionSyntax node, ref LuaExpressionSyntax expression) {
       if (semanticModel_.IsUserConversion(node, out var methodSymbol)) {
         expression = BuildConversionExpression(methodSymbol, expression);
+        return;
       }
+      // Roslyn 5.x reclassified the implicit T[] -> Span<T>/ReadOnlySpan<T> conversion so that it
+      // is no longer reported as a user-defined conversion. Emit an explicit span construction so
+      // the generated code passes a real Span/ReadOnlySpan instead of a bare array, which would
+      // otherwise crash the runtime (e.g. MemoryExtensions.Contains called on an array).
+      var typeInfo = semanticModel_.GetTypeInfo(node);
+      if (IsSpanConstructionConversion(typeInfo.Type, typeInfo.ConvertedType)) {
+        expression = BuildSpanConstructionExpression(typeInfo.ConvertedType, expression);
+      }
+    }
+
+    private static bool IsSpanConstructionConversion(ITypeSymbol originalType, ITypeSymbol convertedType) {
+      return originalType is IArrayTypeSymbol && IsSpanOrReadOnlySpan(convertedType);
+    }
+
+    private static bool IsSpanOrReadOnlySpan(ITypeSymbol type) {
+      if (type is not INamedTypeSymbol namedType || namedType.TypeArguments.Length != 1) {
+        return false;
+      }
+      var ns = namedType.ContainingNamespace;
+      return ns != null && ns.Name == "System" && (namedType.Name == "Span" || namedType.Name == "ReadOnlySpan");
+    }
+
+    private LuaExpressionSyntax BuildSpanConstructionExpression(ITypeSymbol convertedType, LuaExpressionSyntax expression) {
+      var typeExpression = GetTypeName(convertedType);
+      var ctorArray = typeExpression.MemberAccess("ctorArray");
+      return new LuaInvocationExpressionSyntax(ctorArray, expression);
     }
 
     private LuaExpressionSyntax GetOperatorMemberAccessExpression(IMethodSymbol methodSymbol) {
