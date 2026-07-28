@@ -1281,9 +1281,55 @@ namespace CSharpLua {
     }
 
     public override LuaSyntaxNode VisitStackAllocArrayCreationExpression(StackAllocArrayCreationExpressionSyntax node) {
-      var symbol = semanticModel_.GetTypeInfo(node.Type).Type;
-      var spanTypeExp = node.Type.Accept<LuaArrayTypeAdapterExpressionSyntax>(this);
-      return BuildArrayCreationExpression(symbol, spanTypeExp, node.Initializer);
+      return BuildStackAllocCreation(node, node.Type, node.Initializer);
+    }
+
+    public override LuaSyntaxNode VisitImplicitStackAllocArrayCreationExpression(ImplicitStackAllocArrayCreationExpressionSyntax node) {
+      // target-typed / implicit array type, e.g. Span<int> s = stackalloc[] { 5, 6, 7 };
+      return BuildStackAllocCreation(node, null, node.Initializer);
+    }
+
+    private LuaSyntaxNode BuildStackAllocCreation(CSharpSyntaxNode stackAllocNode, TypeSyntax typeSyntax, InitializerExpressionSyntax initializer) {
+      if (initializer != null && initializer.Expressions.Count > 0) {
+        // Span<T>(System.Array(T) { ... }) — a Span must wrap a real array object, not a bare table.
+        var contextualType = semanticModel_.GetTypeInfo(stackAllocNode).Type;
+        if (contextualType == null) {
+          contextualType = semanticModel_.GetTypeInfo(stackAllocNode).ConvertedType;
+        }
+        var elementType = GetSpanElementType(contextualType);
+        var arrayTypeAdapter = BuildArrayTypeAdapter(elementType);
+        var arrayCreation = BuildArrayCreationExpression(elementType, arrayTypeAdapter, initializer);
+        var spanTypeExp = GetTypeName(contextualType);
+        return new LuaInvocationExpressionSyntax(spanTypeExp, arrayCreation);
+      }
+      // size form, e.g. Span<int> span = stackalloc int[10]; -> Span<T>(10)
+      ITypeSymbol type;
+      LuaArrayTypeAdapterExpressionSyntax spanTypeAdapter;
+      if (typeSyntax != null) {
+        type = semanticModel_.GetTypeInfo(typeSyntax).Type;
+        spanTypeAdapter = typeSyntax.Accept<LuaArrayTypeAdapterExpressionSyntax>(this);
+      } else {
+        type = semanticModel_.GetTypeInfo(stackAllocNode).Type;
+        var typeExpress = GetTypeName(type);
+        spanTypeAdapter = new LuaArrayTypeAdapterExpressionSyntax(typeExpress, new LuaArrayRankSpecifierSyntax(1));
+      }
+      return BuildArrayCreationExpression(type, spanTypeAdapter, null);
+    }
+
+    private static ITypeSymbol GetSpanElementType(ITypeSymbol type) {
+      if (type is INamedTypeSymbol namedType && namedType.TypeArguments.Length == 1) {
+        return namedType.TypeArguments[0];
+      }
+      if (type is IArrayTypeSymbol arrayType) {
+        return arrayType.ElementType;
+      }
+      return type;
+    }
+
+    private LuaArrayTypeAdapterExpressionSyntax BuildArrayTypeAdapter(ITypeSymbol elementType) {
+      var elementTypeName = GetTypeName(elementType);
+      var arrayInvocation = new LuaInvocationExpressionSyntax(LuaIdentifierNameSyntax.Array, elementTypeName);
+      return new LuaArrayTypeAdapterExpressionSyntax(arrayInvocation, new LuaArrayRankSpecifierSyntax(1));
     }
 
     public override LuaSyntaxNode VisitUnsafeStatement(UnsafeStatementSyntax node) {

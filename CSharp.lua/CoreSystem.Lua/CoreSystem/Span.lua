@@ -41,10 +41,10 @@ local Span = {
       this._array = input
       this._min = start
       this._max = start + length - 1
-    elseif t == "number" then
-      this._array = System.Array(this.__genericT__)(input)
-      this._min = 0
-      this._max = input
+  elseif t == "number" then
+    this._array = System.Array(this.__genericT__)(input)
+    this._min = 0
+    this._max = input - 1
     else
       this._array = System.Array(this.__genericT__)(1)
       this._array:set(0, input)

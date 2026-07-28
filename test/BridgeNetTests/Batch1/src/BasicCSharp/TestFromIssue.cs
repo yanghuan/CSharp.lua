@@ -176,6 +176,32 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual(1, s_processed529);
         }
 
+        [Test]
+        public static void TestOf530()
+        {
+            // Regression for issue #530: `stackalloc` used to crash the compiler for the
+            // implicit/target-typed form `stackalloc[] { ... }` (Roslyn uses a separate
+            // ImplicitStackAllocArrayCreationExpressionSyntax with no visitor, so the
+            // visitor returned null and the equals-value clause failed). The initializer
+            // form also produced `Span<T> { ... }`, passing a bare table to Span.__ctor__
+            // which expects a real array object.
+            Span<int> size = stackalloc int[10];
+            Assert.AreEqual(10, size.Length);
+            size[0] = 42;
+            Assert.AreEqual(42, size[0]);
+
+            Span<int> init = stackalloc int[] { 1, 2, 3, 4, 5 };
+            Assert.AreEqual(5, init.Length);
+            Assert.AreEqual(3, init[2]);
+
+            Span<int> implicitInit = stackalloc[] { 6, 7, 8 };
+            Assert.AreEqual(3, implicitInit.Length);
+            Assert.AreEqual(7, implicitInit[1]);
+
+            ReadOnlySpan<int> ro = stackalloc int[3];
+            Assert.AreEqual(3, ro.Length);
+        }
+
         private static int s_processed529 = 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
