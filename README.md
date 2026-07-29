@@ -69,8 +69,8 @@ Options
 -include        : the root directory of the CoreSystem library, adds all the dependencies to a single file named out.lua
 -noconcurrent   : close concurrent compile
 ```
-Make sure that .NET 7.0 is installed.
-https://dotnet.microsoft.com/download/dotnet/7.0
+Make sure that .NET 11.0 is installed.
+https://dotnet.microsoft.com/download/dotnet/11.0
 
 
 ### Download
