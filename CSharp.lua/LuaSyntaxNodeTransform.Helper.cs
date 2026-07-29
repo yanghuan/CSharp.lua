@@ -1503,15 +1503,7 @@ namespace CSharpLua {
     }
 
     private static bool IsSpanConstructionConversion(ITypeSymbol originalType, ITypeSymbol convertedType) {
-      return originalType is IArrayTypeSymbol && IsSpanOrReadOnlySpan(convertedType);
-    }
-
-    private static bool IsSpanOrReadOnlySpan(ITypeSymbol type) {
-      if (type is not INamedTypeSymbol namedType || namedType.TypeArguments.Length != 1) {
-        return false;
-      }
-      var ns = namedType.ContainingNamespace;
-      return ns != null && ns.Name == "System" && (namedType.Name == "Span" || namedType.Name == "ReadOnlySpan");
+      return originalType is IArrayTypeSymbol && convertedType.IsSpanOrReadOnlySpan();
     }
 
     private LuaExpressionSyntax BuildSpanConstructionExpression(ITypeSymbol convertedType, LuaExpressionSyntax expression) {

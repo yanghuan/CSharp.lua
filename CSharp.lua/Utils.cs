@@ -464,6 +464,14 @@ namespace CSharpLua {
       return type.Name == "Index" && type.ContainingNamespace.Name == "System";
     }
 
+    public static bool IsSpanOrReadOnlySpan(this ITypeSymbol type) {
+      if (type is not INamedTypeSymbol namedType || namedType.TypeArguments.Length != 1) {
+        return false;
+      }
+      var ns = namedType.ContainingNamespace;
+      return ns != null && ns.Name == "System" && (namedType.Name == "Span" || namedType.Name == "ReadOnlySpan");
+    }
+
     private static bool IsSystemIComparableT(this INamedTypeSymbol type) {
       return type.Name == "IComparable"   && type.ContainingNamespace.Name == "System"  && type.IsGenericType;
     }
