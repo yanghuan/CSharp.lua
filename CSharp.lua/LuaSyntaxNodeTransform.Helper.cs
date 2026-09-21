@@ -593,9 +593,12 @@ namespace CSharpLua {
       if (unicodeRegex_.IsMatch(text)) {
         if (IsLuaClassic) {
           return unicodeRegex_.Replace(text, m => {
-            if (short.TryParse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var c)) {
+            if (ushort.TryParse(m.Groups[1].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var c)) {
               char ch = (char)c;
               switch (ch) {
+                case '\0': {
+                  return "\\0";
+                }
                 case '\a': {
                   return "\\a";
                 }
@@ -636,7 +639,7 @@ namespace CSharpLua {
     }
 
     private LuaLiteralExpressionSyntax BuildStringLiteralTokenExpression(SyntaxToken token) {
-      if (token.Text[0] == '@') {
+      if (token.Text.Length > 0 && (token.Text[0] == '@' || token.Text.StartsWith("\"\"\""))) {
         return BuildVerbatimStringExpression(token.ValueText);
       }
 
@@ -650,6 +653,19 @@ namespace CSharpLua {
 
     private LuaVerbatimStringLiteralExpressionSyntax BuildVerbatimStringExpression(string value) {
       return new(value);
+    }
+
+    private LuaExpressionSyntax BuildUtf8StringLiteralExpression(LiteralExpressionSyntax node) {
+      string text = node.Token.Text;
+      if (text.EndsWith("u8", StringComparison.OrdinalIgnoreCase)) {
+        text = text[..^2];
+      }
+
+      if (text.Length > 0 && (text[0] == '@' || text.StartsWith("\"\"\""))) {
+        return BuildVerbatimStringExpression(node.Token.ValueText);
+      }
+
+      return new LuaIdentifierLiteralExpressionSyntax(DecodeUnicodeCharacter(text));
     }
 
     private enum CallerAttributeKind {
@@ -2451,6 +2467,9 @@ namespace CSharpLua {
         case SyntaxKind.IdentifierName: {
           var semanticModel = generator_.GetSemanticModel(expressionBody.SyntaxTree);
           var identifierSymbol = semanticModel.GetSymbolInfo(expressionBody).Symbol;
+          if (identifierSymbol is IParameterSymbol) {
+            return false;
+          }
           if (identifierSymbol is {IsStatic: true} && identifierSymbol.IsPrivate()) {
             return false;
           }

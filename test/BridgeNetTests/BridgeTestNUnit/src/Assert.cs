@@ -20,7 +20,7 @@ namespace Bridge.Test.NUnit {
     /// <param name="actual">Actual</param>
     /// <param name="description">Description</param>
     public static void AreEqual(object expected, object actual, string description = null) {
-      description += $", '{expected}' != '{actual}'";
+      description = (description ?? "") + $", '{expected}' != '{actual}'";
       if (kIsCtachException) {
         try {
           Contract.Assert(Equals(expected, actual), description);
@@ -33,7 +33,7 @@ namespace Bridge.Test.NUnit {
     }
 
     public static void AreEqual(string expected, string actual, string description = null) {
-      description += $", '{expected}' != '{actual}'";
+      description = (description ?? "") + $", '{(object)expected}' != '{(object)actual}'";
       if (kIsCtachException) {
         try {
           Contract.Assert(expected == actual, description);

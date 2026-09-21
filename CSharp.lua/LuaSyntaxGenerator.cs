@@ -896,6 +896,10 @@ namespace CSharpLua {
       return symbolName;
     }
 
+    internal LuaIdentifierNameSyntax GetInnerName(ISymbol symbol) {
+      return propertyOrEventInnerFieldNames_.GetOrDefault(symbol) ?? AddInnerName(symbol);
+    }
+
     private string GetSymbolBaseName(ISymbol symbol) {
       switch (symbol.Kind) {
         case SymbolKind.Method: {

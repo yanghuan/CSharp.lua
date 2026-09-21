@@ -726,6 +726,30 @@ local function trimStart(this, chars, ...)
   return (gsub(this, chars, "%1"))
 end
 
+local function slice(this, start, ...)
+  local len = #this
+  if start < 0 or start > len then
+    throw(ArgumentOutOfRangeException("start"))
+  end
+  local argsLen = select("#", ...)
+  if argsLen == 1 then
+    local length = ...
+    if length < 0 or start + length > len then
+      throw(ArgumentOutOfRangeException("length"))
+    end
+    return sub(this, start + 1, start + length)
+  end
+  return sub(this, start + 1)
+end
+
+local function toArray(this)
+  local t = {}
+  for i = 1, #this do
+    t[i] = byte(this, i)
+  end
+  return System.arrayFromTable(t, System.Byte)
+end
+
 local function inherits(_, T)
   return { System.IEnumerable_1(System.Char), System.IComparable, System.IComparable_1(T), System.IConvertible, System.IEquatable_1(T), System.ICloneable }
 end
@@ -733,7 +757,10 @@ end
 string.traceback = emptyFn  -- make throw(str) not fail
 string.getLength = lengthFn
 string.getCount = lengthFn
+string.getIsEmpty = function (this) return #this == 0 end
 string.get = get
+string.Slice = slice
+string.ToArray = toArray
 string.Compare = compareFull
 string.CompareOrdinal = compareFull
 string.Concat = concat

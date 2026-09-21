@@ -471,20 +471,54 @@ namespace CSharpLua {
       var function = new LuaConstructorAdapterExpressionSyntax();
       function.AddParameter(LuaIdentifierNameSyntax.This);
       function.AddParameters(parameterList.Parameters);
-      typeDeclaration.AddCtor(function, false);
-      var ctor = typeSymbol.InstanceConstructors.First();
-      int index = 0;
-      foreach (var p in ctor.Parameters) {
-        if (isRecord || !typeSymbol.GetMembers($"<{p.Name}>P").IsEmpty) {
-          var parameterName = parameterList.Parameters[index];
-          function.AddStatement(LuaIdentifierNameSyntax.This.MemberAccess(parameterName).Assignment(parameterName));
-          var expression = GetFieldValueExpression(p.Type, null, out bool isLiteral, out _);
-          if (expression != null) {
-            typeDeclaration.AddField(parameterList.Parameters[index], expression, p.Type.IsImmutable() && isLiteral, false, false, true, null, false, false);
+
+      if (!typeSymbol.IsValueType && typeSymbol.BaseType != null) {
+        var primaryBase = node.BaseList?.Types.OfType<PrimaryConstructorBaseTypeSyntax>().FirstOrDefault();
+        if (primaryBase != null) {
+          var baseTypeSymbol = semanticModel_.GetTypeInfo(primaryBase.Type).Type;
+          if (baseTypeSymbol is INamedTypeSymbol namedBaseType && !namedBaseType.IsSystemObjectOrValueType()) {
+            var baseCtorInvoke = BuildCallBaseConstructor(typeSymbol, namedBaseType, 0);
+            baseCtorInvoke.AddArgument(LuaIdentifierNameSyntax.This);
+            foreach (var arg in primaryBase.ArgumentList.Arguments) {
+              baseCtorInvoke.AddArgument(arg.Expression.AcceptExpression(this));
+            }
+            function.AddStatement(baseCtorInvoke);
+          }
+        } else {
+          var baseCtorInvoke = BuildCallBaseConstructor(typeSymbol);
+          if (baseCtorInvoke != null) {
+            function.AddStatement(baseCtorInvoke);
           }
         }
-        ++index;
       }
+
+      typeDeclaration.AddCtor(function, false);
+      var ctor = typeSymbol.InstanceConstructors.FirstOrDefault() ?? typeSymbol.Constructors.FirstOrDefault();
+      if (ctor != null) {
+        int index = 0;
+        foreach (var p in ctor.Parameters) {
+          if (index < parameterList.Parameters.Count) {
+            var parameterName = parameterList.Parameters[index];
+            function.AddStatement(LuaIdentifierNameSyntax.This.MemberAccess(parameterName).Assignment(parameterName));
+            var expression = GetFieldValueExpression(p.Type, null, out bool isLiteral, out _);
+            if (expression != null) {
+              typeDeclaration.AddField(parameterName, expression, p.Type.IsImmutable() && isLiteral, false, false, true, null, false, false);
+            }
+          }
+          ++index;
+        }
+      }
+    }
+
+    private static bool IsInsidePrimaryConstructor(SyntaxNode node) {
+      if (node.FirstAncestorOrSelf<PrimaryConstructorBaseTypeSyntax>() != null) {
+        return true;
+      }
+      var paramList = node.FirstAncestorOrSelf<ParameterListSyntax>();
+      if (paramList?.Parent is TypeDeclarationSyntax) {
+        return true;
+      }
+      return false;
     }
 
     private void BuildRecordMembers(INamedTypeSymbol typeSymbol, LuaTypeDeclarationSyntax typeDeclaration) {
@@ -1075,6 +1109,12 @@ namespace CSharpLua {
         PropertyMethodResult getMethod = null;
         PropertyMethodResult setMethod = null;
         if (node.AccessorList != null) {
+          bool hasFieldKeyword = node.AccessorList.Accessors.Any(a => a.DescendantNodes().OfType<FieldExpressionSyntax>().Any());
+          if (hasFieldKeyword) {
+            var innerName = generator_.GetInnerName(symbol);
+            var valueExpression = GetFieldValueExpression(symbol.Type, node.Initializer?.Value, out bool valueIsLiteral, out var statements);
+            CurType.AddField(innerName, valueExpression, symbol.Type.IsImmutable() && valueIsLiteral, symbol.IsStatic, isPrivate, false, statements, false, false);
+          }
           foreach (var accessor in node.AccessorList.Accessors) {
             if (accessor.Body != null || accessor.ExpressionBody != null) {
               var accessorSymbol = semanticModel_.GetDeclaredSymbol(accessor);
@@ -3336,7 +3376,13 @@ namespace CSharpLua {
         }
         case SymbolKind.Parameter: {
           var parameterSymbol = (IParameterSymbol)symbol;
-          identifier = GetSampleName(symbol);
+          if (parameterSymbol.OriginalDefinition.DeclaringSyntaxReferences.Any(r => r.GetSyntax().Parent?.Parent is TypeDeclarationSyntax)
+              && SymbolEqualityComparer.Default.Equals(parameterSymbol.ContainingSymbol?.ContainingType, CurTypeSymbol)
+              && !IsInsidePrimaryConstructor(node)) {
+            identifier = LuaIdentifierNameSyntax.This.MemberAccess(GetSampleName(symbol));
+          } else {
+            identifier = GetSampleName(symbol);
+          }
           CheckValueTypeClone(parameterSymbol.Type, node, ref identifier);
           break;
         }
@@ -3514,6 +3560,9 @@ namespace CSharpLua {
         }
         case SyntaxKind.StringLiteralExpression: {
           return BuildStringLiteralTokenExpression(node.Token);
+        }
+        case SyntaxKind.Utf8StringLiteralExpression: {
+          return BuildUtf8StringLiteralExpression(node);
         }
         case SyntaxKind.CharacterLiteralExpression: {
           return new LuaCharacterLiteralExpression((char)node.Token.Value);
@@ -4015,7 +4064,8 @@ namespace CSharpLua {
             FillSwitchPatternSyntax(ref ifStatement, null, arm.WhenClause, result, arm.Expression);
             break;
           }
-          case SyntaxKind.OrPattern: {
+          case SyntaxKind.OrPattern:
+          case SyntaxKind.ListPattern: {
             var condition = BuildPatternExpression(governingIdentifier, arm.Pattern, node.GoverningExpression);
             FillSwitchPatternSyntax(ref ifStatement, condition, arm.WhenClause, result, arm.Expression);
             break; 

@@ -22,7 +22,8 @@ local IndexOutOfRangeException = System.IndexOutOfRangeException
 
 local ReadOnlySpan = {
   __ctor__ = function (this, input, ...)
-    if type(input) == "table" then
+    local t = type(input)
+    if t == "table" then
       local argsLen = select("#", ...)
       local maxLength = input:getLength()
       local start, length
@@ -40,6 +41,24 @@ local ReadOnlySpan = {
       this._array = input
       this._min = start
       this._max = start + length - 1
+    elseif t == "string" then
+      local argsLen = select("#", ...)
+      local maxLength = #input
+      local start, length
+      if argsLen == 2 then
+        start, length = ...
+        if start >= maxLength then
+          throw(ArgumentOutOfRangeException("start"))
+        end
+        if start + length > maxLength then
+          throw(ArgumentOutOfRangeException("length"))
+        end 
+      else
+        start, length = 0, maxLength
+      end
+      this._str = input
+      this._min = start
+      this._max = start + length - 1
     else
       this._array = System.Array(this.__genericT__)(1)
       this._array:set(0, input)
@@ -51,6 +70,9 @@ local ReadOnlySpan = {
     local i = this._min + index
     if i > this._max then
       throw(IndexOutOfRangeException("index"))
+    end
+    if this._str then
+      return string.byte(this._str, i + 1)
     end
     return this._array:get(i)
   end,
@@ -78,9 +100,20 @@ local ReadOnlySpan = {
       newMax = this._max
     end
     local ctor = System.ReadOnlySpan(this.__genericT__)
-    return ctor(this._array, newMin, newMax - newMin + 1)
+    return ctor(this._str or this._array, newMin, newMax - newMin + 1)
+  end,
+  ToArray = function (this)
+    local len = this:getLength()
+    local arr = System.Array(this.__genericT__)(len)
+    for i = 0, len - 1 do
+      arr:set(i, this:get(i))
+    end
+    return arr
   end,
   ctorArray = function (array)
+    if type(array) == "string" then
+      return array
+    end
     local ctor = System.ReadOnlySpan(array.__genericT__)
     return ctor(array)    
   end
