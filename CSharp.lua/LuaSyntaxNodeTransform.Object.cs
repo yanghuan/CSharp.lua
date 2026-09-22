@@ -573,18 +573,27 @@ namespace CSharpLua {
       var function = new LuaFunctionExpressionSyntax();
       PushFunction(function);
 
+      var defaultParamStatements = new List<LuaStatementSyntax>();
       if (parameters != null) {
         foreach (var parameter in parameters) {
           var luaParameter = parameter.Accept<LuaIdentifierNameSyntax>(this);
           function.ParameterList.Parameters.Add(luaParameter);
+          if (parameter.Default != null) {
+            var defaultVal = parameter.Default.Value.AcceptExpression(this);
+            var ifStmt = new LuaIfStatementSyntax(luaParameter.EqualsEquals(LuaIdentifierLiteralExpressionSyntax.Nil));
+            ifStmt.Body.AddStatement(luaParameter.Assignment(defaultVal));
+            defaultParamStatements.Add(ifStmt);
+          }
         }
       }
 
       LuaExpressionSyntax resultExpression = function;
       if (body.IsKind(SyntaxKind.Block)) {
         var block = body.Accept<LuaBlockSyntax>(this);
+        function.AddStatements(defaultParamStatements);
         function.AddStatements(block.Statements);
       } else {
+        function.AddStatements(defaultParamStatements);
         var type = (INamedTypeSymbol)semanticModel_.GetTypeInfo(body.Parent).ConvertedType;
         var expression = body.AcceptExpression(this);
         var delegateInvokeMethod = type.DelegateInvokeMethod;

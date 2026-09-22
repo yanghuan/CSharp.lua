@@ -45,6 +45,9 @@ local testClasses = {
     "TestDiscardsAndVariables",
     "TestSwitchExpression",
   }},
+  { name = "GenericAttributeTests", cls = Bridge.ClientTest.CSharp11.GenericAttributeTests, methods = {
+    "TestGenericAttributeTypeArg",
+  }},
   { name = "CollectionExpressionTests", cls = Bridge.ClientTest.CSharp12.CollectionExpressionTests, methods = {
     "TestArrayCreation",
     "TestListCreation",
@@ -55,6 +58,15 @@ local testClasses = {
     "TestClassPrimaryConstructor",
     "TestInheritanceWithPrimaryConstructor",
     "TestStructPrimaryConstructor",
+  }},
+  { name = "LambdaDefaultParameterTests", cls = Bridge.ClientTest.CSharp12.LambdaDefaultParameterTests, methods = {
+    "TestExpressionBodyWithDefault",
+    "TestBlockBodyWithDefaults",
+    "TestMultipleTypesAndNilCheck",
+  }},
+  { name = "UsingAliasTests", cls = Bridge.ClientTest.CSharp12.UsingAliasTests, methods = {
+    "TestTupleAlias",
+    "TestGenericCollectionAlias",
   }},
   { name = "FieldKeywordTests", cls = Bridge.ClientTest.CSharp14.FieldKeywordTests, methods = {
     "TestDefaultValue",
