@@ -1,4 +1,5 @@
 using Bridge.Test.NUnit;
+using System;
 
 namespace Bridge.ClientTest.BasicCSharp
 {
@@ -82,6 +83,116 @@ namespace Bridge.ClientTest.BasicCSharp
             Assert.AreEqual(10, b.X, "b.X = 10");
             Assert.AreEqual(10, b.HandleNumber(10), "b.HandleNumber(10) = 10");
             Assert.AreEqual("Hundred", b.HandleString("Hundred"), "b.HandleString('Hundred') = 'Hundred'");
+        }
+
+        private class Counter
+        {
+            private int count;
+
+            private int Total { get; set; }
+
+            private event Action Changed;
+
+            public int Count
+            {
+                get
+                {
+                    return count;
+                }
+            }
+
+            public int BaseTotal
+            {
+                get
+                {
+                    return Total;
+                }
+            }
+
+            public void Add()
+            {
+                count++;
+                Total += 10;
+            }
+
+            public void ListenBase(Action action)
+            {
+                Changed += action;
+            }
+
+            public void RaiseBase()
+            {
+                Changed?.Invoke();
+            }
+        }
+
+        private class OwnCounter : Counter
+        {
+            private int count = 100;
+
+            public int Total { get; set; } = 7;
+
+            public event Action Changed;
+
+            public int Own
+            {
+                get
+                {
+                    return count;
+                }
+            }
+
+            public void RaiseOwn()
+            {
+                Changed?.Invoke();
+            }
+        }
+
+        private class MiddleCounter : Counter
+        {
+        }
+
+        private class DeeperCounter : MiddleCounter
+        {
+            private int count = 300;
+
+            public int Own
+            {
+                get
+                {
+                    return count;
+                }
+            }
+        }
+
+        [Test]
+        public static void TestPrivateBaseFieldsKeepTheirValues()
+        {
+            var c = new OwnCounter();
+            c.Add();
+            Assert.AreEqual(1, c.Count, "base count");
+            Assert.AreEqual(100, c.Own, "derived count");
+            Assert.AreEqual(10, c.BaseTotal, "base Total");
+            Assert.AreEqual(7, c.Total, "derived Total");
+
+            int baseCalls = 0, ownCalls = 0;
+            c.ListenBase(() => baseCalls++);
+            c.Changed += () => ownCalls++;
+            c.RaiseBase();
+            Assert.AreEqual(1, baseCalls, "base Changed raised");
+            Assert.AreEqual(0, ownCalls, "derived Changed not raised");
+            c.RaiseOwn();
+            Assert.AreEqual(1, baseCalls, "base Changed not raised again");
+            Assert.AreEqual(1, ownCalls, "derived Changed raised");
+        }
+
+        [Test]
+        public static void TestPrivateFieldOfABaseTwoLevelsUp()
+        {
+            var c = new DeeperCounter();
+            c.Add();
+            Assert.AreEqual(1, c.Count, "base count");
+            Assert.AreEqual(300, c.Own, "derived count");
         }
     }
 }
