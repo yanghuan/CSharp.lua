@@ -2296,19 +2296,36 @@ namespace CSharpLua {
       result = null;
       if (symbol.Name == "ToString") {
         if (symbol.ContainingType.SpecialType == SpecialType.System_Enum) {
-          var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
-          var target = memberAccessExpression.Expression.AcceptExpression(this);
-          var enumTypeSymbol = semanticModel_.GetTypeInfo(memberAccessExpression.Expression).Type;
-          result = BuildEnumToStringExpression(enumTypeSymbol, false, target, memberAccessExpression.Expression);
+          var receiver = GetEnumToStringReceiver(node, out var target);
+          var enumTypeSymbol = semanticModel_.GetTypeInfo(receiver).Type;
+          // The receiver of e?.ToString() has the type of a nullable enum, though its value is never nil there.
+          bool isNullable = false;
+          if (enumTypeSymbol.IsEnumType(out var enumType, out bool isNullableEnum)) {
+            enumTypeSymbol = enumType;
+            isNullable = isNullableEnum || node.Expression is MemberBindingExpressionSyntax;
+          }
+          result = BuildEnumToStringExpression(enumTypeSymbol, isNullable, target, receiver);
           return true;
         } else if (symbol.ContainingType.IsEnumType(out var enumTypeSymbol, out bool isNullable)) {
-          var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
-          var target = memberAccessExpression.Expression.AcceptExpression(this);
-          result = BuildEnumToStringExpression(enumTypeSymbol, isNullable, target, memberAccessExpression.Expression);
+          var receiver = GetEnumToStringReceiver(node, out var target);
+          result = BuildEnumToStringExpression(enumTypeSymbol, isNullable || node.Expression is MemberBindingExpressionSyntax, target, receiver);
           return true;
         }
       }
       return false;
+    }
+
+    // e.ToString() has e as its receiver; in e?.ToString() the call is a member binding, and the receiver is the expression
+    // of the conditional access it belongs to, which the surrounding code has already put in a temporary.
+    private ExpressionSyntax GetEnumToStringReceiver(InvocationExpressionSyntax node, out LuaExpressionSyntax target) {
+      if (node.Expression is MemberBindingExpressionSyntax) {
+        target = conditionalTemps_.Peek();
+        return node.Ancestors().OfType<ConditionalAccessExpressionSyntax>().First().Expression;
+      }
+
+      var memberAccessExpression = (MemberAccessExpressionSyntax)node.Expression;
+      target = memberAccessExpression.Expression.AcceptExpression(this);
+      return memberAccessExpression.Expression;
     }
 
     private List<Func<LuaExpressionSyntax>> FillCodeTemplateInvocationArguments(IMethodSymbol symbol, ArgumentListSyntax argumentList, List<Func<LuaExpressionSyntax>> argumentExpressions) {
