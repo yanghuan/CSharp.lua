@@ -3144,6 +3144,10 @@ namespace CSharpLua {
           var type = (INamedTypeSymbol)CurMethodInfoOrNull.Symbol.ReturnType;
           return type.DelegateInvokeMethod;
         }
+        case SyntaxKind.ConditionalExpression: {
+          var type = (INamedTypeSymbol)semanticModel_.GetTypeInfo(parent).ConvertedType;
+          return type.DelegateInvokeMethod;
+        }
         default:
           throw new InvalidProgramException();
       }

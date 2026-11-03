@@ -349,5 +349,51 @@ namespace Bridge.ClientTest
             Assert.True((Action)l[2] == f12);
             Assert.True((Action)l[3] == f11_2);
         }
+
+        private class Counter
+        {
+            public int Count;
+
+            public void Add()
+            {
+                Count++;
+            }
+
+            public static int Twice(int x)
+            {
+                return x * 2;
+            }
+        }
+
+        private static T DefaultOf<T>(T value)
+        {
+            return default(T);
+        }
+
+        [Test]
+        public void MethodGroupInConditionalWorks()
+        {
+            bool yes = true;
+            Func<int, int> f = yes ? Counter.Twice : null;
+            Assert.AreEqual(8, f(4));
+
+            Func<int, int> g = !yes ? Counter.Twice : null;
+            Assert.Null(g);
+
+            Func<int, int> v = yes ? DefaultOf<int> : null;
+            Assert.AreEqual(0, v(5));
+
+            var counter = new Counter();
+            Action a = yes ? counter.Add : null;
+            a();
+            Assert.AreEqual(1, counter.Count);
+
+            Func<int, int> h = yes ? x => x + 1 : null;
+            Assert.AreEqual(2, h(1));
+
+            Action d = yes ? delegate { counter.Add(); } : null;
+            d();
+            Assert.AreEqual(2, counter.Count);
+        }
     }
 }
