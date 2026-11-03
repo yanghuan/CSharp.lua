@@ -1024,13 +1024,19 @@ namespace CSharpLua {
           continue;
         }
 
-        if (!isWithoutPrivate || !member.IsPrivate()) {
+        // A base class's private method is called as a local, but its private field, field-like property or event is kept
+        // in the object's table, as the class's own members are, so it takes the name as well.
+        if (!isWithoutPrivate || !member.IsPrivate() || IsInstanceFieldLike(member)) {
           var memberNames = GetSymbolNames(member);
           if (memberNames.Exists(names.Contains)) {
             outList.Add(member);
           }
         }
       }
+    }
+
+    private bool IsInstanceFieldLike(ISymbol symbol) {
+      return !symbol.IsStatic && (symbol.Kind == SymbolKind.Field || IsPropertyFieldOrEventField(symbol));
     }
 
     private List<string> GetSymbolNames(ISymbol symbol) {
