@@ -365,6 +365,11 @@ namespace Bridge.ClientTest
             }
         }
 
+        private static T DefaultOf<T>(T value)
+        {
+            return default(T);
+        }
+
         [Test]
         public void MethodGroupInConditionalWorks()
         {
@@ -374,6 +379,9 @@ namespace Bridge.ClientTest
 
             Func<int, int> g = !yes ? Counter.Twice : null;
             Assert.Null(g);
+
+            Func<int, int> v = yes ? DefaultOf<int> : null;
+            Assert.AreEqual(0, v(5));
 
             var counter = new Counter();
             Action a = yes ? counter.Add : null;
