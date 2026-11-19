@@ -377,7 +377,7 @@ limitations under the License.
         </property>
         <method name="Equals" Template="System.Nullable.EqualsObj({this}, {0})" />
         <method name="GetHashCode" Template="System.Nullable.GetHashCode({this})" />
-        <method name="GetValueOrDefault" ArgCount="0" Template="({this} or {`0}:default())" />
+        <method name="GetValueOrDefault" ArgCount="0" Template="({this} or {``0}:default())" />
         <method name="GetValueOrDefault" ArgCount="1" Template="({this} or {0})" />
         <method name="ToString" Template="System.toString({this})" />
         <method name="op_Explicit" Template="System.Nullable.Value({0})" />
