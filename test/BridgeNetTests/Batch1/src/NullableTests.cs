@@ -667,6 +667,16 @@ namespace Bridge.ClientTest
         }
 
         [Test]
+        public void ConditionalToStringOfNullableEnumWorks()
+        {
+            Values? a = Values.Value2, b = null;
+            Assert.AreEqual("Value2", a?.ToString());
+            Assert.Null(b?.ToString());
+            Assert.AreEqual(6, a?.ToString().Length);
+            Assert.Null(b?.ToString().Length);
+        }
+
+        [Test]
         public void NullableFieldWorks()
         {
             var a = new PropertyTest();
