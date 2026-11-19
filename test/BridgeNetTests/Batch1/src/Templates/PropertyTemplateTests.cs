@@ -204,9 +204,83 @@ namespace Batch1.src.Templates
             //Assert.Null(prop);
         }
 
+        [Test]
+        public static void PropertyTemplateWithoutReceiverTest()
+        {
+            var test = new TestType();
+            test.WriteBare(3);
+            Assert.AreEqual(3, test.FullProp);
+            Assert.AreEqual(3, test.ReadBare());
+            test.WriteThis(4);
+            Assert.AreEqual(4, test.ReadThis());
+            Assert.AreEqual(5, TestType.ReadStatic());
+        }
+
+        [Test]
+        public static void PropertyTemplateThroughBaseTest()
+        {
+            var test = new DerivedType();
+            test.WriteBase(5);
+            Assert.AreEqual(5, test.ReadBase());
+            Assert.AreEqual(5, test.ReadInherited());
+        }
+
+        [Test]
+        public static void SetOnlyPropertyTemplateInInitializerTest()
+        {
+            var test = new TestType
+            {
+                SetProp = 6
+            };
+            Assert.AreEqual(6, test.GetProp);
+        }
+
+        private class DerivedType : TestType
+        {
+            public int ReadBase()
+            {
+                return base.FullProp;
+            }
+
+            public int ReadInherited()
+            {
+                return FullProp;
+            }
+
+            public void WriteBase(int value)
+            {
+                base.FullProp = value;
+            }
+        }
+
 #pragma warning disable CS0626 // Method, operator, or accessor is marked external and has no attributes on it
         private class TestType
         {
+            public int ReadBare()
+            {
+                return FullProp;
+            }
+
+            public int ReadThis()
+            {
+                return this.FullProp;
+            }
+
+            public void WriteBare(int value)
+            {
+                FullProp = value;
+            }
+
+            public void WriteThis(int value)
+            {
+                this.FullProp = value;
+            }
+
+            public static int ReadStatic()
+            {
+                return StaticGetOnlyProp;
+            }
+
             /// @CSharpLua.Get = "a"
             /// @CSharpLua.Set = "a = {0}"
             public static extern int StaticProp { get; set; }
@@ -220,6 +294,8 @@ namespace Batch1.src.Templates
             public extern int SetProp { get; set; }
             /// @CSharpLua.Get = "4"
             public extern int GetOnlyProp { get; }
+            /// @CSharpLua.Get = "5"
+            public static extern int StaticGetOnlyProp { get; }
 
             /// @CSharpLua.Get = "{this}.CustomProp3"
             /// @CSharpLua.Set = "{this}.CustomProp3 = {0}"

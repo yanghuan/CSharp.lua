@@ -1735,6 +1735,10 @@ namespace CSharpLua {
     }
 
     private LuaExpressionSyntax BuildLuaSimpleAssignmentExpression(LuaExpressionSyntax left, LuaExpressionSyntax right) {
+      if (left is LuaPropertyTemplateExpressionSyntax propertyTemplate) {
+        return BuildCodeTemplateExpression(propertyTemplate.SetTemplate, propertyTemplate.GetArguments(right), propertyTemplate.Name);
+      }
+
       if (left is LuaPropertyAdapterExpressionSyntax propertyAdapter) {
         propertyAdapter.IsGetOrAdd = false;
         propertyAdapter.ArgumentList.AddArgument(right);
@@ -2726,6 +2730,9 @@ namespace CSharpLua {
 
       if (node.Expression.IsKind(SyntaxKind.ThisExpression)) {
         var nameExpression = node.Name.AcceptExpression(this);
+        if (nameExpression is LuaPropertyTemplateExpressionSyntax thisTemplate) {
+          return BuildFieldOrPropertyMemberAccessExpression(LuaIdentifierNameSyntax.This, thisTemplate, false);
+        }
         if (symbol.Kind == SymbolKind.Method) {
           if (IsDelegateExpression((IMethodSymbol)symbol, node, nameExpression, LuaIdentifierNameSyntax.This, out var delegateExpression)) {
             return delegateExpression;
@@ -2750,6 +2757,8 @@ namespace CSharpLua {
             }
             case LuaMemberAccessExpressionSyntax memberAccess when memberAccess.Expression == LuaIdentifierNameSyntax.This:
               return nameExpression;
+            case LuaPropertyTemplateExpressionSyntax baseTemplate:
+              return BuildFieldOrPropertyMemberAccessExpression(LuaIdentifierNameSyntax.This, baseTemplate, false);
             default:
               return baseExpression.MemberAccess(nameExpression);
           }
@@ -2975,6 +2984,19 @@ namespace CSharpLua {
       }
 
       return false;
+    }
+
+    // The name after the dot of a member access or of a ?. binding, whose receiver the caller fills in.
+    private static bool IsMemberNameOfAccess(IdentifierNameSyntax node) {
+      return node.Parent is MemberAccessExpressionSyntax access && access.Name == node
+        || node.Parent is MemberBindingExpressionSyntax
+        || node.Parent is QualifiedNameSyntax;
+    }
+
+    // The receiver of a property template written by its bare name: the instance for an instance property; a static one has
+    // none, and its type stands for {this}.
+    private LuaExpressionSyntax GetPropertyTemplateReceiver(IPropertySymbol symbol) {
+      return symbol.IsStatic ? GetTypeName(symbol.ContainingType) : LuaIdentifierNameSyntax.This;
     }
 
     private bool IsPropertyField(IdentifierNameSyntax node, IPropertySymbol propertySymbol) {
@@ -3425,6 +3447,10 @@ namespace CSharpLua {
         case SymbolKind.Property: {
           var propertyField = (IPropertySymbol)symbol;
           identifier = VisitPropertyOrEventIdentifierName(node, propertyField, true, out bool isField);
+          if (identifier is LuaPropertyTemplateExpressionSyntax propertyTemplate && !IsMemberNameOfAccess(node)) {
+            // Written with no receiver, the template's {this} is the instance itself.
+            identifier = BuildFieldOrPropertyMemberAccessExpression(GetPropertyTemplateReceiver(propertyField), propertyTemplate, propertyField.IsStatic);
+          }
           if (isField) {
             CheckValueTypeClone(propertyField.Type, node, ref identifier, true);
           }
