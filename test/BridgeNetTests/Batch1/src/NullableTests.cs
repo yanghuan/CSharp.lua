@@ -177,6 +177,23 @@ namespace Bridge.ClientTest
         }
 
         [Test]
+        public void GetValueOrDefaultWorks()
+        {
+            int? a = 3, b = null;
+            Assert.AreEqual(3, a.GetValueOrDefault());
+            Assert.AreEqual(0, b.GetValueOrDefault());
+
+            bool? c = null;
+            Assert.AreEqual(false, c.GetValueOrDefault());
+
+            double? d = null;
+            Assert.AreEqual(0.0, d.GetValueOrDefault());
+
+            Values? e = null;
+            Assert.AreEqual(default(Values), e.GetValueOrDefault());
+        }
+
+        [Test]
         public void GetValueOrDefaultWithArgWorks()
         {
             int? a = 3, b = null;
