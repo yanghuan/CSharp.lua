@@ -1532,7 +1532,7 @@ namespace CSharpLua {
           var varPattern = (VarPatternSyntax)pattern;
           if (!varPattern.IsKind(SyntaxKind.DiscardPattern)) {
             var name = varPattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
-            CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+            AddPatternVariable(pattern, name, targetExpression);
           }
           return LuaIdentifierLiteralExpressionSyntax.True;
         }
@@ -1542,15 +1542,8 @@ namespace CSharpLua {
         }
         case SyntaxKind.DeclarationPattern: {
           var declarationPattern = (DeclarationPatternSyntax)pattern;
-          int count = declarationPattern.GetIsDeclarationInBinaryCount();
           var name = declarationPattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
-          if (count == 0) {
-            CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
-          } else {
-            var block = GetBlock(count + 1);
-            block.AddStatement(new LuaLocalVariableDeclaratorSyntax(name));
-            CurBlock.AddStatement(name.Assignment(targetExpression));
-          }
+          AddPatternVariable(pattern, name, targetExpression);
           return BuildIsPatternExpression(targetNode, declarationPattern.Type, name);
         }
         case SyntaxKind.NotPattern: {
@@ -1564,7 +1557,7 @@ namespace CSharpLua {
             case SyntaxKind.DeclarationPattern: {
               var declarationPattern = (DeclarationPatternSyntax)notPattern.Pattern;
               var name = declarationPattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
-              CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+              AddPatternVariable(pattern, name, targetExpression);
               var expression = BuildIsPatternExpression(targetNode, declarationPattern.Type, name);
               return expression.Not();
             }
@@ -1619,12 +1612,49 @@ namespace CSharpLua {
           LuaIdentifierNameSyntax name;
           if (recursivePattern.Designation != null) {
             name = recursivePattern.Designation.Accept<LuaIdentifierNameSyntax>(this);
-            CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, targetExpression));
+            AddPatternVariable(pattern, name, targetExpression);
           } else {
             name = GetIdentifierNameFromExpression(targetExpression);
           }
           return BuildRecursivePatternExpression(recursivePattern, name, targetNode);
         }
+      }
+    }
+
+    // An `is` in a part of a condition that runs only sometimes (the right of &&, || or ??, a branch of a conditional
+    // written as an if) is written inside a block of its own for each, however deep in brackets or behind a `!`. The
+    // variable its pattern declares is declared outside those blocks, to be seen after the condition:
+    // `if (a == null || !(b is T t)) { return; } Use(t);`.
+    private LuaBlockSyntax GetPatternVariableBlock(PatternSyntax pattern) {
+      SyntaxNode current = pattern;
+      while (current.Parent is PatternSyntax or SubpatternSyntax or PropertyPatternClauseSyntax or PositionalPatternClauseSyntax) {
+        current = current.Parent;
+      }
+      if (current.Parent is not IsPatternExpressionSyntax) {
+        return CurBlock;
+      }
+
+      int count = 0;
+      current = current.Parent;
+      while (current.Parent is ExpressionSyntax parent and not AnonymousFunctionExpressionSyntax) {
+        switch (parent) {
+          case BinaryExpressionSyntax binary when binary.Right == current && binary.Kind() is SyntaxKind.LogicalAndExpression or SyntaxKind.LogicalOrExpression or SyntaxKind.CoalesceExpression:
+          case ConditionalExpressionSyntax conditional when conditional.Condition != current && MayBeNullOrFalse(conditional.WhenTrue):
+            ++count;
+            break;
+        }
+        current = parent;
+      }
+      return GetBlock(count + 1);
+    }
+
+    private void AddPatternVariable(PatternSyntax pattern, LuaIdentifierNameSyntax name, LuaExpressionSyntax value) {
+      var block = GetPatternVariableBlock(pattern);
+      if (block == CurBlock) {
+        CurBlock.AddStatement(new LuaLocalVariableDeclaratorSyntax(name, value));
+      } else {
+        block.AddStatement(new LuaLocalVariableDeclaratorSyntax(name));
+        CurBlock.AddStatement(name.Assignment(value));
       }
     }
 
